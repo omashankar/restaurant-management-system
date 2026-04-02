@@ -1,36 +1,96 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Restaurant Management System (RMS)
 
-## Getting Started
+## 📌 Description
+Restaurant Management System (RMS) is a modern web app for managing restaurant operations in one place.  
+It helps reduce manual work by organizing orders, menu, tables, inventory, staff, and customer workflows.  
+It is useful for restaurants, cafes, cloud kitchens, and multi-outlet food businesses.
 
-First, run the development server:
+## 🌐 Live Demo
+- Demo Link: `https://your-demo-link-here.com`
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## ✨ Features
+- Dashboard
+- POS (Dine-in, Takeaway, Delivery)
+- Menu Management
+  - Menu Items
+  - Categories
+  - Recipes
+- Table Management
+- Reservations
+- Inventory Management
+- Staff Management
+- Customer Management
+- Settings
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 🛠 Tech Stack
+- Next.js
+- React
+- Tailwind CSS
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## ⚙️ Installation
+1. Clone the repository
+   ```bash
+   git clone <your-repo-url>
+   ```
+2. Go to project folder
+   ```bash
+   cd my-project
+   ```
+3. Install dependencies
+   ```bash
+   npm install
+   ```
+4. Run development server
+   ```bash
+   npm run dev
+   ```
+5. Open in browser:
+   - `http://localhost:3000`
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 📁 Project Structure
+- `components/` → reusable UI components
+- `pages/` → app pages/routes
+- `layouts/` → layout and shell files
+- `hooks/` → custom React hooks
+- `utils/` → helper and utility functions
 
-## Learn More
+> Note: In Next.js App Router projects, some routing files may be inside `app/`.
 
-To learn more about Next.js, take a look at the following resources:
+## 🚀 How to Use
+- Open the app in browser
+- Use sidebar navigation to move between modules
+- Manage menu, orders, tables, inventory, staff, and customers
+- Use settings to configure app behavior
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 📱 Responsiveness
+- Fully usable on Desktop
+- Tablet-friendly layout
+- Mobile-friendly interface
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## 📚 Module Overview
+- **POS** → Take and manage dine-in, takeaway, and delivery orders
+- **Menu** → Manage menu items, categories, and recipes
+- **Inventory** → Track stock levels and alerts
+- **Staff** → Manage employee records and operational roles
+- **Reservations** → Handle booking flow and table planning
+- **Customers** → Store and manage customer information
 
-## Deploy on Vercel
+## 🔮 Future Improvements
+- Backend integration
+- Authentication system
+- API integration
+- Advanced reports and analytics
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## 🤝 Contributing
+Contributions are welcome.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+1. Fork the repository
+2. Create a feature branch
+3. Commit your changes
+4. Open a pull request
+
+## 📄 License
+- License: `Your License Here` (e.g., MIT)
+
+## 👨‍💻 Author
+- Your Name
