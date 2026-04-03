@@ -2,6 +2,7 @@
 const nextConfig = {
   reactCompiler: true,
   images: {
+    unoptimized: true, // 👈 IMPORTANT for ngrok
     remotePatterns: [
       {
         protocol: "https",
