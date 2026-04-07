@@ -167,6 +167,6 @@ export function canAccessPath(role, pathname) {
   const match = rules.find(
     (r) => pathname === r.href || pathname.startsWith(`${r.href}/`)
   );
-  if (!match) return true;
+  if (!match) return true;  // /profile and unknown paths are open to all
   return match.roles.includes(role);
 }

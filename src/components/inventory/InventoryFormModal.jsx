@@ -12,6 +12,24 @@ const CATEGORIES = [
   "Other",
 ];
 
+const UNITS = [
+  "bottle",
+  "kg",
+  "g",
+  "litre",
+  "ml",
+  "crate",
+  "box",
+  "case",
+  "pack",
+  "piece",
+  "dozen",
+  "wheel",
+  "bag",
+  "can",
+  "jar",
+];
+
 export default function InventoryFormModal({
   open,
   title,
@@ -92,12 +110,16 @@ export default function InventoryFormModal({
             <label className="mb-1 block text-xs font-medium text-zinc-400">
               Unit
             </label>
-            <input
+            <select
               value={form.unit}
               onChange={(e) => onChange({ ...form, unit: e.target.value })}
-              className="w-full rounded-xl border border-zinc-800 bg-zinc-950/80 px-3 py-2 text-sm text-zinc-100 outline-none focus:border-emerald-500/40"
-              placeholder="bottle, kg…"
-            />
+              className="cursor-pointer w-full rounded-xl border border-zinc-800 bg-zinc-950/80 px-3 py-2 text-sm text-zinc-100 outline-none focus:border-emerald-500/40"
+            >
+              <option value="" disabled>Select unit…</option>
+              {UNITS.map((u) => (
+                <option key={u} value={u}>{u}</option>
+              ))}
+            </select>
           </div>
         </div>
         <div>

@@ -86,6 +86,14 @@ export function AppProvider({ children }) {
     [user, persist]
   );
 
+  const updateProfile = useCallback(
+    (patch) => {
+      if (!user) return;
+      persist({ ...user, ...patch });
+    },
+    [user, persist]
+  );
+
   const value = useMemo(
     () => ({
       user,
@@ -94,8 +102,9 @@ export function AppProvider({ children }) {
       signup,
       logout,
       setDemoRole,
+      updateProfile,
     }),
-    [user, hydrated, login, signup, logout, setDemoRole]
+    [user, hydrated, login, signup, logout, setDemoRole, updateProfile]
   );
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

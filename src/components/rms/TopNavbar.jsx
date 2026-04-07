@@ -211,7 +211,7 @@ export default function TopNavbar({ onOpenSidebar, onToggleSidebar }) {
               type="button"
               onClick={() => {
                 setIsProfileOpen(false);
-                router.push("/settings");
+                router.push("/profile");
               }}
               className="cursor-pointer flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left text-sm text-zinc-200 transition-colors hover:bg-zinc-800"
               role="menuitem"
