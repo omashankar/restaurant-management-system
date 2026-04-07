@@ -25,7 +25,7 @@ export default function RestrictedPage({ title = "Access restricted", message })
       </p>
       <Link
         href={home}
-        className="mt-8 rounded-xl border border-zinc-700 px-5 py-2.5 text-sm font-medium text-zinc-200 transition-colors hover:border-emerald-500/50 hover:bg-emerald-500/10"
+        className="cursor-pointer mt-8 rounded-xl border border-zinc-700 px-5 py-2.5 text-sm font-medium text-zinc-200 transition-colors hover:border-emerald-500/50 hover:bg-emerald-500/10"
       >
         Back to workspace
       </Link>

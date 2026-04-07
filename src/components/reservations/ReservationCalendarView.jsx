@@ -67,7 +67,7 @@ export default function ReservationCalendarView({ rows, onView, onEdit, onDelete
                   <button
                     type="button"
                     onClick={() => onView(r)}
-                    className="flex flex-1 items-center justify-center gap-1 rounded-lg py-2 text-xs font-medium text-zinc-400 transition-colors hover:bg-zinc-800 hover:text-sky-400"
+                    className="cursor-pointer flex flex-1 items-center justify-center gap-1 rounded-lg py-2 text-xs font-medium text-zinc-400 transition-colors hover:bg-zinc-800 hover:text-sky-400"
                   >
                     <Eye className="size-3.5" />
                     View

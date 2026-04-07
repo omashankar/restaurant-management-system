@@ -27,7 +27,7 @@ export default function Modal({ open, title, onClose, children, footer }) {
     >
       <button
         type="button"
-        className="absolute inset-0 bg-black/65 backdrop-blur-[2px] transition-opacity duration-200"
+        className="cursor-pointer absolute inset-0 bg-black/65 backdrop-blur-[2px] transition-opacity duration-200"
         onClick={onClose}
         aria-label="Close dialog"
       />

@@ -58,7 +58,7 @@ export default function ReservationTable({ rows, onView, onEdit, onDelete }) {
                   <button
                     type="button"
                     onClick={() => onView(r)}
-                    className="rounded-lg p-2 text-zinc-500 transition-colors hover:bg-zinc-800 hover:text-sky-400"
+                    className="cursor-pointer rounded-lg p-2 text-zinc-500 transition-colors hover:bg-zinc-800 hover:text-sky-400"
                     aria-label="View"
                   >
                     <Eye className="size-4" />
@@ -66,7 +66,7 @@ export default function ReservationTable({ rows, onView, onEdit, onDelete }) {
                   <button
                     type="button"
                     onClick={() => onEdit(r)}
-                    className="rounded-lg p-2 text-zinc-500 transition-colors hover:bg-zinc-800 hover:text-emerald-400"
+                    className="cursor-pointer rounded-lg p-2 text-zinc-500 transition-colors hover:bg-zinc-800 hover:text-emerald-400"
                     aria-label="Edit"
                   >
                     <Pencil className="size-4" />

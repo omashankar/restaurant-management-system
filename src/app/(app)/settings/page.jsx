@@ -387,7 +387,7 @@ export default function SettingsPage() {
               type="button"
               onClick={saveChanges}
               disabled={!hasChanges || isSaving}
-              className="inline-flex items-center gap-2 rounded-xl bg-emerald-500 px-4 py-2 text-sm font-semibold text-zinc-950 transition-colors hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-45"
+              className="cursor-pointer inline-flex items-center gap-2 rounded-xl bg-emerald-500 px-4 py-2 text-sm font-semibold text-zinc-950 transition-colors hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-45"
             >
               {isSaving ? <Loader2 className="size-4 animate-spin" /> : null}
               {saveLabel}

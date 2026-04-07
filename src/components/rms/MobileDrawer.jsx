@@ -23,7 +23,7 @@ export default function MobileDrawer({ open, onClose, children }) {
       <button
         type="button"
         onClick={onClose}
-        className="absolute inset-0"
+        className="cursor-pointer absolute inset-0"
         aria-label="Close sidebar"
       />
       <button

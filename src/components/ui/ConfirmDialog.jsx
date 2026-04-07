@@ -30,7 +30,7 @@ export default function ConfirmDialog({
     <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
       <button
         type="button"
-        className="absolute inset-0 bg-black/60 backdrop-blur-sm duration-150"
+        className="cursor-pointer absolute inset-0 bg-black/60 backdrop-blur-sm duration-150"
         onClick={onCancel}
         aria-label="Dismiss"
       />

@@ -11,7 +11,7 @@ export default function LandingNavbar() {
   return (
     <header className="sticky top-0 z-50 border-b border-slate-200/80 bg-white/75 backdrop-blur-xl">
       <div className="mx-auto flex h-16 w-full max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-        <Link href="/" className="inline-flex items-center gap-2">
+        <Link href="/" className="cursor-pointer inline-flex items-center gap-2">
           <span className="inline-flex size-8 items-center justify-center rounded-lg bg-gradient-to-br from-indigo-600 to-indigo-500 text-sm font-bold text-white shadow-sm shadow-indigo-400/40">
             RMS
           </span>
@@ -25,7 +25,7 @@ export default function LandingNavbar() {
             <a
               key={item.label}
               href={item.href}
-                className="text-sm font-medium text-slate-600 transition-colors hover:text-slate-900"
+              className="cursor-pointer text-sm font-medium text-slate-600 transition-colors hover:text-slate-900"
             >
               {item.label}
             </a>
@@ -35,7 +35,7 @@ export default function LandingNavbar() {
         <div className="hidden items-center gap-2 md:flex">
           <Link
             href="/login"
-            className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 transition-all duration-200 hover:-translate-y-0.5 hover:bg-slate-50"
+            className="cursor-pointer rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 transition-all duration-200 hover:-translate-y-0.5 hover:bg-slate-50"
           >
             Login
           </Link>

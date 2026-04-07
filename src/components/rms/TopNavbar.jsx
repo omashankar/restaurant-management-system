@@ -58,7 +58,7 @@ export default function TopNavbar({ onOpenSidebar, onToggleSidebar }) {
         <button
           type="button"
           onClick={onToggleSidebar ?? onOpenSidebar}
-          className="inline-flex items-center justify-center rounded-xl border border-zinc-800 bg-zinc-900/40 p-2 text-zinc-200 transition-colors hover:bg-zinc-900 md:hidden"
+          className="cursor-pointer inline-flex items-center justify-center rounded-xl border border-zinc-800 bg-zinc-900/40 p-2 text-zinc-200 transition-colors hover:bg-zinc-900 md:hidden"
           aria-label="Open sidebar"
         >
           <Menu className="size-5" aria-hidden />
@@ -109,7 +109,7 @@ export default function TopNavbar({ onOpenSidebar, onToggleSidebar }) {
         >
           <button
             type="button"
-            className="inline-flex items-center gap-2 rounded-xl border border-zinc-800 bg-zinc-900/80 px-3 py-2 text-xs font-medium text-zinc-200 transition-colors hover:border-emerald-500/40"
+            className="cursor-pointer inline-flex items-center gap-2 rounded-xl border border-zinc-800 bg-zinc-900/80 px-3 py-2 text-xs font-medium text-zinc-200 transition-colors hover:border-emerald-500/40"
             aria-expanded={open}
             aria-haspopup="listbox"
           >
@@ -135,7 +135,7 @@ export default function TopNavbar({ onOpenSidebar, onToggleSidebar }) {
                       else if (r === "waiter") router.push("/pos");
                       else router.push("/dashboard");
                     }}
-                    className={`flex w-full items-center gap-2 px-3 py-2 text-left text-sm transition-colors hover:bg-zinc-800 ${
+                    className={`cursor-pointer flex w-full items-center gap-2 px-3 py-2 text-left text-sm transition-colors hover:bg-zinc-800 ${
                       user.role === r ? "text-emerald-400" : "text-zinc-300"
                     }`}
                   >
@@ -194,7 +194,7 @@ export default function TopNavbar({ onOpenSidebar, onToggleSidebar }) {
                         else if (r === "waiter") router.push("/pos");
                         else router.push("/dashboard");
                       }}
-                      className={`flex w-full items-center px-2.5 py-2 text-left text-sm transition-colors hover:bg-zinc-800 ${
+                      className={`cursor-pointer flex w-full items-center px-2.5 py-2 text-left text-sm transition-colors hover:bg-zinc-800 ${
                         user.role === r ? "font-medium text-emerald-400" : "text-zinc-300"
                       }`}
                       role="menuitem"
@@ -213,7 +213,7 @@ export default function TopNavbar({ onOpenSidebar, onToggleSidebar }) {
                 setIsProfileOpen(false);
                 router.push("/settings");
               }}
-              className="flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left text-sm text-zinc-200 transition-colors hover:bg-zinc-800"
+              className="cursor-pointer flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left text-sm text-zinc-200 transition-colors hover:bg-zinc-800"
               role="menuitem"
             >
               <User className="size-4 text-zinc-400" />
@@ -222,7 +222,7 @@ export default function TopNavbar({ onOpenSidebar, onToggleSidebar }) {
             <button
               type="button"
               onClick={() => setIsProfileOpen(false)}
-              className="flex w-full items-center justify-between rounded-lg px-2.5 py-2 text-left text-sm text-zinc-200 transition-colors hover:bg-zinc-800"
+              className="cursor-pointer flex w-full items-center justify-between rounded-lg px-2.5 py-2 text-left text-sm text-zinc-200 transition-colors hover:bg-zinc-800"
               role="menuitem"
             >
               <span className="inline-flex items-center gap-2">
@@ -236,7 +236,7 @@ export default function TopNavbar({ onOpenSidebar, onToggleSidebar }) {
             <button
               type="button"
               onClick={() => setIsProfileOpen(false)}
-              className="flex w-full items-center justify-between rounded-lg px-2.5 py-2 text-left text-sm text-zinc-200 transition-colors hover:bg-zinc-800"
+              className="cursor-pointer flex w-full items-center justify-between rounded-lg px-2.5 py-2 text-left text-sm text-zinc-200 transition-colors hover:bg-zinc-800"
               role="menuitem"
             >
               <span className="inline-flex items-center gap-2">
@@ -257,7 +257,7 @@ export default function TopNavbar({ onOpenSidebar, onToggleSidebar }) {
                 logout();
                 router.push("/login");
               }}
-              className="flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left text-sm text-zinc-200 transition-colors hover:bg-red-500/10 hover:text-red-300"
+              className="cursor-pointer flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left text-sm text-zinc-200 transition-colors hover:bg-red-500/10 hover:text-red-300"
               role="menuitem"
             >
               <LogOut className="size-4 text-zinc-400" />

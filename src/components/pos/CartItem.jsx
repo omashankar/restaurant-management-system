@@ -19,7 +19,7 @@ export default function CartItem({
         <button
           type="button"
           onClick={() => onRemove(line.id)}
-          className="rounded-md p-1.5 text-zinc-500 transition-colors hover:bg-red-500/15 hover:text-red-300"
+          className="cursor-pointer rounded-md p-1.5 text-zinc-500 transition-colors hover:bg-red-500/15 hover:text-red-300"
           aria-label={`Remove ${line.name}`}
         >
           <Trash2 className="size-4" />
@@ -31,7 +31,7 @@ export default function CartItem({
           <button
             type="button"
             onClick={() => onDec(line.id)}
-            className="rounded-md p-1 text-zinc-300 hover:bg-zinc-800"
+            className="cursor-pointer rounded-md p-1 text-zinc-300 hover:bg-zinc-800"
             aria-label={`Decrease ${line.name}`}
           >
             <Minus className="size-4" />

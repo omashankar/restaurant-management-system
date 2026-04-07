@@ -201,7 +201,7 @@ export default function WaiterPOS() {
             <button
               type="button"
               onClick={placeOrder}
-              className="flex-1 rounded-xl bg-emerald-500 py-3 text-sm font-semibold text-zinc-950 transition-transform hover:bg-emerald-400 active:scale-[0.98]"
+              className="cursor-pointer flex-1 rounded-xl bg-emerald-500 py-3 text-sm font-semibold text-zinc-950 transition-transform hover:bg-emerald-400 active:scale-[0.98]"
             >
               Place order
             </button>

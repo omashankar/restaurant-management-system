@@ -135,7 +135,7 @@ export default function RecipesPage() {
           type="button"
           onClick={openCreate}
           disabled={activeMenuItems.length === 0}
-          className="inline-flex items-center gap-2 rounded-xl bg-emerald-500 px-4 py-2.5 text-sm font-semibold text-zinc-950 hover:bg-emerald-400 disabled:opacity-40"
+          className="cursor-pointer inline-flex items-center gap-2 rounded-xl bg-emerald-500 px-4 py-2.5 text-sm font-semibold text-zinc-950 hover:bg-emerald-400 disabled:opacity-40"
         >
           <Plus className="size-4" />
           Add recipe
@@ -157,7 +157,7 @@ export default function RecipesPage() {
               type="button"
               onClick={openCreate}
               disabled={activeMenuItems.length === 0}
-              className="rounded-xl bg-emerald-500 px-4 py-2 text-sm font-semibold text-zinc-950 disabled:opacity-40"
+              className="cursor-pointer rounded-xl bg-emerald-500 px-4 py-2 text-sm font-semibold text-zinc-950 disabled:opacity-40"
             >
               Add recipe
             </button>
@@ -194,7 +194,7 @@ export default function RecipesPage() {
                       <button
                         type="button"
                         onClick={() => setDetailRecipe(row)}
-                        className="rounded-lg p-2 text-zinc-400 hover:bg-zinc-800 hover:text-sky-400"
+                        className="cursor-pointer rounded-lg p-2 text-zinc-400 hover:bg-zinc-800 hover:text-sky-400"
                         aria-label="View"
                       >
                         <Eye className="size-4" />
@@ -202,7 +202,7 @@ export default function RecipesPage() {
                       <button
                         type="button"
                         onClick={() => openEdit(row)}
-                        className="rounded-lg p-2 text-zinc-400 hover:bg-zinc-800 hover:text-emerald-400"
+                        className="cursor-pointer rounded-lg p-2 text-zinc-400 hover:bg-zinc-800 hover:text-emerald-400"
                         aria-label="Edit"
                       >
                         <Pencil className="size-4" />
@@ -234,14 +234,14 @@ export default function RecipesPage() {
             <button
               type="button"
               onClick={() => setModalOpen(false)}
-              className="rounded-xl border border-zinc-700 px-4 py-2 text-sm text-zinc-300"
+              className="cursor-pointer rounded-xl border border-zinc-700 px-4 py-2 text-sm text-zinc-300"
             >
               Cancel
             </button>
             <button
               type="button"
               onClick={saveRecipe}
-              className="rounded-xl bg-emerald-500 px-4 py-2 text-sm font-semibold text-zinc-950 hover:bg-emerald-400"
+              className="cursor-pointer rounded-xl bg-emerald-500 px-4 py-2 text-sm font-semibold text-zinc-950 hover:bg-emerald-400"
             >
               Save
             </button>
@@ -281,7 +281,7 @@ export default function RecipesPage() {
               <button
                 type="button"
                 onClick={addIngredientRow}
-                className="text-xs font-medium text-emerald-400 hover:text-emerald-300"
+                className="cursor-pointer text-xs font-medium text-emerald-400 hover:text-emerald-300"
               >
                 + Add line
               </button>
@@ -337,7 +337,7 @@ export default function RecipesPage() {
           <button
             type="button"
             onClick={() => setDetailRecipe(null)}
-            className="rounded-xl border border-zinc-700 px-4 py-2 text-sm text-zinc-300"
+            className="cursor-pointer rounded-xl border border-zinc-700 px-4 py-2 text-sm text-zinc-300"
           >
             Close
           </button>

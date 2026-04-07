@@ -1,0 +1,78 @@
+"use client";
+
+import { orderChannels } from "@/lib/mockData";
+
+/**
+ * Pure CSS/SVG donut — no external chart lib needed.
+ */
+export default function DonutChart() {
+  const total = orderChannels.reduce((s, c) => s + c.value, 0);
+
+  // Build SVG arc segments
+  const r = 54;
+  const cx = 70;
+  const cy = 70;
+  const circumference = 2 * Math.PI * r;
+
+  let offset = 0;
+  const segments = orderChannels.map((c) => {
+    const pct = c.value / total;
+    const dash = pct * circumference;
+    const gap = circumference - dash;
+    const seg = { ...c, dash, gap, offset };
+    offset += dash;
+    return seg;
+  });
+
+  return (
+    <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-5">
+      <h3 className="text-sm font-semibold text-zinc-100">Order Channels</h3>
+      <p className="text-xs text-zinc-500">Online vs offline split</p>
+
+      <div className="mt-4 flex flex-col items-center gap-4 sm:flex-row sm:items-center sm:justify-around">
+        {/* SVG donut */}
+        <div className="relative shrink-0">
+          <svg width="140" height="140" viewBox="0 0 140 140" aria-hidden>
+            {/* track */}
+            <circle cx={cx} cy={cy} r={r} fill="none" stroke="#27272a" strokeWidth="18" />
+            {segments.map((seg) => (
+              <circle
+                key={seg.label}
+                cx={cx}
+                cy={cy}
+                r={r}
+                fill="none"
+                stroke={seg.color}
+                strokeWidth="18"
+                strokeDasharray={`${seg.dash} ${seg.gap}`}
+                strokeDashoffset={-seg.offset + circumference * 0.25}
+                strokeLinecap="butt"
+                style={{ transition: "stroke-dasharray 0.5s ease" }}
+              />
+            ))}
+          </svg>
+          <div className="absolute inset-0 flex flex-col items-center justify-center">
+            <p className="text-xl font-semibold text-zinc-50">{total}%</p>
+            <p className="text-[10px] text-zinc-500">Total</p>
+          </div>
+        </div>
+
+        {/* Legend */}
+        <div className="space-y-3">
+          {orderChannels.map((c) => (
+            <div key={c.label} className="flex items-center gap-3">
+              <span
+                className="size-3 shrink-0 rounded-full"
+                style={{ backgroundColor: c.color }}
+              />
+              <div>
+                <p className="text-sm font-medium text-zinc-200">{c.label}</p>
+                <p className="text-xs text-zinc-500">{c.value}% of orders</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}

@@ -118,7 +118,7 @@ export default function SignupPage() {
           </div>
           <button
             type="submit"
-            className="w-full rounded-xl bg-emerald-500 py-3 text-sm font-semibold text-zinc-950 transition-all duration-200 hover:bg-emerald-400 active:scale-[0.99]"
+            className="cursor-pointer w-full rounded-xl bg-emerald-500 py-3 text-sm font-semibold text-zinc-950 transition-all duration-200 hover:bg-emerald-400 active:scale-[0.99]"
           >
             Create account
           </button>
@@ -127,7 +127,7 @@ export default function SignupPage() {
           Already have an account?{" "}
           <Link
             href="/login"
-            className="font-medium text-emerald-400 hover:text-emerald-300"
+            className="cursor-pointer font-medium text-emerald-400 hover:text-emerald-300"
           >
             Login
           </Link>

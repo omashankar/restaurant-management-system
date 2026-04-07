@@ -53,7 +53,7 @@ export default function SearchFilterBar({
           <button
             type="button"
             onClick={() => onDateChange("")}
-            className="rounded-lg px-2 py-1 text-xs font-medium text-zinc-500 hover:bg-zinc-800 hover:text-zinc-300"
+            className="cursor-pointer rounded-lg px-2 py-1 text-xs font-medium text-zinc-500 hover:bg-zinc-800 hover:text-zinc-300"
           >
             All dates
           </button>

@@ -203,7 +203,7 @@ export default function InventoryPage() {
         <button
           type="button"
           onClick={openCreate}
-          className="inline-flex items-center gap-2 rounded-xl bg-emerald-500 px-4 py-2.5 text-sm font-semibold text-zinc-950 transition-colors hover:bg-emerald-400"
+          className="cursor-pointer inline-flex items-center gap-2 rounded-xl bg-emerald-500 px-4 py-2.5 text-sm font-semibold text-zinc-950 transition-colors hover:bg-emerald-400"
         >
           <Plus className="size-4" />
           Add item
@@ -304,7 +304,7 @@ export default function InventoryPage() {
             <button
               type="button"
               onClick={openCreate}
-              className="rounded-xl bg-emerald-500 px-4 py-2 text-sm font-semibold text-zinc-950"
+              className="cursor-pointer rounded-xl bg-emerald-500 px-4 py-2 text-sm font-semibold text-zinc-950"
             >
               Add item
             </button>
@@ -315,6 +315,20 @@ export default function InventoryPage() {
           rows={pageRows}
           onEdit={openEdit}
           onDelete={setDeleteTarget}
+          onUpdateQty={(row, delta) => {
+            const next = Math.max(0, row.quantity + delta);
+            setInventoryRows((prev) =>
+              prev.map((r) => r.id === row.id ? { ...r, quantity: next } : r)
+            );
+            appendLog({
+              id: `ih-${Date.now()}`,
+              itemId: row.id,
+              itemName: row.name,
+              delta,
+              message: delta > 0 ? `+1 quick update` : `-1 quick update`,
+              createdAt: new Date().toISOString(),
+            });
+          }}
           footer={
             <div className="px-4 pb-4">
               <PaginationBar

@@ -363,7 +363,7 @@ export default function Home() {
     <main className="min-h-screen bg-slate-50 text-slate-900">
       <header className="sticky top-0 z-50 border-b border-slate-200/80 bg-white/70 backdrop-blur-xl">
         <div className="mx-auto flex h-16 w-full max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-          <Link href="/" className="inline-flex items-center gap-2">
+          <Link href="/" className="cursor-pointer inline-flex items-center gap-2">
             <span className="inline-flex size-8 items-center justify-center rounded-lg bg-indigo-600 text-sm font-bold text-white shadow-sm">
               RMS
             </span>
@@ -377,7 +377,7 @@ export default function Home() {
               <a
                 key={label}
                 href={`#${label.toLowerCase()}`}
-                className="text-sm font-medium text-slate-600 transition-colors hover:text-slate-900"
+                className="cursor-pointer text-sm font-medium text-slate-600 transition-colors hover:text-slate-900"
               >
                 {label}
               </a>
@@ -387,13 +387,13 @@ export default function Home() {
           <div className="hidden items-center gap-2 md:flex">
             <Link
               href="/login"
-              className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 transition-colors hover:border-slate-400 hover:bg-white"
+              className="cursor-pointer rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 transition-colors hover:border-slate-400 hover:bg-white"
             >
               Login
             </Link>
             <Link
               href="/signup"
-              className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-indigo-500"
+              className="cursor-pointer rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-indigo-500"
             >
               Get Started
             </Link>
@@ -421,8 +421,8 @@ export default function Home() {
                   {label}
                 </a>
               ))}
-              <Link href="/login" className="rounded-lg border border-slate-300 px-3 py-2 text-sm font-semibold text-slate-700">Login</Link>
-              <Link href="/signup" className="rounded-lg bg-indigo-600 px-3 py-2 text-center text-sm font-semibold text-white">Get Started</Link>
+              <Link href="/login" className="cursor-pointer rounded-lg border border-slate-300 px-3 py-2 text-sm font-semibold text-slate-700">Login</Link>
+              <Link href="/signup" className="cursor-pointer rounded-lg bg-indigo-600 px-3 py-2 text-center text-sm font-semibold text-white">Get Started</Link>
             </div>
           </div>
         ) : null}
@@ -441,10 +441,10 @@ export default function Home() {
             Manage orders, inventory, staff, and customers — all in one platform
           </p>
           <div className="flex flex-wrap items-center gap-3">
-            <Link href="/signup" className="rounded-xl bg-indigo-600 px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-indigo-500/20 transition hover:bg-indigo-500">
+            <Link href="/signup" className="cursor-pointer rounded-xl bg-indigo-600 px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-indigo-500/20 transition hover:bg-indigo-500">
               Get Started
             </Link>
-            <a href="#demo" className="inline-flex items-center gap-1 rounded-xl border border-slate-300 bg-white px-5 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-100">
+            <a href="#demo" className="cursor-pointer inline-flex items-center gap-1 rounded-xl border border-slate-300 bg-white px-5 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-100">
               Live Demo <ChevronRight className="size-4" />
             </a>
           </div>
@@ -722,7 +722,7 @@ export default function Home() {
               Launch your modern restaurant operations stack in minutes.
             </p>
           </div>
-          <Link href="/signup" className="mt-5 inline-flex rounded-xl bg-white px-5 py-3 text-sm font-semibold text-indigo-700 transition hover:bg-indigo-50 md:mt-0">
+          <Link href="/signup" className="cursor-pointer mt-5 inline-flex rounded-xl bg-white px-5 py-3 text-sm font-semibold text-indigo-700 transition hover:bg-indigo-50 md:mt-0">
             Get Started
           </Link>
         </div>
@@ -732,9 +732,9 @@ export default function Home() {
         <div className="mx-auto flex w-full max-w-7xl flex-col gap-4 px-4 py-8 text-sm text-slate-600 sm:px-6 md:flex-row md:items-center md:justify-between lg:px-8">
           <p>© {new Date().getFullYear()} RMS. All rights reserved.</p>
           <div className="flex flex-wrap items-center gap-4">
-            <a href="#features" className="hover:text-slate-900">Features</a>
-            <a href="#demo" className="hover:text-slate-900">Demo</a>
-            <a href="#contact" className="hover:text-slate-900">Contact</a>
+            <a href="#features" className="cursor-pointer hover:text-slate-900">Features</a>
+            <a href="#demo" className="cursor-pointer hover:text-slate-900">Demo</a>
+            <a href="#contact" className="cursor-pointer hover:text-slate-900">Contact</a>
           </div>
         </div>
       </footer>

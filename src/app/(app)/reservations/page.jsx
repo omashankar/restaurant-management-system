@@ -125,7 +125,7 @@ export default function ReservationsPage() {
             <button
               type="button"
               onClick={openAdd}
-              className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-emerald-500 px-5 py-2.5 text-sm font-bold text-zinc-950 shadow-lg shadow-emerald-500/20 transition-all duration-200 hover:bg-emerald-400 hover:shadow-emerald-400/25 active:scale-[0.98]"
+              className="cursor-pointer inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-emerald-500 px-5 py-2.5 text-sm font-bold text-zinc-950 shadow-lg shadow-emerald-500/20 transition-all duration-200 hover:bg-emerald-400 hover:shadow-emerald-400/25 active:scale-[0.98]"
             >
               <Plus className="size-4" strokeWidth={2.5} />
               Add Reservation
@@ -151,7 +151,7 @@ export default function ReservationsPage() {
                 <button
                   type="button"
                   onClick={openAdd}
-                  className="rounded-xl bg-emerald-500 px-4 py-2 text-sm font-semibold text-zinc-950 hover:bg-emerald-400"
+                  className="cursor-pointer rounded-xl bg-emerald-500 px-4 py-2 text-sm font-semibold text-zinc-950 hover:bg-emerald-400"
                 >
                   Add reservation
                 </button>

@@ -136,7 +136,7 @@ export default function StaffModulePage() {
         <button
           type="button"
           onClick={openCreate}
-          className="inline-flex items-center gap-2 rounded-xl bg-emerald-500 px-4 py-2.5 text-sm font-semibold text-zinc-950 hover:bg-emerald-400"
+          className="cursor-pointer inline-flex items-center gap-2 rounded-xl bg-emerald-500 px-4 py-2.5 text-sm font-semibold text-zinc-950 hover:bg-emerald-400"
         >
           <Plus className="size-4" />
           Add staff
@@ -171,7 +171,7 @@ export default function StaffModulePage() {
             <button
               type="button"
               onClick={openCreate}
-              className="rounded-xl bg-emerald-500 px-4 py-2 text-sm font-semibold text-zinc-950"
+              className="cursor-pointer rounded-xl bg-emerald-500 px-4 py-2 text-sm font-semibold text-zinc-950"
             >
               Add staff
             </button>
@@ -218,7 +218,7 @@ export default function StaffModulePage() {
                       <button
                         type="button"
                         onClick={() => openEdit(row)}
-                        className="rounded-lg p-2 text-zinc-400 hover:bg-zinc-800 hover:text-emerald-400"
+                        className="cursor-pointer rounded-lg p-2 text-zinc-400 hover:bg-zinc-800 hover:text-emerald-400"
                         aria-label="Edit"
                       >
                         <Pencil className="size-4" />
@@ -226,7 +226,7 @@ export default function StaffModulePage() {
                       <button
                         type="button"
                         onClick={() => setDeleteTarget(row)}
-                        className="rounded-lg p-2 text-zinc-400 hover:bg-red-500/15 hover:text-red-400"
+                        className="cursor-pointer rounded-lg p-2 text-zinc-400 hover:bg-red-500/15 hover:text-red-400"
                         aria-label="Delete"
                       >
                         <Trash2 className="size-4" />
@@ -258,14 +258,14 @@ export default function StaffModulePage() {
             <button
               type="button"
               onClick={() => setModalOpen(false)}
-              className="rounded-xl border border-zinc-700 px-4 py-2 text-sm text-zinc-300"
+              className="cursor-pointer rounded-xl border border-zinc-700 px-4 py-2 text-sm text-zinc-300"
             >
               Cancel
             </button>
             <button
               type="button"
               onClick={saveStaff}
-              className="rounded-xl bg-emerald-500 px-4 py-2 text-sm font-semibold text-zinc-950 hover:bg-emerald-400"
+              className="cursor-pointer rounded-xl bg-emerald-500 px-4 py-2 text-sm font-semibold text-zinc-950 hover:bg-emerald-400"
             >
               Save
             </button>

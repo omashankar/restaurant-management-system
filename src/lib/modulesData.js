@@ -57,6 +57,9 @@ export const INITIAL_MENU_ITEMS = [
     status: "active",
     badge: "Popular",
     image: IMG.burger,
+    itemType: "non-veg",
+    prepTime: 12,
+    kitchenType: "non_veg_kitchen",
   },
   {
     id: "mi-2",
@@ -68,6 +71,9 @@ export const INITIAL_MENU_ITEMS = [
     status: "active",
     badge: null,
     image: IMG.wrap,
+    itemType: "non-veg",
+    prepTime: 10,
+    kitchenType: "non_veg_kitchen",
   },
   {
     id: "mi-3",
@@ -79,6 +85,9 @@ export const INITIAL_MENU_ITEMS = [
     status: "active",
     badge: null,
     image: IMG.fries,
+    itemType: "veg",
+    prepTime: 8,
+    kitchenType: "veg_kitchen",
   },
   {
     id: "mi-4",
@@ -90,6 +99,9 @@ export const INITIAL_MENU_ITEMS = [
     status: "active",
     badge: "Fresh",
     image: IMG.juice,
+    itemType: "drink",
+    prepTime: 3,
+    kitchenType: "default_kitchen",
   },
   {
     id: "mi-5",
@@ -101,6 +113,9 @@ export const INITIAL_MENU_ITEMS = [
     status: "active",
     badge: null,
     image: IMG.green,
+    itemType: "drink",
+    prepTime: 4,
+    kitchenType: "default_kitchen",
   },
   {
     id: "mi-6",
@@ -112,6 +127,9 @@ export const INITIAL_MENU_ITEMS = [
     status: "active",
     badge: null,
     image: IMG.coffee,
+    itemType: "drink",
+    prepTime: 5,
+    kitchenType: "default_kitchen",
   },
   {
     id: "mi-7",
@@ -123,6 +141,9 @@ export const INITIAL_MENU_ITEMS = [
     status: "inactive",
     badge: null,
     image: IMG.cola,
+    itemType: "drink",
+    prepTime: 1,
+    kitchenType: "default_kitchen",
   },
   {
     id: "mi-8",
@@ -134,6 +155,9 @@ export const INITIAL_MENU_ITEMS = [
     status: "active",
     badge: "Chef pick",
     image: IMG.cake,
+    itemType: "veg",
+    prepTime: 15,
+    kitchenType: "veg_kitchen",
   },
   {
     id: "mi-9",
@@ -145,6 +169,9 @@ export const INITIAL_MENU_ITEMS = [
     status: "active",
     badge: null,
     image: IMG.cheese,
+    itemType: "veg",
+    prepTime: 6,
+    kitchenType: "veg_kitchen",
   },
 ];
 

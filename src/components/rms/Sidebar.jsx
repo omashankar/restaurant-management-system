@@ -125,7 +125,7 @@ export default function Sidebar({
               const next = !collapsed;
               onCollapsedChange?.(next);
             }}
-            className="group relative inline-flex shrink-0 items-center justify-center rounded-lg border border-zinc-800 bg-zinc-900/50 p-1.5 text-zinc-400 transition-colors hover:border-zinc-600 hover:text-zinc-200"
+            className="cursor-pointer group relative inline-flex shrink-0 items-center justify-center rounded-lg border border-zinc-800 bg-zinc-900/50 p-1.5 text-zinc-400 transition-colors hover:border-zinc-600 hover:text-zinc-200"
             aria-expanded={!collapsed}
             aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
           >
@@ -272,7 +272,7 @@ export default function Sidebar({
               <button
                 type="button"
                 onClick={() => toggleGroup(id)}
-                className={`relative flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-medium transition-all duration-200 ${
+                className={`cursor-pointer relative flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-medium transition-all duration-200 ${
                   groupActive
                     ? "bg-zinc-900 text-zinc-100 ring-1 ring-zinc-800"
                     : "text-zinc-400 hover:bg-zinc-900 hover:text-zinc-100"

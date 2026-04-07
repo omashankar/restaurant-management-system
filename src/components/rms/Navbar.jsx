@@ -44,7 +44,7 @@ export default function Navbar() {
         >
           <button
             type="button"
-            className="flex items-center gap-2 rounded-xl border border-zinc-800 bg-zinc-900/80 px-3 py-2 text-xs font-medium text-zinc-200 transition-colors hover:border-emerald-500/40"
+            className="cursor-pointer flex items-center gap-2 rounded-xl border border-zinc-800 bg-zinc-900/80 px-3 py-2 text-xs font-medium text-zinc-200 transition-colors hover:border-emerald-500/40"
             aria-expanded={open}
             aria-haspopup="listbox"
           >

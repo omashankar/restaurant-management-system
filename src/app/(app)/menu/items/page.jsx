@@ -2,14 +2,18 @@
 
 import CategoryTabs from "@/components/menu/CategoryTabs";
 import MenuItemsSearch from "@/components/menu/MenuItemsSearch";
-import MenuProductCard from "@/components/menu/MenuProductCard";
+import MenuCard from "@/components/menu/MenuCard";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import EmptyState from "@/components/ui/EmptyState";
 import Modal from "@/components/ui/Modal";
 import TableSkeleton from "@/components/ui/TableSkeleton";
 import { useModuleData } from "@/context/ModuleDataContext";
+import { DEFAULT_KITCHEN_FOR_TYPE, KITCHEN_TYPE_LABELS } from "@/types/menu";
 import { Plus } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
+
+const ITEM_TYPES = ["veg", "non-veg", "egg", "drink", "halal", "other"];
+const KITCHEN_TYPES = ["default_kitchen", "veg_kitchen", "non_veg_kitchen"];
 
 const emptyForm = {
   name: "",
@@ -18,6 +22,9 @@ const emptyForm = {
   description: "",
   status: "active",
   imageUrl: "",
+  itemType: "veg",
+  prepTime: "",
+  kitchenType: "default_kitchen",
 };
 
 function MenuGridSkeleton() {
@@ -92,6 +99,9 @@ export default function MenuItemsPage() {
       description: row.description ?? "",
       status: row.status,
       imageUrl: typeof row.image === "string" ? row.image : "",
+      itemType: row.itemType ?? "veg",
+      prepTime: row.prepTime != null ? String(row.prepTime) : "",
+      kitchenType: row.kitchenType ?? "default_kitchen",
     });
     setImageFileLabel("");
     setModalOpen(true);
@@ -121,6 +131,9 @@ export default function MenuItemsPage() {
       status: form.status,
       badge: null,
       image: resolveImage(),
+      itemType: form.itemType,
+      prepTime: form.prepTime !== "" ? parseInt(form.prepTime, 10) : null,
+      kitchenType: form.kitchenType,
     };
 
     if (editingId) {
@@ -165,7 +178,7 @@ export default function MenuItemsPage() {
         <button
           type="button"
           onClick={openCreate}
-          className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-emerald-500 px-5 py-2.5 text-sm font-bold text-zinc-950 shadow-lg shadow-emerald-500/20 transition-all duration-200 hover:bg-emerald-400 hover:shadow-emerald-400/25 active:scale-[0.98]"
+          className="cursor-pointer inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-emerald-500 px-5 py-2.5 text-sm font-bold text-zinc-950 shadow-lg shadow-emerald-500/20 transition-all duration-200 hover:bg-emerald-400 hover:shadow-emerald-400/25 active:scale-[0.98]"
         >
           <Plus className="size-4" strokeWidth={2.5} />
           Add Item
@@ -199,7 +212,7 @@ export default function MenuItemsPage() {
             <button
               type="button"
               onClick={openCreate}
-              className="rounded-xl bg-emerald-500 px-4 py-2 text-sm font-semibold text-zinc-950 hover:bg-emerald-400"
+              className="cursor-pointer rounded-xl bg-emerald-500 px-4 py-2 text-sm font-semibold text-zinc-950 hover:bg-emerald-400"
             >
               Add Item
             </button>
@@ -211,8 +224,9 @@ export default function MenuItemsPage() {
           className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 [animation:menu-grid-in_0.4s_ease-out_both]"
         >
           {filteredItems.map((item) => (
-            <MenuProductCard
+            <MenuCard
               key={item.id}
+              variant="menu"
               item={item}
               onEdit={openEdit}
               onDelete={setDeleteTarget}
@@ -230,14 +244,14 @@ export default function MenuItemsPage() {
             <button
               type="button"
               onClick={() => setModalOpen(false)}
-              className="rounded-xl border border-zinc-700 px-4 py-2 text-sm font-medium text-zinc-300 hover:border-zinc-500"
+              className="cursor-pointer rounded-xl border border-zinc-700 px-4 py-2 text-sm font-medium text-zinc-300 hover:border-zinc-500"
             >
               Cancel
             </button>
             <button
               type="button"
               onClick={saveItem}
-              className="rounded-xl bg-emerald-500 px-4 py-2 text-sm font-semibold text-zinc-950 hover:bg-emerald-400"
+              className="cursor-pointer rounded-xl bg-emerald-500 px-4 py-2 text-sm font-semibold text-zinc-950 hover:bg-emerald-400"
             >
               Save
             </button>
@@ -328,6 +342,50 @@ export default function MenuItemsPage() {
             <p className="mt-1 text-xs text-zinc-600">
               File picks a placeholder tile unless URL above is set.
             </p>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="text-xs font-medium text-zinc-500">Item Type</label>
+              <select
+                value={form.itemType}
+                onChange={(e) =>
+                  setForm((f) => ({
+                    ...f,
+                    itemType: e.target.value,
+                    kitchenType: DEFAULT_KITCHEN_FOR_TYPE[e.target.value] ?? "default_kitchen",
+                  }))
+                }
+                className="mt-1 w-full rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus:border-emerald-500/40"
+              >
+                {ITEM_TYPES.map((t) => (
+                  <option key={t} value={t}>{t.charAt(0).toUpperCase() + t.slice(1)}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="text-xs font-medium text-zinc-500">Prep Time (min)</label>
+              <input
+                type="number"
+                min="0"
+                max="120"
+                value={form.prepTime}
+                onChange={(e) => setForm((f) => ({ ...f, prepTime: e.target.value }))}
+                placeholder="e.g. 10"
+                className="mt-1 w-full rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus:border-emerald-500/40"
+              />
+            </div>
+          </div>
+          <div>
+            <label className="text-xs font-medium text-zinc-500">Kitchen Type</label>
+            <select
+              value={form.kitchenType}
+              onChange={(e) => setForm((f) => ({ ...f, kitchenType: e.target.value }))}
+              className="mt-1 w-full rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus:border-emerald-500/40"
+            >
+              {KITCHEN_TYPES.map((k) => (
+                <option key={k} value={k}>{KITCHEN_TYPE_LABELS[k]}</option>
+              ))}
+            </select>
           </div>
           <div>
             <label className="text-xs font-medium text-zinc-500">Status</label>
