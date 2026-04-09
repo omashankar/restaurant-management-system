@@ -11,7 +11,7 @@ export default function CategoryTabs({ categories, activeCategory, onChange }) {
               key={category.id}
               type="button"
               onClick={() => onChange(category.name)}
-              className={`rounded-full px-4 py-2 text-sm font-semibold transition-all duration-200 ${
+              className={`cursor-pointer rounded-full px-4 py-2 text-sm font-semibold transition-all duration-200 ${
                 active
                   ? "bg-emerald-500 text-zinc-950 shadow-lg shadow-emerald-500/20"
                   : "bg-zinc-900 text-zinc-300 ring-1 ring-zinc-800 hover:bg-zinc-800"

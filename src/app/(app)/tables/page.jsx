@@ -215,7 +215,7 @@ export default function TablesModulePage() {
                     <button
                       type="button"
                       onClick={() => openEdit(t)}
-                      className="flex flex-1 items-center justify-center gap-1 rounded-lg border border-zinc-800 py-2 text-xs font-medium text-zinc-400 transition-colors hover:border-emerald-500/40 hover:text-emerald-400"
+                      className="cursor-pointer flex flex-1 items-center justify-center gap-1 rounded-lg border border-zinc-800 py-2 text-xs font-medium text-zinc-400 transition-colors hover:border-emerald-500/40 hover:text-emerald-400"
                     >
                       <Pencil className="size-3.5" />
                       Edit
@@ -223,7 +223,7 @@ export default function TablesModulePage() {
                     <button
                       type="button"
                       onClick={() => setDeleteTarget(t)}
-                      className="flex flex-1 items-center justify-center gap-1 rounded-lg border border-zinc-800 py-2 text-xs font-medium text-zinc-400 transition-colors hover:border-red-500/40 hover:text-red-400"
+                      className="cursor-pointer flex flex-1 items-center justify-center gap-1 rounded-lg border border-zinc-800 py-2 text-xs font-medium text-zinc-400 transition-colors hover:border-red-500/40 hover:text-red-400"
                     >
                       <Trash2 className="size-3.5" />
                       Delete

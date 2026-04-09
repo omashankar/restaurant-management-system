@@ -52,7 +52,7 @@ export default function ComparisonChart() {
                 key={p}
                 type="button"
                 onClick={() => setPeriod(p)}
-                className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-all ${
+                className={`cursor-pointer rounded-lg px-3 py-1.5 text-xs font-semibold transition-all ${
                   period === p ? "bg-zinc-700 text-zinc-100" : "text-zinc-500 hover:text-zinc-300"
                 }`}
               >

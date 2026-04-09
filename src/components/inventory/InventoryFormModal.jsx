@@ -55,7 +55,7 @@ export default function InventoryFormModal({
           <button
             type="button"
             onClick={onSubmit}
-            className="rounded-xl bg-emerald-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-emerald-500"
+            className="cursor-pointer rounded-xl bg-emerald-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-emerald-500"
           >
             Save
           </button>

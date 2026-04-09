@@ -90,7 +90,7 @@ export default function SalesChart() {
                 key={f}
                 type="button"
                 onClick={() => setActiveFilter(f)}
-                className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-all ${
+                className={`cursor-pointer rounded-lg px-3 py-1.5 text-xs font-semibold transition-all ${
                   activeFilter === f
                     ? "bg-zinc-700 text-zinc-100"
                     : "text-zinc-500 hover:text-zinc-300"

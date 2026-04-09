@@ -14,7 +14,7 @@ export default function SettingsSidebar({ tabs, activeTab, onTabChange }) {
               key={tab.id}
               type="button"
               onClick={() => onTabChange(tab.id)}
-              className={`w-full rounded-xl px-3 py-2.5 text-left text-sm font-medium transition-all ${
+              className={`cursor-pointer w-full rounded-xl px-3 py-2.5 text-left text-sm font-medium transition-all ${
                 active
                   ? "bg-emerald-500 text-zinc-950 shadow-lg shadow-emerald-500/20"
                   : "text-zinc-300 hover:bg-zinc-800"

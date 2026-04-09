@@ -75,7 +75,7 @@ export default function SearchFilterBar({
           <button
             type="button"
             onClick={() => onViewModeChange("table")}
-            className={`flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-semibold transition-all duration-200 ${
+            className={`cursor-pointer flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-semibold transition-all duration-200 ${
               viewMode === "table"
                 ? "bg-emerald-500 text-zinc-950 shadow-md"
                 : "text-zinc-500 hover:text-zinc-300"
@@ -88,7 +88,7 @@ export default function SearchFilterBar({
           <button
             type="button"
             onClick={() => onViewModeChange("calendar")}
-            className={`flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-semibold transition-all duration-200 ${
+            className={`cursor-pointer flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-semibold transition-all duration-200 ${
               viewMode === "calendar"
                 ? "bg-emerald-500 text-zinc-950 shadow-md"
                 : "text-zinc-500 hover:text-zinc-300"

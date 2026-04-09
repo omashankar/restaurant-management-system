@@ -71,7 +71,7 @@ export default function CustomerSearch({ onCustomerSelect }) {
         <button
           type="button"
           onClick={() => setShowAddForm((v) => !v)}
-          className="flex items-center justify-center size-10 m-1 rounded-lg bg-zinc-800 text-zinc-300 transition-colors hover:bg-zinc-700 hover:text-emerald-400 shrink-0"
+          className="cursor-pointer flex items-center justify-center size-10 m-1 rounded-lg bg-zinc-800 text-zinc-300 transition-colors hover:bg-zinc-700 hover:text-emerald-400 shrink-0"
           aria-label="Add new customer"
           title="Add new customer"
         >
@@ -89,7 +89,7 @@ export default function CustomerSearch({ onCustomerSelect }) {
                   <button
                     type="button"
                     onClick={() => handleSelect(c)}
-                    className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left transition-colors hover:bg-zinc-800/60"
+                    className="cursor-pointer flex w-full items-center justify-between gap-3 px-4 py-3 text-left transition-colors hover:bg-zinc-800/60"
                   >
                     <div>
                       <p className="text-sm font-medium text-zinc-100">{c.name}</p>
@@ -115,7 +115,7 @@ export default function CustomerSearch({ onCustomerSelect }) {
                 name: !looksLikePhone ? query.trim() : f.name,
               }));
             }}
-            className="flex w-full items-center gap-2 px-4 py-3 text-sm font-semibold text-emerald-400 transition-colors hover:bg-zinc-800/60"
+            className="cursor-pointer flex w-full items-center gap-2 px-4 py-3 text-sm font-semibold text-emerald-400 transition-colors hover:bg-zinc-800/60"
           >
             <UserPlus className="size-4" />
             Add new customer
@@ -157,7 +157,7 @@ export default function CustomerSearch({ onCustomerSelect }) {
             <button
               type="button"
               onClick={() => setShowAddForm(false)}
-              className="rounded-xl border border-zinc-700 px-3 py-2 text-sm text-zinc-400 hover:text-zinc-200"
+              className="cursor-pointer rounded-xl border border-zinc-700 px-3 py-2 text-sm text-zinc-400 hover:text-zinc-200"
             >
               Cancel
             </button>

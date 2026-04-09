@@ -100,7 +100,7 @@ export default function KitchenDisplay() {
                   <button
                     type="button"
                     onClick={() => updateStatus(ticket.id, "preparing")}
-                    className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl bg-sky-500/20 px-3 py-2.5 text-sm font-semibold text-sky-200 ring-1 ring-sky-500/30 transition-all hover:bg-sky-500/30"
+                    className="cursor-pointer inline-flex flex-1 items-center justify-center gap-2 rounded-xl bg-sky-500/20 px-3 py-2.5 text-sm font-semibold text-sky-200 ring-1 ring-sky-500/30 transition-all hover:bg-sky-500/30"
                   >
                     <Flame className="size-4" aria-hidden />
                     Start cooking
@@ -110,7 +110,7 @@ export default function KitchenDisplay() {
                   <button
                     type="button"
                     onClick={() => updateStatus(ticket.id, "ready")}
-                    className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl bg-emerald-500 px-3 py-2.5 text-sm font-semibold text-zinc-950 transition-transform hover:bg-emerald-400 active:scale-[0.98]"
+                    className="cursor-pointer inline-flex flex-1 items-center justify-center gap-2 rounded-xl bg-emerald-500 px-3 py-2.5 text-sm font-semibold text-zinc-950 transition-transform hover:bg-emerald-400 active:scale-[0.98]"
                   >
                     Mark ready
                   </button>
@@ -119,7 +119,7 @@ export default function KitchenDisplay() {
                   <button
                     type="button"
                     onClick={() => updateStatus(ticket.id, "new")}
-                    className="flex-1 rounded-xl border border-zinc-700 py-2.5 text-sm font-medium text-zinc-400 hover:border-zinc-500 hover:text-zinc-200"
+                    className="cursor-pointer flex-1 rounded-xl border border-zinc-700 py-2.5 text-sm font-medium text-zinc-400 hover:border-zinc-500 hover:text-zinc-200"
                   >
                     Demo: reset ticket
                   </button>

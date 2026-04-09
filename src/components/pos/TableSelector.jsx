@@ -16,7 +16,7 @@ export default function TableSelector({ tables, selectedTableId, onSelect, compa
             key={table.id}
             type="button"
             onClick={() => onSelect(table.id)}
-            className={`rounded-xl border px-2 py-1.5 text-left transition-all ${
+            className={`cursor-pointer rounded-xl border px-2 py-1.5 text-left transition-all ${
               selected
                 ? "border-emerald-500/60 bg-emerald-500/10"
                 : "border-zinc-800 bg-zinc-900/50 hover:border-zinc-700"

@@ -26,6 +26,7 @@ function emptyForm() {
     quantity: "0",
     unit: "",
     reorderLevel: "0",
+    maxLevel: "",
     supplier: "",
     notes: "",
   };
@@ -119,6 +120,7 @@ export default function InventoryPage() {
       quantity: String(row.quantity),
       unit: row.unit,
       reorderLevel: String(row.reorderLevel),
+      maxLevel: row.maxLevel != null ? String(row.maxLevel) : "",
       supplier: row.supplier ?? "",
       notes: row.notes ?? "",
     });

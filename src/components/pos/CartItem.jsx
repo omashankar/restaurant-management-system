@@ -47,7 +47,7 @@ export default function CartItem({
           <button
             type="button"
             onClick={() => onInc(line.id)}
-            className="rounded-md p-1 text-zinc-300 hover:bg-zinc-800"
+            className="cursor-pointer rounded-md p-1 text-zinc-300 hover:bg-zinc-800"
             aria-label={`Increase ${line.name}`}
           >
             <Plus className="size-4" />
