@@ -75,7 +75,7 @@ export default function ReservationCalendarView({ rows, onView, onEdit, onDelete
                   <button
                     type="button"
                     onClick={() => onEdit(r)}
-                    className="flex flex-1 items-center justify-center gap-1 rounded-lg py-2 text-xs font-medium text-zinc-400 transition-colors hover:bg-zinc-800 hover:text-emerald-400"
+                    className="cursor-pointer flex flex-1 items-center justify-center gap-1 rounded-lg py-2 text-xs font-medium text-zinc-400 transition-colors hover:bg-zinc-800 hover:text-emerald-400"
                   >
                     <Pencil className="size-3.5" />
                     Edit
@@ -83,7 +83,7 @@ export default function ReservationCalendarView({ rows, onView, onEdit, onDelete
                   <button
                     type="button"
                     onClick={() => onDelete(r)}
-                    className="flex flex-1 items-center justify-center gap-1 rounded-lg py-2 text-xs font-medium text-zinc-400 transition-colors hover:bg-red-500/15 hover:text-red-400"
+                    className="cursor-pointer flex flex-1 items-center justify-center gap-1 rounded-lg py-2 text-xs font-medium text-zinc-400 transition-colors hover:bg-red-500/15 hover:text-red-400"
                   >
                     <Trash2 className="size-3.5" />
                     Delete

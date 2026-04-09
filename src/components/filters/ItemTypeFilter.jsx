@@ -42,7 +42,7 @@ export default function ItemTypeFilter({
       <button
         type="button"
         onClick={() => onFastToggle(!fastOnly)}
-        className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold transition-all duration-150 ${
+        className={`cursor-pointer inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold transition-all duration-150 ${
           fastOnly
             ? "bg-amber-500/20 text-amber-300 ring-1 ring-amber-500/30"
             : "bg-zinc-900 text-zinc-400 ring-1 ring-zinc-800 hover:text-zinc-200"

@@ -7,7 +7,7 @@ const statusStyles = {
   preparing: "bg-sky-500/15 text-sky-300 ring-sky-500/25",
   ready: "bg-emerald-500/15 text-emerald-300 ring-emerald-500/25",
   completed: "bg-zinc-500/15 text-zinc-400 ring-zinc-500/25",
-  cancelled: "bg-red-500/15 text-red-400 ring-red-500/25",
+  cancelled: "bg-red-500/20 text-red-400 ring-red-500/40",
 };
 
 const typeIcon = {

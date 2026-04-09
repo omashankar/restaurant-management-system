@@ -3,18 +3,93 @@
 import { computeInventoryStatus } from "@/components/inventory/inventoryUtils";
 import InventoryStatusBadge from "@/components/inventory/InventoryStatusBadge";
 import DataTableShell from "@/components/ui/DataTableShell";
-import { Minus, Pencil, Plus, Trash2 } from "lucide-react";
+import { Minus, Pencil, Plus, RefreshCw, Trash2 } from "lucide-react";
+import { useState } from "react";
+
+/** Per-row qty editor with input + refresh */
+function QtyEditor({ row, onUpdateQty }) {
+  const [val, setVal] = useState(String(row.quantity));
+  const [dirty, setDirty] = useState(false);
+
+  const handleChange = (e) => {
+    setVal(e.target.value);
+    setDirty(true);
+  };
+
+  const handleRefresh = () => {
+    const next = Math.max(0, parseInt(val, 10) || 0);
+    const delta = next - row.quantity;
+    if (delta !== 0) onUpdateQty?.(row, delta);
+    setDirty(false);
+  };
+
+  const handleKeyDown = (e) => {
+    if (e.key === "Enter") handleRefresh();
+    if (e.key === "Escape") { setVal(String(row.quantity)); setDirty(false); }
+  };
+
+  // Sync if row.quantity changes externally
+  if (!dirty && val !== String(row.quantity)) {
+    setVal(String(row.quantity));
+  }
+
+  return (
+    <div className="inline-flex items-center gap-1">
+      <button
+        type="button"
+        onClick={() => { const n = Math.max(0, (parseInt(val,10)||0) - 1); setVal(String(n)); setDirty(true); onUpdateQty?.(row, -1); }}
+        className="cursor-pointer flex size-7 items-center justify-center rounded-lg border border-zinc-700 text-zinc-400 transition-colors hover:border-red-500/40 hover:bg-red-500/10 hover:text-red-400"
+        aria-label="Decrease"
+      >
+        <Minus className="size-3.5" />
+      </button>
+
+      <input
+        type="number"
+        min={0}
+        value={val}
+        onChange={handleChange}
+        onKeyDown={handleKeyDown}
+        className="w-14 rounded-lg border border-zinc-700 bg-zinc-950/60 px-1.5 py-1 text-center text-sm tabular-nums text-zinc-100 outline-none focus:border-emerald-500/40"
+        aria-label="Quantity"
+      />
+
+      <button
+        type="button"
+        onClick={() => { const n = (parseInt(val,10)||0) + 1; setVal(String(n)); setDirty(true); onUpdateQty?.(row, +1); }}
+        className="cursor-pointer flex size-7 items-center justify-center rounded-lg border border-zinc-700 text-zinc-400 transition-colors hover:border-emerald-500/40 hover:bg-emerald-500/10 hover:text-emerald-400"
+        aria-label="Increase"
+      >
+        <Plus className="size-3.5" />
+      </button>
+
+      <button
+        type="button"
+        onClick={handleRefresh}
+        className={`cursor-pointer flex size-7 items-center justify-center rounded-lg border transition-colors ${
+          dirty
+            ? "border-emerald-500/50 bg-emerald-500/15 text-emerald-400 hover:bg-emerald-500/25"
+            : "border-zinc-700 text-zinc-600 hover:border-zinc-600 hover:text-zinc-400"
+        }`}
+        aria-label="Apply quantity"
+        title="Apply (Enter)"
+      >
+        <RefreshCw className="size-3.5" />
+      </button>
+    </div>
+  );
+}
 
 export default function InventoryTable({ rows, onEdit, onDelete, onUpdateQty, footer }) {
   return (
     <DataTableShell>
-      <table className="w-full min-w-[720px] text-left text-sm">
+      <table className="w-full min-w-[800px] text-left text-sm">
         <thead>
           <tr className="border-b border-zinc-800 text-xs font-medium uppercase tracking-wide text-zinc-500">
             <th className="px-4 py-3">Name</th>
             <th className="hidden px-4 py-3 md:table-cell">Category</th>
-            <th className="px-4 py-3 text-right tabular-nums">Stock</th>
-            <th className="px-4 py-3 text-right tabular-nums">Reorder</th>
+            <th className="px-4 py-3 text-center">QTY</th>
+            <th className="px-4 py-3 text-center tabular-nums">Reorder</th>
             <th className="hidden px-4 py-3 lg:table-cell">Unit</th>
             <th className="px-4 py-3">Status</th>
             <th className="px-4 py-3 text-right">Actions</th>
@@ -41,42 +116,28 @@ export default function InventoryTable({ rows, onEdit, onDelete, onUpdateQty, fo
                   {row.category}
                 </td>
 
-                {/* Quantity with inline +/- */}
-                <td className="px-4 py-3 text-right">
-                  <div className="inline-flex items-center gap-1">
-                    <button
-                      type="button"
-                      onClick={() => onUpdateQty?.(row, -1)}
-                      className="cursor-pointer flex size-6 items-center justify-center rounded-md border border-zinc-700 text-zinc-400 transition-colors hover:border-red-500/40 hover:bg-red-500/10 hover:text-red-400"
-                      aria-label={`Decrease ${row.name}`}
-                    >
-                      <Minus className="size-3" />
-                    </button>
-                    <span className="w-8 text-center tabular-nums font-semibold text-zinc-200">
-                      {row.quantity}
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => onUpdateQty?.(row, +1)}
-                      className="cursor-pointer flex size-6 items-center justify-center rounded-md border border-zinc-700 text-zinc-400 transition-colors hover:border-emerald-500/40 hover:bg-emerald-500/10 hover:text-emerald-400"
-                      aria-label={`Increase ${row.name}`}
-                    >
-                      <Plus className="size-3" />
-                    </button>
-                  </div>
+                {/* QTY — plain number */}
+                <td className="px-4 py-3 text-center tabular-nums font-semibold text-zinc-200">
+                  {row.quantity}
                 </td>
 
-                <td className="px-4 py-3 text-right tabular-nums text-zinc-400">
+                {/* Reorder */}
+                <td className="px-4 py-3 text-center tabular-nums text-zinc-400">
                   {row.reorderLevel}
                 </td>
+
                 <td className="hidden px-4 py-3 text-zinc-400 lg:table-cell">
                   {row.unit}
                 </td>
                 <td className="px-4 py-3">
                   <InventoryStatusBadge item={row} />
                 </td>
+
+                {/* Actions: qty editor | edit | delete */}
                 <td className="px-4 py-3">
-                  <div className="flex justify-end gap-1">
+                  <div className="flex items-center justify-end gap-1">
+                    <QtyEditor row={row} onUpdateQty={onUpdateQty} />
+                    <div className="mx-1 h-4 w-px bg-zinc-700" />
                     <button
                       type="button"
                       onClick={() => onEdit(row)}

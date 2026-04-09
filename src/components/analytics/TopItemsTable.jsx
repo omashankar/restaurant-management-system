@@ -28,7 +28,7 @@ export default function TopItemsTable() {
               key={t}
               type="button"
               onClick={() => setTab(t)}
-              className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-all ${
+              className={`cursor-pointer rounded-lg px-3 py-1.5 text-xs font-semibold transition-all ${
                 tab === t ? "bg-emerald-500 text-zinc-950" : "text-zinc-500 hover:text-zinc-300"
               }`}
             >

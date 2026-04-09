@@ -46,7 +46,7 @@ export default function Modal({ open, title, onClose, children, footer }) {
           <button
             type="button"
             onClick={onClose}
-            className="rounded-lg p-1.5 text-zinc-500 transition-colors hover:bg-zinc-800 hover:text-zinc-200"
+            className="cursor-pointer rounded-lg p-1.5 text-zinc-500 transition-colors hover:bg-zinc-800 hover:text-zinc-200"
             aria-label="Close"
           >
             <X className="size-5" />

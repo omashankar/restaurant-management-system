@@ -32,7 +32,7 @@ export default function PaginationBar({
           type="button"
           disabled={page <= 1}
           onClick={() => onPageChange(page - 1)}
-          className="inline-flex items-center gap-1 rounded-lg border border-zinc-800 px-3 py-1.5 font-medium text-zinc-300 transition-all hover:border-zinc-600 disabled:cursor-not-allowed disabled:opacity-35"
+          className="cursor-pointer inline-flex items-center gap-1 rounded-lg border border-zinc-800 px-3 py-1.5 font-medium text-zinc-300 transition-all hover:border-zinc-600 disabled:cursor-not-allowed disabled:opacity-35"
         >
           <ChevronLeft className="size-4" />
           Prev
@@ -44,7 +44,7 @@ export default function PaginationBar({
           type="button"
           disabled={page >= totalPages}
           onClick={() => onPageChange(page + 1)}
-          className="inline-flex items-center gap-1 rounded-lg border border-zinc-800 px-3 py-1.5 font-medium text-zinc-300 transition-all hover:border-zinc-600 disabled:cursor-not-allowed disabled:opacity-35"
+          className="cursor-pointer inline-flex items-center gap-1 rounded-lg border border-zinc-800 px-3 py-1.5 font-medium text-zinc-300 transition-all hover:border-zinc-600 disabled:cursor-not-allowed disabled:opacity-35"
         >
           Next
           <ChevronRight className="size-4" />

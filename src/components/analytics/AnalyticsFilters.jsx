@@ -55,7 +55,7 @@ export default function AnalyticsFilters({ dateRange, setDateRange, orderType, s
           onClick={handleExportCSV}
           disabled={!canExport}
           title={!canExport ? "Export requires admin access" : undefined}
-          className="inline-flex items-center gap-1.5 rounded-xl border border-zinc-700 px-3 py-1.5 text-xs font-semibold text-zinc-300 transition-colors hover:border-emerald-500/40 hover:text-emerald-400 disabled:cursor-not-allowed disabled:opacity-40"
+          className="cursor-pointer inline-flex items-center gap-1.5 rounded-xl border border-zinc-700 px-3 py-1.5 text-xs font-semibold text-zinc-300 transition-colors hover:border-emerald-500/40 hover:text-emerald-400 disabled:cursor-not-allowed disabled:opacity-40"
         >
           <Download className="size-3.5" />
           CSV
@@ -65,7 +65,7 @@ export default function AnalyticsFilters({ dateRange, setDateRange, orderType, s
           onClick={handleExportPDF}
           disabled={!canExport}
           title={!canExport ? "Export requires admin access" : undefined}
-          className="inline-flex items-center gap-1.5 rounded-xl border border-zinc-700 px-3 py-1.5 text-xs font-semibold text-zinc-300 transition-colors hover:border-indigo-500/40 hover:text-indigo-400 disabled:cursor-not-allowed disabled:opacity-40"
+          className="cursor-pointer inline-flex items-center gap-1.5 rounded-xl border border-zinc-700 px-3 py-1.5 text-xs font-semibold text-zinc-300 transition-colors hover:border-indigo-500/40 hover:text-indigo-400 disabled:cursor-not-allowed disabled:opacity-40"
         >
           <Download className="size-3.5" />
           PDF

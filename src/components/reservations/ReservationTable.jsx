@@ -74,7 +74,7 @@ export default function ReservationTable({ rows, onView, onEdit, onDelete }) {
                   <button
                     type="button"
                     onClick={() => onDelete(r)}
-                    className="rounded-lg p-2 text-zinc-500 transition-colors hover:bg-red-500/15 hover:text-red-400"
+                    className="cursor-pointer rounded-lg p-2 text-zinc-500 transition-colors hover:bg-red-500/15 hover:text-red-400"
                     aria-label="Delete"
                   >
                     <Trash2 className="size-4" />

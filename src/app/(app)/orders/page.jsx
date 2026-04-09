@@ -33,7 +33,7 @@ export default function OrdersPage() {
               key={f}
               type="button"
               onClick={() => setFilter(f)}
-              className={`rounded-full px-3 py-1 text-xs font-semibold capitalize transition-all duration-200 ${
+              className={`cursor-pointer rounded-full px-3 py-1 text-xs font-semibold capitalize transition-all duration-200 ${
                 filter === f
                   ? "bg-emerald-500 text-zinc-950"
                   : "bg-zinc-900 text-zinc-400 ring-1 ring-zinc-800 hover:text-zinc-200"

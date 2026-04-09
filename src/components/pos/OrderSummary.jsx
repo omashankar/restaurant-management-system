@@ -35,7 +35,7 @@ export default function OrderSummary({
             key={id}
             type="button"
             onClick={() => onOrderTypeChange(id)}
-            className={`flex flex-1 items-center justify-center gap-1.5 rounded-xl py-2 text-xs font-semibold transition-all ${
+            className={`cursor-pointer flex flex-1 items-center justify-center gap-1.5 rounded-xl py-2 text-xs font-semibold transition-all ${
               orderType === id
                 ? "bg-emerald-500 text-zinc-950"
                 : "text-zinc-400 hover:bg-zinc-800 hover:text-zinc-200"

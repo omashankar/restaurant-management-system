@@ -78,7 +78,7 @@ export default function TopNavbar({ onOpenSidebar, onToggleSidebar }) {
         <button
           type="button"
           onClick={() => setIsProfileOpen(false)}
-          className="relative inline-flex items-center justify-center rounded-xl border border-zinc-800 bg-zinc-900/60 p-2 text-zinc-300 transition-colors hover:border-zinc-700 hover:text-zinc-100"
+          className="cursor-pointer relative inline-flex items-center justify-center rounded-xl border border-zinc-800 bg-zinc-900/60 p-2 text-zinc-300 transition-colors hover:border-zinc-700 hover:text-zinc-100"
           aria-label="Messages"
         >
           <MessageSquare className="size-4" />
@@ -90,7 +90,7 @@ export default function TopNavbar({ onOpenSidebar, onToggleSidebar }) {
         <button
           type="button"
           onClick={() => setIsProfileOpen(false)}
-          className="relative inline-flex items-center justify-center rounded-xl border border-zinc-800 bg-zinc-900/60 p-2 text-zinc-300 transition-colors hover:border-zinc-700 hover:text-zinc-100"
+          className="cursor-pointer relative inline-flex items-center justify-center rounded-xl border border-zinc-800 bg-zinc-900/60 p-2 text-zinc-300 transition-colors hover:border-zinc-700 hover:text-zinc-100"
           aria-label="Notifications"
         >
           <Bell className="size-4" />
@@ -153,7 +153,7 @@ export default function TopNavbar({ onOpenSidebar, onToggleSidebar }) {
           <button
             type="button"
             onClick={() => setIsProfileOpen((v) => !v)}
-            className="inline-flex items-center justify-center rounded-full border border-zinc-800 bg-zinc-900/60 p-0.5 text-zinc-200 outline-none ring-emerald-500/0 transition-colors hover:border-zinc-700 hover:ring-2 hover:ring-emerald-500/20 focus-visible:ring-2 focus-visible:ring-emerald-500/40"
+            className="cursor-pointer inline-flex items-center justify-center rounded-full border border-zinc-800 bg-zinc-900/60 p-0.5 text-zinc-200 outline-none ring-emerald-500/0 transition-colors hover:border-zinc-700 hover:ring-2 hover:ring-emerald-500/20 focus-visible:ring-2 focus-visible:ring-emerald-500/40"
             aria-expanded={isProfileOpen}
             aria-haspopup="menu"
             aria-label={`Open profile menu (${user.name})`}
