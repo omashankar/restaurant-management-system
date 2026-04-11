@@ -38,7 +38,8 @@ export function CustomerProvider({ children }) {
     customer, updateCustomer,
     toasts,   showToast,
     orderTypeModalOpen, setOrderTypeModalOpen,
-  }), [cart, orderType, customer, updateCustomer, toasts, showToast, orderTypeModalOpen]);
+    cartOpen, setCartOpen,
+  }), [cart, orderType, customer, updateCustomer, toasts, showToast, orderTypeModalOpen, cartOpen]);
 
   return <CustomerContext.Provider value={value}>{children}</CustomerContext.Provider>;
 }

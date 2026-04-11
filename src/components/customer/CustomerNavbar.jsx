@@ -15,7 +15,7 @@ const NAV = [
 ];
 
 export default function CustomerNavbar() {
-  const { cart, setOrderTypeModalOpen } = useCustomer();
+  const { cart, setOrderTypeModalOpen, setCartOpen } = useCustomer();
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
 
@@ -62,8 +62,9 @@ export default function CustomerNavbar() {
           </button>
 
           {/* Cart */}
-          <Link
-            href="/order/cart"
+          <button
+            type="button"
+            onClick={() => setCartOpen(true)}
             className="cursor-pointer relative flex size-10 items-center justify-center rounded-xl border border-zinc-800 bg-zinc-900/60 text-zinc-300 transition-colors hover:border-emerald-500/40 hover:text-emerald-400"
             aria-label="Cart"
           >
@@ -73,7 +74,7 @@ export default function CustomerNavbar() {
                 {cart.itemCount}
               </span>
             )}
-          </Link>
+          </button>
 
           {/* Mobile toggle */}
           <button

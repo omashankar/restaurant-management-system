@@ -1,9 +1,10 @@
 "use client";
 
 import { CustomerProvider } from "@/context/CustomerContext";
+import CartDrawer from "@/components/customer/CartDrawer";
+import CustomerFooter from "@/components/customer/CustomerFooter";
 import CustomerNavbar from "@/components/customer/CustomerNavbar";
 import CustomerToasts from "@/components/customer/CustomerToasts";
-import CustomerFooter from "@/components/customer/CustomerFooter";
 import OrderTypeModal from "@/components/customer/OrderTypeModal";
 
 export default function CustomerLayout({ children }) {
@@ -15,6 +16,7 @@ export default function CustomerLayout({ children }) {
         <CustomerFooter />
         <CustomerToasts />
         <OrderTypeModal />
+        <CartDrawer />
       </div>
     </CustomerProvider>
   );

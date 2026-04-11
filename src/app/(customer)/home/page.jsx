@@ -2,9 +2,48 @@
 
 import { useCustomer } from "@/context/CustomerContext";
 import { useModuleData } from "@/context/ModuleDataContext";
-import { Bike, CalendarClock, ChevronRight, Clock, ConciergeBell, Star, Store, Zap } from "lucide-react";
+import {
+  ArrowRight,
+  BarChart3,
+  Bike,
+  CalendarClock,
+  ChefHat,
+  ChevronRight,
+  Clock,
+  ConciergeBell,
+  CreditCard,
+  LayoutGrid,
+  PackageSearch,
+  Star,
+  Store,
+  Zap,
+} from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+
+/* ── Customer-adapted How It Works steps ── */
+const STEPS = [
+  { n: "01", title: "Choose Order Type",   text: "Select Dine-In, Takeaway, or Delivery based on your preference.",  Icon: LayoutGrid },
+  { n: "02", title: "Browse the Menu",     text: "Explore categories, filter by veg/non-veg, and pick your favourites.", Icon: CreditCard },
+  { n: "03", title: "Add to Cart",         text: "Adjust quantities and review your selections before checkout.",       Icon: PackageSearch },
+  { n: "04", title: "Place Your Order",    text: "Confirm details and submit — kitchen gets notified instantly.",       Icon: ChefHat },
+  { n: "05", title: "Enjoy Your Meal",     text: "Track status and enjoy fresh food prepared just for you.",            Icon: BarChart3 },
+];
+
+/* ── Customer testimonials ── */
+const REVIEWS = [
+  { name: "Aisha Khan",    role: "Regular Customer",  quote: "Food is always fresh and delivery is super fast. Love the online ordering!" },
+  { name: "Rohan Sharma",  role: "Dine-In Guest",     quote: "Table booking was seamless and the staff was very welcoming." },
+  { name: "Priya Nair",    role: "Takeaway Customer", quote: "Order was ready exactly on time. The app makes it so easy to order ahead." },
+];
+
+/* ── Popular categories ── */
+const CATEGORIES = [
+  { label: "Starters",   emoji: "🥗", color: "border-emerald-500/20 bg-emerald-500/5 text-emerald-400" },
+  { label: "Main Course",emoji: "🍛", color: "border-indigo-500/20 bg-indigo-500/5 text-indigo-400" },
+  { label: "Beverages",  emoji: "🥤", color: "border-sky-500/20 bg-sky-500/5 text-sky-400" },
+  { label: "Desserts",   emoji: "🍰", color: "border-amber-500/20 bg-amber-500/5 text-amber-400" },
+];
 
 export default function CustomerHomePage() {
   const { setOrderType, setOrderTypeModalOpen } = useCustomer();
@@ -20,7 +59,10 @@ export default function CustomerHomePage() {
 
   return (
     <div>
-      {/* ── Hero ── */}
+
+      {/* ══════════════════════════════════════
+          HERO
+      ══════════════════════════════════════ */}
       <section className="relative overflow-hidden bg-gradient-to-br from-zinc-950 via-zinc-900 to-zinc-950 px-4 py-24 sm:px-6 lg:px-8">
         <div className="pointer-events-none absolute inset-0">
           <div className="absolute -left-20 top-10 h-96 w-96 rounded-full bg-emerald-500/10 blur-3xl" />
@@ -54,10 +96,10 @@ export default function CustomerHomePage() {
           </div>
 
           {/* Stats */}
-          <div className="mt-6 grid grid-cols-3 gap-4 sm:gap-8">
+          <div className="mt-10 grid grid-cols-3 gap-4 sm:gap-8">
             {[
-              { value: "50+", label: "Menu Items" },
-              { value: "4.9★", label: "Rating" },
+              { value: "50+",    label: "Menu Items" },
+              { value: "4.9★",   label: "Rating" },
               { value: "20 min", label: "Avg. Delivery" },
             ].map((s) => (
               <div key={s.label} className="rounded-2xl border border-zinc-800 bg-zinc-900/40 px-4 py-4">
@@ -69,7 +111,9 @@ export default function CustomerHomePage() {
         </div>
       </section>
 
-      {/* ── Order type cards ── */}
+      {/* ══════════════════════════════════════
+          ORDER TYPE CARDS
+      ══════════════════════════════════════ */}
       <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
         <div className="mb-8 text-center">
           <h2 className="text-2xl font-bold text-zinc-100">How do you want to order?</h2>
@@ -77,7 +121,6 @@ export default function CustomerHomePage() {
         </div>
         <div className="grid gap-4 sm:grid-cols-3">
 
-          {/* Dine-In */}
           <button
             type="button"
             onClick={() => handleOrderType("dine-in")}
@@ -93,7 +136,6 @@ export default function CustomerHomePage() {
             </span>
           </button>
 
-          {/* Takeaway */}
           <button
             type="button"
             onClick={() => handleOrderType("takeaway")}
@@ -109,7 +151,6 @@ export default function CustomerHomePage() {
             </span>
           </button>
 
-          {/* Delivery */}
           <button
             type="button"
             onClick={() => handleOrderType("delivery")}
@@ -128,16 +169,40 @@ export default function CustomerHomePage() {
         </div>
       </section>
 
-      {/* ── Featured dishes ── */}
+      {/* ══════════════════════════════════════
+          POPULAR CATEGORIES
+      ══════════════════════════════════════ */}
+      <section className="mx-auto max-w-7xl px-4 pb-16 sm:px-6 lg:px-8">
+        <div className="mb-8 text-center">
+          <p className="text-xs font-semibold uppercase tracking-widest text-emerald-500">Browse by Category</p>
+          <h2 className="mt-2 text-2xl font-bold text-zinc-100">Popular Categories</h2>
+        </div>
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+          {CATEGORIES.map((cat) => (
+            <Link
+              key={cat.label}
+              href="/order/menu"
+              className={`cursor-pointer group flex flex-col items-center gap-3 rounded-2xl border p-6 text-center transition-all duration-200 hover:-translate-y-1 hover:shadow-lg hover:shadow-black/30 ${cat.color}`}
+            >
+              <span className="text-3xl">{cat.emoji}</span>
+              <span className="text-sm font-semibold">{cat.label}</span>
+            </Link>
+          ))}
+        </div>
+      </section>
+
+      {/* ══════════════════════════════════════
+          FEATURED DISHES
+      ══════════════════════════════════════ */}
       {featured.length > 0 && (
         <section className="mx-auto max-w-7xl px-4 pb-16 sm:px-6 lg:px-8">
           <div className="mb-8 flex items-center justify-between">
             <div>
-              <h2 className="text-2xl font-bold text-zinc-100">Featured Dishes</h2>
-              <p className="mt-1 text-sm text-zinc-500">Our most loved items</p>
+              <p className="text-xs font-semibold uppercase tracking-widest text-emerald-500">Chef&apos;s Pick</p>
+              <h2 className="mt-1 text-2xl font-bold text-zinc-100">Featured Dishes</h2>
             </div>
-            <Link href="/order/menu" className="cursor-pointer text-sm font-medium text-emerald-400 hover:text-emerald-300">
-              View full menu →
+            <Link href="/order/menu" className="cursor-pointer inline-flex items-center gap-1 text-sm font-medium text-emerald-400 hover:text-emerald-300">
+              View full menu <ArrowRight className="size-4" />
             </Link>
           </div>
           <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
@@ -153,7 +218,7 @@ export default function CustomerHomePage() {
                     </span>
                   )}
                   <span className="absolute bottom-3 right-3 rounded-lg bg-zinc-950/80 px-3 py-1 text-sm font-bold text-emerald-400 backdrop-blur-sm">
-                    ${item.price.toFixed(2)}
+                    ${item.price?.toFixed(2)}
                   </span>
                 </div>
                 <div className="p-4">
@@ -177,7 +242,64 @@ export default function CustomerHomePage() {
         </section>
       )}
 
-      {/* ── CTA banner ── */}
+      {/* ══════════════════════════════════════
+          HOW IT WORKS
+      ══════════════════════════════════════ */}
+      <section className="mx-auto max-w-7xl px-4 pb-16 sm:px-6 lg:px-8">
+        <div className="mb-10 text-center">
+          <p className="text-xs font-semibold uppercase tracking-widest text-emerald-500">Simple Process</p>
+          <h2 className="mt-2 text-2xl font-bold text-zinc-100">How It Works</h2>
+          <p className="mt-2 text-sm text-zinc-500">From browsing to enjoying — it&apos;s that easy</p>
+        </div>
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+          {STEPS.map(({ n, title, text, Icon }) => (
+            <div
+              key={n}
+              className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-5 transition-all duration-200 hover:-translate-y-1 hover:border-emerald-500/30 hover:shadow-lg hover:shadow-black/30"
+            >
+              <span className="inline-flex size-9 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-400">
+                <Icon className="size-4" />
+              </span>
+              <p className="mt-3 text-xs font-semibold tracking-widest text-emerald-500">{n}</p>
+              <h3 className="mt-1 text-sm font-semibold text-zinc-100">{title}</h3>
+              <p className="mt-2 text-xs leading-relaxed text-zinc-500">{text}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* ══════════════════════════════════════
+          TESTIMONIALS
+      ══════════════════════════════════════ */}
+      <section className="mx-auto max-w-7xl px-4 pb-16 sm:px-6 lg:px-8">
+        <div className="mb-10 text-center">
+          <p className="text-xs font-semibold uppercase tracking-widest text-emerald-500">Reviews</p>
+          <h2 className="mt-2 text-2xl font-bold text-zinc-100">What Our Customers Say</h2>
+        </div>
+        <div className="grid gap-4 md:grid-cols-3">
+          {REVIEWS.map((r) => (
+            <div
+              key={r.name}
+              className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-5 transition-all duration-200 hover:-translate-y-1 hover:shadow-md hover:shadow-black/30"
+            >
+              <div className="flex gap-0.5 text-amber-400">
+                {[...Array(5)].map((_, i) => (
+                  <Star key={i} className="size-3.5 fill-amber-400" />
+                ))}
+              </div>
+              <p className="mt-3 text-sm leading-relaxed text-zinc-400">&ldquo;{r.quote}&rdquo;</p>
+              <div className="mt-4 border-t border-zinc-800 pt-4">
+                <p className="text-sm font-semibold text-zinc-100">{r.name}</p>
+                <p className="text-xs text-zinc-500">{r.role}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* ══════════════════════════════════════
+          CTA BANNER
+      ══════════════════════════════════════ */}
       <section className="mx-auto max-w-7xl px-4 pb-16 sm:px-6 lg:px-8">
         <div className="rounded-3xl bg-gradient-to-r from-emerald-600 to-emerald-500 p-8 text-center shadow-xl shadow-emerald-500/20 md:flex md:items-center md:justify-between md:text-left">
           <div>
@@ -192,12 +314,16 @@ export default function CustomerHomePage() {
             >
               Order Now
             </button>
-            <Link href="/order/table-booking" className="cursor-pointer rounded-xl border border-white/30 bg-white/10 px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-white/20">
+            <Link
+              href="/order/table-booking"
+              className="cursor-pointer rounded-xl border border-white/30 bg-white/10 px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-white/20"
+            >
               Book Table
             </Link>
           </div>
         </div>
       </section>
+
     </div>
   );
 }
