@@ -50,7 +50,7 @@ function QtyEditor({ row, onUpdateQty }) {
         value={val}
         onChange={handleChange}
         onKeyDown={handleKeyDown}
-        className="w-14 rounded-lg border border-zinc-700 bg-zinc-950/60 px-1.5 py-1 text-center text-sm tabular-nums text-zinc-100 outline-none focus:border-emerald-500/40"
+        className="w-16 rounded-lg border border-zinc-700 bg-zinc-950/60 px-1.5 py-1 text-center text-sm tabular-nums text-zinc-100 outline-none focus:border-emerald-500/40"
         aria-label="Quantity"
       />
 
@@ -92,6 +92,7 @@ export default function InventoryTable({ rows, onEdit, onDelete, onUpdateQty, fo
             <th className="px-4 py-3 text-center tabular-nums">Reorder</th>
             <th className="hidden px-4 py-3 lg:table-cell">Unit</th>
             <th className="px-4 py-3">Status</th>
+            <th className="px-4 py-3">Update QTY</th>
             <th className="px-4 py-3 text-right">Actions</th>
           </tr>
         </thead>
@@ -133,11 +134,15 @@ export default function InventoryTable({ rows, onEdit, onDelete, onUpdateQty, fo
                   <InventoryStatusBadge item={row} />
                 </td>
 
+                <td className="px-4 py-3">
+                  <QtyEditor row={row} onUpdateQty={onUpdateQty} />
+                </td>
+
                 {/* Actions: qty editor | edit | delete */}
                 <td className="px-4 py-3">
                   <div className="flex items-center justify-end gap-1">
-                    <QtyEditor row={row} onUpdateQty={onUpdateQty} />
-                    <div className="mx-1 h-4 w-px bg-zinc-700" />
+                    {/* <QtyEditor row={row} onUpdateQty={onUpdateQty} /> */}
+                    {/* <div className="mx-1 h-4 w-px bg-zinc-700" /> */}
                     <button
                       type="button"
                       onClick={() => onEdit(row)}
