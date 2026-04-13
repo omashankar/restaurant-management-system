@@ -209,42 +209,31 @@ export const INITIAL_RECIPES = [
   },
 ];
 
+/* ── Table Areas / Categories ── */
+export const INITIAL_TABLE_CATEGORIES = [
+  { id: "tcat-1", name: "Indoor",   description: "Air-conditioned indoor seating", color: "emerald" },
+  { id: "tcat-2", name: "Outdoor",  description: "Open-air garden seating",        color: "sky"     },
+  { id: "tcat-3", name: "AC Hall",  description: "Large air-conditioned hall",     color: "indigo"  },
+  { id: "tcat-4", name: "Non-AC",   description: "Standard non-AC seating",        color: "amber"   },
+  { id: "tcat-5", name: "Rooftop",  description: "Scenic rooftop dining",          color: "rose"    },
+  { id: "tcat-6", name: "VIP",      description: "Private VIP lounge area",        color: "yellow"  },
+];
+
 export const INITIAL_FLOOR_TABLES = [
-  {
-    id: "tbl-1",
-    tableNumber: "T01",
-    capacity: 2,
-    status: "available",
-    zone: "Window",
-  },
-  {
-    id: "tbl-2",
-    tableNumber: "T02",
-    capacity: 4,
-    status: "occupied",
-    zone: "Main",
-  },
-  {
-    id: "tbl-3",
-    tableNumber: "T03",
-    capacity: 4,
-    status: "available",
-    zone: "Main",
-  },
-  {
-    id: "tbl-4",
-    tableNumber: "T04",
-    capacity: 6,
-    status: "occupied",
-    zone: "Patio",
-  },
-  {
-    id: "tbl-5",
-    tableNumber: "T05",
-    capacity: 2,
-    status: "available",
-    zone: "Bar",
-  },
+  { id: "tbl-1",  tableNumber: "T01", capacity: 2, status: "available", zone: "Window", area: "indoor",  categoryId: "tcat-1" },
+  { id: "tbl-2",  tableNumber: "T02", capacity: 4, status: "occupied",  zone: "Main",   area: "indoor",  categoryId: "tcat-1" },
+  { id: "tbl-3",  tableNumber: "T03", capacity: 4, status: "available", zone: "Main",   area: "indoor",  categoryId: "tcat-1" },
+  { id: "tbl-4",  tableNumber: "T04", capacity: 6, status: "occupied",  zone: "Patio",  area: "outdoor", categoryId: "tcat-2" },
+  { id: "tbl-5",  tableNumber: "T05", capacity: 2, status: "available", zone: "Bar",    area: "outdoor", categoryId: "tcat-2" },
+  { id: "tbl-6",  tableNumber: "T06", capacity: 4, status: "available", zone: "AC-1",   area: "ac-hall", categoryId: "tcat-3" },
+  { id: "tbl-7",  tableNumber: "T07", capacity: 6, status: "available", zone: "AC-2",   area: "ac-hall", categoryId: "tcat-3" },
+  { id: "tbl-8",  tableNumber: "T08", capacity: 2, status: "occupied",  zone: "AC-3",   area: "ac-hall", categoryId: "tcat-3" },
+  { id: "tbl-9",  tableNumber: "T09", capacity: 4, status: "available", zone: "NAC-1",  area: "non-ac",  categoryId: "tcat-4" },
+  { id: "tbl-10", tableNumber: "T10", capacity: 4, status: "available", zone: "NAC-2",  area: "non-ac",  categoryId: "tcat-4" },
+  { id: "tbl-11", tableNumber: "T11", capacity: 6, status: "available", zone: "Roof-1", area: "rooftop", categoryId: "tcat-5" },
+  { id: "tbl-12", tableNumber: "T12", capacity: 4, status: "occupied",  zone: "Roof-2", area: "rooftop", categoryId: "tcat-5" },
+  { id: "tbl-13", tableNumber: "T13", capacity: 2, status: "available", zone: "VIP-1",  area: "vip",     categoryId: "tcat-6" },
+  { id: "tbl-14", tableNumber: "T14", capacity: 6, status: "available", zone: "VIP-2",  area: "vip",     categoryId: "tcat-6" },
 ];
 
 export const INITIAL_RESERVATIONS = [

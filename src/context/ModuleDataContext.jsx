@@ -10,6 +10,7 @@ import {
   INITIAL_RECIPES,
   INITIAL_RESERVATIONS,
   INITIAL_STAFF,
+  INITIAL_TABLE_CATEGORIES,
 } from "@/lib/modulesData";
 import {
   createContext,
@@ -26,6 +27,7 @@ const ModuleDataContext = createContext(null);
 export function ModuleDataProvider({ children }) {
   const [hydrated, setHydrated] = useState(false);
   const [categories, setCategories] = useState(INITIAL_CATEGORIES);
+  const [tableCategories, setTableCategories] = useState(INITIAL_TABLE_CATEGORIES);
   const [menuItems, setMenuItems] = useState(INITIAL_MENU_ITEMS);
   const [recipes, setRecipes] = useState(INITIAL_RECIPES);
   const [floorTables, setFloorTables] = useState(INITIAL_FLOOR_TABLES);
@@ -45,6 +47,7 @@ export function ModuleDataProvider({ children }) {
       if (raw) {
         const d = JSON.parse(raw);
         if (d.categories) setCategories(d.categories);
+        if (d.tableCategories) setTableCategories(d.tableCategories);
         if (d.menuItems) setMenuItems(d.menuItems);
         if (d.recipes) setRecipes(d.recipes);
         if (d.floorTables) setFloorTables(d.floorTables);
@@ -66,6 +69,7 @@ export function ModuleDataProvider({ children }) {
       KEY,
       JSON.stringify({
         categories,
+        tableCategories,
         menuItems,
         recipes,
         floorTables,
@@ -79,6 +83,7 @@ export function ModuleDataProvider({ children }) {
   }, [
     hydrated,
     categories,
+    tableCategories,
     menuItems,
     recipes,
     floorTables,
@@ -104,6 +109,8 @@ export function ModuleDataProvider({ children }) {
       hydrated,
       categories,
       setCategories,
+      tableCategories,
+      setTableCategories,
       menuItems,
       setMenuItems,
       recipes,
@@ -124,6 +131,7 @@ export function ModuleDataProvider({ children }) {
     [
       hydrated,
       categories,
+      tableCategories,
       menuItems,
       recipes,
       floorTables,

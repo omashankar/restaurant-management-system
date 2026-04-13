@@ -2,6 +2,7 @@ const styles = {
   pending:   "bg-amber-500/15 text-amber-300 ring-amber-500/30",
   confirmed: "bg-emerald-500/15 text-emerald-300 ring-emerald-500/30",
   cancelled: "bg-red-500/20 text-red-400 ring-red-500/40",
+  completed: "bg-sky-500/15 text-sky-300 ring-sky-500/30",
 };
 
 export default function StatusBadge({ status }) {
