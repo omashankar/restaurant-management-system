@@ -8,6 +8,7 @@ import ItemTypeFilter from "@/components/filters/ItemTypeFilter";
 import ListToolbar from "@/components/ui/ListToolbar";
 import Modal from "@/components/ui/Modal";
 import { useMenuFilter } from "@/hooks/useMenuFilter";
+import { useModuleData } from "@/context/ModuleDataContext";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 const KITCHEN_LABELS = {
@@ -58,6 +59,7 @@ export default function PosPage() {
   const deliveryValid = delivery.name.trim() && delivery.phone.trim() && delivery.address.trim();
   const canPlaceOrder =
     cart.length > 0 &&
+    !!selectedCustomer &&
     (orderType === "takeaway" ||
       (orderType === "dine-in" && selectedTableId) ||
       (orderType === "delivery" && deliveryValid));
@@ -138,6 +140,7 @@ export default function PosPage() {
             selectedTableId={selectedTableId} onTableSelect={setSelectedTableId}
             delivery={delivery} onDeliveryChange={(f, v) => setDelivery((p) => ({ ...p, [f]: v }))}
             onCustomerSelect={setSelectedCustomer}
+            selectedCustomer={selectedCustomer}
           />
         </section>
       </div>
