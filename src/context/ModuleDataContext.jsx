@@ -40,6 +40,8 @@ export function ModuleDataProvider({ children }) {
   const [inventoryHistory, setInventoryHistory] = useState(
     INITIAL_INVENTORY_HISTORY
   );
+  const [orderRows, setOrderRows] = useState([]);
+  const [kitchenQueue, setKitchenQueue] = useState([]);
 
   useEffect(() => {
     try {
@@ -56,6 +58,8 @@ export function ModuleDataProvider({ children }) {
         if (d.reservationRows) setReservationRows(d.reservationRows);
         if (d.inventoryRows) setInventoryRows(d.inventoryRows);
         if (d.inventoryHistory) setInventoryHistory(d.inventoryHistory);
+        if (d.orderRows) setOrderRows(d.orderRows);
+        if (d.kitchenQueue) setKitchenQueue(d.kitchenQueue);
       }
     } catch {
       sessionStorage.removeItem(KEY);
@@ -78,6 +82,8 @@ export function ModuleDataProvider({ children }) {
         reservationRows,
         inventoryRows,
         inventoryHistory,
+        orderRows,
+        kitchenQueue,
       })
     );
   }, [
@@ -92,6 +98,8 @@ export function ModuleDataProvider({ children }) {
     reservationRows,
     inventoryRows,
     inventoryHistory,
+    orderRows,
+    kitchenQueue,
   ]);
 
   useEffect(() => {
@@ -127,6 +135,10 @@ export function ModuleDataProvider({ children }) {
       setInventoryRows,
       inventoryHistory,
       setInventoryHistory,
+      orderRows,
+      setOrderRows,
+      kitchenQueue,
+      setKitchenQueue,
     }),
     [
       hydrated,
@@ -140,6 +152,8 @@ export function ModuleDataProvider({ children }) {
       reservationRows,
       inventoryRows,
       inventoryHistory,
+      orderRows,
+      kitchenQueue,
     ]
   );
 

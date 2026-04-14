@@ -18,6 +18,7 @@ const KITCHEN_LABELS = {
 };
 
 export default function PosPage() {
+  const { setCustomerRows, setOrderRows, setKitchenQueue, floorTables, setFloorTables } = useModuleData();
   const [orderType, setOrderType] = useState("dine-in");
   const [selectedTableId, setSelectedTableId] = useState("");
   const [delivery, setDelivery] = useState({ name: "", phone: "", address: "" });
@@ -66,17 +67,85 @@ export default function PosPage() {
 
   const placeOrder = useCallback(() => {
     if (!canPlaceOrder) return;
+
+    const now = new Date();
+    const orderId = `ORD-POS-${Date.now()}`;
+
+    // Kitchen routing map
     const map = {};
     for (const l of cart) {
       const k = l.kitchenType ?? "default_kitchen";
       (map[k] ??= []).push({ name: l.name, qty: l.qty });
     }
     setKitchenRouting(map);
+
+    // Save to shared orderRows
+    const table = floorTables.find((t) => t.id === selectedTableId);
+    const newOrder = {
+      id: orderId,
+      source: "pos",
+      customer: selectedCustomer?.name ?? (orderType === "delivery" ? delivery.name : "Walk-in"),
+      phone: selectedCustomer?.phone ?? delivery.phone ?? "",
+      type: orderType,
+      table: table?.tableNumber ?? (orderType === "dine-in" ? selectedTableId : "—"),
+      address: orderType === "delivery" ? delivery.address : "",
+      amount: total,
+      status: "new",
+      items: cart.map((l) => ({ name: l.name, qty: l.qty, price: l.price })),
+      itemCount: cart.reduce((s, l) => s + l.qty, 0),
+      time: "Just now",
+      createdAt: now.toISOString(),
+    };
+    setOrderRows((prev) => [newOrder, ...prev]);
+
+    // Push to kitchen queue
+    const kitchenTicket = {
+      id: `K-${orderId}`,
+      orderId,
+      table: newOrder.table,
+      orderType,
+      customer: newOrder.customer,
+      placedAt: now.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" }),
+      elapsedMin: 0,
+      status: "new",
+      items: cart.map((l) => ({ name: l.name, qty: l.qty })),
+    };
+    setKitchenQueue((prev) => [kitchenTicket, ...prev]);
+
+    // Update customer visits
+    if (selectedCustomer) {
+      const itemsSummary = cart.map((l) => `${l.name} ×${l.qty}`).join(", ");
+      setCustomerRows((prev) =>
+        prev.map((c) =>
+          c.id === selectedCustomer.id
+            ? {
+                ...c,
+                visits: (c.visits ?? 0) + 1,
+                lastVisit: now.toISOString().slice(0, 10),
+                orderHistory: [
+                  { id: orderId, date: now.toISOString().slice(0, 10), total, items: itemsSummary },
+                  ...(c.orderHistory ?? []),
+                ],
+              }
+            : c
+        )
+      );
+    }
+
+    // Mark table occupied
+    if (orderType === "dine-in" && selectedTableId) {
+      setFloorTables((prev) =>
+        prev.map((t) => t.id === selectedTableId ? { ...t, status: "occupied" } : t)
+      );
+    }
+
     setSuccessOpen(true);
     setCart([]);
     setSelectedTableId("");
     setDelivery({ name: "", phone: "", address: "" });
-  }, [canPlaceOrder, cart]);
+    setSelectedCustomer(null);
+  }, [canPlaceOrder, cart, orderType, selectedTableId, selectedCustomer, delivery, total,
+      floorTables, setOrderRows, setKitchenQueue, setCustomerRows, setFloorTables]);
 
   useEffect(() => {
     const h = (e) => {

@@ -1,5 +1,6 @@
 "use client";
 
+import { useModuleData } from "@/context/ModuleDataContext";
 import { recentOrdersTable } from "@/lib/mockData";
 import {
   Bike,
@@ -30,8 +31,8 @@ const TYPE_ICON = {
   "delivery": { Icon: Bike,          color: "text-sky-400",     bg: "bg-sky-500/10"     },
 };
 
-/* ── Extend mock with more orders for a richer view ── */
-const ALL_ORDERS = [
+/* ── Seed mock orders (shown when no real orders exist) ── */
+const MOCK_ORDERS = [
   ...recentOrdersTable,
   { id: "ORD-1035", customer: "Raj P.",    type: "dine-in",  table: "T06", amount: 156.0,  status: "completed", time: "52 min ago" },
   { id: "ORD-1034", customer: "Nina D.",   type: "delivery", table: "—",   amount: 89.5,   status: "completed", time: "1 hr ago"   },
@@ -142,9 +143,17 @@ function OrderCard({ order }) {
 
 /* ── Page ── */
 export default function OrdersPage() {
+  const { orderRows, setOrderRows } = useModuleData();
   const [filter, setFilter]   = useState("all");
   const [search, setSearch]   = useState("");
   const [sortNew, setSortNew] = useState(true);
+
+  // Merge real orders (from context) with mock seed — real orders on top
+  const ALL_ORDERS = useMemo(() => {
+    if (orderRows.length > 0) return [...orderRows, ...MOCK_ORDERS];
+    return MOCK_ORDERS;
+  }, [orderRows]);
+
   const summary = useSummary(ALL_ORDERS);
 
   const filtered = useMemo(() => {
@@ -155,11 +164,11 @@ export default function OrdersPage() {
         (o) =>
           o.id.toLowerCase().includes(q) ||
           o.customer.toLowerCase().includes(q) ||
-          o.table.toLowerCase().includes(q)
+          (o.table ?? "").toLowerCase().includes(q)
       );
     }
     return sortNew ? list : [...list].reverse();
-  }, [filter, search, sortNew]);
+  }, [filter, search, sortNew, ALL_ORDERS]);
 
   return (
     <div className="space-y-6">

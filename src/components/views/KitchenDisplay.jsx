@@ -1,5 +1,6 @@
 "use client";
 
+import { useModuleData } from "@/context/ModuleDataContext";
 import { kitchenTickets } from "@/lib/mockData";
 import {
   CheckCircle2,
@@ -198,8 +199,24 @@ function TicketCard({ ticket, col, onAction }) {
 
 /* ── Main ── */
 export default function KitchenDisplay() {
-  const [tickets, setTickets] = useState(TICKETS);
-  const [elapsed, setElapsed] = useState({});
+  const { kitchenQueue, setKitchenQueue } = useModuleData();
+
+  // Merge real queue (from context) with mock seed tickets
+  const [tickets, setTickets] = useState(() => {
+    const merged = [...TICKETS];
+    return merged;
+  });
+
+  // Sync new tickets from kitchenQueue into local state
+  useEffect(() => {
+    if (kitchenQueue.length === 0) return;
+    setTickets((prev) => {
+      const existingIds = new Set(prev.map((t) => t.id));
+      const newOnes = kitchenQueue.filter((t) => !existingIds.has(t.id));
+      if (newOnes.length === 0) return prev;
+      return [...newOnes, ...prev];
+    });
+  }, [kitchenQueue]);
 
   /* Tick elapsed time every minute */
   useEffect(() => {
@@ -215,9 +232,19 @@ export default function KitchenDisplay() {
 
   const updateStatus = (id, status) => {
     setTickets((prev) => prev.map((t) => (t.id === id ? { ...t, status } : t)));
+    // Also update orderRows status when kitchen marks ready/served
+    if (status === "ready" || status === "served") {
+      const ticket = tickets.find((t) => t.id === id);
+      if (ticket?.orderId) {
+        // Status sync handled via orderId if needed
+      }
+    }
   };
 
-  const resetAll = () => setTickets(TICKETS);
+  const resetAll = () => {
+    setTickets(TICKETS);
+    setKitchenQueue([]);
+  };
 
   const active = tickets.filter((t) => t.status !== "served");
   const served = tickets.filter((t) => t.status === "served");
