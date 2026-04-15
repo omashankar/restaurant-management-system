@@ -57,6 +57,11 @@ export default function ReservationCalendarView({ rows, onView, onEdit, onDelete
                       {r.tableNumber}
                     </span>
                   </span>
+                  {r.area && (
+                    <span className="rounded-md bg-zinc-800/80 px-2 py-1 text-zinc-400">
+                      {r.area}
+                    </span>
+                  )}
                 </div>
                 {r.notes ? (
                   <p className="mt-2 line-clamp-2 text-xs text-zinc-500">

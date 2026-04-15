@@ -2,18 +2,6 @@
 
 import { CalendarRange, LayoutGrid, List, Search } from "lucide-react";
 
-/**
- * @param {{
- *   search: string;
- *   onSearchChange: (v: string) => void;
- *   dateFilter: string;
- *   onDateChange: (v: string) => void;
- *   statusFilter: string;
- *   onStatusChange: (v: string) => void;
- *   viewMode: 'table' | 'calendar';
- *   onViewModeChange: (v: 'table'|'calendar') => void;
- * }} props
- */
 export default function SearchFilterBar({
   search,
   onSearchChange,
@@ -21,16 +9,17 @@ export default function SearchFilterBar({
   onDateChange,
   statusFilter,
   onStatusChange,
+  areaFilter = "all",
+  onAreaChange,
+  areaOptions = [],
   viewMode,
   onViewModeChange,
 }) {
   return (
     <div className="flex flex-col gap-3 lg:flex-row lg:flex-wrap lg:items-center lg:justify-between">
+      {/* Search */}
       <div className="relative min-w-[200px] max-w-md flex-1">
-        <Search
-          className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-zinc-500"
-          aria-hidden
-        />
+        <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-zinc-500" aria-hidden />
         <input
           type="search"
           value={search}
@@ -41,6 +30,7 @@ export default function SearchFilterBar({
       </div>
 
       <div className="flex flex-wrap items-center gap-2">
+        {/* Date */}
         <div className="flex items-center gap-2 rounded-xl border border-zinc-800 bg-zinc-900/50 px-2 py-1">
           <CalendarRange className="ml-1 size-4 text-zinc-500" aria-hidden />
           <input
@@ -50,53 +40,48 @@ export default function SearchFilterBar({
             className="rounded-lg bg-transparent py-1.5 pr-2 text-sm text-zinc-200 outline-none [color-scheme:dark]"
             aria-label="Filter by date"
           />
-          <button
-            type="button"
-            onClick={() => onDateChange("")}
-            className="cursor-pointer rounded-lg px-2 py-1 text-xs font-medium text-zinc-500 hover:bg-zinc-800 hover:text-zinc-300"
-          >
+          <button type="button" onClick={() => onDateChange("")}
+            className="cursor-pointer rounded-lg px-2 py-1 text-xs font-medium text-zinc-500 hover:bg-zinc-800 hover:text-zinc-300">
             All dates
           </button>
         </div>
 
-        <select
-          value={statusFilter}
-          onChange={(e) => onStatusChange(e.target.value)}
-          className="rounded-xl border border-zinc-800 bg-zinc-900/70 px-3 py-2.5 text-sm text-zinc-200 outline-none focus:border-emerald-500/40"
-          aria-label="Filter by status"
-        >
+        {/* Status */}
+        <select value={statusFilter} onChange={(e) => onStatusChange(e.target.value)}
+          className="cursor-pointer rounded-xl border border-zinc-800 bg-zinc-900/70 px-3 py-2.5 text-sm text-zinc-200 outline-none focus:border-emerald-500/40"
+          aria-label="Filter by status">
           <option value="all">All statuses</option>
           <option value="pending">Pending</option>
           <option value="confirmed">Confirmed</option>
+          <option value="completed">Completed</option>
           <option value="cancelled">Cancelled</option>
         </select>
 
+        {/* Area filter — only shown when areas exist */}
+        {areaOptions.length > 0 && onAreaChange && (
+          <select value={areaFilter} onChange={(e) => onAreaChange(e.target.value)}
+            className="cursor-pointer rounded-xl border border-zinc-800 bg-zinc-900/70 px-3 py-2.5 text-sm text-zinc-200 outline-none focus:border-emerald-500/40"
+            aria-label="Filter by area">
+            <option value="all">All areas</option>
+            {areaOptions.map((a) => (
+              <option key={a} value={a}>{a}</option>
+            ))}
+          </select>
+        )}
+
+        {/* View toggle */}
         <div className="flex rounded-xl border border-zinc-800 p-0.5">
-          <button
-            type="button"
-            onClick={() => onViewModeChange("table")}
+          <button type="button" onClick={() => onViewModeChange("table")}
             className={`cursor-pointer flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-semibold transition-all duration-200 ${
-              viewMode === "table"
-                ? "bg-emerald-500 text-zinc-950 shadow-md"
-                : "text-zinc-500 hover:text-zinc-300"
-            }`}
-            aria-pressed={viewMode === "table"}
-          >
-            <List className="size-3.5" aria-hidden />
-            List
+              viewMode === "table" ? "bg-emerald-500 text-zinc-950 shadow-md" : "text-zinc-500 hover:text-zinc-300"
+            }`} aria-pressed={viewMode === "table"}>
+            <List className="size-3.5" aria-hidden /> List
           </button>
-          <button
-            type="button"
-            onClick={() => onViewModeChange("calendar")}
+          <button type="button" onClick={() => onViewModeChange("calendar")}
             className={`cursor-pointer flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-semibold transition-all duration-200 ${
-              viewMode === "calendar"
-                ? "bg-emerald-500 text-zinc-950 shadow-md"
-                : "text-zinc-500 hover:text-zinc-300"
-            }`}
-            aria-pressed={viewMode === "calendar"}
-          >
-            <LayoutGrid className="size-3.5" aria-hidden />
-            By date
+              viewMode === "calendar" ? "bg-emerald-500 text-zinc-950 shadow-md" : "text-zinc-500 hover:text-zinc-300"
+            }`} aria-pressed={viewMode === "calendar"}>
+            <LayoutGrid className="size-3.5" aria-hidden /> By date
           </button>
         </div>
       </div>

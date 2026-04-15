@@ -21,6 +21,7 @@ export default function ReservationTable({ rows, onView, onEdit, onDelete }) {
               Guests
             </th>
             <th className="whitespace-nowrap px-4 py-3">Table</th>
+            <th className="hidden whitespace-nowrap px-4 py-3 lg:table-cell">Area</th>
             <th className="whitespace-nowrap px-4 py-3">Status</th>
             <th className="whitespace-nowrap px-4 py-3 text-right">Actions</th>
           </tr>
@@ -49,6 +50,9 @@ export default function ReservationTable({ rows, onView, onEdit, onDelete }) {
               </td>
               <td className="px-4 py-3 font-mono text-xs text-emerald-400/90">
                 {r.tableNumber}
+              </td>
+              <td className="hidden px-4 py-3 text-xs text-zinc-400 capitalize lg:table-cell">
+                {r.area ?? "—"}
               </td>
               <td className="px-4 py-3">
                 <StatusBadge status={r.status} />

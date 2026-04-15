@@ -1,6 +1,7 @@
 "use client";
 
 import { useCustomer } from "@/context/CustomerContext";
+import { useModuleData } from "@/context/ModuleDataContext";
 import { Bike, ConciergeBell, Loader2, Store } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -24,6 +25,7 @@ const inputCls = "w-full rounded-xl border border-zinc-700 bg-zinc-950/60 px-3.5
 
 export default function CheckoutPage() {
   const { cart, orderType, customer, updateCustomer, showToast, setOrderTypeModalOpen } = useCustomer();
+  const { setOrderRows, setKitchenQueue } = useModuleData();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
 
@@ -64,7 +66,43 @@ export default function CheckoutPage() {
     }
     setLoading(true);
     await new Promise((r) => setTimeout(r, 900));
+
     const orderId = `ORD-C-${Date.now()}`;
+    const now = new Date();
+    const itemsSummary = lines.map((l) => `${l.name} ×${l.qty}`).join(", ");
+
+    // Save to shared orderRows (visible in admin Orders page)
+    const newOrder = {
+      id: orderId,
+      source: "customer",
+      customer: customer.name.trim(),
+      phone: customer.phone.trim(),
+      type: orderType,
+      table: orderType === "dine-in" ? customer.tableNumber.trim() : "—",
+      address: orderType === "delivery" ? customer.address.trim() : "",
+      amount: total,
+      status: "new",
+      items: lines.map((l) => ({ name: l.name, qty: l.qty, price: l.price })),
+      itemCount: lines.reduce((s, l) => s + l.qty, 0),
+      time: "Just now",
+      createdAt: now.toISOString(),
+    };
+    setOrderRows((prev) => [newOrder, ...prev]);
+
+    // Push to kitchen queue
+    const kitchenTicket = {
+      id: `K-${orderId}`,
+      orderId,
+      table: newOrder.table,
+      orderType,
+      customer: customer.name.trim(),
+      placedAt: now.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" }),
+      elapsedMin: 0,
+      status: "new",
+      items: lines.map((l) => ({ name: l.name, qty: l.qty })),
+    };
+    setKitchenQueue((prev) => [kitchenTicket, ...prev]);
+
     clearCart();
     setLoading(false);
     router.push(`/order/success?id=${orderId}`);

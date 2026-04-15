@@ -20,16 +20,42 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [showPw, setShowPw] = useState(false);
   const [copied, setCopied] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [rememberMe, setRememberMe] = useState(false);
 
   useEffect(() => {
     if (!hydrated) return;
     if (user) router.replace(defaultRedirectForRole(user.role));
   }, [hydrated, user, router]);
 
-  const onSubmit = (e) => {
+  const onSubmit = async (e) => {
     e.preventDefault();
-    const dest = login(email);
-    router.push(dest);
+    setError("");
+    setLoading(true);
+    try {
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password, rememberMe }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        const dest = login(data.user.email, data.user.role);
+        router.push(dest);
+        return;
+      }
+      // Demo fallback
+      const demo = DEMO_USERS.find((u) => u.email === email && u.password === password);
+      if (demo) { router.push(login(demo.email, demo.role.toLowerCase())); return; }
+      setError(data.error ?? "Login failed.");
+    } catch {
+      const demo = DEMO_USERS.find((u) => u.email === email && u.password === password);
+      if (demo) { router.push(login(demo.email, demo.role.toLowerCase())); return; }
+      setError("Network error. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const fillDemo = (u) => { setEmail(u.email); setPassword(u.password); };
@@ -97,11 +123,29 @@ export default function LoginPage() {
                 </button>
               </div>
             </div>
+            {error && (
+              <p className="rounded-xl border border-red-500/20 bg-red-500/10 px-3 py-2 text-xs text-red-400">
+                {error}
+              </p>
+            )}
+            <div className="flex items-center gap-2">
+              <input
+                id="rememberMe"
+                type="checkbox"
+                checked={rememberMe}
+                onChange={(e) => setRememberMe(e.target.checked)}
+                className="cursor-pointer size-4 rounded border-zinc-600 bg-zinc-800 accent-emerald-500"
+              />
+              <label htmlFor="rememberMe" className="cursor-pointer text-xs text-zinc-400">
+                Remember me for 30 days
+              </label>
+            </div>
             <button
               type="submit"
-              className="cursor-pointer w-full rounded-xl bg-emerald-500 py-3 text-sm font-semibold text-zinc-950 transition-all duration-200 hover:bg-emerald-400 active:scale-[0.99]"
+              disabled={loading}
+              className="cursor-pointer w-full rounded-xl bg-emerald-500 py-3 text-sm font-semibold text-zinc-950 transition-all duration-200 hover:bg-emerald-400 active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Sign In
+              {loading ? "Signing in…" : "Sign In"}
             </button>
           </form>
           <p className="mt-5 text-center text-sm text-zinc-500">

@@ -73,6 +73,7 @@ export default function ReservationDetailModal({ open, onClose, reservation }) {
             ["Date", formatReservationDate(reservation.date)],
             ["Time", formatTimeSlot(reservation.time)],
             ["Table", reservation.tableNumber],
+            ...(reservation.area ? [["Area", reservation.area]] : []),
           ].map(([k, v]) => (
             <div
               key={k}

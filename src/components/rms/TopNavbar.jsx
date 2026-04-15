@@ -252,8 +252,9 @@ export default function TopNavbar({ onOpenSidebar, onToggleSidebar }) {
 
             <button
               type="button"
-              onClick={() => {
+              onClick={async () => {
                 setIsProfileOpen(false);
+                await fetch("/api/auth/logout", { method: "POST" });
                 logout();
                 router.push("/login");
               }}

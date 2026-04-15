@@ -21,12 +21,14 @@ export default function ReservationsPage() {
     reservationRows,
     setReservationRows,
     floorTables,
+    tableCategories,
   } = useModuleData();
 
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [dateFilter, setDateFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [areaFilter, setAreaFilter] = useState("all");
   const [viewMode, setViewMode] = useState("table");
 
   const [formOpen, setFormOpen] = useState(false);
@@ -55,13 +57,20 @@ export default function ReservationsPage() {
     return reservationRows.filter((r) => {
       if (statusFilter !== "all" && r.status !== statusFilter) return false;
       if (dateFilter && r.date !== dateFilter) return false;
+      if (areaFilter !== "all" && (r.area ?? "") !== areaFilter) return false;
       if (!q) return true;
       return (
         r.customerName.toLowerCase().includes(q) ||
         r.phone.replace(/\s/g, "").includes(q.replace(/\s/g, ""))
       );
     });
-  }, [reservationRows, search, dateFilter, statusFilter]);
+  }, [reservationRows, search, dateFilter, statusFilter, areaFilter]);
+
+  // Unique area names from categories for filter dropdown
+  const areaOptions = useMemo(
+    () => tableCategories.map((c) => c.name),
+    [tableCategories]
+  );
 
   const openAdd = () => {
     setEditing(null);
@@ -139,6 +148,9 @@ export default function ReservationsPage() {
             onDateChange={setDateFilter}
             statusFilter={statusFilter}
             onStatusChange={setStatusFilter}
+            areaFilter={areaFilter}
+            onAreaChange={setAreaFilter}
+            areaOptions={areaOptions}
             viewMode={viewMode}
             onViewModeChange={setViewMode}
           />

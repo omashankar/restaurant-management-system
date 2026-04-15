@@ -3,6 +3,7 @@ import {
   BookOpen,
   FolderTree,
   LayoutDashboard,
+  LayoutGrid,
   ListOrdered,
   MonitorPlay,
   Package,
@@ -85,11 +86,15 @@ export const NAV_ITEMS = [
     ],
   },
   {
-    type: "link",
-    href: "/tables",
+    type: "group",
+    id: "tables",
     label: "Tables",
     Icon: Table2,
     roles: ["admin", "manager", "waiter"],
+    children: [
+      { href: "/tables",       label: "Tables List", Icon: Table2 },
+      { href: "/tables/areas", label: "Areas",       Icon: LayoutGrid },
+    ],
   },
   {
     type: "link",
@@ -157,7 +162,7 @@ export function canAccessPath(role, pathname) {
     if (item.type === "link") {
       rules.push({ href: item.href, roles: item.roles });
     } else if (item.type === "group") {
-      rules.push({ href: "/menu", roles: item.roles });
+      rules.push({ href: `/${item.id}`, roles: item.roles });
       for (const c of item.children) {
         rules.push({ href: c.href, roles: item.roles });
       }

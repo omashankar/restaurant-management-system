@@ -22,7 +22,8 @@ export default function Sidebar({
   const { user } = useApp();
   const pathname = usePathname();
   const [openGroups, setOpenGroups] = useState(() => ({
-    menu: pathname.startsWith("/menu"),
+    menu:   pathname.startsWith("/menu"),
+    tables: pathname.startsWith("/tables"),
   }));
   const [popover, setPopover] = useState(null);
   const closeTimerRef = useRef(null);
@@ -38,6 +39,9 @@ export default function Sidebar({
   useEffect(() => {
     if (pathname.startsWith("/menu")) {
       setOpenGroups((g) => ({ ...g, menu: true }));
+    }
+    if (pathname.startsWith("/tables")) {
+      setOpenGroups((g) => ({ ...g, tables: true }));
     }
   }, [pathname]);
 
@@ -208,8 +212,8 @@ export default function Sidebar({
           }
 
           const { id, label, Icon, children } = item;
-          const groupActive = pathname.startsWith("/menu");
-          const firstHref = children[0]?.href ?? "/menu/items";
+          const groupActive = pathname.startsWith(`/${id}`);
+          const firstHref = children[0]?.href ?? `/${id}`;
 
           if (collapsed) {
             return (
