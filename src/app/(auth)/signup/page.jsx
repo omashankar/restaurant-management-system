@@ -20,16 +20,34 @@ export default function SignupPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [role, setRole] = useState("admin");
+  const [restaurantName, setRestaurantName] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   useEffect(() => {
     if (!hydrated) return;
     if (user) router.replace(defaultRedirectForRole(user.role));
   }, [hydrated, user, router]);
 
-  const onSubmit = (e) => {
+  const onSubmit = async (e) => {
     e.preventDefault();
-    const dest = signup({ name, email, role });
-    router.push(dest);
+    setError("");
+    setLoading(true);
+    try {
+      const res = await fetch("/api/auth/signup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, email, password, role, restaurantName }),
+      });
+      const data = await res.json();
+      if (!data.success) { setError(data.error ?? "Signup failed."); setLoading(false); return; }
+      // Sync local app state
+      const dest = signup({ name, email, role });
+      router.push(dest);
+    } catch {
+      setError("Network error. Please try again.");
+      setLoading(false);
+    }
   };
 
   return (
@@ -98,11 +116,32 @@ export default function SignupPage() {
                 ))}
               </select>
             </div>
+            {role === "admin" && (
+              <div>
+                <label htmlFor="restaurantName" className="text-xs font-medium uppercase tracking-wider text-zinc-500">
+                  Restaurant Name <span className="text-red-400">*</span>
+                </label>
+                <input
+                  id="restaurantName"
+                  required
+                  value={restaurantName}
+                  onChange={(e) => setRestaurantName(e.target.value)}
+                  className="mt-1.5 w-full rounded-xl border border-zinc-700 bg-zinc-950/80 px-4 py-3 text-sm text-zinc-100 outline-none transition-all focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/20"
+                  placeholder="e.g. The Grand Kitchen"
+                />
+              </div>
+            )}
+            {error && (
+              <p className="rounded-xl border border-red-500/20 bg-red-500/10 px-3 py-2 text-xs text-red-400">
+                {error}
+              </p>
+            )}
             <button
               type="submit"
-              className="cursor-pointer w-full rounded-xl bg-emerald-500 py-3 text-sm font-semibold text-zinc-950 transition-all duration-200 hover:bg-emerald-400 active:scale-[0.99]"
+              disabled={loading}
+              className="cursor-pointer w-full rounded-xl bg-emerald-500 py-3 text-sm font-semibold text-zinc-950 transition-all duration-200 hover:bg-emerald-400 active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Create account
+              {loading ? "Creating account…" : "Create account"}
             </button>
           </form>
           <p className="mt-5 text-center text-sm text-zinc-500">

@@ -52,14 +52,14 @@ export function AppProvider({ children }) {
   }, []);
 
   const login = useCallback(
-    (email) => {
+    (email, role = "admin") => {
       const name = email?.split("@")[0] || "User";
       persist({
         email,
         name: name.charAt(0).toUpperCase() + name.slice(1),
-        role: "admin",
+        role,
       });
-      return defaultRedirectForRole("admin");
+      return defaultRedirectForRole(role);
     },
     [persist]
   );
