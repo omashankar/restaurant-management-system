@@ -65,8 +65,12 @@ export function errRes(message, status = 500) {
 export function withTenant(allowedRoles, handler) {
   return async (request, context) => {
     try {
+      // Next.js 16: params must be awaited
+      const resolvedContext = context
+        ? { ...context, params: context.params ? await context.params : {} }
+        : {};
       const ctx = await getTenantContext(request, allowedRoles);
-      return await handler(ctx, request, context);
+      return await handler(ctx, request, resolvedContext);
     } catch (err) {
       if (err.status) return errRes(err.message, err.status);
       console.error("Route error:", err.message);

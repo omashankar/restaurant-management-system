@@ -4,6 +4,7 @@ import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import EmptyState from "@/components/ui/EmptyState";
 import Modal from "@/components/ui/Modal";
 import { CATEGORY_COLORS, getCategoryBadge } from "@/lib/tableCategoryColors";
+import { useToast } from "@/hooks/useToast";
 import { LayoutGrid, Pencil, Plus, RefreshCw, Table2, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
@@ -20,6 +21,8 @@ export default function TableAreasPage() {
   const [form, setForm]             = useState(EMPTY_FORM);
   const [formError, setFormError]   = useState("");
   const [deleteTarget, setDeleteTarget] = useState(null);
+  const [deleting, setDeleting] = useState(false);
+  const { showToast, ToastUI } = useToast();
 
   const set = (k, v) => setForm((f) => ({ ...f, [k]: v }));
 
@@ -62,8 +65,10 @@ export default function TableAreasPage() {
 
       if (editingId) {
         setAreas((prev) => prev.map((a) => a.id === editingId ? { ...a, ...form } : a));
+        showToast("Area updated.");
       } else {
         setAreas((prev) => [...prev, data.area]);
+        showToast("Area created.");
       }
       setModalOpen(false);
     } catch { setFormError("Network error."); }
@@ -72,9 +77,16 @@ export default function TableAreasPage() {
 
   const confirmDelete = async () => {
     if (!deleteTarget) return;
-    await fetch(`/api/tables/areas/${deleteTarget.id}`, { method: "DELETE" });
-    setAreas((prev) => prev.filter((a) => a.id !== deleteTarget.id));
-    setDeleteTarget(null);
+    setDeleting(true);
+    try {
+      const res  = await fetch(`/api/tables/areas/${deleteTarget.id}`, { method: "DELETE" });
+      const data = await res.json();
+      if (!data.success) { showToast(data.error ?? "Failed to delete.", "error"); return; }
+      setAreas((prev) => prev.filter((a) => a.id !== deleteTarget.id));
+      showToast(`"${deleteTarget.name}" deleted.`);
+      setDeleteTarget(null);
+    } catch { showToast("Network error.", "error"); }
+    finally { setDeleting(false); }
   };
 
   if (loading) {
@@ -228,10 +240,11 @@ export default function TableAreasPage() {
         open={!!deleteTarget}
         title="Delete area?"
         message={deleteTarget ? `"${deleteTarget.name}" will be removed. Tables in this area will lose their category.` : ""}
-        confirmLabel="Delete"
+        confirmLabel={deleting ? "Deleting…" : "Delete"}
         onCancel={() => setDeleteTarget(null)}
         onConfirm={confirmDelete}
       />
+      {ToastUI}
     </div>
   );
 }

@@ -9,6 +9,7 @@ import PaginationBar from "@/components/ui/PaginationBar";
 import TableSkeleton from "@/components/ui/TableSkeleton";
 import { useUser } from "@/context/AuthContext";
 import { usePaginatedList } from "@/lib/usePaginatedList";
+import { useToast } from "@/hooks/useToast";
 import { Pencil, Plus, RefreshCw, Trash2, Users } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 
@@ -30,6 +31,8 @@ export default function StaffModulePage() {
   const [formError, setFormError]   = useState("");
   const [saving, setSaving]         = useState(false);
   const [deleteTarget, setDeleteTarget] = useState(null);
+  const [deleting, setDeleting] = useState(false);
+  const { showToast, ToastUI } = useToast();
 
   /* ── Fetch staff from DB ── */
   const fetchStaff = useCallback(async () => {
@@ -108,29 +111,45 @@ export default function StaffModulePage() {
           return;
         }
         setStaffRows((prev) => [data.staff, ...prev]);
+        showToast("Staff member added.");
         setModalOpen(false);
       } catch {
         setFormError("Network error. Please try again.");
       }
     } else {
-      /* ── EDIT — local state only (extend with PATCH API if needed) ── */
-      setStaffRows((prev) =>
-        prev.map((s) =>
-          s.id === editingId
-            ? { ...s, name: form.name, role: form.role, phone: form.phone, email: form.email, status: form.status }
-            : s
-        )
-      );
-      setModalOpen(false);
+      /* ── EDIT via API ── */
+      try {
+        const res  = await fetch(`/api/staff/${editingId}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name: form.name, role: form.role, phone: form.phone, status: form.status }),
+        });
+        const data = await res.json();
+        if (!data.success) { setFormError(data.error ?? "Failed to update."); setSaving(false); return; }
+        setStaffRows((prev) => prev.map((s) => s.id === editingId
+          ? { ...s, name: form.name, role: form.role, phone: form.phone, status: form.status }
+          : s
+        ));
+        showToast("Staff member updated.");
+        setModalOpen(false);
+      } catch { setFormError("Network error."); }
     }
 
     setSaving(false);
   };
 
-  const confirmDelete = () => {
+  const confirmDelete = async () => {
     if (!deleteTarget) return;
-    setStaffRows((prev) => prev.filter((s) => s.id !== deleteTarget.id));
-    setDeleteTarget(null);
+    setDeleting(true);
+    try {
+      const res  = await fetch(`/api/staff/${deleteTarget.id}`, { method: "DELETE" });
+      const data = await res.json();
+      if (!data.success) { showToast(data.error ?? "Failed to delete.", "error"); return; }
+      setStaffRows((prev) => prev.filter((s) => s.id !== deleteTarget.id));
+      showToast(`${deleteTarget.name} removed.`);
+      setDeleteTarget(null);
+    } catch { showToast("Network error.", "error"); }
+    finally { setDeleting(false); }
   };
 
   if (loading) {
@@ -338,9 +357,11 @@ export default function StaffModulePage() {
         open={!!deleteTarget}
         title="Remove staff member?"
         message={deleteTarget ? `${deleteTarget.name} will be removed from the roster.` : ""}
+        confirmLabel={deleting ? "Removing…" : "Remove"}
         onCancel={() => setDeleteTarget(null)}
         onConfirm={confirmDelete}
       />
+      {ToastUI}
     </div>
   );
 }

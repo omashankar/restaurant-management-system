@@ -5,6 +5,7 @@ import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import EmptyState from "@/components/ui/EmptyState";
 import Modal from "@/components/ui/Modal";
 import { DEFAULT_KITCHEN_FOR_TYPE, KITCHEN_TYPE_LABELS } from "@/types/menu";
+import { useToast } from "@/hooks/useToast";
 import { LayoutGrid, List, Plus, RefreshCw, Search, UtensilsCrossed } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
@@ -42,6 +43,8 @@ export default function MenuItemsPage() {
   const [form, setForm]             = useState(emptyForm);
   const [formError, setFormError]   = useState("");
   const [deleteTarget, setDeleteTarget] = useState(null);
+  const [deleting, setDeleting]         = useState(false);
+  const { showToast, ToastUI }          = useToast();
 
   /* ── Fetch items + categories ── */
   const fetchAll = useCallback(async () => {
@@ -127,11 +130,13 @@ export default function MenuItemsPage() {
         const data = await res.json();
         if (!data.success) { setFormError(data.error ?? "Failed to update."); return; }
         setItems((prev) => prev.map((m) => m.id === editingId ? { ...m, ...body } : m));
+        showToast("Item updated successfully.");
       } else {
         const res  = await fetch("/api/menu", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
         const data = await res.json();
         if (!data.success) { setFormError(data.error ?? "Failed to create."); return; }
         setItems((prev) => [data.item, ...prev]);
+        showToast("Item created successfully.");
       }
       setModalOpen(false);
     } catch { setFormError("Network error."); }
@@ -140,9 +145,16 @@ export default function MenuItemsPage() {
 
   const confirmDelete = async () => {
     if (!deleteTarget) return;
-    await fetch(`/api/menu/${deleteTarget.id}`, { method: "DELETE" });
-    setItems((prev) => prev.filter((m) => m.id !== deleteTarget.id));
-    setDeleteTarget(null);
+    setDeleting(true);
+    try {
+      const res  = await fetch(`/api/menu/${deleteTarget.id}`, { method: "DELETE" });
+      const data = await res.json();
+      if (!data.success) { showToast(data.error ?? "Failed to delete.", "error"); return; }
+      setItems((prev) => prev.filter((m) => m.id !== deleteTarget.id));
+      showToast(`"${deleteTarget.name}" deleted.`);
+      setDeleteTarget(null);
+    } catch { showToast("Network error.", "error"); }
+    finally { setDeleting(false); }
   };
 
   if (loading) {
@@ -384,7 +396,9 @@ export default function MenuItemsPage() {
         message={deleteTarget ? `Remove "${deleteTarget.name}" from the catalog?` : ""}
         onCancel={() => setDeleteTarget(null)}
         onConfirm={confirmDelete}
+        confirmLabel={deleting ? "Deleting…" : "Delete"}
       />
+      {ToastUI}
     </div>
   );
 }
