@@ -1,71 +1,83 @@
 "use client";
 
-import { CATEGORY_COLORS, getCategoryBadge } from "@/lib/tableCategoryColors";
-import { useModuleData } from "@/context/ModuleDataContext";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
-import Modal from "@/components/ui/Modal";
 import EmptyState from "@/components/ui/EmptyState";
-import { LayoutGrid, Pencil, Plus, Trash2 } from "lucide-react";
-import { useEffect, useState } from "react";
+import Modal from "@/components/ui/Modal";
+import { CATEGORY_COLORS, getCategoryBadge } from "@/lib/tableCategoryColors";
+import { LayoutGrid, Pencil, Plus, RefreshCw, Table2, Trash2 } from "lucide-react";
+import Link from "next/link";
+import { useCallback, useEffect, useState } from "react";
 
 const EMPTY_FORM = { name: "", description: "", color: "emerald" };
 
 export default function TableAreasPage() {
-  const { hydrated, tableCategories, setTableCategories, floorTables } = useModuleData();
-  const [loading, setLoading] = useState(true);
-  const [modalOpen, setModalOpen] = useState(false);
-  const [editingId, setEditingId] = useState(null);
-  const [form, setForm] = useState(EMPTY_FORM);
+  const [areas, setAreas]           = useState([]);
+  const [tableCounts, setTableCounts] = useState({});
+  const [loading, setLoading]       = useState(true);
+  const [saving, setSaving]         = useState(false);
+  const [modalOpen, setModalOpen]   = useState(false);
+  const [editingId, setEditingId]   = useState(null);
+  const [form, setForm]             = useState(EMPTY_FORM);
+  const [formError, setFormError]   = useState("");
   const [deleteTarget, setDeleteTarget] = useState(null);
-
-  useEffect(() => {
-    if (!hydrated) return;
-    const t = setTimeout(() => setLoading(false), 300);
-    return () => clearTimeout(t);
-  }, [hydrated]);
 
   const set = (k, v) => setForm((f) => ({ ...f, [k]: v }));
 
-  const openCreate = () => {
-    setEditingId(null);
-    setForm(EMPTY_FORM);
-    setModalOpen(true);
-  };
-
-  const openEdit = (cat) => {
-    setEditingId(cat.id);
-    setForm({ name: cat.name, description: cat.description ?? "", color: cat.color ?? "emerald" });
-    setModalOpen(true);
-  };
-
-  const save = () => {
-    if (!form.name.trim()) return;
-    if (editingId) {
-      setTableCategories((prev) =>
-        prev.map((c) => c.id === editingId ? { ...c, name: form.name.trim(), description: form.description.trim(), color: form.color } : c)
-      );
-    } else {
-      setTableCategories((prev) => [
-        ...prev,
-        { id: `tcat-${Date.now()}`, name: form.name.trim(), description: form.description.trim(), color: form.color },
+  /* ── Fetch areas + table counts ── */
+  const fetchAreas = useCallback(async () => {
+    setLoading(true);
+    try {
+      const [areasRes, tablesRes] = await Promise.all([
+        fetch("/api/tables/areas"),
+        fetch("/api/tables"),
       ]);
-    }
-    setModalOpen(false);
+      const [areasData, tablesData] = await Promise.all([areasRes.json(), tablesRes.json()]);
+
+      if (areasData.success)  setAreas(areasData.areas);
+      if (tablesData.success) {
+        const counts = {};
+        tablesData.tables.forEach((t) => {
+          if (t.categoryId) counts[t.categoryId] = (counts[t.categoryId] ?? 0) + 1;
+        });
+        setTableCounts(counts);
+      }
+    } catch { /* keep existing */ }
+    finally { setLoading(false); }
+  }, []);
+
+  useEffect(() => { fetchAreas(); }, [fetchAreas]);
+
+  const openCreate = () => { setEditingId(null); setForm(EMPTY_FORM); setFormError(""); setModalOpen(true); };
+  const openEdit   = (a)  => { setEditingId(a.id); setForm({ name: a.name, description: a.description ?? "", color: a.color ?? "emerald" }); setFormError(""); setModalOpen(true); };
+
+  const save = async () => {
+    if (!form.name.trim()) { setFormError("Area name is required."); return; }
+    setSaving(true); setFormError("");
+    try {
+      const url    = editingId ? `/api/tables/areas/${editingId}` : "/api/tables/areas";
+      const method = editingId ? "PATCH" : "POST";
+      const res    = await fetch(url, { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(form) });
+      const data   = await res.json();
+      if (!data.success) { setFormError(data.error ?? "Failed to save."); return; }
+
+      if (editingId) {
+        setAreas((prev) => prev.map((a) => a.id === editingId ? { ...a, ...form } : a));
+      } else {
+        setAreas((prev) => [...prev, data.area]);
+      }
+      setModalOpen(false);
+    } catch { setFormError("Network error."); }
+    finally { setSaving(false); }
   };
 
-  const confirmDelete = () => {
+  const confirmDelete = async () => {
     if (!deleteTarget) return;
-    setTableCategories((prev) => prev.filter((c) => c.id !== deleteTarget.id));
+    await fetch(`/api/tables/areas/${deleteTarget.id}`, { method: "DELETE" });
+    setAreas((prev) => prev.filter((a) => a.id !== deleteTarget.id));
     setDeleteTarget(null);
   };
 
-  // Count tables per category
-  const tableCounts = floorTables.reduce((acc, t) => {
-    if (t.categoryId) acc[t.categoryId] = (acc[t.categoryId] ?? 0) + 1;
-    return acc;
-  }, {});
-
-  if (!hydrated || loading) {
+  if (loading) {
     return (
       <div className="space-y-4">
         <div className="h-8 w-40 animate-pulse rounded-lg bg-zinc-800" />
@@ -88,20 +100,27 @@ export default function TableAreasPage() {
           </span>
           <div>
             <h1 className="text-2xl font-semibold tracking-tight text-zinc-50">Table Areas</h1>
-            <p className="mt-1 text-sm text-zinc-500">Manage seating areas — assign to tables for filtering.</p>
+            <p className="mt-1 text-sm text-zinc-500">Seating areas — assign to tables for filtering.</p>
           </div>
         </div>
-        <button
-          type="button"
-          onClick={openCreate}
-          className="cursor-pointer inline-flex items-center gap-2 rounded-xl bg-emerald-500 px-4 py-2.5 text-sm font-semibold text-zinc-950 hover:bg-emerald-400"
-        >
-          <Plus className="size-4" /> Add Area
-        </button>
+        <div className="flex items-center gap-2">
+          <Link href="/tables"
+            className="cursor-pointer inline-flex items-center gap-2 rounded-xl border border-zinc-700 px-4 py-2.5 text-sm font-medium text-zinc-300 hover:border-zinc-500">
+            <Table2 className="size-4" /> Tables
+          </Link>
+          <button type="button" onClick={fetchAreas}
+            className="cursor-pointer flex items-center gap-1.5 rounded-xl border border-zinc-700 px-3 py-2.5 text-sm font-medium text-zinc-400 hover:border-zinc-500 hover:text-zinc-200 transition-colors">
+            <RefreshCw className="size-4" />
+          </button>
+          <button type="button" onClick={openCreate}
+            className="cursor-pointer inline-flex items-center gap-2 rounded-xl bg-emerald-500 px-4 py-2.5 text-sm font-semibold text-zinc-950 hover:bg-emerald-400">
+            <Plus className="size-4" /> Add Area
+          </button>
+        </div>
       </div>
 
       {/* Grid */}
-      {tableCategories.length === 0 ? (
+      {areas.length === 0 ? (
         <EmptyState
           title="No areas yet"
           description="Create seating areas like Indoor, Outdoor, VIP to organize your tables."
@@ -114,31 +133,31 @@ export default function TableAreasPage() {
         />
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {tableCategories.map((cat) => {
-            const badgeClass = getCategoryBadge(cat.color);
-            const count = tableCounts[cat.id] ?? 0;
+          {areas.map((area) => {
+            const badgeClass = getCategoryBadge(area.color);
+            const count = tableCounts[area.id] ?? 0;
             return (
-              <div key={cat.id}
-                className="group rounded-2xl border border-zinc-800 bg-zinc-900/60 p-5 shadow-sm transition-all duration-200 hover:border-zinc-700 hover:shadow-md">
-                <div className="flex items-start justify-between gap-3">
+              <div key={area.id}
+                className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-5 shadow-sm transition-all duration-200 hover:border-zinc-700 hover:shadow-md">
+                <div className="flex items-start gap-3">
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 flex-wrap">
                       <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold ring-1 ${badgeClass}`}>
-                        {cat.name}
+                        {area.name}
                       </span>
                       <span className="text-xs text-zinc-600">{count} table{count !== 1 ? "s" : ""}</span>
                     </div>
-                    {cat.description && (
-                      <p className="mt-2 text-xs leading-relaxed text-zinc-500">{cat.description}</p>
+                    {area.description && (
+                      <p className="mt-2 text-xs leading-relaxed text-zinc-500">{area.description}</p>
                     )}
                   </div>
                 </div>
                 <div className="mt-4 flex gap-1.5 border-t border-zinc-800/80 pt-3">
-                  <button type="button" onClick={() => openEdit(cat)}
+                  <button type="button" onClick={() => openEdit(area)}
                     className="cursor-pointer flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-zinc-800 py-2 text-xs font-medium text-zinc-400 transition-colors hover:border-emerald-500/40 hover:text-emerald-400">
                     <Pencil className="size-3.5" /> Edit
                   </button>
-                  <button type="button" onClick={() => setDeleteTarget(cat)}
+                  <button type="button" onClick={() => setDeleteTarget(area)}
                     className="cursor-pointer flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-zinc-800 py-2 text-xs font-medium text-zinc-400 transition-colors hover:border-red-500/40 hover:text-red-400">
                     <Trash2 className="size-3.5" /> Delete
                   </button>
@@ -150,9 +169,7 @@ export default function TableAreasPage() {
       )}
 
       {/* Modal */}
-      <Modal
-        open={modalOpen}
-        onClose={() => setModalOpen(false)}
+      <Modal open={modalOpen} onClose={() => setModalOpen(false)}
         title={editingId ? "Edit Area" : "Add Area"}
         footer={
           <div className="flex justify-end gap-2">
@@ -160,14 +177,14 @@ export default function TableAreasPage() {
               className="cursor-pointer rounded-xl border border-zinc-700 px-4 py-2 text-sm text-zinc-300 hover:border-zinc-500">
               Cancel
             </button>
-            <button type="button" onClick={save} disabled={!form.name.trim()}
+            <button type="button" onClick={save} disabled={saving || !form.name.trim()}
               className="cursor-pointer rounded-xl bg-emerald-500 px-4 py-2 text-sm font-semibold text-zinc-950 hover:bg-emerald-400 disabled:opacity-40">
-              Save
+              {saving ? "Saving…" : "Save"}
             </button>
           </div>
-        }
-      >
+        }>
         <div className="space-y-4">
+          {formError && <p className="rounded-xl border border-red-500/20 bg-red-500/10 px-3 py-2 text-xs text-red-400">{formError}</p>}
           <div>
             <label className="text-xs font-medium text-zinc-500">Area Name *</label>
             <input value={form.name} onChange={(e) => set("name", e.target.value)}
@@ -196,7 +213,6 @@ export default function TableAreasPage() {
               ))}
             </div>
           </div>
-          {/* Preview */}
           {form.name && (
             <div className="rounded-xl border border-zinc-800 bg-zinc-950/40 px-4 py-3">
               <p className="mb-2 text-xs text-zinc-600">Preview</p>
@@ -211,7 +227,7 @@ export default function TableAreasPage() {
       <ConfirmDialog
         open={!!deleteTarget}
         title="Delete area?"
-        message={deleteTarget ? `"${deleteTarget.name}" will be removed. Tables using this area will lose their category.` : ""}
+        message={deleteTarget ? `"${deleteTarget.name}" will be removed. Tables in this area will lose their category.` : ""}
         confirmLabel="Delete"
         onCancel={() => setDeleteTarget(null)}
         onConfirm={confirmDelete}

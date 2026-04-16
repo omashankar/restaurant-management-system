@@ -20,7 +20,7 @@ import {
   useState,
 } from "react";
 
-const KEY = "rms-modules-v2";
+const KEY = "rms-modules-v3";
 
 const ModuleDataContext = createContext(null);
 

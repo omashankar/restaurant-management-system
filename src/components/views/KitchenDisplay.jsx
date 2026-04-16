@@ -1,153 +1,83 @@
 "use client";
 
-import { useModuleData } from "@/context/ModuleDataContext";
-import { kitchenTickets } from "@/lib/mockData";
 import {
-  CheckCircle2,
-  ChefHat,
-  Clock,
-  Flame,
-  RefreshCw,
-  UtensilsCrossed,
+  CheckCircle2, ChefHat, Clock,
+  Flame, RefreshCw, UtensilsCrossed,
 } from "lucide-react";
-import { useEffect, useState } from "react";
-
-/* ── Extended mock tickets ── */
-const INITIAL_TICKETS = [
-  ...kitchenTickets,
-  {
-    id: "K-1042",
-    table: "T12",
-    orderType: "dine-in",
-    customer: "Walk-in",
-    placedAt: "12:02 PM",
-    elapsedMin: 2,
-    status: "new",
-    items: [
-      { name: "Classic Smash Burger", qty: 2 },
-      { name: "Truffle Parmesan Fries", qty: 2 },
-    ],
-  },
-  {
-    id: "K-1038",
-    table: "—",
-    orderType: "delivery",
-    customer: "Priya S.",
-    placedAt: "11:55 AM",
-    elapsedMin: 9,
-    status: "preparing",
-    items: [
-      { name: "Crispy Chicken Wrap", qty: 1, note: "Extra spicy" },
-      { name: "Iced Caramel Latte", qty: 2 },
-    ],
-  },
-  {
-    id: "K-1037",
-    table: "—",
-    orderType: "takeaway",
-    customer: "James O.",
-    placedAt: "11:50 AM",
-    elapsedMin: 14,
-    status: "ready",
-    items: [
-      { name: "Berry Lemon Cheesecake", qty: 2 },
-      { name: "Craft Cola", qty: 2 },
-    ],
-  },
-];
-
-/* Patch existing kitchenTickets with missing fields */
-const TICKETS = INITIAL_TICKETS.map((t, i) => ({
-  orderType: "dine-in",
-  customer: "—",
-  elapsedMin: [12, 8, 15, 2, 9, 14][i] ?? 5,
-  ...t,
-}));
+import { useCallback, useEffect, useRef, useState } from "react";
 
 /* ── Column config ── */
 const COLUMNS = [
-  {
-    key: "new",
-    label: "New",
-    accent: "text-amber-400",
-    headerBg: "bg-amber-500/10 border-amber-500/20",
-    borderLeft: "border-l-amber-400",
-    badge: "bg-amber-500/15 text-amber-300 ring-1 ring-amber-500/25",
-    dot: "bg-amber-400",
-  },
-  {
-    key: "preparing",
-    label: "Preparing",
-    accent: "text-sky-400",
-    headerBg: "bg-sky-500/10 border-sky-500/20",
-    borderLeft: "border-l-sky-400",
-    badge: "bg-sky-500/15 text-sky-300 ring-1 ring-sky-500/25",
-    dot: "bg-sky-400",
-  },
-  {
-    key: "ready",
-    label: "Ready",
-    accent: "text-emerald-400",
-    headerBg: "bg-emerald-500/10 border-emerald-500/20",
-    borderLeft: "border-l-emerald-400",
-    badge: "bg-emerald-500/15 text-emerald-300 ring-1 ring-emerald-500/25",
-    dot: "bg-emerald-400",
-  },
+  { key: "new",       label: "New",       accent: "text-amber-400",   headerBg: "bg-amber-500/10 border-amber-500/20",     borderLeft: "border-l-amber-400",   badge: "bg-amber-500/15 text-amber-300 ring-1 ring-amber-500/25",   dot: "bg-amber-400"   },
+  { key: "preparing", label: "Preparing", accent: "text-sky-400",     headerBg: "bg-sky-500/10 border-sky-500/20",         borderLeft: "border-l-sky-400",     badge: "bg-sky-500/15 text-sky-300 ring-1 ring-sky-500/25",         dot: "bg-sky-400"     },
+  { key: "ready",     label: "Ready",     accent: "text-emerald-400", headerBg: "bg-emerald-500/10 border-emerald-500/20", borderLeft: "border-l-emerald-400", badge: "bg-emerald-500/15 text-emerald-300 ring-1 ring-emerald-500/25", dot: "bg-emerald-400" },
 ];
 
-/* ── Elapsed timer ── */
-function ElapsedBadge({ minutes }) {
-  const urgent = minutes >= 15;
-  const warn   = minutes >= 8;
+/* ── Elapsed timer badge ── */
+function ElapsedBadge({ createdAt, elapsedMin }) {
+  const [mins, setMins] = useState(() => {
+    if (elapsedMin != null) return elapsedMin;
+    if (createdAt) return Math.floor((Date.now() - new Date(createdAt).getTime()) / 60000);
+    return 0;
+  });
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      if (createdAt) setMins(Math.floor((Date.now() - new Date(createdAt).getTime()) / 60000));
+      else setMins((m) => m + 1);
+    }, 30_000);
+    return () => clearInterval(id);
+  }, [createdAt]);
+
+  const urgent = mins >= 15;
+  const warn   = mins >= 8;
   return (
     <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold ${
       urgent ? "bg-red-500/15 text-red-400 ring-1 ring-red-500/25" :
       warn   ? "bg-amber-500/15 text-amber-400 ring-1 ring-amber-500/25" :
                "bg-zinc-800 text-zinc-500"
     }`}>
-      <Clock className="size-3" />
-      {minutes}m
+      <Clock className="size-3" />{mins}m
     </span>
   );
 }
 
-/* ── Order type label ── */
-function OrderTypePill({ type }) {
-  const map = {
-    "dine-in":  "Dine-In",
-    "takeaway": "Takeaway",
-    "delivery": "Delivery",
+/* ── Order type pill ── */
+function TypePill({ type }) {
+  const cfg = {
+    "dine-in":  { label: "Dine-In",  color: "text-emerald-400" },
+    "takeaway": { label: "Takeaway", color: "text-indigo-400"  },
+    "delivery": { label: "Delivery", color: "text-sky-400"     },
   };
-  const color = {
-    "dine-in":  "text-emerald-400",
-    "takeaway": "text-indigo-400",
-    "delivery": "text-sky-400",
-  };
-  return (
-    <span className={`text-[10px] font-semibold uppercase tracking-wide ${color[type] ?? "text-zinc-500"}`}>
-      {map[type] ?? type}
-    </span>
-  );
+  const c = cfg[type] ?? { label: type, color: "text-zinc-500" };
+  return <span className={`text-[10px] font-semibold uppercase tracking-wide ${c.color}`}>{c.label}</span>;
 }
 
 /* ── Ticket card ── */
-function TicketCard({ ticket, col, onAction }) {
+function TicketCard({ ticket, col, onAction, updating }) {
+  const isUpdating = updating === ticket.id;
+  const placedAt = ticket.placedAt ?? (ticket.createdAt
+    ? new Date(ticket.createdAt).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })
+    : "—");
+
   return (
     <article className={`rounded-2xl border border-zinc-800 bg-zinc-900/80 shadow-md shadow-black/20 border-l-4 ${col.borderLeft} transition-all duration-200 hover:border-zinc-700`}>
       {/* Header */}
       <div className="flex items-start justify-between gap-2 border-b border-zinc-800/80 p-4">
         <div className="space-y-1">
           <div className="flex items-center gap-2">
-            <p className="font-mono text-sm font-semibold text-emerald-400">{ticket.id}</p>
-            <ElapsedBadge minutes={ticket.elapsedMin} />
+            <p className="font-mono text-sm font-semibold text-emerald-400">
+              {ticket.orderId ?? ticket.id?.slice(-8).toUpperCase()}
+            </p>
+            <ElapsedBadge createdAt={ticket.createdAt} elapsedMin={ticket.elapsedMin} />
           </div>
           <p className="text-base font-bold text-zinc-100">
-            {ticket.table !== "—" ? `Table ${ticket.table}` : ticket.customer}
+            {ticket.tableNumber ? `Table ${ticket.tableNumber}` : ticket.customer ?? "—"}
           </p>
           <div className="flex items-center gap-2">
-            <OrderTypePill type={ticket.orderType} />
+            <TypePill type={ticket.orderType ?? ticket.type} />
             <span className="text-zinc-700">·</span>
-            <span className="text-xs text-zinc-600">{ticket.placedAt}</span>
+            <span className="text-xs text-zinc-600">{placedAt}</span>
           </div>
         </div>
         <span className={`shrink-0 rounded-full px-2.5 py-0.5 text-xs font-bold uppercase tracking-wide ${col.badge}`}>
@@ -157,7 +87,7 @@ function TicketCard({ ticket, col, onAction }) {
 
       {/* Items */}
       <ul className="space-y-1.5 p-4">
-        {ticket.items.map((it, idx) => (
+        {(ticket.items ?? []).map((it, idx) => (
           <li key={idx} className="rounded-lg bg-zinc-950/50 px-3 py-2 text-sm">
             <div className="flex items-center gap-2">
               <span className="flex size-5 shrink-0 items-center justify-center rounded-md bg-zinc-800 text-xs font-bold text-zinc-300">
@@ -165,31 +95,40 @@ function TicketCard({ ticket, col, onAction }) {
               </span>
               <span className="font-medium text-zinc-100">{it.name}</span>
             </div>
-            {it.note && (
-              <p className="mt-1 pl-7 text-xs text-amber-400">{it.note}</p>
-            )}
+            {it.note && <p className="mt-1 pl-7 text-xs text-amber-400">{it.note}</p>}
           </li>
         ))}
+        {ticket.notes && (
+          <li className="rounded-lg border border-amber-500/20 bg-amber-500/5 px-3 py-2 text-xs text-amber-400">
+            📝 {ticket.notes}
+          </li>
+        )}
       </ul>
 
-      {/* Action */}
+      {/* Action button */}
       <div className="border-t border-zinc-800/80 p-3">
         {ticket.status === "new" && (
-          <button type="button" onClick={() => onAction(ticket.id, "preparing")}
-            className="cursor-pointer flex w-full items-center justify-center gap-2 rounded-xl bg-sky-500/15 py-2.5 text-sm font-bold text-sky-300 ring-1 ring-sky-500/25 transition-all hover:bg-sky-500/25 active:scale-[0.98]">
-            <Flame className="size-4" /> Start Cooking
+          <button type="button" disabled={isUpdating}
+            onClick={() => onAction(ticket.id, "preparing")}
+            className="cursor-pointer flex w-full items-center justify-center gap-2 rounded-xl bg-sky-500/15 py-2.5 text-sm font-bold text-sky-300 ring-1 ring-sky-500/25 transition-all hover:bg-sky-500/25 active:scale-[0.98] disabled:opacity-50">
+            <Flame className="size-4" />
+            {isUpdating ? "Updating…" : "Start Cooking"}
           </button>
         )}
         {ticket.status === "preparing" && (
-          <button type="button" onClick={() => onAction(ticket.id, "ready")}
-            className="cursor-pointer flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-500 py-2.5 text-sm font-bold text-zinc-950 shadow-lg shadow-emerald-500/20 transition-all hover:bg-emerald-400 active:scale-[0.98]">
-            <CheckCircle2 className="size-4" /> Mark Ready
+          <button type="button" disabled={isUpdating}
+            onClick={() => onAction(ticket.id, "ready")}
+            className="cursor-pointer flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-500 py-2.5 text-sm font-bold text-zinc-950 shadow-lg shadow-emerald-500/20 transition-all hover:bg-emerald-400 active:scale-[0.98] disabled:opacity-50">
+            <CheckCircle2 className="size-4" />
+            {isUpdating ? "Updating…" : "Mark Ready"}
           </button>
         )}
         {ticket.status === "ready" && (
-          <button type="button" onClick={() => onAction(ticket.id, "served")}
-            className="cursor-pointer flex w-full items-center justify-center gap-2 rounded-xl bg-zinc-800 py-2.5 text-sm font-semibold text-zinc-300 transition-all hover:bg-zinc-700 active:scale-[0.98]">
-            <UtensilsCrossed className="size-4" /> Mark Served
+          <button type="button" disabled={isUpdating}
+            onClick={() => onAction(ticket.id, "completed")}
+            className="cursor-pointer flex w-full items-center justify-center gap-2 rounded-xl bg-zinc-800 py-2.5 text-sm font-semibold text-zinc-300 transition-all hover:bg-zinc-700 active:scale-[0.98] disabled:opacity-50">
+            <UtensilsCrossed className="size-4" />
+            {isUpdating ? "Updating…" : "Mark Served"}
           </button>
         )}
       </div>
@@ -197,57 +136,82 @@ function TicketCard({ ticket, col, onAction }) {
   );
 }
 
-/* ── Main ── */
+/* ══════════════════════════════════════
+   MAIN KITCHEN DISPLAY
+══════════════════════════════════════ */
 export default function KitchenDisplay() {
-  const { kitchenQueue, setKitchenQueue } = useModuleData();
+  const [orders, setOrders]     = useState([]);
+  const [loading, setLoading]   = useState(true);
+  const [updating, setUpdating] = useState(null); // id being updated
+  const [lastRefresh, setLastRefresh] = useState(null);
+  const intervalRef = useRef(null);
 
-  // Merge real queue (from context) with mock seed tickets
-  const [tickets, setTickets] = useState(() => {
-    const merged = [...TICKETS];
-    return merged;
-  });
-
-  // Sync new tickets from kitchenQueue into local state
-  useEffect(() => {
-    if (kitchenQueue.length === 0) return;
-    setTickets((prev) => {
-      const existingIds = new Set(prev.map((t) => t.id));
-      const newOnes = kitchenQueue.filter((t) => !existingIds.has(t.id));
-      if (newOnes.length === 0) return prev;
-      return [...newOnes, ...prev];
-    });
-  }, [kitchenQueue]);
-
-  /* Tick elapsed time every minute */
-  useEffect(() => {
-    const id = setInterval(() => {
-      setTickets((prev) =>
-        prev.map((t) =>
-          t.status !== "served" ? { ...t, elapsedMin: t.elapsedMin + 1 } : t
-        )
-      );
-    }, 60_000);
-    return () => clearInterval(id);
+  /* ── Fetch active orders from DB ── */
+  const fetchOrders = useCallback(async (silent = false) => {
+    if (!silent) setLoading(true);
+    try {
+      const res  = await fetch("/api/orders");
+      const data = await res.json();
+      if (data.success) {
+        // Kitchen shows: new, preparing, ready (not completed/cancelled)
+        const active = data.orders.filter((o) => ["new", "preparing", "ready"].includes(o.status));
+        setOrders(active);
+        setLastRefresh(new Date());
+      }
+    } catch { /* keep existing */ }
+    finally { if (!silent) setLoading(false); }
   }, []);
 
-  const updateStatus = (id, status) => {
-    setTickets((prev) => prev.map((t) => (t.id === id ? { ...t, status } : t)));
-    // Also update orderRows status when kitchen marks ready/served
-    if (status === "ready" || status === "served") {
-      const ticket = tickets.find((t) => t.id === id);
-      if (ticket?.orderId) {
-        // Status sync handled via orderId if needed
+  useEffect(() => { fetchOrders(); }, [fetchOrders]);
+
+  /* ── Auto-refresh every 30 seconds ── */
+  useEffect(() => {
+    intervalRef.current = setInterval(() => fetchOrders(true), 30_000);
+    return () => clearInterval(intervalRef.current);
+  }, [fetchOrders]);
+
+  /* ── Update order status via API ── */
+  const handleAction = useCallback(async (id, status) => {
+    setUpdating(id);
+    try {
+      const res  = await fetch(`/api/orders/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        if (status === "completed") {
+          // Remove from kitchen board
+          setOrders((prev) => prev.filter((o) => o.id !== id));
+        } else {
+          setOrders((prev) => prev.map((o) => o.id === id ? { ...o, status } : o));
+        }
       }
-    }
-  };
+    } catch { /* keep existing */ }
+    finally { setUpdating(null); }
+  }, []);
 
-  const resetAll = () => {
-    setTickets(TICKETS);
-    setKitchenQueue([]);
-  };
+  const active   = orders.filter((o) => o.status !== "completed");
+  const colCount = (key) => active.filter((o) => o.status === key).length;
 
-  const active = tickets.filter((t) => t.status !== "served");
-  const served = tickets.filter((t) => t.status === "served");
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <div className="h-8 w-48 animate-pulse rounded-lg bg-zinc-800" />
+        <div className="grid gap-6 lg:grid-cols-3">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <div key={i} className="space-y-3">
+              <div className="h-10 animate-pulse rounded-xl bg-zinc-800" />
+              {Array.from({ length: 2 }).map((_, j) => (
+                <div key={j} className="h-40 animate-pulse rounded-2xl border border-zinc-800 bg-zinc-900/40" />
+              ))}
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -261,96 +225,93 @@ export default function KitchenDisplay() {
           <div>
             <h1 className="text-2xl font-semibold tracking-tight text-zinc-50">Kitchen Display</h1>
             <p className="mt-1 text-sm text-zinc-500">
-              Color rails: amber = new · blue = preparing · green = ready
+              {lastRefresh ? `Last updated ${lastRefresh.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })}` : "Loading…"}
+              {" · "}Auto-refresh every 30s
             </p>
           </div>
         </div>
+
         <div className="flex items-center gap-3">
-          {/* Stats */}
+          {/* Live counts */}
           <div className="flex items-center gap-3 rounded-xl border border-zinc-800 bg-zinc-900/60 px-4 py-2 text-xs">
-            {COLUMNS.map((col) => {
-              const count = active.filter((t) => t.status === col.key).length;
-              return (
-                <span key={col.key} className="flex items-center gap-1.5">
-                  <span className={`size-2 rounded-full ${col.dot}`} />
-                  <span className={`font-bold ${col.accent}`}>{count}</span>
-                  <span className="text-zinc-600">{col.label}</span>
-                </span>
-              );
-            })}
+            {COLUMNS.map((col) => (
+              <span key={col.key} className="flex items-center gap-1.5">
+                <span className={`size-2 rounded-full ${col.dot}`} />
+                <span className={`font-bold ${col.accent}`}>{colCount(col.key)}</span>
+                <span className="text-zinc-600">{col.label}</span>
+              </span>
+            ))}
           </div>
-          <button type="button" onClick={resetAll}
+          <button type="button" onClick={() => fetchOrders()}
             className="cursor-pointer flex items-center gap-1.5 rounded-xl border border-zinc-800 bg-zinc-900/60 px-3 py-2 text-xs font-medium text-zinc-500 hover:border-zinc-600 hover:text-zinc-300 transition-colors">
-            <RefreshCw className="size-3.5" /> Reset
+            <RefreshCw className="size-3.5" /> Refresh
           </button>
         </div>
       </div>
 
-      {/* Legend */}
+      {/* Timer legend */}
       <div className="flex flex-wrap items-center gap-4 text-xs text-zinc-500">
-        <span className="flex items-center gap-1.5"><Clock className="size-3.5 text-zinc-600" /> Timer color: <span className="text-zinc-400">normal</span> · <span className="text-amber-400">8m+ warn</span> · <span className="text-red-400">15m+ urgent</span></span>
+        <span className="flex items-center gap-1.5">
+          <Clock className="size-3.5 text-zinc-600" />
+          Timer: <span className="text-zinc-400">normal</span>
+          <span className="mx-1">·</span>
+          <span className="text-amber-400">8m+ warn</span>
+          <span className="mx-1">·</span>
+          <span className="text-red-400">15m+ urgent</span>
+        </span>
       </div>
 
-      {/* 3-column board */}
-      <div className="grid gap-6 lg:grid-cols-3">
-        {COLUMNS.map((col) => {
-          const colTickets = active.filter((t) => t.status === col.key);
-          return (
-            <div key={col.key} className="space-y-3">
-              {/* Column header */}
-              <div className={`flex items-center justify-between rounded-xl border px-4 py-2.5 ${col.headerBg}`}>
-                <div className="flex items-center gap-2">
-                  <span className={`size-2.5 rounded-full ${col.dot}`} />
-                  <span className={`text-sm font-bold ${col.accent}`}>{col.label}</span>
-                </div>
-                <span className={`rounded-full px-2 py-0.5 text-xs font-bold ${col.badge}`}>
-                  {colTickets.length}
-                </span>
-              </div>
-
-              {/* Tickets */}
-              {colTickets.length === 0 ? (
-                <div className="flex flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-zinc-800 py-12 text-center">
-                  <ChefHat className="size-8 text-zinc-800" />
-                  <p className="text-xs text-zinc-700">No {col.label.toLowerCase()} tickets</p>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {colTickets.map((ticket) => (
-                    <TicketCard
-                      key={ticket.id}
-                      ticket={ticket}
-                      col={col}
-                      onAction={updateStatus}
-                    />
-                  ))}
-                </div>
-              )}
-            </div>
-          );
-        })}
-      </div>
-
-      {/* Served tickets */}
-      {served.length > 0 && (
-        <div className="space-y-3">
-          <p className="text-xs font-semibold uppercase tracking-widest text-zinc-600">
-            Served ({served.length})
-          </p>
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            {served.map((ticket) => (
-              <div key={ticket.id}
-                className="flex items-center justify-between rounded-xl border border-zinc-800/50 bg-zinc-900/30 px-4 py-3 opacity-50">
-                <div>
-                  <p className="font-mono text-xs text-zinc-500">{ticket.id}</p>
-                  <p className="text-sm font-medium text-zinc-400">
-                    {ticket.table !== "—" ? `Table ${ticket.table}` : ticket.customer}
-                  </p>
-                </div>
-                <CheckCircle2 className="size-4 text-emerald-600" />
-              </div>
-            ))}
+      {/* Empty state */}
+      {active.length === 0 && (
+        <div className="flex flex-col items-center justify-center gap-4 rounded-2xl border border-dashed border-zinc-800 py-24 text-center">
+          <ChefHat className="size-12 text-zinc-700" />
+          <div>
+            <p className="text-base font-semibold text-zinc-400">Kitchen is clear</p>
+            <p className="mt-1 text-sm text-zinc-600">No active orders right now.</p>
           </div>
+        </div>
+      )}
+
+      {/* 3-column Kanban board */}
+      {active.length > 0 && (
+        <div className="grid gap-6 lg:grid-cols-3">
+          {COLUMNS.map((col) => {
+            const colTickets = active.filter((o) => o.status === col.key);
+            return (
+              <div key={col.key} className="space-y-3">
+                {/* Column header */}
+                <div className={`flex items-center justify-between rounded-xl border px-4 py-2.5 ${col.headerBg}`}>
+                  <div className="flex items-center gap-2">
+                    <span className={`size-2.5 rounded-full ${col.dot}`} />
+                    <span className={`text-sm font-bold ${col.accent}`}>{col.label}</span>
+                  </div>
+                  <span className={`rounded-full px-2 py-0.5 text-xs font-bold ${col.badge}`}>
+                    {colTickets.length}
+                  </span>
+                </div>
+
+                {/* Tickets */}
+                {colTickets.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-zinc-800 py-10 text-center">
+                    <ChefHat className="size-7 text-zinc-800" />
+                    <p className="text-xs text-zinc-700">No {col.label.toLowerCase()} orders</p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {colTickets.map((ticket) => (
+                      <TicketCard
+                        key={ticket.id}
+                        ticket={ticket}
+                        col={col}
+                        onAction={handleAction}
+                        updating={updating}
+                      />
+                    ))}
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </div>
       )}
     </div>

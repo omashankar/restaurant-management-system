@@ -1,6 +1,7 @@
 "use client";
 
 import { ROLES, roleLabel, useApp } from "@/context/AppProviders";
+import { useUser } from "@/context/AuthContext";
 import {
   Bell,
   ChevronDown,
@@ -13,7 +14,10 @@ import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
 export default function TopNavbar({ onOpenSidebar, onToggleSidebar }) {
-  const { user, logout, setDemoRole } = useApp();
+  const { user: appUser, logout, setDemoRole } = useApp();
+  const { user: dbUser } = useUser();
+  // Prefer DB user (has real name from MongoDB), fallback to app user
+  const user = dbUser ?? appUser;
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);

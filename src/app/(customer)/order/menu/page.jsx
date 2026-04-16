@@ -3,7 +3,6 @@
 import { useCustomer } from "@/context/CustomerContext";
 import { useModuleData } from "@/context/ModuleDataContext";
 import { ITEM_TYPE_META } from "@/types/menu";
-import { INITIAL_CATEGORIES } from "@/lib/modulesData";
 import { Bike, Clock, ConciergeBell, Plus, Search, ShoppingCart, Store, Zap } from "lucide-react";
 import Link from "next/link";
 import { useMemo, useState } from "react";
@@ -20,7 +19,7 @@ function typeButtonClass(type) {
 
 export default function CustomerMenuPage() {
   const { cart, setOrderTypeModalOpen, orderType, showToast, setCartOpen } = useCustomer();
-  const { menuItems } = useModuleData();
+  const { menuItems, categories } = useModuleData();
   const [search, setSearch] = useState("");
   const [activeCategory, setActiveCategory] = useState("all");
   const [activeType, setActiveType] = useState("all");
@@ -104,7 +103,7 @@ export default function CustomerMenuPage() {
 
       {/* Category tabs */}
       <div className="mb-3 flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none]">
-        {[{ id: "all", name: "All" }, ...INITIAL_CATEGORIES].map((c) => (
+        {[{ id: "all", name: "All" }, ...categories].map((c) => (
           <button
             key={c.id}
             type="button"

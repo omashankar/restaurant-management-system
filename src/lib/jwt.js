@@ -1,6 +1,6 @@
 import jwt from "jsonwebtoken";
 
-const SECRET = process.env.JWT_SECRET;
+const SECRET = process.env.JWT_SECRET ?? "fallback_dev_secret_change_in_prod";
 const EXPIRES_IN = process.env.JWT_EXPIRES_IN ?? "7d";
 
 /** Sign a JWT token */
