@@ -1,4 +1,5 @@
 import bcrypt from "bcryptjs";
+import crypto from "crypto";
 import { ObjectId } from "mongodb";
 import clientPromise from "./mongodb";
 
@@ -7,23 +8,29 @@ async function getDb() {
   return client.db();
 }
 
-/* ── Signup ── */
+/** Generate a secure random token */
+function generateToken() {
+  return crypto.randomBytes(32).toString("hex");
+}
+
+/* ══════════════════════════════════════
+   SIGNUP — saves user, returns token
+══════════════════════════════════════ */
 export async function createUser({ name, email, password, role, restaurantName }) {
+  console.log("DB_LOGS ", name, email, password, role, restaurantName)
   const db = await getDb();
 
-  // Duplicate email check
-  const existing = await db.collection("users").findOne({ email });
+  const existing = await db.collection("users").findOne({ email: email.toLowerCase().trim() });
   if (existing) throw new Error("EMAIL_EXISTS");
 
   const hashedPassword = await bcrypt.hash(password, 10);
   let restaurantId = null;
 
-  // Admin creates a new restaurant
   if (role === "admin") {
     if (!restaurantName?.trim()) throw new Error("RESTAURANT_NAME_REQUIRED");
     const res = await db.collection("restaurants").insertOne({
       name: restaurantName.trim(),
-      ownerId: null, // will update after user insert
+      ownerId: null,
       createdAt: new Date(),
     });
     restaurantId = res.insertedId;
@@ -35,10 +42,10 @@ export async function createUser({ name, email, password, role, restaurantName }
     password: hashedPassword,
     role,
     restaurantId,
+    isVerified: true,
     createdAt: new Date(),
   });
 
-  // Link restaurant owner
   if (role === "admin" && restaurantId) {
     await db.collection("restaurants").updateOne(
       { _id: restaurantId },
@@ -55,7 +62,69 @@ export async function createUser({ name, email, password, role, restaurantName }
   };
 }
 
-/* ── Login ── */
+/* ══════════════════════════════════════
+   RESEND VERIFICATION EMAIL
+══════════════════════════════════════ */
+export async function resendVerification(email) {
+  const db = await getDb();
+
+  const user = await db.collection("users").findOne({
+    email: email.toLowerCase().trim(),
+  });
+
+  if (!user) throw new Error("USER_NOT_FOUND");
+  if (user.isVerified) throw new Error("ALREADY_VERIFIED");
+
+  // Generate new token — invalidates old one
+  const verificationToken = generateToken();
+  const verificationExpires = new Date(Date.now() + 15 * 60 * 1000);
+
+  await db.collection("users").updateOne(
+    { _id: user._id },
+    {
+      $set: {
+        emailVerificationToken: verificationToken,
+        emailVerificationExpires: verificationExpires,
+      },
+    }
+  );
+
+  return {
+    name: user.name,
+    email: user.email,
+    verificationToken,
+  };
+}
+export async function verifyEmail(token) {
+  const db = await getDb();
+
+  const user = await db.collection("users").findOne({
+    emailVerificationToken: token,
+    emailVerificationExpires: { $gt: new Date() },
+  });
+
+  if (!user) throw new Error("TOKEN_INVALID_OR_EXPIRED");
+
+  await db.collection("users").updateOne(
+    { _id: user._id },
+    {
+      $set: { isVerified: true },
+      $unset: { emailVerificationToken: "", emailVerificationExpires: "" },
+    }
+  );
+
+  return {
+    id: user._id.toString(),
+    name: user.name,
+    email: user.email,
+    role: user.role,
+    restaurantId: user.restaurantId?.toString() ?? null,
+  };
+}
+
+/* ══════════════════════════════════════
+   LOGIN — checks isVerified
+══════════════════════════════════════ */
 export async function verifyUser({ email, password }) {
   const db = await getDb();
 
@@ -67,6 +136,8 @@ export async function verifyUser({ email, password }) {
   const isMatch = await bcrypt.compare(password, user.password);
   if (!isMatch) throw new Error("WRONG_PASSWORD");
 
+  if (!user.isVerified) throw new Error("EMAIL_NOT_VERIFIED");
+
   return {
     id: user._id.toString(),
     name: user.name,
@@ -76,7 +147,9 @@ export async function verifyUser({ email, password }) {
   };
 }
 
-/* ── Get user by ID ── */
+/* ══════════════════════════════════════
+   GET USER BY ID
+══════════════════════════════════════ */
 export async function getUserById(id) {
   const db = await getDb();
   const user = await db.collection("users").findOne({ _id: new ObjectId(id) });
@@ -87,5 +160,6 @@ export async function getUserById(id) {
     email: user.email,
     role: user.role,
     restaurantId: user.restaurantId?.toString() ?? null,
+    isVerified: user.isVerified,
   };
 }

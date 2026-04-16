@@ -22,7 +22,10 @@ export default function LoginPage() {
   const [copied, setCopied] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [unverified, setUnverified] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
+  const [resendLoading, setResendLoading] = useState(false);
+  const [resendMsg, setResendMsg] = useState("");
 
   useEffect(() => {
     if (!hydrated) return;
@@ -32,6 +35,7 @@ export default function LoginPage() {
   const onSubmit = async (e) => {
     e.preventDefault();
     setError("");
+    setUnverified(false);
     setLoading(true);
     try {
       const res = await fetch("/api/auth/login", {
@@ -40,14 +44,23 @@ export default function LoginPage() {
         body: JSON.stringify({ email, password, rememberMe }),
       });
       const data = await res.json();
+
       if (data.success) {
-        const dest = login(data.user.email, data.user.role);
+        const dest = login(data.user.email, data.user.role, data.user.name);
         router.push(dest);
         return;
       }
-      // Demo fallback
+
+      // Email not verified — show special UI
+      if (data.code === "EMAIL_NOT_VERIFIED") {
+        setUnverified(true);
+        return;
+      }
+
+      // Demo fallback (only for non-verified errors)
       const demo = DEMO_USERS.find((u) => u.email === email && u.password === password);
       if (demo) { router.push(login(demo.email, demo.role.toLowerCase())); return; }
+
       setError(data.error ?? "Login failed.");
     } catch {
       const demo = DEMO_USERS.find((u) => u.email === email && u.password === password);
@@ -60,6 +73,26 @@ export default function LoginPage() {
 
   const fillDemo = (u) => { setEmail(u.email); setPassword(u.password); };
 
+  const resendVerification = async () => {
+    setResendMsg("");
+    setResendLoading(true);
+    try {
+      const res = await fetch("/api/auth/resend-verification", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+      const data = await res.json();
+      setResendMsg(data.success
+        ? "✅ " + data.message
+        : "❌ " + (data.error ?? "Failed to resend.")
+      );
+    } catch {
+      setResendMsg("❌ Network error. Please try again.");
+    } finally {
+      setResendLoading(false);
+    }
+  };
   const copyDemo = (u) => {
     navigator.clipboard.writeText(`${u.email} / ${u.password}`).catch(() => { });
     setCopied(u.role);
@@ -127,6 +160,29 @@ export default function LoginPage() {
               <p className="rounded-xl border border-red-500/20 bg-red-500/10 px-3 py-2 text-xs text-red-400">
                 {error}
               </p>
+            )}
+            {unverified && (
+              <div className="rounded-xl border border-amber-500/25 bg-amber-500/10 px-4 py-3 space-y-2">
+                <p className="text-xs font-semibold text-amber-300">
+                  📧 Email not verified
+                </p>
+                <p className="text-xs text-amber-400/80">
+                  Please check your inbox and click the verification link before logging in.
+                </p>
+                {resendMsg && (
+                  <p className={`text-xs font-medium ${resendMsg.startsWith("✅") ? "text-emerald-400" : "text-red-400"}`}>
+                    {resendMsg}
+                  </p>
+                )}
+                <button
+                  type="button"
+                  onClick={resendVerification}
+                  disabled={resendLoading}
+                  className="cursor-pointer text-xs font-semibold text-emerald-400 hover:text-emerald-300 underline underline-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {resendLoading ? "Sending…" : "Resend verification email →"}
+                </button>
+              </div>
             )}
             <div className="flex items-center gap-2">
               <input

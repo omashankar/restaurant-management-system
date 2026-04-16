@@ -8,12 +8,7 @@ import {
 import { formatTimeSlot } from "@/lib/reservationUtils";
 
 export const statsOverview = {
-  salesToday: 12847.5,
-  ordersToday: 186,
-  customersToday: 74,
-  salesChange: 12.4,
-  ordersChange: -3.1,
-  customersChange: 8.0,
+  
 };
 
 export const recentOrders = [
@@ -148,20 +143,11 @@ export const inventoryAlerts = [
 
 // ─── Extended dashboard data ──────────────────────────────────────────────────
 
-export const dashboardStats = {
-  salesToday: 12847.5,
-  salesChange: 12.4,
-  ordersToday: 186,
-  ordersChange: -3.1,
-  totalCustomers: 1284,
-  customersChange: 8.0,
-  totalReservations: 24,
-  reservationsChange: 5.2,
-};
+
 
 /** Monthly sales (last 6 months) */
 export const monthlySales = [
-  { month: "Nov", sales: 68400, orders: 920 },
+  { month: "Nov", sales: 0, orders: 920 },
   { month: "Dec", sales: 91200, orders: 1240 },
   { month: "Jan", sales: 74500, orders: 1010 },
   { month: "Feb", sales: 82300, orders: 1120 },

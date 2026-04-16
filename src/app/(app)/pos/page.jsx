@@ -3,7 +3,6 @@
 import CategoryTabs from "@/components/pos/CategoryTabs";
 import MenuCard from "@/components/menu/MenuCard";
 import OrderSummary from "@/components/pos/OrderSummary";
-import { POS_CATEGORIES, POS_MENU_ITEMS } from "@/components/pos/mockData";
 import ItemTypeFilter from "@/components/filters/ItemTypeFilter";
 import ListToolbar from "@/components/ui/ListToolbar";
 import Modal from "@/components/ui/Modal";
@@ -18,7 +17,12 @@ const KITCHEN_LABELS = {
 };
 
 export default function PosPage() {
-  const { setCustomerRows, setOrderRows, setKitchenQueue, floorTables, setFloorTables } = useModuleData();
+  const { setCustomerRows, setOrderRows, setKitchenQueue, floorTables, setFloorTables, menuItems, categories } = useModuleData();
+
+  // Use real menu items from DB context (active only)
+  const activeMenuItems = useMemo(() => menuItems.filter((m) => m.status === "active"), [menuItems]);
+  // Build category tabs from real categories
+  const posCategories = useMemo(() => [{ id: "all", name: "All" }, ...categories], [categories]);
   const [orderType, setOrderType] = useState("dine-in");
   const [selectedTableId, setSelectedTableId] = useState("");
   const [delivery, setDelivery] = useState({ name: "", phone: "", address: "" });
@@ -34,7 +38,7 @@ export default function PosPage() {
     activeItemType, setActiveItemType,
     fastOnly, setFastOnly,
     search, setSearch,
-  } = useMenuFilter(POS_MENU_ITEMS);
+  } = useMenuFilter(activeMenuItems);
 
   const subtotal = useMemo(() => cart.reduce((s, l) => s + l.price * l.qty, 0), [cart]);
   const tax = subtotal * 0.08;
@@ -171,7 +175,7 @@ export default function PosPage() {
       <div className="grid gap-6 xl:grid-cols-10">
         {/* ── Menu panel ── */}
         <section className="space-y-4 xl:col-span-7">
-          <CategoryTabs categories={POS_CATEGORIES} activeCategory={activeCategory} onChange={setActiveCategory} />
+          <CategoryTabs categories={posCategories} activeCategory={activeCategory} onChange={setActiveCategory} />
           <ItemTypeFilter activeItemType={activeItemType} onItemTypeChange={setActiveItemType} fastOnly={fastOnly} onFastToggle={setFastOnly} />
           <ListToolbar
             search={search}

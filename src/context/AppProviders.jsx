@@ -4,107 +4,76 @@ import {
   createContext,
   useCallback,
   useContext,
-  useEffect,
   useMemo,
-  useState,
 } from "react";
-
-const STORAGE_KEY = "rms-session";
+import { useUser } from "./AuthContext";
 
 const AppContext = createContext(null);
 
 export const ROLES = ["admin", "manager", "waiter", "chef"];
 
 export function roleLabel(role) {
-  const map = {
-    admin: "Admin",
-    manager: "Manager",
-    waiter: "Waiter",
-    chef: "Chef",
-  };
+  const map = { admin: "Admin", manager: "Manager", waiter: "Waiter", chef: "Chef" };
   return map[role] ?? role;
 }
 
 export function defaultRedirectForRole(role) {
-  if (role === "chef") return "/kitchen";
-  if (role === "waiter") return "/pos";
-  return "/dashboard";
+  switch (role) {
+    case "admin":   return "/admin/dashboard";
+    case "manager": return "/manager/dashboard";
+    case "waiter":  return "/waiter/dashboard";
+    case "chef":    return "/chef/dashboard";
+    default:        return "/dashboard";
+  }
 }
 
 export function AppProvider({ children }) {
-  const [user, setUser] = useState(null);
-  const [hydrated, setHydrated] = useState(false);
+  const { user, loading, hydrated, setUser, clearUser } = useUser();
 
-  useEffect(() => {
-    try {
-      const raw = sessionStorage.getItem(STORAGE_KEY);
-      if (raw) setUser(JSON.parse(raw));
-    } catch {
-      sessionStorage.removeItem(STORAGE_KEY);
-    }
-    setHydrated(true);
-  }, []);
-
-  const persist = useCallback((next) => {
-    if (next) sessionStorage.setItem(STORAGE_KEY, JSON.stringify(next));
-    else sessionStorage.removeItem(STORAGE_KEY);
-    setUser(next);
-  }, []);
-
+  /* ── Login — call after API login success ── */
   const login = useCallback(
-    (email, role = "admin") => {
-      const name = email?.split("@")[0] || "User";
-      persist({
+    (email, role = "admin", name) => {
+      const displayName = name
+        ?? email?.split("@")[0]?.replace(/[._]/g, " ") ?? "User";
+      const u = {
         email,
-        name: name.charAt(0).toUpperCase() + name.slice(1),
+        name: displayName.charAt(0).toUpperCase() + displayName.slice(1),
         role,
-      });
+      };
+      setUser(u);
       return defaultRedirectForRole(role);
     },
-    [persist]
+    [setUser]
   );
 
+  /* ── Signup — call after API signup success ── */
   const signup = useCallback(
     ({ name, email, role }) => {
-      persist({
-        email,
-        name,
-        role,
-      });
+      setUser({ name, email, role });
       return defaultRedirectForRole(role);
     },
-    [persist]
+    [setUser]
   );
 
-  const logout = useCallback(() => persist(null), [persist]);
+  /* ── Logout — clear user + cookie ── */
+  const logout = useCallback(async () => {
+    await fetch("/api/auth/logout", { method: "POST" }).catch(() => {});
+    clearUser();
+  }, [clearUser]);
 
   const setDemoRole = useCallback(
-    (role) => {
-      if (!user) return;
-      persist({ ...user, role });
-    },
-    [user, persist]
+    (role) => { if (user) setUser({ ...user, role }); },
+    [user, setUser]
   );
 
   const updateProfile = useCallback(
-    (patch) => {
-      if (!user) return;
-      persist({ ...user, ...patch });
-    },
-    [user, persist]
+    (patch) => { if (user) setUser({ ...user, ...patch }); },
+    [user, setUser]
   );
 
   const value = useMemo(
-    () => ({
-      user,
-      hydrated,
-      login,
-      signup,
-      logout,
-      setDemoRole,
-      updateProfile,
-    }),
-    [user, hydrated, login, signup, logout, setDemoRole, updateProfile]
+    () => ({ user, hydrated, loading, login, signup, logout, setDemoRole, updateProfile }),
+    [user, hydrated, loading, login, signup, logout, setDemoRole, updateProfile]
   );
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
