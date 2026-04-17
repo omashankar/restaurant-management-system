@@ -7,6 +7,7 @@ import Modal from "@/components/ui/Modal";
 import PaginationBar from "@/components/ui/PaginationBar";
 import { getCategoryBadge } from "@/lib/tableCategoryColors";
 import { usePaginatedList } from "@/lib/usePaginatedList";
+import { useToast } from "@/hooks/useToast";
 import { LayoutGrid, Pencil, Plus, RefreshCw, Table2, Trash2, Users } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
@@ -25,6 +26,8 @@ export default function TablesModulePage() {
   const [form, setForm]             = useState(emptyForm);
   const [formError, setFormError]   = useState("");
   const [deleteTarget, setDeleteTarget] = useState(null);
+  const [deleting, setDeleting] = useState(false);
+  const { showToast, ToastUI } = useToast();
 
   /* ── Fetch tables + areas ── */
   const fetchAll = useCallback(async () => {
@@ -100,11 +103,13 @@ export default function TablesModulePage() {
         const data = await res.json();
         if (!data.success) { setFormError(data.error ?? "Failed to update."); return; }
         setTables((prev) => prev.map((t) => t.id === editingId ? { ...t, ...body } : t));
+        showToast("Table updated.");
       } else {
         const res  = await fetch("/api/tables", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
         const data = await res.json();
         if (!data.success) { setFormError(data.error ?? "Failed to create."); return; }
         setTables((prev) => [data.table, ...prev]);
+        showToast("Table created.");
       }
       setModalOpen(false);
     } catch { setFormError("Network error."); }
@@ -113,9 +118,16 @@ export default function TablesModulePage() {
 
   const confirmDelete = async () => {
     if (!deleteTarget) return;
-    await fetch(`/api/tables/${deleteTarget.id}`, { method: "DELETE" });
-    setTables((prev) => prev.filter((t) => t.id !== deleteTarget.id));
-    setDeleteTarget(null);
+    setDeleting(true);
+    try {
+      const res  = await fetch(`/api/tables/${deleteTarget.id}`, { method: "DELETE" });
+      const data = await res.json();
+      if (!data.success) { showToast(data.error ?? "Failed to delete.", "error"); return; }
+      setTables((prev) => prev.filter((t) => t.id !== deleteTarget.id));
+      showToast(`Table ${deleteTarget.tableNumber} deleted.`);
+      setDeleteTarget(null);
+    } catch { showToast("Network error.", "error"); }
+    finally { setDeleting(false); }
   };
 
   if (loading) {
@@ -308,9 +320,11 @@ export default function TablesModulePage() {
         open={!!deleteTarget}
         title="Remove table?"
         message={deleteTarget ? `Table ${deleteTarget.tableNumber} will be deleted.` : ""}
+        confirmLabel={deleting ? "Deleting…" : "Delete"}
         onCancel={() => setDeleteTarget(null)}
         onConfirm={confirmDelete}
       />
+      {ToastUI}
     </div>
   );
 }
