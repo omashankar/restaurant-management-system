@@ -17,7 +17,6 @@ function generateToken() {
    SIGNUP — saves user, returns token
 ══════════════════════════════════════ */
 export async function createUser({ name, email, password, role, restaurantName }) {
-  console.log("DB_LOGS ", name, email, password, role, restaurantName)
   const db = await getDb();
 
   const existing = await db.collection("users").findOne({ email: email.toLowerCase().trim() });
@@ -152,7 +151,9 @@ export async function verifyUser({ email, password }) {
 ══════════════════════════════════════ */
 export async function getUserById(id) {
   const db = await getDb();
-  const user = await db.collection("users").findOne({ _id: new ObjectId(id) });
+  let _id;
+  try { _id = new ObjectId(id); } catch { return null; }
+  const user = await db.collection("users").findOne({ _id });
   if (!user) return null;
   return {
     id: user._id.toString(),

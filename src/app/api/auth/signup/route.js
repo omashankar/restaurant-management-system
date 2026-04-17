@@ -2,9 +2,13 @@ import { createUser } from "@/lib/authService";
 import { setTokenCookie } from "@/lib/authCookies";
 import { signToken } from "@/lib/jwt";
 import { getClientIp, signupLimiter } from "@/lib/rateLimit";
-import { parseSchema, signupSchema } from "@/lib/validationSchemas";
+import bcrypt from "bcryptjs";
+import clientPromise from "@/lib/mongodb";
+
+const VALID_ROLES = ["admin", "manager", "waiter", "chef"];
 
 export async function POST(request) {
+  /* ── Rate limit ── */
   const ip = getClientIp(request);
   const limit = signupLimiter.check(ip);
   if (!limit.allowed) {
@@ -14,34 +18,87 @@ export async function POST(request) {
     );
   }
 
+  let body;
   try {
-    const body = await request.json();
-    const { name, email, password, role, restaurantName } = parseSchema(signupSchema, body);
+    body = await request.json();
+  } catch {
+    return Response.json({ success: false, error: "Invalid JSON body." }, { status: 400 });
+  }
 
-    if (role === "admin" && !restaurantName?.trim()) {
-      return Response.json(
-        { success: false, error: "Restaurant name is required for Admin." },
-        { status: 400 }
+  const { name, email, password, role, restaurantName } = body ?? {};
+
+  /* ── Manual validation (no Zod dependency issues) ── */
+  if (!name?.trim())     return Response.json({ success: false, error: "Name is required." },     { status: 400 });
+  if (!email?.trim())    return Response.json({ success: false, error: "Email is required." },    { status: 400 });
+  if (!password)         return Response.json({ success: false, error: "Password is required." }, { status: 400 });
+  if (password.length < 6) return Response.json({ success: false, error: "Password must be at least 6 characters." }, { status: 400 });
+  if (!role)             return Response.json({ success: false, error: "Role is required." },     { status: 400 });
+  if (!VALID_ROLES.includes(role)) return Response.json({ success: false, error: "Invalid role." }, { status: 400 });
+
+  const cleanEmail          = email.toLowerCase().trim();
+  const cleanRestaurantName = restaurantName?.trim() || null;
+
+  if (role === "admin" && !cleanRestaurantName) {
+    return Response.json({ success: false, error: "Restaurant name is required for Admin." }, { status: 400 });
+  }
+
+  try {
+    const client = await clientPromise;
+    const db     = client.db();
+
+    /* ── Duplicate email check ── */
+    const existing = await db.collection("users").findOne({ email: cleanEmail });
+    if (existing) {
+      return Response.json({ success: false, error: "Email already registered." }, { status: 409 });
+    }
+
+    /* ── Create restaurant for admin ── */
+    let restaurantId = null;
+    if (role === "admin" && cleanRestaurantName) {
+      const resResult = await db.collection("restaurants").insertOne({
+        name: cleanRestaurantName,
+        ownerId: null,
+        createdAt: new Date(),
+      });
+      restaurantId = resResult.insertedId;
+    }
+
+    /* ── Hash password & insert user ── */
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const result = await db.collection("users").insertOne({
+      name: name.trim(),
+      email: cleanEmail,
+      password: hashedPassword,
+      role,
+      restaurantId,
+      isVerified: true,
+      status: "active",
+      createdAt: new Date(),
+    });
+
+    /* ── Link restaurant owner ── */
+    if (restaurantId) {
+      await db.collection("restaurants").updateOne(
+        { _id: restaurantId },
+        { $set: { ownerId: result.insertedId } }
       );
     }
 
-    const user = await createUser({ name, email, password, role, restaurantName });
+    const user = {
+      id:           result.insertedId.toString(),
+      name:         name.trim(),
+      email:        cleanEmail,
+      role,
+      restaurantId: restaurantId?.toString() ?? null,
+    };
 
-    // Set JWT cookie — auto login
+    /* ── Issue JWT cookie ── */
     const token = signToken({ id: user.id, role: user.role, restaurantId: user.restaurantId });
-    const res = Response.json({ success: true, user });
+    const res   = Response.json({ success: true, user });
     return setTokenCookie(res, token);
+
   } catch (err) {
-    if (err.message === "EMAIL_EXISTS") {
-      return Response.json({ success: false, error: "Email already registered." }, { status: 409 });
-    }
-    if (err.message === "RESTAURANT_NAME_REQUIRED") {
-      return Response.json({ success: false, error: "Restaurant name is required for Admin." }, { status: 400 });
-    }
-    if (err.message && err.message.length < 120) {
-      return Response.json({ success: false, error: err.message }, { status: 400 });
-    }
     console.error("Signup error:", err.message);
-    return Response.json({ success: false, error: err.message }, { status: 500 });
+    return Response.json({ success: false, error: "Something went wrong. Please try again." }, { status: 500 });
   }
 }
