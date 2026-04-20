@@ -7,10 +7,11 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 const DEMO_USERS = [
-  { role: "Admin", email: "admin@restaurant.com", password: "password123", icon: "👑", accent: "ring-amber-500/30 hover:ring-amber-500/60" },
-  { role: "Manager", email: "manager@restaurant.com", password: "password123", icon: "👤", accent: "ring-violet-500/30 hover:ring-violet-500/60" },
-  { role: "Waiter", email: "waiter@restaurant.com", password: "password123", icon: "🍽️", accent: "ring-sky-500/30 hover:ring-sky-500/60" },
-  { role: "Chef", email: "chef@restaurant.com", password: "password123", icon: "👨‍🍳", accent: "ring-emerald-500/30 hover:ring-emerald-500/60" },
+  { role: "Super Admin", email: "superadmin@rms.com",      password: "SuperAdmin@2026", icon: "🛡️", accent: "ring-rose-500/30 hover:ring-rose-500/60" },
+  { role: "Admin",       email: "admin@restaurant.com",    password: "password123",     icon: "👑", accent: "ring-amber-500/30 hover:ring-amber-500/60" },
+  { role: "Manager",     email: "manager@restaurant.com",  password: "password123",     icon: "👤", accent: "ring-violet-500/30 hover:ring-violet-500/60" },
+  { role: "Waiter",      email: "waiter@restaurant.com",   password: "password123",     icon: "🍽️", accent: "ring-sky-500/30 hover:ring-sky-500/60" },
+  { role: "Chef",        email: "chef@restaurant.com",     password: "password123",     icon: "👨‍🍳", accent: "ring-emerald-500/30 hover:ring-emerald-500/60" },
 ];
 
 export default function LoginPage() {
@@ -54,6 +55,12 @@ export default function LoginPage() {
       // Email not verified — show special UI
       if (data.code === "EMAIL_NOT_VERIFIED") {
         setUnverified(true);
+        return;
+      }
+
+      // Account inactive
+      if (data.code === "ACCOUNT_INACTIVE") {
+        setError(data.error);
         return;
       }
 

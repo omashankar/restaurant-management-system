@@ -1,8 +1,8 @@
 import { setTokenCookie } from "@/lib/authCookies";
-import { verifyUser } from "@/lib/authService";
 import { signToken } from "@/lib/jwt";
 import { getClientIp, loginLimiter } from "@/lib/rateLimit";
-import { loginSchema, parseSchema } from "@/lib/validationSchemas";
+import clientPromise from "@/lib/mongodb";
+import bcrypt from "bcryptjs";
 
 export async function POST(request) {
   /* ── Rate limit ── */
@@ -15,51 +15,74 @@ export async function POST(request) {
     );
   }
 
+  let body;
+  try { body = await request.json(); }
+  catch { return Response.json({ success: false, error: "Invalid JSON body." }, { status: 400 }); }
+
+  const { email, password, rememberMe = false } = body ?? {};
+
+  if (!email?.trim() || !password) {
+    return Response.json({ success: false, error: "Email and password are required." }, { status: 400 });
+  }
+
   try {
-    /* ── Validate input ── */
-    const body = await request.json();
-    const { email, password, rememberMe } = parseSchema(loginSchema, body);
+    const client = await clientPromise;
+    const db     = client.db();
 
-    /* ── Verify credentials ── */
-    const user = await verifyUser({ email, password });
-
-    /* ── Issue JWT ── */
-    const token = signToken({
-      id: user.id,
-      role: user.role,
-      restaurantId: user.restaurantId,
+    /* ── Find user by email ── */
+    const user = await db.collection("users").findOne({
+      email: email.toLowerCase().trim(),
     });
 
-    const res = Response.json({ success: true, user });
-    return setTokenCookie(res, token, rememberMe);
+    /* ── User not found OR wrong password → same message (prevent enumeration) ── */
+    if (!user) {
+      return Response.json({ success: false, error: "Invalid email or password." }, { status: 401 });
+    }
 
-  } catch (err) {
-    /* ── Specific known errors ── */
-    if (err.message === "EMAIL_NOT_VERIFIED") {
+    /* ── Secure password compare using bcrypt ── */
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return Response.json({ success: false, error: "Invalid email or password." }, { status: 401 });
+    }
+
+    /* ── Block inactive accounts ── */
+    if (user.status && user.status !== "active") {
+      return Response.json(
+        { success: false, error: "Your account is inactive. Please contact support.", code: "ACCOUNT_INACTIVE" },
+        { status: 403 }
+      );
+    }
+
+    /* ── Block unverified accounts (skip for super_admin) ── */
+    if (!user.isVerified && user.role !== "super_admin") {
       return Response.json(
         { success: false, error: "Please verify your email before logging in.", code: "EMAIL_NOT_VERIFIED" },
         { status: 403 }
       );
     }
 
-    /* ── USER_NOT_FOUND + WRONG_PASSWORD → same message (prevent user enumeration) ── */
-    if (err.message === "USER_NOT_FOUND" || err.message === "WRONG_PASSWORD") {
-      return Response.json(
-        { success: false, error: "Invalid email or password." },
-        { status: 401 }
-      );
-    }
+    /* ── Build user payload ── */
+    const userPayload = {
+      id:           user._id.toString(),
+      name:         user.name,
+      email:        user.email,
+      role:         user.role,
+      restaurantId: user.restaurantId?.toString() ?? null,
+      status:       user.status,
+    };
 
-    /* ── Validation errors ── */
-    if (err.message && !err.message.includes("Internal")) {
-      return Response.json({ success: false, error: err.message }, { status: 400 });
-    }
+    /* ── Issue JWT ── */
+    const token = signToken({
+      id:           userPayload.id,
+      role:         userPayload.role,
+      restaurantId: userPayload.restaurantId,
+    });
 
-    /* ── Generic — never expose internals ── */
+    const res = Response.json({ success: true, user: userPayload });
+    return setTokenCookie(res, token, rememberMe);
+
+  } catch (err) {
     console.error("Login error:", err.message);
-    return Response.json(
-      { success: false, error: "Something went wrong. Please try again." },
-      { status: 500 }
-    );
+    return Response.json({ success: false, error: "Something went wrong. Please try again." }, { status: 500 });
   }
 }
