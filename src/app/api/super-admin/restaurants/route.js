@@ -2,7 +2,6 @@ import { getTokenFromRequest } from "@/lib/authCookies";
 import { verifyToken } from "@/lib/jwt";
 import clientPromise from "@/lib/mongodb";
 import bcrypt from "bcryptjs";
-import { ObjectId } from "mongodb";
 
 function superAdminOnly(request) {
   const token   = getTokenFromRequest(request);
@@ -63,8 +62,10 @@ export async function GET(request) {
           name:       r.name,
           ownerEmail: owner?.email ?? r.ownerEmail ?? "—",
           ownerName:  owner?.name  ?? "—",
-          plan:       r.plan   ?? "free",
-          status:     r.status ?? "active",
+          phone:      r.phone      ?? "—",
+          address:    r.address    ?? "",
+          plan:       r.plan       ?? "free",
+          status:     r.status     ?? "active",
           createdAt:  r.createdAt,
         };
       }),
@@ -85,7 +86,7 @@ export async function POST(request) {
   try { body = await request.json(); }
   catch { return Response.json({ success: false, error: "Invalid JSON." }, { status: 400 }); }
 
-  const { name, ownerEmail, ownerName, ownerPassword, plan = "free" } = body;
+  const { name, ownerEmail, ownerName, ownerPassword, plan = "free", phone = "", address = "" } = body;
 
   if (!name?.trim())        return Response.json({ success: false, error: "Restaurant name is required." }, { status: 400 });
   if (!ownerEmail?.trim())  return Response.json({ success: false, error: "Owner email is required." },     { status: 400 });
@@ -106,9 +107,11 @@ export async function POST(request) {
     const restaurantResult = await db.collection("restaurants").insertOne({
       name:       name.trim(),
       ownerEmail: ownerEmail.toLowerCase().trim(),
+      phone:      phone?.trim() ?? "",
+      address:    address?.trim() ?? "",
       plan,
       status:     "active",
-      ownerId:    null, // will update after user insert
+      ownerId:    null,
       createdAt:  new Date(),
     });
 
@@ -139,8 +142,12 @@ export async function POST(request) {
         id:         restaurantId.toString(),
         name:       name.trim(),
         ownerEmail: ownerEmail.toLowerCase().trim(),
+        ownerName:  (ownerName?.trim()) || ownerEmail.split("@")[0],
+        phone:      phone?.trim() ?? "",
+        address:    address?.trim() ?? "",
         plan,
         status:     "active",
+        createdAt:  new Date(),
       },
     }, { status: 201 });
 

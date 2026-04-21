@@ -14,14 +14,12 @@ export async function GET(request) {
     const client = await clientPromise;
     const db     = client.db();
 
-    /* ── RBAC: super_admin stats scope is restaurants + admin users only.
-       Staff (manager/waiter/chef) belong to their tenant — not visible here.
-    ── */
     const [
       totalRestaurants,
       totalAdmins,
       activeAdmins,
       recentAdmins,
+      revenueResult,
     ] = await Promise.all([
       db.collection("restaurants").countDocuments(),
       db.collection("users").countDocuments({ role: "admin" }),
@@ -31,7 +29,13 @@ export async function GET(request) {
         .sort({ createdAt: -1 })
         .limit(8)
         .toArray(),
+      db.collection("payments").aggregate([
+        { $match: { status: "paid" } },
+        { $group: { _id: null, total: { $sum: "$amount" } } },
+      ]).toArray(),
     ]);
+
+    const totalRevenue = revenueResult[0]?.total ?? 0;
 
     return Response.json({
       success: true,
@@ -40,6 +44,7 @@ export async function GET(request) {
         totalAdmins,
         activeAdmins,
         inactiveAdmins: totalAdmins - activeAdmins,
+        totalRevenue,
       },
       recentUsers: recentAdmins.map((u) => ({
         id:        u._id.toString(),

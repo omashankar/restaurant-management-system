@@ -1,151 +1,7 @@
-﻿"use client";
+﻿const fs = require("fs");
+const existing = fs.readFileSync("src/app/super-admin/restaurants/page.jsx", "utf8");
 
-
-import ConfirmDialog from "@/components/ui/ConfirmDialog";
-import Modal from "@/components/ui/Modal";
-import { useToast } from "@/hooks/useToast";
-import {
-  Building2, Calendar, ChevronLeft, ChevronRight,
-  Crown, Eye, EyeOff, Mail, MapPin,
-  Pencil, Phone, Plus, RefreshCw,
-  Search, Trash2, X,
-} from "lucide-react";
-import { useCallback, useEffect, useMemo, useState } from "react";
-
-/* ─────────────────────────────────────────
-   CONSTANTS
-───────────────────────────────────────── */
-const PLANS    = ["free", "starter", "pro", "enterprise"];
-const STATUSES = ["active", "inactive", "suspended"];
-const PAGE_SIZE = 10;
-
-const PLAN_BADGE = {
-  free:       "bg-zinc-500/15 text-zinc-400 ring-zinc-500/25",
-  starter:    "bg-sky-500/15 text-sky-400 ring-sky-500/25",
-  pro:        "bg-indigo-500/15 text-indigo-400 ring-indigo-500/25",
-  enterprise: "bg-amber-500/15 text-amber-400 ring-amber-500/25",
-};
-
-const PLAN_DOT = {
-  free: "bg-zinc-500", starter: "bg-sky-500",
-  pro: "bg-indigo-500", enterprise: "bg-amber-500",
-};
-
-const emptyForm = {
-  name: "", ownerName: "", ownerEmail: "", ownerPassword: "",
-  phone: "", address: "", plan: "free", status: "active",
-};
-
-const inputCls = "w-full rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus:border-emerald-500/40 placeholder:text-zinc-600 transition-colors";
-
-/* ─────────────────────────────────────────
-   TOGGLE SWITCH
-───────────────────────────────────────── */
-function ToggleSwitch({ checked, onChange, disabled }) {
-  return (
-    <button
-      type="button"
-      role="switch"
-      aria-checked={checked}
-      disabled={disabled}
-      onClick={() => onChange(!checked)}
-      className={`cursor-pointer relative inline-flex h-5 w-9 shrink-0 items-center rounded-full transition-colors duration-200 disabled:opacity-40 ${
-        checked ? "bg-emerald-500" : "bg-zinc-700"
-      }`}
-    >
-      <span className={`inline-block size-3.5 rounded-full bg-white shadow-sm transition-transform duration-200 ${
-        checked ? "translate-x-4" : "translate-x-0.5"
-      }`} />
-    </button>
-  );
-}
-
-/* ─────────────────────────────────────────
-   FIELD WRAPPER
-───────────────────────────────────────── */
-function Field({ label, required, children }) {
-  return (
-    <div>
-      <label className="block text-xs font-medium text-zinc-400 mb-1">
-        {label}{required && <span className="ml-0.5 text-red-400">*</span>}
-      </label>
-      {children}
-    </div>
-  );
-}
-
-/* ─────────────────────────────────────────
-   PREVIEW MODAL
-───────────────────────────────────────── */
-function PreviewModal({ restaurant, onClose }) {
-  if (!restaurant) return null;
-  return (
-    <Modal open={!!restaurant} onClose={onClose} title="Restaurant Details"
-      footer={
-        <div className="flex justify-end">
-          <button type="button" onClick={onClose}
-            className="cursor-pointer rounded-xl border border-zinc-700 px-4 py-2 text-sm text-zinc-300 hover:border-zinc-500 transition-colors">
-            Close
-          </button>
-        </div>
-      }>
-      <div className="space-y-5">
-        {/* Avatar + name */}
-        <div className="flex items-center gap-4">
-          <span className="flex size-14 shrink-0 items-center justify-center rounded-2xl bg-emerald-500/10 text-2xl font-bold text-emerald-400 ring-1 ring-emerald-500/20">
-            {restaurant.name?.[0]?.toUpperCase()}
-          </span>
-          <div>
-            <h3 className="text-lg font-semibold text-zinc-50">{restaurant.name}</h3>
-            <div className="mt-1 flex items-center gap-2">
-              <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-semibold capitalize ring-1 ${PLAN_BADGE[restaurant.plan] ?? PLAN_BADGE.free}`}>
-                <span className={`size-1.5 rounded-full ${PLAN_DOT[restaurant.plan] ?? "bg-zinc-500"}`} />
-                {restaurant.plan}
-              </span>
-              <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold capitalize ring-1 ${
-                restaurant.status === "active"
-                  ? "bg-emerald-500/15 text-emerald-400 ring-emerald-500/25"
-                  : "bg-zinc-500/15 text-zinc-400 ring-zinc-500/25"
-              }`}>
-                {restaurant.status}
-              </span>
-            </div>
-          </div>
-        </div>
-
-        <div className="border-t border-zinc-800" />
-
-        {/* Details grid */}
-        <div className="grid gap-3 sm:grid-cols-2">
-          {[
-            { icon: Crown,    label: "Owner",   value: restaurant.ownerName },
-            { icon: Mail,     label: "Email",   value: restaurant.ownerEmail },
-            { icon: Phone,    label: "Phone",   value: restaurant.phone !== "—" ? restaurant.phone : "Not provided" },
-            { icon: Calendar, label: "Created", value: restaurant.createdAt ? new Date(restaurant.createdAt).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" }) : "—" },
-          ].map(({ icon: Icon, label, value }) => (
-            <div key={label} className="flex items-start gap-3 rounded-xl border border-zinc-800 bg-zinc-950/40 px-3 py-2.5">
-              <Icon className="mt-0.5 size-4 shrink-0 text-zinc-500" />
-              <div className="min-w-0">
-                <p className="text-[10px] font-semibold uppercase tracking-wider text-zinc-600">{label}</p>
-                <p className="mt-0.5 truncate text-sm text-zinc-200">{value || "—"}</p>
-              </div>
-            </div>
-          ))}
-          {restaurant.address && (
-            <div className="sm:col-span-2 flex items-start gap-3 rounded-xl border border-zinc-800 bg-zinc-950/40 px-3 py-2.5">
-              <MapPin className="mt-0.5 size-4 shrink-0 text-zinc-500" />
-              <div>
-                <p className="text-[10px] font-semibold uppercase tracking-wider text-zinc-600">Address</p>
-                <p className="mt-0.5 text-sm text-zinc-200">{restaurant.address}</p>
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
-    </Modal>
-  );
-}
-
+const mainComponent = `
 /* ─────────────────────────────────────────
    MAIN PAGE
 ───────────────────────────────────────── */
@@ -648,7 +504,7 @@ export default function RestaurantsPage() {
       <ConfirmDialog
         open={!!deleteTarget}
         title="Delete restaurant?"
-        message={deleteTarget ? "\"" + deleteTarget.name + "\" and all its users will be permanently deleted." : ""}
+        message={deleteTarget ? "\\"" + deleteTarget.name + "\\" and all its users will be permanently deleted." : ""}
         confirmLabel={deleting ? "Deleting…" : "Delete"}
         onCancel={() => setDeleteTarget(null)}
         onConfirm={confirmDelete}
@@ -658,3 +514,7 @@ export default function RestaurantsPage() {
     </div>
   );
 }
+`;
+
+fs.appendFileSync("src/app/super-admin/restaurants/page.jsx", mainComponent, "utf8");
+console.log("Appended main component. Total:", fs.readFileSync("src/app/super-admin/restaurants/page.jsx","utf8").length, "bytes");

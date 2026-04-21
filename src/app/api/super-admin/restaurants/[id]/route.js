@@ -30,8 +30,10 @@ export async function PATCH(request, { params }) {
 
   const update = {};
   if (body.status && ["active", "inactive", "suspended"].includes(body.status)) update.status = body.status;
-  if (body.plan)   update.plan   = body.plan;
-  if (body.name)   update.name   = body.name.trim();
+  if (body.plan)    update.plan    = body.plan;
+  if (body.name)    update.name    = body.name.trim();
+  if (body.phone   != null) update.phone   = body.phone.trim();
+  if (body.address != null) update.address = body.address.trim();
   update.updatedAt = new Date();
 
   try {

@@ -6,13 +6,14 @@ import {
   Building2,
   ChevronLeft,
   ChevronRight,
-  ClipboardList,
   CreditCard,
+  DollarSign,
+  Globe,
   LayoutDashboard,
   LogOut,
+  Receipt,
   Settings,
   Shield,
-  Users,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
@@ -21,13 +22,13 @@ import { useEffect, useState } from "react";
 const STORAGE_KEY = "sa-sidebar-collapsed";
 
 const NAV = [
-  { href: "/super-admin/dashboard",    label: "Dashboard",    Icon: LayoutDashboard },
-  { href: "/super-admin/restaurants",  label: "Restaurants",  Icon: Building2       },
-  { href: "/super-admin/users",        label: "Users",        Icon: Users           },
-  { href: "/super-admin/plans",        label: "Plans",        Icon: CreditCard      },
-  { href: "/super-admin/analytics",    label: "Analytics",    Icon: BarChart3       },
-  { href: "/super-admin/settings",     label: "Settings",     Icon: Settings        },
-  { href: "/super-admin/logs",         label: "Logs",         Icon: ClipboardList   },
+  { href: "/super-admin/dashboard",     label: "Dashboard",     Icon: LayoutDashboard },
+  { href: "/super-admin/restaurants",   label: "Restaurants",   Icon: Building2       },
+  { href: "/super-admin/payments",      label: "Payments",      Icon: DollarSign      },
+  { href: "/super-admin/plans",         label: "Plans",         Icon: CreditCard      },
+  { href: "/super-admin/billing",       label: "Billing",       Icon: Receipt         },
+  { href: "/super-admin/landing-site",  label: "Landing Site",  Icon: Globe           },
+  { href: "/super-admin/settings",      label: "Settings",      Icon: Settings        },
 ];
 
 export default function SuperAdminSidebar() {

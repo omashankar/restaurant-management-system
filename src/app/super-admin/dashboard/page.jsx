@@ -106,8 +106,8 @@ function SuperAdminDashboard() {
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <StatCard label="Total Restaurants" value={stats?.totalRestaurants ?? 0} sub="Registered tenants"              icon={Building2} color="text-emerald-400" bg="bg-emerald-500/5" border="border-emerald-500/20" />
           <StatCard label="Restaurant Admins" value={stats?.totalAdmins ?? 0}      sub={`${stats?.activeAdmins ?? 0} active`} icon={Users}     color="text-amber-400"   bg="bg-amber-500/5"   border="border-amber-500/20"   />
-          <StatCard label="Active Admins"     value={stats?.activeAdmins ?? 0}     sub={`${stats?.inactiveAdmins ?? 0} inactive`} icon={UserCheck} color="text-indigo-400"  bg="bg-indigo-500/5"  border="border-indigo-500/20"  />
-          <StatCard label="System Status"     value="Online"                       sub="All services running"             icon={Activity}  color="text-rose-400"    bg="bg-rose-500/5"    border="border-rose-500/20"    />
+          <StatCard label="Total Revenue"     value={`$${(stats?.totalRevenue ?? 0).toLocaleString()}`} sub="All time paid"  icon={Activity}  color="text-indigo-400"  bg="bg-indigo-500/5"  border="border-indigo-500/20"  />
+          <StatCard label="System Status"     value="Online"                       sub="All services running"             icon={UserCheck} color="text-rose-400"    bg="bg-rose-500/5"    border="border-rose-500/20"    />
         </div>
       )}
 
@@ -120,7 +120,7 @@ function SuperAdminDashboard() {
               <h2 className="text-sm font-semibold text-zinc-100">Recent Restaurant Admins</h2>
               <p className="mt-0.5 text-xs text-zinc-500">Latest registered admin accounts</p>
             </div>
-            <Link href="/super-admin/users"
+            <Link href="/super-admin/restaurants"
               className="cursor-pointer flex items-center gap-1 text-xs font-medium text-emerald-400 hover:text-emerald-300">
               View all <ChevronRight className="size-3.5" />
             </Link>
@@ -167,10 +167,10 @@ function SuperAdminDashboard() {
             <h2 className="mb-4 text-sm font-semibold text-zinc-100">Quick Actions</h2>
             <div className="space-y-2">
               {[
-                { href: "/super-admin/restaurants", label: "Add Restaurant", desc: "Register new tenant",  icon: Plus,     color: "text-emerald-400", bg: "bg-emerald-500/10" },
-                { href: "/super-admin/users",       label: "View Users",     desc: "Manage all accounts", icon: Users,    color: "text-sky-400",     bg: "bg-sky-500/10"     },
-                { href: "/super-admin/analytics",   label: "Analytics",      desc: "System-wide reports", icon: BarChart3,color: "text-indigo-400",  bg: "bg-indigo-500/10"  },
-                { href: "/super-admin/settings",    label: "Settings",       desc: "Configure system",    icon: Settings, color: "text-zinc-400",    bg: "bg-zinc-500/10"    },
+                { href: "/super-admin/restaurants",  label: "Add Restaurant", desc: "Register new tenant",    icon: Plus,     color: "text-emerald-400", bg: "bg-emerald-500/10" },
+                { href: "/super-admin/payments",     label: "Payments",       desc: "View transactions",      icon: BarChart3,color: "text-indigo-400",  bg: "bg-indigo-500/10"  },
+                { href: "/super-admin/billing",      label: "Billing",        desc: "Subscription overview",  icon: Settings, color: "text-sky-400",     bg: "bg-sky-500/10"     },
+                { href: "/super-admin/settings",     label: "Settings",       desc: "Configure system",       icon: Settings, color: "text-zinc-400",    bg: "bg-zinc-500/10"    },
               ].map(({ href, label, desc, icon: Icon, color, bg }) => (
                 <Link key={href} href={href}
                   className="cursor-pointer flex items-center gap-3 rounded-xl border border-zinc-800 p-3 transition-all hover:border-zinc-700 hover:bg-zinc-800/40">

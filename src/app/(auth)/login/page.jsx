@@ -7,11 +7,11 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 const DEMO_USERS = [
-  { role: "Super Admin", email: "superadmin@rms.com",      password: "SuperAdmin@2026", icon: "🛡️", accent: "ring-rose-500/30 hover:ring-rose-500/60" },
-  { role: "Admin",       email: "admin@restaurant.com",    password: "password123",     icon: "👑", accent: "ring-amber-500/30 hover:ring-amber-500/60" },
-  { role: "Manager",     email: "manager@restaurant.com",  password: "password123",     icon: "👤", accent: "ring-violet-500/30 hover:ring-violet-500/60" },
-  { role: "Waiter",      email: "waiter@restaurant.com",   password: "password123",     icon: "🍽️", accent: "ring-sky-500/30 hover:ring-sky-500/60" },
-  { role: "Chef",        email: "chef@restaurant.com",     password: "password123",     icon: "👨‍🍳", accent: "ring-emerald-500/30 hover:ring-emerald-500/60" },
+  { role: "Super Admin", roleKey: "super_admin", email: "superadmin@rms.com",      password: "SuperAdmin@2026", icon: "🛡️", accent: "ring-rose-500/30 hover:ring-rose-500/60" },
+  { role: "Admin",       roleKey: "admin",        email: "admin@restaurant.com",    password: "password123",     icon: "👑", accent: "ring-amber-500/30 hover:ring-amber-500/60" },
+  { role: "Manager",     roleKey: "manager",      email: "manager@restaurant.com",  password: "password123",     icon: "👤", accent: "ring-violet-500/30 hover:ring-violet-500/60" },
+  { role: "Waiter",      roleKey: "waiter",       email: "waiter@restaurant.com",   password: "password123",     icon: "🍽️", accent: "ring-sky-500/30 hover:ring-sky-500/60" },
+  { role: "Chef",        roleKey: "chef",         email: "chef@restaurant.com",     password: "password123",     icon: "👨‍🍳", accent: "ring-emerald-500/30 hover:ring-emerald-500/60" },
 ];
 
 export default function LoginPage() {
@@ -66,12 +66,12 @@ export default function LoginPage() {
 
       // Demo fallback (only for non-verified errors)
       const demo = DEMO_USERS.find((u) => u.email === email && u.password === password);
-      if (demo) { router.push(login(demo.email, demo.role.toLowerCase())); return; }
+      if (demo) { router.push(login(demo.email, demo.roleKey)); return; }
 
       setError(data.error ?? "Login failed.");
     } catch {
       const demo = DEMO_USERS.find((u) => u.email === email && u.password === password);
-      if (demo) { router.push(login(demo.email, demo.role.toLowerCase())); return; }
+      if (demo) { router.push(login(demo.email, demo.roleKey)); return; }
       setError("Network error. Please try again.");
     } finally {
       setLoading(false);

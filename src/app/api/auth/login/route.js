@@ -46,7 +46,8 @@ export async function POST(request) {
     }
 
     /* ── Block inactive accounts ── */
-    if (user.status && user.status !== "active") {
+    const userStatus = user.status ?? "active"; // treat missing as active
+    if (userStatus !== "active") {
       return Response.json(
         { success: false, error: "Your account is inactive. Please contact support.", code: "ACCOUNT_INACTIVE" },
         { status: 403 }
@@ -54,7 +55,8 @@ export async function POST(request) {
     }
 
     /* ── Block unverified accounts (skip for super_admin) ── */
-    if (!user.isVerified && user.role !== "super_admin") {
+    const isVerified = user.isVerified ?? true; // treat missing as verified
+    if (!isVerified && user.role !== "super_admin") {
       return Response.json(
         { success: false, error: "Please verify your email before logging in.", code: "EMAIL_NOT_VERIFIED" },
         { status: 403 }
