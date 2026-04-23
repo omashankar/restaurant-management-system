@@ -33,7 +33,7 @@ export default function LandingNavbar() {
           ))}
         </nav>
 
-        {/* CTA buttons */}
+        {/* Desktop CTA */}
         <div className="hidden items-center gap-2 md:flex">
           <Link
             href="/login"
@@ -74,15 +74,17 @@ export default function LandingNavbar() {
                 {item.label}
               </a>
             ))}
-            <div className="mt-2 grid grid-cols-2 gap-2">
+            <div className="mt-2 grid grid-cols-2 gap-2 border-t border-slate-100 pt-3">
               <Link
                 href="/login"
+                onClick={() => setOpen(false)}
                 className="cursor-pointer rounded-xl border border-slate-300 px-3 py-2.5 text-center text-sm font-semibold text-slate-700 hover:bg-slate-50"
               >
                 Login
               </Link>
               <Link
                 href="/signup"
+                onClick={() => setOpen(false)}
                 className="cursor-pointer rounded-xl bg-indigo-600 px-3 py-2.5 text-center text-sm font-semibold text-white hover:bg-indigo-500"
               >
                 Get Started
