@@ -19,11 +19,12 @@ export function roleLabel(role) {
 
 export function defaultRedirectForRole(role) {
   switch (role) {
-    case "admin":   return "/admin/dashboard";
-    case "manager": return "/manager/dashboard";
-    case "waiter":  return "/waiter/dashboard";
-    case "chef":    return "/chef/dashboard";
-    default:        return "/dashboard";
+    case "super_admin": return "/super-admin/dashboard";
+    case "admin":       return "/admin/dashboard";
+    case "manager":     return "/manager/dashboard";
+    case "waiter":      return "/waiter/dashboard";
+    case "chef":        return "/chef/dashboard";
+    default:            return "/dashboard";
   }
 }
 

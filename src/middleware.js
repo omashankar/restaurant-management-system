@@ -1,23 +1,39 @@
 import { NextResponse } from "next/server";
 import { TOKEN_COOKIE } from "@/lib/authCookies";
 
-/* ── Role → allowed path prefixes ── */
+/* ══════════════════════════════════════════════════════════
+   ROLE → ALLOWED PATH PREFIXES
+   Each role can ONLY access paths listed here.
+   super_admin has full access including /super-admin/*.
+══════════════════════════════════════════════════════════ */
 const ROLE_PATHS = {
-  admin:   ["/admin", "/dashboard", "/pos", "/orders", "/menu", "/tables",
-            "/reservations", "/customers", "/staff", "/inventory",
-            "/analytics", "/settings", "/kitchen", "/profile"],
-  manager: ["/manager", "/dashboard", "/pos", "/orders", "/menu", "/tables",
-            "/reservations", "/customers", "/inventory", "/analytics", "/profile"],
-  waiter:  ["/waiter", "/pos", "/orders", "/tables", "/reservations", "/customers", "/profile"],
-  chef:    ["/chef", "/kitchen", "/orders", "/profile"],
+  super_admin: [
+    "/super-admin",   // ← exclusive to super_admin
+    "/admin", "/dashboard", "/pos", "/orders", "/menu",
+    "/tables", "/reservations", "/customers", "/staff",
+    "/inventory", "/analytics", "/settings", "/kitchen", "/profile",
+  ],
+  admin: [
+    "/admin", "/dashboard", "/pos", "/orders", "/menu",
+    "/tables", "/reservations", "/customers", "/staff",
+    "/inventory", "/analytics", "/settings", "/kitchen", "/profile",
+  ],
+  manager: [
+    "/manager", "/dashboard", "/pos", "/orders", "/menu",
+    "/tables", "/reservations", "/customers",
+    "/inventory", "/analytics", "/profile",
+  ],
+  waiter: ["/waiter", "/pos", "/orders", "/tables", "/reservations", "/customers", "/profile"],
+  chef:   ["/chef", "/kitchen", "/orders", "/profile"],
 };
 
-/* ── Role home pages ── */
+/* ── Role home (redirect after login or unauthorized access) ── */
 const ROLE_HOME = {
-  admin:   "/admin/dashboard",
-  manager: "/manager/dashboard",
-  waiter:  "/waiter/dashboard",
-  chef:    "/chef/dashboard",
+  super_admin: "/super-admin/dashboard",
+  admin:       "/admin/dashboard",
+  manager:     "/manager/dashboard",
+  waiter:      "/waiter/dashboard",
+  chef:        "/chef/dashboard",
 };
 
 /* ── Public paths — no auth needed ── */
@@ -32,7 +48,7 @@ const PUBLIC_PATHS = [
   "/verify-email",
 ];
 
-/** Decode JWT payload without crypto (Edge-safe) */
+/* ── Decode JWT payload (Edge-safe, no crypto import) ── */
 function decodeJwt(token) {
   try {
     const part = token.split(".")[1];
@@ -46,57 +62,74 @@ function decodeJwt(token) {
 export function middleware(request) {
   const { pathname } = request.nextUrl;
 
-  /* ── Allow public paths ── */
+  /* ── 1. Allow public paths ── */
   if (PUBLIC_PATHS.some((p) => pathname === p || pathname.startsWith(p + "/"))) {
     return NextResponse.next();
   }
 
-  /* ── Allow static assets ── */
+  /* ── 2. Allow static assets ── */
   if (pathname.startsWith("/_next") || pathname.includes(".")) {
     return NextResponse.next();
   }
 
   const token = request.cookies.get(TOKEN_COOKIE)?.value;
 
-  /* ── No token → login ── */
+  /* ── 3. No token → redirect to login (remember original path) ── */
   if (!token) {
     const url = new URL("/login", request.url);
-    url.searchParams.set("from", pathname); // remember where they came from
+    url.searchParams.set("from", pathname);
     return NextResponse.redirect(url);
   }
 
   const payload = decodeJwt(token);
 
-  /* ── Invalid token → login + clear cookie ── */
+  /* ── 4. Invalid token → clear cookie + redirect to login ── */
   if (!payload?.role) {
     const res = NextResponse.redirect(new URL("/login", request.url));
     res.cookies.delete(TOKEN_COOKIE);
     return res;
   }
 
-  /* ── Expired token → login + clear cookie ── */
+  /* ── 5. Expired token → clear cookie + redirect to login ── */
   if (payload.exp && Date.now() / 1000 > payload.exp) {
     const res = NextResponse.redirect(new URL("/login", request.url));
     res.cookies.delete(TOKEN_COOKIE);
     return res;
   }
 
-  /* ── RBAC: check if role can access this path ── */
-  const allowed = ROLE_PATHS[payload.role] ?? [];
+  const { role } = payload;
+
+  /* ── 6. /super-admin/* → ONLY super_admin allowed ── */
+  if (pathname.startsWith("/super-admin")) {
+    if (role !== "super_admin") {
+      const url = new URL("/unauthorized", request.url);
+      url.searchParams.set("role", role);
+      url.searchParams.set("path", pathname);
+      url.searchParams.set("reason", "super_admin_only");
+      return NextResponse.redirect(url);
+    }
+    // super_admin — allow through
+    const res = NextResponse.next();
+    res.headers.set("x-user-id",   payload.id   ?? "");
+    res.headers.set("x-user-role", role);
+    return res;
+  }
+
+  /* ── 7. RBAC: check role's allowed paths ── */
+  const allowed   = ROLE_PATHS[role] ?? [];
   const canAccess = allowed.some((p) => pathname === p || pathname.startsWith(p + "/"));
 
   if (!canAccess) {
-    /* Redirect to /unauthorized instead of silently bouncing */
     const url = new URL("/unauthorized", request.url);
-    url.searchParams.set("role", payload.role);
+    url.searchParams.set("role", role);
     url.searchParams.set("path", pathname);
     return NextResponse.redirect(url);
   }
 
-  /* ── Attach user info to headers for server components ── */
+  /* ── 8. Authorized — attach user info to request headers ── */
   const res = NextResponse.next();
   res.headers.set("x-user-id",        payload.id           ?? "");
-  res.headers.set("x-user-role",      payload.role         ?? "");
+  res.headers.set("x-user-role",      role);
   res.headers.set("x-restaurant-id",  payload.restaurantId ?? "");
   return res;
 }

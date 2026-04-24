@@ -12,10 +12,11 @@ import {
 } from "lucide-react";
 
 export const NAV_LINKS = [
-  { label: "Features", href: "#features" },
-  { label: "How It Works", href: "#how-it-works" },
-  { label: "Demo", href: "#demo" },
-  { label: "Contact", href: "#contact" },
+  { label: "Features",    href: "#features"    },
+  { label: "How It Works",href: "#how-it-works" },
+  { label: "Pricing",     href: "#pricing"      },
+  { label: "Demo",        href: "#demo"         },
+  { label: "Contact",     href: "#contact"      },
 ];
 
 export const STEP_FLOW = [
@@ -135,5 +136,65 @@ export const TESTIMONIALS = [
     role: "Outlet Manager",
     quote:
       "Inventory alerts and reporting made daily decisions much faster.",
+  },
+];
+
+export const PRICING_PLANS = [
+  {
+    name:        "Starter",
+    price:       { monthly: 29,  yearly: 23  },
+    description: "Perfect for a single-location restaurant getting started.",
+    highlight:   false,
+    badge:       null,
+    features: [
+      { text: "1 Restaurant location",        included: true  },
+      { text: "POS & Order Management",       included: true  },
+      { text: "Menu & Category Management",   included: true  },
+      { text: "Table Management",             included: true  },
+      { text: "Basic Analytics",              included: true  },
+      { text: "Inventory Management",         included: false },
+      { text: "Staff Role Management",        included: false },
+      { text: "Advanced Reports",             included: false },
+      { text: "Priority Support",             included: false },
+    ],
+    cta: "Start Free Trial",
+  },
+  {
+    name:        "Pro",
+    price:       { monthly: 79,  yearly: 63  },
+    description: "For growing restaurants that need full operational control.",
+    highlight:   true,
+    badge:       "Most Popular",
+    features: [
+      { text: "Up to 3 Restaurant locations", included: true },
+      { text: "POS & Order Management",       included: true },
+      { text: "Menu & Category Management",   included: true },
+      { text: "Table Management",             included: true },
+      { text: "Advanced Analytics",           included: true },
+      { text: "Inventory Management",         included: true },
+      { text: "Staff Role Management",        included: true },
+      { text: "Advanced Reports",             included: true },
+      { text: "Priority Support",             included: false },
+    ],
+    cta: "Start Free Trial",
+  },
+  {
+    name:        "Enterprise",
+    price:       { monthly: 199, yearly: 159 },
+    description: "For restaurant chains and franchises at scale.",
+    highlight:   false,
+    badge:       null,
+    features: [
+      { text: "Unlimited locations",          included: true },
+      { text: "POS & Order Management",       included: true },
+      { text: "Menu & Category Management",   included: true },
+      { text: "Table Management",             included: true },
+      { text: "Advanced Analytics",           included: true },
+      { text: "Inventory Management",         included: true },
+      { text: "Staff Role Management",        included: true },
+      { text: "Advanced Reports",             included: true },
+      { text: "Dedicated Support + SLA",      included: true },
+    ],
+    cta: "Contact Sales",
   },
 ];
