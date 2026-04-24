@@ -98,7 +98,7 @@ export default function LandingSections() {
       </section>
 
       {/* 4 ── HOW IT WORKS */}
-      <section id="how-it-works" className="mx-auto w-full max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+      <section id="how-it-works" className="scroll-mt-16 mx-auto w-full max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
         <SectionTitle
           eyebrow="How It Works"
           title="From setup to service in minutes"
@@ -192,7 +192,9 @@ export default function LandingSections() {
       </section>
 
       {/* 9 ── DEMO / DASHBOARD PREVIEW */}
-      <DemoSection />
+      <section id="demo" className="scroll-mt-16">
+        <DemoSection />
+      </section>
 
       {/* 10 ── TESTIMONIALS */}
       <TestimonialSection />

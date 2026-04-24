@@ -17,6 +17,7 @@
 import { getTokenFromRequest } from "@/lib/authCookies";
 import { verifyToken } from "@/lib/jwt";
 import clientPromise from "@/lib/mongodb";
+import { revalidatePath, revalidateTag } from "next/cache";
 
 /* ── Auth guard ── */
 function superAdminOnly(request) {
@@ -184,6 +185,10 @@ export async function PATCH(request) {
       { upsert: true }
     );
 
+    /* Purge the public landing page cache immediately */
+    revalidateTag("landing"); // invalidates the tagged fetch in page.jsx
+    revalidatePath("/");      // also purge the page route cache
+
     return Response.json({ success: true, section, updatedAt: new Date() });
   } catch (err) {
     console.error("PATCH landing error:", err.message);
@@ -213,6 +218,9 @@ export async function PUT(request) {
       { _id: "landing", ...body, updatedAt: new Date() },
       { upsert: true }
     );
+
+    revalidateTag("landing");
+    revalidatePath("/");
 
     return Response.json({ success: true, updatedAt: new Date() });
   } catch (err) {
