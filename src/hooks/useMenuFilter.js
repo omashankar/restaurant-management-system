@@ -18,11 +18,13 @@ export function useMenuFilter(items) {
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
     return items.filter((item) => {
-      if (activeCategory !== "All" && item.category !== activeCategory) return false;
+      // Support both field names: categoryName (from DB) and category (legacy)
+      const itemCategory = item.categoryName ?? item.category ?? "";
+      if (activeCategory !== "All" && itemCategory !== activeCategory) return false;
       if (activeItemType !== "all" && item.itemType !== activeItemType) return false;
       if (activeKitchen !== "all" && item.kitchenType !== activeKitchen) return false;
       if (fastOnly && (item.prepTime ?? 99) >= 10) return false;
-      if (q && !`${item.name} ${item.category}`.toLowerCase().includes(q)) return false;
+      if (q && !`${item.name} ${itemCategory}`.toLowerCase().includes(q)) return false;
       return true;
     });
   }, [items, activeCategory, activeItemType, activeKitchen, fastOnly, search]);

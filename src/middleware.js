@@ -8,7 +8,7 @@ import { TOKEN_COOKIE } from "@/lib/authCookies";
 ══════════════════════════════════════════════════════════ */
 const ROLE_PATHS = {
   super_admin: [
-    "/super-admin",   // ← exclusive to super_admin
+    "/super-admin",
     "/admin", "/dashboard", "/pos", "/orders", "/menu",
     "/tables", "/reservations", "/customers", "/staff",
     "/inventory", "/analytics", "/settings", "/kitchen", "/profile",

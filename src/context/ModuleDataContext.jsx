@@ -14,6 +14,7 @@ import {
 } from "@/lib/modulesData";
 import {
   createContext,
+  useCallback,
   useContext,
   useEffect,
   useMemo,
@@ -44,39 +45,78 @@ export function ModuleDataProvider({ children }) {
   const [kitchenQueue, setKitchenQueue] = useState([]);
 
   useEffect(() => {
+    // Restore non-API session state (orders, kitchen queue, floor state)
     try {
       const raw = sessionStorage.getItem(KEY);
       if (raw) {
         const d = JSON.parse(raw);
-        if (d.categories) setCategories(d.categories);
         if (d.tableCategories) setTableCategories(d.tableCategories);
-        if (d.menuItems) setMenuItems(d.menuItems);
-        if (d.recipes) setRecipes(d.recipes);
-        if (d.floorTables) setFloorTables(d.floorTables);
-        if (d.staffRows) setStaffRows(d.staffRows);
-        if (d.customerRows) setCustomerRows(d.customerRows);
+        if (d.floorTables)     setFloorTables(d.floorTables);
+        if (d.staffRows)       setStaffRows(d.staffRows);
+        if (d.customerRows)    setCustomerRows(d.customerRows);
         if (d.reservationRows) setReservationRows(d.reservationRows);
-        if (d.inventoryRows) setInventoryRows(d.inventoryRows);
+        if (d.inventoryRows)   setInventoryRows(d.inventoryRows);
         if (d.inventoryHistory) setInventoryHistory(d.inventoryHistory);
-        if (d.orderRows) setOrderRows(d.orderRows);
-        if (d.kitchenQueue) setKitchenQueue(d.kitchenQueue);
+        if (d.orderRows)       setOrderRows(d.orderRows);
+        if (d.kitchenQueue)    setKitchenQueue(d.kitchenQueue);
       }
     } catch {
       sessionStorage.removeItem(KEY);
     }
-    setHydrated(true);
+
+    // Fetch menu + categories from real API
+    async function fetchMenuData() {
+      try {
+        const [menuRes, catRes, tablesRes, areasRes] = await Promise.all([
+          fetch("/api/menu"),
+          fetch("/api/categories"),
+          fetch("/api/tables"),
+          fetch("/api/tables/areas"),
+        ]);
+        const [menuData, catData, tablesData, areasData] = await Promise.all([
+          menuRes.json(),
+          catRes.json(),
+          tablesRes.json(),
+          areasRes.json(),
+        ]);
+        if (menuData.success   && Array.isArray(menuData.items))        setMenuItems(menuData.items);
+        if (catData.success    && Array.isArray(catData.categories))    setCategories(catData.categories);
+        if (tablesData.success && Array.isArray(tablesData.tables))     setFloorTables(tablesData.tables);
+        if (areasData.success  && Array.isArray(areasData.areas))       setTableCategories(areasData.areas);
+      } catch (err) {
+        console.error("[ModuleDataContext] Failed to fetch menu data:", err.message);
+      }
+    }
+
+    fetchMenuData().finally(() => setHydrated(true));
   }, []);
 
-  useEffect(() => {
+  const refreshMenu = useCallback(async () => {
+    try {
+      const [menuRes, catRes, tablesRes, areasRes] = await Promise.all([
+        fetch("/api/menu"),
+        fetch("/api/categories"),
+        fetch("/api/tables"),
+        fetch("/api/tables/areas"),
+      ]);
+      const [menuData, catData, tablesData, areasData] = await Promise.all([
+        menuRes.json(),
+        catRes.json(),
+        tablesRes.json(),
+        areasRes.json(),
+      ]);
+      if (menuData.success   && Array.isArray(menuData.items))     setMenuItems(menuData.items);
+      if (catData.success    && Array.isArray(catData.categories)) setCategories(catData.categories);
+      if (tablesData.success && Array.isArray(tablesData.tables))  setFloorTables(tablesData.tables);
+      if (areasData.success  && Array.isArray(areasData.areas))    setTableCategories(areasData.areas);
+    } catch (err) {
+      console.error("[ModuleDataContext] refreshMenu failed:", err.message);
+    }
+  }, []);  useEffect(() => {
     if (!hydrated) return;
     sessionStorage.setItem(
       KEY,
       JSON.stringify({
-        categories,
-        tableCategories,
-        menuItems,
-        recipes,
-        floorTables,
         staffRows,
         customerRows,
         reservationRows,
@@ -88,11 +128,6 @@ export function ModuleDataProvider({ children }) {
     );
   }, [
     hydrated,
-    categories,
-    tableCategories,
-    menuItems,
-    recipes,
-    floorTables,
     staffRows,
     customerRows,
     reservationRows,
@@ -139,6 +174,7 @@ export function ModuleDataProvider({ children }) {
       setOrderRows,
       kitchenQueue,
       setKitchenQueue,
+      refreshMenu,
     }),
     [
       hydrated,

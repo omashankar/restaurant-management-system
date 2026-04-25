@@ -144,7 +144,7 @@ export default function CustomerMenuPage() {
             fastOnly ? "bg-amber-500/20 text-amber-300 ring-1 ring-amber-500/30" : "bg-zinc-900 text-zinc-400 ring-1 ring-zinc-800 hover:text-zinc-200"
           }`}
         >
-          <Zap className="size-3" /> Fast (&lt;10 min)
+          <Zap className="size-3" /> Fast ({"<"}10 min)
         </button>
       </div>
 

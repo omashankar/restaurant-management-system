@@ -5,7 +5,7 @@ import { useModuleData } from "@/context/ModuleDataContext";
 import { Bike, ConciergeBell, Loader2, Store } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 const TYPE_LABEL = { "dine-in": "Dine-In", takeaway: "Takeaway", delivery: "Delivery" };
 const TYPE_ICON  = { "dine-in": Store, takeaway: ConciergeBell, delivery: Bike };
@@ -34,6 +34,13 @@ export default function CheckoutPage() {
   const total = subtotal + tax;
   const TypeIcon = orderType ? TYPE_ICON[orderType] : null;
 
+  // Redirect to menu if cart is empty — must be in useEffect, not during render
+  useEffect(() => {
+    if (lines.length === 0) {
+      router.replace("/order/menu");
+    }
+  }, [lines.length, router]);
+
   if (!orderType) {
     return (
       <div className="flex min-h-[60vh] flex-col items-center justify-center gap-5 px-4 text-center">
@@ -49,10 +56,7 @@ export default function CheckoutPage() {
     );
   }
 
-  if (lines.length === 0) {
-    router.replace("/order/menu");
-    return null;
-  }
+  if (lines.length === 0) return null;
 
   const placeOrder = async () => {
     if (!customer.name.trim() || !customer.phone.trim()) {

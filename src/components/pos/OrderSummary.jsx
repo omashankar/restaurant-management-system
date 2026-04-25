@@ -29,6 +29,8 @@ export default function OrderSummary({
   delivery, onDeliveryChange,
   onCustomerSelect,
   selectedCustomer,
+  isPlacing = false,
+  note = "", onNoteChange,
 }) {
   const { floorTables, tableCategories } = useModuleData();
   const [activeArea, setActiveArea] = useState(null);
@@ -215,6 +217,22 @@ export default function OrderSummary({
 
         {/* ── Totals + actions ── */}
         <div className="border-t border-zinc-800 p-3 space-y-3">
+
+          {/* Order note */}
+          {cart.length > 0 && (
+            <div>
+              <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-zinc-500">
+                Order Note <span className="normal-case font-normal text-zinc-700">(optional)</span>
+              </label>
+              <textarea
+                rows={2}
+                value={note}
+                onChange={(e) => onNoteChange?.(e.target.value)}
+                placeholder="Allergies, special requests…"
+                className="w-full resize-none rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2 text-xs text-zinc-100 outline-none focus:border-emerald-500/40 placeholder:text-zinc-600 transition-colors"
+              />
+            </div>
+          )}
           <div className="space-y-1 text-xs">
             <div className="flex justify-between text-zinc-400">
               <span>Subtotal</span><span className="text-zinc-200">${subtotal.toFixed(2)}</span>
@@ -243,9 +261,11 @@ export default function OrderSummary({
             </p>
           )}
 
-          <button type="button" onClick={onPlaceOrder} disabled={!canPlaceOrder}
+          <button type="button" onClick={onPlaceOrder} disabled={!canPlaceOrder || isPlacing}
             className="cursor-pointer flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-500 py-2.5 text-sm font-semibold text-zinc-950 transition-all hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-40">
-            <CreditCard className="size-4" /> Place Order
+            {isPlacing
+              ? <><span className="size-4 animate-spin rounded-full border-2 border-zinc-950/30 border-t-zinc-950" /> Placing…</>
+              : <><CreditCard className="size-4" /> Place Order</>}
           </button>
           <button type="button" onClick={onClearCart} disabled={cart.length === 0}
             className="cursor-pointer flex w-full items-center justify-center gap-2 rounded-xl border border-zinc-700 py-2 text-xs font-medium text-zinc-400 transition-all hover:border-zinc-500 hover:text-zinc-200 disabled:opacity-40">
