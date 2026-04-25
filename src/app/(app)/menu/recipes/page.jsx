@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import DataTableShell from "@/components/ui/DataTableShell";
 import EmptyState from "@/components/ui/EmptyState";
@@ -7,7 +7,7 @@ import Modal from "@/components/ui/Modal";
 import PaginationBar from "@/components/ui/PaginationBar";
 import TableSkeleton from "@/components/ui/TableSkeleton";
 import { useModuleData } from "@/context/ModuleDataContext";
-import { usePaginatedList } from "@/lib/usePaginatedList";
+import { usePaginatedList } from "@/hooks/usePaginatedList";
 import { BookOpen, Eye, Pencil, Plus, X } from "lucide-react";
 import { useEffect, useState } from "react";
 
@@ -74,13 +74,13 @@ export default function RecipesPage() {
     if (!mi || !form.name.trim()) return;
     const ing = form.ingredients.map((s) => s.trim()).filter(Boolean);
     const preview =
-      ing.slice(0, 2).join(", ") + (ing.length > 2 ? "…" : "");
+      ing.slice(0, 2).join(", ") + (ing.length > 2 ? "â€¦" : "");
 
     const payload = {
       name: form.name.trim(),
       menuItemId: mi.id,
       menuItemName: mi.name,
-      ingredientsPreview: preview || "—",
+      ingredientsPreview: preview || "â€”",
       ingredients: ing,
       steps: form.steps.trim(),
     };
@@ -145,7 +145,7 @@ export default function RecipesPage() {
       <ListToolbar
         search={search}
         onSearchChange={setSearch}
-        searchPlaceholder="Search recipes or linked item…"
+        searchPlaceholder="Search recipes or linked itemâ€¦"
       />
 
       {total === 0 ? (
@@ -270,7 +270,7 @@ export default function RecipesPage() {
             >
               {activeMenuItems.map((m) => (
                 <option key={m.id} value={m.id}>
-                  {m.name} · ${m.price}
+                  {m.name} Â· ${m.price}
                 </option>
               ))}
             </select>
@@ -315,7 +315,7 @@ export default function RecipesPage() {
               onChange={(e) =>
                 setForm((f) => ({ ...f, steps: e.target.value }))
               }
-              placeholder="Prep and plating steps…"
+              placeholder="Prep and plating stepsâ€¦"
               className="mt-1 w-full resize-none rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2 text-sm text-zinc-100"
             />
           </div>
@@ -366,7 +366,7 @@ export default function RecipesPage() {
                 Steps
               </h4>
               <p className="mt-2 whitespace-pre-wrap leading-relaxed text-zinc-300">
-                {detailRecipe.steps || "—"}
+                {detailRecipe.steps || "â€”"}
               </p>
             </div>
           </div>
@@ -375,3 +375,4 @@ export default function RecipesPage() {
     </div>
   );
 }
+

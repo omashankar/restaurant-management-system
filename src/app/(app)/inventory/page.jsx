@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import InventoryAlertCard from "@/components/inventory/InventoryAlertCard";
 import InventoryFormModal from "@/components/inventory/InventoryFormModal";
@@ -13,7 +13,7 @@ import PaginationBar from "@/components/ui/PaginationBar";
 import TableSkeleton from "@/components/ui/TableSkeleton";
 import { useApp } from "@/context/AppProviders";
 import { useModuleData } from "@/context/ModuleDataContext";
-import { usePaginatedList } from "@/lib/usePaginatedList";
+import { usePaginatedList } from "@/hooks/usePaginatedList";
 import { AlertTriangle, Package, Plus } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
@@ -157,7 +157,7 @@ export default function InventoryPage() {
           itemId: editingId,
           itemName: payload.name,
           delta: quantity - prevRow.quantity,
-          message: `Adjusted from ${prevRow.quantity} → ${quantity} ${payload.unit}`,
+          message: `Adjusted from ${prevRow.quantity} â†’ ${quantity} ${payload.unit}`,
           createdAt: new Date().toISOString(),
         });
       }
@@ -169,7 +169,7 @@ export default function InventoryPage() {
         itemId: id,
         itemName: payload.name,
         delta: quantity,
-        message: `Initial stock · ${quantity} ${payload.unit}`,
+        message: `Initial stock Â· ${quantity} ${payload.unit}`,
         createdAt: new Date().toISOString(),
       });
     }
@@ -283,7 +283,7 @@ export default function InventoryPage() {
       <ListToolbar
         search={search}
         onSearchChange={setSearch}
-        searchPlaceholder="Search name, category, supplier…"
+        searchPlaceholder="Search name, category, supplierâ€¦"
         filterSlot={
           <select
             value={statusFilter}
@@ -364,7 +364,7 @@ export default function InventoryPage() {
         title="Remove item?"
         message={
           deleteTarget
-            ? `Delete “${deleteTarget.name}” from inventory? This cannot be undone.`
+            ? `Delete â€œ${deleteTarget.name}â€ from inventory? This cannot be undone.`
             : ""
         }
         onConfirm={confirmDelete}
@@ -373,3 +373,4 @@ export default function InventoryPage() {
     </div>
   );
 }
+

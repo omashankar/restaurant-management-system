@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import DataTableShell from "@/components/ui/DataTableShell";
@@ -10,7 +10,7 @@ import TableSkeleton from "@/components/ui/TableSkeleton";
 import RoleCard from "@/components/rms/RoleCard";
 import { useApp } from "@/context/AppProviders";
 import { useModuleData } from "@/context/ModuleDataContext";
-import { usePaginatedList } from "@/lib/usePaginatedList";
+import { usePaginatedList } from "@/hooks/usePaginatedList";
 import { Eye, Pencil, Plus, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
@@ -109,7 +109,7 @@ export default function CustomersModulePage() {
           email: form.email.trim(),
           notes: form.notes.trim(),
           visits: 0,
-          lastVisit: "—",
+          lastVisit: "â€”",
           orderHistory: [],
         },
       ]);
@@ -164,7 +164,7 @@ export default function CustomersModulePage() {
       <ListToolbar
         search={search}
         onSearchChange={setSearch}
-        searchPlaceholder="Search name, phone, email…"
+        searchPlaceholder="Search name, phone, emailâ€¦"
         filterSlot={
           <select
             value={visitFilter}
@@ -172,8 +172,8 @@ export default function CustomersModulePage() {
             className="rounded-xl border border-zinc-800 bg-zinc-900/60 px-3 py-2 text-sm text-zinc-200"
           >
             <option value="all">All visits</option>
-            <option value="1-5">1–5 visits</option>
-            <option value="6-15">6–15 visits</option>
+            <option value="1-5">1â€“5 visits</option>
+            <option value="6-15">6â€“15 visits</option>
             <option value="16+">16+ visits</option>
           </select>
         }
@@ -347,3 +347,4 @@ export default function CustomersModulePage() {
     </div>
   );
 }
+

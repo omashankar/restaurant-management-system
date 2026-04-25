@@ -14,6 +14,7 @@ import {
   Receipt,
   Settings,
   Shield,
+  Users,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
@@ -24,6 +25,7 @@ const STORAGE_KEY = "sa-sidebar-collapsed";
 const NAV = [
   { href: "/super-admin/dashboard",     label: "Dashboard",     Icon: LayoutDashboard },
   { href: "/super-admin/restaurants",   label: "Restaurants",   Icon: Building2       },
+  { href: "/super-admin/users",         label: "Users",         Icon: Users           },
   { href: "/super-admin/payments",      label: "Payments",      Icon: DollarSign      },
   { href: "/super-admin/plans",         label: "Plans",         Icon: CreditCard      },
   { href: "/super-admin/billing",       label: "Billing",       Icon: Receipt         },
