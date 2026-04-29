@@ -1,5 +1,6 @@
 import { Check, Star, X } from "lucide-react";
 import Link from "next/link";
+import { getIcon } from "@/lib/iconMap";
 import SectionTitle from "./SectionTitle";
 
 /* ─────────────────────────────────────────
@@ -20,7 +21,7 @@ export function DynamicFeatures({ features = [] }) {
             <article key={f.id ?? f.title}
               className="group rounded-2xl border border-slate-200 bg-slate-50 p-5 transition-all duration-200 hover:-translate-y-1 hover:border-indigo-300 hover:bg-white hover:shadow-lg hover:shadow-indigo-100/50">
               <span className="inline-flex size-11 items-center justify-center rounded-xl bg-indigo-100 text-indigo-700 transition-colors duration-200 group-hover:bg-indigo-600 group-hover:text-white">
-                <Star className="size-5" />
+                {(() => { const Icon = getIcon(f.icon); return <Icon className="size-5" />; })()}
               </span>
               <h3 className="mt-4 text-base font-bold text-slate-900">{f.title}</h3>
               <p className="mt-2 text-sm leading-relaxed text-slate-600">{f.description}</p>
@@ -57,7 +58,7 @@ export function DynamicRoles({ roles = [] }) {
             <article key={r.id ?? r.role}
               className={`flex flex-col rounded-2xl border border-slate-200 p-6 transition-all duration-200 hover:-translate-y-1 hover:shadow-lg ${ROLE_COLORS[r.role] ?? "hover:border-slate-300"}`}>
               <span className="inline-flex size-12 items-center justify-center rounded-xl bg-indigo-100 text-indigo-700">
-                <Star className="size-5" />
+                {(() => { const Icon = getIcon(r.icon); return <Icon className="size-5" />; })()}
               </span>
               <h3 className="mt-4 text-base font-bold text-slate-900">{r.role}</h3>
               <p className="mt-1.5 text-sm leading-relaxed text-slate-600">{r.description}</p>

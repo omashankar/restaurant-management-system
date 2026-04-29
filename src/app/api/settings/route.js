@@ -12,10 +12,15 @@ export const GET = withTenant(
     // Merge stored values over empty defaults so shape is always complete
     const settings = {};
     for (const section of Object.keys(EMPTY_SETTINGS)) {
-      settings[section] = {
-        ...EMPTY_SETTINGS[section],
-        ...(doc?.[section] ?? {}),
-      };
+      const def    = EMPTY_SETTINGS[section];
+      const stored = doc?.[section] ?? null;
+
+      if (Array.isArray(def)) {
+        // Arrays (e.g. openingHours): use stored array if valid, else fall back to default
+        settings[section] = Array.isArray(stored) ? stored : def;
+      } else {
+        settings[section] = { ...def, ...(stored ?? {}) };
+      }
     }
 
     return Response.json({ success: true, settings });

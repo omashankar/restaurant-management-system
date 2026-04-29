@@ -66,6 +66,12 @@ export function ModuleDataProvider({ children }) {
 
     // Fetch menu + categories from real API
     async function fetchMenuData() {
+      // Skip if no auth cookie — avoids 401s on public pages (landing, login)
+      const hasAuth = document.cookie.includes("rms_token");
+      if (!hasAuth) {
+        setHydrated(true);
+        return;
+      }
       try {
         const [menuRes, catRes, tablesRes, areasRes] = await Promise.all([
           fetch("/api/menu"),

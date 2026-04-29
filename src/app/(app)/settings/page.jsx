@@ -30,8 +30,15 @@ export default function SettingsPage() {
         const res = await fetch("/api/settings");
         const data = await res.json();
         if (data.success) {
-          setSettings(data.settings);
-          setSavedSnapshot(data.settings);
+          // Guard: ensure openingHours is always an array (old DB docs may have it as object)
+          const safe = {
+            ...data.settings,
+            openingHours: Array.isArray(data.settings.openingHours)
+              ? data.settings.openingHours
+              : EMPTY_SETTINGS.openingHours,
+          };
+          setSettings(safe);
+          setSavedSnapshot(safe);
         }
       } catch {
         showToast("error", "Failed to load settings.");

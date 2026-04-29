@@ -57,10 +57,10 @@ const DEFAULTS = {
   ],
 
   roles: [
-    { id: "admin",   role: "Admin",   description: "Full control over modules, settings, and user access.",    permissions: ["Full system access", "Manage staff & roles", "View all reports", "Configure settings"] },
-    { id: "manager", role: "Manager", description: "Handles daily operations, reports, and team supervision.", permissions: ["Daily operations", "Staff supervision", "Sales reports", "Inventory oversight"]       },
-    { id: "waiter",  role: "Waiter",  description: "Takes customer orders and manages table service quickly.", permissions: ["Take & manage orders", "Table service", "Customer requests", "Order status updates"]  },
-    { id: "chef",    role: "Chef",    description: "Tracks kitchen queue and prepares orders on time.",        permissions: ["Kitchen display queue", "Mark orders ready", "Prep time tracking", "Recipe access"]    },
+    { id: "admin",   role: "Admin",   icon: "ShieldCheck",  description: "Full control over modules, settings, and user access.",    permissions: ["Full system access", "Manage staff & roles", "View all reports", "Configure settings"] },
+    { id: "manager", role: "Manager", icon: "ClipboardList",description: "Handles daily operations, reports, and team supervision.", permissions: ["Daily operations", "Staff supervision", "Sales reports", "Inventory oversight"]       },
+    { id: "waiter",  role: "Waiter",  icon: "UtensilsCrossed", description: "Takes customer orders and manages table service quickly.", permissions: ["Take & manage orders", "Table service", "Customer requests", "Order status updates"]  },
+    { id: "chef",    role: "Chef",    icon: "ChefHat",      description: "Tracks kitchen queue and prepares orders on time.",        permissions: ["Kitchen display queue", "Mark orders ready", "Prep time tracking", "Recipe access"]    },
   ],
 
   pricing: [

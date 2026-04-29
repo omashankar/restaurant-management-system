@@ -59,6 +59,49 @@ const DEFAULTS = {
     default:   "USD",
     supported: ["USD", "EUR", "GBP", "INR", "AUD", "CAD"],
   },
+
+  /* ── NEW SECTIONS ── */
+  sms: {
+    provider:   "twilio",   // "twilio" | "fast2sms"
+    apiKey:     "",
+    authToken:  "",
+    senderId:   "",
+    enabled:    false,
+  },
+  security: {
+    minPasswordLength:      8,
+    requireSpecialChars:    true,
+    requireNumbers:         true,
+    loginAttemptLimit:      5,
+    blockDurationMinutes:   30,
+    enable2FA:              false,
+    sessionTimeoutMinutes:  60,
+    ipWhitelist:            "",   // comma-separated
+  },
+  backup: {
+    autoBackup:       false,
+    backupSchedule:   "daily",   // "daily" | "weekly"
+    retentionDays:    30,
+    lastBackupAt:     null,
+  },
+  integrations: {
+    googleAnalyticsId: "",
+    metaPixelId:       "",
+    webhookUrl:        "",
+    webhookSecret:     "",
+    razorpayKeyId:     "",
+    razorpayKeySecret: "",
+  },
+  advanced: {
+    maintenanceMode:  false,
+    debugMode:        false,
+    invoicePrefix:    "INV-",
+    autoBilling:      true,
+    featureMenuQR:    true,
+    featureOnlineOrder: true,
+    featureReservations: true,
+    featureInventory: true,
+  },
 };
 
 /* ── GET /api/super-admin/settings ── */

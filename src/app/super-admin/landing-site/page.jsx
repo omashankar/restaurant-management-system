@@ -1,7 +1,9 @@
 ﻿"use client";
 
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
+import IconPicker from "@/components/ui/IconPicker";
 import Modal from "@/components/ui/Modal";
+import { getIcon } from "@/lib/iconMap";
 import { useToast } from "@/hooks/useToast";
 import {
   AlertCircle, CreditCard, Globe,
@@ -156,8 +158,21 @@ function ArrayPanel({ items, fields, onSave, saving, icon: Icon, title, descript
   const [errors, setErrors]         = useState({});
   const [itemSaving, setItemSaving] = useState(false);
 
-  const openAdd  = () => { setForm({}); setErrors({}); setEditIdx(-1); };
-  const openEdit = (i) => { setForm({ ...items[i] }); setErrors({}); setEditIdx(i); };
+  const defaultForm = () => {
+    const defaults = {};
+    fields.forEach(f => { if (f.type === "iconpicker") defaults[f.key] = f.default ?? "Circle"; });
+    return defaults;
+  };
+
+  const openAdd  = () => { setForm(defaultForm()); setErrors({}); setEditIdx(-1); };
+  const openEdit = (i) => {
+    const item = { ...items[i] };
+    // fill missing iconpicker fields with their default
+    fields.forEach(f => { if (f.type === "iconpicker" && !item[f.key]) item[f.key] = f.default ?? "Circle"; });
+    setForm(item);
+    setErrors({});
+    setEditIdx(i);
+  };
 
   const handleSave = async () => {
     const e = {};
@@ -229,7 +244,12 @@ function ArrayPanel({ items, fields, onSave, saving, icon: Icon, title, descript
         <div className="space-y-4">
           {fields.map(f => (
             <Field key={f.key} label={f.label} required={f.required} error={errors[f.key]} hint={f.hint}>
-              {f.type === "textarea" ? (
+              {f.type === "iconpicker" ? (
+                <IconPicker
+                  value={form[f.key] ?? "Star"}
+                  onChange={v => { setForm(p => ({ ...p, [f.key]: v })); setErrors(p => ({ ...p, [f.key]: "" })); }}
+                />
+              ) : f.type === "textarea" ? (
                 <textarea rows={2} value={form[f.key] ?? ""} placeholder={f.placeholder}
                   onChange={e => { setForm(p => ({ ...p, [f.key]: e.target.value })); setErrors(p => ({ ...p, [f.key]: "" })); }}
                   className={`${ic} resize-none`} />
@@ -330,14 +350,15 @@ function FooterPanel({ data, onChange, onSave, saving }) {
    FIELD DEFINITIONS FOR ARRAY PANELS
 ════════════════════════════════════════ */
 const FEATURE_FIELDS = [
-  { key: "icon",        label: "Icon Name",   placeholder: "Star",              hint: "Lucide icon name e.g. CreditCard, BarChart3" },
+  { key: "icon",        label: "Icon",        type: "iconpicker", required: true, default: "Star" },
   { key: "title",       label: "Title",       placeholder: "POS System",        required: true },
   { key: "description", label: "Description", placeholder: "Short description", type: "textarea" },
 ];
 
 const ROLE_FIELDS = [
-  { key: "role",        label: "Role Name",   placeholder: "Admin",           required: true },
-  { key: "description", label: "Description", placeholder: "Full control…",   type: "textarea" },
+  { key: "icon",        label: "Icon",        type: "iconpicker", required: true, default: "Circle" },
+  { key: "role",        label: "Role Name",   placeholder: "Admin",         required: true },
+  { key: "description", label: "Description", placeholder: "Full control…", type: "textarea" },
 ];
 
 const PRICING_FIELDS = [
@@ -498,12 +519,20 @@ export default function LandingSitePage() {
                   icon={Users}
                   title="Roles"
                   description="Describe each role and their access level."
-                  renderCard={item => (
-                    <>
-                      <p className="text-sm font-medium text-zinc-100">{item.role}</p>
-                      <p className="text-xs text-zinc-500 truncate">{item.description}</p>
-                    </>
-                  )}
+                  renderCard={item => {
+                    const RoleIcon = getIcon(item.icon);
+                    return (
+                      <div className="flex items-center gap-3">
+                        <span className="inline-flex size-8 shrink-0 items-center justify-center rounded-lg bg-indigo-500/15 text-indigo-400">
+                          <RoleIcon className="size-4" />
+                        </span>
+                        <div className="min-w-0">
+                          <p className="text-sm font-medium text-zinc-100">{item.role}</p>
+                          <p className="text-xs text-zinc-500 truncate">{item.description}</p>
+                        </div>
+                      </div>
+                    );
+                  }}
                 />
               )}
               {activeTab === "pricing" && (
