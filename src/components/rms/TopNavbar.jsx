@@ -2,6 +2,7 @@
 
 import { ROLES, roleLabel, useApp } from "@/context/AppProviders";
 import { useUser } from "@/context/AuthContext";
+import GlobalSearch from "@/components/rms/GlobalSearch";
 import {
   Bell,
   ChevronDown,
@@ -79,6 +80,9 @@ export default function TopNavbar({ onOpenSidebar, onToggleSidebar }) {
       </div>
 
       <div className="flex items-center gap-3">
+        {/* Global Search */}
+        <GlobalSearch />
+
         <button
           type="button"
           onClick={() => setIsProfileOpen(false)}

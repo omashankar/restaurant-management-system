@@ -27,7 +27,7 @@ export default function WaiterDashboard({ tables = [], orders = [] }) {
       <section>
         <div className="mb-3 flex items-center justify-between gap-4">
           <h2 className="text-sm font-semibold text-zinc-100">Active Tables</h2>
-          <Link href="/tables" className="cursor-pointer text-xs font-medium text-emerald-400 hover:text-emerald-300">Floor map →</Link>
+          <Link href="/tables" className="cursor-pointer text-xs font-medium text-emerald-400 hover:text-emerald-300">View tables →</Link>
         </div>
         {tables.length === 0 ? (
           <p className="text-sm text-zinc-600">No tables configured yet.</p>

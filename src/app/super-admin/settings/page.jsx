@@ -104,6 +104,31 @@ function AppSection({ data, onChange, onSave, saving }) {
 }
 
 function EmailSection({ data, onChange, onSave, saving }) {
+  const [testing, setTesting] = useState(false);
+  const { showToast } = useToast();
+
+  async function sendTestEmail() {
+    if (!data.smtpHost || !data.smtpUser) {
+      showToast("Fill in SMTP Host and Username first.", "error");
+      return;
+    }
+    setTesting(true);
+    try {
+      const res  = await fetch("/api/super-admin/settings/test-email", {
+        method:  "POST",
+        headers: { "Content-Type": "application/json" },
+        body:    JSON.stringify({ smtp: data }),
+      });
+      const json = await res.json();
+      if (json.success) showToast("Test email sent successfully.");
+      else showToast(json.error ?? "Failed to send test email.", "error");
+    } catch {
+      showToast("Network error.", "error");
+    } finally {
+      setTesting(false);
+    }
+  }
+
   return (
     <div className="space-y-5">
       <SectionHeader icon={Key} title="Email / SMTP" description="Outbound email configuration." />
@@ -135,6 +160,26 @@ function EmailSection({ data, onChange, onSave, saving }) {
       </div>
       <Toggle checked={!!data.secure} onChange={(v) => onChange("secure", v)}
         label="Use SSL/TLS" description="Enable for port 465. Use STARTTLS for port 587." />
+
+      {/* Test email */}
+      <div className="flex items-center justify-between rounded-xl border border-zinc-800 bg-zinc-900/40 px-4 py-3">
+        <div>
+          <p className="text-sm font-medium text-zinc-200">Send Test Email</p>
+          <p className="mt-0.5 text-xs text-zinc-500">Verify your SMTP config by sending a test message.</p>
+        </div>
+        <button
+          type="button"
+          onClick={sendTestEmail}
+          disabled={testing}
+          className="cursor-pointer inline-flex items-center gap-2 rounded-xl border border-zinc-700 px-4 py-2 text-xs font-semibold text-zinc-300 hover:border-indigo-500/40 hover:text-indigo-400 disabled:opacity-50 transition-colors"
+        >
+          {testing
+            ? <span className="size-3 animate-spin rounded-full border-2 border-zinc-500/30 border-t-zinc-400" />
+            : <Key className="size-3.5" />}
+          {testing ? "Sending…" : "Send Test"}
+        </button>
+      </div>
+
       <SaveButton saving={saving} onClick={onSave} />
     </div>
   );

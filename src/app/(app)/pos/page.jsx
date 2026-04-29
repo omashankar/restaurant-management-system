@@ -3,6 +3,7 @@
 import CategoryTabs from "@/components/pos/CategoryTabs";
 import MenuCard from "@/components/menu/MenuCard";
 import OrderSummary from "@/components/pos/OrderSummary";
+import PrintInvoice from "@/components/pos/PrintInvoice";
 import ItemTypeFilter from "@/components/filters/ItemTypeFilter";
 import ListToolbar from "@/components/ui/ListToolbar";
 import Modal from "@/components/ui/Modal";
@@ -30,6 +31,7 @@ export default function PosPage() {
   const [successOpen, setSuccessOpen] = useState(false);
   const [lastAddedId, setLastAddedId] = useState("");
   const [selectedCustomer, setSelectedCustomer] = useState(null);
+  const [lastOrder, setLastOrder] = useState(null); // for print invoice
 
   // Pre-select table from ?tableId= query param (set by floor view)
   useEffect(() => {
@@ -183,6 +185,16 @@ export default function PosPage() {
       }
 
       setSuccessOpen(true);
+      setLastOrder({
+        orderId,
+        orderType,
+        tableNumber,
+        customer: customerName,
+        items: cart.map((l) => ({ name: l.name, qty: l.qty, price: l.price })),
+        subtotal,
+        tax,
+        total,
+      });
       setCart([]);
       setNote("");
       setSelectedTableId("");
@@ -277,7 +289,19 @@ export default function PosPage() {
         onClose={() => setSuccessOpen(false)}
         title="Order Placed"
         footer={
-          <div className="flex justify-end">
+          <div className="flex justify-between gap-2">
+            {lastOrder && (
+              <PrintInvoice
+                orderId={lastOrder.orderId}
+                orderType={lastOrder.orderType}
+                tableNumber={lastOrder.tableNumber}
+                customer={lastOrder.customer}
+                items={lastOrder.items}
+                subtotal={lastOrder.subtotal}
+                tax={lastOrder.tax}
+                total={lastOrder.total}
+              />
+            )}
             <button type="button" onClick={() => setSuccessOpen(false)} className="cursor-pointer rounded-xl bg-emerald-500 px-4 py-2 text-sm font-semibold text-zinc-950 hover:bg-emerald-400">
               New Order
             </button>

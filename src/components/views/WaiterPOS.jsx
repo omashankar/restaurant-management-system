@@ -63,7 +63,7 @@ export default function WaiterPOS() {
 
       {step === 1 && (
         <div>
-          <h2 className="mb-4 text-sm font-semibold text-zinc-300">Floor — tap a table</h2>
+          <h2 className="mb-4 text-sm font-semibold text-zinc-300">Select a table</h2>
           {tableData.length === 0 ? (
             <p className="text-sm text-zinc-600">No available tables. Check the Tables module.</p>
           ) : (
