@@ -108,13 +108,15 @@ export function ModuleDataProvider({ children }) {
 
     // Fetch API-backed module data.
     async function fetchModuleData() {
-      // Skip if no auth cookie — avoids 401s on public pages (landing, login)
-      const hasAuth = document.cookie.includes("rms_token");
-      if (!hasAuth) {
-        setHydrated(true);
-        return;
-      }
       try {
+        const meRes = await fetch("/api/auth/me");
+        const meData = await meRes.json().catch(() => null);
+        // Tenant module APIs (/api/menu, /api/orders, etc.) are for restaurant roles only.
+        // Avoid noisy 401/403 calls for super_admin or unauthenticated sessions.
+        if (!meData?.success || meData.user?.role === "super_admin") {
+          return;
+        }
+
         const [
           menuRes,
           catRes,
