@@ -2,8 +2,9 @@
 
 import { useToast } from "@/hooks/useToast";
 import {
-  Bell, CreditCard, DollarSign, Globe,
-  Key, Palette, Save, Settings,
+  Bell, CreditCard, Database, DollarSign, Globe,
+  Key, Palette, Save, Settings, Shield, Smartphone,
+  ToggleLeft, Webhook,
 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 
@@ -103,6 +104,31 @@ function AppSection({ data, onChange, onSave, saving }) {
 }
 
 function EmailSection({ data, onChange, onSave, saving }) {
+  const [testing, setTesting] = useState(false);
+  const { showToast } = useToast();
+
+  async function sendTestEmail() {
+    if (!data.smtpHost || !data.smtpUser) {
+      showToast("Fill in SMTP Host and Username first.", "error");
+      return;
+    }
+    setTesting(true);
+    try {
+      const res  = await fetch("/api/super-admin/settings/test-email", {
+        method:  "POST",
+        headers: { "Content-Type": "application/json" },
+        body:    JSON.stringify({ smtp: data }),
+      });
+      const json = await res.json();
+      if (json.success) showToast("Test email sent successfully.");
+      else showToast(json.error ?? "Failed to send test email.", "error");
+    } catch {
+      showToast("Network error.", "error");
+    } finally {
+      setTesting(false);
+    }
+  }
+
   return (
     <div className="space-y-5">
       <SectionHeader icon={Key} title="Email / SMTP" description="Outbound email configuration." />
@@ -134,6 +160,26 @@ function EmailSection({ data, onChange, onSave, saving }) {
       </div>
       <Toggle checked={!!data.secure} onChange={(v) => onChange("secure", v)}
         label="Use SSL/TLS" description="Enable for port 465. Use STARTTLS for port 587." />
+
+      {/* Test email */}
+      <div className="flex items-center justify-between rounded-xl border border-zinc-800 bg-zinc-900/40 px-4 py-3">
+        <div>
+          <p className="text-sm font-medium text-zinc-200">Send Test Email</p>
+          <p className="mt-0.5 text-xs text-zinc-500">Verify your SMTP config by sending a test message.</p>
+        </div>
+        <button
+          type="button"
+          onClick={sendTestEmail}
+          disabled={testing}
+          className="cursor-pointer inline-flex items-center gap-2 rounded-xl border border-zinc-700 px-4 py-2 text-xs font-semibold text-zinc-300 hover:border-indigo-500/40 hover:text-indigo-400 disabled:opacity-50 transition-colors"
+        >
+          {testing
+            ? <span className="size-3 animate-spin rounded-full border-2 border-zinc-500/30 border-t-zinc-400" />
+            : <Key className="size-3.5" />}
+          {testing ? "Sending…" : "Send Test"}
+        </button>
+      </div>
+
       <SaveButton saving={saving} onClick={onSave} />
     </div>
   );
@@ -324,6 +370,476 @@ function CurrenciesSection({ data, onChange, onSave, saving }) {
   );
 }
 
+/* ════════════════════════════════════════
+   SMS SETTINGS
+════════════════════════════════════════ */
+function SmsSection({ data, onChange, onSave, saving }) {
+  return (
+    <div className="space-y-5">
+      <SectionHeader icon={Smartphone} title="SMS Settings" description="Configure SMS provider for OTPs and alerts." />
+      <Toggle
+        checked={!!data.enabled}
+        onChange={(v) => onChange("enabled", v)}
+        label="Enable SMS"
+        description="Send SMS notifications and OTPs to users."
+      />
+      <div className="grid gap-4 sm:grid-cols-2">
+        <div className="sm:col-span-2">
+          <Field label="SMS Provider">
+            <select
+              value={data.provider ?? "twilio"}
+              onChange={(e) => onChange("provider", e.target.value)}
+              className={`cursor-pointer ${inputCls}`}
+            >
+              <option value="twilio">Twilio</option>
+              <option value="fast2sms">Fast2SMS</option>
+              <option value="msg91">MSG91</option>
+              <option value="vonage">Vonage</option>
+            </select>
+          </Field>
+        </div>
+        <Field label="API Key / Account SID" hint="Twilio: Account SID. Fast2SMS: API key.">
+          <input
+            value={data.apiKey ?? ""}
+            onChange={(e) => onChange("apiKey", e.target.value)}
+            placeholder="ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+            className={`${inputCls} font-mono text-xs`}
+          />
+        </Field>
+        <Field label="Auth Token / API Secret" hint="Twilio: Auth Token. Fast2SMS: leave blank.">
+          <input
+            type="password"
+            value={data.authToken ?? ""}
+            onChange={(e) => onChange("authToken", e.target.value)}
+            placeholder="••••••••"
+            autoComplete="new-password"
+            className={`${inputCls} font-mono text-xs`}
+          />
+        </Field>
+        <div className="sm:col-span-2">
+          <Field label="Sender ID / From Number" hint="Twilio: +1XXXXXXXXXX. Fast2SMS: registered sender ID.">
+            <input
+              value={data.senderId ?? ""}
+              onChange={(e) => onChange("senderId", e.target.value)}
+              placeholder="+15550001234"
+              className={inputCls}
+            />
+          </Field>
+        </div>
+      </div>
+      <SaveButton saving={saving} onClick={onSave} />
+    </div>
+  );
+}
+
+/* ════════════════════════════════════════
+   SECURITY SETTINGS
+════════════════════════════════════════ */
+function SecuritySection({ data, onChange, onSave, saving }) {
+  return (
+    <div className="space-y-5">
+      <SectionHeader icon={Shield} title="Security" description="Password policy, login limits, and 2FA." />
+
+      <div className="grid gap-4 sm:grid-cols-2">
+        <Field label="Minimum Password Length">
+          <input
+            type="number" min={6} max={32}
+            value={data.minPasswordLength ?? 8}
+            onChange={(e) => onChange("minPasswordLength", Number(e.target.value))}
+            className={inputCls}
+          />
+        </Field>
+        <Field label="Login Attempt Limit" hint="Consecutive failures before block.">
+          <input
+            type="number" min={1} max={20}
+            value={data.loginAttemptLimit ?? 5}
+            onChange={(e) => onChange("loginAttemptLimit", Number(e.target.value))}
+            className={inputCls}
+          />
+        </Field>
+        <Field label="Block Duration (minutes)" hint="How long to block after limit reached.">
+          <input
+            type="number" min={1} max={1440}
+            value={data.blockDurationMinutes ?? 30}
+            onChange={(e) => onChange("blockDurationMinutes", Number(e.target.value))}
+            className={inputCls}
+          />
+        </Field>
+        <Field label="Session Timeout (minutes)" hint="Idle session expiry. 0 = never.">
+          <input
+            type="number" min={0} max={10080}
+            value={data.sessionTimeoutMinutes ?? 60}
+            onChange={(e) => onChange("sessionTimeoutMinutes", Number(e.target.value))}
+            className={inputCls}
+          />
+        </Field>
+        <div className="sm:col-span-2">
+          <Field label="IP Whitelist" hint="Comma-separated IPs. Leave blank to allow all.">
+            <input
+              value={data.ipWhitelist ?? ""}
+              onChange={(e) => onChange("ipWhitelist", e.target.value)}
+              placeholder="192.168.1.1, 10.0.0.0/24"
+              className={inputCls}
+            />
+          </Field>
+        </div>
+      </div>
+
+      <div className="space-y-2 border-t border-zinc-800 pt-4">
+        <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-zinc-500">Password Policy</p>
+        <Toggle
+          checked={!!data.requireSpecialChars}
+          onChange={(v) => onChange("requireSpecialChars", v)}
+          label="Require Special Characters"
+          description="Password must contain at least one special character."
+        />
+        <Toggle
+          checked={!!data.requireNumbers}
+          onChange={(v) => onChange("requireNumbers", v)}
+          label="Require Numbers"
+          description="Password must contain at least one number."
+        />
+      </div>
+
+      <div className="space-y-2 border-t border-zinc-800 pt-4">
+        <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-zinc-500">Two-Factor Authentication</p>
+        <Toggle
+          checked={!!data.enable2FA}
+          onChange={(v) => onChange("enable2FA", v)}
+          label="Enable 2FA for Super Admin"
+          description="Require TOTP verification on every super admin login."
+        />
+      </div>
+
+      <SaveButton saving={saving} onClick={onSave} />
+    </div>
+  );
+}
+
+/* ════════════════════════════════════════
+   BACKUP & RESTORE
+════════════════════════════════════════ */
+function BackupSection({ data, onChange, onSave, saving, showToast }) {
+  const [backups, setBackups]         = useState([]);
+  const [loadingBackups, setLoadingBackups] = useState(true);
+  const [triggering, setTriggering]   = useState(false);
+
+  useEffect(() => {
+    fetch("/api/super-admin/settings/backup")
+      .then((r) => r.json())
+      .then((d) => { if (d.success) setBackups(d.backups); })
+      .catch(() => {})
+      .finally(() => setLoadingBackups(false));
+  }, []);
+
+  async function triggerBackup() {
+    setTriggering(true);
+    try {
+      const res  = await fetch("/api/super-admin/settings/backup", { method: "POST" });
+      const json = await res.json();
+      if (json.success) {
+        setBackups(json.backups ?? []);
+        showToast("Backup completed successfully.");
+      } else {
+        showToast(json.error ?? "Backup failed.", "error");
+      }
+    } catch {
+      showToast("Network error.", "error");
+    } finally {
+      setTriggering(false);
+    }
+  }
+
+  return (
+    <div className="space-y-5">
+      <SectionHeader icon={Database} title="Backup & Restore" description="Manual and scheduled database backups." />
+
+      {/* Manual backup */}
+      <div className="flex items-center justify-between rounded-xl border border-zinc-800 bg-zinc-900/40 px-4 py-3">
+        <div>
+          <p className="text-sm font-medium text-zinc-200">Manual Backup</p>
+          <p className="mt-0.5 text-xs text-zinc-500">
+            {data.lastBackupAt
+              ? `Last backup: ${new Date(data.lastBackupAt).toLocaleString()}`
+              : "No backup taken yet."}
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={triggerBackup}
+          disabled={triggering}
+          className="cursor-pointer inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2 text-xs font-semibold text-white hover:bg-indigo-500 disabled:opacity-50 transition-colors"
+        >
+          {triggering
+            ? <span className="size-3 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+            : <Database className="size-3.5" />}
+          {triggering ? "Running…" : "Run Backup"}
+        </button>
+      </div>
+
+      {/* Auto backup settings */}
+      <div className="space-y-3">
+        <Toggle
+          checked={!!data.autoBackup}
+          onChange={(v) => onChange("autoBackup", v)}
+          label="Auto Backup"
+          description="Automatically back up the database on a schedule."
+        />
+        {data.autoBackup && (
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Field label="Backup Schedule">
+              <select
+                value={data.backupSchedule ?? "daily"}
+                onChange={(e) => onChange("backupSchedule", e.target.value)}
+                className={`cursor-pointer ${inputCls}`}
+              >
+                <option value="daily">Daily (midnight)</option>
+                <option value="weekly">Weekly (Sunday midnight)</option>
+              </select>
+            </Field>
+            <Field label="Retention (days)" hint="Backups older than this are deleted.">
+              <input
+                type="number" min={1} max={365}
+                value={data.retentionDays ?? 30}
+                onChange={(e) => onChange("retentionDays", Number(e.target.value))}
+                className={inputCls}
+              />
+            </Field>
+          </div>
+        )}
+      </div>
+
+      {/* Backup history */}
+      <div className="border-t border-zinc-800 pt-4">
+        <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-zinc-500">Recent Backups</p>
+        {loadingBackups ? (
+          <div className="space-y-2">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="h-10 animate-pulse rounded-xl bg-zinc-800/60" />
+            ))}
+          </div>
+        ) : backups.length === 0 ? (
+          <p className="rounded-xl border border-dashed border-zinc-800 py-6 text-center text-xs text-zinc-600">
+            No backups yet.
+          </p>
+        ) : (
+          <div className="space-y-1.5">
+            {backups.map((b) => (
+              <div
+                key={b.id}
+                className="flex items-center justify-between rounded-xl border border-zinc-800 bg-zinc-900/40 px-4 py-2.5"
+              >
+                <div className="flex items-center gap-3">
+                  <span className={`size-2 rounded-full ${b.status === "completed" ? "bg-emerald-400" : "bg-amber-400"}`} />
+                  <div>
+                    <p className="text-xs font-medium text-zinc-200">
+                      {b.type === "manual" ? "Manual" : "Auto"} backup
+                    </p>
+                    <p className="text-[10px] text-zinc-600">
+                      {new Date(b.createdAt).toLocaleString()}
+                    </p>
+                  </div>
+                </div>
+                <span className="rounded-lg bg-zinc-800 px-2 py-0.5 text-[10px] font-medium text-zinc-400 capitalize">
+                  {b.status}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <SaveButton saving={saving} onClick={onSave} />
+    </div>
+  );
+}
+
+/* ════════════════════════════════════════
+   INTEGRATIONS
+════════════════════════════════════════ */
+function IntegrationsSection({ data, onChange, onSave, saving }) {
+  return (
+    <div className="space-y-5">
+      <SectionHeader icon={Webhook} title="Integrations" description="Analytics, pixels, webhooks, and payment gateways." />
+
+      <div className="space-y-4">
+        <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500">Analytics & Tracking</p>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Field label="Google Analytics ID" hint="e.g. G-XXXXXXXXXX or UA-XXXXXXXX-X">
+            <input
+              value={data.googleAnalyticsId ?? ""}
+              onChange={(e) => onChange("googleAnalyticsId", e.target.value)}
+              placeholder="G-XXXXXXXXXX"
+              className={`${inputCls} font-mono text-xs`}
+            />
+          </Field>
+          <Field label="Meta Pixel ID" hint="From Facebook Events Manager.">
+            <input
+              value={data.metaPixelId ?? ""}
+              onChange={(e) => onChange("metaPixelId", e.target.value)}
+              placeholder="1234567890123456"
+              className={`${inputCls} font-mono text-xs`}
+            />
+          </Field>
+        </div>
+      </div>
+
+      <div className="space-y-4 border-t border-zinc-800 pt-4">
+        <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500">Webhook</p>
+        <Field label="Webhook URL" hint="POST events will be sent here.">
+          <input
+            value={data.webhookUrl ?? ""}
+            onChange={(e) => onChange("webhookUrl", e.target.value)}
+            placeholder="https://your-server.com/webhook"
+            className={inputCls}
+          />
+        </Field>
+        <Field label="Webhook Secret" hint="Used to verify incoming webhook signatures.">
+          <input
+            type="password"
+            value={data.webhookSecret ?? ""}
+            onChange={(e) => onChange("webhookSecret", e.target.value)}
+            placeholder="••••••••"
+            autoComplete="new-password"
+            className={`${inputCls} font-mono text-xs`}
+          />
+        </Field>
+      </div>
+
+      <div className="space-y-4 border-t border-zinc-800 pt-4">
+        <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500">Razorpay</p>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Field label="Razorpay Key ID">
+            <input
+              value={data.razorpayKeyId ?? ""}
+              onChange={(e) => onChange("razorpayKeyId", e.target.value)}
+              placeholder="rzp_live_XXXXXXXXXX"
+              className={`${inputCls} font-mono text-xs`}
+            />
+          </Field>
+          <Field label="Razorpay Key Secret">
+            <input
+              type="password"
+              value={data.razorpayKeySecret ?? ""}
+              onChange={(e) => onChange("razorpayKeySecret", e.target.value)}
+              placeholder="••••••••"
+              autoComplete="new-password"
+              className={`${inputCls} font-mono text-xs`}
+            />
+          </Field>
+        </div>
+      </div>
+
+      <SaveButton saving={saving} onClick={onSave} />
+    </div>
+  );
+}
+
+/* ════════════════════════════════════════
+   ADVANCED SETTINGS
+════════════════════════════════════════ */
+function AdvancedSection({ data, onChange, onSave, saving, showToast }) {
+  const [clearing, setClearing] = useState(false);
+
+  async function clearCache() {
+    setClearing(true);
+    try {
+      const res  = await fetch("/api/super-admin/settings/cache", { method: "POST" });
+      const json = await res.json();
+      if (json.success) showToast("Cache cleared successfully.");
+      else showToast(json.error ?? "Failed to clear cache.", "error");
+    } catch {
+      showToast("Network error.", "error");
+    } finally {
+      setClearing(false);
+    }
+  }
+
+  const features = [
+    { key: "featureMenuQR",       label: "QR Menu",          desc: "Allow restaurants to generate QR codes for their menu." },
+    { key: "featureOnlineOrder",  label: "Online Ordering",  desc: "Enable customer-facing online ordering flow."           },
+    { key: "featureReservations", label: "Reservations",     desc: "Table reservation module for restaurants."              },
+    { key: "featureInventory",    label: "Inventory Module", desc: "Stock tracking and low-stock alerts."                   },
+  ];
+
+  return (
+    <div className="space-y-5">
+      <SectionHeader icon={ToggleLeft} title="Advanced" description="Maintenance mode, cache, billing, and feature flags." />
+
+      {/* Billing */}
+      <div className="grid gap-4 sm:grid-cols-2">
+        <Field label="Invoice Prefix" hint="Prepended to all invoice numbers.">
+          <input
+            value={data.invoicePrefix ?? "INV-"}
+            onChange={(e) => onChange("invoicePrefix", e.target.value)}
+            placeholder="INV-"
+            className={`${inputCls} font-mono`}
+          />
+        </Field>
+      </div>
+
+      <Toggle
+        checked={!!data.autoBilling}
+        onChange={(v) => onChange("autoBilling", v)}
+        label="Auto Billing"
+        description="Automatically charge subscriptions on renewal date."
+      />
+
+      {/* System */}
+      <div className="space-y-2 border-t border-zinc-800 pt-4">
+        <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-zinc-500">System</p>
+        <Toggle
+          checked={!!data.maintenanceMode}
+          onChange={(v) => onChange("maintenanceMode", v)}
+          label="Maintenance Mode"
+          description="Show a maintenance page to all non-super-admin users."
+        />
+        <Toggle
+          checked={!!data.debugMode}
+          onChange={(v) => onChange("debugMode", v)}
+          label="Debug Mode"
+          description="Log verbose errors to console. Disable in production."
+        />
+      </div>
+
+      {/* Cache */}
+      <div className="flex items-center justify-between rounded-xl border border-zinc-800 bg-zinc-900/40 px-4 py-3">
+        <div>
+          <p className="text-sm font-medium text-zinc-200">Clear Cache</p>
+          <p className="mt-0.5 text-xs text-zinc-500">Revalidate landing and key super-admin pages cache.</p>
+        </div>
+        <button
+          type="button"
+          onClick={clearCache}
+          disabled={clearing}
+          className="cursor-pointer inline-flex items-center gap-2 rounded-xl border border-zinc-700 px-4 py-2 text-xs font-semibold text-zinc-300 hover:border-zinc-500 hover:text-zinc-100 disabled:opacity-50 transition-colors"
+        >
+          {clearing
+            ? <span className="size-3 animate-spin rounded-full border-2 border-zinc-500/30 border-t-zinc-400" />
+            : null}
+          {clearing ? "Clearing…" : "Clear Cache"}
+        </button>
+      </div>
+
+      {/* Feature flags */}
+      <div className="space-y-2 border-t border-zinc-800 pt-4">
+        <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-zinc-500">Feature Flags</p>
+        {features.map(({ key, label, desc }) => (
+          <Toggle
+            key={key}
+            checked={!!data[key]}
+            onChange={(v) => onChange(key, v)}
+            label={label}
+            description={desc}
+          />
+        ))}
+      </div>
+
+      <SaveButton saving={saving} onClick={onSave} />
+    </div>
+  );
+}
+
 /* ── Tab definitions ── */
 const TABS = [
   { id: "app",           label: "App",           Icon: Settings    },
@@ -333,6 +849,11 @@ const TABS = [
   { id: "theme",         label: "Theme",         Icon: Palette     },
   { id: "notifications", label: "Notifications", Icon: Bell        },
   { id: "currencies",    label: "Currencies",    Icon: DollarSign  },
+  { id: "sms",           label: "SMS",           Icon: Smartphone  },
+  { id: "security",      label: "Security",      Icon: Shield      },
+  { id: "backup",        label: "Backup",        Icon: Database    },
+  { id: "integrations",  label: "Integrations",  Icon: Webhook     },
+  { id: "advanced",      label: "Advanced",      Icon: ToggleLeft  },
 ];
 
 /* ── Main page ── */
@@ -435,6 +956,11 @@ export default function SuperAdminSettingsPage() {
               {activeTab === "theme"         && <ThemeSection         data={sectionData} onChange={handleChange} onSave={handleSave} saving={saving} />}
               {activeTab === "notifications" && <NotificationsSection data={sectionData} onChange={handleChange} onSave={handleSave} saving={saving} />}
               {activeTab === "currencies"    && <CurrenciesSection    data={sectionData} onChange={handleChange} onSave={handleSave} saving={saving} />}
+              {activeTab === "sms"           && <SmsSection           data={sectionData} onChange={handleChange} onSave={handleSave} saving={saving} />}
+              {activeTab === "security"      && <SecuritySection      data={sectionData} onChange={handleChange} onSave={handleSave} saving={saving} />}
+              {activeTab === "backup"        && <BackupSection        data={sectionData} onChange={handleChange} onSave={handleSave} saving={saving} showToast={showToast} />}
+              {activeTab === "integrations"  && <IntegrationsSection  data={sectionData} onChange={handleChange} onSave={handleSave} saving={saving} />}
+              {activeTab === "advanced"      && <AdvancedSection      data={sectionData} onChange={handleChange} onSave={handleSave} saving={saving} showToast={showToast} />}
             </>
           )}
         </div>

@@ -1,4 +1,6 @@
 import { withTenant } from "@/lib/tenantDb";
+import { logInfo } from "@/lib/logger";
+import { orderCreateSchema, parseSchema } from "@/lib/validationSchemas";
 import { ObjectId } from "mongodb";
 
 /* GET /api/orders */
@@ -28,11 +30,13 @@ export const POST = withTenant(
   ["admin", "manager", "waiter"],
   async ({ db, tenantFilter, restaurantId, payload }, request) => {
     const body = await request.json();
-    const { items, orderType, tableNumber, customer, notes } = body;
-
-    if (!items?.length || !orderType) {
-      return Response.json({ success: false, error: "items and orderType are required." }, { status: 400 });
+    let parsed;
+    try {
+      parsed = parseSchema(orderCreateSchema, body);
+    } catch (err) {
+      return Response.json({ success: false, error: err.message }, { status: 400 });
     }
+    const { items, orderType, tableNumber, customer, notes } = parsed;
 
     const total = items.reduce((s, i) => s + (i.price * i.qty), 0);
     const orderId = `ORD-${Date.now()}`;
@@ -53,6 +57,13 @@ export const POST = withTenant(
     };
 
     const result = await db.collection("orders").insertOne(doc);
+    if (orderType === "dine-in" && tableNumber) {
+      await db.collection("tables").updateOne(
+        { ...tenantFilter, tableNumber },
+        { $set: { status: "occupied", updatedAt: new Date() } }
+      ).catch(() => {});
+    }
+    logInfo("order.created", { route: "/api/orders", orderId, actorId: payload.id, restaurantId });
     return Response.json({
       success: true,
       order: { ...doc, id: result.insertedId.toString(), _id: undefined },

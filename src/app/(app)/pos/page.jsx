@@ -3,12 +3,14 @@
 import CategoryTabs from "@/components/pos/CategoryTabs";
 import MenuCard from "@/components/menu/MenuCard";
 import OrderSummary from "@/components/pos/OrderSummary";
+import PrintInvoice from "@/components/pos/PrintInvoice";
 import ItemTypeFilter from "@/components/filters/ItemTypeFilter";
 import ListToolbar from "@/components/ui/ListToolbar";
 import Modal from "@/components/ui/Modal";
 import { useMenuFilter } from "@/hooks/useMenuFilter";
 import { useModuleData } from "@/context/ModuleDataContext";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
 
 const KITCHEN_LABELS = {
   default_kitchen: "Default Kitchen",
@@ -18,10 +20,9 @@ const KITCHEN_LABELS = {
 
 export default function PosPage() {
   const { setCustomerRows, setOrderRows, setKitchenQueue, floorTables, setFloorTables, menuItems, categories } = useModuleData();
+  const searchParams = useSearchParams();
 
-  // Use real menu items from DB context (active only)
   const activeMenuItems = useMemo(() => menuItems.filter((m) => m.status === "active"), [menuItems]);
-  // Build category tabs from real categories
   const posCategories = useMemo(() => [{ id: "all", name: "All" }, ...categories], [categories]);
   const [orderType, setOrderType] = useState("dine-in");
   const [selectedTableId, setSelectedTableId] = useState("");
@@ -30,6 +31,16 @@ export default function PosPage() {
   const [successOpen, setSuccessOpen] = useState(false);
   const [lastAddedId, setLastAddedId] = useState("");
   const [selectedCustomer, setSelectedCustomer] = useState(null);
+  const [lastOrder, setLastOrder] = useState(null); // for print invoice
+
+  // Pre-select table from ?tableId= query param (set by floor view)
+  useEffect(() => {
+    const tableId = searchParams.get("tableId");
+    if (tableId) {
+      setSelectedTableId(tableId);
+      setOrderType("dine-in");
+    }
+  }, [searchParams]);
   const [kitchenRouting, setKitchenRouting] = useState({});
 
   const {
@@ -69,11 +80,16 @@ export default function PosPage() {
       (orderType === "dine-in" && selectedTableId) ||
       (orderType === "delivery" && deliveryValid));
 
-  const placeOrder = useCallback(() => {
-    if (!canPlaceOrder) return;
+  const [isPlacing, setIsPlacing] = useState(false);
+  const [placeError, setPlaceError] = useState("");
+  const [note, setNote] = useState("");
+
+  const placeOrder = useCallback(async () => {
+    if (!canPlaceOrder || isPlacing) return;
+    setIsPlacing(true);
+    setPlaceError("");
 
     const now = new Date();
-    const orderId = `ORD-POS-${Date.now()}`;
 
     // Kitchen routing map
     const map = {};
@@ -83,72 +99,113 @@ export default function PosPage() {
     }
     setKitchenRouting(map);
 
-    // Save to shared orderRows
     const table = floorTables.find((t) => t.id === selectedTableId);
-    const newOrder = {
-      id: orderId,
-      source: "pos",
-      customer: selectedCustomer?.name ?? (orderType === "delivery" ? delivery.name : "Walk-in"),
-      phone: selectedCustomer?.phone ?? delivery.phone ?? "",
-      type: orderType,
-      table: table?.tableNumber ?? (orderType === "dine-in" ? selectedTableId : "—"),
-      address: orderType === "delivery" ? delivery.address : "",
-      amount: total,
-      status: "new",
-      items: cart.map((l) => ({ name: l.name, qty: l.qty, price: l.price })),
-      itemCount: cart.reduce((s, l) => s + l.qty, 0),
-      time: "Just now",
-      createdAt: now.toISOString(),
-    };
-    setOrderRows((prev) => [newOrder, ...prev]);
+    const customerName = selectedCustomer?.name ?? (orderType === "delivery" ? delivery.name : "Walk-in");
+    const tableNumber  = table?.tableNumber ?? (orderType === "dine-in" ? selectedTableId : null);
 
-    // Push to kitchen queue
-    const kitchenTicket = {
-      id: `K-${orderId}`,
-      orderId,
-      table: newOrder.table,
-      orderType,
-      customer: newOrder.customer,
-      placedAt: now.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" }),
-      elapsedMin: 0,
-      status: "new",
-      items: cart.map((l) => ({ name: l.name, qty: l.qty })),
-    };
-    setKitchenQueue((prev) => [kitchenTicket, ...prev]);
+    // Persist to MongoDB
+    try {
+      const res  = await fetch("/api/orders", {
+        method:  "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          items:       cart.map((l) => ({ name: l.name, qty: l.qty, price: l.price, menuItemId: l.id })),
+          orderType,
+          tableNumber,
+          customer:    customerName,
+          notes:       note || (orderType === "delivery" ? delivery.address : ""),
+        }),
+      });
+      const data = await res.json();
+      if (!data.success) {
+        setPlaceError(data.error ?? "Failed to place order.");
+        setIsPlacing(false);
+        return;
+      }
 
-    // Update customer visits
-    if (selectedCustomer) {
-      const itemsSummary = cart.map((l) => `${l.name} ×${l.qty}`).join(", ");
-      setCustomerRows((prev) =>
-        prev.map((c) =>
-          c.id === selectedCustomer.id
-            ? {
-                ...c,
-                visits: (c.visits ?? 0) + 1,
-                lastVisit: now.toISOString().slice(0, 10),
-                orderHistory: [
-                  { id: orderId, date: now.toISOString().slice(0, 10), total, items: itemsSummary },
-                  ...(c.orderHistory ?? []),
-                ],
-              }
-            : c
-        )
-      );
+      const orderId = data.order?.orderId ?? `ORD-POS-${Date.now()}`;
+
+      // Sync into shared in-memory context so Orders/Kitchen pages update live
+      const newOrder = {
+        id:        orderId,
+        source:    "pos",
+        customer:  customerName,
+        phone:     selectedCustomer?.phone ?? delivery.phone ?? "",
+        type:      orderType,
+        table:     tableNumber ?? "—",
+        address:   orderType === "delivery" ? delivery.address : "",
+        amount:    total,
+        status:    "new",
+        items:     cart.map((l) => ({ name: l.name, qty: l.qty, price: l.price })),
+        itemCount: cart.reduce((s, l) => s + l.qty, 0),
+        time:      "Just now",
+        createdAt: now.toISOString(),
+      };
+      setOrderRows((prev) => [newOrder, ...prev]);
+
+      // Push to kitchen queue
+      const kitchenTicket = {
+        id:         `K-${orderId}`,
+        orderId,
+        table:      newOrder.table,
+        orderType,
+        customer:   newOrder.customer,
+        placedAt:   now.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" }),
+        elapsedMin: 0,
+        status:     "new",
+        items:      cart.map((l) => ({ name: l.name, qty: l.qty })),
+      };
+      setKitchenQueue((prev) => [kitchenTicket, ...prev]);
+
+      // Update customer visits
+      if (selectedCustomer) {
+        const itemsSummary = cart.map((l) => `${l.name} ×${l.qty}`).join(", ");
+        setCustomerRows((prev) =>
+          prev.map((c) =>
+            c.id === selectedCustomer.id
+              ? {
+                  ...c,
+                  visits:       (c.visits ?? 0) + 1,
+                  lastVisit:    now.toISOString().slice(0, 10),
+                  orderHistory: [
+                    { id: orderId, date: now.toISOString().slice(0, 10), total, items: itemsSummary },
+                    ...(c.orderHistory ?? []),
+                  ],
+                }
+              : c
+          )
+        );
+      }
+
+      // Mark table occupied
+      if (orderType === "dine-in" && selectedTableId) {
+        setFloorTables((prev) =>
+          prev.map((t) => t.id === selectedTableId ? { ...t, status: "occupied" } : t)
+        );
+      }
+
+      setSuccessOpen(true);
+      setLastOrder({
+        orderId,
+        orderType,
+        tableNumber,
+        customer: customerName,
+        items: cart.map((l) => ({ name: l.name, qty: l.qty, price: l.price })),
+        subtotal,
+        tax,
+        total,
+      });
+      setCart([]);
+      setNote("");
+      setSelectedTableId("");
+      setDelivery({ name: "", phone: "", address: "" });
+      setSelectedCustomer(null);
+    } catch {
+      setPlaceError("Network error. Please try again.");
+    } finally {
+      setIsPlacing(false);
     }
-
-    // Mark table occupied
-    if (orderType === "dine-in" && selectedTableId) {
-      setFloorTables((prev) =>
-        prev.map((t) => t.id === selectedTableId ? { ...t, status: "occupied" } : t)
-      );
-    }
-
-    setSuccessOpen(true);
-    setCart([]);
-    setSelectedTableId("");
-    setDelivery({ name: "", phone: "", address: "" });
-    setSelectedCustomer(null);
-  }, [canPlaceOrder, cart, orderType, selectedTableId, selectedCustomer, delivery, total,
+  }, [canPlaceOrder, isPlacing, cart, orderType, selectedTableId, selectedCustomer, delivery, total, subtotal, tax, note,
       floorTables, setOrderRows, setKitchenQueue, setCustomerRows, setFloorTables]);
 
   useEffect(() => {
@@ -201,10 +258,15 @@ export default function PosPage() {
 
         {/* ── Order summary (contains order type + table + customer) ── */}
         <section className="xl:col-span-3">
+          {placeError && (
+            <div className="mb-3 rounded-xl border border-red-500/25 bg-red-500/10 px-3 py-2 text-xs text-red-400">
+              {placeError}
+            </div>
+          )}
           <OrderSummary
             cart={cart}
             subtotal={subtotal} tax={tax} total={total}
-            canPlaceOrder={canPlaceOrder}
+            canPlaceOrder={canPlaceOrder && !isPlacing}
             onPlaceOrder={placeOrder}
             onClearCart={() => setCart([])}
             onInc={incrementQty} onDec={decrementQty}
@@ -214,6 +276,9 @@ export default function PosPage() {
             delivery={delivery} onDeliveryChange={(f, v) => setDelivery((p) => ({ ...p, [f]: v }))}
             onCustomerSelect={setSelectedCustomer}
             selectedCustomer={selectedCustomer}
+            isPlacing={isPlacing}
+            note={note}
+            onNoteChange={setNote}
           />
         </section>
       </div>
@@ -224,7 +289,19 @@ export default function PosPage() {
         onClose={() => setSuccessOpen(false)}
         title="Order Placed"
         footer={
-          <div className="flex justify-end">
+          <div className="flex justify-between gap-2">
+            {lastOrder && (
+              <PrintInvoice
+                orderId={lastOrder.orderId}
+                orderType={lastOrder.orderType}
+                tableNumber={lastOrder.tableNumber}
+                customer={lastOrder.customer}
+                items={lastOrder.items}
+                subtotal={lastOrder.subtotal}
+                tax={lastOrder.tax}
+                total={lastOrder.total}
+              />
+            )}
             <button type="button" onClick={() => setSuccessOpen(false)} className="cursor-pointer rounded-xl bg-emerald-500 px-4 py-2 text-sm font-semibold text-zinc-950 hover:bg-emerald-400">
               New Order
             </button>

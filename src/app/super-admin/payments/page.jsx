@@ -24,6 +24,7 @@ const STATUS_ICON = {
 const STATUSES = ["paid", "pending", "failed", "refunded"];
 
 export default function PaymentsPage() {
+  const [activeTab, setActiveTab] = useState("overview");
   const [payments, setPayments]   = useState([]);
   const [summary, setSummary]     = useState({ totalRevenue: 0, paidCount: 0 });
   const [pagination, setPagination] = useState({ page: 1, pages: 1, total: 0 });
@@ -69,13 +70,38 @@ export default function PaymentsPage() {
             <p className="mt-1 text-sm text-zinc-500">Transaction history across all tenants.</p>
           </div>
         </div>
-        <button type="button" onClick={fetchPayments}
-          className="cursor-pointer flex items-center gap-1.5 rounded-xl border border-zinc-700 px-3 py-2.5 text-sm font-medium text-zinc-400 hover:border-zinc-500 hover:text-zinc-200 transition-colors">
-          <RefreshCw className={`size-4 ${loading ? "animate-spin" : ""}`} /> Refresh
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setActiveTab("overview")}
+            className={`cursor-pointer rounded-xl px-3 py-2 text-sm font-medium transition-colors ${
+              activeTab === "overview"
+                ? "bg-zinc-800 text-zinc-100"
+                : "text-zinc-500 hover:bg-zinc-900 hover:text-zinc-300"
+            }`}
+          >
+            Overview
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab("transactions")}
+            className={`cursor-pointer rounded-xl px-3 py-2 text-sm font-medium transition-colors ${
+              activeTab === "transactions"
+                ? "bg-zinc-800 text-zinc-100"
+                : "text-zinc-500 hover:bg-zinc-900 hover:text-zinc-300"
+            }`}
+          >
+            Transactions
+          </button>
+          <button type="button" onClick={fetchPayments}
+            className="cursor-pointer flex items-center gap-1.5 rounded-xl border border-zinc-700 px-3 py-2.5 text-sm font-medium text-zinc-400 hover:border-zinc-500 hover:text-zinc-200 transition-colors">
+            <RefreshCw className={`size-4 ${loading ? "animate-spin" : ""}`} /> Refresh
+          </button>
+        </div>
       </div>
 
       {/* Summary cards */}
+      {activeTab === "overview" && (
       <div className="grid gap-3 sm:grid-cols-3">
         <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/5 px-5 py-4">
           <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500">Total Revenue</p>
@@ -95,8 +121,11 @@ export default function PaymentsPage() {
           <p className="mt-1 text-xs text-zinc-600">Page {pagination.page} of {pagination.pages}</p>
         </div>
       </div>
+      )}
 
       {/* Filters */}
+      {activeTab === "transactions" && (
+      <>
       <div className="flex flex-wrap items-center gap-3">
         <div className="relative flex-1 min-w-[200px] max-w-sm">
           <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-zinc-500" />
@@ -198,6 +227,8 @@ export default function PaymentsPage() {
             </div>
           )}
         </div>
+      )}
+      </>
       )}
 
       {ToastUI}

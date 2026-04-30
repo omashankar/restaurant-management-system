@@ -1,5 +1,9 @@
+"use client";
+
 import { Check, Star, X } from "lucide-react";
 import Link from "next/link";
+import { useState } from "react";
+import { getIcon } from "@/lib/iconMap";
 import SectionTitle from "./SectionTitle";
 
 /* ─────────────────────────────────────────
@@ -20,7 +24,7 @@ export function DynamicFeatures({ features = [] }) {
             <article key={f.id ?? f.title}
               className="group rounded-2xl border border-slate-200 bg-slate-50 p-5 transition-all duration-200 hover:-translate-y-1 hover:border-indigo-300 hover:bg-white hover:shadow-lg hover:shadow-indigo-100/50">
               <span className="inline-flex size-11 items-center justify-center rounded-xl bg-indigo-100 text-indigo-700 transition-colors duration-200 group-hover:bg-indigo-600 group-hover:text-white">
-                <Star className="size-5" />
+                {(() => { const Icon = getIcon(f.icon); return <Icon className="size-5" />; })()}
               </span>
               <h3 className="mt-4 text-base font-bold text-slate-900">{f.title}</h3>
               <p className="mt-2 text-sm leading-relaxed text-slate-600">{f.description}</p>
@@ -57,7 +61,7 @@ export function DynamicRoles({ roles = [] }) {
             <article key={r.id ?? r.role}
               className={`flex flex-col rounded-2xl border border-slate-200 p-6 transition-all duration-200 hover:-translate-y-1 hover:shadow-lg ${ROLE_COLORS[r.role] ?? "hover:border-slate-300"}`}>
               <span className="inline-flex size-12 items-center justify-center rounded-xl bg-indigo-100 text-indigo-700">
-                <Star className="size-5" />
+                {(() => { const Icon = getIcon(r.icon); return <Icon className="size-5" />; })()}
               </span>
               <h3 className="mt-4 text-base font-bold text-slate-900">{r.role}</h3>
               <p className="mt-1.5 text-sm leading-relaxed text-slate-600">{r.description}</p>
@@ -83,6 +87,7 @@ export function DynamicRoles({ roles = [] }) {
    PRICING SECTION
 ───────────────────────────────────────── */
 export function DynamicPricing({ pricing = [] }) {
+  const [billingCycle, setBillingCycle] = useState("monthly");
   if (!pricing.length) return null;
   return (
     <section id="pricing" className="scroll-mt-16 bg-slate-50 py-20">
@@ -92,6 +97,28 @@ export function DynamicPricing({ pricing = [] }) {
           title="Simple, transparent pricing"
           subtext="Choose the plan that fits your restaurant. Upgrade or downgrade anytime."
         />
+        <div className="mt-6 flex justify-center">
+          <div className="inline-flex rounded-xl border border-slate-200 bg-white p-1 shadow-sm">
+            <button
+              type="button"
+              onClick={() => setBillingCycle("monthly")}
+              className={`cursor-pointer rounded-lg px-4 py-2 text-sm font-semibold transition-colors ${
+                billingCycle === "monthly" ? "bg-indigo-600 text-white" : "text-slate-600 hover:bg-slate-100"
+              }`}
+            >
+              Monthly
+            </button>
+            <button
+              type="button"
+              onClick={() => setBillingCycle("yearly")}
+              className={`cursor-pointer rounded-lg px-4 py-2 text-sm font-semibold transition-colors ${
+                billingCycle === "yearly" ? "bg-indigo-600 text-white" : "text-slate-600 hover:bg-slate-100"
+              }`}
+            >
+              Yearly
+            </button>
+          </div>
+        </div>
         <div className="mt-10 grid gap-6 lg:grid-cols-3">
           {pricing.map((plan) => (
             <article key={plan.id ?? plan.name}
@@ -113,9 +140,11 @@ export function DynamicPricing({ pricing = [] }) {
               </p>
               <div className="mt-3 flex items-end gap-1">
                 <span className={`text-4xl font-extrabold tabular-nums ${plan.highlight ? "text-white" : "text-slate-900"}`}>
-                  ${plan.price?.monthly ?? 0}
+                  ${billingCycle === "yearly" ? (plan.price?.yearly ?? plan.price?.monthly ?? 0) : (plan.price?.monthly ?? 0)}
                 </span>
-                <span className={`mb-1 text-sm ${plan.highlight ? "text-indigo-200" : "text-slate-400"}`}>/mo</span>
+                <span className={`mb-1 text-sm ${plan.highlight ? "text-indigo-200" : "text-slate-400"}`}>
+                  /{billingCycle === "yearly" ? "yr" : "mo"}
+                </span>
               </div>
               <p className={`mt-3 text-sm leading-relaxed ${plan.highlight ? "text-indigo-100" : "text-slate-600"}`}>
                 {plan.description}

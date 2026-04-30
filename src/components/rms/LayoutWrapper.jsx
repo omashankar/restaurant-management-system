@@ -37,6 +37,7 @@ export default function LayoutWrapper({ children }) {
   });
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setMounted(true);
   }, []);
 
@@ -60,6 +61,7 @@ export default function LayoutWrapper({ children }) {
 
   useEffect(() => {
     // Auto-close the mobile drawer on route change.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setIsSidebarOpen(false);
   }, [pathname]);
 

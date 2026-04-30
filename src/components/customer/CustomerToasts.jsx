@@ -12,10 +12,10 @@ export default function CustomerToasts() {
       {toasts.map((t) => (
         <div
           key={t.id}
-          className={`flex items-center gap-2.5 rounded-xl border px-4 py-3 text-sm font-medium shadow-2xl shadow-black/40 ${
+          className={`flex items-center gap-2.5 rounded-xl border px-4 py-3 text-sm font-medium shadow-lg ${
             t.type === "error"
-              ? "border-red-500/30 bg-zinc-900 text-red-300"
-              : "border-emerald-500/30 bg-zinc-900 text-emerald-300"
+              ? "border-red-300 bg-red-50 text-red-700"
+              : "border-emerald-300 bg-emerald-50 text-emerald-700"
           }`}
         >
           {t.type === "error"

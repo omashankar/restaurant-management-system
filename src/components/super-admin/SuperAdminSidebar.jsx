@@ -6,6 +6,7 @@ import {
   Building2,
   ChevronLeft,
   ChevronRight,
+  ClipboardList,
   CreditCard,
   DollarSign,
   Globe,
@@ -27,7 +28,9 @@ const NAV = [
   { href: "/super-admin/payments",      label: "Payments",      Icon: DollarSign      },
   { href: "/super-admin/plans",         label: "Plans",         Icon: CreditCard      },
   { href: "/super-admin/billing",       label: "Billing",       Icon: Receipt         },
+  { href: "/super-admin/analytics",     label: "Analytics",     Icon: BarChart3       },
   { href: "/super-admin/landing-site",  label: "Landing Site",  Icon: Globe           },
+  { href: "/super-admin/logs",          label: "Logs",          Icon: ClipboardList   },
   { href: "/super-admin/settings",      label: "Settings",      Icon: Settings        },
 ];
 

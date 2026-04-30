@@ -6,7 +6,7 @@ import { parseSchema, resendSchema } from "@/lib/validationSchemas";
 export async function POST(request) {
   /* ── Rate limit ── */
   const ip = getClientIp(request);
-  const limit = resendLimiter.check(ip);
+  const limit = await resendLimiter.check(ip);
   if (!limit.allowed) {
     return Response.json(
       { success: false, error: `Too many requests. Try again in ${limit.retryAfter}s.` },

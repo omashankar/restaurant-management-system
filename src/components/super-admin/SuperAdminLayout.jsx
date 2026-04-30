@@ -4,15 +4,12 @@ import SuperAdminSidebar from "./SuperAdminSidebar";
 import { useUser } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { Menu, Shield, X } from "lucide-react";
+import { Menu, Shield } from "lucide-react";
 
 export default function SuperAdminLayout({ children }) {
   const { user, hydrated, loading } = useUser();
   const router = useRouter();
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => { setMounted(true); }, []);
 
   useEffect(() => {
     if (!hydrated) return;
@@ -20,7 +17,7 @@ export default function SuperAdminLayout({ children }) {
     if (user.role !== "super_admin") { router.replace("/unauthorized"); }
   }, [hydrated, user, router]);
 
-  if (!mounted || loading || !hydrated) {
+  if (loading || !hydrated) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-zinc-950">
         <div className="flex items-center gap-3 text-sm text-zinc-500">

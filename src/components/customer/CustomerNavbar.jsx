@@ -22,15 +22,15 @@ export default function CustomerNavbar() {
   const isActive = (href) => pathname === href || pathname.startsWith(href + "/");
 
   return (
-    <header className="sticky top-0 z-50 border-b border-zinc-800 bg-zinc-950/95 backdrop-blur-md">
+    <header className="sticky top-0 z-50 border-b border-zinc-200/80 bg-white/90 shadow-sm backdrop-blur-md">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
 
         {/* Logo */}
         <Link href="/home" className="cursor-pointer inline-flex shrink-0 items-center gap-2.5">
-          <span className="flex size-9 items-center justify-center rounded-xl bg-emerald-500/15 text-emerald-400 ring-1 ring-emerald-500/25">
+          <span className="flex size-9 items-center justify-center rounded-xl bg-emerald-500/15 text-emerald-600 ring-1 ring-emerald-500/20">
             <UtensilsCrossed className="size-5" aria-hidden />
           </span>
-          <span className="text-sm font-bold tracking-tight text-zinc-100">RMS Restaurant</span>
+          <span className="text-sm font-bold tracking-tight text-zinc-900">RMS Restaurant</span>
         </Link>
 
         {/* Desktop nav */}
@@ -39,10 +39,10 @@ export default function CustomerNavbar() {
             <Link
               key={n.href}
               href={n.href}
-              className={`cursor-pointer rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
+              className={`cursor-pointer rounded-lg px-3 py-2 text-sm font-medium transition-all ${
                 isActive(n.href)
-                  ? "bg-emerald-500/10 text-emerald-400"
-                  : "text-zinc-400 hover:bg-zinc-800/60 hover:text-zinc-100"
+                  ? "bg-emerald-500/10 text-emerald-700 shadow-sm"
+                  : "text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900"
               }`}
             >
               {n.label}
@@ -56,7 +56,7 @@ export default function CustomerNavbar() {
           <button
             type="button"
             onClick={() => setOrderTypeModalOpen(true)}
-            className="cursor-pointer hidden rounded-xl bg-emerald-500 px-4 py-2 text-xs font-bold text-zinc-950 transition-colors hover:bg-emerald-400 sm:inline-flex"
+            className="cursor-pointer hidden rounded-xl bg-emerald-500 px-4 py-2 text-xs font-bold text-zinc-950 shadow-sm transition-all hover:-translate-y-0.5 hover:bg-emerald-400 sm:inline-flex"
           >
             Order Now
           </button>
@@ -65,7 +65,7 @@ export default function CustomerNavbar() {
           <button
             type="button"
             onClick={() => setCartOpen(true)}
-            className="cursor-pointer relative flex size-10 items-center justify-center rounded-xl border border-zinc-800 bg-zinc-900/60 text-zinc-300 transition-colors hover:border-emerald-500/40 hover:text-emerald-400"
+            className="cursor-pointer relative flex size-10 items-center justify-center rounded-xl border border-zinc-200 bg-white text-zinc-700 transition-all hover:-translate-y-0.5 hover:border-emerald-500/40 hover:text-emerald-600"
             aria-label="Cart"
           >
             <ShoppingCart className="size-4" />
@@ -80,7 +80,7 @@ export default function CustomerNavbar() {
           <button
             type="button"
             onClick={() => setOpen((v) => !v)}
-            className="cursor-pointer flex size-10 items-center justify-center rounded-xl border border-zinc-800 bg-zinc-900/60 text-zinc-300 transition-colors hover:bg-zinc-800 md:hidden"
+            className="cursor-pointer flex size-10 items-center justify-center rounded-xl border border-zinc-200 bg-white text-zinc-700 transition-colors hover:bg-zinc-100 md:hidden"
             aria-label="Toggle menu"
           >
             {open ? <X className="size-5" /> : <Menu className="size-5" />}
@@ -90,7 +90,7 @@ export default function CustomerNavbar() {
 
       {/* Mobile menu */}
       {open && (
-        <div className="border-t border-zinc-800 bg-zinc-950 px-4 pb-4 pt-3 md:hidden">
+        <div className="border-t border-zinc-200 bg-white px-4 pb-4 pt-3 md:hidden">
           <div className="flex flex-col gap-1">
             {NAV.map((n) => (
               <Link
@@ -99,8 +99,8 @@ export default function CustomerNavbar() {
                 onClick={() => setOpen(false)}
                 className={`cursor-pointer rounded-xl px-3 py-2.5 text-sm font-medium transition-colors ${
                   isActive(n.href)
-                    ? "bg-emerald-500/15 text-emerald-400"
-                    : "text-zinc-400 hover:bg-zinc-800 hover:text-zinc-100"
+                    ? "bg-emerald-500/10 text-emerald-700"
+                    : "text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900"
                 }`}
               >
                 {n.label}

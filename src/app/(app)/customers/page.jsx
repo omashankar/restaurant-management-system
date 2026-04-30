@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import DataTableShell from "@/components/ui/DataTableShell";
@@ -10,10 +10,24 @@ import TableSkeleton from "@/components/ui/TableSkeleton";
 import RoleCard from "@/components/rms/RoleCard";
 import { useApp } from "@/context/AppProviders";
 import { useModuleData } from "@/context/ModuleDataContext";
-import { usePaginatedList } from "@/lib/usePaginatedList";
+import { usePaginatedList } from "@/hooks/usePaginatedList";
+import { useToast } from "@/hooks/useToast";
 import { Eye, Pencil, Plus, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
+
+function normalizeCustomer(row) {
+  return {
+    id: row.id,
+    name: row.name ?? "",
+    phone: row.phone ?? "",
+    email: row.email ?? "",
+    notes: row.notes ?? "",
+    visits: Number(row.visits ?? 0),
+    lastVisit: row.lastVisit ?? "-",
+    orderHistory: Array.isArray(row.orderHistory) ? row.orderHistory : [],
+  };
+}
 
 export default function CustomersModulePage() {
   const { user } = useApp();
@@ -30,12 +44,32 @@ export default function CustomersModulePage() {
   });
   const [deleteTarget, setDeleteTarget] = useState(null);
   const limited = user?.role === "waiter";
+  const canDelete = user?.role === "admin" || user?.role === "manager";
+  const { showToast, ToastUI } = useToast();
 
   useEffect(() => {
     if (!hydrated) return;
-    const t = setTimeout(() => setLoading(false), 400);
-    return () => clearTimeout(t);
-  }, [hydrated]);
+    let alive = true;
+    async function loadCustomers() {
+      setLoading(true);
+      try {
+        const res = await fetch("/api/customers", { cache: "no-store" });
+        const data = await res.json();
+        if (!alive) return;
+        if (res.ok && data?.success && Array.isArray(data.customers)) {
+          setCustomerRows(data.customers.map(normalizeCustomer));
+        }
+      } catch {
+        // Keep existing fallback rows if API is temporarily unavailable.
+      } finally {
+        if (alive) setLoading(false);
+      }
+    }
+    loadCustomers();
+    return () => {
+      alive = false;
+    };
+  }, [hydrated, setCustomerRows]);
 
   const filterFn = useCallback(
     (row) => {
@@ -82,45 +116,78 @@ export default function CustomersModulePage() {
     setModalOpen(true);
   };
 
-  const saveCustomer = () => {
+  const saveCustomer = async () => {
     if (!form.name.trim()) return;
-    if (editingId) {
-      setCustomerRows((prev) =>
-        prev.map((c) =>
-          c.id === editingId
-            ? {
-                ...c,
-                name: form.name.trim(),
-                phone: form.phone.trim(),
-                email: form.email.trim(),
-                notes: form.notes.trim(),
-              }
-            : c
-        )
-      );
-    } else {
-      const id = `cu-${Date.now()}`;
-      setCustomerRows((prev) => [
-        ...prev,
-        {
-          id,
-          name: form.name.trim(),
-          phone: form.phone.trim(),
-          email: form.email.trim(),
-          notes: form.notes.trim(),
-          visits: 0,
-          lastVisit: "—",
-          orderHistory: [],
-        },
-      ]);
+    const payload = {
+      name: form.name.trim(),
+      phone: form.phone.trim(),
+      email: form.email.trim(),
+      notes: form.notes.trim(),
+    };
+    try {
+      if (editingId) {
+        const res = await fetch(`/api/customers/${editingId}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        if (!res.ok) {
+          showToast("Customer update failed.", "error");
+          return;
+        }
+        setCustomerRows((prev) =>
+          prev.map((c) => (c.id === editingId ? { ...c, ...payload } : c))
+        );
+        showToast("Customer updated.");
+      } else {
+        const res = await fetch("/api/customers", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        const data = await res.json();
+        if (!res.ok || !data?.id) {
+          showToast(data?.error ?? "Customer creation failed.", "error");
+          return;
+        }
+        setCustomerRows((prev) => [
+          ...prev,
+          normalizeCustomer({
+            id: data.id,
+            ...payload,
+            visits: 0,
+            lastVisit: "-",
+            orderHistory: [],
+          }),
+        ]);
+        showToast("Customer added.");
+      }
+      setModalOpen(false);
+    } catch {
+      showToast("Network error while saving customer.", "error");
     }
-    setModalOpen(false);
   };
 
-  const confirmDelete = () => {
+  const confirmDelete = async () => {
     if (!deleteTarget) return;
-    setCustomerRows((prev) => prev.filter((c) => c.id !== deleteTarget.id));
-    setDeleteTarget(null);
+    if (!canDelete) {
+      showToast("Only admin or manager can delete customers.", "error");
+      return;
+    }
+    try {
+      const res = await fetch(`/api/customers/${deleteTarget.id}`, {
+        method: "DELETE",
+      });
+      if (!res.ok) {
+        showToast("Delete failed. Permission or server error.", "error");
+        return;
+      }
+      setCustomerRows((prev) => prev.filter((c) => c.id !== deleteTarget.id));
+      setDeleteTarget(null);
+      showToast("Customer deleted.");
+    } catch {
+      showToast("Network error while deleting customer.", "error");
+    }
   };
 
   if (!hydrated || loading) {
@@ -164,7 +231,7 @@ export default function CustomersModulePage() {
       <ListToolbar
         search={search}
         onSearchChange={setSearch}
-        searchPlaceholder="Search name, phone, email…"
+        searchPlaceholder="Search name, phone, emailâ€¦"
         filterSlot={
           <select
             value={visitFilter}
@@ -172,8 +239,8 @@ export default function CustomersModulePage() {
             className="rounded-xl border border-zinc-800 bg-zinc-900/60 px-3 py-2 text-sm text-zinc-200"
           >
             <option value="all">All visits</option>
-            <option value="1-5">1–5 visits</option>
-            <option value="6-15">6–15 visits</option>
+            <option value="1-5">1â€“5 visits</option>
+            <option value="6-15">6â€“15 visits</option>
             <option value="16+">16+ visits</option>
           </select>
         }
@@ -241,7 +308,8 @@ export default function CustomersModulePage() {
                       <button
                         type="button"
                         onClick={() => setDeleteTarget(row)}
-                        className="cursor-pointer rounded-lg p-2 text-zinc-400 hover:bg-red-500/15 hover:text-red-400"
+                        disabled={!canDelete}
+                        className="cursor-pointer rounded-lg p-2 text-zinc-400 hover:bg-red-500/15 hover:text-red-400 disabled:cursor-not-allowed disabled:opacity-40"
                         aria-label="Delete"
                       >
                         <Trash2 className="size-4" />
@@ -344,6 +412,8 @@ export default function CustomersModulePage() {
         onCancel={() => setDeleteTarget(null)}
         onConfirm={confirmDelete}
       />
+      {ToastUI}
     </div>
   );
 }
+

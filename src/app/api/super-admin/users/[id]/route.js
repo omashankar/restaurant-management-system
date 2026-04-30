@@ -38,13 +38,16 @@ export async function PATCH(request, { params }) {
   const target = await db.collection("users").findOne({ _id }, { projection: { role: 1 } });
   if (!target) return Response.json({ success: false, error: "User not found." }, { status: 404 });
 
-  /* ── RBAC: block access to super_admin and all staff roles ── */
-  if (target.role === "super_admin") {
-    return Response.json({ success: false, error: "Cannot modify another super admin." }, { status: 403 });
-  }
-  if (STAFF_ROLES.includes(target.role)) {
+  /* Super admin can only manage restaurant admin users. */
+  if (target.role !== "admin") {
+    const isStaff = STAFF_ROLES.includes(target.role);
     return Response.json(
-      { success: false, error: "Super Admin cannot modify staff users. Staff is managed by their restaurant admin." },
+      {
+        success: false,
+        error: isStaff
+          ? "Super Admin cannot modify staff users. Staff is managed by their restaurant admin."
+          : "Super Admin can only modify restaurant admin users.",
+      },
       { status: 403 }
     );
   }
@@ -80,14 +83,28 @@ export async function DELETE(request, { params }) {
     const target = await db.collection("users").findOne({ _id }, { projection: { role: 1 } });
     if (!target) return Response.json({ success: false, error: "User not found." }, { status: 404 });
 
-    /* ── RBAC: block deletion of super_admin and all staff roles ── */
-    if (target.role === "super_admin") {
-      return Response.json({ success: false, error: "Cannot delete a super admin." }, { status: 403 });
-    }
-    if (STAFF_ROLES.includes(target.role)) {
+    /* Super admin can only delete restaurant admin users. */
+    if (target.role !== "admin") {
+      const isStaff = STAFF_ROLES.includes(target.role);
       return Response.json(
-        { success: false, error: "Super Admin cannot delete staff users. Staff is managed by their restaurant admin." },
+        {
+          success: false,
+          error: isStaff
+            ? "Super Admin cannot delete staff users. Staff is managed by their restaurant admin."
+            : "Super Admin can only delete restaurant admin users.",
+        },
         { status: 403 }
+      );
+    }
+
+    const ownsRestaurants = await db.collection("restaurants").countDocuments({ ownerId: _id });
+    if (ownsRestaurants > 0) {
+      return Response.json(
+        {
+          success: false,
+          error: "Cannot delete this admin because they are assigned as restaurant owner. Reassign owner first.",
+        },
+        { status: 409 }
       );
     }
 

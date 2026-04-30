@@ -10,10 +10,11 @@ function SuccessContent() {
   const orderId = params.get("id") ?? "ORD-XXXX";
 
   return (
-    <div className="flex min-h-[85vh] flex-col items-center justify-center px-4 py-16 text-center">
+    <div className="mx-auto flex min-h-[85vh] max-w-3xl flex-col items-center justify-center px-4 py-16 text-center">
+      <div className="w-full rounded-3xl border border-zinc-200 bg-white p-8 shadow-sm">
       {/* Icon */}
       <div className="relative">
-        <span className="flex size-24 items-center justify-center rounded-full bg-emerald-500/15 text-emerald-400 ring-2 ring-emerald-500/30">
+        <span className="flex size-24 items-center justify-center rounded-full bg-emerald-500/15 text-emerald-600 ring-2 ring-emerald-500/30">
           <CheckCircle2 className="size-12" />
         </span>
         <span className="absolute -right-1 -top-1 flex size-7 items-center justify-center rounded-full bg-emerald-500 text-zinc-950 shadow-lg shadow-emerald-500/30">
@@ -21,19 +22,20 @@ function SuccessContent() {
         </span>
       </div>
 
-      <h1 className="mt-7 text-3xl font-bold text-zinc-50">Order Placed!</h1>
-      <p className="mt-2 max-w-sm text-sm text-zinc-400">
-        Your order has been received and is being prepared. We'll have it ready soon.
+      <h1 className="mt-7 text-3xl font-bold text-zinc-900">Order Placed!</h1>
+      <p className="mt-2 max-w-sm text-sm text-zinc-600">
+        Your order has been received and is being prepared. We&apos;ll have it ready soon.
       </p>
+      <p className="mt-1 text-xs text-zinc-500">You can place another order anytime from the menu.</p>
 
       {/* Order ID */}
-      <div className="mt-7 rounded-2xl border border-zinc-800 bg-zinc-900/60 px-8 py-5">
+      <div className="mt-7 rounded-2xl border border-zinc-200 bg-zinc-50 px-8 py-5">
         <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500">Order ID</p>
-        <p className="mt-1.5 font-mono text-xl font-bold text-emerald-400">{orderId}</p>
+        <p className="mt-1.5 font-mono text-xl font-bold text-emerald-700">{orderId}</p>
       </div>
 
       {/* Est. time */}
-      <div className="mt-4 flex items-center gap-2.5 rounded-xl border border-amber-500/25 bg-amber-500/5 px-5 py-3 text-sm text-amber-300">
+      <div className="mt-4 flex items-center gap-2.5 rounded-xl border border-amber-300 bg-amber-50 px-5 py-3 text-sm text-amber-700">
         <Clock className="size-4 shrink-0" />
         Estimated time: <span className="font-bold">20–30 minutes</span>
       </div>
@@ -48,10 +50,11 @@ function SuccessContent() {
         </Link>
         <Link
           href="/home"
-          className="cursor-pointer inline-flex items-center rounded-xl border border-zinc-700 px-6 py-3 text-sm font-medium text-zinc-300 transition-colors hover:border-zinc-500 hover:text-zinc-100"
+          className="cursor-pointer inline-flex items-center rounded-xl border border-zinc-300 px-6 py-3 text-sm font-medium text-zinc-700 transition-colors hover:border-zinc-400 hover:text-zinc-900"
         >
           Back to Home
         </Link>
+      </div>
       </div>
     </div>
   );

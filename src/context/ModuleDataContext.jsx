@@ -14,6 +14,7 @@ import {
 } from "@/lib/modulesData";
 import {
   createContext,
+  useCallback,
   useContext,
   useEffect,
   useMemo,
@@ -23,6 +24,52 @@ import {
 const KEY = "rms-modules-v3";
 
 const ModuleDataContext = createContext(null);
+
+function normalizeCustomer(row) {
+  return {
+    id: row.id,
+    name: row.name ?? "",
+    phone: row.phone ?? "",
+    email: row.email ?? "",
+    notes: row.notes ?? "",
+    visits: Number(row.visits ?? 0),
+    lastVisit: row.lastVisit ?? null,
+    orderHistory: Array.isArray(row.orderHistory) ? row.orderHistory : [],
+  };
+}
+
+function normalizeReservation(row) {
+  return {
+    id: row.id,
+    customerName: row.customerName ?? "",
+    phone: row.phone ?? "",
+    date: row.date ?? "",
+    time: row.time ?? "",
+    guests: Number(row.guests ?? 2),
+    tableNumber: row.tableNumber ?? "TBD",
+    area: row.area ?? "",
+    notes: row.notes ?? "",
+    status: row.status ?? "pending",
+    createdAt: row.createdAt ?? null,
+    confirmedAt: row.confirmedAt ?? null,
+    completedAt: row.completedAt ?? null,
+    cancelledAt: row.cancelledAt ?? null,
+  };
+}
+
+function normalizeInventoryItem(row) {
+  return {
+    id: row.id,
+    name: row.name ?? "",
+    category: row.category ?? "Other",
+    quantity: Number(row.quantity ?? 0),
+    unit: row.unit ?? "unit",
+    reorderLevel: Number(row.reorderLevel ?? 0),
+    maxLevel: row.maxLevel ?? "",
+    supplier: row.supplier ?? "",
+    notes: row.notes ?? "",
+  };
+}
 
 export function ModuleDataProvider({ children }) {
   const [hydrated, setHydrated] = useState(false);
@@ -44,27 +91,118 @@ export function ModuleDataProvider({ children }) {
   const [kitchenQueue, setKitchenQueue] = useState([]);
 
   useEffect(() => {
+    // Restore non-API session state (optional floor/staff fallback only)
     try {
       const raw = sessionStorage.getItem(KEY);
       if (raw) {
         const d = JSON.parse(raw);
-        if (d.categories) setCategories(d.categories);
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         if (d.tableCategories) setTableCategories(d.tableCategories);
-        if (d.menuItems) setMenuItems(d.menuItems);
-        if (d.recipes) setRecipes(d.recipes);
-        if (d.floorTables) setFloorTables(d.floorTables);
-        if (d.staffRows) setStaffRows(d.staffRows);
-        if (d.customerRows) setCustomerRows(d.customerRows);
-        if (d.reservationRows) setReservationRows(d.reservationRows);
-        if (d.inventoryRows) setInventoryRows(d.inventoryRows);
+        if (d.floorTables)     setFloorTables(d.floorTables);
+        if (d.staffRows)       setStaffRows(d.staffRows);
         if (d.inventoryHistory) setInventoryHistory(d.inventoryHistory);
-        if (d.orderRows) setOrderRows(d.orderRows);
-        if (d.kitchenQueue) setKitchenQueue(d.kitchenQueue);
       }
     } catch {
       sessionStorage.removeItem(KEY);
     }
-    setHydrated(true);
+
+    // Fetch API-backed module data.
+    async function fetchModuleData() {
+      try {
+        const meRes = await fetch("/api/auth/me");
+        const meData = await meRes.json().catch(() => null);
+        // Tenant module APIs (/api/menu, /api/orders, etc.) are for restaurant roles only.
+        // Avoid noisy 401/403 calls for super_admin or unauthenticated sessions.
+        if (!meData?.success || meData.user?.role === "super_admin") {
+          return;
+        }
+
+        const [
+          menuRes,
+          catRes,
+          tablesRes,
+          areasRes,
+          customersRes,
+          reservationsRes,
+          inventoryRes,
+          ordersRes,
+        ] = await Promise.all([
+          fetch("/api/menu"),
+          fetch("/api/categories"),
+          fetch("/api/tables"),
+          fetch("/api/tables/areas"),
+          fetch("/api/customers"),
+          fetch("/api/reservations"),
+          fetch("/api/inventory"),
+          fetch("/api/orders"),
+        ]);
+        const [
+          menuData,
+          catData,
+          tablesData,
+          areasData,
+          customersData,
+          reservationsData,
+          inventoryData,
+          ordersData,
+        ] = await Promise.all([
+          menuRes.json(),
+          catRes.json(),
+          tablesRes.json(),
+          areasRes.json(),
+          customersRes.json(),
+          reservationsRes.json(),
+          inventoryRes.json(),
+          ordersRes.json(),
+        ]);
+        if (menuData.success   && Array.isArray(menuData.items))        setMenuItems(menuData.items);
+        if (catData.success    && Array.isArray(catData.categories))    setCategories(catData.categories);
+        if (tablesData.success && Array.isArray(tablesData.tables))     setFloorTables(tablesData.tables);
+        if (areasData.success  && Array.isArray(areasData.areas))       setTableCategories(areasData.areas);
+        if (customersData.success && Array.isArray(customersData.customers)) {
+          setCustomerRows(customersData.customers.map(normalizeCustomer));
+        }
+        if (reservationsData.success && Array.isArray(reservationsData.reservations)) {
+          setReservationRows(reservationsData.reservations.map(normalizeReservation));
+        }
+        if (inventoryData.success && Array.isArray(inventoryData.items)) {
+          setInventoryRows(inventoryData.items.map(normalizeInventoryItem));
+        }
+        if (ordersData.success && Array.isArray(ordersData.orders)) {
+          setOrderRows(ordersData.orders);
+          setKitchenQueue(
+            ordersData.orders.filter((o) => ["new", "preparing", "ready"].includes(o.status))
+          );
+        }
+      } catch (err) {
+        console.error("[ModuleDataContext] Failed to fetch module data:", err.message);
+      }
+    }
+
+    fetchModuleData().finally(() => setHydrated(true));
+  }, []);
+
+  const refreshMenu = useCallback(async () => {
+    try {
+      const [menuRes, catRes, tablesRes, areasRes] = await Promise.all([
+        fetch("/api/menu"),
+        fetch("/api/categories"),
+        fetch("/api/tables"),
+        fetch("/api/tables/areas"),
+      ]);
+      const [menuData, catData, tablesData, areasData] = await Promise.all([
+        menuRes.json(),
+        catRes.json(),
+        tablesRes.json(),
+        areasRes.json(),
+      ]);
+      if (menuData.success   && Array.isArray(menuData.items))     setMenuItems(menuData.items);
+      if (catData.success    && Array.isArray(catData.categories)) setCategories(catData.categories);
+      if (tablesData.success && Array.isArray(tablesData.tables))  setFloorTables(tablesData.tables);
+      if (areasData.success  && Array.isArray(areasData.areas))    setTableCategories(areasData.areas);
+    } catch (err) {
+      console.error("[ModuleDataContext] refreshMenu failed:", err.message);
+    }
   }, []);
 
   useEffect(() => {
@@ -72,38 +210,19 @@ export function ModuleDataProvider({ children }) {
     sessionStorage.setItem(
       KEY,
       JSON.stringify({
-        categories,
-        tableCategories,
-        menuItems,
-        recipes,
-        floorTables,
         staffRows,
-        customerRows,
-        reservationRows,
-        inventoryRows,
         inventoryHistory,
-        orderRows,
-        kitchenQueue,
       })
     );
   }, [
     hydrated,
-    categories,
-    tableCategories,
-    menuItems,
-    recipes,
-    floorTables,
     staffRows,
-    customerRows,
-    reservationRows,
-    inventoryRows,
     inventoryHistory,
-    orderRows,
-    kitchenQueue,
   ]);
 
   useEffect(() => {
     if (!hydrated) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setCategories((cats) =>
       cats.map((c) => ({
         ...c,
@@ -139,6 +258,7 @@ export function ModuleDataProvider({ children }) {
       setOrderRows,
       kitchenQueue,
       setKitchenQueue,
+      refreshMenu,
     }),
     [
       hydrated,
@@ -154,6 +274,7 @@ export function ModuleDataProvider({ children }) {
       inventoryHistory,
       orderRows,
       kitchenQueue,
+      refreshMenu,
     ]
   );
 

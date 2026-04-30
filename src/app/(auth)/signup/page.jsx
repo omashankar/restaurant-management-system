@@ -16,7 +16,7 @@ const ROLE_INFO = [
 const inputCls = "mt-1.5 w-full rounded-xl border border-zinc-700 bg-zinc-950/80 px-4 py-3 text-sm text-zinc-100 outline-none transition-all focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/20";
 
 export default function SignupPage() {
-  const { user, hydrated, login } = useApp();
+  const { user, hydrated } = useApp();
   const router = useRouter();
 
   const [name, setName] = useState("");
@@ -26,7 +26,7 @@ export default function SignupPage() {
   const [restaurantName, setRestaurantName] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  console.log("user details ", name, email, password, role, restaurantName)
+  const [successMsg, setSuccessMsg] = useState("");
 
   useEffect(() => {
     if (!hydrated) return;
@@ -36,6 +36,7 @@ export default function SignupPage() {
   const onSubmit = async (e) => {
     e.preventDefault();
     setError("");
+    setSuccessMsg("");
     setLoading(true);
 
     try {
@@ -44,19 +45,22 @@ export default function SignupPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name, email, password, role, restaurantName }),
       });
-      console.log("data")
       const data = await res.json();
-      console.log("data", data)
       if (!data.success) {
         setError(data.error ?? "Signup failed.");
-        setLoading(false);
         return;
       }
-      // Directly login after signup
-      const dest = login(data.user.email, data.user.role, data.user.name);
-      router.push(dest);
+
+      if (data.requiresVerification) {
+        setSuccessMsg(data.message ?? "Account created. Please verify your email.");
+        router.push(`/login?email=${encodeURIComponent(email)}&verify=1`);
+        return;
+      }
+
+      router.push("/login");
     } catch {
       setError("Network error. Please try again.");
+    } finally {
       setLoading(false);
     }
   };
@@ -108,6 +112,9 @@ export default function SignupPage() {
             )}
             {error && (
               <p className="rounded-xl border border-red-500/20 bg-red-500/10 px-3 py-2 text-xs text-red-400">{error}</p>
+            )}
+            {successMsg && (
+              <p className="rounded-xl border border-emerald-500/20 bg-emerald-500/10 px-3 py-2 text-xs text-emerald-400">{successMsg}</p>
             )}
             <button type="submit" disabled={loading}
               className="cursor-pointer w-full rounded-xl bg-emerald-500 py-3 text-sm font-semibold text-zinc-950 transition-all hover:bg-emerald-400 active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed">

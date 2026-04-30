@@ -28,6 +28,12 @@ export async function GET(request) {
     return Response.json({
       success: true,
       plans: plans.map((p) => ({
+        monthlyPrice: Number.isFinite(Number(p.monthlyPrice))
+          ? Number(p.monthlyPrice)
+          : (p.billingCycle === "yearly" ? Number((Number(p.price ?? 0) / 12).toFixed(2)) : Number(p.price ?? 0)),
+        yearlyPrice: Number.isFinite(Number(p.yearlyPrice))
+          ? Number(p.yearlyPrice)
+          : (p.billingCycle === "yearly" ? Number(p.price ?? 0) : Number((Number(p.price ?? 0) * 12).toFixed(2))),
         id:           p._id.toString(),
         name:         p.name,
         slug:         p.slug,
@@ -56,10 +62,29 @@ export async function POST(request) {
   try { body = await request.json(); }
   catch { return Response.json({ success: false, error: "Invalid JSON." }, { status: 400 }); }
 
-  const { name, price, billingCycle = "monthly", description, features = [], limits = {} } = body;
+  const {
+    name,
+    price,
+    monthlyPrice,
+    yearlyPrice,
+    billingCycle = "monthly",
+    description,
+    features = [],
+    limits = {},
+  } = body;
 
   if (!name?.trim())    return Response.json({ success: false, error: "Plan name is required." }, { status: 400 });
-  if (price == null || isNaN(Number(price))) return Response.json({ success: false, error: "Valid price is required." }, { status: 400 });
+  const monthlyNum = Number(monthlyPrice);
+  const yearlyNum = Number(yearlyPrice);
+  const legacyPriceNum = Number(price);
+  const hasDualPrice = Number.isFinite(monthlyNum) && monthlyNum >= 0 && Number.isFinite(yearlyNum) && yearlyNum >= 0;
+  const hasLegacyPrice = Number.isFinite(legacyPriceNum) && legacyPriceNum >= 0;
+  if (!hasDualPrice && !hasLegacyPrice) {
+    return Response.json({ success: false, error: "Valid monthlyPrice and yearlyPrice are required." }, { status: 400 });
+  }
+  if (!["monthly", "yearly"].includes(billingCycle)) {
+    return Response.json({ success: false, error: "Invalid billingCycle." }, { status: 400 });
+  }
 
   const slug = name.trim().toLowerCase().replace(/\s+/g, "-");
 
@@ -70,10 +95,18 @@ export async function POST(request) {
     const existing = await db.collection("plans").findOne({ slug });
     if (existing) return Response.json({ success: false, error: "A plan with this name already exists." }, { status: 409 });
 
+    const effectiveMonthly = hasDualPrice
+      ? monthlyNum
+      : (billingCycle === "yearly" ? Number((legacyPriceNum / 12).toFixed(2)) : legacyPriceNum);
+    const effectiveYearly = hasDualPrice
+      ? yearlyNum
+      : (billingCycle === "yearly" ? legacyPriceNum : Number((legacyPriceNum * 12).toFixed(2)));
     const result = await db.collection("plans").insertOne({
       name:         name.trim(),
       slug,
-      price:        Number(price),
+      price:        billingCycle === "yearly" ? effectiveYearly : effectiveMonthly,
+      monthlyPrice: effectiveMonthly,
+      yearlyPrice:  effectiveYearly,
       billingCycle,
       description:  description?.trim() ?? "",
       features,
@@ -84,7 +117,13 @@ export async function POST(request) {
 
     return Response.json({
       success: true,
-      plan: { id: result.insertedId.toString(), name: name.trim(), slug, price: Number(price) },
+      plan: {
+        id: result.insertedId.toString(),
+        name: name.trim(),
+        slug,
+        monthlyPrice: effectiveMonthly,
+        yearlyPrice: effectiveYearly,
+      },
     }, { status: 201 });
   } catch (err) {
     console.error("POST plan error:", err.message);

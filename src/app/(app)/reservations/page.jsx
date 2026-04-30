@@ -11,8 +11,28 @@ import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import EmptyState from "@/components/ui/EmptyState";
 import { useApp } from "@/context/AppProviders";
 import { useModuleData } from "@/context/ModuleDataContext";
+import { useToast } from "@/hooks/useToast";
 import { CalendarClock, Plus } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
+
+function normalizeReservation(row) {
+  return {
+    id: row.id,
+    customerName: row.customerName ?? "",
+    phone: row.phone ?? "",
+    date: row.date ?? "",
+    time: row.time ?? "",
+    guests: Number(row.guests ?? 2),
+    tableNumber: row.tableNumber ?? "TBD",
+    area: row.area ?? "",
+    notes: row.notes ?? "",
+    status: row.status ?? "pending",
+    createdAt: row.createdAt ?? null,
+    confirmedAt: row.confirmedAt ?? null,
+    completedAt: row.completedAt ?? null,
+    cancelledAt: row.cancelledAt ?? null,
+  };
+}
 
 export default function ReservationsPage() {
   const { user } = useApp();
@@ -37,12 +57,32 @@ export default function ReservationsPage() {
   const [deleteTarget, setDeleteTarget] = useState(null);
 
   const limited = user?.role === "manager" || user?.role === "waiter";
+  const canDelete = user?.role === "admin" || user?.role === "manager";
+  const { showToast, ToastUI } = useToast();
 
   useEffect(() => {
     if (!hydrated) return;
-    const t = setTimeout(() => setLoading(false), 420);
-    return () => clearTimeout(t);
-  }, [hydrated]);
+    let alive = true;
+    async function loadReservations() {
+      setLoading(true);
+      try {
+        const res = await fetch("/api/reservations", { cache: "no-store" });
+        const data = await res.json();
+        if (!alive) return;
+        if (res.ok && data?.success && Array.isArray(data.reservations)) {
+          setReservationRows(data.reservations.map(normalizeReservation));
+        }
+      } catch {
+        // Keep fallback/session data when API is unavailable.
+      } finally {
+        if (alive) setLoading(false);
+      }
+    }
+    loadReservations();
+    return () => {
+      alive = false;
+    };
+  }, [hydrated, setReservationRows]);
 
   const tableOptions = useMemo(
     () =>
@@ -82,21 +122,77 @@ export default function ReservationsPage() {
     setFormOpen(true);
   };
 
-  const saveReservation = (payload) => {
-    setReservationRows((prev) => {
-      const exists = prev.some((x) => x.id === payload.id);
-      if (exists) {
-        return prev.map((x) => (x.id === payload.id ? payload : x));
+  const saveReservation = async (payload) => {
+    const body = {
+      customerName: payload.customerName,
+      phone: payload.phone,
+      date: payload.date,
+      time: payload.time,
+      guests: payload.guests,
+      tableNumber: payload.tableNumber,
+      area: payload.area,
+      notes: payload.notes,
+      status: payload.status,
+    };
+
+    try {
+      if (editing?.id) {
+        const res = await fetch(`/api/reservations/${editing.id}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+        });
+        if (!res.ok) {
+          showToast("Reservation update failed.", "error");
+          return;
+        }
+        setReservationRows((prev) =>
+          prev.map((x) => (x.id === editing.id ? { ...x, ...body } : x))
+        );
+        showToast("Reservation updated.");
+      } else {
+        const res = await fetch("/api/reservations", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+        });
+        const data = await res.json();
+        if (!res.ok || !data?.id) {
+          showToast(data?.error ?? "Reservation creation failed.", "error");
+          return;
+        }
+        setReservationRows((prev) => [
+          ...prev,
+          normalizeReservation({ ...payload, id: data.id }),
+        ]);
+        showToast("Reservation created.");
       }
-      return [...prev, payload];
-    });
+    } catch {
+      showToast("Network error while saving reservation.", "error");
+    }
   };
 
-  const confirmDelete = () => {
+  const confirmDelete = async () => {
     if (!deleteTarget) return;
-    setReservationRows((prev) => prev.filter((x) => x.id !== deleteTarget.id));
-    setDeleteTarget(null);
-    setViewing((v) => (v?.id === deleteTarget.id ? null : v));
+    if (!canDelete) {
+      showToast("Only admin or manager can delete reservations.", "error");
+      return;
+    }
+    try {
+      const res = await fetch(`/api/reservations/${deleteTarget.id}`, {
+        method: "DELETE",
+      });
+      if (!res.ok) {
+        showToast("Delete failed. Permission or server error.", "error");
+        return;
+      }
+      setReservationRows((prev) => prev.filter((x) => x.id !== deleteTarget.id));
+      setDeleteTarget(null);
+      setViewing((v) => (v?.id === deleteTarget.id ? null : v));
+      showToast("Reservation deleted.");
+    } catch {
+      showToast("Network error while deleting reservation.", "error");
+    }
   };
 
   if (!hydrated || loading) {
@@ -176,6 +272,7 @@ export default function ReservationsPage() {
                 onView={setViewing}
                 onEdit={openEdit}
                 onDelete={setDeleteTarget}
+                canDelete={canDelete}
               />
             </div>
           ) : (
@@ -218,6 +315,7 @@ export default function ReservationsPage() {
             onCancel={() => setDeleteTarget(null)}
             onConfirm={confirmDelete}
           />
+      {ToastUI}
     </div>
   );
 }

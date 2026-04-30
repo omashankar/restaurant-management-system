@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import DataTableShell from "@/components/ui/DataTableShell";
@@ -8,7 +8,7 @@ import Modal from "@/components/ui/Modal";
 import PaginationBar from "@/components/ui/PaginationBar";
 import TableSkeleton from "@/components/ui/TableSkeleton";
 import { useUser } from "@/context/AuthContext";
-import { usePaginatedList } from "@/lib/usePaginatedList";
+import { usePaginatedList } from "@/hooks/usePaginatedList";
 import { useToast } from "@/hooks/useToast";
 import { Pencil, Plus, RefreshCw, Trash2, Users } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
@@ -34,7 +34,7 @@ export default function StaffModulePage() {
   const [deleting, setDeleting] = useState(false);
   const { showToast, ToastUI } = useToast();
 
-  /* ── Fetch staff from DB ── */
+  /* â”€â”€ Fetch staff from DB â”€â”€ */
   const fetchStaff = useCallback(async () => {
     setLoading(true);
     try {
@@ -42,7 +42,7 @@ export default function StaffModulePage() {
       const data = await res.json();
       if (data.success) setStaffRows(data.staff);
     } catch {
-      // fallback — keep existing rows
+      // fallback â€” keep existing rows
     } finally {
       setLoading(false);
     }
@@ -91,7 +91,7 @@ export default function StaffModulePage() {
     setSaving(true);
 
     if (!editingId) {
-      /* ── CREATE via API → saves to DB ── */
+      /* â”€â”€ CREATE via API â†’ saves to DB â”€â”€ */
       try {
         const res  = await fetch("/api/users/create", {
           method: "POST",
@@ -117,7 +117,7 @@ export default function StaffModulePage() {
         setFormError("Network error. Please try again.");
       }
     } else {
-      /* ── EDIT via API ── */
+      /* â”€â”€ EDIT via API â”€â”€ */
       try {
         const res  = await fetch(`/api/staff/${editingId}`, {
           method: "PATCH",
@@ -172,7 +172,7 @@ export default function StaffModulePage() {
           </span>
           <div>
             <h1 className="text-2xl font-semibold tracking-tight text-zinc-50">Staff</h1>
-            <p className="mt-1 text-sm text-zinc-500">Team roster · {total} member{total !== 1 ? "s" : ""}</p>
+            <p className="mt-1 text-sm text-zinc-500">Team roster Â· {total} member{total !== 1 ? "s" : ""}</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -193,7 +193,7 @@ export default function StaffModulePage() {
       <ListToolbar
         search={search}
         onSearchChange={setSearch}
-        searchPlaceholder="Search name, email, phone…"
+        searchPlaceholder="Search name, email, phoneâ€¦"
         filterSlot={
           <select value={roleFilter} onChange={(e) => setRoleFilter(e.target.value)}
             className="cursor-pointer rounded-xl border border-zinc-800 bg-zinc-900/60 px-3 py-2 text-sm text-zinc-200">
@@ -249,7 +249,7 @@ export default function StaffModulePage() {
                     </span>
                   </td>
                   <td className="hidden px-4 py-3 text-zinc-400 md:table-cell">{row.email}</td>
-                  <td className="hidden px-4 py-3 tabular-nums text-zinc-500 md:table-cell">{row.phone || "—"}</td>
+                  <td className="hidden px-4 py-3 tabular-nums text-zinc-500 md:table-cell">{row.phone || "â€”"}</td>
                   <td className="px-4 py-3">
                     <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold capitalize ring-1 ${
                       row.status === "active"
@@ -296,7 +296,7 @@ export default function StaffModulePage() {
             </button>
             <button type="button" onClick={saveStaff} disabled={saving}
               className="cursor-pointer rounded-xl bg-emerald-500 px-4 py-2 text-sm font-semibold text-zinc-950 hover:bg-emerald-400 disabled:opacity-50">
-              {saving ? "Saving…" : "Save"}
+              {saving ? "Savingâ€¦" : "Save"}
             </button>
           </div>
         }
@@ -335,7 +335,7 @@ export default function StaffModulePage() {
               <div className="sm:col-span-2">
                 <label className="text-xs font-medium text-zinc-500">Password * <span className="text-zinc-600">(min 6 chars)</span></label>
                 <input type="password" value={form.password} onChange={(e) => setForm((f) => ({ ...f, password: e.target.value }))}
-                  placeholder="••••••••" autoComplete="new-password"
+                  placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢" autoComplete="new-password"
                   className="mt-1 w-full rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus:border-emerald-500/40 placeholder:text-zinc-600" />
               </div>
             )}
@@ -357,7 +357,7 @@ export default function StaffModulePage() {
         open={!!deleteTarget}
         title="Remove staff member?"
         message={deleteTarget ? `${deleteTarget.name} will be removed from the roster.` : ""}
-        confirmLabel={deleting ? "Removing…" : "Remove"}
+        confirmLabel={deleting ? "Removingâ€¦" : "Remove"}
         onCancel={() => setDeleteTarget(null)}
         onConfirm={confirmDelete}
       />
@@ -365,3 +365,4 @@ export default function StaffModulePage() {
     </div>
   );
 }
+

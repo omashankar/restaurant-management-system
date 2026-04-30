@@ -2,6 +2,7 @@
 
 import { useProfile } from "@/hooks/useProfile";
 import { roleLabel } from "@/context/AppProviders";
+import Image from "next/image";
 import {
   Camera,
   CheckCircle2,
@@ -98,7 +99,7 @@ export default function ProfilePage() {
       <div className="flex items-center gap-5 rounded-2xl border border-zinc-800 bg-zinc-900/60 p-5">
         <div className="relative shrink-0">
           {avatar ? (
-            <img src={avatar} alt="Avatar" className="size-20 rounded-full object-cover ring-2 ring-emerald-500/40" />
+            <Image src={avatar} alt="Avatar" width={80} height={80} className="size-20 rounded-full object-cover ring-2 ring-emerald-500/40" unoptimized />
           ) : (
             <span className="flex size-20 items-center justify-center rounded-full bg-zinc-800 text-2xl font-bold text-zinc-200 ring-2 ring-zinc-700">
               {avatarFallback}

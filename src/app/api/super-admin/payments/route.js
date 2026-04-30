@@ -1,6 +1,7 @@
 import { getTokenFromRequest } from "@/lib/authCookies";
 import { verifyToken } from "@/lib/jwt";
 import clientPromise from "@/lib/mongodb";
+import { safeSearchPattern } from "@/lib/search";
 import { ObjectId } from "mongodb";
 
 function superAdminOnly(request) {
@@ -20,7 +21,7 @@ export async function GET(request) {
 
   try {
     const { searchParams } = new URL(request.url);
-    const search = searchParams.get("search")?.trim() ?? "";
+    const search = safeSearchPattern(searchParams.get("search"));
     const status = searchParams.get("status") ?? "all";
     const page   = Math.max(1, Number(searchParams.get("page") ?? 1));
     const limit  = 20;
@@ -93,9 +94,12 @@ export async function POST(request) {
   catch { return Response.json({ success: false, error: "Invalid JSON." }, { status: 400 }); }
 
   const { restaurantId, plan, amount, currency = "USD", method = "manual", notes } = body;
+  const amountNum = Number(amount);
 
   if (!restaurantId) return Response.json({ success: false, error: "restaurantId is required." }, { status: 400 });
-  if (!amount || isNaN(Number(amount))) return Response.json({ success: false, error: "Valid amount is required." }, { status: 400 });
+  if (!Number.isFinite(amountNum) || amountNum <= 0) {
+    return Response.json({ success: false, error: "Amount must be greater than 0." }, { status: 400 });
+  }
 
   try {
     const client = await clientPromise;
@@ -113,7 +117,7 @@ export async function POST(request) {
       restaurantName: restaurant.name,
       adminEmail:     restaurant.ownerEmail ?? "—",
       plan:           plan ?? "—",
-      amount:         Number(amount),
+      amount:         amountNum,
       currency,
       method,
       status:         "paid",
@@ -124,7 +128,7 @@ export async function POST(request) {
 
     return Response.json({
       success: true,
-      payment: { id: result.insertedId.toString(), invoiceId, amount: Number(amount), status: "paid" },
+      payment: { id: result.insertedId.toString(), invoiceId, amount: amountNum, status: "paid" },
     }, { status: 201 });
   } catch (err) {
     console.error("POST payment error:", err.message);

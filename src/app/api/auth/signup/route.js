@@ -1,8 +1,8 @@
-import { createUser } from "@/lib/authService";
-import { setTokenCookie } from "@/lib/authCookies";
-import { signToken } from "@/lib/jwt";
 import { getClientIp, signupLimiter } from "@/lib/rateLimit";
 import bcrypt from "bcryptjs";
+import crypto from "crypto";
+import { sendVerificationEmail } from "@/lib/emailService";
+import { logError, logInfo } from "@/lib/logger";
 import clientPromise from "@/lib/mongodb";
 
 const VALID_ROLES = ["admin", "manager", "waiter", "chef"];
@@ -10,7 +10,7 @@ const VALID_ROLES = ["admin", "manager", "waiter", "chef"];
 export async function POST(request) {
   /* ── Rate limit ── */
   const ip = getClientIp(request);
-  const limit = signupLimiter.check(ip);
+  const limit = await signupLimiter.check(ip);
   if (!limit.allowed) {
     return Response.json(
       { success: false, error: `Too many signup attempts. Try again in ${limit.retryAfter}s.` },
@@ -65,13 +65,19 @@ export async function POST(request) {
 
     /* ── Hash password & insert user ── */
     const hashedPassword = await bcrypt.hash(password, 10);
+    const verificationToken = crypto.randomBytes(32).toString("hex");
+    const verificationExpires = new Date(Date.now() + 15 * 60 * 1000);
+    const isSuperAdmin = role === "super_admin";
+
     const result = await db.collection("users").insertOne({
       name: name.trim(),
       email: cleanEmail,
       password: hashedPassword,
       role,
       restaurantId,
-      isVerified: true,
+      isVerified: isSuperAdmin,
+      emailVerificationToken: isSuperAdmin ? null : verificationToken,
+      emailVerificationExpires: isSuperAdmin ? null : verificationExpires,
       status: "active",
       createdAt: new Date(),
     });
@@ -84,21 +90,27 @@ export async function POST(request) {
       );
     }
 
-    const user = {
-      id:           result.insertedId.toString(),
-      name:         name.trim(),
-      email:        cleanEmail,
-      role,
-      restaurantId: restaurantId?.toString() ?? null,
-    };
+    if (!isSuperAdmin) {
+      sendVerificationEmail({
+        name: name.trim(),
+        email: cleanEmail,
+        token: verificationToken,
+      }).catch((err) => {
+        console.error("Signup verification email failed:", err.message);
+      });
+    }
 
-    /* ── Issue JWT cookie ── */
-    const token = signToken({ id: user.id, role: user.role, restaurantId: user.restaurantId });
-    const res   = Response.json({ success: true, user });
-    return setTokenCookie(res, token);
+    logInfo("auth.signup.success", { email: cleanEmail, role });
+    return Response.json({
+      success: true,
+      requiresVerification: !isSuperAdmin,
+      message: isSuperAdmin
+        ? "Account created successfully."
+        : "Account created. Please verify your email before logging in.",
+    });
 
   } catch (err) {
-    console.error("Signup error:", err.message);
+    logError("auth.signup.failed", err, { route: "/api/auth/signup" });
     return Response.json({ success: false, error: "Something went wrong. Please try again." }, { status: 500 });
   }
 }

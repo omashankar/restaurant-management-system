@@ -31,14 +31,15 @@ function validateSection(section) {
 
 /* ── PATCH /api/super-admin/landing/:section/:itemId ── */
 export async function PATCH(request, { params }) {
-  if (!superAdminOnly(request)) return Response.json({ success: false, error: "Forbidden." }, { status: 403 });
+  const sa = superAdminOnly(request);
+  if (!sa) return Response.json({ success: false, error: "Forbidden." }, { status: 403 });
   const { section, itemId } = await params;
   const err = validateSection(section);
   if (err) return err;
   let body;
   try { body = await request.json(); } catch { return Response.json({ success: false, error: "Invalid JSON." }, { status: 400 }); }
   try {
-    const result = await updateItem(section, itemId, body);
+    const result = await updateItem(section, itemId, body, sa.id ?? null);
     revalidateTag("landing");
     revalidatePath("/");
     return Response.json({ success: true, ...result });
@@ -49,12 +50,13 @@ export async function PATCH(request, { params }) {
 
 /* ── DELETE /api/super-admin/landing/:section/:itemId ── */
 export async function DELETE(request, { params }) {
-  if (!superAdminOnly(request)) return Response.json({ success: false, error: "Forbidden." }, { status: 403 });
+  const sa = superAdminOnly(request);
+  if (!sa) return Response.json({ success: false, error: "Forbidden." }, { status: 403 });
   const { section, itemId } = await params;
   const err = validateSection(section);
   if (err) return err;
   try {
-    const result = await deleteItem(section, itemId);
+    const result = await deleteItem(section, itemId, sa.id ?? null);
     revalidateTag("landing");
     revalidatePath("/");
     return Response.json({ success: true, ...result });

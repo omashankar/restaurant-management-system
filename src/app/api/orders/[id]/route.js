@@ -1,7 +1,7 @@
 import { withTenant } from "@/lib/tenantDb";
+import { logInfo } from "@/lib/logger";
+import { orderPatchSchema, parseSchema } from "@/lib/validationSchemas";
 import { ObjectId } from "mongodb";
-
-const VALID_STATUSES = ["new", "preparing", "ready", "completed", "cancelled"];
 
 function getFilter(tenantFilter, id) {
   try { return { ...tenantFilter, _id: new ObjectId(id) }; }
@@ -28,21 +28,37 @@ export const PATCH = withTenant(
     if (!filter) return Response.json({ success: false, error: "Invalid ID." }, { status: 400 });
 
     const body = await request.json();
-
-    // Validate status if provided
-    if (body.status && !VALID_STATUSES.includes(body.status)) {
-      return Response.json({ success: false, error: `Invalid status. Must be one of: ${VALID_STATUSES.join(", ")}` }, { status: 400 });
+    let parsed;
+    try {
+      parsed = parseSchema(orderPatchSchema, body);
+    } catch (err) {
+      return Response.json({ success: false, error: err.message }, { status: 400 });
     }
 
-    const update = { ...body, updatedAt: new Date() };
+    if (Object.keys(parsed).length === 0) {
+      return Response.json({ success: false, error: "No valid fields to update." }, { status: 400 });
+    }
+
+    const existing = await db.collection("orders").findOne(filter);
+    if (!existing) return Response.json({ success: false, error: "Order not found." }, { status: 404 });
+
+    const update = { ...parsed, updatedAt: new Date() };
     // Add timestamps for status transitions
-    if (body.status === "preparing") update.preparingAt = new Date();
-    if (body.status === "ready")     update.readyAt     = new Date();
-    if (body.status === "completed") update.completedAt = new Date();
-    if (body.status === "cancelled") update.cancelledAt = new Date();
+    if (parsed.status === "preparing") update.preparingAt = new Date();
+    if (parsed.status === "ready")     update.readyAt     = new Date();
+    if (parsed.status === "completed") update.completedAt = new Date();
+    if (parsed.status === "cancelled") update.cancelledAt = new Date();
 
     const result = await db.collection("orders").updateOne(filter, { $set: update });
     if (result.matchedCount === 0) return Response.json({ success: false, error: "Order not found." }, { status: 404 });
+    if (parsed.status && existing.orderType === "dine-in" && existing.tableNumber) {
+      const nextTableStatus = ["completed", "cancelled"].includes(parsed.status) ? "available" : "occupied";
+      await db.collection("tables").updateOne(
+        { ...tenantFilter, tableNumber: existing.tableNumber },
+        { $set: { status: nextTableStatus, updatedAt: new Date() } }
+      ).catch(() => {});
+    }
+    logInfo("order.updated", { route: "/api/orders/[id]", orderId: params.id, status: parsed.status ?? null });
     return Response.json({ success: true });
   }
 );

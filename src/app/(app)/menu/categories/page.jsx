@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import DataTableShell from "@/components/ui/DataTableShell";
@@ -8,7 +8,7 @@ import Modal from "@/components/ui/Modal";
 import PaginationBar from "@/components/ui/PaginationBar";
 import TableSkeleton from "@/components/ui/TableSkeleton";
 import { useToast } from "@/hooks/useToast";
-import { usePaginatedList } from "@/lib/usePaginatedList";
+import { usePaginatedList } from "@/hooks/usePaginatedList";
 import { FolderTree, Pencil, Plus, RefreshCw, Trash2 } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 
@@ -92,7 +92,7 @@ export default function CategoriesPage() {
         </div>
       </div>
 
-      <ListToolbar search={search} onSearchChange={setSearch} searchPlaceholder="Search categories…" />
+      <ListToolbar search={search} onSearchChange={setSearch} searchPlaceholder="Search categoriesâ€¦" />
 
       {total === 0 ? (
         <EmptyState title="No categories" description="Create categories like Starters, Main Course, Drinks."
@@ -107,7 +107,7 @@ export default function CategoriesPage() {
               {pageRows.map((row) => (
                 <tr key={row.id} className="transition-colors hover:bg-zinc-800/40">
                   <td className="px-4 py-3 font-medium text-zinc-100">{row.name}</td>
-                  <td className="px-4 py-3 text-zinc-500 text-xs">{row.description || "—"}</td>
+                  <td className="px-4 py-3 text-zinc-500 text-xs">{row.description || "â€”"}</td>
                   <td className="px-4 py-3"><span className="inline-flex rounded-full bg-zinc-800 px-2.5 py-0.5 text-xs font-semibold text-zinc-300">{row.itemCount ?? 0}</span></td>
                   <td className="px-4 py-3 text-right">
                     <div className="flex justify-end gap-1">
@@ -126,7 +126,7 @@ export default function CategoriesPage() {
       <Modal open={modalOpen} onClose={() => setModalOpen(false)} title={editingId ? "Edit Category" : "Add Category"}
         footer={<div className="flex justify-end gap-2">
           <button type="button" onClick={() => setModalOpen(false)} className="cursor-pointer rounded-xl border border-zinc-700 px-4 py-2 text-sm text-zinc-300 hover:border-zinc-500">Cancel</button>
-          <button type="button" onClick={save} disabled={saving} className="cursor-pointer rounded-xl bg-emerald-500 px-4 py-2 text-sm font-semibold text-zinc-950 hover:bg-emerald-400 disabled:opacity-40">{saving ? "Saving…" : "Save"}</button>
+          <button type="button" onClick={save} disabled={saving} className="cursor-pointer rounded-xl bg-emerald-500 px-4 py-2 text-sm font-semibold text-zinc-950 hover:bg-emerald-400 disabled:opacity-40">{saving ? "Savingâ€¦" : "Save"}</button>
         </div>}>
         <div className="space-y-4">
           {formError && <p className="rounded-xl border border-red-500/20 bg-red-500/10 px-3 py-2 text-xs text-red-400">{formError}</p>}
@@ -137,9 +137,10 @@ export default function CategoriesPage() {
 
       <ConfirmDialog open={!!deleteTarget} title="Delete category?"
         message={deleteTarget ? `"${deleteTarget.name}" will be removed. Its menu items will be uncategorized.` : ""}
-        confirmLabel={deleting ? "Deleting…" : "Delete"}
+        confirmLabel={deleting ? "Deletingâ€¦" : "Delete"}
         onCancel={() => setDeleteTarget(null)} onConfirm={confirmDelete} />
       {ToastUI}
     </div>
   );
 }
+

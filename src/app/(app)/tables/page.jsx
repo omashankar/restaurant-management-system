@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import EmptyState from "@/components/ui/EmptyState";
@@ -6,7 +6,7 @@ import ListToolbar from "@/components/ui/ListToolbar";
 import Modal from "@/components/ui/Modal";
 import PaginationBar from "@/components/ui/PaginationBar";
 import { getCategoryBadge } from "@/lib/tableCategoryColors";
-import { usePaginatedList } from "@/lib/usePaginatedList";
+import { usePaginatedList } from "@/hooks/usePaginatedList";
 import { useToast } from "@/hooks/useToast";
 import { LayoutGrid, Pencil, Plus, RefreshCw, Table2, Trash2, Users } from "lucide-react";
 import Link from "next/link";
@@ -29,7 +29,7 @@ export default function TablesModulePage() {
   const [deleting, setDeleting] = useState(false);
   const { showToast, ToastUI } = useToast();
 
-  /* ── Fetch tables + areas ── */
+  /* â”€â”€ Fetch tables + areas â”€â”€ */
   const fetchAll = useCallback(async () => {
     setLoading(true);
     try {
@@ -153,7 +153,7 @@ export default function TablesModulePage() {
           </span>
           <div>
             <h1 className="text-2xl font-semibold tracking-tight text-zinc-50">Tables</h1>
-            <p className="mt-1 text-sm text-zinc-500">Floor layout · {total} table{total !== 1 ? "s" : ""}</p>
+            <p className="mt-1 text-sm text-zinc-500">Floor layout Â· {total} table{total !== 1 ? "s" : ""}</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -176,7 +176,7 @@ export default function TablesModulePage() {
       <ListToolbar
         search={search}
         onSearchChange={setSearch}
-        searchPlaceholder="Search table number…"
+        searchPlaceholder="Search table numberâ€¦"
         filterSlot={
           <div className="flex flex-wrap gap-2">
             <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}
@@ -271,7 +271,7 @@ export default function TablesModulePage() {
             </button>
             <button type="button" onClick={saveTable} disabled={saving}
               className="cursor-pointer rounded-xl bg-emerald-500 px-4 py-2 text-sm font-semibold text-zinc-950 hover:bg-emerald-400 disabled:opacity-40">
-              {saving ? "Saving…" : "Save"}
+              {saving ? "Savingâ€¦" : "Save"}
             </button>
           </div>
         }>
@@ -301,13 +301,13 @@ export default function TablesModulePage() {
               <label className="text-xs text-zinc-500">Area</label>
               {areas.length === 0 ? (
                 <div className="mt-1 rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-500">
-                  No areas —{" "}
+                  No areas â€”{" "}
                   <Link href="/tables/areas" className="cursor-pointer text-emerald-400 hover:text-emerald-300">create one</Link>
                 </div>
               ) : (
                 <select value={form.categoryId} onChange={(e) => setForm((f) => ({ ...f, categoryId: e.target.value }))}
                   className="cursor-pointer mt-1 w-full rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus:border-emerald-500/50">
-                  <option value="">— Select area —</option>
+                  <option value="">â€” Select area â€”</option>
                   {areas.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}
                 </select>
               )}
@@ -320,7 +320,7 @@ export default function TablesModulePage() {
         open={!!deleteTarget}
         title="Remove table?"
         message={deleteTarget ? `Table ${deleteTarget.tableNumber} will be deleted.` : ""}
-        confirmLabel={deleting ? "Deleting…" : "Delete"}
+        confirmLabel={deleting ? "Deletingâ€¦" : "Delete"}
         onCancel={() => setDeleteTarget(null)}
         onConfirm={confirmDelete}
       />
@@ -328,3 +328,4 @@ export default function TablesModulePage() {
     </div>
   );
 }
+
