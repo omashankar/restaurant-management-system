@@ -15,22 +15,22 @@ export default function CartDrawer() {
         <button
           type="button"
           aria-label="Close cart"
-          className="cursor-pointer fixed inset-0 z-40 bg-black/60 backdrop-blur-sm"
+          className="cursor-pointer fixed inset-0 z-40 bg-black/35 backdrop-blur-sm"
           onClick={() => setCartOpen(false)}
         />
       )}
 
       {/* Drawer */}
       <div
-        className={`fixed right-0 top-0 z-50 flex h-full w-full max-w-sm flex-col border-l border-zinc-800 bg-zinc-950 shadow-2xl transition-transform duration-300 ${
+        className={`fixed right-0 top-0 z-50 flex h-full w-full max-w-sm flex-col border-l border-zinc-200 bg-white shadow-2xl transition-transform duration-300 ${
           cartOpen ? "translate-x-0" : "translate-x-full"
         }`}
       >
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-zinc-800 px-5 py-4">
+        <div className="flex items-center justify-between border-b border-zinc-200 px-5 py-4">
           <div className="flex items-center gap-2">
-            <ShoppingCart className="size-5 text-emerald-400" />
-            <h2 className="text-base font-semibold text-zinc-100">Your Cart</h2>
+            <ShoppingCart className="size-5 text-emerald-600" />
+            <h2 className="text-base font-semibold text-zinc-900">Your Cart</h2>
             {itemCount > 0 && (
               <span className="rounded-full bg-emerald-500 px-2 py-0.5 text-xs font-bold text-zinc-950">
                 {itemCount}
@@ -40,7 +40,7 @@ export default function CartDrawer() {
           <button
             type="button"
             onClick={() => setCartOpen(false)}
-            className="cursor-pointer rounded-lg p-2 text-zinc-500 hover:bg-zinc-800 hover:text-zinc-200"
+            className="cursor-pointer rounded-lg p-2 text-zinc-500 hover:bg-zinc-100 hover:text-zinc-800"
           >
             <X className="size-5" />
           </button>
@@ -50,9 +50,9 @@ export default function CartDrawer() {
         <div className="flex-1 overflow-y-auto px-5 py-4">
           {lines.length === 0 ? (
             <div className="flex flex-col items-center justify-center gap-3 py-20 text-center">
-              <ShoppingCart className="size-12 text-zinc-700" />
-              <p className="text-sm font-medium text-zinc-400">Your cart is empty</p>
-              <p className="text-xs text-zinc-600">Add items from the menu to get started</p>
+              <ShoppingCart className="size-12 text-zinc-400" />
+              <p className="text-sm font-medium text-zinc-700">Your cart is empty</p>
+              <p className="text-xs text-zinc-500">Add items from the menu to get started</p>
               <Link
                 href="/order/menu"
                 onClick={() => setCartOpen(false)}
@@ -64,38 +64,38 @@ export default function CartDrawer() {
           ) : (
             <ul className="space-y-3">
               {lines.map((line) => (
-                <li key={line.id} className="flex gap-3 rounded-xl border border-zinc-800 bg-zinc-900/60 p-3">
+                <li key={line.id} className="flex gap-3 rounded-xl border border-zinc-200 bg-zinc-50 p-3">
                   {/* Image */}
                   {line.image ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img src={line.image} alt={line.name} className="size-14 shrink-0 rounded-lg object-cover" />
                   ) : (
-                    <div className="flex size-14 shrink-0 items-center justify-center rounded-lg bg-zinc-800 text-2xl">
+                    <div className="flex size-14 shrink-0 items-center justify-center rounded-lg bg-zinc-200 text-2xl">
                       🍽️
                     </div>
                   )}
 
                   {/* Info */}
                   <div className="flex flex-1 flex-col gap-1.5">
-                    <p className="text-sm font-semibold leading-tight text-zinc-100">{line.name}</p>
-                    <p className="text-xs font-bold text-emerald-400">${(line.price * line.qty).toFixed(2)}</p>
+                    <p className="text-sm font-semibold leading-tight text-zinc-900">{line.name}</p>
+                    <p className="text-xs font-bold text-emerald-700">${(line.price * line.qty).toFixed(2)}</p>
 
                     {/* Qty controls */}
                     <div className="flex items-center gap-2">
                       <button
                         type="button"
                         onClick={() => line.qty === 1 ? removeItem(line.id) : setQty(line.id, line.qty - 1)}
-                        className="cursor-pointer flex size-6 items-center justify-center rounded-md border border-zinc-700 bg-zinc-800 text-zinc-300 hover:border-zinc-600 hover:text-zinc-100"
+                        className="cursor-pointer flex size-6 items-center justify-center rounded-md border border-zinc-300 bg-white text-zinc-700 hover:border-zinc-400 hover:text-zinc-900"
                       >
                         <Minus className="size-3" />
                       </button>
-                      <span className="min-w-[1.5rem] text-center text-sm font-semibold text-zinc-100">
+                      <span className="min-w-[1.5rem] text-center text-sm font-semibold text-zinc-900">
                         {line.qty}
                       </span>
                       <button
                         type="button"
                         onClick={() => setQty(line.id, line.qty + 1)}
-                        className="cursor-pointer flex size-6 items-center justify-center rounded-md border border-zinc-700 bg-zinc-800 text-zinc-300 hover:border-zinc-600 hover:text-zinc-100"
+                        className="cursor-pointer flex size-6 items-center justify-center rounded-md border border-zinc-300 bg-white text-zinc-700 hover:border-zinc-400 hover:text-zinc-900"
                       >
                         <Plus className="size-3" />
                       </button>
@@ -106,7 +106,7 @@ export default function CartDrawer() {
                   <button
                     type="button"
                     onClick={() => removeItem(line.id)}
-                    className="cursor-pointer self-start rounded-lg p-1.5 text-zinc-600 hover:bg-zinc-800 hover:text-red-400"
+                    className="cursor-pointer self-start rounded-lg p-1.5 text-zinc-500 hover:bg-zinc-100 hover:text-red-500"
                   >
                     <Trash2 className="size-4" />
                   </button>
@@ -118,13 +118,13 @@ export default function CartDrawer() {
 
         {/* Footer */}
         {lines.length > 0 && (
-          <div className="border-t border-zinc-800 px-5 py-4 space-y-3">
+          <div className="border-t border-zinc-200 px-5 py-4 space-y-3">
             <div className="flex items-center justify-between text-sm">
-              <span className="text-zinc-400">Subtotal</span>
-              <span className="font-bold text-zinc-100">${subtotal.toFixed(2)}</span>
+              <span className="text-zinc-600">Subtotal</span>
+              <span className="font-bold text-zinc-900">${subtotal.toFixed(2)}</span>
             </div>
             {cart.maxPrepTime > 0 && (
-              <p className="text-xs text-zinc-500">Est. prep time: ~{cart.maxPrepTime} min</p>
+              <p className="text-xs text-zinc-600">Est. prep time: ~{cart.maxPrepTime} min</p>
             )}
             <Link
               href="/order/cart"

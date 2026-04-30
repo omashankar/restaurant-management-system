@@ -20,7 +20,7 @@ function Field({ label, required, children }) {
   );
 }
 
-const inputCls = "w-full rounded-xl border border-zinc-700 bg-zinc-950/60 px-3.5 py-3 text-sm text-zinc-100 outline-none transition-all focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/15 placeholder:text-zinc-600";
+const inputCls = "w-full rounded-xl border border-zinc-300 bg-white px-3.5 py-3 text-sm text-zinc-900 outline-none transition-all focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/15 placeholder:text-zinc-500";
 
 export default function CheckoutPage() {
   const { cart, orderType, customer, updateCustomer, showToast, setOrderTypeModalOpen } = useCustomer();
@@ -42,7 +42,7 @@ export default function CheckoutPage() {
   if (!orderType) {
     return (
       <div className="flex min-h-[60vh] flex-col items-center justify-center gap-5 px-4 text-center">
-        <p className="text-zinc-300">Please select an order type first.</p>
+        <p className="text-zinc-700">Please select an order type first.</p>
         <button
           type="button"
           onClick={() => setOrderTypeModalOpen(true)}
@@ -106,10 +106,13 @@ export default function CheckoutPage() {
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-10 sm:px-6 lg:px-8">
-      <div className="mb-8 flex items-center gap-3">
-        <Link href="/order/cart" className="cursor-pointer text-sm text-zinc-500 hover:text-zinc-300">← Cart</Link>
-        <span className="text-zinc-700">/</span>
-        <h1 className="text-2xl font-bold text-zinc-50">Checkout</h1>
+      <div className="mb-8 rounded-2xl border border-zinc-200 bg-white/85 px-5 py-4 shadow-sm">
+        <div className="flex items-center gap-3">
+        <Link href="/order/cart" className="cursor-pointer text-sm text-zinc-500 hover:text-zinc-800">← Cart</Link>
+        <span className="text-zinc-400">/</span>
+        <h1 className="text-2xl font-bold text-zinc-900">Checkout</h1>
+        </div>
+        <p className="mt-1 text-xs text-zinc-600">Complete your details to place order securely.</p>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-3">
@@ -118,23 +121,24 @@ export default function CheckoutPage() {
         <div className="space-y-5 lg:col-span-2">
 
           {/* Order type */}
-          <div className="flex items-center justify-between rounded-2xl border border-zinc-800 bg-zinc-900/60 px-4 py-3.5">
+          <div className="flex items-center justify-between rounded-2xl border border-zinc-200 bg-white px-4 py-3.5 shadow-sm">
             <div className="flex items-center gap-2.5">
-              {TypeIcon && <TypeIcon className="size-4 text-emerald-400" />}
-              <span className="text-sm font-medium text-zinc-200">{TYPE_LABEL[orderType]}</span>
+              {TypeIcon && <TypeIcon className="size-4 text-emerald-600" />}
+              <span className="text-sm font-medium text-zinc-900">{TYPE_LABEL[orderType]}</span>
             </div>
             <button
               type="button"
               onClick={() => setOrderTypeModalOpen(true)}
-              className="cursor-pointer rounded-lg border border-zinc-700 px-3 py-1.5 text-xs font-semibold text-zinc-300 hover:border-emerald-500/40 hover:text-emerald-400"
+              className="cursor-pointer rounded-lg border border-zinc-300 px-3 py-1.5 text-xs font-semibold text-zinc-700 hover:border-emerald-500/40 hover:text-emerald-700"
             >
               Change
             </button>
           </div>
 
           {/* Customer details */}
-          <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-6">
-            <h2 className="mb-5 text-sm font-bold uppercase tracking-wider text-zinc-400">Your Details</h2>
+          <div className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm">
+            <h2 className="mb-5 text-sm font-bold uppercase tracking-wider text-zinc-600">Your Details</h2>
+            <p className="mb-4 text-xs text-zinc-500">Fields marked with * are required to place your order.</p>
             <div className="grid gap-4 sm:grid-cols-2">
               <Field label="Full Name" required>
                 <input value={customer.name} onChange={(e) => updateCustomer({ name: e.target.value })} placeholder="Your name" className={inputCls} />
@@ -163,21 +167,21 @@ export default function CheckoutPage() {
 
         {/* ── Order summary ── */}
         <div className="lg:col-span-1">
-          <div className="sticky top-24 rounded-2xl border border-zinc-800 bg-zinc-900/60 p-5">
-            <h2 className="mb-4 text-sm font-bold uppercase tracking-wider text-zinc-400">Order Summary</h2>
+          <div className="sticky top-24 rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm">
+            <h2 className="mb-4 text-sm font-bold uppercase tracking-wider text-zinc-600">Order Summary</h2>
             <ul className="space-y-2.5">
               {lines.map((l) => (
                 <li key={l.id} className="flex items-start justify-between gap-2 text-sm">
-                  <span className="text-zinc-400">{l.qty}× <span className="text-zinc-200">{l.name}</span></span>
-                  <span className="shrink-0 font-medium text-zinc-200">${(l.price * l.qty).toFixed(2)}</span>
+                  <span className="text-zinc-600">{l.qty}× <span className="text-zinc-900">{l.name}</span></span>
+                  <span className="shrink-0 font-medium text-zinc-900">${(l.price * l.qty).toFixed(2)}</span>
                 </li>
               ))}
             </ul>
-            <div className="mt-4 space-y-2 border-t border-zinc-800 pt-4 text-sm">
-              <div className="flex justify-between text-zinc-400"><span>Subtotal</span><span>${subtotal.toFixed(2)}</span></div>
-              <div className="flex justify-between text-zinc-400"><span>Tax (8%)</span><span>${tax.toFixed(2)}</span></div>
-              <div className="flex justify-between pt-1 text-base font-bold text-zinc-100">
-                <span>Total</span><span className="text-emerald-400">${total.toFixed(2)}</span>
+            <div className="mt-4 space-y-2 border-t border-zinc-200 pt-4 text-sm">
+              <div className="flex justify-between text-zinc-600"><span>Subtotal</span><span>${subtotal.toFixed(2)}</span></div>
+              <div className="flex justify-between text-zinc-600"><span>Tax (8%)</span><span>${tax.toFixed(2)}</span></div>
+              <div className="flex justify-between pt-1 text-base font-bold text-zinc-900">
+                <span>Total</span><span className="text-emerald-700">${total.toFixed(2)}</span>
               </div>
             </div>
             <button

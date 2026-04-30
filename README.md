@@ -94,6 +94,13 @@ Create a `.env` file before running:
 - Required checks: `npm run lint` and `npm run build`
 - Local tests: `npm run test`
 
+## 🧪 Dev Troubleshooting
+- **Hydration mismatch with `bis_skin_checked` attribute**
+  - If you see React/Next hydration warnings mentioning `bis_skin_checked`, this is usually caused by a browser extension injecting attributes into the DOM before React hydrates.
+  - This is not an RMS application bug.
+  - Verify by opening the app in Incognito mode (extensions disabled) or disabling extensions for `localhost`.
+  - Keep problematic extensions off while local development/testing to avoid noisy hydration warnings.
+
 ## 🤝 Contributing
 Contributions are welcome.
 

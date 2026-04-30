@@ -2,6 +2,10 @@
 
 import { useCustomer } from "@/context/CustomerContext";
 import { useModuleData } from "@/context/ModuleDataContext";
+import {
+  CUSTOMER_MENU_CONTENT,
+  CUSTOMER_MENU_TYPE_FILTERS,
+} from "@/config/customerMenuContent";
 import { ITEM_TYPE_META } from "@/types/menu";
 import { Bike, Clock, ConciergeBell, Plus, Search, ShoppingCart, Store, Zap } from "lucide-react";
 import Link from "next/link";
@@ -11,9 +15,9 @@ const TYPE_ICON  = { "dine-in": Store, takeaway: ConciergeBell, delivery: Bike }
 const TYPE_LABEL = { "dine-in": "Dine-In", takeaway: "Takeaway", delivery: "Delivery" };
 
 function typeButtonClass(type) {
-  if (type === "dine-in")  return "text-emerald-400 border-emerald-500/30 bg-emerald-500/10";
-  if (type === "takeaway") return "text-indigo-400 border-indigo-500/30 bg-indigo-500/10";
-  if (type === "delivery") return "text-sky-400 border-sky-500/30 bg-sky-500/10";
+  if (type === "dine-in")  return "text-emerald-700 border-emerald-500/30 bg-emerald-500/10";
+  if (type === "takeaway") return "text-indigo-700 border-indigo-500/30 bg-indigo-500/10";
+  if (type === "delivery") return "text-sky-700 border-sky-500/30 bg-sky-500/10";
   return "";
 }
 
@@ -51,10 +55,12 @@ export default function CustomerMenuPage() {
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
 
       {/* Header */}
-      <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="mb-6 flex flex-col gap-4 rounded-2xl border border-zinc-200 bg-white/85 p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-zinc-50">Our Menu</h1>
-          <p className="mt-1 text-sm text-zinc-500">{filtered.length} items available</p>
+          <h1 className="text-2xl font-bold text-zinc-900">{CUSTOMER_MENU_CONTENT.title}</h1>
+          <p className="mt-1 text-sm text-zinc-600">
+            {filtered.length} {CUSTOMER_MENU_CONTENT.subtitle}
+          </p>
         </div>
         <div className="flex items-center gap-2">
           {/* Order type indicator */}
@@ -66,15 +72,15 @@ export default function CustomerMenuPage() {
             >
               {OrderTypeIcon && <OrderTypeIcon className="size-3.5" />}
               {TYPE_LABEL[orderType]}
-              <span className="text-zinc-500">· Change</span>
+              <span className="text-zinc-500">· {CUSTOMER_MENU_CONTENT.changeOrderType}</span>
             </button>
           ) : (
             <button
               type="button"
               onClick={() => setOrderTypeModalOpen(true)}
-              className="cursor-pointer inline-flex items-center gap-1.5 rounded-xl border border-zinc-700 bg-zinc-800/60 px-3 py-2 text-xs font-semibold text-zinc-300 hover:border-emerald-500/40 hover:text-emerald-400"
+              className="cursor-pointer inline-flex items-center gap-1.5 rounded-xl border border-zinc-300 bg-white px-3 py-2 text-xs font-semibold text-zinc-700 hover:border-emerald-500/40 hover:text-emerald-700"
             >
-              Select Order Type
+              {CUSTOMER_MENU_CONTENT.selectOrderType}
             </button>
           )}
           {cart.itemCount > 0 && (
@@ -83,7 +89,7 @@ export default function CustomerMenuPage() {
               className="cursor-pointer inline-flex items-center gap-2 rounded-xl bg-emerald-500 px-4 py-2 text-xs font-bold text-zinc-950 shadow-lg shadow-emerald-500/20 hover:bg-emerald-400"
             >
               <ShoppingCart className="size-3.5" />
-              Cart ({cart.itemCount}) · ${cart.subtotal.toFixed(2)}
+              {CUSTOMER_MENU_CONTENT.cartLabel} ({cart.itemCount}) · ${cart.subtotal.toFixed(2)}
             </Link>
           )}
         </div>
@@ -91,25 +97,25 @@ export default function CustomerMenuPage() {
 
       {/* Search */}
       <div className="relative mb-4">
-        <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-zinc-500" />
+        <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-zinc-400" />
         <input
           type="search"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          placeholder="Search dishes…"
-          className="w-full rounded-xl border border-zinc-800 bg-zinc-900/60 py-2.5 pl-10 pr-4 text-sm text-zinc-100 outline-none focus:border-emerald-500/40 focus:ring-2 focus:ring-emerald-500/15"
+          placeholder={CUSTOMER_MENU_CONTENT.searchPlaceholder}
+          className="w-full rounded-xl border border-zinc-300 bg-white py-2.5 pl-10 pr-4 text-sm text-zinc-900 outline-none focus:border-emerald-500/40 focus:ring-2 focus:ring-emerald-500/15"
         />
       </div>
 
       {/* Category tabs */}
       <div className="mb-3 flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none]">
-        {[{ id: "all", name: "All" }, ...categories].map((c) => (
+        {[{ id: "all", name: CUSTOMER_MENU_CONTENT.allCategoryLabel }, ...categories].map((c) => (
           <button
             key={c.id}
             type="button"
             onClick={() => setActiveCategory(c.id)}
             className={`cursor-pointer shrink-0 rounded-full px-4 py-1.5 text-xs font-semibold transition-all ${
-              activeCategory === c.id ? "bg-emerald-500 text-zinc-950" : "bg-zinc-800 text-zinc-400 hover:text-zinc-200"
+              activeCategory === c.id ? "bg-emerald-500 text-zinc-950" : "bg-zinc-100 text-zinc-700 hover:text-zinc-900"
             }`}
           >
             {c.name}
@@ -119,7 +125,7 @@ export default function CustomerMenuPage() {
 
       {/* Type filters */}
       <div className="mb-6 flex flex-wrap gap-2">
-        {["all", "veg", "non-veg", "drink"].map((t) => {
+        {CUSTOMER_MENU_TYPE_FILTERS.map((t) => {
           const meta = ITEM_TYPE_META[t];
           return (
             <button
@@ -129,11 +135,11 @@ export default function CustomerMenuPage() {
               className={`cursor-pointer inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold transition-all ${
                 activeType === t
                   ? t === "all" ? "bg-zinc-200 text-zinc-900" : meta?.badge ?? ""
-                  : "bg-zinc-900 text-zinc-400 ring-1 ring-zinc-800 hover:text-zinc-200"
+                  : "bg-white text-zinc-600 ring-1 ring-zinc-300 hover:text-zinc-900"
               }`}
             >
               {t !== "all" && <span className={`size-1.5 rounded-full ${meta?.dot}`} />}
-              {t === "all" ? "All Types" : meta?.label}
+              {t === "all" ? CUSTOMER_MENU_CONTENT.allTypesLabel : meta?.label}
             </button>
           );
         })}
@@ -141,19 +147,19 @@ export default function CustomerMenuPage() {
           type="button"
           onClick={() => setFastOnly((v) => !v)}
           className={`cursor-pointer inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold transition-all ${
-            fastOnly ? "bg-amber-500/20 text-amber-300 ring-1 ring-amber-500/30" : "bg-zinc-900 text-zinc-400 ring-1 ring-zinc-800 hover:text-zinc-200"
+            fastOnly ? "bg-amber-100 text-amber-700 ring-1 ring-amber-300" : "bg-white text-zinc-600 ring-1 ring-zinc-300 hover:text-zinc-900"
           }`}
         >
-          <Zap className="size-3" /> Fast ({"<"}10 min)
+          <Zap className="size-3" /> {CUSTOMER_MENU_CONTENT.fastFilterLabel}
         </button>
       </div>
 
       {/* Grid */}
       {filtered.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 text-center">
-          <p className="text-zinc-500">No items match your filters.</p>
-          <button type="button" onClick={() => { setSearch(""); setActiveCategory("all"); setActiveType("all"); setFastOnly(false); }} className="cursor-pointer mt-3 text-sm font-medium text-emerald-400 hover:text-emerald-300">
-            Clear filters
+          <p className="text-zinc-600">{CUSTOMER_MENU_CONTENT.emptyStateTitle}</p>
+          <button type="button" onClick={() => { setSearch(""); setActiveCategory("all"); setActiveType("all"); setFastOnly(false); }} className="cursor-pointer mt-3 text-sm font-medium text-emerald-700 hover:text-emerald-800">
+            {CUSTOMER_MENU_CONTENT.clearFiltersLabel}
           </button>
         </div>
       ) : (
@@ -163,11 +169,11 @@ export default function CustomerMenuPage() {
             const inCart = cart.lines.find((l) => l.id === item.id);
             const isFast = (item.prepTime ?? 99) < 10;
             return (
-              <article key={item.id} className="group flex flex-col overflow-hidden rounded-2xl border border-zinc-800 bg-zinc-900/60 transition-all hover:-translate-y-0.5 hover:border-zinc-700 hover:shadow-lg hover:shadow-black/30">
-                <div className="relative aspect-[16/9] overflow-hidden bg-zinc-950">
+              <article key={item.id} className="group flex flex-col overflow-hidden rounded-2xl border border-zinc-200 bg-white transition-all hover:-translate-y-0.5 hover:border-zinc-300 hover:shadow-lg">
+                <div className="relative aspect-[16/9] overflow-hidden bg-zinc-100">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={item.image} alt={item.name} className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105" />
-                  <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-zinc-950/70 via-zinc-950/10 to-transparent" />
+                  <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-zinc-900/40 via-transparent to-transparent" />
                   {typeMeta && (
                     <span className={`absolute left-2 top-2 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[9px] font-bold ring-1 backdrop-blur-sm ${typeMeta.badge}`}>
                       <span className={`size-1.5 rounded-full ${typeMeta.dot}`} />
@@ -175,29 +181,29 @@ export default function CustomerMenuPage() {
                     </span>
                   )}
                   {item.prepTime != null && (
-                    <span className={`absolute right-2 top-2 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[9px] font-semibold backdrop-blur-sm ${isFast ? "bg-amber-400 text-zinc-950" : "bg-zinc-950/80 text-zinc-300"}`}>
+                    <span className={`absolute right-2 top-2 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[9px] font-semibold backdrop-blur-sm ${isFast ? "bg-amber-400 text-zinc-950" : "bg-white/90 text-zinc-700"}`}>
                       {isFast ? <Zap className="size-2.5" /> : <Clock className="size-2.5" />}
                       {item.prepTime}m
                     </span>
                   )}
-                  <span className="absolute bottom-2 right-2 rounded-lg bg-zinc-950/80 px-2.5 py-1 text-sm font-bold text-emerald-400 backdrop-blur-sm">
+                  <span className="absolute bottom-2 right-2 rounded-lg bg-white/90 px-2.5 py-1 text-sm font-bold text-emerald-700 backdrop-blur-sm">
                     ${item.price.toFixed(2)}
                   </span>
                 </div>
                 <div className="flex flex-1 flex-col gap-1.5 p-3">
-                  <h3 className="line-clamp-1 text-sm font-semibold text-zinc-100">{item.name}</h3>
-                  {item.description && <p className="line-clamp-1 text-[11px] text-zinc-500">{item.description}</p>}
+                  <h3 className="line-clamp-1 text-sm font-semibold text-zinc-900">{item.name}</h3>
+                  {item.description && <p className="line-clamp-1 text-[11px] text-zinc-600">{item.description}</p>}
                   <button
                     type="button"
                     onClick={() => handleAdd(item)}
                     className={`cursor-pointer mt-auto flex w-full items-center justify-center gap-1.5 rounded-xl py-2 text-xs font-bold transition-all active:scale-95 ${
                       inCart
-                        ? "bg-emerald-500/20 text-emerald-300 ring-1 ring-emerald-500/30 hover:bg-emerald-500/30"
+                        ? "bg-emerald-500/15 text-emerald-700 ring-1 ring-emerald-500/30 hover:bg-emerald-500/20"
                         : "bg-emerald-500 text-zinc-950 hover:bg-emerald-400"
                     }`}
                   >
                     <Plus className="size-3.5" />
-                    {inCart ? `In Cart (${inCart.qty})` : "Add to Cart"}
+                    {inCart ? `${CUSTOMER_MENU_CONTENT.inCartLabel} (${inCart.qty})` : CUSTOMER_MENU_CONTENT.addToCartLabel}
                   </button>
                 </div>
               </article>
@@ -216,7 +222,7 @@ export default function CustomerMenuPage() {
             <span className="flex size-7 items-center justify-center rounded-lg bg-emerald-600 text-xs font-bold text-white">
               {cart.itemCount}
             </span>
-            <span className="text-sm font-bold text-zinc-950">View Cart</span>
+            <span className="text-sm font-bold text-zinc-950">{CUSTOMER_MENU_CONTENT.viewCartLabel}</span>
             <span className="text-sm font-bold text-zinc-950">${cart.subtotal.toFixed(2)}</span>
           </Link>
         </div>
