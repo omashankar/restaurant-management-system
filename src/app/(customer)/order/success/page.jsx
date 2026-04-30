@@ -23,7 +23,7 @@ function SuccessContent() {
 
       <h1 className="mt-7 text-3xl font-bold text-zinc-50">Order Placed!</h1>
       <p className="mt-2 max-w-sm text-sm text-zinc-400">
-        Your order has been received and is being prepared. We'll have it ready soon.
+        Your order has been received and is being prepared. We&apos;ll have it ready soon.
       </p>
 
       {/* Order ID */}

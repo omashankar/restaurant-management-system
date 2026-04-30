@@ -11,6 +11,8 @@ It is useful for restaurants, cafes, cloud kitchens, and multi-outlet food busin
 ## ✨ Features
 - Dashboard
 - POS (Dine-in, Takeaway, Delivery)
+- Role-based authentication (Super Admin, Admin, Manager, Waiter, Chef)
+- Email verification flow for new accounts
 - Menu Management
   - Menu Items
   - Categories
@@ -26,6 +28,7 @@ It is useful for restaurants, cafes, cloud kitchens, and multi-outlet food busin
 - Next.js
 - React
 - Tailwind CSS
+- MongoDB
 
 ## ⚙️ Installation
 1. Clone the repository
@@ -46,6 +49,17 @@ It is useful for restaurants, cafes, cloud kitchens, and multi-outlet food busin
    ```
 5. Open in browser:
    - `http://localhost:3000`
+
+## 🔐 Environment Variables
+Create a `.env` file before running:
+
+- `MONGODB_URI` - MongoDB connection string
+- `JWT_SECRET` - secret key for auth token signing
+- `JWT_EXPIRES_IN`, `JWT_REFRESH_EXPIRES_IN` - optional token lifetimes (default `15m` and `30d`)
+- `NEXT_PUBLIC_APP_URL` - app base URL (for email verification links)
+- `EMAIL_USER`, `EMAIL_PASS`, `EMAIL_FROM` - SMTP credentials for verification emails
+- `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN` - optional distributed rate limiting
+- `LOG_WEBHOOK_URL` - optional external observability webhook for structured logs
 
 ## 📁 Project Structure
 - `components/` → reusable UI components
@@ -75,11 +89,10 @@ It is useful for restaurants, cafes, cloud kitchens, and multi-outlet food busin
 - **Reservations** → Handle booking flow and table planning
 - **Customers** → Store and manage customer information
 
-## 🔮 Future Improvements
-- Backend integration
-- Authentication system
-- API integration
-- Advanced reports and analytics
+## ✅ Quality Gates
+- CI workflow runs on push/PR (`.github/workflows/ci.yml`)
+- Required checks: `npm run lint` and `npm run build`
+- Local tests: `npm run test`
 
 ## 🤝 Contributing
 Contributions are welcome.

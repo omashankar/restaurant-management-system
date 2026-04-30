@@ -10,6 +10,7 @@
  */
 
 import * as Icons from "lucide-react";
+import { createElement } from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 /* ─────────────────────────────────────────
@@ -31,6 +32,11 @@ const PAGE_SIZE = 96; // icons rendered per "page"
 /** Resolve name → component. Falls back to Circle. */
 function getIcon(name) {
   return Icons[name] ?? Icons["Circle"];
+}
+
+function renderIcon(name, className) {
+  const IconRef = getIcon(name);
+  return createElement(IconRef, { className });
 }
 
 /* ─────────────────────────────────────────
@@ -55,7 +61,10 @@ export default function IconPicker({ value, onChange, label = "Icon" }) {
   const visible = useMemo(() => filtered.slice(0, page * PAGE_SIZE), [filtered, page]);
 
   /* Reset page when search changes */
-  useEffect(() => { setPage(1); }, [search]);
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setPage(1);
+  }, [search]);
 
   /* Auto-focus search when dropdown opens */
   useEffect(() => {
@@ -90,7 +99,6 @@ export default function IconPicker({ value, onChange, label = "Icon" }) {
     }
   }
 
-  const SelectedIcon = getIcon(value);
   const hasMore = visible.length < filtered.length;
 
   return (
@@ -109,7 +117,7 @@ export default function IconPicker({ value, onChange, label = "Icon" }) {
         className="flex w-full items-center gap-2.5 rounded-xl border border-zinc-800 bg-zinc-950/80 px-3 py-2.5 text-sm text-zinc-200 transition-colors hover:border-zinc-600 focus:outline-none focus:border-indigo-500"
       >
         <span className="inline-flex size-7 shrink-0 items-center justify-center rounded-lg bg-indigo-500/20 text-indigo-400">
-          <SelectedIcon className="size-4" />
+          {renderIcon(value, "size-4")}
         </span>
         <span className="flex-1 text-left text-zinc-200">
           {value || <span className="text-zinc-500">Select icon…</span>}
@@ -216,7 +224,7 @@ export default function IconPicker({ value, onChange, label = "Icon" }) {
           {value && (
             <div className="flex items-center gap-2 border-t border-zinc-800 px-3 py-2.5">
               <span className="inline-flex size-6 items-center justify-center rounded-lg bg-indigo-500/20 text-indigo-400">
-                <SelectedIcon className="size-3.5" />
+                {renderIcon(value, "size-3.5")}
               </span>
               <span className="text-xs text-zinc-400">
                 Selected: <span className="font-medium text-zinc-200">{value}</span>

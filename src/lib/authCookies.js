@@ -1,4 +1,5 @@
 export const TOKEN_COOKIE = "rms_token";
+export const REFRESH_COOKIE = "rms_refresh_token";
 
 const IS_PROD = process.env.NODE_ENV === "production";
 
@@ -10,7 +11,7 @@ const IS_PROD = process.env.NODE_ENV === "production";
 export function setTokenCookie(response, token, rememberMe = false) {
   const maxAge = rememberMe ? 60 * 60 * 24 * 30 : 60 * 60 * 24 * 7;
   const secure = IS_PROD ? "; Secure" : "";
-  const cookie = `${TOKEN_COOKIE}=${token}; HttpOnly; Path=/; Max-Age=${maxAge}; SameSite=Lax${secure}`;
+  const cookie = `${TOKEN_COOKIE}=${token}; HttpOnly; Path=/; Max-Age=${maxAge}; SameSite=Lax; Priority=High${secure}`;
 
   // Collect existing headers then add Set-Cookie
   const headers = new Headers(response.headers);
@@ -29,7 +30,7 @@ export function setTokenCookie(response, token, rememberMe = false) {
  */
 export function clearTokenCookie(response) {
   const secure = IS_PROD ? "; Secure" : "";
-  const cookie = `${TOKEN_COOKIE}=; HttpOnly; Path=/; Max-Age=0; SameSite=Lax${secure}`;
+  const cookie = `${TOKEN_COOKIE}=; HttpOnly; Path=/; Max-Age=0; SameSite=Lax; Priority=High${secure}`;
 
   const headers = new Headers(response.headers);
   headers.set("Set-Cookie", cookie);
@@ -44,4 +45,32 @@ export function clearTokenCookie(response) {
 /** Read token from request cookies */
 export function getTokenFromRequest(request) {
   return request.cookies.get(TOKEN_COOKIE)?.value ?? null;
+}
+
+export function setRefreshTokenCookie(response, token) {
+  const secure = IS_PROD ? "; Secure" : "";
+  const cookie = `${REFRESH_COOKIE}=${token}; HttpOnly; Path=/; Max-Age=${60 * 60 * 24 * 30}; SameSite=Strict; Priority=High${secure}`;
+  const headers = new Headers(response.headers);
+  headers.append("Set-Cookie", cookie);
+  return new Response(response.body, {
+    status: response.status,
+    statusText: response.statusText,
+    headers,
+  });
+}
+
+export function clearRefreshTokenCookie(response) {
+  const secure = IS_PROD ? "; Secure" : "";
+  const cookie = `${REFRESH_COOKIE}=; HttpOnly; Path=/; Max-Age=0; SameSite=Strict; Priority=High${secure}`;
+  const headers = new Headers(response.headers);
+  headers.append("Set-Cookie", cookie);
+  return new Response(response.body, {
+    status: response.status,
+    statusText: response.statusText,
+    headers,
+  });
+}
+
+export function getRefreshTokenFromRequest(request) {
+  return request.cookies.get(REFRESH_COOKIE)?.value ?? null;
 }

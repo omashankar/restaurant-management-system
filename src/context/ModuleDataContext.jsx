@@ -91,17 +91,16 @@ export function ModuleDataProvider({ children }) {
   const [kitchenQueue, setKitchenQueue] = useState([]);
 
   useEffect(() => {
-    // Restore non-API session state (orders, kitchen queue, optional floor/staff fallback)
+    // Restore non-API session state (optional floor/staff fallback only)
     try {
       const raw = sessionStorage.getItem(KEY);
       if (raw) {
         const d = JSON.parse(raw);
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         if (d.tableCategories) setTableCategories(d.tableCategories);
         if (d.floorTables)     setFloorTables(d.floorTables);
         if (d.staffRows)       setStaffRows(d.staffRows);
         if (d.inventoryHistory) setInventoryHistory(d.inventoryHistory);
-        if (d.orderRows)       setOrderRows(d.orderRows);
-        if (d.kitchenQueue)    setKitchenQueue(d.kitchenQueue);
       }
     } catch {
       sessionStorage.removeItem(KEY);
@@ -124,6 +123,7 @@ export function ModuleDataProvider({ children }) {
           customersRes,
           reservationsRes,
           inventoryRes,
+          ordersRes,
         ] = await Promise.all([
           fetch("/api/menu"),
           fetch("/api/categories"),
@@ -132,6 +132,7 @@ export function ModuleDataProvider({ children }) {
           fetch("/api/customers"),
           fetch("/api/reservations"),
           fetch("/api/inventory"),
+          fetch("/api/orders"),
         ]);
         const [
           menuData,
@@ -141,6 +142,7 @@ export function ModuleDataProvider({ children }) {
           customersData,
           reservationsData,
           inventoryData,
+          ordersData,
         ] = await Promise.all([
           menuRes.json(),
           catRes.json(),
@@ -149,6 +151,7 @@ export function ModuleDataProvider({ children }) {
           customersRes.json(),
           reservationsRes.json(),
           inventoryRes.json(),
+          ordersRes.json(),
         ]);
         if (menuData.success   && Array.isArray(menuData.items))        setMenuItems(menuData.items);
         if (catData.success    && Array.isArray(catData.categories))    setCategories(catData.categories);
@@ -162,6 +165,12 @@ export function ModuleDataProvider({ children }) {
         }
         if (inventoryData.success && Array.isArray(inventoryData.items)) {
           setInventoryRows(inventoryData.items.map(normalizeInventoryItem));
+        }
+        if (ordersData.success && Array.isArray(ordersData.orders)) {
+          setOrderRows(ordersData.orders);
+          setKitchenQueue(
+            ordersData.orders.filter((o) => ["new", "preparing", "ready"].includes(o.status))
+          );
         }
       } catch (err) {
         console.error("[ModuleDataContext] Failed to fetch module data:", err.message);
@@ -201,20 +210,17 @@ export function ModuleDataProvider({ children }) {
       JSON.stringify({
         staffRows,
         inventoryHistory,
-        orderRows,
-        kitchenQueue,
       })
     );
   }, [
     hydrated,
     staffRows,
     inventoryHistory,
-    orderRows,
-    kitchenQueue,
   ]);
 
   useEffect(() => {
     if (!hydrated) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setCategories((cats) =>
       cats.map((c) => ({
         ...c,
@@ -266,6 +272,7 @@ export function ModuleDataProvider({ children }) {
       inventoryHistory,
       orderRows,
       kitchenQueue,
+      refreshMenu,
     ]
   );
 

@@ -4,7 +4,7 @@ import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import IconPicker from "@/components/ui/IconPicker";
 import { getIcon } from "@/lib/iconMap";
 import { CheckCircle2, Loader2, Pencil, Plus, Trash2, XCircle } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 function LandingSectionsManager() {
   const [sections, setSections] = useState([]);
@@ -21,11 +21,7 @@ function LandingSectionsManager() {
     isActive: true,
   });
 
-  useEffect(() => {
-    loadSections();
-  }, []);
-
-  async function loadSections() {
+  const loadSections = useCallback(async () => {
     try {
       const res = await fetch("/api/landing-sections");
       const data = await res.json();
@@ -37,7 +33,11 @@ function LandingSectionsManager() {
     } finally {
       setIsLoading(false);
     }
-  }
+  }, []);
+
+  useEffect(() => {
+    loadSections();
+  }, [loadSections]);
 
   function showToast(type, message) {
     setToast({ type, message });

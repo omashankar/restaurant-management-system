@@ -14,7 +14,7 @@ export default function SalesChart({ data = {} }) {
   const [activeFilter, setActiveFilter] = useState("Weekly");
   const [activeTab, setActiveTab]       = useState("sales");
 
-  const chartData = data[activeFilter] ?? [];
+  const chartData = useMemo(() => data[activeFilter] ?? [], [data, activeFilter]);
   const max = useMemo(
     () => Math.max(...chartData.map((d) => (activeTab === "sales" ? d.sales : d.orders)), 1),
     [chartData, activeTab]

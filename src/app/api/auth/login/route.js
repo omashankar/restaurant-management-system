@@ -1,5 +1,6 @@
-import { setTokenCookie } from "@/lib/authCookies";
-import { signToken } from "@/lib/jwt";
+import { setRefreshTokenCookie, setTokenCookie } from "@/lib/authCookies";
+import { signRefreshToken, signToken } from "@/lib/jwt";
+import { logError, logInfo } from "@/lib/logger";
 import { getClientIp, loginLimiter } from "@/lib/rateLimit";
 import clientPromise from "@/lib/mongodb";
 import bcrypt from "bcryptjs";
@@ -7,17 +8,23 @@ import bcrypt from "bcryptjs";
 export async function POST(request) {
   /* ── Rate limit ── */
   const ip = getClientIp(request);
-  const limit = loginLimiter.check(ip);
+  const limit = await loginLimiter.check(ip);
+  const body = await request.json().catch(() => null);
+  const emailKey = `${ip}:${String(body?.email ?? "").toLowerCase().trim() || "unknown"}`;
+  const emailLimit = await loginLimiter.check(emailKey);
   if (!limit.allowed) {
     return Response.json(
       { success: false, error: `Too many login attempts. Try again in ${limit.retryAfter}s.` },
       { status: 429, headers: { "Retry-After": String(limit.retryAfter) } }
     );
   }
-
-  let body;
-  try { body = await request.json(); }
-  catch { return Response.json({ success: false, error: "Invalid JSON body." }, { status: 400 }); }
+  if (!emailLimit.allowed) {
+    return Response.json(
+      { success: false, error: `Too many login attempts. Try again in ${emailLimit.retryAfter}s.` },
+      { status: 429, headers: { "Retry-After": String(emailLimit.retryAfter) } }
+    );
+  }
+  if (!body) return Response.json({ success: false, error: "Invalid JSON body." }, { status: 400 });
 
   const { email, password, rememberMe = false } = body ?? {};
 
@@ -80,11 +87,18 @@ export async function POST(request) {
       restaurantId: userPayload.restaurantId,
     });
 
+    const refreshToken = signRefreshToken({
+      id: userPayload.id,
+      role: userPayload.role,
+      restaurantId: userPayload.restaurantId,
+      type: "refresh",
+    });
     const res = Response.json({ success: true, user: userPayload });
-    return setTokenCookie(res, token, rememberMe);
+    logInfo("auth.login.success", { email: userPayload.email, role: userPayload.role });
+    return setRefreshTokenCookie(setTokenCookie(res, token, rememberMe), refreshToken);
 
   } catch (err) {
-    console.error("Login error:", err.message);
+    logError("auth.login.failed", err, { route: "/api/auth/login" });
     return Response.json({ success: false, error: "Something went wrong. Please try again." }, { status: 500 });
   }
 }

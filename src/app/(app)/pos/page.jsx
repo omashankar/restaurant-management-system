@@ -205,7 +205,7 @@ export default function PosPage() {
     } finally {
       setIsPlacing(false);
     }
-  }, [canPlaceOrder, isPlacing, cart, orderType, selectedTableId, selectedCustomer, delivery, total,
+  }, [canPlaceOrder, isPlacing, cart, orderType, selectedTableId, selectedCustomer, delivery, total, subtotal, tax, note,
       floorTables, setOrderRows, setKitchenQueue, setCustomerRows, setFloorTables]);
 
   useEffect(() => {

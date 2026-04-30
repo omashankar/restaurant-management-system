@@ -29,7 +29,7 @@ export default function Sidebar({
   const closeTimerRef = useRef(null);
   const triggerRefs = useRef({});
   const popoverRef = useRef(null);
-  const items = user ? navForRole(user.role) : [];
+  const items = useMemo(() => (user ? navForRole(user.role) : []), [user]);
   const collapsedPopoverEnabled = collapsed && allowCollapse;
   const popoverItem = useMemo(() => {
     if (!popover?.id) return null;
@@ -38,6 +38,7 @@ export default function Sidebar({
 
   useEffect(() => {
     if (pathname.startsWith("/menu")) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setOpenGroups((g) => ({ ...g, menu: true }));
     }
     if (pathname.startsWith("/tables")) {
@@ -79,7 +80,10 @@ export default function Sidebar({
   };
 
   useEffect(() => {
-    if (!collapsedPopoverEnabled) setPopover(null);
+    if (!collapsedPopoverEnabled) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setPopover(null);
+    }
   }, [collapsedPopoverEnabled]);
 
   useEffect(() => {

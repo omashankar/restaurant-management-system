@@ -17,7 +17,7 @@ export default function AiInsights({ insights = [] }) {
         </span>
         <div>
           <h3 className="text-sm font-semibold text-zinc-100">AI Insights</h3>
-          <p className="text-xs text-zinc-500">Smart observations from today's data</p>
+          <p className="text-xs text-zinc-500">Smart observations from today&apos;s data</p>
         </div>
         <span className="ml-auto rounded-full border border-violet-500/30 bg-violet-500/10 px-2.5 py-0.5 text-[10px] font-semibold text-violet-400">
           Live

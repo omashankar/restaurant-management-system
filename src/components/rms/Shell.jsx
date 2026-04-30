@@ -25,6 +25,7 @@ export default function Shell({ children }) {
   useLayoutEffect(() => {
     if (!user) return;
     if (user.role === "waiter" && pathname === "/dashboard") {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setRouting(true);
       router.replace("/pos");
       return;

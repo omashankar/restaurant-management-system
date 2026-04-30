@@ -114,7 +114,7 @@ export async function POST(request) {
   const payload = token ? verifyToken(token) : null;
   const ip = getClientIp(request);
 
-  const limit = logsWriteLimiter.check(ip);
+  const limit = await logsWriteLimiter.check(ip);
   if (!limit.allowed) {
     return Response.json(
       { success: false, error: "Too many log requests. Try again later." },

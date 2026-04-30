@@ -43,6 +43,44 @@ export const resendSchema = z.object({
     .trim(),
 });
 
+export const orderItemSchema = z.object({
+  name: z.string().min(1, "Item name is required."),
+  qty: z.number().int().positive("Item quantity must be positive."),
+  price: z.number().nonnegative("Item price cannot be negative."),
+  menuItemId: z.string().optional(),
+});
+
+export const orderCreateSchema = z.object({
+  items: z.array(orderItemSchema).min(1, "At least one item is required."),
+  orderType: z.enum(["dine-in", "takeaway", "delivery"], { message: "Invalid orderType." }),
+  tableNumber: z.string().trim().nullable().optional(),
+  customer: z.string().trim().optional(),
+  notes: z.string().trim().max(500).optional(),
+});
+
+export const orderPatchSchema = z.object({
+  status: z.enum(["new", "preparing", "ready", "completed", "cancelled"]).optional(),
+  notes: z.string().trim().max(500).optional(),
+});
+
+export const customerCheckoutSchema = z.object({
+  items: z.array(z.object({
+    id: z.string().optional(),
+    name: z.string().min(1, "Item name is required."),
+    price: z.number().nonnegative("Item price cannot be negative."),
+    qty: z.number().int().positive("Item quantity must be positive."),
+  })).min(1, "At least one item is required."),
+  orderType: z.enum(["dine-in", "takeaway", "delivery"], { message: "Invalid orderType." }),
+  customer: z.object({
+    name: z.string().min(1, "Customer name is required."),
+    phone: z.string().min(1, "Customer phone is required."),
+    email: z.string().email("Invalid email address.").or(z.literal("")).optional(),
+    address: z.string().optional(),
+    tableNumber: z.string().optional(),
+  }),
+  notes: z.string().trim().max(500).optional(),
+});
+
 /** Parse schema — returns data or throws first error message */
 export function parseSchema(schema, input) {
   const result = schema.safeParse(input);

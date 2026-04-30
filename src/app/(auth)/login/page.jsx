@@ -3,8 +3,8 @@
 import { defaultRedirectForRole, useApp } from "@/context/AppProviders";
 import { Copy, Eye, EyeOff, UtensilsCrossed } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense, useEffect, useState } from "react";
 
 const DEMO_USERS = [
   { role: "Super Admin", roleKey: "super_admin", email: "superadmin@rms.com",      password: "SuperAdmin@2026", icon: "🛡️", accent: "ring-rose-500/30 hover:ring-rose-500/60" },
@@ -14,9 +14,10 @@ const DEMO_USERS = [
   { role: "Chef",        roleKey: "chef",         email: "chef@restaurant.com",     password: "password123",     icon: "👨‍🍳", accent: "ring-emerald-500/30 hover:ring-emerald-500/60" },
 ];
 
-export default function LoginPage() {
+function LoginContent() {
   const { user, hydrated, login } = useApp();
   const router = useRouter();
+  const params = useSearchParams();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPw, setShowPw] = useState(false);
@@ -27,11 +28,21 @@ export default function LoginPage() {
   const [rememberMe, setRememberMe] = useState(false);
   const [resendLoading, setResendLoading] = useState(false);
   const [resendMsg, setResendMsg] = useState("");
+  const [verificationInfo, setVerificationInfo] = useState("");
 
   useEffect(() => {
     if (!hydrated) return;
     if (user) router.replace(defaultRedirectForRole(user.role));
   }, [hydrated, user, router]);
+
+  useEffect(() => {
+    const defaultEmail = params.get("email");
+    const verifyFlag = params.get("verify");
+    if (defaultEmail) setEmail(defaultEmail);
+    if (verifyFlag === "1") {
+      setVerificationInfo("Account created. Please verify your email from inbox, then login.");
+    }
+  }, [params]);
 
   const onSubmit = async (e) => {
     e.preventDefault();
@@ -168,6 +179,11 @@ export default function LoginPage() {
                 {error}
               </p>
             )}
+            {verificationInfo && (
+              <p className="rounded-xl border border-emerald-500/20 bg-emerald-500/10 px-3 py-2 text-xs text-emerald-400">
+                {verificationInfo}
+              </p>
+            )}
             {unverified && (
               <div className="rounded-xl border border-amber-500/25 bg-amber-500/10 px-4 py-3 space-y-2">
                 <p className="text-xs font-semibold text-amber-300">
@@ -265,5 +281,13 @@ export default function LoginPage() {
 
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense>
+      <LoginContent />
+    </Suspense>
   );
 }

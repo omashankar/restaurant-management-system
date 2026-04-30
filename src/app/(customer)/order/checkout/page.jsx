@@ -1,7 +1,6 @@
 "use client";
 
 import { useCustomer } from "@/context/CustomerContext";
-import { useModuleData } from "@/context/ModuleDataContext";
 import { Bike, ConciergeBell, Loader2, Store } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -25,7 +24,6 @@ const inputCls = "w-full rounded-xl border border-zinc-700 bg-zinc-950/60 px-3.5
 
 export default function CheckoutPage() {
   const { cart, orderType, customer, updateCustomer, showToast, setOrderTypeModalOpen } = useCustomer();
-  const { setOrderRows, setKitchenQueue } = useModuleData();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
 
@@ -69,47 +67,41 @@ export default function CheckoutPage() {
       showToast("Table number is required.", "error"); return;
     }
     setLoading(true);
-    await new Promise((r) => setTimeout(r, 900));
+    try {
+      const res = await fetch("/api/customer/orders", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          orderType,
+          items: lines.map((l) => ({
+            id: l.id,
+            name: l.name,
+            price: l.price,
+            qty: l.qty,
+          })),
+          customer: {
+            name: customer.name.trim(),
+            phone: customer.phone.trim(),
+            email: customer.email.trim(),
+            address: customer.address.trim(),
+            tableNumber: customer.tableNumber.trim(),
+          },
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data?.success) {
+        showToast(data?.error ?? "Failed to place order.", "error");
+        return;
+      }
 
-    const orderId = `ORD-C-${Date.now()}`;
-    const now = new Date();
-    const itemsSummary = lines.map((l) => `${l.name} ×${l.qty}`).join(", ");
-
-    // Save to shared orderRows (visible in admin Orders page)
-    const newOrder = {
-      id: orderId,
-      source: "customer",
-      customer: customer.name.trim(),
-      phone: customer.phone.trim(),
-      type: orderType,
-      table: orderType === "dine-in" ? customer.tableNumber.trim() : "—",
-      address: orderType === "delivery" ? customer.address.trim() : "",
-      amount: total,
-      status: "new",
-      items: lines.map((l) => ({ name: l.name, qty: l.qty, price: l.price })),
-      itemCount: lines.reduce((s, l) => s + l.qty, 0),
-      time: "Just now",
-      createdAt: now.toISOString(),
-    };
-    setOrderRows((prev) => [newOrder, ...prev]);
-
-    // Push to kitchen queue
-    const kitchenTicket = {
-      id: `K-${orderId}`,
-      orderId,
-      table: newOrder.table,
-      orderType,
-      customer: customer.name.trim(),
-      placedAt: now.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" }),
-      elapsedMin: 0,
-      status: "new",
-      items: lines.map((l) => ({ name: l.name, qty: l.qty })),
-    };
-    setKitchenQueue((prev) => [kitchenTicket, ...prev]);
-
-    clearCart();
-    setLoading(false);
-    router.push(`/order/success?id=${orderId}`);
+      clearCart();
+      showToast("Order placed successfully.");
+      router.push(`/order/success?id=${encodeURIComponent(data.order.orderId)}`);
+    } catch {
+      showToast("Network error. Please try again.", "error");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (

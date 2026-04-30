@@ -28,7 +28,7 @@ export default function ContactPage() {
     <div className="mx-auto max-w-4xl px-4 py-12 sm:px-6 lg:px-8">
       <div className="mb-8 text-center">
         <h1 className="text-3xl font-bold text-zinc-50">Contact Us</h1>
-        <p className="mt-2 text-sm text-zinc-400">Have a question or feedback? We'd love to hear from you.</p>
+        <p className="mt-2 text-sm text-zinc-400">Have a question or feedback? We&apos;d love to hear from you.</p>
       </div>
 
       <div className="grid gap-8 lg:grid-cols-2">

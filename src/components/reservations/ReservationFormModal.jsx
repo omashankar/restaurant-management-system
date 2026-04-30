@@ -229,23 +229,29 @@ export default function ReservationFormModal({ open, onClose, editing, tableOpti
 
   useEffect(() => {
     if (!open) return;
-    setLinkedCustomerId(null);
-    if (editing) {
-      setForm({
-        customerName: editing.customerName,
-        phone: editing.phone,
-        date: editing.date,
-        time: editing.time,
-        guests: String(editing.guests),
-        tableNumber: editing.tableNumber,
-        area: editing.area ?? "",
-        notes: editing.notes ?? "",
-        status: editing.status,
-      });
-    } else {
-      const today = new Date().toISOString().slice(0, 10);
-      setForm({ ...empty, date: today, tableNumber: tableOptions[0] ?? "" });
-    }
+    const nextForm = editing
+      ? {
+          customerName: editing.customerName,
+          phone: editing.phone,
+          date: editing.date,
+          time: editing.time,
+          guests: String(editing.guests),
+          tableNumber: editing.tableNumber,
+          area: editing.area ?? "",
+          notes: editing.notes ?? "",
+          status: editing.status,
+        }
+      : {
+          ...empty,
+          date: new Date().toISOString().slice(0, 10),
+          tableNumber: tableOptions[0] ?? "",
+        };
+
+    const raf = requestAnimationFrame(() => {
+      setLinkedCustomerId(null);
+      setForm(nextForm);
+    });
+    return () => cancelAnimationFrame(raf);
   }, [open, editing, tableOptions]);
 
   /* Customer selected from search widget */
