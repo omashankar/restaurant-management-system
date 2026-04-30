@@ -7,7 +7,7 @@ import { useToast } from "@/hooks/useToast";
 import {
   Building2, Calendar, ChevronLeft, ChevronRight,
   Crown, Eye, EyeOff, Mail, MapPin,
-  Pencil, Phone, Plus, RefreshCw,
+  Pencil, Phone, Plus, RefreshCw, ShieldCheck, ShieldOff,
   Search, Trash2, X,
 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -17,6 +17,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 ───────────────────────────────────────── */
 const PLANS    = ["free", "starter", "pro", "enterprise"];
 const STATUSES = ["active", "inactive", "suspended"];
+const OWNER_STATUSES = ["active", "inactive", "blocked"];
 const PAGE_SIZE = 10;
 
 const PLAN_BADGE = {
@@ -115,6 +116,20 @@ function PreviewModal({ restaurant, onClose }) {
 
         <div className="border-t border-zinc-800" />
 
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+          {[
+            { label: "Admin", value: restaurant.roleCounts?.admin ?? 0, tone: "text-emerald-400" },
+            { label: "Manager", value: restaurant.roleCounts?.manager ?? 0, tone: "text-indigo-400" },
+            { label: "Waiter", value: restaurant.roleCounts?.waiter ?? 0, tone: "text-sky-400" },
+            { label: "Chef", value: restaurant.roleCounts?.chef ?? 0, tone: "text-amber-400" },
+          ].map((item) => (
+            <div key={item.label} className="rounded-xl border border-zinc-800 bg-zinc-950/40 px-3 py-2">
+              <p className={"text-lg font-semibold " + item.tone}>{item.value}</p>
+              <p className="text-[10px] uppercase tracking-wider text-zinc-500">{item.label}</p>
+            </div>
+          ))}
+        </div>
+
         {/* Details grid */}
         <div className="grid gap-3 sm:grid-cols-2">
           {[
@@ -155,8 +170,10 @@ export default function RestaurantsPage() {
   const [search, setSearch]             = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [planFilter, setPlanFilter]     = useState("all");
+  const [ownerStatusFilter, setOwnerStatusFilter] = useState("all");
   const [page, setPage]                 = useState(1);
   const [togglingId, setTogglingId]     = useState(null);
+  const [ownerTogglingId, setOwnerTogglingId] = useState(null);
 
   // Create modal
   const [createOpen, setCreateOpen]   = useState(false);
@@ -197,9 +214,14 @@ export default function RestaurantsPage() {
 
   useEffect(() => { fetchRestaurants(); }, [fetchRestaurants]);
 
+  const filteredRestaurants = useMemo(() => {
+    if (ownerStatusFilter === "all") return restaurants;
+    return restaurants.filter((r) => (r.ownerStatus ?? "inactive") === ownerStatusFilter);
+  }, [restaurants, ownerStatusFilter]);
+
   /* Paginated slice */
-  const totalPages = Math.max(1, Math.ceil(restaurants.length / PAGE_SIZE));
-  const paginated  = restaurants.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  const totalPages = Math.max(1, Math.ceil(filteredRestaurants.length / PAGE_SIZE));
+  const paginated  = filteredRestaurants.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   /* Toggle status */
   const toggleStatus = async (r) => {
@@ -217,6 +239,30 @@ export default function RestaurantsPage() {
       showToast(r.name + " " + (newStatus === "active" ? "activated." : "deactivated."));
     } catch { showToast("Network error.", "error"); }
     finally { setTogglingId(null); }
+  };
+
+  const toggleOwnerStatus = async (r) => {
+    if (!r.ownerId) {
+      showToast("Owner admin not linked.", "error");
+      return;
+    }
+    const next = r.ownerStatus === "blocked" ? "active" : "blocked";
+    setOwnerTogglingId(r.id);
+    try {
+      const res = await fetch("/api/super-admin/users/" + r.ownerId, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: next }),
+      });
+      const data = await res.json();
+      if (!data.success) { showToast(data.error ?? "Failed.", "error"); return; }
+      setRestaurants((prev) => prev.map((x) => x.id === r.id ? { ...x, ownerStatus: next } : x));
+      showToast(next === "blocked" ? "Owner admin blocked." : "Owner admin unblocked.");
+    } catch {
+      showToast("Network error.", "error");
+    } finally {
+      setOwnerTogglingId(null);
+    }
   };
 
   /* Create */
@@ -356,6 +402,11 @@ export default function RestaurantsPage() {
           <option value="all">All plans</option>
           {PLANS.map((p) => <option key={p} value={p}>{p.charAt(0).toUpperCase() + p.slice(1)}</option>)}
         </select>
+        <select value={ownerStatusFilter} onChange={(e) => { setOwnerStatusFilter(e.target.value); setPage(1); }}
+          className="cursor-pointer rounded-xl border border-zinc-800 bg-zinc-900/70 px-3 py-2.5 text-sm text-zinc-200 outline-none focus:border-emerald-500/40">
+          <option value="all">All owner statuses</option>
+          {OWNER_STATUSES.map((s) => <option key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1)}</option>)}
+        </select>
       </div>
 
       {/* Table */}
@@ -365,10 +416,10 @@ export default function RestaurantsPage() {
             <div key={i} className="h-16 animate-pulse rounded-xl border border-zinc-800 bg-zinc-900/40" />
           ))}
         </div>
-      ) : restaurants.length === 0 ? (
+      ) : filteredRestaurants.length === 0 ? (
         <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-zinc-800 py-20 text-center">
           <Building2 className="size-10 text-zinc-700" />
-          <p className="text-sm text-zinc-500">No restaurants found.</p>
+          <p className="text-sm text-zinc-500">No restaurants found for selected filters.</p>
           <button type="button" onClick={() => { setCreateForm(emptyForm); setCreateOpen(true); }}
             className="cursor-pointer rounded-xl bg-emerald-500 px-4 py-2 text-sm font-semibold text-zinc-950 hover:bg-emerald-400">
             Add First Restaurant
@@ -381,7 +432,7 @@ export default function RestaurantsPage() {
               <thead>
                 <tr className="border-b border-zinc-800 bg-zinc-950/60 text-xs font-semibold uppercase tracking-wider text-zinc-500">
                   <th className="px-4 py-3">Restaurant</th>
-                  <th className="hidden px-4 py-3 md:table-cell">Owner</th>
+                  <th className="hidden px-4 py-3 md:table-cell">Owner Admin</th>
                   <th className="hidden px-4 py-3 lg:table-cell">Phone</th>
                   <th className="hidden px-4 py-3 md:table-cell">Plan</th>
                   <th className="px-4 py-3">Status</th>
@@ -413,6 +464,17 @@ export default function RestaurantsPage() {
                         <div className="min-w-0">
                           <p className="truncate text-sm text-zinc-200">{r.ownerName}</p>
                           <p className="truncate text-xs text-zinc-500">{r.ownerEmail}</p>
+                          <p className="mt-0.5">
+                            <span className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-semibold ring-1 ${
+                              r.ownerStatus === "active"
+                                ? "bg-emerald-500/15 text-emerald-400 ring-emerald-500/25"
+                                : r.ownerStatus === "blocked"
+                                  ? "bg-red-500/15 text-red-400 ring-red-500/25"
+                                  : "bg-zinc-500/15 text-zinc-400 ring-zinc-500/25"
+                            }`}>
+                              {r.ownerStatus}
+                            </span>
+                          </p>
                         </div>
                       </div>
                     </td>
@@ -428,6 +490,9 @@ export default function RestaurantsPage() {
                         <span className={"size-1.5 rounded-full " + (PLAN_DOT[r.plan] ?? "bg-zinc-500")} />
                         {r.plan}
                       </span>
+                      <p className="mt-1 text-[10px] text-zinc-500">
+                        A:{r.roleCounts?.admin ?? 0} · M:{r.roleCounts?.manager ?? 0} · W:{r.roleCounts?.waiter ?? 0} · C:{r.roleCounts?.chef ?? 0}
+                      </p>
                     </td>
 
                     {/* Status toggle */}
@@ -470,6 +535,20 @@ export default function RestaurantsPage() {
                           className="cursor-pointer rounded-lg p-2 text-zinc-400 hover:bg-red-500/15 hover:text-red-400 transition-colors">
                           <Trash2 className="size-4" />
                         </button>
+                        {/* Block / Unblock owner admin */}
+                        <button
+                          type="button"
+                          onClick={() => toggleOwnerStatus(r)}
+                          disabled={ownerTogglingId === r.id}
+                          title={r.ownerStatus === "blocked" ? "Unblock owner admin" : "Block owner admin"}
+                          className={`cursor-pointer rounded-lg p-2 transition-colors disabled:opacity-40 ${
+                            r.ownerStatus === "blocked"
+                              ? "text-zinc-400 hover:bg-emerald-500/15 hover:text-emerald-400"
+                              : "text-zinc-400 hover:bg-amber-500/15 hover:text-amber-400"
+                          }`}
+                        >
+                          {r.ownerStatus === "blocked" ? <ShieldCheck className="size-4" /> : <ShieldOff className="size-4" />}
+                        </button>
                       </div>
                     </td>
                   </tr>
@@ -481,7 +560,7 @@ export default function RestaurantsPage() {
           {/* Pagination */}
           <div className="flex items-center justify-between border-t border-zinc-800 px-4 py-3">
             <p className="text-xs text-zinc-600">
-              {restaurants.length} restaurant{restaurants.length !== 1 ? "s" : ""}
+              {filteredRestaurants.length} restaurant{filteredRestaurants.length !== 1 ? "s" : ""}
               {totalPages > 1 && " · page " + page + " of " + totalPages}
             </p>
             {totalPages > 1 && (

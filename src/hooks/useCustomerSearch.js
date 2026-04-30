@@ -22,22 +22,39 @@ export function useCustomerSearch() {
     );
   }, [customerRows, query]);
 
-  /** Add a brand-new customer and auto-select them */
-  const addCustomer = ({ name, phone, email = "" }) => {
-    const newCustomer = {
-      id: `cu-${Date.now()}`,
+  /** Add a brand-new customer from API and auto-select them */
+  const addCustomer = async ({ name, phone, email = "" }) => {
+    const payload = {
       name: name.trim(),
       phone: phone.trim(),
       email: email.trim(),
-      visits: 0,
-      lastVisit: new Date().toISOString().slice(0, 10),
       notes: "",
-      orderHistory: [],
     };
-    setCustomerRows((prev) => [...prev, newCustomer]);
-    setSelected(newCustomer);
-    setQuery("");
-    return newCustomer;
+    if (!payload.name || !payload.phone) return null;
+
+    try {
+      const res = await fetch("/api/customers", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json();
+      if (!res.ok || !data?.id) return null;
+
+      const newCustomer = {
+        id: data.id,
+        ...payload,
+        visits: 0,
+        lastVisit: null,
+        orderHistory: [],
+      };
+      setCustomerRows((prev) => [...prev, newCustomer]);
+      setSelected(newCustomer);
+      setQuery("");
+      return newCustomer;
+    } catch {
+      return null;
+    }
   };
 
   const clearSelection = () => {

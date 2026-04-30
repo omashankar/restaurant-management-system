@@ -40,6 +40,7 @@ const PLAN_BAR = {
 const inputCls = "w-full rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus:border-emerald-500/40 placeholder:text-zinc-600 transition-colors";
 
 export default function BillingPage() {
+  const [activeTab, setActiveTab] = useState("overview");
   const [subs, setSubs]               = useState([]);
   const [plans, setPlans]             = useState([]);
   const [restaurants, setRestaurants] = useState([]);
@@ -172,6 +173,28 @@ export default function BillingPage() {
           </div>
         </div>
         <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setActiveTab("overview")}
+            className={`cursor-pointer rounded-xl px-3 py-2 text-sm font-medium transition-colors ${
+              activeTab === "overview"
+                ? "bg-zinc-800 text-zinc-100"
+                : "text-zinc-500 hover:bg-zinc-900 hover:text-zinc-300"
+            }`}
+          >
+            Overview
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab("subscriptions")}
+            className={`cursor-pointer rounded-xl px-3 py-2 text-sm font-medium transition-colors ${
+              activeTab === "subscriptions"
+                ? "bg-zinc-800 text-zinc-100"
+                : "text-zinc-500 hover:bg-zinc-900 hover:text-zinc-300"
+            }`}
+          >
+            Subscriptions
+          </button>
           <button type="button" onClick={fetchAll}
             className="cursor-pointer flex items-center gap-1.5 rounded-xl border border-zinc-700 px-3 py-2.5 text-sm font-medium text-zinc-400 hover:border-zinc-500 hover:text-zinc-200 transition-colors">
             <RefreshCw className={"size-4 " + (loading ? "animate-spin" : "")} />
@@ -192,6 +215,8 @@ export default function BillingPage() {
         </div>
       ) : (
         <>
+          {activeTab === "overview" && (
+          <>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {[
               { label: "Total Revenue",        value: "$" + (billing?.overview?.totalRevenue ?? 0).toLocaleString(), icon: DollarSign,    color: "text-emerald-400", bg: "bg-emerald-500/5",  border: "border-emerald-500/20" },
@@ -269,6 +294,10 @@ export default function BillingPage() {
             </div>
           </div>
 
+          </>
+          )}
+
+          {activeTab === "subscriptions" && (
           <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60">
             <div className="flex items-center justify-between border-b border-zinc-800 px-5 py-4">
               <div>
@@ -329,7 +358,7 @@ export default function BillingPage() {
                               {s.planName}
                             </span>
                             {s.price > 0 && (
-                              <p className="mt-0.5 text-[10px] text-zinc-600">{"$"}{s.price}/{"{"}{s.billingCycle}{"}"}</p>
+                              <p className="mt-0.5 text-[10px] text-zinc-600">{"$"}{s.price}/{s.billingCycle}</p>
                             )}
                           </td>
                           <td className="px-4 py-3">
@@ -382,6 +411,7 @@ export default function BillingPage() {
               {subs.length} subscription{subs.length !== 1 ? "s" : ""}
             </div>
           </div>
+          )}
         </>
       )}
 

@@ -5,7 +5,7 @@ import DataTableShell from "@/components/ui/DataTableShell";
 import StatusBadge from "./StatusBadge";
 import { formatReservationDate, formatTimeSlot } from "@/lib/reservationUtils";
 
-export default function ReservationTable({ rows, onView, onEdit, onDelete }) {
+export default function ReservationTable({ rows, onView, onEdit, onDelete, canDelete = true }) {
   return (
     <DataTableShell>
       <table className="min-w-[800px] w-full text-left text-sm">
@@ -78,7 +78,8 @@ export default function ReservationTable({ rows, onView, onEdit, onDelete }) {
                   <button
                     type="button"
                     onClick={() => onDelete(r)}
-                    className="cursor-pointer rounded-lg p-2 text-zinc-500 transition-colors hover:bg-red-500/15 hover:text-red-400"
+                    disabled={!canDelete}
+                    className="cursor-pointer rounded-lg p-2 text-zinc-500 transition-colors hover:bg-red-500/15 hover:text-red-400 disabled:cursor-not-allowed disabled:opacity-40"
                     aria-label="Delete"
                   >
                     <Trash2 className="size-4" />

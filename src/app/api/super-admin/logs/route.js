@@ -18,6 +18,7 @@
 import { getTokenFromRequest } from "@/lib/authCookies";
 import { verifyToken } from "@/lib/jwt";
 import clientPromise from "@/lib/mongodb";
+import { getClientIp, rateLimit } from "@/lib/rateLimit";
 
 function superAdminOnly(request) {
   const token   = getTokenFromRequest(request);
@@ -28,6 +29,11 @@ function superAdminOnly(request) {
 
 const VALID_CATEGORIES = ["restaurant", "user", "payment", "settings", "auth", "system", "billing"];
 const PAGE_SIZE = 25;
+const logsWriteLimiter = rateLimit({ windowMs: 60_000, max: 20 });
+
+function escapeRegex(input) {
+  return input.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
 
 /* ── GET /api/super-admin/logs ── */
 export async function GET(request) {
@@ -38,7 +44,8 @@ export async function GET(request) {
   const { searchParams } = new URL(request.url);
   const page     = Math.max(1, Number(searchParams.get("page") ?? 1));
   const category = searchParams.get("category") ?? "all";
-  const search   = searchParams.get("search")?.trim() ?? "";
+  const rawSearch = searchParams.get("search")?.trim() ?? "";
+  const search   = rawSearch.slice(0, 80);
   const skip     = (page - 1) * PAGE_SIZE;
 
   try {
@@ -50,10 +57,11 @@ export async function GET(request) {
       filter.category = category;
     }
     if (search) {
+      const safe = escapeRegex(search);
       filter.$or = [
-        { action:     { $regex: search, $options: "i" } },
-        { actorName:  { $regex: search, $options: "i" } },
-        { targetName: { $regex: search, $options: "i" } },
+        { action:     { $regex: safe, $options: "i" } },
+        { actorName:  { $regex: safe, $options: "i" } },
+        { targetName: { $regex: safe, $options: "i" } },
       ];
     }
 
@@ -101,9 +109,26 @@ export async function GET(request) {
 
 /* ── POST /api/super-admin/logs — write a log entry ── */
 export async function POST(request) {
-  // Allow super_admin OR internal server calls (no token = system log)
+  // Allow super_admin OR trusted internal calls with shared key.
   const token   = getTokenFromRequest(request);
   const payload = token ? verifyToken(token) : null;
+  const ip = getClientIp(request);
+
+  const limit = logsWriteLimiter.check(ip);
+  if (!limit.allowed) {
+    return Response.json(
+      { success: false, error: "Too many log requests. Try again later." },
+      { status: 429, headers: { "Retry-After": String(limit.retryAfter ?? 60) } }
+    );
+  }
+
+  if (!payload || payload.role !== "super_admin") {
+    const internalKey = request.headers.get("x-internal-log-key");
+    const expectedKey = process.env.SUPER_ADMIN_LOG_INGEST_KEY;
+    if (!expectedKey || internalKey !== expectedKey) {
+      return Response.json({ success: false, error: "Forbidden." }, { status: 403 });
+    }
+  }
 
   let body;
   try { body = await request.json(); }
@@ -113,14 +138,13 @@ export async function POST(request) {
   if (!action || !category) {
     return Response.json({ success: false, error: "action and category are required." }, { status: 400 });
   }
+  if (!VALID_CATEGORIES.includes(category)) {
+    return Response.json({ success: false, error: "Invalid category." }, { status: 400 });
+  }
 
   try {
     const client = await clientPromise;
     const db     = client.db();
-
-    const ip = request.headers.get("x-forwarded-for")
-      ?? request.headers.get("x-real-ip")
-      ?? "unknown";
 
     await db.collection("audit_logs").insertOne({
       action,

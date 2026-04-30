@@ -1,19 +1,76 @@
-/**
- * Shared icon resolver for the icon selection system.
- * - Admin panel: IconPicker uses the full lucide-react library directly.
- * - Frontend / landing page: use getIcon() to resolve a stored name → component.
- *
- * getIcon() uses the full lucide-react library so any icon the picker can
- * select will also render correctly on the frontend.
- */
-import * as Icons from "lucide-react";
+import {
+  BarChart3,
+  Bell,
+  BookOpen,
+  CalendarClock,
+  ChefHat,
+  Circle,
+  ClipboardList,
+  Clock,
+  Code2,
+  CreditCard,
+  Globe,
+  Home,
+  LayoutGrid,
+  Layers,
+  Mail,
+  MapPin,
+  MessageSquare,
+  Package,
+  PackageSearch,
+  Phone,
+  Settings,
+  Shield,
+  ShoppingCart,
+  Star,
+  Table2,
+  Tag,
+  Truck,
+  Users,
+  UserRoundCheck,
+  Utensils,
+  Wallet,
+  Zap,
+} from "lucide-react";
+
+const ICON_COMPONENTS = {
+  BarChart3,
+  Bell,
+  BookOpen,
+  CalendarClock,
+  ChefHat,
+  Circle,
+  ClipboardList,
+  Clock,
+  Code2,
+  CreditCard,
+  Globe,
+  Home,
+  LayoutGrid,
+  Layers,
+  Mail,
+  MapPin,
+  MessageSquare,
+  Package,
+  PackageSearch,
+  Phone,
+  Settings,
+  Shield,
+  ShoppingCart,
+  Star,
+  Table2,
+  Tag,
+  Truck,
+  Users,
+  UserRoundCheck,
+  Utensils,
+  Wallet,
+  Zap,
+};
 
 /** Resolve an icon name string → component. Falls back to Circle. */
 export function getIcon(name) {
-  const icon = Icons[name];
-  // Accept both forwardRef objects (lucide v1+) and plain functions
-  if (icon && (typeof icon === "object" || typeof icon === "function")) return icon;
-  return Icons["Circle"];
+  return ICON_COMPONENTS[name] ?? Circle;
 }
 
 /**
@@ -34,5 +91,5 @@ export const ICON_LIST = [
  * Resolves the curated ICON_LIST names to components.
  */
 export const ICON_MAP = Object.fromEntries(
-  ICON_LIST.map((name) => [name, Icons[name] ?? Icons["Circle"]])
+  ICON_LIST.map((name) => [name, ICON_COMPONENTS[name] ?? Circle])
 );

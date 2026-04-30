@@ -76,7 +76,6 @@ export async function GET(request) {
       db.collection("restaurants").countDocuments({ status: "active" }),
 
       db.collection("users").countDocuments({ role: "admin" }),
-
       db.collection("users").countDocuments(),
 
       // Total revenue
@@ -156,11 +155,11 @@ export async function GET(request) {
     return Response.json({
       success: true,
       overview: {
+        totalAdmins,
+        totalUsers,
         totalRestaurants,
         activeRestaurants,
         inactiveRestaurants: totalRestaurants - activeRestaurants,
-        totalAdmins,
-        totalUsers,
         totalRevenue:   revenueAgg[0]?.total ?? 0,
         totalPayments:  revenueAgg[0]?.count ?? 0,
         activeSubsCount,

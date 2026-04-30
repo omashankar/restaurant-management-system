@@ -44,23 +44,68 @@ const PUBLIC_PATHS = [
   "/unauthorized",
   "/home",
   "/order",
-  "/api",
   "/verify-email",
 ];
 
-/* ── Decode JWT payload (Edge-safe, no crypto import) ── */
-function decodeJwt(token) {
+const PUBLIC_API_PREFIXES = ["/api/auth", "/api/landing-sections"];
+const JWT_SECRET = process.env.JWT_SECRET ?? "dev-only-secret";
+
+function decodeBase64Url(input) {
+  const normalized = input.replace(/-/g, "+").replace(/_/g, "/");
+  const padded = normalized + "=".repeat((4 - (normalized.length % 4)) % 4);
+  return atob(padded);
+}
+
+async function importHmacKey(secret) {
+  return crypto.subtle.importKey(
+    "raw",
+    new TextEncoder().encode(secret),
+    { name: "HMAC", hash: "SHA-256" },
+    false,
+    ["verify"]
+  );
+}
+
+async function verifyJwt(token) {
   try {
-    const part = token.split(".")[1];
-    const json = Buffer.from(part, "base64").toString("utf8");
-    return JSON.parse(json);
+    const [headerPart, payloadPart, signaturePart] = token.split(".");
+    if (!headerPart || !payloadPart || !signaturePart) return null;
+
+    const header = JSON.parse(decodeBase64Url(headerPart));
+    if (header.alg !== "HS256") return null;
+
+    const key = await importHmacKey(JWT_SECRET);
+    const signingInput = `${headerPart}.${payloadPart}`;
+    const signatureBytes = Uint8Array.from(
+      decodeBase64Url(signaturePart),
+      (ch) => ch.charCodeAt(0)
+    );
+    const valid = await crypto.subtle.verify(
+      "HMAC",
+      key,
+      signatureBytes,
+      new TextEncoder().encode(signingInput)
+    );
+    if (!valid) return null;
+
+    return JSON.parse(decodeBase64Url(payloadPart));
   } catch {
     return null;
   }
 }
 
-export function middleware(request) {
+export async function middleware(request) {
   const { pathname } = request.nextUrl;
+
+  // API routes are guarded inside each route handler via verifyToken/role checks.
+  // Let API requests pass through middleware to avoid redirecting fetch() calls.
+  if (pathname.startsWith("/api/")) {
+    return NextResponse.next();
+  }
+
+  if (PUBLIC_API_PREFIXES.some((p) => pathname === p || pathname.startsWith(`${p}/`))) {
+    return NextResponse.next();
+  }
 
   /* ── 1. Allow public paths ── */
   if (PUBLIC_PATHS.some((p) => pathname === p || pathname.startsWith(p + "/"))) {
@@ -81,7 +126,7 @@ export function middleware(request) {
     return NextResponse.redirect(url);
   }
 
-  const payload = decodeJwt(token);
+  const payload = await verifyJwt(token);
 
   /* ── 4. Invalid token → clear cookie + redirect to login ── */
   if (!payload?.role) {

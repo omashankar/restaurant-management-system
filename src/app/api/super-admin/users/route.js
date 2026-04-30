@@ -1,6 +1,7 @@
 import { getTokenFromRequest } from "@/lib/authCookies";
 import { verifyToken } from "@/lib/jwt";
 import clientPromise from "@/lib/mongodb";
+import { safeSearchPattern } from "@/lib/search";
 import { ObjectId } from "mongodb";
 
 function superAdminOnly(request) {
@@ -22,7 +23,7 @@ export async function GET(request) {
 
   try {
     const { searchParams } = new URL(request.url);
-    const search = searchParams.get("search")?.trim() ?? "";
+    const search = safeSearchPattern(searchParams.get("search"));
     const status = searchParams.get("status") ?? "all";
 
     const client = await clientPromise;

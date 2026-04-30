@@ -114,9 +114,9 @@ const PRICING_PLANS = [
 /* ─────────────────────────────────────────
    PLAN CARD COMPONENT
 ───────────────────────────────────────── */
-function PricingCard({ plan, onAssign, dbPlan }) {
+function PricingCard({ plan, onAssign, pricingView }) {
   const { accent } = plan;
-  const subscribers = dbPlan?.subscribers ?? 0;
+  const subscribers = plan?.subscribers ?? 0;
 
   return (
     <div className={`relative flex flex-col rounded-2xl border bg-gradient-to-b p-6 ring-1 transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl hover:shadow-black/40 ${accent.gradient} ${accent.border} ${accent.ring}`}>
@@ -133,7 +133,7 @@ function PricingCard({ plan, onAssign, dbPlan }) {
 
       {/* Plan name + badge */}
       <div className="flex items-center justify-between gap-2">
-        <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold ${accent.badge}`}>
+          <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-sm font-bold ${accent.badge}`}>
           <span className={`size-1.5 rounded-full ${accent.dot}`} />
           {plan.name}
         </span>
@@ -148,13 +148,16 @@ function PricingCard({ plan, onAssign, dbPlan }) {
       <div className="mt-5">
         <div className="flex items-end gap-1">
           <span className={`text-4xl font-extrabold tabular-nums tracking-tight ${accent.price}`}>
-            {plan.price === 0 ? "Free" : `$${plan.price}`}
+            {(() => {
+              const value = pricingView === "yearly" ? Number(plan.yearlyPrice ?? 0) : Number(plan.monthlyPrice ?? 0);
+              return value === 0 ? "Free" : `$${value}`;
+            })()}
           </span>
-          {plan.price > 0 && (
-            <span className="mb-1 text-sm text-zinc-500">/month</span>
+          {(pricingView === "yearly" ? Number(plan.yearlyPrice ?? 0) : Number(plan.monthlyPrice ?? 0)) > 0 && (
+            <span className="mb-1 text-sm text-zinc-500">/{pricingView === "yearly" ? "year" : "month"}</span>
           )}
         </div>
-        <p className="mt-1.5 text-xs text-zinc-500 leading-relaxed">{plan.description}</p>
+        <p className="mt-1.5 text-sm text-zinc-500 leading-relaxed">{plan.description}</p>
       </div>
 
       {/* Divider */}
@@ -173,7 +176,7 @@ function PricingCard({ plan, onAssign, dbPlan }) {
                 <X className="size-3 text-zinc-600" strokeWidth={3} />
               </span>
             )}
-            <span className={`text-xs ${f.included ? "text-zinc-300" : "text-zinc-600 line-through"}`}>
+            <span className={`text-sm ${f.included ? "text-zinc-300" : "text-zinc-600 line-through"}`}>
               {f.label}
             </span>
           </li>
@@ -203,13 +206,15 @@ const PLAN_COLORS = {
 };
 const DEFAULT_COLOR = { bg: "bg-emerald-500/5", border: "border-emerald-500/20", badge: "bg-emerald-500/15 text-emerald-400 ring-emerald-500/25", icon: "text-emerald-400" };
 const BILLING_CYCLES = ["monthly", "yearly"];
-const emptyForm = { name: "", price: "", billingCycle: "monthly", description: "", features: "", limits: { staff: "", tables: "", menuItems: "", orders: "" } };
+const emptyForm = { name: "", monthlyPrice: "", yearlyPrice: "", billingCycle: "monthly", description: "", features: "", limits: { staff: "", tables: "", menuItems: "", orders: "" } };
 
 /* ─────────────────────────────────────────
    MAIN PAGE
 ───────────────────────────────────────── */
 export default function PlansPage() {
   const [plans, setPlans]         = useState([]);
+  const [pricingView, setPricingView] = useState("monthly");
+  const [activeTab, setActiveTab] = useState("preview");
   const [loading, setLoading]     = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
   const [editingId, setEditingId] = useState(null);
@@ -242,7 +247,9 @@ export default function PlansPage() {
   const openEdit = (p) => {
     setEditingId(p.id);
     setForm({
-      name: p.name, price: String(p.price),
+      name: p.name,
+      monthlyPrice: String(p.monthlyPrice ?? p.price ?? ""),
+      yearlyPrice: String(p.yearlyPrice ?? ((p.price ?? 0) * 12)),
       billingCycle: p.billingCycle ?? "monthly",
       description: p.description ?? "",
       features: (p.features ?? []).join(", "),
@@ -258,10 +265,20 @@ export default function PlansPage() {
 
   const save = async () => {
     if (!form.name.trim()) { setFormError("Plan name is required."); return; }
-    if (form.price === "" || isNaN(Number(form.price))) { setFormError("Valid price is required."); return; }
+    if (form.monthlyPrice === "" || isNaN(Number(form.monthlyPrice)) || Number(form.monthlyPrice) < 0) {
+      setFormError("Valid monthly price is required.");
+      return;
+    }
+    if (form.yearlyPrice === "" || isNaN(Number(form.yearlyPrice)) || Number(form.yearlyPrice) < 0) {
+      setFormError("Valid yearly price is required.");
+      return;
+    }
     setSaving(true); setFormError("");
     const body = {
-      name: form.name.trim(), price: Number(form.price),
+      name: form.name.trim(),
+      monthlyPrice: Number(form.monthlyPrice),
+      yearlyPrice: Number(form.yearlyPrice),
+      price: form.billingCycle === "yearly" ? Number(form.yearlyPrice) : Number(form.monthlyPrice),
       billingCycle: form.billingCycle, description: form.description.trim(),
       features: form.features.split(",").map((f) => f.trim()).filter(Boolean),
       limits: {
@@ -321,8 +338,18 @@ export default function PlansPage() {
     finally { setAssigning(false); }
   };
 
-  /* Map DB plans by slug for subscriber counts */
-  const dbPlanMap = Object.fromEntries(plans.map((p) => [p.slug, p]));
+  /* Use DB plans as source of truth for both sections */
+  const previewPlans = plans.map((p) => {
+    const staticMeta = PRICING_PLANS.find((sp) => sp.slug === p.slug);
+    const safeFeatures = (p.features ?? []).map((feature) => ({ label: feature, included: true }));
+    return {
+      ...p,
+      description: p.description || staticMeta?.description || "No description available.",
+      accent: staticMeta?.accent ?? PRICING_PLANS[2].accent,
+      recommended: staticMeta?.recommended ?? p.slug === "pro",
+      features: safeFeatures.length ? safeFeatures : (staticMeta?.features ?? []),
+    };
+  });
 
   return (
     <div className="space-y-10">
@@ -341,6 +368,28 @@ export default function PlansPage() {
           </div>
         </div>
         <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setActiveTab("preview")}
+            className={`cursor-pointer rounded-xl px-3 py-2 text-sm font-medium transition-colors ${
+              activeTab === "preview"
+                ? "bg-zinc-800 text-zinc-100"
+                : "text-zinc-500 hover:bg-zinc-900 hover:text-zinc-300"
+            }`}
+          >
+            Pricing Preview
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab("manage")}
+            className={`cursor-pointer rounded-xl px-3 py-2 text-sm font-medium transition-colors ${
+              activeTab === "manage"
+                ? "bg-zinc-800 text-zinc-100"
+                : "text-zinc-500 hover:bg-zinc-900 hover:text-zinc-300"
+            }`}
+          >
+            Manage Plans
+          </button>
           <button type="button" onClick={fetchPlans}
             className="cursor-pointer flex items-center gap-1.5 rounded-xl border border-zinc-700 px-3 py-2.5 text-sm font-medium text-zinc-400 hover:border-zinc-500 hover:text-zinc-200 transition-colors">
             <RefreshCw className={`size-4 ${loading ? "animate-spin" : ""}`} />
@@ -355,29 +404,54 @@ export default function PlansPage() {
       {/* ══════════════════════════════════════════
           PRICING TABLE
       ══════════════════════════════════════════ */}
+      {activeTab === "preview" && (
       <section>
         <div className="mb-8 text-center">
           <h2 className="text-xl font-bold tracking-tight text-zinc-50">Choose the right plan</h2>
           <p className="mt-2 text-sm text-zinc-500">
-            All plans include a 14-day free trial. No credit card required.
+            Live preview based on your database plans.
           </p>
+          <div className="mt-4 flex justify-center">
+            <div className="inline-flex rounded-xl border border-zinc-700 bg-zinc-900 p-1">
+              <button
+                type="button"
+                onClick={() => setPricingView("monthly")}
+                className={`cursor-pointer rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors ${
+                  pricingView === "monthly" ? "bg-emerald-500 text-zinc-950" : "text-zinc-400 hover:bg-zinc-800"
+                }`}
+              >
+                Monthly
+              </button>
+              <button
+                type="button"
+                onClick={() => setPricingView("yearly")}
+                className={`cursor-pointer rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors ${
+                  pricingView === "yearly" ? "bg-emerald-500 text-zinc-950" : "text-zinc-400 hover:bg-zinc-800"
+                }`}
+              >
+                Yearly
+              </button>
+            </div>
+          </div>
         </div>
 
         <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-          {PRICING_PLANS.map((plan) => (
+          {previewPlans.map((plan) => (
             <PricingCard
-              key={plan.slug}
+              key={plan.id}
               plan={plan}
-              dbPlan={dbPlanMap[plan.slug]}
+              pricingView={pricingView}
               onAssign={openAssign}
             />
           ))}
         </div>
       </section>
+      )}
 
       {/* ══════════════════════════════════════════
           DB PLAN MANAGEMENT (CRUD)
       ══════════════════════════════════════════ */}
+      {activeTab === "manage" && (
       <section>
         <div className="mb-5 flex items-center justify-between">
           <div>
@@ -417,9 +491,18 @@ export default function PlansPage() {
                   </div>
                   <div className="mt-3">
                     <span className={`text-2xl font-bold ${c.icon}`}>
-                      {p.price === 0 ? "Free" : `$${p.price}`}
+                      {(() => {
+                        const value = pricingView === "yearly"
+                          ? Number(p.yearlyPrice ?? ((p.monthlyPrice ?? p.price ?? 0) * 12))
+                          : Number(p.monthlyPrice ?? p.price ?? 0);
+                        return value === 0 ? "Free" : `$${value}`;
+                      })()}
                     </span>
-                    {p.price > 0 && <span className="ml-1 text-xs text-zinc-500">/{p.billingCycle}</span>}
+                    {((pricingView === "yearly"
+                      ? Number(p.yearlyPrice ?? ((p.monthlyPrice ?? p.price ?? 0) * 12))
+                      : Number(p.monthlyPrice ?? p.price ?? 0)) > 0) && (
+                      <span className="ml-1 text-xs text-zinc-500">/{pricingView}</span>
+                    )}
                   </div>
                   {p.description && <p className="mt-1.5 text-xs text-zinc-500">{p.description}</p>}
                   <ul className="mt-3 flex-1 space-y-1">
@@ -456,6 +539,7 @@ export default function PlansPage() {
           </div>
         )}
       </section>
+      )}
 
       {/* ── Create / Edit Modal ── */}
       <Modal open={modalOpen} onClose={() => setModalOpen(false)}
@@ -482,14 +566,21 @@ export default function PlansPage() {
                 className="mt-1 w-full rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus:border-emerald-500/40 placeholder:text-zinc-600" />
             </div>
             <div>
-              <label className="text-xs font-medium text-zinc-500">Price (USD) *</label>
-              <input type="number" min="0" step="0.01" value={form.price}
-                onChange={(e) => setForm((f) => ({ ...f, price: e.target.value }))}
-                placeholder="0 for free"
+              <label className="text-xs font-medium text-zinc-500">Monthly Price (USD) *</label>
+              <input type="number" min="0" step="0.01" value={form.monthlyPrice}
+                onChange={(e) => setForm((f) => ({ ...f, monthlyPrice: e.target.value }))}
+                placeholder="29"
                 className="mt-1 w-full rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus:border-emerald-500/40" />
             </div>
             <div>
-              <label className="text-xs font-medium text-zinc-500">Billing Cycle</label>
+              <label className="text-xs font-medium text-zinc-500">Yearly Price (USD) *</label>
+              <input type="number" min="0" step="0.01" value={form.yearlyPrice}
+                onChange={(e) => setForm((f) => ({ ...f, yearlyPrice: e.target.value }))}
+                placeholder="299"
+                className="mt-1 w-full rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus:border-emerald-500/40" />
+            </div>
+            <div>
+              <label className="text-xs font-medium text-zinc-500">Default Billing Cycle</label>
               <select value={form.billingCycle} onChange={(e) => setForm((f) => ({ ...f, billingCycle: e.target.value }))}
                 className="cursor-pointer mt-1 w-full rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus:border-emerald-500/40">
                 {BILLING_CYCLES.map((b) => <option key={b} value={b} className="capitalize">{b}</option>)}

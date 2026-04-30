@@ -14,6 +14,7 @@ import TableSkeleton from "@/components/ui/TableSkeleton";
 import { useApp } from "@/context/AppProviders";
 import { useModuleData } from "@/context/ModuleDataContext";
 import { usePaginatedList } from "@/hooks/usePaginatedList";
+import { useToast } from "@/hooks/useToast";
 import { AlertTriangle, Package, Plus } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
@@ -29,6 +30,20 @@ function emptyForm() {
     maxLevel: "",
     supplier: "",
     notes: "",
+  };
+}
+
+function normalizeInventoryItem(row) {
+  return {
+    id: row.id,
+    name: row.name ?? "",
+    category: row.category ?? "Other",
+    quantity: Number(row.quantity ?? 0),
+    unit: row.unit ?? "unit",
+    reorderLevel: Number(row.reorderLevel ?? 0),
+    maxLevel: row.maxLevel ?? "",
+    supplier: row.supplier ?? "",
+    notes: row.notes ?? "",
   };
 }
 
@@ -49,12 +64,31 @@ export default function InventoryPage() {
   const [editingId, setEditingId] = useState(null);
   const [form, setForm] = useState(emptyForm);
   const [deleteTarget, setDeleteTarget] = useState(null);
+  const { showToast, ToastUI } = useToast();
 
   useEffect(() => {
     if (!hydrated) return;
-    const t = setTimeout(() => setLoading(false), 380);
-    return () => clearTimeout(t);
-  }, [hydrated]);
+    let alive = true;
+    async function loadInventory() {
+      setLoading(true);
+      try {
+        const res = await fetch("/api/inventory", { cache: "no-store" });
+        const data = await res.json();
+        if (!alive) return;
+        if (res.ok && data?.success && Array.isArray(data.items)) {
+          setInventoryRows(data.items.map(normalizeInventoryItem));
+        }
+      } catch {
+        // Keep fallback/session rows.
+      } finally {
+        if (alive) setLoading(false);
+      }
+    }
+    loadInventory();
+    return () => {
+      alive = false;
+    };
+  }, [hydrated, setInventoryRows]);
 
   const filterFn = useCallback(
     (row) => {
@@ -131,7 +165,7 @@ export default function InventoryPage() {
     setInventoryHistory((prev) => [entry, ...prev].slice(0, HISTORY_CAP));
   };
 
-  const saveItem = () => {
+  const saveItem = async () => {
     if (!form.name.trim() || !form.unit.trim()) return;
     const quantity = Math.max(0, parseInt(form.quantity, 10) || 0);
     const reorderLevel = Math.max(0, parseInt(form.reorderLevel, 10) || 0);
@@ -146,40 +180,79 @@ export default function InventoryPage() {
     };
     const ts = Date.now();
 
-    if (editingId) {
-      const prevRow = inventoryRows.find((r) => r.id === editingId);
-      setInventoryRows((rows) =>
-        rows.map((r) => (r.id === editingId ? { ...r, ...payload } : r))
-      );
-      if (prevRow && prevRow.quantity !== quantity) {
+    try {
+      if (editingId) {
+        const prevRow = inventoryRows.find((r) => r.id === editingId);
+        const res = await fetch(`/api/inventory/${editingId}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        if (!res.ok) {
+          showToast("Inventory update failed.", "error");
+          return;
+        }
+        setInventoryRows((rows) =>
+          rows.map((r) => (r.id === editingId ? { ...r, ...payload } : r))
+        );
+        if (prevRow && prevRow.quantity !== quantity) {
+          appendLog({
+            id: `ih-${ts}`,
+            itemId: editingId,
+            itemName: payload.name,
+            delta: quantity - prevRow.quantity,
+            message: `Adjusted from ${prevRow.quantity} -> ${quantity} ${payload.unit}`,
+            createdAt: new Date().toISOString(),
+          });
+        }
+        showToast("Inventory item updated.");
+      } else {
+        const res = await fetch("/api/inventory", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        const data = await res.json();
+        if (!res.ok || !data?.id) {
+          showToast(data?.error ?? "Inventory creation failed.", "error");
+          return;
+        }
+        setInventoryRows((rows) => [
+          ...rows,
+          normalizeInventoryItem({ ...payload, id: data.id }),
+        ]);
         appendLog({
-          id: `ih-${ts}`,
-          itemId: editingId,
+          id: `ih-${ts + 1}`,
+          itemId: data.id,
           itemName: payload.name,
-          delta: quantity - prevRow.quantity,
-          message: `Adjusted from ${prevRow.quantity} â†’ ${quantity} ${payload.unit}`,
+          delta: quantity,
+          message: `Initial stock · ${quantity} ${payload.unit}`,
           createdAt: new Date().toISOString(),
         });
+        showToast("Inventory item added.");
       }
-    } else {
-      const id = `inv-${ts}`;
-      setInventoryRows((rows) => [...rows, { ...payload, id }]);
-      appendLog({
-        id: `ih-${ts + 1}`,
-        itemId: id,
-        itemName: payload.name,
-        delta: quantity,
-        message: `Initial stock Â· ${quantity} ${payload.unit}`,
-        createdAt: new Date().toISOString(),
-      });
+      setModalOpen(false);
+    } catch {
+      showToast("Network error while saving inventory.", "error");
     }
-    setModalOpen(false);
   };
 
-  const confirmDelete = () => {
+  const confirmDelete = async () => {
     if (!deleteTarget) return;
-    setInventoryRows((prev) => prev.filter((r) => r.id !== deleteTarget.id));
-    setDeleteTarget(null);
+    try {
+      const res = await fetch(`/api/inventory/${deleteTarget.id}`, {
+        method: "DELETE",
+      });
+      if (!res.ok) {
+        showToast("Delete failed. Permission or server error.", "error");
+        return;
+      }
+      setInventoryRows((prev) => prev.filter((r) => r.id !== deleteTarget.id));
+      setDeleteTarget(null);
+      showToast("Inventory item deleted.");
+    } catch {
+      showToast("Network error while deleting inventory item.", "error");
+    }
   };
 
   if (!hydrated || loading) {
@@ -319,17 +392,31 @@ export default function InventoryPage() {
           onDelete={setDeleteTarget}
           onUpdateQty={(row, delta) => {
             const next = Math.max(0, row.quantity + delta);
-            setInventoryRows((prev) =>
-              prev.map((r) => r.id === row.id ? { ...r, quantity: next } : r)
-            );
-            appendLog({
-              id: `ih-${Date.now()}`,
-              itemId: row.id,
-              itemName: row.name,
-              delta,
-              message: delta > 0 ? `+1 quick update` : `-1 quick update`,
-              createdAt: new Date().toISOString(),
-            });
+            fetch(`/api/inventory/${row.id}`, {
+              method: "PATCH",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ quantity: next }),
+            })
+              .then((res) => {
+                if (!res.ok) {
+                  showToast("Quick quantity update failed.", "error");
+                  return;
+                }
+                setInventoryRows((prev) =>
+                  prev.map((r) => (r.id === row.id ? { ...r, quantity: next } : r))
+                );
+                appendLog({
+                  id: `ih-${Date.now()}`,
+                  itemId: row.id,
+                  itemName: row.name,
+                  delta,
+                  message: delta > 0 ? "+1 quick update" : "-1 quick update",
+                  createdAt: new Date().toISOString(),
+                });
+              })
+              .catch(() => {
+                showToast("Network error while updating quantity.", "error");
+              });
           }}
           footer={
             <div className="px-4 pb-4">
@@ -370,6 +457,7 @@ export default function InventoryPage() {
         onConfirm={confirmDelete}
         onCancel={() => setDeleteTarget(null)}
       />
+      {ToastUI}
     </div>
   );
 }

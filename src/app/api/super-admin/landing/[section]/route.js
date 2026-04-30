@@ -24,7 +24,8 @@ const badSection = (s) => Response.json({ success: false, error: `Invalid sectio
 
 /* ── GET /api/super-admin/landing/:section ── */
 export async function GET(request, { params }) {
-  if (!superAdminOnly(request)) return forbidden();
+  const sa = superAdminOnly(request);
+  if (!sa) return forbidden();
   const { section } = await params;
   if (!VALID_SECTIONS.includes(section)) return badSection(section);
   try {
@@ -37,13 +38,14 @@ export async function GET(request, { params }) {
 
 /* ── PUT /api/super-admin/landing/:section — replace entire section ── */
 export async function PUT(request, { params }) {
-  if (!superAdminOnly(request)) return forbidden();
+  const sa = superAdminOnly(request);
+  if (!sa) return forbidden();
   const { section } = await params;
   if (!VALID_SECTIONS.includes(section)) return badSection(section);
   let body;
   try { body = await request.json(); } catch { return badJson(); }
   try {
-    const result = await replaceSection(section, body);
+    const result = await replaceSection(section, body, sa.id ?? null);
     revalidateTag("landing");
     revalidatePath("/");
     return Response.json({ success: true, ...result });
@@ -54,13 +56,14 @@ export async function PUT(request, { params }) {
 
 /* ── POST /api/super-admin/landing/:section — add item to array section ── */
 export async function POST(request, { params }) {
-  if (!superAdminOnly(request)) return forbidden();
+  const sa = superAdminOnly(request);
+  if (!sa) return forbidden();
   const { section } = await params;
   if (!VALID_SECTIONS.includes(section)) return badSection(section);
   let body;
   try { body = await request.json(); } catch { return badJson(); }
   try {
-    const result = await addItem(section, body);
+    const result = await addItem(section, body, sa.id ?? null);
     revalidateTag("landing");
     revalidatePath("/");
     return Response.json({ success: true, ...result }, { status: 201 });

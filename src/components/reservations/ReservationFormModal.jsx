@@ -58,6 +58,7 @@ function CustomerSearchField({ onSelect, initialName = "", initialPhone = "" }) 
   const [showDrop, setShowDrop]   = useState(false);
   const [showAdd, setShowAdd]     = useState(false);
   const [newForm, setNewForm]     = useState({ name: "", phone: "", email: "" });
+  const [addError, setAddError] = useState("");
   const wrapRef = useRef(null);
 
   /* Close dropdown on outside click */
@@ -87,9 +88,14 @@ function CustomerSearchField({ onSelect, initialName = "", initialPhone = "" }) 
     onSelect({ name: c.name, phone: c.phone, customerId: c.id });
   };
 
-  const handleAdd = () => {
+  const handleAdd = async () => {
     if (!newForm.name.trim() || !newForm.phone.trim()) return;
-    const c = addCustomer(newForm);
+    setAddError("");
+    const c = await addCustomer(newForm);
+    if (!c) {
+      setAddError("Customer save failed. Try again.");
+      return;
+    }
     setShowAdd(false);
     setShowDrop(false);
     setQuery("");
@@ -204,6 +210,9 @@ function CustomerSearchField({ onSelect, initialName = "", initialPhone = "" }) 
               Cancel
             </button>
           </div>
+          {addError ? (
+            <p className="text-xs text-red-400">{addError}</p>
+          ) : null}
         </div>
       )}
     </div>
@@ -278,7 +287,7 @@ export default function ReservationFormModal({ open, onClose, editing, tableOpti
 
   const isConflict = availabilityInfo && !availabilityInfo.available;
 
-  const submit = () => {
+  const submit = async () => {
     const guests = parseInt(form.guests, 10);
     if (
       !form.customerName.trim() || !form.phone.trim() ||
@@ -296,9 +305,14 @@ export default function ReservationFormModal({ open, onClose, editing, tableOpti
             : c
         )
       );
+      fetch(`/api/customers/${linkedCustomerId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ lastVisit: form.date }),
+      }).catch(() => {});
     }
 
-    onSave(buildPayload(editing, form));
+    await onSave(buildPayload(editing, form));
     onClose();
   };
 

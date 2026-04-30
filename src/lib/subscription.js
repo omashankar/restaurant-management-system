@@ -96,7 +96,14 @@ export async function assignPlan(restaurantId, planSlug, options = {}) {
 
   await db.collection("restaurants").updateOne(
     { _id: _rid },
-    { $set: { plan: plan.slug, planAssignedAt: now, updatedAt: now } }
+    {
+      $set: {
+        plan: plan.slug,
+        subscriptionStatus: status,
+        planAssignedAt: now,
+        updatedAt: now,
+      },
+    }
   );
 
   return result;

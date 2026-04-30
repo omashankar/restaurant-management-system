@@ -4,7 +4,7 @@
  */
 import { getTokenFromRequest } from "@/lib/authCookies";
 import { verifyToken } from "@/lib/jwt";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 
 function superAdminOnly(request) {
   const token   = getTokenFromRequest(request);
@@ -19,7 +19,11 @@ export async function POST(request) {
   }
   try {
     revalidatePath("/", "layout");
-    return Response.json({ success: true, message: "Cache cleared." });
+    revalidatePath("/super-admin", "layout");
+    revalidatePath("/super-admin/settings");
+    revalidatePath("/super-admin/landing-site");
+    revalidateTag("landing");
+    return Response.json({ success: true, message: "Selected caches cleared and revalidated." });
   } catch (err) {
     console.error("Cache clear error:", err.message);
     return Response.json({ success: false, error: "Failed to clear cache." }, { status: 500 });

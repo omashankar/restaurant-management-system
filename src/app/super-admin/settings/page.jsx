@@ -806,7 +806,7 @@ function AdvancedSection({ data, onChange, onSave, saving, showToast }) {
       <div className="flex items-center justify-between rounded-xl border border-zinc-800 bg-zinc-900/40 px-4 py-3">
         <div>
           <p className="text-sm font-medium text-zinc-200">Clear Cache</p>
-          <p className="mt-0.5 text-xs text-zinc-500">Revalidate all Next.js cached pages and data.</p>
+          <p className="mt-0.5 text-xs text-zinc-500">Revalidate landing and key super-admin pages cache.</p>
         </div>
         <button
           type="button"

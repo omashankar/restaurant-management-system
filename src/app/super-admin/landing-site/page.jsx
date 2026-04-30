@@ -6,8 +6,8 @@ import Modal from "@/components/ui/Modal";
 import { getIcon } from "@/lib/iconMap";
 import { useToast } from "@/hooks/useToast";
 import {
-  AlertCircle, CreditCard, Globe,
-  LayoutTemplate, Mail, MessageSquare,
+  AlertCircle, BarChart3, CreditCard, Globe,
+  Info, LayoutTemplate, Link2, Mail, MessageSquare, Search,
   Pencil, Plus, Save, Star, Trash2, Users,
 } from "lucide-react";
 import Link from "next/link";
@@ -78,13 +78,98 @@ function SaveBtn({ saving, onClick }) {
 
 /* ── Tabs ── */
 const TABS = [
+  { id: "navbar",       label: "Navbar",       Icon: Link2          },
   { id: "hero",         label: "Hero",         Icon: LayoutTemplate },
   { id: "features",     label: "Features",     Icon: Star           },
   { id: "roles",        label: "Roles",        Icon: Users          },
   { id: "pricing",      label: "Pricing",      Icon: CreditCard     },
   { id: "testimonials", label: "Testimonials", Icon: MessageSquare  },
+  { id: "about",        label: "About",        Icon: Info           },
+  { id: "contact",      label: "Contact",      Icon: Mail           },
+  { id: "brands",       label: "Brands",       Icon: Star           },
+  { id: "problemSolution", label: "Problem/Solution", Icon: AlertCircle },
+  { id: "howItWorks",   label: "How It Works", Icon: BarChart3      },
+  { id: "benefits",     label: "Benefits",     Icon: Users          },
+  { id: "demo",         label: "Demo",         Icon: Globe          },
+  { id: "cta",          label: "CTA",          Icon: LayoutTemplate },
   { id: "footer",       label: "Footer",       Icon: Mail           },
+  { id: "seo",          label: "SEO",          Icon: Search         },
 ];
+
+function NavbarPanel({ data, onChange, onSave, saving }) {
+  const links = Array.isArray(data.links) ? data.links : [];
+  const logo = data.logo ?? {};
+  const ctaPrimary = data.ctaPrimary ?? {};
+  const ctaSecondary = data.ctaSecondary ?? {};
+
+  const updateLink = (i, k, v) => onChange("links", links.map((l, idx) => idx === i ? { ...l, [k]: v } : l));
+  const addLink = () => onChange("links", [...links, { label: "", href: "", external: false }]);
+  const removeLink = (i) => onChange("links", links.filter((_, idx) => idx !== i));
+
+  return (
+    <div className="space-y-5">
+      <SectionHeader icon={Link2} title="Navbar" description="Customize logo text, links, and top navigation CTAs." />
+      <div className="grid gap-4 sm:grid-cols-2">
+        <Field label="Logo Text" required>
+          <input
+            value={logo.text ?? ""}
+            onChange={e => onChange("logo", { ...logo, text: e.target.value })}
+            placeholder="Restaurant OS"
+            className={ic}
+          />
+        </Field>
+        <Field label="Logo Icon URL">
+          <input
+            value={logo.iconUrl ?? ""}
+            onChange={e => onChange("logo", { ...logo, iconUrl: e.target.value })}
+            placeholder="https://..."
+            className={ic}
+          />
+        </Field>
+      </div>
+
+      <div className="grid gap-4 sm:grid-cols-2">
+        <Field label="Primary CTA Label">
+          <input value={ctaPrimary.label ?? ""} onChange={e => onChange("ctaPrimary", { ...ctaPrimary, label: e.target.value })} placeholder="Get Started" className={ic} />
+        </Field>
+        <Field label="Primary CTA URL">
+          <input value={ctaPrimary.href ?? ""} onChange={e => onChange("ctaPrimary", { ...ctaPrimary, href: e.target.value })} placeholder="/signup" className={ic} />
+        </Field>
+        <Field label="Secondary CTA Label">
+          <input value={ctaSecondary.label ?? ""} onChange={e => onChange("ctaSecondary", { ...ctaSecondary, label: e.target.value })} placeholder="Login" className={ic} />
+        </Field>
+        <Field label="Secondary CTA URL">
+          <input value={ctaSecondary.href ?? ""} onChange={e => onChange("ctaSecondary", { ...ctaSecondary, href: e.target.value })} placeholder="/login" className={ic} />
+        </Field>
+      </div>
+
+      <div>
+        <p className="block text-xs font-medium text-zinc-400 mb-2">Navigation Links</p>
+        <div className="space-y-2">
+          {links.map((l, i) => (
+            <div key={i} className="grid gap-2 rounded-xl border border-zinc-800 bg-zinc-900/40 p-3 sm:grid-cols-3">
+              <input value={l.label ?? ""} onChange={e => updateLink(i, "label", e.target.value)} placeholder="Label" className={ic} />
+              <input value={l.href ?? ""} onChange={e => updateLink(i, "href", e.target.value)} placeholder="#features or /page" className={ic} />
+              <div className="flex items-center gap-2">
+                <label className="flex items-center gap-2 text-xs text-zinc-400">
+                  <input type="checkbox" checked={!!l.external} onChange={e => updateLink(i, "external", e.target.checked)} />
+                  External
+                </label>
+                <button type="button" onClick={() => removeLink(i)} className="cursor-pointer ml-auto rounded-lg p-2 text-zinc-600 hover:bg-red-500/15 hover:text-red-400 transition-colors">
+                  <Trash2 className="size-4" />
+                </button>
+              </div>
+            </div>
+          ))}
+          <button type="button" onClick={addLink} className="cursor-pointer flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-zinc-700 py-2.5 text-sm text-zinc-500 hover:border-emerald-500/40 hover:text-emerald-400 transition-colors">
+            <Plus className="size-4" /> Add Nav Link
+          </button>
+        </div>
+      </div>
+      <SaveBtn saving={saving} onClick={onSave} />
+    </div>
+  );
+}
 
 /* ════════════════════════════════════════
    HERO PANEL
@@ -346,6 +431,194 @@ function FooterPanel({ data, onChange, onSave, saving }) {
   );
 }
 
+function AboutPanel({ data, onChange, onSave, saving }) {
+  return (
+    <div className="space-y-5">
+      <SectionHeader icon={Info} title="About Section" description="Control about headline, text, and media details." />
+      <Field label="Headline" required>
+        <input value={data.headline ?? ""} onChange={e => onChange("headline", e.target.value)} placeholder="Built by people who understand restaurants" className={ic} />
+      </Field>
+      <Field label="Description">
+        <textarea rows={4} value={data.description ?? ""} onChange={e => onChange("description", e.target.value)} placeholder="About your product and mission..." className={`${ic} resize-none`} />
+      </Field>
+      <Field label="Image URL">
+        <input value={data.imageUrl ?? ""} onChange={e => onChange("imageUrl", e.target.value)} placeholder="https://..." className={ic} />
+      </Field>
+      <SaveBtn saving={saving} onClick={onSave} />
+    </div>
+  );
+}
+
+function ContactPanel({ data, onChange, onSave, saving }) {
+  return (
+    <div className="space-y-5">
+      <SectionHeader icon={Mail} title="Contact Section" description="Set support contact details shown on landing page." />
+      <div className="grid gap-4 sm:grid-cols-2">
+        <Field label="Email" required>
+          <input type="email" value={data.email ?? ""} onChange={e => onChange("email", e.target.value)} placeholder="support@restaurantos.com" className={ic} />
+        </Field>
+        <Field label="Phone">
+          <input value={data.phone ?? ""} onChange={e => onChange("phone", e.target.value)} placeholder="+1 555 000 0000" className={ic} />
+        </Field>
+        <div className="sm:col-span-2">
+          <Field label="Address">
+            <input value={data.address ?? ""} onChange={e => onChange("address", e.target.value)} placeholder="123 Main Street, City, Country" className={ic} />
+          </Field>
+        </div>
+        <div className="sm:col-span-2">
+          <Field label="Map URL">
+            <input value={data.mapUrl ?? ""} onChange={e => onChange("mapUrl", e.target.value)} placeholder="https://maps.google.com/..." className={ic} />
+          </Field>
+        </div>
+      </div>
+      <Toggle
+        checked={!!data.formEnabled}
+        onChange={(v) => onChange("formEnabled", v)}
+        label="Contact form enabled"
+        description="Show/Hide lead capture form on public page."
+      />
+      <SaveBtn saving={saving} onClick={onSave} />
+    </div>
+  );
+}
+
+function SeoPanel({ data, onChange, onSave, saving }) {
+  return (
+    <div className="space-y-5">
+      <SectionHeader icon={Search} title="SEO Settings" description="Manage metadata for search and social previews." />
+      <Field label="Meta Title">
+        <input value={data.title ?? ""} onChange={e => onChange("title", e.target.value)} placeholder="Restaurant OS — All-in-One Restaurant Management System" className={ic} />
+      </Field>
+      <Field label="Meta Description">
+        <textarea rows={3} value={data.description ?? ""} onChange={e => onChange("description", e.target.value)} placeholder="Manage billing, inventory, staff, and analytics..." className={`${ic} resize-none`} />
+      </Field>
+      <Field label="Keywords">
+        <input value={data.keywords ?? ""} onChange={e => onChange("keywords", e.target.value)} placeholder="restaurant management, POS, inventory, SaaS" className={ic} />
+      </Field>
+      <div className="grid gap-4 sm:grid-cols-2">
+        <Field label="Open Graph Image URL">
+          <input value={data.ogImage ?? ""} onChange={e => onChange("ogImage", e.target.value)} placeholder="https://..." className={ic} />
+        </Field>
+        <Field label="Twitter Card Type">
+          <input value={data.twitterCard ?? ""} onChange={e => onChange("twitterCard", e.target.value)} placeholder="summary_large_image" className={ic} />
+        </Field>
+      </div>
+      <SaveBtn saving={saving} onClick={onSave} />
+    </div>
+  );
+}
+
+const toLines = (arr) => (Array.isArray(arr) ? arr.join("\n") : "");
+const fromLines = (txt) => String(txt ?? "").split("\n").map((x) => x.trim()).filter(Boolean);
+
+function BrandsPanel({ data, onChange, onSave, saving }) {
+  return (
+    <div className="space-y-5">
+      <SectionHeader icon={Star} title="Brand Strip" description="Trusted-by label and brand chips." />
+      <Field label="Eyebrow">
+        <input value={data.eyebrow ?? ""} onChange={(e) => onChange("eyebrow", e.target.value)} placeholder="Trusted by" className={ic} />
+      </Field>
+      <Field label="Brands (one per line)">
+        <textarea
+          rows={6}
+          value={toLines(data.items)}
+          onChange={(e) => onChange("items", fromLines(e.target.value))}
+          className={`${ic} resize-none`}
+        />
+      </Field>
+      <SaveBtn saving={saving} onClick={onSave} />
+    </div>
+  );
+}
+
+function ProblemSolutionPanel({ data, onChange, onSave, saving }) {
+  return (
+    <div className="space-y-5">
+      <SectionHeader icon={AlertCircle} title="Problem / Solution" description="Edit both cards shown under hero." />
+      <div className="grid gap-4 sm:grid-cols-2">
+        <Field label="Problem Eyebrow"><input value={data.problemEyebrow ?? ""} onChange={(e) => onChange("problemEyebrow", e.target.value)} className={ic} /></Field>
+        <Field label="Problem Title"><input value={data.problemTitle ?? ""} onChange={(e) => onChange("problemTitle", e.target.value)} className={ic} /></Field>
+        <Field label="Solution Eyebrow"><input value={data.solutionEyebrow ?? ""} onChange={(e) => onChange("solutionEyebrow", e.target.value)} className={ic} /></Field>
+        <Field label="Solution Title"><input value={data.solutionTitle ?? ""} onChange={(e) => onChange("solutionTitle", e.target.value)} className={ic} /></Field>
+      </div>
+      <Field label="Solution Description">
+        <textarea rows={3} value={data.solutionDescription ?? ""} onChange={(e) => onChange("solutionDescription", e.target.value)} className={`${ic} resize-none`} />
+      </Field>
+      <Field label="Problem Points (one per line)">
+        <textarea rows={5} value={toLines(data.problems)} onChange={(e) => onChange("problems", fromLines(e.target.value))} className={`${ic} resize-none`} />
+      </Field>
+      <Field label="Solution Points (one per line)">
+        <textarea rows={5} value={toLines(data.solutionPoints)} onChange={(e) => onChange("solutionPoints", fromLines(e.target.value))} className={`${ic} resize-none`} />
+      </Field>
+      <SaveBtn saving={saving} onClick={onSave} />
+    </div>
+  );
+}
+
+function HowItWorksPanel({ data, onChange, onSave, saving }) {
+  const steps = Array.isArray(data.steps) ? data.steps : [];
+  const textValue = steps.map((s) => `${s.n}|${s.title}|${s.text}|${s.icon ?? "Circle"}`).join("\n");
+  return (
+    <div className="space-y-5">
+      <SectionHeader icon={BarChart3} title="How It Works" description="Flow steps. Format: number|title|text|icon" />
+      <div className="grid gap-4 sm:grid-cols-3">
+        <Field label="Eyebrow"><input value={data.eyebrow ?? ""} onChange={(e) => onChange("eyebrow", e.target.value)} className={ic} /></Field>
+        <Field label="Title"><input value={data.title ?? ""} onChange={(e) => onChange("title", e.target.value)} className={ic} /></Field>
+        <Field label="Subtext"><input value={data.subtext ?? ""} onChange={(e) => onChange("subtext", e.target.value)} className={ic} /></Field>
+      </div>
+      <Field label="Steps (one per line)">
+        <textarea
+          rows={8}
+          value={textValue}
+          onChange={(e) => {
+            const parsed = fromLines(e.target.value).map((line) => {
+              const [n = "", title = "", text = "", icon = "Circle"] = line.split("|");
+              return { n: n.trim(), title: title.trim(), text: text.trim(), icon: icon.trim() || "Circle" };
+            });
+            onChange("steps", parsed);
+          }}
+          className={`${ic} resize-none`}
+        />
+      </Field>
+      <SaveBtn saving={saving} onClick={onSave} />
+    </div>
+  );
+}
+
+function BenefitsPanel({ data, onChange, onSave, saving }) {
+  return (
+    <div className="space-y-5">
+      <SectionHeader icon={Users} title="Benefits Block" description="Device card + Why RMS card content." />
+      <div className="grid gap-4 sm:grid-cols-2">
+        <Field label="Device Badge"><input value={data.deviceBadge ?? ""} onChange={(e) => onChange("deviceBadge", e.target.value)} className={ic} /></Field>
+        <Field label="Why Badge"><input value={data.whyBadge ?? ""} onChange={(e) => onChange("whyBadge", e.target.value)} className={ic} /></Field>
+        <Field label="Device Title"><input value={data.deviceTitle ?? ""} onChange={(e) => onChange("deviceTitle", e.target.value)} className={ic} /></Field>
+        <Field label="Why Title"><input value={data.whyTitle ?? ""} onChange={(e) => onChange("whyTitle", e.target.value)} className={ic} /></Field>
+      </div>
+      <Field label="Device Description">
+        <textarea rows={3} value={data.deviceDescription ?? ""} onChange={(e) => onChange("deviceDescription", e.target.value)} className={`${ic} resize-none`} />
+      </Field>
+      <Field label="Benefit points (one per line)">
+        <textarea rows={6} value={toLines(data.items)} onChange={(e) => onChange("items", fromLines(e.target.value))} className={`${ic} resize-none`} />
+      </Field>
+      <SaveBtn saving={saving} onClick={onSave} />
+    </div>
+  );
+}
+
+function ToggleSectionPanel({ icon: Icon, title, description, data, onChange, onSave, saving }) {
+  return (
+    <div className="space-y-5">
+      <SectionHeader icon={Icon} title={title} description={description} />
+      <Toggle checked={data.enabled !== false} onChange={(v) => onChange("enabled", v)} label="Section enabled" />
+      <Field label="Section ID">
+        <input value={data.sectionId ?? ""} onChange={(e) => onChange("sectionId", e.target.value)} className={ic} />
+      </Field>
+      <SaveBtn saving={saving} onClick={onSave} />
+    </div>
+  );
+}
+
 /* ════════════════════════════════════════
    FIELD DEFINITIONS FOR ARRAY PANELS
 ════════════════════════════════════════ */
@@ -363,6 +636,8 @@ const ROLE_FIELDS = [
 
 const PRICING_FIELDS = [
   { key: "name",        label: "Plan Name",       placeholder: "Pro",                required: true },
+  { key: "monthlyPrice",label: "Monthly Price",   type: "number",    placeholder: "79", required: true },
+  { key: "yearlyPrice", label: "Yearly Price",    type: "number",    placeholder: "63" },
   { key: "description", label: "Description",     placeholder: "For growing teams.", type: "textarea" },
   { key: "cta",         label: "CTA Button Text", placeholder: "Start Free Trial" },
   { key: "badge",       label: "Badge",           placeholder: "Most Popular",       hint: "Optional label on card" },
@@ -380,24 +655,83 @@ const TESTIMONIAL_FIELDS = [
 ════════════════════════════════════════ */
 export default function LandingSitePage() {
   const [activeTab, setActiveTab] = useState("hero");
+  const [pricingView, setPricingView] = useState("monthly");
   const [content, setContent]     = useState(null);
   const [fetching, setFetching]   = useState(true);
   const [saving, setSaving]       = useState(false);
   const { showToast, ToastUI }    = useToast();
   const panelRef                  = useRef(null);
 
+  const normalizePricingForEditor = useCallback((rawContent) => {
+    if (!rawContent) return rawContent;
+    const pricing = Array.isArray(rawContent.pricing)
+      ? rawContent.pricing.map((plan) => ({
+          ...plan,
+          monthlyPrice: plan?.price?.monthly ?? 0,
+          yearlyPrice: plan?.price?.yearly ?? plan?.price?.monthly ?? 0,
+        }))
+      : [];
+    return { ...rawContent, pricing };
+  }, []);
+
+  const mapPlansToLandingPricing = useCallback((plans = [], fallbackPricing = []) => {
+    const fallbackBySlug = Object.fromEntries((fallbackPricing ?? []).map((p) => [p.slug, p]));
+    return plans.map((plan) => {
+      const fallback = fallbackBySlug[plan.slug] ?? {};
+      const normalizedPrice = Number(plan.price) || 0;
+      const monthly = Number.isFinite(Number(plan.monthlyPrice))
+        ? Number(plan.monthlyPrice)
+        : (plan.billingCycle === "yearly"
+          ? Number((normalizedPrice / 12).toFixed(2))
+          : normalizedPrice);
+      const yearly = Number.isFinite(Number(plan.yearlyPrice))
+        ? Number(plan.yearlyPrice)
+        : (plan.billingCycle === "yearly"
+          ? normalizedPrice
+          : Number((normalizedPrice * 12).toFixed(2)));
+      return {
+        id: plan.slug ?? plan.id,
+        name: plan.name,
+        slug: plan.slug,
+        description: plan.description || fallback.description || "",
+        highlight: typeof fallback.highlight === "boolean" ? fallback.highlight : plan.slug === "pro",
+        badge: fallback.badge ?? (plan.slug === "pro" ? "Most Popular" : null),
+        cta: fallback.cta ?? "Start Free Trial",
+        features: Array.isArray(plan.features)
+          ? plan.features.map((feature) => ({ text: String(feature), included: true }))
+          : (fallback.features ?? []),
+        price: { monthly, yearly },
+        monthlyPrice: monthly,
+        yearlyPrice: yearly,
+      };
+    });
+  }, []);
+
   /* ── Fetch all content on mount ── */
   useEffect(() => {
     (async () => {
       try {
-        const res  = await fetch("/api/super-admin/landing");
-        const data = await res.json();
-        if (data.success) setContent(data.content);
-        else showToast(data.error ?? "Failed to load.", "error");
+        const [landingRes, plansRes] = await Promise.all([
+          fetch("/api/super-admin/landing"),
+          fetch("/api/super-admin/plans"),
+        ]);
+        const [landingData, plansData] = await Promise.all([landingRes.json(), plansRes.json()]);
+        if (!landingData.success) {
+          showToast(landingData.error ?? "Failed to load.", "error");
+          return;
+        }
+        const baseContent = normalizePricingForEditor(landingData.content);
+        const syncedPricing = plansData.success
+          ? mapPlansToLandingPricing(plansData.plans ?? [], baseContent?.pricing ?? [])
+          : baseContent?.pricing ?? [];
+        setContent({ ...baseContent, pricing: syncedPricing });
+        if (!plansData.success) {
+          showToast("Plans sync failed. Showing saved landing pricing.", "error");
+        }
       } catch { showToast("Network error.", "error"); }
       finally { setFetching(false); }
     })();
-  }, [showToast]);
+  }, [mapPlansToLandingPricing, normalizePricingForEditor, showToast]);
 
   /* ── Update a field in the active section ── */
   const handleChange = useCallback((keyOrArr, val) => {
@@ -411,6 +745,10 @@ export default function LandingSitePage() {
   /* ── Save active section (optionally with override data) ── */
   const handleSave = useCallback(async (overrideData) => {
     if (!content) return;
+    if (activeTab === "pricing") {
+      showToast("Pricing is synced from Plans. Please update /super-admin/plans.", "error");
+      return;
+    }
     setSaving(true);
     try {
       const payload = overrideData !== undefined ? overrideData : content[activeTab];
@@ -493,6 +831,9 @@ export default function LandingSitePage() {
               {activeTab === "hero" && (
                 <HeroPanel data={sectionData} onChange={handleChange} onSave={handleSave} saving={saving} />
               )}
+              {activeTab === "navbar" && (
+                <NavbarPanel data={sectionData} onChange={handleChange} onSave={() => handleSave()} saving={saving} />
+              )}
               {activeTab === "features" && (
                 <ArrayPanel
                   items={content.features ?? []}
@@ -536,25 +877,57 @@ export default function LandingSitePage() {
                 />
               )}
               {activeTab === "pricing" && (
-                <ArrayPanel
-                  items={content.pricing ?? []}
-                  fields={PRICING_FIELDS}
-                  onSave={handleSave}
-                  saving={saving}
-                  icon={CreditCard}
-                  title="Pricing Plans"
-                  description="Manage subscription tiers shown on the landing page."
-                  renderCard={item => (
-                    <>
-                      <div className="flex items-center gap-2">
-                        <p className="text-sm font-medium text-zinc-100">{item.name}</p>
-                        {item.badge && <span className="rounded-full bg-amber-500/15 px-2 py-0.5 text-[10px] font-semibold text-amber-400">{item.badge}</span>}
-                        {item.highlight && <span className="rounded-full bg-indigo-500/15 px-2 py-0.5 text-[10px] font-semibold text-indigo-400">Featured</span>}
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between gap-3 rounded-xl border border-indigo-500/30 bg-indigo-500/10 px-3 py-2">
+                    <p className="text-xs text-indigo-200">
+                      Pricing here is synced from Plans and is read-only.
+                    </p>
+                    <Link
+                      href="/super-admin/plans"
+                      className="cursor-pointer rounded-lg border border-indigo-400/40 px-2.5 py-1 text-xs font-semibold text-indigo-200 hover:border-indigo-300 hover:text-white"
+                    >
+                      Open Plans
+                    </Link>
+                  </div>
+                  <div className="flex justify-end">
+                    <div className="inline-flex rounded-xl border border-zinc-700 bg-zinc-900 p-1">
+                      <button
+                        type="button"
+                        onClick={() => setPricingView("monthly")}
+                        className={`cursor-pointer rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors ${
+                          pricingView === "monthly" ? "bg-emerald-500 text-zinc-950" : "text-zinc-400 hover:bg-zinc-800"
+                        }`}
+                      >
+                        Monthly
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setPricingView("yearly")}
+                        className={`cursor-pointer rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors ${
+                          pricingView === "yearly" ? "bg-emerald-500 text-zinc-950" : "text-zinc-400 hover:bg-zinc-800"
+                        }`}
+                      >
+                        Yearly
+                      </button>
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    {(content.pricing ?? []).map((item) => (
+                      <div key={item.id ?? item.slug ?? item.name} className="rounded-xl border border-zinc-800 bg-zinc-900/40 px-4 py-3">
+                        <div className="flex items-center gap-2">
+                          <p className="text-sm font-medium text-zinc-100">{item.name}</p>
+                          {item.badge && <span className="rounded-full bg-amber-500/15 px-2 py-0.5 text-[10px] font-semibold text-amber-400">{item.badge}</span>}
+                          {item.highlight && <span className="rounded-full bg-indigo-500/15 px-2 py-0.5 text-[10px] font-semibold text-indigo-400">Featured</span>}
+                        </div>
+                        <p className="text-xs font-semibold text-zinc-300">
+                          ${pricingView === "yearly" ? (item.yearlyPrice ?? item.price?.yearly ?? item.monthlyPrice ?? item.price?.monthly ?? 0) : (item.monthlyPrice ?? item.price?.monthly ?? 0)}
+                          <span className="ml-1 text-zinc-500">/{pricingView === "yearly" ? "yr" : "mo"}</span>
+                        </p>
+                        <p className="text-xs text-zinc-500">{item.description}</p>
                       </div>
-                      <p className="text-xs text-zinc-500 truncate">{item.description}</p>
-                    </>
-                  )}
-                />
+                    ))}
+                  </div>
+                </div>
               )}
               {activeTab === "testimonials" && (
                 <ArrayPanel
@@ -578,6 +951,49 @@ export default function LandingSitePage() {
               )}
               {activeTab === "footer" && (
                 <FooterPanel data={sectionData} onChange={handleChange} onSave={() => handleSave()} saving={saving} />
+              )}
+              {activeTab === "about" && (
+                <AboutPanel data={sectionData} onChange={handleChange} onSave={() => handleSave()} saving={saving} />
+              )}
+              {activeTab === "contact" && (
+                <ContactPanel data={sectionData} onChange={handleChange} onSave={() => handleSave()} saving={saving} />
+              )}
+              {activeTab === "brands" && (
+                <BrandsPanel data={sectionData} onChange={handleChange} onSave={() => handleSave()} saving={saving} />
+              )}
+              {activeTab === "problemSolution" && (
+                <ProblemSolutionPanel data={sectionData} onChange={handleChange} onSave={() => handleSave()} saving={saving} />
+              )}
+              {activeTab === "howItWorks" && (
+                <HowItWorksPanel data={sectionData} onChange={handleChange} onSave={() => handleSave()} saving={saving} />
+              )}
+              {activeTab === "benefits" && (
+                <BenefitsPanel data={sectionData} onChange={handleChange} onSave={() => handleSave()} saving={saving} />
+              )}
+              {activeTab === "demo" && (
+                <ToggleSectionPanel
+                  icon={Globe}
+                  title="Demo Section"
+                  description="Enable/disable demo block and update anchor id."
+                  data={sectionData}
+                  onChange={handleChange}
+                  onSave={() => handleSave()}
+                  saving={saving}
+                />
+              )}
+              {activeTab === "cta" && (
+                <ToggleSectionPanel
+                  icon={LayoutTemplate}
+                  title="CTA Section"
+                  description="Enable/disable CTA block and update anchor id."
+                  data={sectionData}
+                  onChange={handleChange}
+                  onSave={() => handleSave()}
+                  saving={saving}
+                />
+              )}
+              {activeTab === "seo" && (
+                <SeoPanel data={sectionData} onChange={handleChange} onSave={() => handleSave()} saving={saving} />
               )}
             </>
           )}

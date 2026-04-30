@@ -1,5 +1,8 @@
+"use client";
+
 import { Check, Star, X } from "lucide-react";
 import Link from "next/link";
+import { useState } from "react";
 import { getIcon } from "@/lib/iconMap";
 import SectionTitle from "./SectionTitle";
 
@@ -84,6 +87,7 @@ export function DynamicRoles({ roles = [] }) {
    PRICING SECTION
 ───────────────────────────────────────── */
 export function DynamicPricing({ pricing = [] }) {
+  const [billingCycle, setBillingCycle] = useState("monthly");
   if (!pricing.length) return null;
   return (
     <section id="pricing" className="scroll-mt-16 bg-slate-50 py-20">
@@ -93,6 +97,28 @@ export function DynamicPricing({ pricing = [] }) {
           title="Simple, transparent pricing"
           subtext="Choose the plan that fits your restaurant. Upgrade or downgrade anytime."
         />
+        <div className="mt-6 flex justify-center">
+          <div className="inline-flex rounded-xl border border-slate-200 bg-white p-1 shadow-sm">
+            <button
+              type="button"
+              onClick={() => setBillingCycle("monthly")}
+              className={`cursor-pointer rounded-lg px-4 py-2 text-sm font-semibold transition-colors ${
+                billingCycle === "monthly" ? "bg-indigo-600 text-white" : "text-slate-600 hover:bg-slate-100"
+              }`}
+            >
+              Monthly
+            </button>
+            <button
+              type="button"
+              onClick={() => setBillingCycle("yearly")}
+              className={`cursor-pointer rounded-lg px-4 py-2 text-sm font-semibold transition-colors ${
+                billingCycle === "yearly" ? "bg-indigo-600 text-white" : "text-slate-600 hover:bg-slate-100"
+              }`}
+            >
+              Yearly
+            </button>
+          </div>
+        </div>
         <div className="mt-10 grid gap-6 lg:grid-cols-3">
           {pricing.map((plan) => (
             <article key={plan.id ?? plan.name}
@@ -114,9 +140,11 @@ export function DynamicPricing({ pricing = [] }) {
               </p>
               <div className="mt-3 flex items-end gap-1">
                 <span className={`text-4xl font-extrabold tabular-nums ${plan.highlight ? "text-white" : "text-slate-900"}`}>
-                  ${plan.price?.monthly ?? 0}
+                  ${billingCycle === "yearly" ? (plan.price?.yearly ?? plan.price?.monthly ?? 0) : (plan.price?.monthly ?? 0)}
                 </span>
-                <span className={`mb-1 text-sm ${plan.highlight ? "text-indigo-200" : "text-slate-400"}`}>/mo</span>
+                <span className={`mb-1 text-sm ${plan.highlight ? "text-indigo-200" : "text-slate-400"}`}>
+                  /{billingCycle === "yearly" ? "yr" : "mo"}
+                </span>
               </div>
               <p className={`mt-3 text-sm leading-relaxed ${plan.highlight ? "text-indigo-100" : "text-slate-600"}`}>
                 {plan.description}

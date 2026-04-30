@@ -32,11 +32,15 @@ export async function POST(request) {
       { status: 400 }
     );
   }
+  const port = Number(smtp.smtpPort ?? 587);
+  if (!Number.isFinite(port) || port < 1 || port > 65535) {
+    return Response.json({ success: false, error: "Invalid SMTP port." }, { status: 400 });
+  }
 
   try {
     const transporter = nodemailer.createTransport({
       host:   smtp.smtpHost,
-      port:   Number(smtp.smtpPort ?? 587),
+      port,
       secure: !!smtp.secure,
       auth: {
         user: smtp.smtpUser,
@@ -65,9 +69,6 @@ export async function POST(request) {
     return Response.json({ success: true, message: "Test email sent." });
   } catch (err) {
     console.error("Test email error:", err.message);
-    return Response.json(
-      { success: false, error: `SMTP error: ${err.message}` },
-      { status: 500 }
-    );
+    return Response.json({ success: false, error: "Failed to send test email. Check SMTP settings." }, { status: 500 });
   }
 }

@@ -13,7 +13,7 @@ import {
  * AuthContext — global user state backed by JWT cookie.
  *
  * Fetches user from /api/auth/me on mount (uses httpOnly cookie).
- * Falls back to localStorage for instant hydration (no flash).
+ * Local cache is updated after successful verification.
  *
  * Exposes:
  *   user        — { id, name, email, role, restaurantId } | null
@@ -32,17 +32,7 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);   // fetching /me
   const [hydrated, setHydrated] = useState(false); // initial load done
 
-  /* ── 1. Instant hydration from localStorage (no flash) ── */
-  useEffect(() => {
-    try {
-      const cached = localStorage.getItem(LS_KEY);
-      if (cached) setUserState(JSON.parse(cached));
-    } catch {
-      localStorage.removeItem(LS_KEY);
-    }
-  }, []);
-
-  /* ── 2. Verify with server via JWT cookie ── */
+  /* ── Verify with server via JWT cookie ── */
   useEffect(() => {
     let cancelled = false;
 
@@ -61,10 +51,10 @@ export function AuthProvider({ children }) {
         }
       })
       .catch(() => {
-        // Network error — keep cached user (offline support)
+        // Network error — fail closed to avoid stale-role redirects.
         if (!cancelled) {
-          const cached = localStorage.getItem(LS_KEY);
-          if (!cached) setUserState(null);
+          setUserState(null);
+          localStorage.removeItem(LS_KEY);
         }
       })
       .finally(() => {

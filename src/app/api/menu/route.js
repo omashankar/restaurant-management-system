@@ -55,10 +55,14 @@ export const POST = withTenant(
     const result = await db.collection("menuItems").insertOne(doc);
 
     // Update category item count
-    await db.collection("categories").updateOne(
-      { ...tenantFilter, _id: new ObjectId(categoryId).valueOf() },
-      { $inc: { itemCount: 1 } }
-    ).catch(() => {});
+    try {
+      await db.collection("categories").updateOne(
+        { ...tenantFilter, _id: new ObjectId(categoryId) },
+        { $inc: { itemCount: 1 } }
+      );
+    } catch {
+      // Ignore bad categoryId references so menu item creation still succeeds.
+    }
 
     return Response.json({
       success: true,

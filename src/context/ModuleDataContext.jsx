@@ -25,6 +25,52 @@ const KEY = "rms-modules-v3";
 
 const ModuleDataContext = createContext(null);
 
+function normalizeCustomer(row) {
+  return {
+    id: row.id,
+    name: row.name ?? "",
+    phone: row.phone ?? "",
+    email: row.email ?? "",
+    notes: row.notes ?? "",
+    visits: Number(row.visits ?? 0),
+    lastVisit: row.lastVisit ?? null,
+    orderHistory: Array.isArray(row.orderHistory) ? row.orderHistory : [],
+  };
+}
+
+function normalizeReservation(row) {
+  return {
+    id: row.id,
+    customerName: row.customerName ?? "",
+    phone: row.phone ?? "",
+    date: row.date ?? "",
+    time: row.time ?? "",
+    guests: Number(row.guests ?? 2),
+    tableNumber: row.tableNumber ?? "TBD",
+    area: row.area ?? "",
+    notes: row.notes ?? "",
+    status: row.status ?? "pending",
+    createdAt: row.createdAt ?? null,
+    confirmedAt: row.confirmedAt ?? null,
+    completedAt: row.completedAt ?? null,
+    cancelledAt: row.cancelledAt ?? null,
+  };
+}
+
+function normalizeInventoryItem(row) {
+  return {
+    id: row.id,
+    name: row.name ?? "",
+    category: row.category ?? "Other",
+    quantity: Number(row.quantity ?? 0),
+    unit: row.unit ?? "unit",
+    reorderLevel: Number(row.reorderLevel ?? 0),
+    maxLevel: row.maxLevel ?? "",
+    supplier: row.supplier ?? "",
+    notes: row.notes ?? "",
+  };
+}
+
 export function ModuleDataProvider({ children }) {
   const [hydrated, setHydrated] = useState(false);
   const [categories, setCategories] = useState(INITIAL_CATEGORIES);
@@ -45,7 +91,7 @@ export function ModuleDataProvider({ children }) {
   const [kitchenQueue, setKitchenQueue] = useState([]);
 
   useEffect(() => {
-    // Restore non-API session state (orders, kitchen queue, floor state)
+    // Restore non-API session state (orders, kitchen queue, optional floor/staff fallback)
     try {
       const raw = sessionStorage.getItem(KEY);
       if (raw) {
@@ -53,9 +99,6 @@ export function ModuleDataProvider({ children }) {
         if (d.tableCategories) setTableCategories(d.tableCategories);
         if (d.floorTables)     setFloorTables(d.floorTables);
         if (d.staffRows)       setStaffRows(d.staffRows);
-        if (d.customerRows)    setCustomerRows(d.customerRows);
-        if (d.reservationRows) setReservationRows(d.reservationRows);
-        if (d.inventoryRows)   setInventoryRows(d.inventoryRows);
         if (d.inventoryHistory) setInventoryHistory(d.inventoryHistory);
         if (d.orderRows)       setOrderRows(d.orderRows);
         if (d.kitchenQueue)    setKitchenQueue(d.kitchenQueue);
@@ -64,8 +107,8 @@ export function ModuleDataProvider({ children }) {
       sessionStorage.removeItem(KEY);
     }
 
-    // Fetch menu + categories from real API
-    async function fetchMenuData() {
+    // Fetch API-backed module data.
+    async function fetchModuleData() {
       // Skip if no auth cookie — avoids 401s on public pages (landing, login)
       const hasAuth = document.cookie.includes("rms_token");
       if (!hasAuth) {
@@ -73,28 +116,59 @@ export function ModuleDataProvider({ children }) {
         return;
       }
       try {
-        const [menuRes, catRes, tablesRes, areasRes] = await Promise.all([
+        const [
+          menuRes,
+          catRes,
+          tablesRes,
+          areasRes,
+          customersRes,
+          reservationsRes,
+          inventoryRes,
+        ] = await Promise.all([
           fetch("/api/menu"),
           fetch("/api/categories"),
           fetch("/api/tables"),
           fetch("/api/tables/areas"),
+          fetch("/api/customers"),
+          fetch("/api/reservations"),
+          fetch("/api/inventory"),
         ]);
-        const [menuData, catData, tablesData, areasData] = await Promise.all([
+        const [
+          menuData,
+          catData,
+          tablesData,
+          areasData,
+          customersData,
+          reservationsData,
+          inventoryData,
+        ] = await Promise.all([
           menuRes.json(),
           catRes.json(),
           tablesRes.json(),
           areasRes.json(),
+          customersRes.json(),
+          reservationsRes.json(),
+          inventoryRes.json(),
         ]);
         if (menuData.success   && Array.isArray(menuData.items))        setMenuItems(menuData.items);
         if (catData.success    && Array.isArray(catData.categories))    setCategories(catData.categories);
         if (tablesData.success && Array.isArray(tablesData.tables))     setFloorTables(tablesData.tables);
         if (areasData.success  && Array.isArray(areasData.areas))       setTableCategories(areasData.areas);
+        if (customersData.success && Array.isArray(customersData.customers)) {
+          setCustomerRows(customersData.customers.map(normalizeCustomer));
+        }
+        if (reservationsData.success && Array.isArray(reservationsData.reservations)) {
+          setReservationRows(reservationsData.reservations.map(normalizeReservation));
+        }
+        if (inventoryData.success && Array.isArray(inventoryData.items)) {
+          setInventoryRows(inventoryData.items.map(normalizeInventoryItem));
+        }
       } catch (err) {
-        console.error("[ModuleDataContext] Failed to fetch menu data:", err.message);
+        console.error("[ModuleDataContext] Failed to fetch module data:", err.message);
       }
     }
 
-    fetchMenuData().finally(() => setHydrated(true));
+    fetchModuleData().finally(() => setHydrated(true));
   }, []);
 
   const refreshMenu = useCallback(async () => {
@@ -118,15 +192,14 @@ export function ModuleDataProvider({ children }) {
     } catch (err) {
       console.error("[ModuleDataContext] refreshMenu failed:", err.message);
     }
-  }, []);  useEffect(() => {
+  }, []);
+
+  useEffect(() => {
     if (!hydrated) return;
     sessionStorage.setItem(
       KEY,
       JSON.stringify({
         staffRows,
-        customerRows,
-        reservationRows,
-        inventoryRows,
         inventoryHistory,
         orderRows,
         kitchenQueue,
@@ -135,9 +208,6 @@ export function ModuleDataProvider({ children }) {
   }, [
     hydrated,
     staffRows,
-    customerRows,
-    reservationRows,
-    inventoryRows,
     inventoryHistory,
     orderRows,
     kitchenQueue,

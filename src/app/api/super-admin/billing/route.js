@@ -28,7 +28,9 @@ export async function GET(request) {
     const [
       revenueByMonth,
       planBreakdown,
-      restaurants,
+      subscriptions,
+      totalRestaurants,
+      activeRestaurants,
       totalRevenue,
       pendingCount,
     ] = await Promise.all([
@@ -42,15 +44,48 @@ export async function GET(request) {
         { $sort: { "_id.year": 1, "_id.month": 1 } },
       ]).toArray(),
 
-      db.collection("restaurants").aggregate([
-        { $group: { _id: "$plan", count: { $sum: 1 } } },
+      db.collection("subscriptions").aggregate([
+        { $sort: { updatedAt: -1, createdAt: -1 } },
+        { $group: { _id: "$restaurantId", latest: { $first: "$$ROOT" } } },
+        { $replaceRoot: { newRoot: "$latest" } },
+        { $group: { _id: "$planSlug", count: { $sum: 1 } } },
         { $sort: { count: -1 } },
       ]).toArray(),
 
-      db.collection("restaurants")
-        .find({}, { projection: { name: 1, plan: 1, status: 1, ownerEmail: 1, createdAt: 1 } })
-        .sort({ createdAt: -1 })
-        .toArray(),
+      db.collection("subscriptions").aggregate([
+        { $sort: { updatedAt: -1, createdAt: -1 } },
+        { $group: { _id: "$restaurantId", latest: { $first: "$$ROOT" } } },
+        { $replaceRoot: { newRoot: "$latest" } },
+        {
+          $lookup: {
+            from: "restaurants",
+            localField: "restaurantId",
+            foreignField: "_id",
+            as: "restaurant",
+          },
+        },
+        {
+          $unwind: {
+            path: "$restaurant",
+            preserveNullAndEmptyArrays: true,
+          },
+        },
+        {
+          $project: {
+            restaurantId: "$restaurantId",
+            plan: { $ifNull: ["$planSlug", "free"] },
+            subscriptionStatus: { $ifNull: ["$status", "active"] },
+            ownerEmail: { $ifNull: ["$restaurant.ownerEmail", "—"] },
+            name: { $ifNull: ["$restaurant.name", "Unknown"] },
+            restaurantStatus: { $ifNull: ["$restaurant.status", "inactive"] },
+            createdAt: { $ifNull: ["$restaurant.createdAt", "$createdAt"] },
+          },
+        },
+        { $sort: { createdAt: -1 } },
+      ]).toArray(),
+
+      db.collection("restaurants").countDocuments(),
+      db.collection("restaurants").countDocuments({ status: "active" }),
 
       db.collection("payments").aggregate([
         { $match: { status: "paid" } },
@@ -67,8 +102,8 @@ export async function GET(request) {
       overview: {
         totalRevenue,
         pendingCount,
-        totalRestaurants: restaurants.length,
-        activeRestaurants: restaurants.filter((r) => r.status === "active").length,
+        totalRestaurants,
+        activeRestaurants,
       },
       revenueByMonth: revenueByMonth.map((r) => ({
         label:   `${MONTH_NAMES[r._id.month - 1]} ${r._id.year}`,
@@ -79,11 +114,11 @@ export async function GET(request) {
         plan:  p._id ?? "unknown",
         count: p.count,
       })),
-      subscriptions: restaurants.map((r) => ({
-        id:         r._id.toString(),
+      subscriptions: subscriptions.map((r) => ({
+        id:         r.restaurantId?.toString() ?? "",
         name:       r.name,
         plan:       r.plan ?? "free",
-        status:     r.status ?? "active",
+        status:     r.subscriptionStatus ?? "active",
         ownerEmail: r.ownerEmail ?? "—",
         createdAt:  r.createdAt,
       })),

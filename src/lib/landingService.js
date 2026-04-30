@@ -207,6 +207,70 @@ export const DEFAULTS = {
     ogImage:     "",
     twitterCard: "summary_large_image",
   },
+
+  brands: {
+    eyebrow: "Trusted by",
+    items: ["Urban Spoon", "Blue Fork", "TasteHub", "Mango Tree", "KitchenCraft"],
+  },
+
+  problemSolution: {
+    problemEyebrow: "The Problem",
+    problemTitle: "Running a restaurant is hard",
+    problems: [
+      "Managing orders manually causes delays and billing errors",
+      "Inventory runs out unexpectedly during peak hours",
+      "Staff coordination is messy without a clear system",
+      "No visibility into daily sales or performance trends",
+    ],
+    solutionEyebrow: "The Solution",
+    solutionTitle: "RMS handles it all",
+    solutionDescription: "One platform for POS, inventory, tables, reservations, staff, and analytics.",
+    solutionPoints: [
+      "Reduce billing time by up to 60%",
+      "Zero stock surprises with live alerts",
+      "One screen for all order types",
+      "Role-based access keeps teams focused",
+      "Clean reports for faster decisions",
+    ],
+  },
+
+  howItWorks: {
+    eyebrow: "How It Works",
+    title: "From setup to service in minutes",
+    subtext: "Follow the same flow your team uses every day.",
+    steps: [
+      { n: "01", title: "Setup Restaurant", text: "Configure menu, pricing, taxes, and table layout in minutes.", icon: "LayoutGrid" },
+      { n: "02", title: "Take Orders using POS", text: "Capture dine-in, takeaway, and delivery orders from one screen.", icon: "CreditCard" },
+      { n: "03", title: "Kitchen prepares orders", text: "Route active orders to kitchen workflow without confusion.", icon: "ChefHat" },
+      { n: "04", title: "Track inventory automatically", text: "Watch stock movement and low-stock alerts in real time.", icon: "PackageSearch" },
+      { n: "05", title: "View reports & analytics", text: "Monitor sales and performance with clean visual dashboards.", icon: "BarChart3" },
+    ],
+  },
+
+  benefits: {
+    deviceBadge: "Works on all devices",
+    deviceTitle: "Mobile-first, desktop-ready",
+    deviceDescription: "Adaptive layout for desktop, tablet, and phone — fast and clean during busy service hours.",
+    whyBadge: "Why RMS",
+    whyTitle: "Built to save time daily",
+    items: [
+      "Reduce billing time by up to 60%",
+      "Zero stock surprises with live alerts",
+      "One screen for all order types",
+      "Role-based access keeps teams focused",
+      "Clean reports for faster decisions",
+    ],
+  },
+
+  demo: {
+    enabled: true,
+    sectionId: "demo",
+  },
+
+  cta: {
+    enabled: true,
+    sectionId: "cta",
+  },
 };
 
 export const VALID_SECTIONS = Object.keys(DEFAULTS).filter(k => k !== "version");
@@ -276,6 +340,34 @@ const VALIDATORS = {
     if (!d || typeof d !== "object")   return "seo must be an object.";
     return null;
   },
+  brands: (d) => {
+    if (!d || typeof d !== "object") return "brands must be an object.";
+    if (!Array.isArray(d.items)) return "brands.items must be an array.";
+    return null;
+  },
+  problemSolution: (d) => {
+    if (!d || typeof d !== "object") return "problemSolution must be an object.";
+    if (!Array.isArray(d.problems) || !Array.isArray(d.solutionPoints)) return "problemSolution lists must be arrays.";
+    return null;
+  },
+  howItWorks: (d) => {
+    if (!d || typeof d !== "object") return "howItWorks must be an object.";
+    if (!Array.isArray(d.steps)) return "howItWorks.steps must be an array.";
+    return null;
+  },
+  benefits: (d) => {
+    if (!d || typeof d !== "object") return "benefits must be an object.";
+    if (!Array.isArray(d.items)) return "benefits.items must be an array.";
+    return null;
+  },
+  demo: (d) => {
+    if (!d || typeof d !== "object") return "demo must be an object.";
+    return null;
+  },
+  cta: (d) => {
+    if (!d || typeof d !== "object") return "cta must be an object.";
+    return null;
+  },
 };
 
 /* ─────────────────────────────────────────
@@ -290,11 +382,30 @@ function generateId() {
   return Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
 }
 
+function deepMergeSection(defaultValue, storedValue) {
+  if (Array.isArray(defaultValue)) {
+    return Array.isArray(storedValue) ? storedValue : defaultValue;
+  }
+  if (defaultValue && typeof defaultValue === "object") {
+    const merged = { ...defaultValue };
+    if (storedValue && typeof storedValue === "object" && !Array.isArray(storedValue)) {
+      for (const key of Object.keys(defaultValue)) {
+        merged[key] = deepMergeSection(defaultValue[key], storedValue[key]);
+      }
+      for (const key of Object.keys(storedValue)) {
+        if (!(key in merged)) merged[key] = storedValue[key];
+      }
+    }
+    return merged;
+  }
+  return storedValue == null ? defaultValue : storedValue;
+}
+
 /** Deep-merge DB document over defaults — missing sections fall back */
 export function mergeWithDefaults(doc) {
   const content = {};
   for (const section of VALID_SECTIONS) {
-    content[section] = doc?.[section] ?? DEFAULTS[section];
+    content[section] = deepMergeSection(DEFAULTS[section], doc?.[section]);
   }
   return content;
 }
@@ -391,6 +502,8 @@ export async function updateItem(section, itemId, patch, updatedBy) {
   }
 
   const updated = arr.map((x, i) => i === idx ? { ...x, ...patch, id: x.id } : x);
+  const err = VALIDATORS[section]?.(updated);
+  if (err) throw Object.assign(new Error(err), { status: 422 });
 
   await db.collection(COLLECTION).updateOne(
     { _id: DOC_ID },
@@ -436,6 +549,20 @@ export async function reorderItems(section, ids, updatedBy) {
   const db  = await getDb();
   const doc = await db.collection(COLLECTION).findOne({ _id: DOC_ID });
   const arr = doc?.[section] ?? DEFAULTS[section];
+
+  if (ids.length !== arr.length) {
+    throw Object.assign(new Error("ids must include all items exactly once."), { status: 422 });
+  }
+  const currentIds = arr.map((x) => x.id);
+  const uniqueIds = new Set(ids);
+  if (uniqueIds.size !== ids.length) {
+    throw Object.assign(new Error("ids contains duplicates."), { status: 422 });
+  }
+  const validSet = new Set(currentIds);
+  const allValid = ids.every((id) => validSet.has(id));
+  if (!allValid) {
+    throw Object.assign(new Error("ids contains unknown items."), { status: 422 });
+  }
 
   const map       = Object.fromEntries(arr.map(x => [x.id, x]));
   const reordered = ids.map((id, i) => map[id] ? { ...map[id], order: i + 1 } : null).filter(Boolean);

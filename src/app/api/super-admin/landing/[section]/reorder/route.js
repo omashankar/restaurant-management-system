@@ -18,14 +18,15 @@ function superAdminOnly(request) {
 }
 
 export async function PATCH(request, { params }) {
-  if (!superAdminOnly(request)) return Response.json({ success: false, error: "Forbidden." }, { status: 403 });
+  const sa = superAdminOnly(request);
+  if (!sa) return Response.json({ success: false, error: "Forbidden." }, { status: 403 });
   const { section } = await params;
   if (!VALID_SECTIONS.includes(section)) return Response.json({ success: false, error: `Invalid section "${section}".` }, { status: 400 });
   let body;
   try { body = await request.json(); } catch { return Response.json({ success: false, error: "Invalid JSON." }, { status: 400 }); }
   if (!Array.isArray(body.ids) || !body.ids.length) return Response.json({ success: false, error: "ids must be a non-empty array." }, { status: 400 });
   try {
-    const result = await reorderItems(section, body.ids);
+    const result = await reorderItems(section, body.ids, sa.id ?? null);
     revalidateTag("landing");
     revalidatePath("/");
     return Response.json({ success: true, ...result });

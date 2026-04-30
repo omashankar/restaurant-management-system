@@ -3,11 +3,17 @@ import { verifyToken } from "@/lib/jwt";
 import clientPromise from "@/lib/mongodb";
 import bcrypt from "bcryptjs";
 
+const VALID_PLANS = ["free", "starter", "pro", "enterprise"];
+
 function superAdminOnly(request) {
   const token   = getTokenFromRequest(request);
   const payload = token ? verifyToken(token) : null;
   if (!payload || payload.role !== "super_admin") return null;
   return payload;
+}
+
+function escapeRegex(input) {
+  return String(input).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
 /* ── GET /api/super-admin/restaurants ── */
@@ -28,10 +34,15 @@ export async function GET(request) {
     const filter = {};
     if (status !== "all") filter.status = status;
     if (plan   !== "all") filter.plan   = plan;
+    if (search && search.length > 80) {
+      return Response.json({ success: false, error: "Search query is too long." }, { status: 400 });
+    }
     if (search) {
+      const safeSearch = escapeRegex(search);
       filter.$or = [
-        { name:       { $regex: search, $options: "i" } },
-        { ownerEmail: { $regex: search, $options: "i" } },
+        { name:       { $regex: safeSearch, $options: "i" } },
+        { ownerEmail: { $regex: safeSearch, $options: "i" } },
+        { phone:      { $regex: safeSearch, $options: "i" } },
       ];
     }
 
@@ -47,11 +58,32 @@ export async function GET(request) {
 
     const owners = ownerIds.length
       ? await db.collection("users")
-          .find({ _id: { $in: ownerIds } }, { projection: { name: 1, email: 1 } })
+          .find({ _id: { $in: ownerIds } }, { projection: { name: 1, email: 1, status: 1 } })
           .toArray()
       : [];
 
     const ownerMap = Object.fromEntries(owners.map((o) => [o._id.toString(), o]));
+
+    const restaurantIds = restaurants.map((r) => r._id);
+    const roleCountsAgg = restaurantIds.length
+      ? await db.collection("users").aggregate([
+          { $match: { restaurantId: { $in: restaurantIds } } },
+          {
+            $group: {
+              _id: { restaurantId: "$restaurantId", role: "$role" },
+              count: { $sum: 1 },
+            },
+          },
+        ]).toArray()
+      : [];
+    const roleCountMap = {};
+    for (const row of roleCountsAgg) {
+      const restaurantId = row?._id?.restaurantId?.toString?.();
+      const role = row?._id?.role;
+      if (!restaurantId || !role) continue;
+      if (!roleCountMap[restaurantId]) roleCountMap[restaurantId] = {};
+      roleCountMap[restaurantId][role] = row.count;
+    }
 
     return Response.json({
       success: true,
@@ -59,14 +91,22 @@ export async function GET(request) {
         const owner = r.ownerId ? ownerMap[r.ownerId.toString()] : null;
         return {
           id:         r._id.toString(),
+          ownerId:    r.ownerId?.toString() ?? null,
           name:       r.name,
           ownerEmail: owner?.email ?? r.ownerEmail ?? "—",
           ownerName:  owner?.name  ?? "—",
+          ownerStatus: owner?.status ?? "inactive",
           phone:      r.phone      ?? "—",
           address:    r.address    ?? "",
           plan:       r.plan       ?? "free",
           status:     r.status     ?? "active",
           createdAt:  r.createdAt,
+          roleCounts: {
+            admin: roleCountMap[r._id.toString()]?.admin ?? 0,
+            manager: roleCountMap[r._id.toString()]?.manager ?? 0,
+            waiter: roleCountMap[r._id.toString()]?.waiter ?? 0,
+            chef: roleCountMap[r._id.toString()]?.chef ?? 0,
+          },
         };
       }),
     });
@@ -86,12 +126,15 @@ export async function POST(request) {
   try { body = await request.json(); }
   catch { return Response.json({ success: false, error: "Invalid JSON." }, { status: 400 }); }
 
-  const { name, ownerEmail, ownerName, ownerPassword, plan = "free", phone = "", address = "" } = body;
+  const { name, ownerEmail, ownerName, ownerPassword, plan = "free", phone = "", address = "", status = "active" } = body;
+  const allowedStatuses = ["active", "inactive", "suspended"];
 
   if (!name?.trim())        return Response.json({ success: false, error: "Restaurant name is required." }, { status: 400 });
   if (!ownerEmail?.trim())  return Response.json({ success: false, error: "Owner email is required." },     { status: 400 });
   if (!ownerPassword)       return Response.json({ success: false, error: "Owner password is required." },  { status: 400 });
   if (ownerPassword.length < 6) return Response.json({ success: false, error: "Password must be at least 6 characters." }, { status: 400 });
+  if (!allowedStatuses.includes(status)) return Response.json({ success: false, error: "Invalid status." }, { status: 400 });
+  if (!VALID_PLANS.includes(plan)) return Response.json({ success: false, error: "Invalid plan." }, { status: 400 });
 
   try {
     const client = await clientPromise;
@@ -103,51 +146,72 @@ export async function POST(request) {
       return Response.json({ success: false, error: "An account with this email already exists." }, { status: 409 });
     }
 
-    // Create restaurant first (get its _id as tenantId)
-    const restaurantResult = await db.collection("restaurants").insertOne({
-      name:       name.trim(),
-      ownerEmail: ownerEmail.toLowerCase().trim(),
-      phone:      phone?.trim() ?? "",
-      address:    address?.trim() ?? "",
-      plan,
-      status:     "active",
-      ownerId:    null,
-      createdAt:  new Date(),
-    });
+    const session = client.startSession();
+    let restaurantId;
+    let ownerId;
 
-    const restaurantId = restaurantResult.insertedId;
+    try {
+      await session.withTransaction(async () => {
+        // Create restaurant first (get its _id as tenantId)
+        const restaurantResult = await db.collection("restaurants").insertOne({
+          name:       name.trim(),
+          ownerEmail: ownerEmail.toLowerCase().trim(),
+          phone:      phone?.trim() ?? "",
+          address:    address?.trim() ?? "",
+          plan,
+          status,
+          ownerId:    null,
+          createdAt:  new Date(),
+        }, { session });
 
-    // Create owner user with restaurantId as tenantId
-    const hashedPassword = await bcrypt.hash(ownerPassword, 10);
-    const userResult = await db.collection("users").insertOne({
-      name:         (ownerName?.trim()) || ownerEmail.split("@")[0],
-      email:        ownerEmail.toLowerCase().trim(),
-      password:     hashedPassword,
-      role:         "admin",
-      restaurantId, // ← tenantId
-      isVerified:   true,
-      status:       "active",
-      createdAt:    new Date(),
-    });
+        restaurantId = restaurantResult.insertedId;
 
-    // Link owner to restaurant
-    await db.collection("restaurants").updateOne(
-      { _id: restaurantId },
-      { $set: { ownerId: userResult.insertedId } }
-    );
+        // Create owner user with restaurantId as tenantId
+        const hashedPassword = await bcrypt.hash(ownerPassword, 10);
+        const userResult = await db.collection("users").insertOne({
+          name:         (ownerName?.trim()) || ownerEmail.split("@")[0],
+          email:        ownerEmail.toLowerCase().trim(),
+          password:     hashedPassword,
+          role:         "admin",
+          restaurantId, // ← tenantId
+          isVerified:   true,
+          status:       status === "active" ? "active" : "inactive",
+          createdAt:    new Date(),
+        }, { session });
+
+        ownerId = userResult.insertedId;
+
+        // Link owner to restaurant
+        await db.collection("restaurants").updateOne(
+          { _id: restaurantId },
+          { $set: { ownerId } },
+          { session }
+        );
+      });
+    } finally {
+      await session.endSession();
+    }
 
     return Response.json({
       success: true,
       restaurant: {
         id:         restaurantId.toString(),
+        ownerId:    ownerId.toString(),
         name:       name.trim(),
         ownerEmail: ownerEmail.toLowerCase().trim(),
         ownerName:  (ownerName?.trim()) || ownerEmail.split("@")[0],
+        ownerStatus: status === "active" ? "active" : "inactive",
         phone:      phone?.trim() ?? "",
         address:    address?.trim() ?? "",
         plan,
-        status:     "active",
+        status,
         createdAt:  new Date(),
+        roleCounts: {
+          admin: 1,
+          manager: 0,
+          waiter: 0,
+          chef: 0,
+        },
       },
     }, { status: 201 });
 
