@@ -24,16 +24,16 @@ const ROLE_PATHS = {
     "/inventory", "/analytics", "/profile",
   ],
   waiter: ["/waiter", "/pos", "/orders", "/tables", "/reservations", "/customers", "/profile"],
-  chef:   ["/chef", "/kitchen", "/orders", "/profile"],
+  chef: ["/chef", "/kitchen", "/orders", "/profile"],
 };
 
 /* ── Role home (redirect after login or unauthorized access) ── */
 const ROLE_HOME = {
   super_admin: "/super-admin/dashboard",
-  admin:       "/admin/dashboard",
-  manager:     "/manager/dashboard",
-  waiter:      "/waiter/dashboard",
-  chef:        "/chef/dashboard",
+  admin: "/admin/dashboard",
+  manager: "/manager/dashboard",
+  waiter: "/waiter/dashboard",
+  chef: "/chef/dashboard",
 };
 
 /* ── Public paths — no auth needed ── */
@@ -94,7 +94,7 @@ async function verifyJwt(token) {
   }
 }
 
-export async function middleware(request) {
+export async function proxy(request) {
   const { pathname } = request.nextUrl;
 
   // API routes are guarded inside each route handler via verifyToken/role checks.
@@ -155,13 +155,13 @@ export async function middleware(request) {
     }
     // super_admin — allow through
     const res = NextResponse.next();
-    res.headers.set("x-user-id",   payload.id   ?? "");
+    res.headers.set("x-user-id", payload.id ?? "");
     res.headers.set("x-user-role", role);
     return res;
   }
 
   /* ── 7. RBAC: check role's allowed paths ── */
-  const allowed   = ROLE_PATHS[role] ?? [];
+  const allowed = ROLE_PATHS[role] ?? [];
   const canAccess = allowed.some((p) => pathname === p || pathname.startsWith(p + "/"));
 
   if (!canAccess) {
@@ -173,9 +173,9 @@ export async function middleware(request) {
 
   /* ── 8. Authorized — attach user info to request headers ── */
   const res = NextResponse.next();
-  res.headers.set("x-user-id",        payload.id           ?? "");
-  res.headers.set("x-user-role",      role);
-  res.headers.set("x-restaurant-id",  payload.restaurantId ?? "");
+  res.headers.set("x-user-id", payload.id ?? "");
+  res.headers.set("x-user-role", role);
+  res.headers.set("x-restaurant-id", payload.restaurantId ?? "");
   return res;
 }
 

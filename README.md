@@ -6,7 +6,7 @@ It helps reduce manual work by organizing orders, menu, tables, inventory, staff
 It is useful for restaurants, cafes, cloud kitchens, and multi-outlet food businesses.
 
 ## 🌐 Live Demo
-- Demo Link: `https://your-demo-link-here.com`
+- Demo Link: `Not deployed yet`
 
 ## ✨ Features
 - Dashboard
@@ -33,11 +33,11 @@ It is useful for restaurants, cafes, cloud kitchens, and multi-outlet food busin
 ## ⚙️ Installation
 1. Clone the repository
    ```bash
-   git clone <your-repo-url>
+   git clone https://github.com/<your-org>/Restaurant-Management-System.git
    ```
 2. Go to project folder
    ```bash
-   cd my-project
+   cd Restaurant-Management-System
    ```
 3. Install dependencies
    ```bash
@@ -51,7 +51,7 @@ It is useful for restaurants, cafes, cloud kitchens, and multi-outlet food busin
    - `http://localhost:3000`
 
 ## 🔐 Environment Variables
-Create a `.env` file before running:
+Copy `.env.example` to `.env` before running:
 
 - `MONGODB_URI` - MongoDB connection string
 - `JWT_SECRET` - secret key for auth token signing
@@ -62,13 +62,11 @@ Create a `.env` file before running:
 - `LOG_WEBHOOK_URL` - optional external observability webhook for structured logs
 
 ## 📁 Project Structure
-- `components/` → reusable UI components
-- `pages/` → app pages/routes
-- `layouts/` → layout and shell files
-- `hooks/` → custom React hooks
-- `utils/` → helper and utility functions
-
-> Note: In Next.js App Router projects, some routing files may be inside `app/`.
+- `src/app/` → App Router pages and API routes
+- `src/components/` → reusable UI components
+- `src/lib/` → helpers, services, and utility functions
+- `src/context/` → React context providers
+- `tests/` → Node test suite (`node --test`)
 
 ## 🚀 How to Use
 - Open the app in browser
@@ -91,7 +89,7 @@ Create a `.env` file before running:
 
 ## ✅ Quality Gates
 - CI workflow runs on push/PR (`.github/workflows/ci.yml`)
-- Required checks: `npm run lint` and `npm run build`
+- Required checks: `npm run lint`, `npm run test`, and `npm run build`
 - Local tests: `npm run test`
 
 ## 🧪 Dev Troubleshooting
@@ -110,7 +108,7 @@ Contributions are welcome.
 4. Open a pull request
 
 ## 📄 License
-- License: `Your License Here` (e.g., MIT)
+- License: `MIT`
 
 ## 👨‍💻 Author
-- Your Name
+- RMS Team

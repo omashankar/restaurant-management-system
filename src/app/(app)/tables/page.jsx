@@ -5,6 +5,7 @@ import EmptyState from "@/components/ui/EmptyState";
 import ListToolbar from "@/components/ui/ListToolbar";
 import Modal from "@/components/ui/Modal";
 import PaginationBar from "@/components/ui/PaginationBar";
+import TableCapacityIcon from "@/components/table/TableCapacityIcon";
 import { getCategoryBadge } from "@/lib/tableCategoryColors";
 import { usePaginatedList } from "@/hooks/usePaginatedList";
 import { useToast } from "@/hooks/useToast";
@@ -229,9 +230,14 @@ export default function TablesModulePage() {
                       {st}
                     </span>
                   </div>
-                  <div className="mt-3 flex items-center gap-1.5 text-sm text-zinc-400">
-                    <Users className="size-3.5" />
-                    <span className="font-medium text-zinc-200">{t.capacity} persons</span>
+                  <div className="mt-3 flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-1.5 text-sm text-zinc-400">
+                      <Users className="size-3.5" />
+                      <span className="font-medium text-zinc-200">{t.capacity} persons</span>
+                    </div>
+                    <div title={`${t.capacity} Seater Table`} className="rounded-lg border border-zinc-700/70 bg-zinc-800/70 p-1 text-zinc-300">
+                      <TableCapacityIcon capacity={t.capacity} className="size-8" />
+                    </div>
                   </div>
                   {cat && (
                     <div className="mt-2">
