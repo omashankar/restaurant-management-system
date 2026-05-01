@@ -100,12 +100,21 @@ export default function PrintInvoice({
     `;
 
     const win = window.open("", "_blank", "width=360,height=600");
-    if (!win) return;
+    if (!win) {
+      window.alert("Unable to open print preview. Please allow popups for this site and try again.");
+      return;
+    }
     win.document.write(html);
     win.document.close();
     win.focus();
-    win.print();
-    win.close();
+
+    // Wait for print dialog; close only after print completes.
+    win.onload = () => {
+      win.onafterprint = () => {
+        win.close();
+      };
+      win.print();
+    };
   }
 
   return (
