@@ -76,6 +76,13 @@ function mapPlansToLandingPricing(plans = []) {
 
 /* ── Fetch landing page content directly (no internal HTTP hop) ── */
 const getLandingContent = cache(async function getLandingContent() {
+  const isProdBuildPhase = process.env.NEXT_PHASE === "phase-production-build";
+
+  // Keep production builds deterministic even when external DB is unavailable.
+  if (isProdBuildPhase) {
+    return null;
+  }
+
   try {
     const [{ content }, client] = await Promise.all([
       getLandingContentFromService(),
@@ -92,7 +99,9 @@ const getLandingContent = cache(async function getLandingContent() {
       pricing: pricing.length > 0 ? pricing : content?.pricing ?? [],
     };
   } catch (err) {
-    console.error("getLandingContent error:", err.message);
+    if (!isProdBuildPhase) {
+      console.error("getLandingContent error:", err.message);
+    }
     return null; // components fall back to their own defaults
   }
 });
