@@ -52,7 +52,7 @@ function StepLine({ done }) {
 }
 
 export default function TableBookingPage() {
-  const { showToast } = useCustomer();
+  const { showToast, authUser, authLoading } = useCustomer();
   const { floorTables, reservationRows, setReservationRows, tableCategories } = useModuleData();
 
   const [step, setStep]                   = useState(1);
@@ -68,6 +68,15 @@ export default function TableBookingPage() {
 
   const set = (k, v) => setForm((f) => ({ ...f, [k]: v }));
   const normalizeAreaKey = (name) => String(name ?? "").trim().toLowerCase();
+
+  useEffect(() => {
+    if (authLoading || !authUser) return;
+    setForm((prev) => ({
+      ...prev,
+      ...(!String(prev.name ?? "").trim() && authUser.name ? { name: authUser.name } : {}),
+      ...(!String(prev.phone ?? "").trim() && authUser.phone ? { phone: authUser.phone } : {}),
+    }));
+  }, [authUser, authLoading]);
 
   useEffect(() => {
     let active = true;

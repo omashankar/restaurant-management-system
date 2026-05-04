@@ -44,6 +44,7 @@ const PUBLIC_PATHS = [
   "/unauthorized",
   "/home",
   "/order",
+  "/account",
   "/verify-email",
 ];
 

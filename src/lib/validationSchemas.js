@@ -63,6 +63,27 @@ export const orderPatchSchema = z.object({
   notes: z.string().trim().max(500).optional(),
 });
 
+const customerCheckoutInfoSchema = z
+  .object({
+    name: z.string().min(1, "Customer name is required."),
+    phone: z.string().optional().default(""),
+    email: z.union([z.string().email("Invalid email address."), z.literal("")]).optional().default(""),
+    address: z.string().optional(),
+    tableNumber: z.string().optional(),
+  })
+  .superRefine((data, ctx) => {
+    const phoneOk = String(data.phone ?? "").trim().length > 0;
+    const em = String(data.email ?? "").trim();
+    const emailOk = em.length > 0 && z.string().email().safeParse(em).success;
+    if (!phoneOk && !emailOk) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Provide a phone number or a valid email for contact.",
+        path: ["phone"],
+      });
+    }
+  });
+
 export const customerCheckoutSchema = z.object({
   items: z.array(z.object({
     id: z.string().optional(),
@@ -71,13 +92,7 @@ export const customerCheckoutSchema = z.object({
     qty: z.number().int().positive("Item quantity must be positive."),
   })).min(1, "At least one item is required."),
   orderType: z.enum(["dine-in", "takeaway", "delivery"], { message: "Invalid orderType." }),
-  customer: z.object({
-    name: z.string().min(1, "Customer name is required."),
-    phone: z.string().min(1, "Customer phone is required."),
-    email: z.string().email("Invalid email address.").or(z.literal("")).optional(),
-    address: z.string().optional(),
-    tableNumber: z.string().optional(),
-  }),
+  customer: customerCheckoutInfoSchema,
   notes: z.string().trim().max(500).optional(),
 });
 

@@ -57,8 +57,15 @@ export default function CheckoutPage() {
   if (lines.length === 0) return null;
 
   const placeOrder = async () => {
-    if (!customer.name.trim() || !customer.phone.trim()) {
-      showToast("Name and phone are required.", "error"); return;
+    if (!customer.name.trim()) {
+      showToast("Name is required.", "error");
+      return;
+    }
+    const phoneOk = customer.phone.trim().length > 0;
+    const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(customer.email ?? "").trim());
+    if (!phoneOk && !emailOk) {
+      showToast("Please add a phone number or a valid email for contact.", "error");
+      return;
     }
     if (orderType === "delivery" && !customer.address.trim()) {
       showToast("Delivery address is required.", "error"); return;
@@ -138,16 +145,32 @@ export default function CheckoutPage() {
           {/* Customer details */}
           <div className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm">
             <h2 className="mb-5 text-sm font-bold uppercase tracking-wider text-zinc-600">Your Details</h2>
-            <p className="mb-4 text-xs text-zinc-500">Fields marked with * are required to place your order.</p>
+            <p className="mb-4 text-xs text-zinc-500">
+              <span className="text-red-400">*</span> Name is required. You must also provide <strong>either</strong> a phone number <strong>or</strong> a valid email.
+            </p>
             <div className="grid gap-4 sm:grid-cols-2">
               <Field label="Full Name" required>
                 <input value={customer.name} onChange={(e) => updateCustomer({ name: e.target.value })} placeholder="Your name" className={inputCls} />
               </Field>
-              <Field label="Phone" required>
-                <input value={customer.phone} onChange={(e) => updateCustomer({ phone: e.target.value })} placeholder="+1 555 000 0000" className={inputCls} />
+              <Field label="Phone">
+                <input
+                  value={customer.phone}
+                  onChange={(e) => updateCustomer({ phone: e.target.value })}
+                  placeholder="+1 555 000 0000"
+                  className={inputCls}
+                  inputMode="tel"
+                  autoComplete="tel"
+                />
               </Field>
-              <Field label="Email" >
-                <input type="email" value={customer.email} onChange={(e) => updateCustomer({ email: e.target.value })} placeholder="you@example.com" className={inputCls} />
+              <Field label="Email">
+                <input
+                  type="email"
+                  value={customer.email}
+                  onChange={(e) => updateCustomer({ email: e.target.value })}
+                  placeholder="you@example.com"
+                  className={inputCls}
+                  autoComplete="email"
+                />
               </Field>
               {orderType === "dine-in" && (
                 <Field label="Table Number" required>

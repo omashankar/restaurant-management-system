@@ -1,7 +1,7 @@
 "use client";
 
 import { useCustomer } from "@/context/CustomerContext";
-import { Menu, ShoppingCart, UtensilsCrossed, X } from "lucide-react";
+import { LogOut, Menu, ShoppingCart, UserRound, UtensilsCrossed, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
@@ -15,7 +15,7 @@ const NAV = [
 ];
 
 export default function CustomerNavbar() {
-  const { cart, setOrderTypeModalOpen, setCartOpen } = useCustomer();
+  const { cart, setOrderTypeModalOpen, setCartOpen, authUser, logoutCustomer } = useCustomer();
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
 
@@ -52,6 +52,33 @@ export default function CustomerNavbar() {
 
         {/* Right actions */}
         <div className="flex items-center gap-2">
+          {authUser ? (
+            <>
+              <Link
+                href="/account/dashboard"
+                className="hidden cursor-pointer items-center gap-1 rounded-xl border border-zinc-200 bg-white px-3 py-2 text-xs font-semibold text-zinc-700 hover:border-emerald-500/40 hover:text-emerald-700 sm:inline-flex"
+              >
+                <UserRound className="size-3.5" />
+                Dashboard
+              </Link>
+              <button
+                type="button"
+                onClick={logoutCustomer}
+                className="hidden cursor-pointer items-center gap-1 rounded-xl border border-zinc-200 bg-white px-3 py-2 text-xs font-semibold text-zinc-700 hover:border-red-500/40 hover:text-red-600 sm:inline-flex"
+              >
+                <LogOut className="size-3.5" />
+                Logout
+              </button>
+            </>
+          ) : (
+            <Link
+              href="/account/login"
+              className="hidden cursor-pointer rounded-xl border border-zinc-200 bg-white px-4 py-2 text-xs font-bold text-zinc-700 hover:border-emerald-500/40 hover:text-emerald-700 sm:inline-flex"
+            >
+              Login
+            </Link>
+          )}
+
           {/* Order Now — desktop */}
           <button
             type="button"
@@ -113,6 +140,32 @@ export default function CustomerNavbar() {
             >
               Order Now
             </button>
+            {authUser ? (
+              <>
+                <Link
+                  href="/account/dashboard"
+                  onClick={() => setOpen(false)}
+                  className="cursor-pointer rounded-xl px-3 py-2.5 text-sm font-medium text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900"
+                >
+                  Dashboard
+                </Link>
+                <button
+                  type="button"
+                  onClick={() => { setOpen(false); logoutCustomer(); }}
+                  className="cursor-pointer rounded-xl px-3 py-2.5 text-left text-sm font-medium text-red-600 hover:bg-red-50"
+                >
+                  Logout
+                </button>
+              </>
+            ) : (
+              <Link
+                href="/account/login"
+                onClick={() => setOpen(false)}
+                className="cursor-pointer rounded-xl px-3 py-2.5 text-sm font-medium text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900"
+              >
+                Login
+              </Link>
+            )}
           </div>
         </div>
       )}

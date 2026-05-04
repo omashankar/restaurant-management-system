@@ -1,7 +1,71 @@
 import clientPromise from "@/lib/mongodb";
+import { normalizeCustomerOrderStatus } from "@/lib/customerOrderStatus";
+import { getCustomerTokenFromRequest, verifyCustomerToken } from "@/lib/customerAuth";
 import { logError, logInfo } from "@/lib/logger";
 import { customerCheckoutSchema, parseSchema } from "@/lib/validationSchemas";
 import { ObjectId } from "mongodb";
+
+export async function GET(request) {
+  const token = getCustomerTokenFromRequest(request);
+  const payload = verifyCustomerToken(token);
+  if (!payload?.id && !payload?.phone && !payload?.email) {
+    return Response.json({ success: false, error: "Not authenticated." }, { status: 401 });
+  }
+
+  try {
+    const client = await clientPromise;
+    const db = client.db();
+    const match = [];
+    if (payload.phone) {
+      match.push({ "customerInfo.phone": payload.phone });
+    }
+    if (payload.email) {
+      const em = String(payload.email).trim().toLowerCase();
+      if (em) {
+        match.push({ "customerInfo.email": em });
+      }
+    }
+    if (payload.id) {
+      try {
+        match.push({ customerAccountId: new ObjectId(payload.id) });
+      } catch {
+        /* ignore */
+      }
+    }
+    if (match.length === 0) {
+      return Response.json({ success: false, error: "Not authenticated." }, { status: 401 });
+    }
+
+    const orders = await db
+      .collection("orders")
+      .find({ $or: match })
+      .sort({ createdAt: -1 })
+      .limit(50)
+      .toArray();
+
+    return Response.json({
+      success: true,
+      orders: orders.map((o) => {
+        const meta = normalizeCustomerOrderStatus(o.status);
+        return {
+          id: String(o._id),
+          orderId: o.orderId ?? "",
+          orderType: o.orderType ?? "",
+          total: Number(o.total ?? 0),
+          status: o.status ?? "",
+          statusKey: meta.key,
+          statusLabel: meta.label,
+          statusEmoji: meta.emoji,
+          chipClass: meta.chipClass,
+          createdAt: o.createdAt ?? null,
+        };
+      }),
+    });
+  } catch (err) {
+    console.error("customer.orders.GET failed:", err.message);
+    return Response.json({ success: false, error: "Failed to load orders." }, { status: 500 });
+  }
+}
 
 function normalizeItems(items) {
   if (!Array.isArray(items)) return [];
@@ -16,6 +80,11 @@ function normalizeItems(items) {
 }
 
 export async function POST(request) {
+  const customerPayload = verifyCustomerToken(getCustomerTokenFromRequest(request));
+  let customerAccountId = null;
+  if (customerPayload?.id) {
+    try { customerAccountId = new ObjectId(customerPayload.id); } catch {}
+  }
   let body;
   try {
     body = await request.json();
@@ -68,6 +137,7 @@ export async function POST(request) {
       restaurantId: new ObjectId(restaurant._id),
       orderId: `ORD-C-${Date.now()}`,
       source: "customer",
+      customerAccountId,
       orderType,
       tableNumber: orderType === "dine-in" ? tableNumber : null,
       customer: customerName,

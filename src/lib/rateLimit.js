@@ -83,6 +83,8 @@ const IS_DEV = process.env.NODE_ENV !== "production";
 export const loginLimiter  = rateLimit({ windowMs: 15 * 60_000, max: IS_DEV ? 100 : 10 });
 export const signupLimiter = rateLimit({ windowMs: 60 * 60_000, max: IS_DEV ? 50  : 5  });
 export const resendLimiter = rateLimit({ windowMs: 60 * 60_000, max: IS_DEV ? 20  : 3  });
+export const customerOtpRequestLimiter = rateLimit({ windowMs: 10 * 60_000, max: IS_DEV ? 50 : 5 });
+export const customerOtpVerifyLimiter = rateLimit({ windowMs: 10 * 60_000, max: IS_DEV ? 80 : 10 });
 
 /** Get client IP from Next.js request */
 export function getClientIp(request) {

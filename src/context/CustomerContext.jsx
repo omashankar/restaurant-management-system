@@ -2,6 +2,7 @@
 
 import { createContext, useCallback, useContext, useMemo, useState } from "react";
 import { useCart } from "@/hooks/useCart";
+import { useEffect } from "react";
 
 /**
  * Global customer-side state:
@@ -21,6 +22,8 @@ export function CustomerProvider({ children }) {
   const [toasts, setToasts] = useState([]);
   const [orderTypeModalOpen, setOrderTypeModalOpen] = useState(false);
   const [cartOpen, setCartOpen] = useState(false);
+  const [authUser, setAuthUser] = useState(null);
+  const [authLoading, setAuthLoading] = useState(true);
 
   const updateCustomer = useCallback((patch) => {
     setCustomer((prev) => ({ ...prev, ...patch }));
@@ -32,6 +35,45 @@ export function CustomerProvider({ children }) {
     setTimeout(() => setToasts((prev) => prev.filter((t) => t.id !== id)), 3000);
   }, []);
 
+  const refreshAuth = useCallback(async () => {
+    setAuthLoading(true);
+    try {
+      const res = await fetch("/api/customer/auth/me", { cache: "no-store" });
+      const data = await res.json();
+      if (res.ok && data?.success) {
+        setAuthUser(data.user);
+      } else {
+        setAuthUser(null);
+      }
+    } catch {
+      setAuthUser(null);
+    } finally {
+      setAuthLoading(false);
+    }
+  }, []);
+
+  const logoutCustomer = useCallback(async () => {
+    await fetch("/api/customer/auth/logout", { method: "POST" }).catch(() => null);
+    setAuthUser(null);
+    setCustomer({ name: "", phone: "", email: "", address: "", tableNumber: "" });
+  }, []);
+
+  useEffect(() => {
+    refreshAuth();
+  }, [refreshAuth]);
+
+  /** Prefill checkout fields from profile when user logs in (only fills empty slots). */
+  useEffect(() => {
+    if (authLoading || !authUser) return;
+    setCustomer((prev) => {
+      const next = { ...prev };
+      if (!String(prev.name ?? "").trim() && authUser.name) next.name = authUser.name;
+      if (!String(prev.phone ?? "").trim() && authUser.phone) next.phone = authUser.phone;
+      if (!String(prev.email ?? "").trim() && authUser.email) next.email = authUser.email;
+      return next;
+    });
+  }, [authUser, authLoading]);
+
   const value = useMemo(() => ({
     cart,
     orderType, setOrderType,
@@ -39,7 +81,11 @@ export function CustomerProvider({ children }) {
     toasts,   showToast,
     orderTypeModalOpen, setOrderTypeModalOpen,
     cartOpen, setCartOpen,
-  }), [cart, orderType, customer, updateCustomer, toasts, showToast, orderTypeModalOpen, cartOpen]);
+    authUser,
+    authLoading,
+    refreshAuth,
+    logoutCustomer,
+  }), [cart, orderType, customer, updateCustomer, toasts, showToast, orderTypeModalOpen, cartOpen, authUser, authLoading, refreshAuth, logoutCustomer]);
 
   return <CustomerContext.Provider value={value}>{children}</CustomerContext.Provider>;
 }
