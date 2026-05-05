@@ -26,7 +26,8 @@ import {
   Loader2,
   Users,
 } from "lucide-react";
-import { useMemo, useRef, useState } from "react";
+import Image from "next/image";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 /* ── Step indicator ── */
 function StepDot({ n, label, active, done }) {
@@ -62,9 +63,35 @@ export default function TableBookingPage() {
   const [loading, setLoading]             = useState(false);
   const [done, setDone]                   = useState(false);
   const [conflictError, setConflictError] = useState(null);
+  const [customerAreaImages, setCustomerAreaImages] = useState({});
   const dateInputRef = useRef(null);
 
   const set = (k, v) => setForm((f) => ({ ...f, [k]: v }));
+  const normalizeAreaKey = (name) => String(name ?? "").trim().toLowerCase();
+
+  useEffect(() => {
+    let active = true;
+    async function fetchAreaImages() {
+      try {
+        const res = await fetch("/api/customer/table-areas", { cache: "no-store" });
+        const data = await res.json();
+        if (!active || !data?.success || !Array.isArray(data.areas)) return;
+        const map = {};
+        for (const area of data.areas) {
+          const key = normalizeAreaKey(area.name);
+          if (!key || !area.imageUrl || map[key]) continue;
+          map[key] = area.imageUrl;
+        }
+        setCustomerAreaImages(map);
+      } catch {
+        // Customer flow should remain usable even if images fail to load.
+      }
+    }
+    fetchAreaImages();
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const openDatePicker = () => {
     const input = dateInputRef.current;
@@ -322,6 +349,8 @@ export default function TableBookingPage() {
                 const noAvail    = counts && counts.available === 0;
                 const activeClass = getCategoryActive(cat.color);
                 const hoverClass  = getCategoryHover(cat.color);
+                const imageUrl =
+                  cat.imageUrl || customerAreaImages[normalizeAreaKey(cat.name)] || "";
                 return (
                   <button key={cat.id} type="button"
                     onClick={() => { setSelectedCatId(cat.id); setSelectedTable(null); }}
@@ -330,6 +359,17 @@ export default function TableBookingPage() {
                         ? `${activeClass} ring-1`
                         : `border-zinc-200 bg-zinc-50 ${hoverClass}`
                     }`}>
+                    {imageUrl ? (
+                      <div className="mb-1 w-full overflow-hidden rounded-xl border border-zinc-200/70 bg-white/70">
+                        <Image
+                          src={imageUrl}
+                          alt={`${cat.name} area`}
+                          width={320}
+                          height={140}
+                          className="h-24 w-full object-cover"
+                        />
+                      </div>
+                    ) : null}
                     <p className={`text-sm font-bold ${isActive ? "text-current" : "text-zinc-900"}`}>{cat.name}</p>
                     {counts ? (
                       <p className={`text-xs font-medium ${noAvail ? "text-red-400" : "text-zinc-500"}`}>

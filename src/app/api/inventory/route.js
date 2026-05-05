@@ -3,8 +3,16 @@ import { ObjectId } from "mongodb";
 
 export const GET = withTenant(
   ["admin", "manager"],
-  async ({ db, tenantFilter }) => {
-    const items = await db.collection("inventory").find(tenantFilter).sort({ name: 1 }).toArray();
+  async ({ db, tenantFilter }, request) => {
+    const { searchParams } = new URL(request.url);
+    const rawLimit = parseInt(searchParams.get("limit") ?? "1000", 10);
+    const limit = Number.isFinite(rawLimit) ? Math.min(Math.max(rawLimit, 1), 5000) : 1000;
+
+    const items = await db.collection("inventory")
+      .find(tenantFilter)
+      .sort({ name: 1 })
+      .limit(limit)
+      .toArray();
     return Response.json({ success: true, items: items.map((i) => ({ ...i, id: i._id.toString(), _id: undefined })) });
   }
 );

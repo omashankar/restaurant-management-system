@@ -27,13 +27,29 @@ test("orderCreateSchema rejects invalid orderType", () => {
   );
 });
 
-test("customerCheckoutSchema requires name and phone", () => {
+test("customerCheckoutSchema requires name and phone-or-email", () => {
   assert.throws(
     () => parseSchema(customerCheckoutSchema, {
       items: [{ name: "Pizza", qty: 1, price: 12 }],
       orderType: "delivery",
-      customer: { name: "", phone: "" },
+      customer: { name: "", phone: "", email: "" },
     }),
     /Customer name is required/
+  );
+
+  const withEmail = parseSchema(customerCheckoutSchema, {
+    items: [{ name: "Pizza", qty: 1, price: 12 }],
+    orderType: "takeaway",
+    customer: { name: "Alex", phone: "", email: "alex@example.com" },
+  });
+  assert.equal(withEmail.customer.email, "alex@example.com");
+
+  assert.throws(
+    () => parseSchema(customerCheckoutSchema, {
+      items: [{ name: "Pizza", qty: 1, price: 12 }],
+      orderType: "takeaway",
+      customer: { name: "Alex", phone: "", email: "" },
+    }),
+    /phone|email|contact/i
   );
 });

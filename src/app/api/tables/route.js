@@ -13,9 +13,13 @@ export const GET = withTenant(
     if (areaId)                    filter.categoryId = areaId;
     if (status && status !== "all") filter.status     = status;
 
+    const rawLimit = parseInt(searchParams.get("limit") ?? "500", 10);
+    const limit = Number.isFinite(rawLimit) ? Math.min(Math.max(rawLimit, 1), 2000) : 500;
+
     const tables = await db.collection("tables")
       .find(filter)
       .sort({ tableNumber: 1 })
+      .limit(limit)
       .toArray();
 
     return Response.json({

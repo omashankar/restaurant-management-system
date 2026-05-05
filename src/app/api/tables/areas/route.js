@@ -21,7 +21,7 @@ export const GET = withTenant(
 export const POST = withTenant(
   ["admin"],
   async ({ db, tenantFilter, payload }, request) => {
-    const { name, description, color } = await request.json();
+    const { name, description, color, imageUrl } = await request.json();
     if (!name?.trim()) {
       return Response.json({ success: false, error: "Area name is required." }, { status: 400 });
     }
@@ -31,6 +31,7 @@ export const POST = withTenant(
       name: name.trim(),
       description: description?.trim() ?? "",
       color: color ?? "emerald",
+      imageUrl: imageUrl?.trim() || "",
       createdBy: new ObjectId(payload.id),
       createdAt: new Date(),
     };

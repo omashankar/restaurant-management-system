@@ -12,12 +12,23 @@ const CATEGORIES = {
   staff:    { label: "Staff",    color: "text-sky-400",     bg: "bg-sky-500/10"     },
 };
 
+const DEBOUNCE_MS = 200;
+const MAX_HITS = 8;
+/** Cap scans per category so huge tenants do not freeze the main thread. */
+const MAX_SCAN_PER_BUCKET = 400;
+
 export default function GlobalSearch() {
   const { orderRows, customerRows, menuItems, staffRows } = useModuleData();
   const [query, setQuery]   = useState("");
+  const [debouncedQuery, setDebouncedQuery] = useState("");
   const [open, setOpen]     = useState(false);
   const inputRef            = useRef(null);
   const containerRef        = useRef(null);
+
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedQuery(query.trim()), DEBOUNCE_MS);
+    return () => clearTimeout(t);
+  }, [query]);
 
   /* Keyboard shortcut: Ctrl+K or Cmd+K */
   useEffect(() => {
@@ -30,6 +41,7 @@ export default function GlobalSearch() {
       if (e.key === "Escape") {
         setOpen(false);
         setQuery("");
+        setDebouncedQuery("");
       }
     }
     window.addEventListener("keydown", handler);
@@ -48,13 +60,14 @@ export default function GlobalSearch() {
   }, []);
 
   const results = useMemo(() => {
-    const q = query.trim().toLowerCase();
+    const q = debouncedQuery.toLowerCase();
     if (!q || q.length < 2) return [];
 
     const hits = [];
 
-    // Orders
-    (orderRows ?? []).forEach((o) => {
+    const orders = orderRows ?? [];
+    for (let i = 0; i < orders.length && i < MAX_SCAN_PER_BUCKET && hits.length < MAX_HITS; i++) {
+      const o = orders[i];
       if (
         o.orderId?.toLowerCase().includes(q) ||
         o.customer?.toLowerCase().includes(q) ||
@@ -68,10 +81,11 @@ export default function GlobalSearch() {
           href: "/orders",
         });
       }
-    });
+    }
 
-    // Customers
-    (customerRows ?? []).forEach((c) => {
+    const customers = customerRows ?? [];
+    for (let i = 0; i < customers.length && i < MAX_SCAN_PER_BUCKET && hits.length < MAX_HITS; i++) {
+      const c = customers[i];
       if (
         c.name?.toLowerCase().includes(q) ||
         c.email?.toLowerCase().includes(q) ||
@@ -85,10 +99,11 @@ export default function GlobalSearch() {
           href: `/customers/${c.id}`,
         });
       }
-    });
+    }
 
-    // Menu items
-    (menuItems ?? []).forEach((m) => {
+    const menu = menuItems ?? [];
+    for (let i = 0; i < menu.length && i < MAX_SCAN_PER_BUCKET && hits.length < MAX_HITS; i++) {
+      const m = menu[i];
       if (
         m.name?.toLowerCase().includes(q) ||
         m.categoryName?.toLowerCase().includes(q)
@@ -101,10 +116,11 @@ export default function GlobalSearch() {
           href: "/menu/items",
         });
       }
-    });
+    }
 
-    // Staff
-    (staffRows ?? []).forEach((s) => {
+    const staff = staffRows ?? [];
+    for (let i = 0; i < staff.length && i < MAX_SCAN_PER_BUCKET && hits.length < MAX_HITS; i++) {
+      const s = staff[i];
       if (
         s.name?.toLowerCase().includes(q) ||
         s.email?.toLowerCase().includes(q) ||
@@ -118,10 +134,10 @@ export default function GlobalSearch() {
           href: "/staff",
         });
       }
-    });
+    }
 
-    return hits.slice(0, 8);
-  }, [query, orderRows, customerRows, menuItems, staffRows]);
+    return hits;
+  }, [debouncedQuery, orderRows, customerRows, menuItems, staffRows]);
 
   return (
     <div ref={containerRef} className="relative">
@@ -140,7 +156,7 @@ export default function GlobalSearch() {
         {query && (
           <button
             type="button"
-            onClick={() => { setQuery(""); setOpen(false); }}
+            onClick={() => { setQuery(""); setDebouncedQuery(""); setOpen(false); }}
             className="absolute right-2.5 text-zinc-500 hover:text-zinc-300"
           >
             <X className="size-3.5" />
@@ -149,11 +165,13 @@ export default function GlobalSearch() {
       </div>
 
       {/* Results dropdown */}
-      {open && query.length >= 2 && (
+      {open && query.trim().length >= 2 && (
         <div className="absolute right-0 top-full z-50 mt-2 w-80 rounded-2xl border border-zinc-800 bg-zinc-900 shadow-2xl shadow-black/50">
-          {results.length === 0 ? (
+          {debouncedQuery !== query.trim() ? (
+            <div className="px-4 py-6 text-center text-sm text-zinc-500">Searching…</div>
+          ) : results.length === 0 ? (
             <div className="px-4 py-6 text-center text-sm text-zinc-600">
-              No results for &ldquo;{query}&rdquo;
+              No results for &ldquo;{debouncedQuery}&rdquo;
             </div>
           ) : (
             <ul className="py-1.5">
@@ -163,7 +181,7 @@ export default function GlobalSearch() {
                   <li key={`${r.type}-${r.id}`}>
                     <Link
                       href={r.href}
-                      onClick={() => { setOpen(false); setQuery(""); }}
+                      onClick={() => { setOpen(false); setQuery(""); setDebouncedQuery(""); }}
                       className="flex items-center gap-3 px-3 py-2.5 transition-colors hover:bg-zinc-800/60"
                     >
                       <span className={`flex size-7 shrink-0 items-center justify-center rounded-lg text-[10px] font-bold ${cat.bg} ${cat.color}`}>
