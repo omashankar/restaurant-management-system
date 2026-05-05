@@ -12,6 +12,10 @@ import {
   SETTINGS_TABS,
   TIMEZONE_OPTIONS,
 } from "@/config/settingsConfig";
+import {
+  ACCESS_CONTROL_FEATURES,
+  normalizeAccessControl,
+} from "@/config/accessControlConfig";
 import { CheckCircle2, Loader2, Upload, XCircle } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 
@@ -36,6 +40,7 @@ export default function SettingsPage() {
             openingHours: Array.isArray(data.settings.openingHours)
               ? data.settings.openingHours
               : EMPTY_SETTINGS.openingHours,
+            accessControl: normalizeAccessControl(data.settings.accessControl),
           };
           setSettings(safe);
           setSavedSnapshot(safe);
@@ -88,6 +93,19 @@ export default function SettingsPage() {
       openingHours: prev.openingHours.map((day, i) =>
         i === index ? { ...day, ...patch } : day
       ),
+    }));
+  };
+
+  const updateAccess = (featureKey, role, nextValue) => {
+    setSettings((prev) => ({
+      ...prev,
+      accessControl: {
+        ...prev.accessControl,
+        [featureKey]: {
+          ...prev.accessControl[featureKey],
+          [role]: role === "admin" ? true : nextValue,
+        },
+      },
     }));
   };
 
@@ -316,6 +334,49 @@ export default function SettingsPage() {
                     }))
                   }
                 />
+              </div>
+            </SettingsFormSection>
+          ) : null}
+
+          {activeTab === "accessControl" ? (
+            <SettingsFormSection
+              title="Access Control"
+              description="Set feature access by role. Changes apply to new sessions; existing sessions may need re-login."
+            >
+              <div className="overflow-x-auto rounded-xl border border-zinc-800">
+                <table className="min-w-full divide-y divide-zinc-800 text-sm">
+                  <thead className="bg-zinc-950/70 text-xs uppercase tracking-wide text-zinc-500">
+                    <tr>
+                      <th className="px-4 py-3 text-left">Feature</th>
+                      <th className="px-4 py-3 text-center">Admin</th>
+                      <th className="px-4 py-3 text-center">Manager</th>
+                      <th className="px-4 py-3 text-center">Waiter</th>
+                      <th className="px-4 py-3 text-center">Chef</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-zinc-900/70">
+                    {ACCESS_CONTROL_FEATURES.map((feature) => {
+                      const row = settings.accessControl?.[feature.key] ?? {};
+                      return (
+                        <tr key={feature.key} className="bg-zinc-950/30">
+                          <td className="px-4 py-3 font-medium text-zinc-200">{feature.label}</td>
+                          {["admin", "manager", "waiter", "chef"].map((role) => (
+                            <td key={role} className="px-4 py-3 text-center">
+                              <input
+                                type="checkbox"
+                                checked={Boolean(row[role])}
+                                disabled={role === "admin"}
+                                onChange={(e) => updateAccess(feature.key, role, e.target.checked)}
+                                className="size-4 accent-emerald-500 disabled:cursor-not-allowed disabled:opacity-60"
+                                aria-label={`${feature.label} access for ${role}`}
+                              />
+                            </td>
+                          ))}
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
               </div>
             </SettingsFormSection>
           ) : null}

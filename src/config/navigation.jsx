@@ -16,6 +16,10 @@ import {
   UtensilsCrossed,
   Wine,
 } from "lucide-react";
+import {
+  getFeatureForPath,
+  normalizeAccessControl,
+} from "./accessControlConfig";
 
 /** @typedef {'admin'|'manager'|'waiter'|'chef'} Role */
 
@@ -146,25 +150,38 @@ export const NAV_ITEMS = [
 export const MANAGER_STAFF_READ_ONLY = true;
 
 /** @param {Role} role */
-export function navForRole(role) {
-  return NAV_ITEMS.filter((item) => item.roles.includes(role));
+export function navForRole(role, accessControl) {
+  const access = normalizeAccessControl(accessControl);
+
+  return NAV_ITEMS.filter((item) => {
+    if (!item.roles.includes(role)) return false;
+    const probePath = item.type === "link" ? item.href : `/${item.id}`;
+    const feature = getFeatureForPath(probePath);
+    if (!feature) return true;
+    return Boolean(access?.[feature]?.[role]);
+  });
 }
 
 /**
  * @param {Role} role
  * @param {string} pathname
  */
-export function canAccessPath(role, pathname) {
+export function canAccessPath(role, pathname, accessControl) {
+  const access = normalizeAccessControl(accessControl);
   /** @type {{ href: string; roles: Role[] }[]} */
   const rules = [];
 
   for (const item of NAV_ITEMS) {
     if (item.type === "link") {
-      rules.push({ href: item.href, roles: item.roles });
+      rules.push({ href: item.href, roles: item.roles, feature: getFeatureForPath(item.href) });
     } else if (item.type === "group") {
-      rules.push({ href: `/${item.id}`, roles: item.roles });
+      rules.push({
+        href: `/${item.id}`,
+        roles: item.roles,
+        feature: getFeatureForPath(`/${item.id}`),
+      });
       for (const c of item.children) {
-        rules.push({ href: c.href, roles: item.roles });
+        rules.push({ href: c.href, roles: item.roles, feature: getFeatureForPath(c.href) });
       }
     }
   }
@@ -173,5 +190,7 @@ export function canAccessPath(role, pathname) {
     (r) => pathname === r.href || pathname.startsWith(`${r.href}/`)
   );
   if (!match) return true;  // /profile and unknown paths are open to all
-  return match.roles.includes(role);
+  if (!match.roles.includes(role)) return false;
+  if (!match.feature) return true;
+  return Boolean(access?.[match.feature]?.[role]);
 }
