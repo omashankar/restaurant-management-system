@@ -7,7 +7,9 @@ export async function GET() {
     const areas = await db
       .collection("tableAreas")
       .find({})
+      .project({ name: 1, imageUrl: 1 })
       .sort({ updatedAt: -1, createdAt: -1 })
+      .limit(100)
       .toArray();
 
     return Response.json({

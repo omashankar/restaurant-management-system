@@ -45,6 +45,10 @@ export async function GET(request) {
       return Response.json({ success: false, error: "No restaurant associated with this account." }, { status: 400 });
     }
 
+    const { searchParams } = new URL(request.url);
+    const rawLimit = parseInt(searchParams.get("limit") ?? "200", 10);
+    const limit = Number.isFinite(rawLimit) ? Math.min(Math.max(rawLimit, 1), 1000) : 200;
+
     /* Tenant-scoped staff query */
     const staff = await db.collection("users")
       .find(
@@ -52,6 +56,7 @@ export async function GET(request) {
         { projection: { password: 0 } }
       )
       .sort({ createdAt: -1 })
+      .limit(limit)
       .toArray();
 
     return Response.json({

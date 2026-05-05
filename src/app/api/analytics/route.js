@@ -17,7 +17,6 @@ export const GET = withTenant(
       ordersAgg,
       topItemsAgg,
       dailyRevenueAgg,
-      statusAgg,
       orderTypeAgg,
     ] = await Promise.all([
 
@@ -27,7 +26,7 @@ export const GET = withTenant(
         { $group: { _id: null, total: { $sum: "$total" }, count: { $sum: 1 } } },
       ]).toArray(),
 
-      /* Total orders by status */
+      /* Orders in range grouped by status (used for totals + completed/cancelled KPIs) */
       db.collection("orders").aggregate([
         { $match: dateFilter },
         { $group: { _id: "$status", count: { $sum: 1 } } },
@@ -57,12 +56,6 @@ export const GET = withTenant(
         { $sort: { _id: 1 } },
       ]).toArray(),
 
-      /* Orders by status */
-      db.collection("orders").aggregate([
-        { $match: dateFilter },
-        { $group: { _id: "$status", count: { $sum: 1 } } },
-      ]).toArray(),
-
       /* Orders by type */
       db.collection("orders").aggregate([
         { $match: dateFilter },
@@ -74,7 +67,7 @@ export const GET = withTenant(
     const totalOrders  = ordersAgg.reduce((s, o) => s + o.count, 0);
     const avgOrder     = totalOrders > 0 ? totalRevenue / (revenueAgg[0]?.count ?? 1) : 0;
 
-    const statusMap = Object.fromEntries(statusAgg.map((s) => [s._id, s.count]));
+    const statusMap = Object.fromEntries(ordersAgg.map((s) => [s._id, s.count]));
     const typeMap   = Object.fromEntries(orderTypeAgg.map((t) => [t._id, t.count]));
 
     return Response.json({

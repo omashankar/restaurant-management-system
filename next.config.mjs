@@ -2,7 +2,8 @@
 const nextConfig = {
   reactCompiler: true,
   images: {
-    unoptimized: true, // 👈 IMPORTANT for ngrok
+    // Default: optimized images in production. Set NEXT_IMAGE_UNOPTIMIZED=1 for ngrok/tunnel dev.
+    unoptimized: process.env.NEXT_IMAGE_UNOPTIMIZED === "1",
     remotePatterns: [
       {
         protocol: "https",

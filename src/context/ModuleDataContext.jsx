@@ -12,6 +12,7 @@ import {
   INITIAL_STAFF,
   INITIAL_TABLE_CATEGORIES,
 } from "@/lib/modulesData";
+import { useUser } from "@/context/AuthContext";
 import {
   createContext,
   useCallback,
@@ -72,6 +73,7 @@ function normalizeInventoryItem(row) {
 }
 
 export function ModuleDataProvider({ children }) {
+  const { user, hydrated: authHydrated } = useUser();
   const [hydrated, setHydrated] = useState(false);
   const [categories, setCategories] = useState(INITIAL_CATEGORIES);
   const [tableCategories, setTableCategories] = useState(INITIAL_TABLE_CATEGORIES);
@@ -96,7 +98,6 @@ export function ModuleDataProvider({ children }) {
       const raw = sessionStorage.getItem(KEY);
       if (raw) {
         const d = JSON.parse(raw);
-        // eslint-disable-next-line react-hooks/set-state-in-effect
         if (d.tableCategories) setTableCategories(d.tableCategories);
         if (d.floorTables)     setFloorTables(d.floorTables);
         if (d.staffRows)       setStaffRows(d.staffRows);
@@ -106,17 +107,19 @@ export function ModuleDataProvider({ children }) {
       sessionStorage.removeItem(KEY);
     }
 
-    // Fetch API-backed module data.
+    // Wait for auth so we do not duplicate /api/auth/me (AuthContext already loads the user).
+    if (!authHydrated) return;
+
+    // Tenant module APIs are for restaurant roles only — skip for guests and super_admin.
+    if (!user || user.role === "super_admin") {
+      setHydrated(true);
+      return;
+    }
+
+    let cancelled = false;
+
     async function fetchModuleData() {
       try {
-        const meRes = await fetch("/api/auth/me");
-        const meData = await meRes.json().catch(() => null);
-        // Tenant module APIs (/api/menu, /api/orders, etc.) are for restaurant roles only.
-        // Avoid noisy 401/403 calls for super_admin or unauthenticated sessions.
-        if (!meData?.success || meData.user?.role === "super_admin") {
-          return;
-        }
-
         const [
           menuRes,
           catRes,
@@ -176,11 +179,16 @@ export function ModuleDataProvider({ children }) {
         }
       } catch (err) {
         console.error("[ModuleDataContext] Failed to fetch module data:", err.message);
+      } finally {
+        if (!cancelled) setHydrated(true);
       }
     }
 
-    fetchModuleData().finally(() => setHydrated(true));
-  }, []);
+    fetchModuleData();
+    return () => {
+      cancelled = true;
+    };
+  }, [authHydrated, user]);
 
   const refreshMenu = useCallback(async () => {
     try {
@@ -222,7 +230,6 @@ export function ModuleDataProvider({ children }) {
 
   useEffect(() => {
     if (!hydrated) return;
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     setCategories((cats) =>
       cats.map((c) => ({
         ...c,

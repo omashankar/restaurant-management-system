@@ -24,7 +24,14 @@ export async function GET(request) {
     const filter = {};
     if (statusFilter !== "all") filter.status = statusFilter;
 
-    const subs = await db.collection("subscriptions").find(filter).sort({ updatedAt: -1 }).toArray();
+    const rawLimit = parseInt(searchParams.get("limit") ?? "2000", 10);
+    const limit = Number.isFinite(rawLimit) ? Math.min(Math.max(rawLimit, 1), 5000) : 2000;
+
+    const subs = await db.collection("subscriptions")
+      .find(filter)
+      .sort({ updatedAt: -1 })
+      .limit(limit)
+      .toArray();
 
     const rIds = [...new Set(subs.map((s) => s.restaurantId?.toString()).filter(Boolean))];
     let restaurantMap = {};

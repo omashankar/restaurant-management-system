@@ -10,7 +10,7 @@ import {
   Pencil, Phone, Plus, RefreshCw, ShieldCheck, ShieldOff,
   Search, Trash2, X,
 } from "lucide-react";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 /* ─────────────────────────────────────────
    CONSTANTS
@@ -166,6 +166,10 @@ function PreviewModal({ restaurant, onClose }) {
 ───────────────────────────────────────── */
 export default function RestaurantsPage() {
   const [restaurants, setRestaurants]   = useState([]);
+  const [totalCount, setTotalCount]     = useState(0);
+  const [listStats, setListStats]       = useState({
+    total: 0, active: 0, inactive: 0, suspended: 0,
+  });
   const [loading, setLoading]           = useState(true);
   const [search, setSearch]             = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -197,31 +201,51 @@ export default function RestaurantsPage() {
 
   const { showToast, ToastUI } = useToast();
 
-  /* Fetch */
-  const fetchRestaurants = useCallback(async () => {
+  useEffect(() => {
+    setPage(1);
+  }, [search, statusFilter, planFilter, ownerStatusFilter]);
+
+  /* Fetch — server-side page + ownerStatus (billing still calls API without `page`) */
+  const fetchRestaurants = useCallback(async (pageOverride) => {
+    const effectivePage = typeof pageOverride === "number" ? pageOverride : page;
     setLoading(true);
     try {
       const params = new URLSearchParams();
       if (search)              params.set("search", search);
       if (statusFilter !== "all") params.set("status", statusFilter);
       if (planFilter   !== "all") params.set("plan",   planFilter);
+      if (ownerStatusFilter !== "all") params.set("ownerStatus", ownerStatusFilter);
+      params.set("page", String(effectivePage));
+      params.set("pageSize", String(PAGE_SIZE));
       const res  = await fetch("/api/super-admin/restaurants?" + params);
       const data = await res.json();
-      if (data.success) { setRestaurants(data.restaurants); setPage(1); }
+      if (data.success) {
+        const rows = data.restaurants ?? [];
+        if (rows.length === 0 && effectivePage > 1) {
+          setPage((p) => Math.max(1, p - 1));
+          return;
+        }
+        setRestaurants(rows);
+        if (typeof data.total === "number") {
+          setTotalCount(data.total);
+          if (data.stats) setListStats(data.stats);
+        } else {
+          setTotalCount(rows.length);
+          setListStats({
+            total:     rows.length,
+            active:    rows.filter((r) => r.status === "active").length,
+            inactive:  rows.filter((r) => r.status === "inactive").length,
+            suspended: rows.filter((r) => r.status === "suspended").length,
+          });
+        }
+      }
     } catch { /* keep */ }
     finally { setLoading(false); }
-  }, [search, statusFilter, planFilter]);
+  }, [search, statusFilter, planFilter, ownerStatusFilter, page]);
 
   useEffect(() => { fetchRestaurants(); }, [fetchRestaurants]);
 
-  const filteredRestaurants = useMemo(() => {
-    if (ownerStatusFilter === "all") return restaurants;
-    return restaurants.filter((r) => (r.ownerStatus ?? "inactive") === ownerStatusFilter);
-  }, [restaurants, ownerStatusFilter]);
-
-  /* Paginated slice */
-  const totalPages = Math.max(1, Math.ceil(filteredRestaurants.length / PAGE_SIZE));
-  const paginated  = filteredRestaurants.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
 
   /* Toggle status */
   const toggleStatus = async (r) => {
@@ -280,9 +304,10 @@ export default function RestaurantsPage() {
       });
       const data = await res.json();
       if (!data.success) { setCreateError(data.error ?? "Failed to create."); return; }
-      setRestaurants((prev) => [data.restaurant, ...prev]);
       showToast(createForm.name + " created successfully.");
       setCreateOpen(false); setCreateForm(emptyForm);
+      setPage(1);
+      await fetchRestaurants(1);
     } catch { setCreateError("Network error."); }
     finally { setCreating(false); }
   };
@@ -323,19 +348,14 @@ export default function RestaurantsPage() {
       const res  = await fetch("/api/super-admin/restaurants/" + deleteTarget.id, { method: "DELETE" });
       const data = await res.json();
       if (!data.success) { showToast(data.error ?? "Failed to delete.", "error"); return; }
-      setRestaurants((prev) => prev.filter((x) => x.id !== deleteTarget.id));
       showToast(deleteTarget.name + " deleted.");
+      await fetchRestaurants();
       setDeleteTarget(null);
     } catch { showToast("Network error.", "error"); }
     finally { setDeleting(false); }
   };
 
-  const stats = useMemo(() => ({
-    total:     restaurants.length,
-    active:    restaurants.filter((r) => r.status === "active").length,
-    inactive:  restaurants.filter((r) => r.status === "inactive").length,
-    suspended: restaurants.filter((r) => r.status === "suspended").length,
-  }), [restaurants]);
+  const stats = listStats;
 
   return (
     <div className="space-y-6">
@@ -416,7 +436,7 @@ export default function RestaurantsPage() {
             <div key={i} className="h-16 animate-pulse rounded-xl border border-zinc-800 bg-zinc-900/40" />
           ))}
         </div>
-      ) : filteredRestaurants.length === 0 ? (
+      ) : totalCount === 0 ? (
         <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-zinc-800 py-20 text-center">
           <Building2 className="size-10 text-zinc-700" />
           <p className="text-sm text-zinc-500">No restaurants found for selected filters.</p>
@@ -441,7 +461,7 @@ export default function RestaurantsPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-zinc-800/60">
-                {paginated.map((r) => (
+                {restaurants.map((r) => (
                   <tr key={r.id} className={"transition-colors hover:bg-zinc-800/20 " + (r.status !== "active" ? "opacity-70" : "")}>
 
                     {/* Restaurant name */}
@@ -560,7 +580,7 @@ export default function RestaurantsPage() {
           {/* Pagination */}
           <div className="flex items-center justify-between border-t border-zinc-800 px-4 py-3">
             <p className="text-xs text-zinc-600">
-              {filteredRestaurants.length} restaurant{filteredRestaurants.length !== 1 ? "s" : ""}
+              {totalCount} restaurant{totalCount !== 1 ? "s" : ""}
               {totalPages > 1 && " · page " + page + " of " + totalPages}
             </p>
             {totalPages > 1 && (

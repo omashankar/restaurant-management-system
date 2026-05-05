@@ -11,7 +11,14 @@ export const GET = withTenant(
     if (date)   filter.date   = date;
     if (status && status !== "all") filter.status = status;
 
-    const rows = await db.collection("reservations").find(filter).sort({ date: 1, time: 1 }).toArray();
+    const rawLimit = parseInt(searchParams.get("limit") ?? "500", 10);
+    const limit = Number.isFinite(rawLimit) ? Math.min(Math.max(rawLimit, 1), 2000) : 500;
+
+    const rows = await db.collection("reservations")
+      .find(filter)
+      .sort({ date: 1, time: 1 })
+      .limit(limit)
+      .toArray();
     return Response.json({ success: true, reservations: rows.map((r) => ({ ...r, id: r._id.toString(), _id: undefined })) });
   }
 );
