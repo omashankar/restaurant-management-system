@@ -2,6 +2,7 @@
 
 import { canAccessPath } from "@/config/navigation";
 import { useApp } from "@/context/AppProviders";
+import { useAccessControlSettings } from "@/hooks/useAccessControlSettings";
 import { useUser } from "@/context/AuthContext";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useLayoutEffect, useState } from "react";
@@ -11,6 +12,7 @@ import RestrictedPage from "./RestrictedPage";
 export default function Shell({ children }) {
   const { hydrated: appHydrated } = useApp();
   const { user, hydrated, loading } = useUser();
+  const accessControl = useAccessControlSettings();
   const pathname = usePathname();
   const router   = useRouter();
   const [routing, setRouting] = useState(false);
@@ -64,7 +66,7 @@ export default function Shell({ children }) {
   }
 
   /* ── RBAC path check ── */
-  if (!canAccessPath(user.role, pathname)) {
+  if (!canAccessPath(user.role, pathname, accessControl)) {
     return <LayoutWrapper><RestrictedPage title="Module not available" /></LayoutWrapper>;
   }
 

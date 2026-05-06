@@ -2,6 +2,7 @@
 
 import { navForRole } from "@/config/navigation";
 import { useApp } from "@/context/AppProviders";
+import { useAccessControlSettings } from "@/hooks/useAccessControlSettings";
 import {
   ChevronDown,
   ChevronLeft,
@@ -20,6 +21,7 @@ export default function Sidebar({
   allowCollapse = true,
 }) {
   const { user } = useApp();
+  const accessControl = useAccessControlSettings();
   const pathname = usePathname();
   const [openGroups, setOpenGroups] = useState(() => ({
     menu:   pathname.startsWith("/menu"),
@@ -29,7 +31,10 @@ export default function Sidebar({
   const closeTimerRef = useRef(null);
   const triggerRefs = useRef({});
   const popoverRef = useRef(null);
-  const items = useMemo(() => (user ? navForRole(user.role) : []), [user]);
+  const items = useMemo(
+    () => (user ? navForRole(user.role, accessControl) : []),
+    [accessControl, user]
+  );
   const collapsedPopoverEnabled = collapsed && allowCollapse;
   const popoverItem = useMemo(() => {
     if (!popover?.id) return null;

@@ -1,6 +1,9 @@
+import { DEFAULT_ACCESS_CONTROL } from "./accessControlConfig";
+
 export const SETTINGS_TABS = [
   { id: "general", label: "General" },
   { id: "pos", label: "POS & Charges" },
+  { id: "accessControl", label: "Access Control" },
   { id: "notifications", label: "Notifications" },
   { id: "hours", label: "Opening Hours" },
   { id: "contact", label: "Contact" },
@@ -43,6 +46,7 @@ export const EMPTY_SETTINGS = {
     address: "",
     googleMapsLink: "",
   },
+  accessControl: DEFAULT_ACCESS_CONTROL,
 };
 
 export const CURRENCY_OPTIONS = ["USD", "EUR", "GBP", "INR", "AED"];
