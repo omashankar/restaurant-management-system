@@ -5,8 +5,6 @@ import { sendVerificationEmail } from "@/lib/emailService";
 import { logError, logInfo } from "@/lib/logger";
 import clientPromise from "@/lib/mongodb";
 
-const VALID_ROLES = ["admin", "manager", "waiter", "chef"];
-
 export async function POST(request) {
   /* ── Rate limit ── */
   const ip = getClientIp(request);
@@ -25,21 +23,20 @@ export async function POST(request) {
     return Response.json({ success: false, error: "Invalid JSON body." }, { status: 400 });
   }
 
-  const { name, email, password, role, restaurantName } = body ?? {};
+  const { name, email, phone, password, restaurantName } = body ?? {};
+  const role = "admin";
 
   /* ── Manual validation (no Zod dependency issues) ── */
   if (!name?.trim())     return Response.json({ success: false, error: "Name is required." },     { status: 400 });
   if (!email?.trim())    return Response.json({ success: false, error: "Email is required." },    { status: 400 });
   if (!password)         return Response.json({ success: false, error: "Password is required." }, { status: 400 });
   if (password.length < 6) return Response.json({ success: false, error: "Password must be at least 6 characters." }, { status: 400 });
-  if (!role)             return Response.json({ success: false, error: "Role is required." },     { status: 400 });
-  if (!VALID_ROLES.includes(role)) return Response.json({ success: false, error: "Invalid role." }, { status: 400 });
-
   const cleanEmail          = email.toLowerCase().trim();
+  const cleanPhone          = String(phone ?? "").trim();
   const cleanRestaurantName = restaurantName?.trim() || null;
 
-  if (role === "admin" && !cleanRestaurantName) {
-    return Response.json({ success: false, error: "Restaurant name is required for Admin." }, { status: 400 });
+  if (!cleanRestaurantName) {
+    return Response.json({ success: false, error: "Restaurant name is required." }, { status: 400 });
   }
 
   try {
@@ -53,15 +50,12 @@ export async function POST(request) {
     }
 
     /* ── Create restaurant for admin ── */
-    let restaurantId = null;
-    if (role === "admin" && cleanRestaurantName) {
-      const resResult = await db.collection("restaurants").insertOne({
-        name: cleanRestaurantName,
-        ownerId: null,
-        createdAt: new Date(),
-      });
-      restaurantId = resResult.insertedId;
-    }
+    const resResult = await db.collection("restaurants").insertOne({
+      name: cleanRestaurantName,
+      ownerId: null,
+      createdAt: new Date(),
+    });
+    const restaurantId = resResult.insertedId;
 
     /* ── Hash password & insert user ── */
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -72,6 +66,7 @@ export async function POST(request) {
     const result = await db.collection("users").insertOne({
       name: name.trim(),
       email: cleanEmail,
+      phone: cleanPhone || null,
       password: hashedPassword,
       role,
       restaurantId,
@@ -83,12 +78,10 @@ export async function POST(request) {
     });
 
     /* ── Link restaurant owner ── */
-    if (restaurantId) {
-      await db.collection("restaurants").updateOne(
-        { _id: restaurantId },
-        { $set: { ownerId: result.insertedId } }
-      );
-    }
+    await db.collection("restaurants").updateOne(
+      { _id: restaurantId },
+      { $set: { ownerId: result.insertedId } }
+    );
 
     if (!isSuperAdmin) {
       sendVerificationEmail({
