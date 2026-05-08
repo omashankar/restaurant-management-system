@@ -207,17 +207,23 @@ function LoginContent() {
                 </button>
               </div>
             )}
-            <div className="flex items-center gap-2">
-              <input
-                id="rememberMe"
-                type="checkbox"
-                checked={rememberMe}
-                onChange={(e) => setRememberMe(e.target.checked)}
-                className="cursor-pointer size-4 rounded border-zinc-600 bg-zinc-800 accent-emerald-500"
-              />
-              <label htmlFor="rememberMe" className="cursor-pointer text-xs text-zinc-400">
-                Remember me for 30 days
+            <div className="flex items-center justify-between gap-3">
+              <label htmlFor="rememberMe" className="cursor-pointer inline-flex items-center gap-2 text-xs text-zinc-400">
+                <input
+                  id="rememberMe"
+                  type="checkbox"
+                  checked={rememberMe}
+                  onChange={(e) => setRememberMe(e.target.checked)}
+                  className="cursor-pointer size-4 rounded border-zinc-600 bg-zinc-800 accent-emerald-500"
+                />
+                Remember me
               </label>
+              <Link
+                href="/forgot-password"
+                className="text-xs font-medium text-zinc-400 underline-offset-2 transition-colors hover:text-emerald-300 hover:underline"
+              >
+                Forgot your password?
+              </Link>
             </div>
             <button
               type="submit"

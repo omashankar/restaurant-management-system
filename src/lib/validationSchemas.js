@@ -12,15 +12,20 @@ export const signupSchema = z.object({
     .max(100, "Email too long.")
     .toLowerCase()
     .trim(),
+  phone: z
+    .string()
+    .max(20, "Phone too long.")
+    .trim()
+    .optional(),
   password: z
     .string({ required_error: "Password is required." })
     .min(6, "Password must be at least 6 characters.")
     .max(72, "Password too long."),
-  role: z.enum(["admin", "manager", "waiter", "chef"], {
-    required_error: "Role is required.",
-    message: "Invalid role.",
-  }),
-  restaurantName: z.string().max(100).trim().optional(),
+  restaurantName: z
+    .string({ required_error: "Restaurant name is required." })
+    .min(2, "Restaurant name is required.")
+    .max(100)
+    .trim(),
 });
 
 export const loginSchema = z.object({

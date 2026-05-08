@@ -1,7 +1,7 @@
 "use client";
 
-import { useProfile } from "@/hooks/useProfile";
 import { roleLabel } from "@/context/AppProviders";
+import { useProfile } from "@/hooks/useProfile";
 import Image from "next/image";
 import {
   Camera,
@@ -15,7 +15,6 @@ import {
 } from "lucide-react";
 import { useRef, useState } from "react";
 
-// ── reusable input ────────────────────────────────────────────────────────────
 function Field({ label, icon: Icon, type = "text", value, onChange, readOnly, placeholder }) {
   return (
     <div>
@@ -23,9 +22,9 @@ function Field({ label, icon: Icon, type = "text", value, onChange, readOnly, pl
         {label}
       </label>
       <div className="relative">
-        {Icon && (
+        {Icon ? (
           <Icon className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-zinc-500" aria-hidden />
-        )}
+        ) : null}
         <input
           type={type}
           value={value}
@@ -37,7 +36,7 @@ function Field({ label, icon: Icon, type = "text", value, onChange, readOnly, pl
           } ${
             readOnly
               ? "cursor-not-allowed border-zinc-800 text-zinc-500"
-              : "border-zinc-700 focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/15"
+              : "border-zinc-700 focus:border-rose-500/50 focus:ring-2 focus:ring-rose-500/15"
           }`}
         />
       </div>
@@ -45,17 +44,16 @@ function Field({ label, icon: Icon, type = "text", value, onChange, readOnly, pl
   );
 }
 
-// ── section card ──────────────────────────────────────────────────────────────
 function Section({ title, description, icon: Icon, children }) {
   return (
     <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-6">
       <div className="mb-5 flex items-center gap-3">
-        <span className="flex size-9 items-center justify-center rounded-xl bg-emerald-500/15 text-emerald-400 ring-1 ring-emerald-500/20">
+        <span className="flex size-9 items-center justify-center rounded-xl bg-rose-500/15 text-rose-400 ring-1 ring-rose-500/20">
           <Icon className="size-4" aria-hidden />
         </span>
         <div>
           <h2 className="text-sm font-semibold text-zinc-100">{title}</h2>
-          {description && <p className="text-xs text-zinc-500">{description}</p>}
+          {description ? <p className="text-xs text-zinc-500">{description}</p> : null}
         </div>
       </div>
       {children}
@@ -63,8 +61,7 @@ function Section({ title, description, icon: Icon, children }) {
   );
 }
 
-// ── main page ─────────────────────────────────────────────────────────────────
-export default function ProfilePage() {
+export default function SuperAdminProfilePage() {
   const {
     user,
     form, setField, resetForm, formDirty,
@@ -82,22 +79,19 @@ export default function ProfilePage() {
     setAvatar(url);
   };
 
-  const avatarFallback = user?.name?.trim()?.[0]?.toUpperCase() ?? "U";
+  const avatarFallback = user?.name?.trim()?.[0]?.toUpperCase() ?? "S";
 
   return (
     <div className="mx-auto max-w-2xl space-y-6">
-
-      {/* ── Header ── */}
       <div>
         <h1 className="text-2xl font-semibold tracking-tight text-zinc-50">My Profile</h1>
-        <p className="mt-1 text-sm text-zinc-500">Manage your personal details and security.</p>
+        <p className="mt-1 text-sm text-zinc-500">Manage your super admin profile and security.</p>
       </div>
 
-      {/* ── Avatar card ── */}
       <div className="flex items-center gap-5 rounded-2xl border border-zinc-800 bg-zinc-900/60 p-5">
         <div className="relative shrink-0">
           {avatar ? (
-            <Image src={avatar} alt="Avatar" width={80} height={80} className="size-20 rounded-full object-cover ring-2 ring-emerald-500/40" unoptimized />
+            <Image src={avatar} alt="Avatar" width={80} height={80} className="size-20 rounded-full object-cover ring-2 ring-rose-500/40" unoptimized />
           ) : (
             <span className="flex size-20 items-center justify-center rounded-full bg-zinc-800 text-2xl font-bold text-zinc-200 ring-2 ring-zinc-700">
               {avatarFallback}
@@ -106,7 +100,7 @@ export default function ProfilePage() {
           <button
             type="button"
             onClick={() => fileRef.current?.click()}
-            className="cursor-pointer absolute -bottom-1 -right-1 flex size-7 items-center justify-center rounded-full border-2 border-zinc-900 bg-emerald-500 text-zinc-950 transition-colors hover:bg-emerald-400"
+            className="cursor-pointer absolute -bottom-1 -right-1 flex size-7 items-center justify-center rounded-full border-2 border-zinc-900 bg-rose-500 text-zinc-950 transition-colors hover:bg-rose-400"
             aria-label="Change avatar"
           >
             <Camera className="size-3.5" />
@@ -116,48 +110,23 @@ export default function ProfilePage() {
         <div className="min-w-0">
           <p className="truncate text-lg font-semibold text-zinc-100">{user?.name}</p>
           <p className="text-sm text-zinc-500">{user?.email}</p>
-          <span className="mt-1.5 inline-flex items-center gap-1.5 rounded-full bg-emerald-500/15 px-2.5 py-0.5 text-xs font-semibold text-emerald-400 ring-1 ring-emerald-500/25">
+          <span className="mt-1.5 inline-flex items-center gap-1.5 rounded-full bg-rose-500/15 px-2.5 py-0.5 text-xs font-semibold text-rose-300 ring-1 ring-rose-500/25">
             <Shield className="size-3" aria-hidden />
             {roleLabel(user?.role)}
           </span>
         </div>
       </div>
 
-      {/* ── Profile form ── */}
       <Section title="Personal Information" description="Update your name, email, and phone." icon={User}>
         <div className="space-y-4">
-          <Field
-            label="Full Name"
-            icon={User}
-            value={form.name}
-            onChange={(v) => setField("name", v)}
-            placeholder="Your full name"
-          />
-          <Field
-            label="Email"
-            icon={Mail}
-            type="email"
-            value={form.email}
-            onChange={(v) => setField("email", v)}
-            placeholder="you@example.com"
-          />
-          <Field
-            label="Phone"
-            icon={Phone}
-            value={form.phone}
-            onChange={(v) => setField("phone", v)}
-            placeholder="+1 555 000 0000"
-          />
-          <Field
-            label="Role"
-            icon={Shield}
-            value={roleLabel(user?.role)}
-            readOnly
-          />
+          <Field label="Full Name" icon={User} value={form.name} onChange={(v) => setField("name", v)} placeholder="Your full name" />
+          <Field label="Email" icon={Mail} type="email" value={form.email} onChange={(v) => setField("email", v)} placeholder="you@example.com" />
+          <Field label="Phone" icon={Phone} value={form.phone} onChange={(v) => setField("phone", v)} placeholder="+1 555 000 0000" />
+          <Field label="Role" icon={Shield} value={roleLabel(user?.role)} readOnly />
         </div>
 
         <div className="mt-5 flex items-center justify-end gap-2">
-          {formDirty && (
+          {formDirty ? (
             <button
               type="button"
               onClick={resetForm}
@@ -165,12 +134,12 @@ export default function ProfilePage() {
             >
               Cancel
             </button>
-          )}
+          ) : null}
           <button
             type="button"
             onClick={saveProfile}
             disabled={saving || !formDirty}
-            className="cursor-pointer inline-flex items-center gap-2 rounded-xl bg-emerald-500 px-5 py-2 text-sm font-semibold text-zinc-950 transition-all hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-40"
+            className="cursor-pointer inline-flex items-center gap-2 rounded-xl bg-rose-500 px-5 py-2 text-sm font-semibold text-zinc-950 transition-all hover:bg-rose-400 disabled:cursor-not-allowed disabled:opacity-40"
           >
             {saving ? <Loader2 className="size-4 animate-spin" /> : null}
             {saving ? "Saving…" : "Save Changes"}
@@ -178,8 +147,7 @@ export default function ProfilePage() {
         </div>
       </Section>
 
-      {/* ── Toast ── */}
-      {toast && (
+      {toast ? (
         <div
           className={`fixed bottom-5 right-5 z-50 flex items-center gap-2.5 rounded-xl border px-4 py-3 text-sm font-medium shadow-2xl shadow-black/40 transition-all ${
             toast.type === "success"
@@ -192,7 +160,7 @@ export default function ProfilePage() {
             : <XCircle className="size-4 shrink-0" />}
           {toast.msg}
         </div>
-      )}
+      ) : null}
     </div>
   );
 }

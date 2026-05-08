@@ -1,6 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactCompiler: true,
+  devIndicators: false,
   images: {
     // Default: optimized images in production. Set NEXT_IMAGE_UNOPTIMIZED=1 for ngrok/tunnel dev.
     unoptimized: process.env.NEXT_IMAGE_UNOPTIMIZED === "1",

@@ -134,10 +134,12 @@ export async function generateMetadata() {
 /* ════════════════════════════════════════
    PAGE — async server component
 ════════════════════════════════════════ */
-export default async function Home() {
+export default async function Home({ searchParams }) {
+  const params = await searchParams;
+  const isPreviewMode = params?.preview === "1";
   const token = (await cookies()).get(TOKEN_COOKIE)?.value;
   const payload = token ? verifyToken(token) : null;
-  if (payload?.role) {
+  if (payload?.role && !isPreviewMode) {
     redirect(redirectForRole(payload.role));
   }
 

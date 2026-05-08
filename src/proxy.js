@@ -41,6 +41,8 @@ const PUBLIC_PATHS = [
   "/",
   "/login",
   "/signup",
+  "/forgot-password",
+  "/reset-password",
   "/unauthorized",
   "/home",
   "/order",

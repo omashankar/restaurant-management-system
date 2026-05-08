@@ -3,9 +3,11 @@
 import { ROLES, roleLabel, useApp } from "@/context/AppProviders";
 import { useUser } from "@/context/AuthContext";
 import GlobalSearch from "@/components/rms/GlobalSearch";
+import ChangePasswordModal from "@/components/rms/ChangePasswordModal";
 import {
   Bell,
   ChevronDown,
+  KeyRound,
   LogOut,
   Menu,
   MessageSquare,
@@ -22,6 +24,7 @@ export default function TopNavbar({ onOpenSidebar, onToggleSidebar }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false);
   const closeTimer = useRef(null);
   const profileRef = useRef(null);
 
@@ -219,13 +222,25 @@ export default function TopNavbar({ onOpenSidebar, onToggleSidebar }) {
               type="button"
               onClick={() => {
                 setIsProfileOpen(false);
-                router.push("/profile");
+                router.push(user.role === "super_admin" ? "/super-admin/profile" : "/profile");
               }}
               className="cursor-pointer flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left text-sm text-zinc-200 transition-colors hover:bg-zinc-800"
               role="menuitem"
             >
               <User className="size-4 text-zinc-400" />
               Profile
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setIsProfileOpen(false);
+                setIsChangePasswordOpen(true);
+              }}
+              className="cursor-pointer flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left text-sm text-zinc-200 transition-colors hover:bg-zinc-800"
+              role="menuitem"
+            >
+              <KeyRound className="size-4 text-zinc-400" />
+              Change Password
             </button>
             <button
               type="button"
@@ -275,6 +290,10 @@ export default function TopNavbar({ onOpenSidebar, onToggleSidebar }) {
           </div>
         </div>
       </div>
+      <ChangePasswordModal
+        open={isChangePasswordOpen}
+        onClose={() => setIsChangePasswordOpen(false)}
+      />
     </header>
   );
 }
