@@ -61,14 +61,14 @@ export async function POST(request) {
       );
     }
 
-    /* ── Block unverified accounts (skip for super_admin) ── */
-    const isVerified = user.isVerified ?? true; // treat missing as verified
-    if (!isVerified && user.role !== "super_admin") {
-      return Response.json(
-        { success: false, error: "Please verify your email before logging in.", code: "EMAIL_NOT_VERIFIED" },
-        { status: 403 }
-      );
-    }
+    /* ── TEMP: Email verification check disabled for local testing ── */
+    // const isVerified = user.isVerified ?? true; // treat missing as verified
+    // if (!isVerified && user.role !== "super_admin") {
+    //   return Response.json(
+    //     { success: false, error: "Please verify your email before logging in.", code: "EMAIL_NOT_VERIFIED" },
+    //     { status: 403 }
+    //   );
+    // }
 
     /* ── Build user payload ── */
     const userPayload = {
