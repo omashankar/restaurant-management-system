@@ -1,7 +1,7 @@
 "use client";
 
 import { useCustomer } from "@/context/CustomerContext";
-import { ArrowLeft, Loader2 } from "lucide-react";
+import { ArrowLeft, BellRing, Loader2, Receipt } from "lucide-react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -24,6 +24,7 @@ export default function CustomerOrderDetailPage() {
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [requestingAction, setRequestingAction] = useState("");
 
   useEffect(() => {
     if (!authLoading && !authUser) {
@@ -55,6 +56,35 @@ export default function CustomerOrderDetailPage() {
       cancelled = true;
     };
   }, [id, authUser]);
+
+  const submitDineInAction = async (action) => {
+    if (!order?.tableNumber) {
+      setError("Table number not found for this order.");
+      return;
+    }
+    setRequestingAction(action);
+    try {
+      const res = await fetch("/api/customer/dine-in-actions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action,
+          tableNumber: order.tableNumber,
+          orderId: order.orderId,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data?.success) {
+        setError(data?.error ?? "Request failed.");
+        return;
+      }
+      setError("");
+    } catch {
+      setError("Network error. Please try again.");
+    } finally {
+      setRequestingAction("");
+    }
+  };
 
   if (authLoading || (!authUser && !authLoading)) {
     return (
@@ -131,6 +161,12 @@ export default function CustomerOrderDetailPage() {
                 <dt>Tax</dt>
                 <dd className="font-medium text-zinc-900">${Number(order.tax).toFixed(2)}</dd>
               </div>
+              {Number(order.deliveryCharge ?? 0) > 0 ? (
+                <div className="flex justify-between text-zinc-600">
+                  <dt>Delivery</dt>
+                  <dd className="font-medium text-zinc-900">${Number(order.deliveryCharge).toFixed(2)}</dd>
+                </div>
+              ) : null}
               <div className="flex justify-between border-t border-zinc-100 pt-2 text-base font-bold text-zinc-900">
                 <dt>Total</dt>
                 <dd>${Number(order.total).toFixed(2)}</dd>
@@ -181,6 +217,33 @@ export default function CustomerOrderDetailPage() {
               ))}
             </ol>
           </section>
+
+          {order.orderType === "dine-in" ? (
+            <section className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm">
+              <h2 className="text-sm font-bold text-zinc-900">Dine-in actions</h2>
+              <p className="mt-1 text-xs text-zinc-600">Table {order.tableNumber || "—"} · Request support from your phone.</p>
+              <div className="mt-4 flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={() => submitDineInAction("call_waiter")}
+                  disabled={requestingAction !== ""}
+                  className="inline-flex items-center gap-2 rounded-xl bg-emerald-500 px-4 py-2.5 text-sm font-semibold text-zinc-950 hover:bg-emerald-400 disabled:opacity-60"
+                >
+                  <BellRing className="size-4" />
+                  {requestingAction === "call_waiter" ? "Sending..." : "Call Waiter"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => submitDineInAction("request_bill")}
+                  disabled={requestingAction !== ""}
+                  className="inline-flex items-center gap-2 rounded-xl border border-zinc-300 bg-white px-4 py-2.5 text-sm font-semibold text-zinc-800 hover:border-zinc-400 disabled:opacity-60"
+                >
+                  <Receipt className="size-4" />
+                  {requestingAction === "request_bill" ? "Sending..." : "Request Bill"}
+                </button>
+              </div>
+            </section>
+          ) : null}
         </div>
       ) : null}
     </div>

@@ -18,10 +18,13 @@ export default function VerifyOtpPage() {
   const [error, setError] = useState("");
   const [cooldown, setCooldown] = useState(OTP_TTL_SEC);
   const [devHint, setDevHint] = useState("");
+  const [nextPath, setNextPath] = useState("/account/dashboard");
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     setPhone(params.get("phone") ?? "");
+    const next = params.get("next");
+    if (next && next.startsWith("/")) setNextPath(next);
   }, []);
 
   useEffect(() => {
@@ -74,7 +77,7 @@ export default function VerifyOtpPage() {
         return;
       }
       await refreshAuth();
-      router.push("/account/dashboard");
+      router.push(nextPath);
     } catch {
       setError("Network error. Please try again.");
     } finally {

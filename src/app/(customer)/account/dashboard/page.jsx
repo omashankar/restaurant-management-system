@@ -1,7 +1,7 @@
 "use client";
 
 import { useCustomer } from "@/context/CustomerContext";
-import { Calendar, ChevronRight, Loader2, LogOut, ShoppingBag, UserRound } from "lucide-react";
+import { Calendar, ChevronRight, Heart, Loader2, LogOut, MapPin, ShoppingBag, UserRound, Wallet } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -28,6 +28,13 @@ export default function CustomerDashboardPage() {
   const [orders, setOrders] = useState([]);
   const [bookings, setBookings] = useState([]);
   const [loadingData, setLoadingData] = useState(true);
+  const [summary, setSummary] = useState({
+    favorites: [],
+    savedAddresses: [],
+    rewardPoints: 0,
+    walletBalance: 0,
+  });
+  const [reorderingId, setReorderingId] = useState("");
   const [editName, setEditName] = useState("");
   const [editEmail, setEditEmail] = useState("");
   const [savingProfile, setSavingProfile] = useState(false);
@@ -54,16 +61,45 @@ export default function CustomerDashboardPage() {
         fetch("/api/customer/orders", { cache: "no-store" }),
         fetch("/api/customer/auth/bookings", { cache: "no-store" }),
       ]);
-      const [ordersData, bookingsData] = await Promise.all([
+      const [ordersData, bookingsData, summaryData] = await Promise.all([
         ordersRes.json().catch(() => ({ success: false, orders: [] })),
         bookingsRes.json().catch(() => ({ success: false, bookings: [] })),
+        fetch("/api/customer/dashboard/summary", { cache: "no-store" })
+          .then((r) => r.json())
+          .catch(() => ({ success: false, summary: null })),
       ]);
       setOrders(Array.isArray(ordersData.orders) ? ordersData.orders : []);
       setBookings(Array.isArray(bookingsData.bookings) ? bookingsData.bookings : []);
+      if (summaryData?.success && summaryData.summary) {
+        setSummary({
+          favorites: Array.isArray(summaryData.summary.favorites) ? summaryData.summary.favorites : [],
+          savedAddresses: Array.isArray(summaryData.summary.savedAddresses) ? summaryData.summary.savedAddresses : [],
+          rewardPoints: Number(summaryData.summary.rewardPoints ?? 0),
+          walletBalance: Number(summaryData.summary.walletBalance ?? 0),
+        });
+      }
       setLoadingData(false);
     }
     loadData();
   }, [authUser]);
+
+  const reorder = async (orderId) => {
+    setReorderingId(orderId);
+    try {
+      const res = await fetch(`/api/customer/orders/${orderId}/reorder`, { method: "POST" });
+      const data = await res.json();
+      if (!res.ok || !data?.success) {
+        showToast(data?.error ?? "Could not reorder.", "error");
+        return;
+      }
+      showToast("Reorder placed successfully.");
+      router.push(`/order/success?id=${encodeURIComponent(data.order.orderId)}`);
+    } catch {
+      showToast("Network error.", "error");
+    } finally {
+      setReorderingId("");
+    }
+  };
 
   const saveProfile = async () => {
     setSavingProfile(true);
@@ -186,6 +222,17 @@ export default function CustomerDashboardPage() {
                   </div>
                   <div className="flex shrink-0 items-center gap-1">
                     <span className="font-semibold text-zinc-900">${Number(o.total ?? 0).toFixed(2)}</span>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        reorder(o.id);
+                      }}
+                      disabled={reorderingId === o.id}
+                      className="ml-2 rounded-lg border border-zinc-300 px-2 py-1 text-[11px] font-semibold text-zinc-700 hover:border-emerald-500/40 hover:text-emerald-700 disabled:opacity-50"
+                    >
+                      {reorderingId === o.id ? "Reordering..." : "Reorder"}
+                    </button>
                     <ChevronRight className="size-4 text-zinc-400" aria-hidden />
                   </div>
                 </Link>
@@ -214,6 +261,61 @@ export default function CustomerDashboardPage() {
                 <p className="mt-0.5 text-xs text-zinc-500">
                   Table {b.tableNumber || "—"} · {b.guests} guests · {b.status}
                 </p>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+
+      <section className="scroll-mt-24 mt-6 rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm">
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div className="rounded-xl border border-zinc-200 bg-zinc-50 p-4">
+            <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500">Wallet</p>
+            <p className="mt-1 inline-flex items-center gap-2 text-xl font-bold text-zinc-900">
+              <Wallet className="size-5 text-emerald-600" />
+              ${summary.walletBalance.toFixed(2)}
+            </p>
+            <p className="mt-1 text-xs text-zinc-500">Stored value for quick checkout.</p>
+          </div>
+          <div className="rounded-xl border border-zinc-200 bg-zinc-50 p-4">
+            <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500">Reward Points</p>
+            <p className="mt-1 text-xl font-bold text-zinc-900">{summary.rewardPoints}</p>
+            <p className="mt-1 text-xs text-zinc-500">Earn more points on every order.</p>
+          </div>
+        </div>
+      </section>
+
+      <section className="scroll-mt-24 mt-6 rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm">
+        <h2 className="text-base font-bold text-zinc-900">Favorite items</h2>
+        <p className="mt-0.5 text-sm text-zinc-600">Based on your recent order history.</p>
+        {summary.favorites.length === 0 ? (
+          <p className="mt-3 text-sm text-zinc-500">No favorites yet. Order a few items to build your list.</p>
+        ) : (
+          <ul className="mt-4 grid gap-2 sm:grid-cols-2">
+            {summary.favorites.map((f) => (
+              <li key={f.name} className="flex items-center justify-between rounded-xl border border-zinc-100 bg-zinc-50 px-3 py-2 text-sm">
+                <span className="inline-flex items-center gap-2 font-medium text-zinc-900">
+                  <Heart className="size-4 text-rose-500" />
+                  {f.name}
+                </span>
+                <span className="text-xs text-zinc-500">{f.count}x</span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+
+      <section className="scroll-mt-24 mt-6 rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm">
+        <h2 className="text-base font-bold text-zinc-900">Saved addresses</h2>
+        <p className="mt-0.5 text-sm text-zinc-600">Delivery addresses used in your past orders.</p>
+        {summary.savedAddresses.length === 0 ? (
+          <p className="mt-3 text-sm text-zinc-500">No saved addresses yet.</p>
+        ) : (
+          <ul className="mt-4 space-y-2">
+            {summary.savedAddresses.map((address) => (
+              <li key={address} className="inline-flex w-full items-start gap-2 rounded-xl border border-zinc-100 bg-zinc-50 px-3 py-2 text-sm text-zinc-700">
+                <MapPin className="mt-0.5 size-4 shrink-0 text-emerald-600" />
+                <span>{address}</span>
               </li>
             ))}
           </ul>
