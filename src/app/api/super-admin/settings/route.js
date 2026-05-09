@@ -12,6 +12,7 @@ function superAdminOnly(request) {
 const DEFAULTS = {
   app: {
     name:        "RMS Platform",
+    legalName:   "",
     logoUrl:     "",
     faviconUrl:  "",
     supportEmail:"support@rms.com",
@@ -39,6 +40,7 @@ const DEFAULTS = {
     webhookSecret:    "",
     currency:         "USD",
     taxPercent:       0,
+    gstNumber:        "",
     trialDays:        14,
   },
   theme: {
