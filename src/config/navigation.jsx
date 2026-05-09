@@ -2,6 +2,7 @@ import {
   BarChart3,
   BookOpen,
   FolderTree,
+  LifeBuoy,
   LayoutDashboard,
   LayoutGrid,
   ListOrdered,
@@ -144,6 +145,13 @@ export const NAV_ITEMS = [
     label: "Settings",
     Icon: Settings,
     roles: ["admin"],
+  },
+  {
+    type: "link",
+    href: "/support-tickets",
+    label: "Support Tickets",
+    Icon: LifeBuoy,
+    roles: ["admin", "manager", "waiter", "chef"],
   },
 ];
 

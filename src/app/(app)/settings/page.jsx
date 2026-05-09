@@ -16,16 +16,35 @@ import {
   ACCESS_CONTROL_FEATURES,
   normalizeAccessControl,
 } from "@/config/accessControlConfig";
-import { CheckCircle2, Loader2, Upload, XCircle } from "lucide-react";
+import { useUser } from "@/context/AuthContext";
+import { CheckCircle2, Loader2, Mail, Upload, XCircle } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 
 export default function SettingsPage() {
+  const { user, hydrated } = useUser();
   const [activeTab, setActiveTab] = useState("general");
   const [settings, setSettings] = useState(EMPTY_SETTINGS);
   const [savedSnapshot, setSavedSnapshot] = useState(EMPTY_SETTINGS);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [testingSmtp, setTestingSmtp] = useState(false);
+  const [smtpTestRecipient, setSmtpTestRecipient] = useState("");
   const [toast, setToast] = useState(null); // { type: "success"|"error", message }
+
+  const sidebarTabs = useMemo(
+    () =>
+      SETTINGS_TABS.filter(
+        (t) => t.id !== "email" || user?.role === "admin"
+      ),
+    [user?.role]
+  );
+
+  useEffect(() => {
+    if (!hydrated) return;
+    if (activeTab === "email" && user?.role !== "admin") {
+      setActiveTab("general");
+    }
+  }, [hydrated, activeTab, user?.role]);
 
   // Load settings from API on mount
   useEffect(() => {
@@ -37,6 +56,10 @@ export default function SettingsPage() {
           // Guard: ensure openingHours is always an array (old DB docs may have it as object)
           const safe = {
             ...data.settings,
+            email: {
+              ...EMPTY_SETTINGS.email,
+              ...(data.settings.email ?? {}),
+            },
             openingHours: Array.isArray(data.settings.openingHours)
               ? data.settings.openingHours
               : EMPTY_SETTINGS.openingHours,
@@ -62,6 +85,34 @@ export default function SettingsPage() {
   function showToast(type, message) {
     setToast({ type, message });
     setTimeout(() => setToast(null), 2500);
+  }
+
+  async function sendTenantSmtpTest() {
+    if (!settings.email.smtpHost || !settings.email.smtpUser) {
+      showToast("error", "Enter SMTP Host and Username first.");
+      return;
+    }
+    setTestingSmtp(true);
+    try {
+      const res = await fetch("/api/settings/test-email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          smtp: settings.email,
+          testRecipient: smtpTestRecipient.trim() || undefined,
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        showToast("success", "Test email sent.");
+      } else {
+        showToast("error", data.error || "Could not send test email.");
+      }
+    } catch {
+      showToast("error", "Network error.");
+    } finally {
+      setTestingSmtp(false);
+    }
   }
 
   async function saveChanges() {
@@ -130,7 +181,7 @@ export default function SettingsPage() {
 
       <div className="grid gap-5 lg:grid-cols-[240px_1fr]">
         <SettingsSidebar
-          tabs={SETTINGS_TABS}
+          tabs={sidebarTabs}
           activeTab={activeTab}
           onTabChange={setActiveTab}
         />
@@ -274,6 +325,133 @@ export default function SettingsPage() {
                     }))
                   }
                 />
+              </div>
+            </SettingsFormSection>
+          ) : null}
+
+          {activeTab === "email" ? (
+            <SettingsFormSection
+              title="Email / SMTP"
+              description="Verification and password-reset emails for your restaurant accounts use this server when enabled; otherwise Super Admin SMTP or server env Gmail is used."
+            >
+              <ToggleSwitch
+                label="Enable custom SMTP"
+                hint="Must be on for signup verification and forgot-password mail to use this SMTP (after credentials are saved)."
+                checked={settings.email.enabled}
+                onChange={(v) =>
+                  setSettings((prev) => ({
+                    ...prev,
+                    email: { ...prev.email, enabled: v },
+                  }))
+                }
+              />
+              <div className="mt-4 grid gap-4 md:grid-cols-2">
+                <InputField
+                  label="SMTP Host"
+                  placeholder="smtp.example.com"
+                  value={settings.email.smtpHost}
+                  onChange={(v) =>
+                    setSettings((prev) => ({
+                      ...prev,
+                      email: { ...prev.email, smtpHost: v },
+                    }))
+                  }
+                />
+                <InputField
+                  label="SMTP Port"
+                  type="number"
+                  value={String(settings.email.smtpPort ?? 587)}
+                  onChange={(v) =>
+                    setSettings((prev) => ({
+                      ...prev,
+                      email: {
+                        ...prev.email,
+                        smtpPort: Number(v) || 587,
+                      },
+                    }))
+                  }
+                />
+                <InputField
+                  label="SMTP Username"
+                  placeholder="user@company.com"
+                  value={settings.email.smtpUser}
+                  onChange={(v) =>
+                    setSettings((prev) => ({
+                      ...prev,
+                      email: { ...prev.email, smtpUser: v },
+                    }))
+                  }
+                />
+                <InputField
+                  label="SMTP Password"
+                  type="password"
+                  placeholder="••••••••"
+                  value={settings.email.smtpPassword}
+                  onChange={(v) =>
+                    setSettings((prev) => ({
+                      ...prev,
+                      email: { ...prev.email, smtpPassword: v },
+                    }))
+                  }
+                />
+                <InputField
+                  label="From Name"
+                  placeholder={settings.general.restaurantName || "Restaurant"}
+                  value={settings.email.fromName}
+                  onChange={(v) =>
+                    setSettings((prev) => ({
+                      ...prev,
+                      email: { ...prev.email, fromName: v },
+                    }))
+                  }
+                />
+                <InputField
+                  label="From Email"
+                  type="email"
+                  placeholder={settings.contact.email || settings.email.smtpUser}
+                  value={settings.email.fromEmail}
+                  onChange={(v) =>
+                    setSettings((prev) => ({
+                      ...prev,
+                      email: { ...prev.email, fromEmail: v },
+                    }))
+                  }
+                />
+              </div>
+              <div className="mt-4">
+                <ToggleSwitch
+                  label="Use SSL/TLS (secure)"
+                  hint="Typically on for port 465. Port 587 often uses STARTTLS with this off."
+                  checked={settings.email.secure}
+                  onChange={(v) =>
+                    setSettings((prev) => ({
+                      ...prev,
+                      email: { ...prev.email, secure: v },
+                    }))
+                  }
+                />
+              </div>
+              <div className="mt-5 space-y-3 rounded-xl border border-zinc-800 bg-zinc-950/40 p-4">
+                <InputField
+                  label="Send test to (optional)"
+                  type="email"
+                  placeholder={`Default: ${settings.email.smtpUser || "SMTP username"}`}
+                  value={smtpTestRecipient}
+                  onChange={setSmtpTestRecipient}
+                />
+                <button
+                  type="button"
+                  onClick={sendTenantSmtpTest}
+                  disabled={testingSmtp}
+                  className="inline-flex cursor-pointer items-center gap-2 rounded-xl border border-emerald-500/40 bg-emerald-500/15 px-4 py-2.5 text-sm font-medium text-emerald-300 transition-colors hover:bg-emerald-500/25 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {testingSmtp ? (
+                    <Loader2 className="size-4 animate-spin" />
+                  ) : (
+                    <Mail className="size-4" />
+                  )}
+                  {testingSmtp ? "Sending…" : "Send test email"}
+                </button>
               </div>
             </SettingsFormSection>
           ) : null}

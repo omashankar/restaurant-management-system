@@ -92,6 +92,7 @@ export async function resendVerification(email) {
     name: user.name,
     email: user.email,
     verificationToken,
+    restaurantId: user.restaurantId ?? null,
   };
 }
 export async function verifyEmail(token) {

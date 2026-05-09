@@ -11,20 +11,20 @@ const ROLE_PATHS = {
     "/super-admin",
     "/admin", "/dashboard", "/pos", "/orders", "/menu",
     "/tables", "/reservations", "/customers", "/staff",
-    "/inventory", "/analytics", "/settings", "/kitchen", "/profile",
+    "/inventory", "/analytics", "/settings", "/support-tickets", "/kitchen", "/profile",
   ],
   admin: [
     "/admin", "/dashboard", "/pos", "/orders", "/menu",
     "/tables", "/reservations", "/customers", "/staff",
-    "/inventory", "/analytics", "/settings", "/kitchen", "/profile",
+    "/inventory", "/analytics", "/settings", "/support-tickets", "/kitchen", "/profile",
   ],
   manager: [
     "/manager", "/dashboard", "/pos", "/orders", "/menu",
     "/tables", "/reservations", "/customers",
-    "/inventory", "/analytics", "/profile",
+    "/inventory", "/analytics", "/support-tickets", "/profile",
   ],
-  waiter: ["/waiter", "/pos", "/orders", "/tables", "/reservations", "/customers", "/profile"],
-  chef: ["/chef", "/kitchen", "/orders", "/profile"],
+  waiter: ["/waiter", "/pos", "/orders", "/tables", "/reservations", "/customers", "/support-tickets", "/profile"],
+  chef: ["/chef", "/kitchen", "/orders", "/support-tickets", "/profile"],
 };
 
 /* ── Role home (redirect after login or unauthorized access) ── */

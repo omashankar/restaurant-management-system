@@ -2,6 +2,7 @@ import { resendVerification } from "@/lib/authService";
 import { sendVerificationEmail } from "@/lib/emailService";
 import { getClientIp, resendLimiter } from "@/lib/rateLimit";
 import { parseSchema, resendSchema } from "@/lib/validationSchemas";
+import clientPromise from "@/lib/mongodb";
 
 export async function POST(request) {
   /* ── Rate limit ── */
@@ -19,11 +20,15 @@ export async function POST(request) {
     const { email } = parseSchema(resendSchema, body);
 
     const user = await resendVerification(email);
+    const client = await clientPromise;
+    const db = client.db();
 
     sendVerificationEmail({
       name: user.name,
       email: user.email,
       token: user.verificationToken,
+      db,
+      restaurantId: user.restaurantId ?? null,
     }).catch((err) => console.error("Resend email failed:", err.message));
 
     return Response.json({

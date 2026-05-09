@@ -1,10 +1,36 @@
 import { EMPTY_SETTINGS } from "@/config/settingsConfig";
 import { withTenant } from "@/lib/tenantDb";
 
+const SECRET_MASK = "********";
+
+function sanitizeEmailSection(incoming = {}) {
+  const base = { ...EMPTY_SETTINGS.email };
+  const merged = { ...base, ...incoming };
+  const port = Number(merged.smtpPort);
+  merged.smtpPort =
+    Number.isFinite(port) && port >= 1 && port <= 65535 ? port : base.smtpPort;
+  merged.enabled = Boolean(merged.enabled);
+  merged.secure = Boolean(merged.secure);
+  for (const key of ["smtpHost", "smtpUser", "smtpPassword", "fromName", "fromEmail"]) {
+    merged[key] = merged[key] == null ? "" : String(merged[key]).trim();
+  }
+  return merged;
+}
+
+/** Keep DB password when the client sends empty or the mask token. */
+function mergeEmailForSave(incoming, existingEmail) {
+  const clean = sanitizeEmailSection({ ...EMPTY_SETTINGS.email, ...incoming });
+  const raw = incoming?.smtpPassword;
+  if (raw == null || raw === "" || raw === SECRET_MASK) {
+    clean.smtpPassword = existingEmail?.smtpPassword ?? "";
+  }
+  return clean;
+}
+
 /* ── GET /api/settings ── */
 export const GET = withTenant(
   ["admin", "manager", "waiter", "chef"],
-  async ({ db, restaurantId }) => {
+  async ({ db, restaurantId, payload }) => {
     const doc = await db
       .collection("restaurant_settings")
       .findOne({ restaurantId });
@@ -12,15 +38,21 @@ export const GET = withTenant(
     // Merge stored values over empty defaults so shape is always complete
     const settings = {};
     for (const section of Object.keys(EMPTY_SETTINGS)) {
-      const def    = EMPTY_SETTINGS[section];
+      const def = EMPTY_SETTINGS[section];
       const stored = doc?.[section] ?? null;
 
       if (Array.isArray(def)) {
-        // Arrays (e.g. openingHours): use stored array if valid, else fall back to default
         settings[section] = Array.isArray(stored) ? stored : def;
       } else {
         settings[section] = { ...def, ...(stored ?? {}) };
       }
+    }
+
+    // Tenant SMTP: only restaurant admins can read stored values; password always masked.
+    if (payload.role !== "admin") {
+      settings.email = { ...EMPTY_SETTINGS.email };
+    } else if (settings.email?.smtpPassword) {
+      settings.email = { ...settings.email, smtpPassword: SECRET_MASK };
     }
 
     return Response.json({ success: true, settings });
@@ -31,20 +63,31 @@ export const GET = withTenant(
 export const PATCH = withTenant(["admin"], async ({ db, restaurantId }, request) => {
   const body = await request.json();
 
+  const existing = await db
+    .collection("restaurant_settings")
+    .findOne({ restaurantId });
+
   // Accept either a full settings object or a single { section, data } patch
   let updateFields = {};
 
   if (body.section && body.data && typeof body.data === "object") {
-    // Partial patch: { section: "general", data: { restaurantName: "..." } }
     const allowed = Object.keys(EMPTY_SETTINGS);
     if (!allowed.includes(body.section)) {
       return Response.json({ success: false, error: "Invalid section." }, { status: 400 });
     }
-    updateFields[body.section] = body.data;
+    if (body.section === "email") {
+      updateFields.email = mergeEmailForSave(body.data, existing?.email);
+    } else {
+      updateFields[body.section] = body.data;
+    }
   } else {
-    // Full settings object
     for (const section of Object.keys(EMPTY_SETTINGS)) {
-      if (body[section]) updateFields[section] = body[section];
+      if (!body[section]) continue;
+      if (section === "email") {
+        updateFields.email = mergeEmailForSave(body.email, existing?.email);
+      } else {
+        updateFields[section] = body[section];
+      }
     }
   }
 

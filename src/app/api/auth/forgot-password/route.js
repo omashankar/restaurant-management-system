@@ -51,6 +51,8 @@ export async function POST(request) {
       email,
       token,
       baseUrl,
+      db,
+      restaurantId: user.restaurantId ?? null,
     });
 
     const payload = {

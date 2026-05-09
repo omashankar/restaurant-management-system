@@ -5,6 +5,7 @@ export const SETTINGS_TABS = [
   { id: "pos", label: "POS & Charges" },
   { id: "accessControl", label: "Access Control" },
   { id: "notifications", label: "Notifications" },
+  { id: "email", label: "Email / SMTP" },
   { id: "hours", label: "Opening Hours" },
   { id: "contact", label: "Contact" },
 ];
@@ -30,6 +31,16 @@ export const EMPTY_SETTINGS = {
     lowStockAlerts: true,
     emailNotifications: false,
     smsNotifications: false,
+  },
+  email: {
+    enabled: false,
+    smtpHost: "",
+    smtpPort: 587,
+    smtpUser: "",
+    smtpPassword: "",
+    fromName: "",
+    fromEmail: "",
+    secure: false,
   },
   openingHours: [
     { day: "Monday",    openTime: "09:00", closeTime: "22:00", closed: false },
