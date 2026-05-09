@@ -23,6 +23,25 @@ const TYPE_ICON = {
   "delivery": { Icon: Bike,          color: "text-sky-400",     bg: "bg-sky-500/10"     },
 };
 
+const PAYMENT_STATUS_CFG = {
+  paid: "bg-emerald-500/15 text-emerald-300 ring-1 ring-emerald-500/25",
+  pending: "bg-amber-500/15 text-amber-300 ring-1 ring-amber-500/25",
+  initiated: "bg-sky-500/15 text-sky-300 ring-1 ring-sky-500/25",
+  processing: "bg-indigo-500/15 text-indigo-300 ring-1 ring-indigo-500/25",
+  failed: "bg-red-500/15 text-red-400 ring-1 ring-red-500/25",
+};
+
+const PAYMENT_METHOD_LABEL = {
+  cod: "COD",
+  cashCounter: "Cash Counter",
+  upi: "UPI",
+  card: "Card",
+  netBanking: "Net Banking",
+  wallet: "Wallet",
+  payLater: "Pay Later",
+  bankTransfer: "Bank Transfer",
+};
+
 const NEXT_STATUS = { new: "preparing", preparing: "ready", ready: "completed" };
 const NEXT_LABEL  = { new: "Start Preparing", preparing: "Mark Ready", ready: "Mark Completed" };
 
@@ -33,6 +52,8 @@ function OrderCard({ order, onStatusChange, canEdit }) {
   const st = STATUS_CFG[order.status] ?? STATUS_CFG.completed;
   const tp = TYPE_ICON[order.type ?? order.orderType] ?? TYPE_ICON["dine-in"];
   const { Icon: TypeIcon } = tp;
+  const paymentStatus = String(order.payment?.status ?? "pending");
+  const paymentMethod = String(order.payment?.method ?? "cod");
   const next = NEXT_STATUS[order.status];
 
   const handleNext = async () => {
@@ -71,6 +92,15 @@ function OrderCard({ order, onStatusChange, canEdit }) {
         <div className="mt-3 flex items-center justify-between">
           <p className="text-sm text-zinc-400">{order.customer}</p>
           <p className="text-base font-bold text-zinc-100">${Number(order.total ?? order.amount ?? 0).toFixed(2)}</p>
+        </div>
+
+        <div className="mt-2 flex items-center justify-between gap-2">
+          <span className="rounded-full border border-zinc-700 px-2 py-0.5 text-[11px] text-zinc-300">
+            {PAYMENT_METHOD_LABEL[paymentMethod] ?? paymentMethod}
+          </span>
+          <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold capitalize ${PAYMENT_STATUS_CFG[paymentStatus] ?? PAYMENT_STATUS_CFG.pending}`}>
+            {paymentStatus}
+          </span>
         </div>
 
         <div className="mt-2 flex items-center justify-between">

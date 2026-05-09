@@ -3,7 +3,7 @@
 import { useToast } from "@/hooks/useToast";
 import {
   CheckCircle2, ChevronLeft, ChevronRight,
-  Clock, DollarSign, RefreshCw, Search, XCircle,
+  Clock, DollarSign, Download, FileText, RefreshCw, Search, XCircle,
 } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 
@@ -32,6 +32,7 @@ export default function PaymentsPage() {
   const [search, setSearch]       = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [page, setPage]           = useState(1);
+  const [downloadingId, setDownloadingId] = useState("");
   const { showToast, ToastUI }    = useToast();
 
   const fetchPayments = useCallback(async () => {
@@ -55,6 +56,40 @@ export default function PaymentsPage() {
 
   /* Reset to page 1 when filters change */
   useEffect(() => { setPage(1); }, [search, statusFilter]);
+
+  const invoiceRows = payments.filter((p) => p.status === "paid" && p.paymentType === "subscription");
+
+  const downloadReceipt = async (payment) => {
+    setDownloadingId(payment.id);
+    try {
+      const res = await fetch(`/api/super-admin/payments/${payment.id}/receipt`);
+      if (!res.ok) {
+        let message = "Failed to download receipt.";
+        try {
+          const data = await res.json();
+          if (data?.error) message = data.error;
+        } catch {
+          // keep fallback message
+        }
+        showToast(message, "error");
+        return;
+      }
+      const blob = await res.blob();
+      const objectUrl = URL.createObjectURL(blob);
+      const anchor = document.createElement("a");
+      anchor.href = objectUrl;
+      anchor.download = `${payment.invoiceId || `receipt-${payment.id}`}.pdf`;
+      document.body.appendChild(anchor);
+      anchor.click();
+      anchor.remove();
+      URL.revokeObjectURL(objectUrl);
+      showToast("Receipt downloaded.");
+    } catch {
+      showToast("Failed to download receipt.", "error");
+    } finally {
+      setDownloadingId("");
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -92,6 +127,17 @@ export default function PaymentsPage() {
             }`}
           >
             Transactions
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab("invoices")}
+            className={`cursor-pointer rounded-xl px-3 py-2 text-sm font-medium transition-colors ${
+              activeTab === "invoices"
+                ? "bg-zinc-800 text-zinc-100"
+                : "text-zinc-500 hover:bg-zinc-900 hover:text-zinc-300"
+            }`}
+          >
+            Invoices
           </button>
           <button type="button" onClick={fetchPayments}
             className="cursor-pointer flex items-center gap-1.5 rounded-xl border border-zinc-700 px-3 py-2.5 text-sm font-medium text-zinc-400 hover:border-zinc-500 hover:text-zinc-200 transition-colors">
@@ -226,6 +272,85 @@ export default function PaymentsPage() {
               </div>
             </div>
           )}
+        </div>
+      )}
+      </>
+      )}
+
+      {activeTab === "invoices" && (
+      <>
+      {loading ? (
+        <div className="space-y-2">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} className="h-14 animate-pulse rounded-xl border border-zinc-800 bg-zinc-900/40" />
+          ))}
+        </div>
+      ) : invoiceRows.length === 0 ? (
+        <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-zinc-800 py-20 text-center">
+          <FileText className="size-10 text-zinc-700" />
+          <p className="text-sm text-zinc-500">No subscription invoices available.</p>
+          <p className="text-xs text-zinc-600">Paid subscription receipts will appear here.</p>
+        </div>
+      ) : (
+        <div className="overflow-hidden rounded-2xl border border-zinc-800 bg-zinc-900/60">
+          <div className="overflow-x-auto">
+            <table className="min-w-full text-left text-sm">
+              <thead>
+                <tr className="border-b border-zinc-800 bg-zinc-950/60 text-xs font-semibold uppercase tracking-wider text-zinc-500">
+                  <th className="px-4 py-3">Invoice</th>
+                  <th className="px-4 py-3">Restaurant</th>
+                  <th className="hidden px-4 py-3 md:table-cell">Plan</th>
+                  <th className="px-4 py-3">Amount</th>
+                  <th className="hidden px-4 py-3 md:table-cell">Paid On</th>
+                  <th className="px-4 py-3 text-right">Receipt</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-zinc-800/60">
+                {invoiceRows.map((p) => (
+                  <tr key={p.id} className="transition-colors hover:bg-zinc-800/20">
+                    <td className="px-4 py-3">
+                      <p className="font-mono text-xs text-zinc-400">{p.invoiceId}</p>
+                    </td>
+                    <td className="px-4 py-3">
+                      <p className="font-medium text-zinc-100">{p.restaurantName}</p>
+                      <p className="text-xs text-zinc-500">{p.adminEmail}</p>
+                    </td>
+                    <td className="hidden px-4 py-3 md:table-cell">
+                      <span className="inline-flex rounded-full bg-zinc-800 px-2.5 py-0.5 text-xs font-semibold capitalize text-zinc-300">
+                        {p.planName || p.plan} {p.billingCycle ? `(${p.billingCycle})` : ""}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3">
+                      <p className="font-semibold tabular-nums text-zinc-100">
+                        ${p.amount.toLocaleString()} <span className="text-xs font-normal text-zinc-500">{p.currency}</span>
+                      </p>
+                    </td>
+                    <td className="hidden px-4 py-3 text-xs text-zinc-600 md:table-cell">
+                      {p.paidAt
+                        ? new Date(p.paidAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
+                        : (p.createdAt
+                          ? new Date(p.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
+                          : "—")}
+                    </td>
+                    <td className="px-4 py-3 text-right">
+                      <button
+                        type="button"
+                        disabled={downloadingId === p.id}
+                        onClick={() => downloadReceipt(p)}
+                        className="cursor-pointer inline-flex items-center gap-1.5 rounded-lg border border-zinc-700 px-2.5 py-1.5 text-xs font-medium text-zinc-300 hover:border-zinc-500 hover:text-zinc-100 disabled:opacity-50"
+                      >
+                        <Download className="size-3.5" />
+                        {downloadingId === p.id ? "Downloading..." : "Download"}
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <div className="border-t border-zinc-800 px-4 py-2.5 text-xs text-zinc-600">
+            {invoiceRows.length} subscription invoice{invoiceRows.length !== 1 ? "s" : ""}
+          </div>
         </div>
       )}
       </>

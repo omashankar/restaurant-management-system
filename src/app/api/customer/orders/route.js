@@ -2,6 +2,7 @@ import clientPromise from "@/lib/mongodb";
 import { normalizeCustomerOrderStatus } from "@/lib/customerOrderStatus";
 import { getCustomerTokenFromRequest, verifyCustomerToken } from "@/lib/customerAuth";
 import { logError, logInfo } from "@/lib/logger";
+import { createGatewayPaymentSession } from "@/lib/paymentGateway";
 import { customerCheckoutSchema, parseSchema } from "@/lib/validationSchemas";
 import { ObjectId } from "mongodb";
 
@@ -123,6 +124,7 @@ export async function POST(request) {
 
   const items = normalizeItems(parsed.items);
   const orderType = parsed.orderType;
+  const paymentMethod = String(parsed.paymentMethod || "cod");
   const customerName = String(parsed.customer?.name ?? "").trim();
   const phone = String(parsed.customer?.phone ?? "").trim();
   const email = String(parsed.customer?.email ?? "").trim();
@@ -148,22 +150,62 @@ export async function POST(request) {
 
     const settingsDoc = await db.collection("restaurant_settings").findOne(
       { restaurantId },
-      { projection: { pos: 1 } }
+      { projection: { pos: 1, paymentMethods: 1, general: 1 } }
     );
     const taxPercentage = Number(settingsDoc?.pos?.taxPercentage ?? 8);
     const serviceCharge = Number(settingsDoc?.pos?.serviceCharge ?? 0);
     const safeTaxPercent = Number.isFinite(taxPercentage) ? Math.max(0, taxPercentage) : 8;
     const safeServiceCharge = Number.isFinite(serviceCharge) ? Math.max(0, serviceCharge) : 0;
+    const paymentMethods = {
+      defaultMethod: "cod",
+      cod: true,
+      cashCounter: true,
+      upi: true,
+      card: true,
+      netBanking: true,
+      wallet: true,
+      payLater: false,
+      bankTransfer: false,
+      ...(settingsDoc?.paymentMethods ?? {}),
+    };
+    const enabledMethods = Object.keys(paymentMethods).filter(
+      (k) => k !== "defaultMethod" && Boolean(paymentMethods[k])
+    );
+    if (!enabledMethods.includes(paymentMethod)) {
+      return Response.json(
+        { success: false, error: "Selected payment method is disabled for this restaurant." },
+        { status: 400 }
+      );
+    }
 
     const subtotal = items.reduce((sum, item) => sum + item.price * item.qty, 0);
     const tax = Number((subtotal * (safeTaxPercent / 100)).toFixed(2));
     const deliveryCharge = orderType === "delivery" ? Number(safeServiceCharge.toFixed(2)) : 0;
     const total = Number((subtotal + tax + deliveryCharge).toFixed(2));
     const now = new Date();
+    const currency = String(settingsDoc?.general?.currency || "USD").toUpperCase();
+    const orderId = `ORD-C-${Date.now()}`;
+    let gatewaySession = null;
+    if (["upi", "card", "netBanking", "wallet", "payLater", "bankTransfer"].includes(paymentMethod)) {
+      try {
+        gatewaySession = await createGatewayPaymentSession({
+          db,
+          amount: total,
+          currency,
+          orderId,
+          method: paymentMethod,
+        });
+      } catch (err) {
+        return Response.json(
+          { success: false, error: err.message || "Payment gateway setup issue." },
+          { status: 400 }
+        );
+      }
+    }
 
     const doc = {
       restaurantId,
-      orderId: `ORD-C-${Date.now()}`,
+      orderId,
       source: "customer",
       customerAccountId,
       orderType,
@@ -183,6 +225,16 @@ export async function POST(request) {
       deliveryCharge,
       total,
       status: "new",
+      payment: {
+        method: paymentMethod,
+        status: paymentMethod === "cod" || paymentMethod === "cashCounter" ? "pending" : "initiated",
+        provider: ["upi", "card", "netBanking", "wallet", "payLater"].includes(paymentMethod)
+          ? "gateway"
+          : "offline",
+        currency,
+        gatewayProvider: gatewaySession?.provider ?? null,
+        gatewayOrderId: gatewaySession?.providerOrderId ?? null,
+      },
       notes,
       createdAt: now,
       updatedAt: now,
@@ -203,6 +255,10 @@ export async function POST(request) {
         orderId: doc.orderId,
         total: doc.total,
         status: doc.status,
+        payment: {
+          ...doc.payment,
+          checkout: gatewaySession?.checkout ?? null,
+        },
       },
     }, { status: 201 });
   } catch (err) {

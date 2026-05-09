@@ -3,6 +3,7 @@ import { DEFAULT_ACCESS_CONTROL } from "./accessControlConfig";
 export const SETTINGS_TABS = [
   { id: "general", label: "General" },
   { id: "pos", label: "POS & Charges" },
+  { id: "payments", label: "Payments" },
   { id: "accessControl", label: "Access Control" },
   { id: "notifications", label: "Notifications" },
   { id: "email", label: "Email / SMTP" },
@@ -24,6 +25,17 @@ export const EMPTY_SETTINGS = {
     enableDiscount: false,
     enableTips: false,
     roundOffTotal: false,
+  },
+  paymentMethods: {
+    defaultMethod: "cod",
+    cod: true,
+    cashCounter: true,
+    upi: true,
+    card: true,
+    netBanking: true,
+    wallet: true,
+    payLater: false,
+    bankTransfer: false,
   },
   notifications: {
     orderNotifications: true,

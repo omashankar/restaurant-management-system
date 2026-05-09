@@ -10,6 +10,16 @@ import { useEffect, useMemo, useRef, useState } from "react";
 const TYPE_LABEL = { "dine-in": "Dine-In", takeaway: "Takeaway", delivery: "Delivery" };
 const TYPE_ICON  = { "dine-in": Store, takeaway: ConciergeBell, delivery: Bike };
 const OTP_TTL_SEC = 120;
+const PAYMENT_LABEL = {
+  cod: "Cash on Delivery",
+  cashCounter: "Cash at Counter",
+  upi: "UPI",
+  card: "Card",
+  netBanking: "Net Banking",
+  wallet: "Wallet",
+  payLater: "Pay Later",
+  bankTransfer: "Bank Transfer",
+};
 
 function Field({ label, required, children }) {
   return (
@@ -38,13 +48,26 @@ export default function CheckoutPage() {
   } = useCustomer();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const [paying, setPaying] = useState(false);
   const [notes, setNotes] = useState("");
   const [checkoutMeta, setCheckoutMeta] = useState({
     taxPercentage: 8,
     deliveryCharge: 0,
+    paymentMethods: {
+      defaultMethod: "cod",
+      cod: true,
+      cashCounter: true,
+      upi: true,
+      card: true,
+      netBanking: true,
+      wallet: true,
+      payLater: false,
+      bankTransfer: false,
+    },
     etaMinutes: { "dine-in": "15-20", takeaway: "20-30", delivery: "30-45" },
     coupons: [],
   });
+  const [paymentMethod, setPaymentMethod] = useState("cod");
   const [couponCode, setCouponCode] = useState("");
   const [appliedCoupon, setAppliedCoupon] = useState(null);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
@@ -73,7 +96,39 @@ export default function CheckoutPage() {
   }, [appliedCoupon, subtotal]);
   const total = Math.max(0, subtotal + tax + deliveryCharge - couponDiscount);
   const etaLabel = checkoutMeta.etaMinutes?.[orderType] ?? "20-30";
+  const enabledPaymentMethods = useMemo(() => {
+    const pm = checkoutMeta.paymentMethods ?? {};
+    return Object.keys(PAYMENT_LABEL).filter((key) => Boolean(pm[key]));
+  }, [checkoutMeta.paymentMethods]);
   const TypeIcon = orderType ? TYPE_ICON[orderType] : null;
+
+  async function loadRazorpayScript() {
+    if (typeof window === "undefined") return false;
+    if (window.Razorpay) return true;
+    return new Promise((resolve) => {
+      const script = document.createElement("script");
+      script.src = "https://checkout.razorpay.com/v1/checkout.js";
+      script.async = true;
+      script.onload = () => resolve(true);
+      script.onerror = () => resolve(false);
+      document.body.appendChild(script);
+    });
+  }
+
+  async function confirmPayment(orderId, provider, payload) {
+    const res = await fetch("/api/customer/orders/confirm-payment", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ orderId, provider, ...payload }),
+    });
+    return res.json();
+  }
+
+  function finishSuccess(orderId) {
+    clearCart();
+    showToast("Order placed successfully.");
+    router.push(`/order/success?id=${encodeURIComponent(orderId)}`);
+  }
 
   // Redirect to menu if cart is empty — must be in useEffect, not during render
   useEffect(() => {
@@ -90,6 +145,8 @@ export default function CheckoutPage() {
         const data = await res.json();
         if (!mounted || !res.ok || !data?.success || !data.meta) return;
         setCheckoutMeta((prev) => ({ ...prev, ...data.meta }));
+      const nextDefault = String(data.meta.paymentMethods?.defaultMethod ?? "cod");
+      setPaymentMethod(nextDefault);
       } catch {
         // keep defaults
       }
@@ -146,6 +203,10 @@ export default function CheckoutPage() {
     if (orderType === "dine-in" && !customer.tableNumber.trim()) {
       showToast("Table number is required.", "error"); return;
     }
+    if (!enabledPaymentMethods.includes(paymentMethod)) {
+      showToast("Selected payment method is not available.", "error");
+      return;
+    }
     setLoading(true);
     try {
       const res = await fetch("/api/customer/orders", {
@@ -167,6 +228,7 @@ export default function CheckoutPage() {
             address: customer.address.trim(),
             tableNumber: customer.tableNumber.trim(),
           },
+          paymentMethod,
         }),
       });
       const data = await res.json();
@@ -174,10 +236,67 @@ export default function CheckoutPage() {
         showToast(data?.error ?? "Failed to place order.", "error");
         return;
       }
+      const createdOrderId = data.order?.orderId;
+      const payment = data.order?.payment;
+      if (!createdOrderId) {
+        showToast("Order created but missing order id.", "error");
+        return;
+      }
 
-      clearCart();
-      showToast("Order placed successfully.");
-      router.push(`/order/success?id=${encodeURIComponent(data.order.orderId)}`);
+      if (payment?.gatewayProvider === "razorpay" && payment?.checkout?.orderId) {
+        const loaded = await loadRazorpayScript();
+        if (!loaded) {
+          showToast("Could not load payment gateway. Try again.", "error");
+          return;
+        }
+        setPaying(true);
+        const options = {
+          key: payment.checkout.key,
+          amount: payment.checkout.amount,
+          currency: payment.checkout.currency,
+          name: "Restaurant Management System",
+          description: `Order ${createdOrderId}`,
+          order_id: payment.checkout.orderId,
+          prefill: {
+            name: customer.name.trim(),
+            email: customer.email.trim(),
+            contact: customer.phone.trim(),
+          },
+          handler: async (response) => {
+            const confirm = await confirmPayment(createdOrderId, "razorpay", response);
+            if (confirm?.success) {
+              finishSuccess(createdOrderId);
+            } else {
+              showToast(confirm?.error || "Payment confirmation failed.", "error");
+            }
+            setPaying(false);
+          },
+          modal: {
+            ondismiss: () => {
+              setPaying(false);
+              showToast("Payment cancelled.", "error");
+            },
+          },
+          theme: { color: "#10b981" },
+        };
+        const rz = new window.Razorpay(options);
+        rz.on("payment.failed", () => {
+          setPaying(false);
+          showToast("Payment failed. Please retry.", "error");
+        });
+        rz.open();
+        return;
+      }
+
+      if (payment?.gatewayProvider === "stripe" && payment?.checkout?.clientSecret) {
+        showToast(
+          "Stripe intent created. Configure Stripe.js client confirmation to complete payment.",
+          "error"
+        );
+        return;
+      }
+
+      finishSuccess(createdOrderId);
     } catch {
       showToast("Network error. Please try again.", "error");
     } finally {
@@ -382,6 +501,29 @@ export default function CheckoutPage() {
               </div>
             </div>
           </div>
+
+          <div className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm">
+            <h2 className="mb-4 text-sm font-bold uppercase tracking-wider text-zinc-600">Payment Method</h2>
+            <div className="grid gap-2 sm:grid-cols-2">
+              {enabledPaymentMethods.map((methodKey) => (
+                <button
+                  key={methodKey}
+                  type="button"
+                  onClick={() => setPaymentMethod(methodKey)}
+                  className={`cursor-pointer rounded-xl border px-3 py-2.5 text-left text-sm transition-colors ${
+                    paymentMethod === methodKey
+                      ? "border-emerald-500/50 bg-emerald-50 text-emerald-700"
+                      : "border-zinc-300 bg-white text-zinc-700 hover:border-emerald-500/40"
+                  }`}
+                >
+                  {PAYMENT_LABEL[methodKey] ?? methodKey}
+                </button>
+              ))}
+            </div>
+            {!enabledPaymentMethods.length ? (
+              <p className="mt-3 text-xs text-red-500">No payment method enabled. Contact restaurant admin.</p>
+            ) : null}
+          </div>
         </div>
 
         {/* ── Order summary ── */}
@@ -424,15 +566,21 @@ export default function CheckoutPage() {
               <div className="flex justify-between pt-1 text-base font-bold text-zinc-900">
                 <span>Total</span><span className="text-emerald-700">${total.toFixed(2)}</span>
               </div>
+              <div className="flex justify-between text-xs text-zinc-500">
+                <span>Payment</span>
+                <span>{PAYMENT_LABEL[paymentMethod] ?? paymentMethod}</span>
+              </div>
             </div>
             <button
               type="button"
               onClick={placeOrder}
-              disabled={loading || authLoading}
+              disabled={loading || authLoading || paying}
               className="cursor-pointer mt-5 flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-500 py-3.5 text-sm font-bold text-zinc-950 shadow-lg shadow-emerald-500/20 transition-colors hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-50"
             >
               {loading
                 ? <><Loader2 className="size-4 animate-spin" /> Placing Order…</>
+                : paying
+                  ? <><Loader2 className="size-4 animate-spin" /> Processing Payment…</>
                 : authLoading
                   ? "Checking login..."
                   : authUser
