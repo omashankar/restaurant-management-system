@@ -9,7 +9,7 @@ import ListToolbar from "@/components/ui/ListToolbar";
 import Modal from "@/components/ui/Modal";
 import { useMenuFilter } from "@/hooks/useMenuFilter";
 import { useModuleData } from "@/context/ModuleDataContext";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 
 const KITCHEN_LABELS = {
@@ -18,7 +18,7 @@ const KITCHEN_LABELS = {
   non_veg_kitchen: "Non-Veg Kitchen",
 };
 
-export default function PosPage() {
+function PosPageContent() {
   const { setCustomerRows, setOrderRows, setKitchenQueue, floorTables, setFloorTables, menuItems, categories } = useModuleData();
   const searchParams = useSearchParams();
 
@@ -331,5 +331,19 @@ export default function PosPage() {
         </div>
       </Modal>
     </div>
+  );
+}
+
+export default function PosPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex min-h-[50vh] items-center justify-center text-sm text-zinc-500">
+          Loading POS…
+        </div>
+      }
+    >
+      <PosPageContent />
+    </Suspense>
   );
 }

@@ -22,6 +22,7 @@ export default function RootLayout({ children }) {
     <html
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full`}
+      suppressHydrationWarning
     >
       <body className="min-h-full" suppressHydrationWarning>
         <Providers>{children}</Providers>

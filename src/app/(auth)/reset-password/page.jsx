@@ -1,11 +1,11 @@
 "use client";
 
-import { Eye, EyeOff, Lock, UtensilsCrossed } from "lucide-react";
+import { Eye, EyeOff, Loader2, Lock, UtensilsCrossed } from "lucide-react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { useState } from "react";
+import { Suspense, useState } from "react";
 
-export default function ResetPasswordPage() {
+function ResetPasswordForm() {
   const params = useSearchParams();
   const token = params.get("token") ?? "";
   const [password, setPassword] = useState("");
@@ -139,5 +139,19 @@ export default function ResetPasswordPage() {
         </p>
       </div>
     </div>
+  );
+}
+
+export default function ResetPasswordPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex min-h-[40vh] w-full max-w-md items-center justify-center">
+          <Loader2 className="size-8 animate-spin text-emerald-500" aria-hidden />
+        </div>
+      }
+    >
+      <ResetPasswordForm />
+    </Suspense>
   );
 }

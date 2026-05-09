@@ -4,11 +4,11 @@ import { useCustomer } from "@/context/CustomerContext";
 import { Loader2, Phone } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useState } from "react";
+import { Suspense, useState } from "react";
 
 const PHONE_REGEX = /^\+?[0-9]{8,15}$/;
 
-export default function CustomerLoginPage() {
+function CustomerLoginContent() {
   const router = useRouter();
   const params = useSearchParams();
   const [phone, setPhone] = useState("");
@@ -90,5 +90,19 @@ export default function CustomerLoginPage() {
           </div>
       </div>
     </div>
+  );
+}
+
+export default function CustomerLoginPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex min-h-[40vh] items-center justify-center">
+          <Loader2 className="size-8 animate-spin text-emerald-600" aria-hidden />
+        </div>
+      }
+    >
+      <CustomerLoginContent />
+    </Suspense>
   );
 }
