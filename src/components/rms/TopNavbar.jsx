@@ -4,6 +4,8 @@ import { ROLES, roleLabel, useApp } from "@/context/AppProviders";
 import { useUser } from "@/context/AuthContext";
 import GlobalSearch from "@/components/rms/GlobalSearch";
 import ChangePasswordModal from "@/components/rms/ChangePasswordModal";
+import InboxDropdown from "@/components/rms/InboxDropdown";
+import { useInbox } from "@/hooks/useInbox";
 import {
   Bell,
   ChevronDown,
@@ -25,8 +27,19 @@ export default function TopNavbar({ onOpenSidebar, onToggleSidebar }) {
   const [open, setOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false);
+  const [activeInbox, setActiveInbox] = useState(null); // messages | notifications | null
   const closeTimer = useRef(null);
   const profileRef = useRef(null);
+  const inboxRef = useRef(null);
+  const {
+    loading: inboxLoading,
+    messages,
+    notifications,
+    unread,
+    markRead,
+    markAllRead,
+    resolveMessage,
+  } = useInbox();
 
   const clearTimer = () => {
     if (closeTimer.current) clearTimeout(closeTimer.current);
@@ -42,6 +55,9 @@ export default function TopNavbar({ onOpenSidebar, onToggleSidebar }) {
       if (!profileRef.current) return;
       if (!profileRef.current.contains(event.target)) {
         setIsProfileOpen(false);
+      }
+      if (inboxRef.current && !inboxRef.current.contains(event.target)) {
+        setActiveInbox(null);
       }
     };
     const onKeyDown = (event) => {
@@ -88,27 +104,59 @@ export default function TopNavbar({ onOpenSidebar, onToggleSidebar }) {
 
         <button
           type="button"
-          onClick={() => setIsProfileOpen(false)}
+          onClick={() => {
+            setIsProfileOpen(false);
+            setActiveInbox((prev) => (prev === "messages" ? null : "messages"));
+          }}
           className="cursor-pointer relative inline-flex items-center justify-center rounded-xl border border-zinc-800 bg-zinc-900/60 p-2 text-zinc-300 transition-colors hover:border-zinc-700 hover:text-zinc-100"
           aria-label="Messages"
         >
           <MessageSquare className="size-4" />
-          <span className="absolute -right-1 -top-1 rounded-full bg-emerald-500 px-1.5 py-0.5 text-[10px] font-semibold text-zinc-950">
-            3
-          </span>
+          {unread.messages > 0 ? (
+            <span className="absolute -right-1 -top-1 rounded-full bg-emerald-500 px-1.5 py-0.5 text-[10px] font-semibold text-zinc-950">
+              {unread.messages}
+            </span>
+          ) : null}
         </button>
 
         <button
           type="button"
-          onClick={() => setIsProfileOpen(false)}
+          onClick={() => {
+            setIsProfileOpen(false);
+            setActiveInbox((prev) => (prev === "notifications" ? null : "notifications"));
+          }}
           className="cursor-pointer relative inline-flex items-center justify-center rounded-xl border border-zinc-800 bg-zinc-900/60 p-2 text-zinc-300 transition-colors hover:border-zinc-700 hover:text-zinc-100"
           aria-label="Notifications"
         >
           <Bell className="size-4" />
-          <span className="absolute -right-1 -top-1 rounded-full bg-amber-500 px-1.5 py-0.5 text-[10px] font-semibold text-zinc-950">
-            5
-          </span>
+          {unread.notifications > 0 ? (
+            <span className="absolute -right-1 -top-1 rounded-full bg-amber-500 px-1.5 py-0.5 text-[10px] font-semibold text-zinc-950">
+              {unread.notifications}
+            </span>
+          ) : null}
         </button>
+        <div ref={inboxRef} className="relative">
+          <InboxDropdown
+            open={activeInbox === "messages"}
+            type="messages"
+            items={messages}
+            loading={inboxLoading}
+            onMarkRead={markRead}
+            onMarkAllRead={markAllRead}
+            onResolveMessage={resolveMessage}
+            onClose={() => setActiveInbox(null)}
+          />
+          <InboxDropdown
+            open={activeInbox === "notifications"}
+            type="notifications"
+            items={notifications}
+            loading={inboxLoading}
+            onMarkRead={markRead}
+            onMarkAllRead={markAllRead}
+            onResolveMessage={resolveMessage}
+            onClose={() => setActiveInbox(null)}
+          />
+        </div>
 
         <div
           className="relative hidden md:block"
@@ -244,7 +292,10 @@ export default function TopNavbar({ onOpenSidebar, onToggleSidebar }) {
             </button>
             <button
               type="button"
-              onClick={() => setIsProfileOpen(false)}
+              onClick={() => {
+                setIsProfileOpen(false);
+                setActiveInbox("messages");
+              }}
               className="cursor-pointer flex w-full items-center justify-between rounded-lg px-2.5 py-2 text-left text-sm text-zinc-200 transition-colors hover:bg-zinc-800"
               role="menuitem"
             >
@@ -253,12 +304,15 @@ export default function TopNavbar({ onOpenSidebar, onToggleSidebar }) {
                 Messages
               </span>
               <span className="rounded-full bg-emerald-500/20 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-300">
-                3
+                {unread.messages}
               </span>
             </button>
             <button
               type="button"
-              onClick={() => setIsProfileOpen(false)}
+              onClick={() => {
+                setIsProfileOpen(false);
+                setActiveInbox("notifications");
+              }}
               className="cursor-pointer flex w-full items-center justify-between rounded-lg px-2.5 py-2 text-left text-sm text-zinc-200 transition-colors hover:bg-zinc-800"
               role="menuitem"
             >
@@ -267,7 +321,7 @@ export default function TopNavbar({ onOpenSidebar, onToggleSidebar }) {
                 Notifications
               </span>
               <span className="rounded-full bg-amber-500/20 px-1.5 py-0.5 text-[10px] font-semibold text-amber-300">
-                5
+                {unread.notifications}
               </span>
             </button>
 

@@ -88,6 +88,8 @@ export async function POST(request) {
         name: name.trim(),
         email: cleanEmail,
         token: verificationToken,
+        db,
+        restaurantId,
       }).catch((err) => {
         console.error("Signup verification email failed:", err.message);
       });

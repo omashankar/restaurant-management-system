@@ -10,6 +10,7 @@ import {
   DollarSign,
   Globe,
   LayoutDashboard,
+  LifeBuoy,
   Receipt,
   Settings,
   Shield,
@@ -29,6 +30,7 @@ const NAV = [
   { href: "/super-admin/analytics",     label: "Analytics",     Icon: BarChart3       },
   { href: "/super-admin/landing-site",  label: "Landing Site",  Icon: Globe           },
   { href: "/super-admin/logs",          label: "Logs",          Icon: ClipboardList   },
+  { href: "/super-admin/support-tickets", label: "Support Tickets", Icon: LifeBuoy    },
   { href: "/super-admin/settings",      label: "Settings",      Icon: Settings        },
 ];
 

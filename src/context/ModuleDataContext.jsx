@@ -110,8 +110,39 @@ export function ModuleDataProvider({ children }) {
     // Wait for auth so we do not duplicate /api/auth/me (AuthContext already loads the user).
     if (!authHydrated) return;
 
-    // Tenant module APIs are for restaurant roles only — skip for guests and super_admin.
-    if (!user || user.role === "super_admin") {
+    // Guest/customer routes use public customer APIs for dynamic menu + categories.
+    if (!user) {
+      let cancelled = false;
+      async function fetchPublicCustomerData() {
+        try {
+          const [menuRes, catRes] = await Promise.all([
+            fetch("/api/customer/menu"),
+            fetch("/api/customer/categories"),
+          ]);
+          const [menuData, catData] = await Promise.all([
+            menuRes.json(),
+            catRes.json(),
+          ]);
+          if (menuData.success && Array.isArray(menuData.items)) {
+            setMenuItems(menuData.items);
+          }
+          if (catData.success && Array.isArray(catData.categories)) {
+            setCategories(catData.categories);
+          }
+        } catch (err) {
+          console.error("[ModuleDataContext] Failed to fetch customer data:", err.message);
+        } finally {
+          if (!cancelled) setHydrated(true);
+        }
+      }
+      fetchPublicCustomerData();
+      return () => {
+        cancelled = true;
+      };
+    }
+
+    // Tenant module APIs are for restaurant roles only — skip for super_admin.
+    if (user.role === "super_admin") {
       setHydrated(true);
       return;
     }
@@ -192,9 +223,11 @@ export function ModuleDataProvider({ children }) {
 
   const refreshMenu = useCallback(async () => {
     try {
+      const menuUrl = user ? "/api/menu" : "/api/customer/menu";
+      const categoriesUrl = user ? "/api/categories" : "/api/customer/categories";
       const [menuRes, catRes, tablesRes, areasRes] = await Promise.all([
-        fetch("/api/menu"),
-        fetch("/api/categories"),
+        fetch(menuUrl),
+        fetch(categoriesUrl),
         fetch("/api/tables"),
         fetch("/api/tables/areas"),
       ]);
@@ -211,7 +244,7 @@ export function ModuleDataProvider({ children }) {
     } catch (err) {
       console.error("[ModuleDataContext] refreshMenu failed:", err.message);
     }
-  }, []);
+  }, [user]);
 
   useEffect(() => {
     if (!hydrated) return;

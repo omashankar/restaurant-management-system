@@ -5,6 +5,22 @@ import { logError, logInfo } from "@/lib/logger";
 import { customerCheckoutSchema, parseSchema } from "@/lib/validationSchemas";
 import { ObjectId } from "mongodb";
 
+async function getPublicRestaurantId(db) {
+  const envRestaurantId = process.env.NEXT_PUBLIC_RESTAURANT_ID?.trim();
+  if (envRestaurantId) {
+    try {
+      return new ObjectId(envRestaurantId);
+    } catch {
+      // ignore malformed env and fallback to active restaurant
+    }
+  }
+  const restaurant = await db.collection("restaurants").findOne(
+    { status: "active" },
+    { sort: { createdAt: 1 }, projection: { _id: 1 } }
+  );
+  return restaurant?._id ?? null;
+}
+
 export async function GET(request) {
   const token = getCustomerTokenFromRequest(request);
   const payload = verifyCustomerToken(token);
@@ -81,6 +97,12 @@ function normalizeItems(items) {
 
 export async function POST(request) {
   const customerPayload = verifyCustomerToken(getCustomerTokenFromRequest(request));
+  if (!customerPayload?.id && !customerPayload?.phone && !customerPayload?.email) {
+    return Response.json(
+      { success: false, error: "Please login to place an order." },
+      { status: 401 }
+    );
+  }
   let customerAccountId = null;
   if (customerPayload?.id) {
     try { customerAccountId = new ObjectId(customerPayload.id); } catch {}
@@ -119,22 +141,28 @@ export async function POST(request) {
     const client = await clientPromise;
     const db = client.db();
 
-    // Public ordering currently targets the primary active restaurant.
-    const restaurant = await db.collection("restaurants").findOne(
-      { status: "active" },
-      { sort: { createdAt: 1 }, projection: { _id: 1 } }
-    );
-    if (!restaurant?._id) {
+    const restaurantId = await getPublicRestaurantId(db);
+    if (!restaurantId) {
       return Response.json({ success: false, error: "No active restaurant available for ordering." }, { status: 404 });
     }
 
+    const settingsDoc = await db.collection("restaurant_settings").findOne(
+      { restaurantId },
+      { projection: { pos: 1 } }
+    );
+    const taxPercentage = Number(settingsDoc?.pos?.taxPercentage ?? 8);
+    const serviceCharge = Number(settingsDoc?.pos?.serviceCharge ?? 0);
+    const safeTaxPercent = Number.isFinite(taxPercentage) ? Math.max(0, taxPercentage) : 8;
+    const safeServiceCharge = Number.isFinite(serviceCharge) ? Math.max(0, serviceCharge) : 0;
+
     const subtotal = items.reduce((sum, item) => sum + item.price * item.qty, 0);
-    const tax = Number((subtotal * 0.08).toFixed(2));
-    const total = Number((subtotal + tax).toFixed(2));
+    const tax = Number((subtotal * (safeTaxPercent / 100)).toFixed(2));
+    const deliveryCharge = orderType === "delivery" ? Number(safeServiceCharge.toFixed(2)) : 0;
+    const total = Number((subtotal + tax + deliveryCharge).toFixed(2));
     const now = new Date();
 
     const doc = {
-      restaurantId: new ObjectId(restaurant._id),
+      restaurantId,
       orderId: `ORD-C-${Date.now()}`,
       source: "customer",
       customerAccountId,
@@ -151,6 +179,8 @@ export async function POST(request) {
       itemCount: items.reduce((sum, item) => sum + item.qty, 0),
       subtotal,
       tax,
+      taxPercentage: safeTaxPercent,
+      deliveryCharge,
       total,
       status: "new",
       notes,
@@ -161,7 +191,7 @@ export async function POST(request) {
     const result = await db.collection("orders").insertOne(doc);
     if (orderType === "dine-in" && tableNumber) {
       await db.collection("tables").updateOne(
-        { restaurantId: new ObjectId(restaurant._id), tableNumber },
+        { restaurantId, tableNumber },
         { $set: { status: "occupied", updatedAt: new Date() } }
       ).catch(() => {});
     }

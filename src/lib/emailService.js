@@ -1,4 +1,32 @@
 import nodemailer from "nodemailer";
+import { ObjectId } from "mongodb";
+
+/** Custom SMTP shape (tenant / platform settings); same fields as nodemailer transport options auth. */
+export function createSmtpTransport(smtp) {
+  if (!smtp?.smtpHost || !smtp?.smtpUser) {
+    throw new Error("SMTP Host and Username are required.");
+  }
+  const port = Number(smtp.smtpPort ?? 587);
+  if (!Number.isFinite(port) || port < 1 || port > 65535) {
+    throw new Error("Invalid SMTP port.");
+  }
+  return nodemailer.createTransport({
+    host: smtp.smtpHost,
+    port,
+    secure: Boolean(smtp.secure),
+    auth: {
+      user: smtp.smtpUser,
+      pass: String(smtp.smtpPassword ?? ""),
+    },
+  });
+}
+
+/** Build a MIME "from" string from tenant email settings */
+export function buildFromAddress(smtp) {
+  const name = String(smtp.fromName ?? "").trim() || "Restaurant";
+  const addr = String(smtp.fromEmail ?? "").trim() || String(smtp.smtpUser ?? "").trim();
+  return `"${name.replace(/"/g, "")}" <${addr}>`;
+}
 
 /* ── Transporter (lazy init — only created when needed) ── */
 let _transporter = null;
@@ -15,6 +43,74 @@ function getTransporter() {
   });
 
   return _transporter;
+}
+
+function normalizeRestaurantId(restaurantId) {
+  if (restaurantId == null || restaurantId === "") return null;
+  if (typeof restaurantId === "string") {
+    return ObjectId.isValid(restaurantId) ? new ObjectId(restaurantId) : null;
+  }
+  return restaurantId;
+}
+
+/** Create a nodemailer transport from `restaurant_settings.email` when enabled and complete. */
+export async function getRestaurantSmtpTransport(db, restaurantId) {
+  const doc = await db
+    .collection("restaurant_settings")
+    .findOne({ restaurantId }, { projection: { email: 1 } });
+
+  const email = doc?.email;
+  if (!email?.enabled) return null;
+  if (!email.smtpHost?.trim() || !email.smtpUser?.trim() || !email.smtpPassword) {
+    return null;
+  }
+  try {
+    return createSmtpTransport(email);
+  } catch {
+    return null;
+  }
+}
+
+/** Tenant (enabled + creds) → platform Mongo `settings.email` → env Gmail */
+async function resolveMailSendingContext(db, restaurantId) {
+  const rid = normalizeRestaurantId(restaurantId);
+  if (rid) {
+    const tTenant = await getRestaurantSmtpTransport(db, rid);
+    if (tTenant) {
+      const row = await db
+        .collection("restaurant_settings")
+        .findOne({ restaurantId: rid }, { projection: { email: 1 } });
+      return {
+        transporter: tTenant,
+        from: buildFromAddress(row?.email ?? {}),
+      };
+    }
+  }
+
+  const platformDoc = await db
+    .collection("settings")
+    .findOne({ _id: "platform" }, { projection: { email: 1 } });
+  const pe = platformDoc?.email;
+  if (pe?.smtpHost?.trim() && pe?.smtpUser?.trim() && pe?.smtpPassword) {
+    try {
+      return {
+        transporter: createSmtpTransport(pe),
+        from: buildFromAddress(pe),
+      };
+    } catch {
+      /* fall through */
+    }
+  }
+
+  if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
+    const raw = process.env.EMAIL_FROM?.trim();
+    return {
+      transporter: getTransporter(),
+      from: raw || `"RMS" <${process.env.EMAIL_USER}>`,
+    };
+  }
+
+  throw new Error("No outbound email is configured.");
 }
 
 /* ── HTML email template ── */
@@ -149,21 +245,41 @@ function buildResetPasswordHtml(name, url) {
 
 /**
  * Send email verification link.
- * @param {{ name: string, email: string, token: string }} params
+ * Pass `db` + `restaurantId` so tenant SMTP (Settings → Email) or Super Admin SMTP is used before env Gmail.
+ *
+ * @param {{ name: string, email: string, token: string, baseUrl?: string, db?: import('mongodb').Db, restaurantId?: import('mongodb').ObjectId | string | null }} params
  * @returns {Promise<{ success: boolean, error?: string }>}
  */
-export async function sendVerificationEmail({ name, email, token, baseUrl }) {
+export async function sendVerificationEmail({
+  name,
+  email,
+  token,
+  baseUrl,
+  db,
+  restaurantId,
+}) {
   const appBaseUrl = baseUrl || process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
   const url = `${appBaseUrl}/verify-email?token=${token}`;
 
   try {
-    const transporter = getTransporter();
+    const { transporter, from } = db
+      ? await resolveMailSendingContext(db, restaurantId ?? null)
+        : (() => {
+          if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+            throw new Error("EMAIL_USER / EMAIL_PASS are not set.");
+          }
+          const raw = process.env.EMAIL_FROM?.trim();
+          return {
+            transporter: getTransporter(),
+            from: raw || `"RMS" <${process.env.EMAIL_USER}>`,
+          };
+        })();
 
     await transporter.sendMail({
-      from: process.env.EMAIL_FROM,   // "RMS System <you@gmail.com>"
+      from,
       to: email,
       subject: "Verify your RMS account",
-      text: `Hi ${name}, verify your email: ${url}`,  // plain text fallback
+      text: `Hi ${name}, verify your email: ${url}`,
       html: buildVerificationHtml(name, url),
     });
 
@@ -176,16 +292,34 @@ export async function sendVerificationEmail({ name, email, token, baseUrl }) {
 }
 
 /**
- * Send password reset email.
- * @param {{ name: string, email: string, token: string }} params
+ * @param {{ name: string, email: string, token: string, baseUrl?: string, db?: import('mongodb').Db, restaurantId?: import('mongodb').ObjectId | string | null }} params
  */
-export async function sendPasswordResetEmail({ name, email, token, baseUrl }) {
+export async function sendPasswordResetEmail({
+  name,
+  email,
+  token,
+  baseUrl,
+  db,
+  restaurantId,
+}) {
   const appBaseUrl = baseUrl || process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
   const url = `${appBaseUrl}/reset-password?token=${token}`;
   try {
-    const transporter = getTransporter();
+    const { transporter, from } = db
+      ? await resolveMailSendingContext(db, restaurantId ?? null)
+        : (() => {
+          if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+            throw new Error("EMAIL_USER / EMAIL_PASS are not set.");
+          }
+          const raw = process.env.EMAIL_FROM?.trim();
+          return {
+            transporter: getTransporter(),
+            from: raw || `"RMS" <${process.env.EMAIL_USER}>`,
+          };
+        })();
+
     await transporter.sendMail({
-      from: process.env.EMAIL_FROM,
+      from,
       to: email,
       subject: "Reset your RMS password",
       text: `Hi ${name || ""}, reset your password here: ${url}`,
