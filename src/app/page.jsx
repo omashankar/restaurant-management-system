@@ -26,7 +26,10 @@ import { getIcon } from "@/lib/iconMap";
 import SectionTitle from "@/components/landing/SectionTitle";
 import { TOKEN_COOKIE } from "@/lib/authCookies";
 import { verifyToken } from "@/lib/jwt";
-import { getLandingContent as getLandingContentFromService } from "@/lib/landingService";
+import {
+  getLandingContent as getLandingContentFromService,
+  mergeWithDefaults,
+} from "@/lib/landingService";
 import clientPromise from "@/lib/mongodb";
 import { CheckCircle2, MonitorSmartphone, Star, TrendingUp } from "lucide-react";
 import { cookies } from "next/headers";
@@ -76,11 +79,21 @@ function mapPlansToLandingPricing(plans = []) {
 
 /* ── Fetch landing page content directly (no internal HTTP hop) ── */
 const getLandingContent = cache(async function getLandingContent() {
-  const isProdBuildPhase = process.env.NEXT_PHASE === "phase-production-build";
+  /** Deterministic full defaults when DB is unavailable (e.g. production build phase). */
+  if (process.env.NEXT_PHASE === "phase-production-build") {
+    return mergeWithDefaults(null);
+  }
 
-  // Keep production builds deterministic even when external DB is unavailable.
-  if (isProdBuildPhase) {
-    return null;
+  const defaults = mergeWithDefaults(null);
+
+  async function plansPricingFromDb(client) {
+    const db = client.db();
+    const plans = await db
+      .collection("plans")
+      .find({ isActive: { $ne: false } })
+      .sort({ price: 1 })
+      .toArray();
+    return mapPlansToLandingPricing(plans);
   }
 
   try {
@@ -88,21 +101,24 @@ const getLandingContent = cache(async function getLandingContent() {
       getLandingContentFromService(),
       clientPromise,
     ]);
-    const db = client.db();
-    const plans = await db.collection("plans")
-      .find({ isActive: { $ne: false } })
-      .sort({ price: 1 })
-      .toArray();
-    const pricing = mapPlansToLandingPricing(plans);
+    const fromPlans = await plansPricingFromDb(client);
+    const pricing =
+      fromPlans.length > 0 ? fromPlans : content?.pricing?.length ? content.pricing : defaults.pricing;
+
     return {
       ...content,
-      pricing: pricing.length > 0 ? pricing : content?.pricing ?? [],
+      pricing,
     };
   } catch (err) {
-    if (!isProdBuildPhase) {
-      console.error("getLandingContent error:", err.message);
+    console.error("getLandingContent error:", err.message);
+    try {
+      const client = await clientPromise;
+      const fromPlans = await plansPricingFromDb(client);
+      if (fromPlans.length > 0) return { ...defaults, pricing: fromPlans };
+    } catch {
+      /* use defaults.pricing */
     }
-    return null; // components fall back to their own defaults
+    return defaults;
   }
 });
 
@@ -276,18 +292,17 @@ export default async function Home({ searchParams }) {
 
       {/* ── 8. Pricing — dynamic from CMS ── */}
       <section id="pricing" className="scroll-mt-16">
-        <DynamicPricing pricing={content?.pricing} />
+        <DynamicPricing
+          pricing={content?.pricing}
+          currencyCode={content?.seo?.priceCurrency ?? "INR"}
+        />
       </section>
 
       {/* ── 9. About — dynamic from CMS ── */}
       <AboutSection about={content?.about} />
 
       {/* ── 10. Demo — static ── */}
-      {content?.demo?.enabled !== false && (
-        <section id={content?.demo?.sectionId ?? "demo"} className="scroll-mt-16">
-          <DemoSection />
-        </section>
-      )}
+      {content?.demo?.enabled !== false && <DemoSection demo={content?.demo} />}
 
       {/* ── 11. Testimonials — dynamic from CMS ── */}
       <DynamicTestimonials testimonials={content?.testimonials} />
@@ -298,7 +313,7 @@ export default async function Home({ searchParams }) {
       {/* ── 13. CTA — static ── */}
       {content?.cta?.enabled !== false && (
         <section id={content?.cta?.sectionId ?? "cta"} className="scroll-mt-16">
-          <CTASection />
+          <CTASection cta={content?.cta} />
         </section>
       )}
 

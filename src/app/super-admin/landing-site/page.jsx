@@ -1,5 +1,6 @@
 ﻿"use client";
 
+import { formatLandingCurrency } from "@/lib/formatLandingCurrency";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import IconPicker from "@/components/ui/IconPicker";
 import Modal from "@/components/ui/Modal";
@@ -503,6 +504,17 @@ function SeoPanel({ data, onChange, onSave, saving }) {
           <input value={data.twitterCard ?? ""} onChange={e => onChange("twitterCard", e.target.value)} placeholder="summary_large_image" className={ic} />
         </Field>
       </div>
+      <Field
+        label="Pricing currency (ISO 4217)"
+        hint="Used on public pricing cards — e.g. INR, USD, EUR."
+      >
+        <input
+          value={data.priceCurrency ?? ""}
+          onChange={(e) => onChange("priceCurrency", e.target.value)}
+          placeholder="INR"
+          className={ic}
+        />
+      </Field>
       <SaveBtn saving={saving} onClick={onSave} />
     </div>
   );
@@ -606,14 +618,61 @@ function BenefitsPanel({ data, onChange, onSave, saving }) {
   );
 }
 
-function ToggleSectionPanel({ icon: Icon, title, description, data, onChange, onSave, saving }) {
+function DemoSectionPanel({ data, onChange, onSave, saving }) {
   return (
     <div className="space-y-5">
-      <SectionHeader icon={Icon} title={title} description={description} />
+      <SectionHeader icon={Globe} title="Demo Section" description="Dashboard-style preview strip and section copy." />
       <Toggle checked={data.enabled !== false} onChange={(v) => onChange("enabled", v)} label="Section enabled" />
-      <Field label="Section ID">
-        <input value={data.sectionId ?? ""} onChange={(e) => onChange("sectionId", e.target.value)} className={ic} />
+      <Field label="Section anchor ID" hint="Navbar “Demo” should match this ID.">
+        <input value={data.sectionId ?? ""} onChange={(e) => onChange("sectionId", e.target.value)} placeholder="demo" className={ic} />
       </Field>
+      <Field label="Eyebrow">
+        <input value={data.eyebrow ?? ""} onChange={(e) => onChange("eyebrow", e.target.value)} className={ic} />
+      </Field>
+      <Field label="Title">
+        <input value={data.title ?? ""} onChange={(e) => onChange("title", e.target.value)} className={ic} />
+      </Field>
+      <Field label="Subtext">
+        <textarea rows={3} value={data.subtext ?? ""} onChange={(e) => onChange("subtext", e.target.value)} className={`${ic} resize-none`} />
+      </Field>
+      <SaveBtn saving={saving} onClick={onSave} />
+    </div>
+  );
+}
+
+function CTASectionPanel({ data, onChange, onSave, saving }) {
+  return (
+    <div className="space-y-5">
+      <SectionHeader icon={LayoutTemplate} title="CTA banner" description="Gradient call-to-action block before the footer." />
+      <Toggle checked={data.enabled !== false} onChange={(v) => onChange("enabled", v)} label="Section enabled" />
+      <Field label="Section anchor ID">
+        <input value={data.sectionId ?? ""} onChange={(e) => onChange("sectionId", e.target.value)} placeholder="cta" className={ic} />
+      </Field>
+      <Field label="Eyebrow">
+        <input value={data.eyebrow ?? ""} onChange={(e) => onChange("eyebrow", e.target.value)} className={ic} />
+      </Field>
+      <Field label="Title">
+        <input value={data.title ?? ""} onChange={(e) => onChange("title", e.target.value)} className={ic} />
+      </Field>
+      <Field label="Description">
+        <textarea rows={3} value={data.description ?? ""} onChange={(e) => onChange("description", e.target.value)} className={`${ic} resize-none`} />
+      </Field>
+      <div className="grid gap-4 sm:grid-cols-2">
+        <Field label="Primary button label">
+          <input value={data.primaryCtaLabel ?? ""} onChange={(e) => onChange("primaryCtaLabel", e.target.value)} className={ic} />
+        </Field>
+        <Field label="Primary URL" hint="Internal path or https://…">
+          <input value={data.primaryCtaHref ?? ""} onChange={(e) => onChange("primaryCtaHref", e.target.value)} placeholder="/signup" className={ic} />
+        </Field>
+      </div>
+      <div className="grid gap-4 sm:grid-cols-2">
+        <Field label="Secondary button label">
+          <input value={data.secondaryCtaLabel ?? ""} onChange={(e) => onChange("secondaryCtaLabel", e.target.value)} className={ic} />
+        </Field>
+        <Field label="Secondary URL" hint="Use #demo for same-page anchors.">
+          <input value={data.secondaryCtaHref ?? ""} onChange={(e) => onChange("secondaryCtaHref", e.target.value)} placeholder="#demo" className={ic} />
+        </Field>
+      </div>
       <SaveBtn saving={saving} onClick={onSave} />
     </div>
   );
@@ -920,7 +979,12 @@ export default function LandingSitePage() {
                           {item.highlight && <span className="rounded-full bg-indigo-500/15 px-2 py-0.5 text-[10px] font-semibold text-indigo-400">Featured</span>}
                         </div>
                         <p className="text-xs font-semibold text-zinc-300">
-                          ${pricingView === "yearly" ? (item.yearlyPrice ?? item.price?.yearly ?? item.monthlyPrice ?? item.price?.monthly ?? 0) : (item.monthlyPrice ?? item.price?.monthly ?? 0)}
+                          {formatLandingCurrency(
+                            pricingView === "yearly"
+                              ? (item.yearlyPrice ?? item.price?.yearly ?? item.monthlyPrice ?? item.price?.monthly ?? 0)
+                              : (item.monthlyPrice ?? item.price?.monthly ?? 0),
+                            content?.seo?.priceCurrency ?? "INR",
+                          )}
                           <span className="ml-1 text-zinc-500">/{pricingView === "yearly" ? "yr" : "mo"}</span>
                         </p>
                         <p className="text-xs text-zinc-500">{item.description}</p>
@@ -971,26 +1035,10 @@ export default function LandingSitePage() {
                 <BenefitsPanel data={sectionData} onChange={handleChange} onSave={() => handleSave()} saving={saving} />
               )}
               {activeTab === "demo" && (
-                <ToggleSectionPanel
-                  icon={Globe}
-                  title="Demo Section"
-                  description="Enable/disable demo block and update anchor id."
-                  data={sectionData}
-                  onChange={handleChange}
-                  onSave={() => handleSave()}
-                  saving={saving}
-                />
+                <DemoSectionPanel data={sectionData} onChange={handleChange} onSave={() => handleSave()} saving={saving} />
               )}
               {activeTab === "cta" && (
-                <ToggleSectionPanel
-                  icon={LayoutTemplate}
-                  title="CTA Section"
-                  description="Enable/disable CTA block and update anchor id."
-                  data={sectionData}
-                  onChange={handleChange}
-                  onSave={() => handleSave()}
-                  saving={saving}
-                />
+                <CTASectionPanel data={sectionData} onChange={handleChange} onSave={() => handleSave()} saving={saving} />
               )}
               {activeTab === "seo" && (
                 <SeoPanel data={sectionData} onChange={handleChange} onSave={() => handleSave()} saving={saving} />

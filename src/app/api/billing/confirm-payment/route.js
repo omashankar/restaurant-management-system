@@ -1,6 +1,10 @@
 import { ObjectId } from "mongodb";
 import { withTenant } from "@/lib/tenantDb";
-import { getPlatformPaymentSecrets, verifyRazorpayCheckoutSignature } from "@/lib/paymentGateway";
+import {
+  assertStripePaymentIntentForOrder,
+  getPlatformPaymentSecrets,
+  verifyRazorpayCheckoutSignature,
+} from "@/lib/paymentGateway";
 
 function addCycle(startDate, billingCycle) {
   const endDate = new Date(startDate);
@@ -17,8 +21,8 @@ export const POST = withTenant(["admin"], async ({ db, restaurantId }, request) 
   if (!paymentId) {
     return Response.json({ success: false, error: "paymentId is required." }, { status: 400 });
   }
-  if (provider !== "razorpay") {
-    return Response.json({ success: false, error: "Only Razorpay confirmation is supported right now." }, { status: 400 });
+  if (provider !== "razorpay" && provider !== "stripe") {
+    return Response.json({ success: false, error: "Unsupported payment provider." }, { status: 400 });
   }
 
   let _id;
@@ -40,19 +44,41 @@ export const POST = withTenant(["admin"], async ({ db, restaurantId }, request) 
     return Response.json({ success: true, message: "Payment already confirmed." });
   }
 
-  const cfg = await getPlatformPaymentSecrets(db);
-  const valid = verifyRazorpayCheckoutSignature({
-    orderId: body?.razorpay_order_id,
-    paymentId: body?.razorpay_payment_id,
-    signature: body?.razorpay_signature,
-    secret: cfg.razorpayKeySecret,
-  });
-  if (!valid) {
-    await db.collection("payments").updateOne(
-      { _id },
-      { $set: { status: "failed", failureReason: "Signature mismatch.", updatedAt: new Date() } }
-    );
-    return Response.json({ success: false, error: "Invalid payment signature." }, { status: 400 });
+  if (provider === "stripe") {
+    const paymentIntentId = String(body?.paymentIntentId ?? "").trim();
+    if (!paymentIntentId) {
+      return Response.json({ success: false, error: "paymentIntentId is required." }, { status: 400 });
+    }
+    try {
+      await assertStripePaymentIntentForOrder(db, paymentIntentId, paymentId);
+    } catch (err) {
+      await db.collection("payments").updateOne(
+        { _id },
+        {
+          $set: {
+            status: "failed",
+            failureReason: err.message || "Stripe verification failed.",
+            updatedAt: new Date(),
+          },
+        }
+      );
+      return Response.json({ success: false, error: err.message || "Stripe verification failed." }, { status: 400 });
+    }
+  } else {
+    const cfg = await getPlatformPaymentSecrets(db);
+    const valid = verifyRazorpayCheckoutSignature({
+      orderId: body?.razorpay_order_id,
+      paymentId: body?.razorpay_payment_id,
+      signature: body?.razorpay_signature,
+      secret: cfg.razorpayKeySecret,
+    });
+    if (!valid) {
+      await db.collection("payments").updateOne(
+        { _id },
+        { $set: { status: "failed", failureReason: "Signature mismatch.", updatedAt: new Date() } }
+      );
+      return Response.json({ success: false, error: "Invalid payment signature." }, { status: 400 });
+    }
   }
 
   const plan = await db.collection("plans").findOne({ slug: payment.plan });
@@ -102,9 +128,15 @@ export const POST = withTenant(["admin"], async ({ db, restaurantId }, request) 
     {
       $set: {
         status: "paid",
-        gatewayProvider: "razorpay",
-        gatewayPaymentId: body?.razorpay_payment_id ?? null,
-        gatewayOrderId: body?.razorpay_order_id ?? payment.gatewayOrderId ?? null,
+        gatewayProvider: provider === "stripe" ? "stripe" : "razorpay",
+        gatewayPaymentId:
+          provider === "stripe"
+            ? String(body?.paymentIntentId ?? "").trim()
+            : body?.razorpay_payment_id ?? null,
+        gatewayOrderId:
+          provider === "stripe"
+            ? payment.gatewayOrderId ?? null
+            : body?.razorpay_order_id ?? payment.gatewayOrderId ?? null,
         paidAt: now,
         updatedAt: now,
       },

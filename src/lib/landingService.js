@@ -33,7 +33,7 @@
  * AboutDoc   { headline, description, imageUrl, stats:[{value,label}], values:[{icon,title,description}] }
  * ContactDoc { email, phone, address, mapUrl, formEnabled }
  * FooterDoc  { companyName, tagline, email, phone, address, links:[{label,href}], social:[{platform,href,icon}] }
- * SeoDoc     { title, description, keywords, ogImage, twitterCard }
+ * SeoDoc     { title, description, keywords, ogImage, twitterCard, priceCurrency }
  */
 
 import clientPromise from "./mongodb";
@@ -188,15 +188,15 @@ export const DEFAULTS = {
     phone:       "+1 (555) 000-0000",
     address:     "123 Main Street, City, Country",
     links: [
-      { label: "Features",      href: "#features" },
-      { label: "Pricing",       href: "#pricing"  },
-      { label: "Privacy Policy",href: "#"         },
-      { label: "Terms",         href: "#"         },
+      { label: "Features",       href: "#features" },
+      { label: "Pricing",        href: "#pricing"  },
+      { label: "Privacy Policy", href: "/privacy"  },
+      { label: "Terms of Use",   href: "/terms"    },
     ],
     social: [
-      { platform: "twitter",  href: "#", icon: "MessageSquare" },
-      { platform: "linkedin", href: "#", icon: "Globe"         },
-      { platform: "github",   href: "#", icon: "Code2"         },
+      { platform: "twitter",  href: "https://twitter.com", icon: "MessageSquare" },
+      { platform: "linkedin", href: "https://linkedin.com", icon: "Globe" },
+      { platform: "github",   href: "https://github.com", icon: "Code2" },
     ],
   },
 
@@ -206,6 +206,8 @@ export const DEFAULTS = {
     keywords:    "restaurant management, POS, inventory, staff management, SaaS",
     ogImage:     "",
     twitterCard: "summary_large_image",
+    /** ISO 4217 code for landing pricing cards (e.g. INR, USD) */
+    priceCurrency: "INR",
   },
 
   brands: {
@@ -265,11 +267,23 @@ export const DEFAULTS = {
   demo: {
     enabled: true,
     sectionId: "demo",
+    eyebrow: "Dashboard Preview",
+    title: "A control center for operations and growth",
+    subtext:
+      "Monitor performance, track orders, and catch inventory risks before they become issues.",
   },
 
   cta: {
     enabled: true,
     sectionId: "cta",
+    eyebrow: "Get Started Today",
+    title: "Start Managing Your Restaurant Smarter",
+    description:
+      "Join 500+ restaurants already using RMS. Launch your modern operations stack in minutes — no credit card required.",
+    primaryCtaLabel: "Get Started Now",
+    primaryCtaHref: "/signup",
+    secondaryCtaLabel: "View Demo",
+    secondaryCtaHref: "#demo",
   },
 };
 
@@ -384,7 +398,9 @@ function generateId() {
 
 function deepMergeSection(defaultValue, storedValue) {
   if (Array.isArray(defaultValue)) {
-    return Array.isArray(storedValue) ? storedValue : defaultValue;
+    if (!Array.isArray(storedValue)) return defaultValue;
+    /** Empty curated lists fall back so the public site never drops whole sections */
+    return storedValue.length === 0 ? defaultValue : storedValue;
   }
   if (defaultValue && typeof defaultValue === "object") {
     const merged = { ...defaultValue };

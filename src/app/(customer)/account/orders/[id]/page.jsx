@@ -1,6 +1,7 @@
 "use client";
 
 import { useCustomer } from "@/context/CustomerContext";
+import { formatCustomerMoney } from "@/lib/customerCurrency";
 import { ArrowLeft, BellRing, Loader2, Receipt } from "lucide-react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
@@ -142,10 +143,10 @@ export default function CustomerOrderDetailPage() {
                     <div>
                       <p className="font-medium text-zinc-900">{line.name}</p>
                       <p className="text-xs text-zinc-500">
-                        ${line.price.toFixed(2)} × {line.qty}
+                        {formatCustomerMoney(line.price)} × {line.qty}
                       </p>
                     </div>
-                    <p className="shrink-0 font-semibold text-zinc-900">${line.lineTotal.toFixed(2)}</p>
+                    <p className="shrink-0 font-semibold text-zinc-900">{formatCustomerMoney(line.lineTotal)}</p>
                   </li>
                 ))
               ) : (
@@ -155,21 +156,21 @@ export default function CustomerOrderDetailPage() {
             <dl className="mt-4 space-y-2 border-t border-zinc-100 pt-4 text-sm">
               <div className="flex justify-between text-zinc-600">
                 <dt>Subtotal</dt>
-                <dd className="font-medium text-zinc-900">${Number(order.subtotal).toFixed(2)}</dd>
+                <dd className="font-medium text-zinc-900">{formatCustomerMoney(Number(order.subtotal))}</dd>
               </div>
               <div className="flex justify-between text-zinc-600">
                 <dt>Tax</dt>
-                <dd className="font-medium text-zinc-900">${Number(order.tax).toFixed(2)}</dd>
+                <dd className="font-medium text-zinc-900">{formatCustomerMoney(Number(order.tax))}</dd>
               </div>
               {Number(order.deliveryCharge ?? 0) > 0 ? (
                 <div className="flex justify-between text-zinc-600">
                   <dt>Delivery</dt>
-                  <dd className="font-medium text-zinc-900">${Number(order.deliveryCharge).toFixed(2)}</dd>
+                  <dd className="font-medium text-zinc-900">{formatCustomerMoney(Number(order.deliveryCharge))}</dd>
                 </div>
               ) : null}
               <div className="flex justify-between border-t border-zinc-100 pt-2 text-base font-bold text-zinc-900">
                 <dt>Total</dt>
-                <dd>${Number(order.total).toFixed(2)}</dd>
+                <dd>{formatCustomerMoney(Number(order.total))}</dd>
               </div>
             </dl>
           </section>

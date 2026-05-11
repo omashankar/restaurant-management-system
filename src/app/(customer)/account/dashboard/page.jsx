@@ -1,6 +1,7 @@
 "use client";
 
 import { useCustomer } from "@/context/CustomerContext";
+import { formatCustomerMoney } from "@/lib/customerCurrency";
 import { Calendar, ChevronRight, Heart, Loader2, LogOut, MapPin, ShoppingBag, UserRound, Wallet } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -221,7 +222,7 @@ export default function CustomerDashboardPage() {
                     <p className="mt-0.5 text-xs text-zinc-500">{formatDate(o.createdAt)}</p>
                   </div>
                   <div className="flex shrink-0 items-center gap-1">
-                    <span className="font-semibold text-zinc-900">${Number(o.total ?? 0).toFixed(2)}</span>
+                    <span className="font-semibold text-zinc-900">{formatCustomerMoney(Number(o.total ?? 0))}</span>
                     <button
                       type="button"
                       onClick={(e) => {
@@ -273,7 +274,7 @@ export default function CustomerDashboardPage() {
             <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500">Wallet</p>
             <p className="mt-1 inline-flex items-center gap-2 text-xl font-bold text-zinc-900">
               <Wallet className="size-5 text-emerald-600" />
-              ${summary.walletBalance.toFixed(2)}
+              {formatCustomerMoney(summary.walletBalance)}
             </p>
             <p className="mt-1 text-xs text-zinc-500">Stored value for quick checkout.</p>
           </div>

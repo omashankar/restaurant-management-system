@@ -104,11 +104,43 @@ export async function createGatewayPaymentSession({
       checkout: {
         clientSecret: data.client_secret,
         paymentIntentId: data.id,
+        publishableKey: cfg.stripePublicKey || "",
       },
     };
   }
 
   throw new Error("No online payment gateway configured.");
+}
+
+/**
+ * Fetch PaymentIntent from Stripe and verify it succeeded for metadata.orderId.
+ * @param {import("mongodb").Db} db
+ */
+export async function assertStripePaymentIntentForOrder(db, paymentIntentId, expectedMetadataOrderId) {
+  const cfg = await readPlatformSettings(db);
+  if (!cfg.stripeSecretKey) {
+    throw new Error("Stripe is not configured.");
+  }
+  const id = String(paymentIntentId ?? "").trim();
+  if (!id) {
+    throw new Error("Missing payment intent id.");
+  }
+  const res = await fetch(
+    `https://api.stripe.com/v1/payment_intents/${encodeURIComponent(id)}`,
+    { headers: { Authorization: `Bearer ${cfg.stripeSecretKey}` } }
+  );
+  const pi = await res.json();
+  if (!res.ok) {
+    const msg = typeof pi?.error?.message === "string" ? pi.error.message : "Stripe verification failed.";
+    throw new Error(msg);
+  }
+  if (pi.status !== "succeeded") {
+    throw new Error(`Payment status is "${pi.status}".`);
+  }
+  if (String(pi.metadata?.orderId ?? "") !== String(expectedMetadataOrderId)) {
+    throw new Error("Payment intent does not match this order.");
+  }
+  return pi;
 }
 
 export function verifyRazorpayWebhook(body, signature, secret) {

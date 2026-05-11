@@ -1,6 +1,7 @@
 "use client";
 
 import { useCustomer } from "@/context/CustomerContext";
+import { formatCustomerMoney } from "@/lib/customerCurrency";
 import { Minus, Plus, ShoppingCart, Trash2, X } from "lucide-react";
 import Link from "next/link";
 
@@ -78,7 +79,7 @@ export default function CartDrawer() {
                   {/* Info */}
                   <div className="flex flex-1 flex-col gap-1.5">
                     <p className="text-sm font-semibold leading-tight text-zinc-900">{line.name}</p>
-                    <p className="text-xs font-bold text-emerald-700">${(line.price * line.qty).toFixed(2)}</p>
+                    <p className="text-xs font-bold text-emerald-700">{formatCustomerMoney(line.price * line.qty)}</p>
 
                     {/* Qty controls */}
                     <div className="flex items-center gap-2">
@@ -121,7 +122,7 @@ export default function CartDrawer() {
           <div className="border-t border-zinc-200 px-5 py-4 space-y-3">
             <div className="flex items-center justify-between text-sm">
               <span className="text-zinc-600">Subtotal</span>
-              <span className="font-bold text-zinc-900">${subtotal.toFixed(2)}</span>
+              <span className="font-bold text-zinc-900">{formatCustomerMoney(subtotal)}</span>
             </div>
             {cart.maxPrepTime > 0 && (
               <p className="text-xs text-zinc-600">Est. prep time: ~{cart.maxPrepTime} min</p>

@@ -41,6 +41,10 @@ const DEFAULTS = {
     currency:         "USD",
     taxPercent:       0,
     gstNumber:        "",
+    gstHsnSac:        "",
+    gstSupplyType:    "intra_state",
+    gstInclusivePricing: true,
+    gstPlaceOfSupply: "",
     trialDays:        14,
   },
   theme: {
@@ -152,6 +156,12 @@ function sanitizeSectionData(section, incoming = {}) {
   if (section === "payment") {
     clean.taxPercent = Math.min(100, Math.max(0, Number(clean.taxPercent ?? base.taxPercent)));
     clean.trialDays  = Math.min(90, Math.max(0, Number(clean.trialDays ?? base.trialDays)));
+    clean.gstInclusivePricing = Boolean(clean.gstInclusivePricing);
+    if (!["intra_state", "inter_state"].includes(clean.gstSupplyType)) {
+      clean.gstSupplyType = base.gstSupplyType;
+    }
+    clean.gstHsnSac = String(clean.gstHsnSac ?? "").trim().slice(0, 20);
+    clean.gstPlaceOfSupply = String(clean.gstPlaceOfSupply ?? "").trim().slice(0, 80);
   }
   if (section === "email") {
     const port = Number(clean.smtpPort ?? base.smtpPort);

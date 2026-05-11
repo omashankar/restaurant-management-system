@@ -6,6 +6,7 @@ import {
   CUSTOMER_MENU_CONTENT,
   CUSTOMER_MENU_TYPE_FILTERS,
 } from "@/config/customerMenuContent";
+import { formatCustomerMoney } from "@/lib/customerCurrency";
 import { ITEM_TYPE_META } from "@/types/menu";
 import { Bike, Clock, ConciergeBell, Plus, Search, ShoppingCart, Store, Zap } from "lucide-react";
 import Link from "next/link";
@@ -89,7 +90,7 @@ export default function CustomerMenuPage() {
               className="cursor-pointer inline-flex items-center gap-2 rounded-xl bg-emerald-500 px-4 py-2 text-xs font-bold text-zinc-950 shadow-lg shadow-emerald-500/20 hover:bg-emerald-400"
             >
               <ShoppingCart className="size-3.5" />
-              {CUSTOMER_MENU_CONTENT.cartLabel} ({cart.itemCount}) · ${cart.subtotal.toFixed(2)}
+              {CUSTOMER_MENU_CONTENT.cartLabel} ({cart.itemCount}) · {formatCustomerMoney(cart.subtotal)}
             </Link>
           )}
         </div>
@@ -187,7 +188,7 @@ export default function CustomerMenuPage() {
                     </span>
                   )}
                   <span className="absolute bottom-2 right-2 rounded-lg bg-white/90 px-2.5 py-1 text-sm font-bold text-emerald-700 backdrop-blur-sm">
-                    ${item.price.toFixed(2)}
+                    {formatCustomerMoney(item.price)}
                   </span>
                 </div>
                 <div className="flex flex-1 flex-col gap-1.5 p-3">
@@ -223,7 +224,7 @@ export default function CustomerMenuPage() {
               {cart.itemCount}
             </span>
             <span className="text-sm font-bold text-zinc-950">{CUSTOMER_MENU_CONTENT.viewCartLabel}</span>
-            <span className="text-sm font-bold text-zinc-950">${cart.subtotal.toFixed(2)}</span>
+            <span className="text-sm font-bold text-zinc-950">{formatCustomerMoney(cart.subtotal)}</span>
           </Link>
         </div>
       )}

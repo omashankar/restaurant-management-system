@@ -1,5 +1,6 @@
 "use client";
 
+import StripePaymentModal from "@/components/payments/StripePaymentModal";
 import { useToast } from "@/hooks/useToast";
 import { CheckCircle2, CreditCard, Loader2, RefreshCw } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -31,6 +32,7 @@ export default function BillingPage() {
   const [profile, setProfile] = useState(null);
   const [subscription, setSubscription] = useState(null);
   const [plans, setPlans] = useState([]);
+  const [stripeSession, setStripeSession] = useState(null);
   const { showToast, ToastUI } = useToast();
 
   const fetchOverview = useCallback(async () => {
@@ -65,6 +67,7 @@ export default function BillingPage() {
   async function startSubscription(plan) {
     if (!plan?.slug) return;
     setSubmittingPlan(plan.slug);
+    let clearSpinnerInFinally = true;
     try {
       const startRes = await fetch("/api/billing/start-checkout", {
         method: "POST",
@@ -81,58 +84,88 @@ export default function BillingPage() {
         return;
       }
 
-      if (startData.gatewayProvider !== "razorpay" || !startData.checkout?.orderId) {
-        showToast("Only Razorpay checkout is supported currently.", "error");
+      if (startData.gatewayProvider === "razorpay" && startData.checkout?.orderId) {
+        const loaded = await loadRazorpayScript();
+        if (!loaded) {
+          showToast("Could not load payment gateway. Try again.", "error");
+          return;
+        }
+
+        clearSpinnerInFinally = false;
+        const rz = new window.Razorpay({
+          key: startData.checkout.key,
+          order_id: startData.checkout.orderId,
+          amount: startData.checkout.amount,
+          currency: startData.checkout.currency,
+          name: "Restaurant Management System",
+          description: `${plan.name} - ${billingCycle}`,
+          prefill: {
+            name: profile?.restaurantName ?? "",
+            email: profile?.ownerEmail ?? "",
+          },
+          handler: async (response) => {
+            setSubmittingPlan("");
+            const confirmRes = await fetch("/api/billing/confirm-payment", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                paymentId: startData.paymentId,
+                provider: "razorpay",
+                ...response,
+              }),
+            });
+            const confirmData = await confirmRes.json();
+            if (!confirmRes.ok || !confirmData?.success) {
+              showToast(confirmData?.error ?? "Payment confirmation failed.", "error");
+              return;
+            }
+            showToast("Subscription activated successfully.");
+            fetchOverview();
+          },
+          modal: {
+            ondismiss: () => {
+              setSubmittingPlan("");
+              showToast("Payment cancelled.", "error");
+            },
+          },
+          theme: { color: "#10b981" },
+        });
+
+        rz.on("payment.failed", () => {
+          setSubmittingPlan("");
+          showToast("Payment failed. Please retry.", "error");
+        });
+        setSubmittingPlan("");
+        rz.open();
         return;
       }
 
-      const loaded = await loadRazorpayScript();
-      if (!loaded) {
-        showToast("Could not load payment gateway. Try again.", "error");
+      if (startData.gatewayProvider === "stripe" && startData.checkout?.clientSecret) {
+        const publishableKey =
+          startData.checkout.publishableKey || "";
+        if (!publishableKey) {
+          showToast(
+            "Stripe publishable key missing. Add Super Admin → Payment settings.",
+            "error"
+          );
+          return;
+        }
+        clearSpinnerInFinally = false;
+        setStripeSession({
+          clientSecret: startData.checkout.clientSecret,
+          publishableKey,
+          paymentId: startData.paymentId,
+          planName: plan.name,
+        });
+        setSubmittingPlan("");
         return;
       }
 
-      const rz = new window.Razorpay({
-        key: startData.checkout.key,
-        order_id: startData.checkout.orderId,
-        amount: startData.checkout.amount,
-        currency: startData.checkout.currency,
-        name: "Restaurant Management System",
-        description: `${plan.name} - ${billingCycle}`,
-        prefill: {
-          name: profile?.restaurantName ?? "",
-          email: profile?.ownerEmail ?? "",
-        },
-        handler: async (response) => {
-          const confirmRes = await fetch("/api/billing/confirm-payment", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              paymentId: startData.paymentId,
-              provider: "razorpay",
-              ...response,
-            }),
-          });
-          const confirmData = await confirmRes.json();
-          if (!confirmRes.ok || !confirmData?.success) {
-            showToast(confirmData?.error ?? "Payment confirmation failed.", "error");
-            return;
-          }
-          showToast("Subscription activated successfully.");
-          fetchOverview();
-        },
-        modal: {
-          ondismiss: () => showToast("Payment cancelled.", "error"),
-        },
-        theme: { color: "#10b981" },
-      });
-
-      rz.on("payment.failed", () => showToast("Payment failed. Please retry.", "error"));
-      rz.open();
+      showToast("No payment gateway is configured.", "error");
     } catch {
       showToast("Network error while processing payment.", "error");
     } finally {
-      setSubmittingPlan("");
+      if (clearSpinnerInFinally) setSubmittingPlan("");
     }
   }
 
@@ -255,6 +288,49 @@ export default function BillingPage() {
           })}
         </div>
       )}
+      {stripeSession ? (
+        <StripePaymentModal
+          open={!!stripeSession}
+          publishableKey={stripeSession.publishableKey}
+          clientSecret={stripeSession.clientSecret}
+          title={`Subscribe — ${stripeSession.planName}`}
+          returnUrl={
+            typeof window !== "undefined"
+              ? `${window.location.origin}/admin/dashboard`
+              : ""
+          }
+          onClose={() => {
+            setStripeSession(null);
+            showToast("Payment cancelled.", "error");
+          }}
+          onPaid={async (paymentIntentId) => {
+            const paymentId = stripeSession.paymentId;
+            try {
+              const confirmRes = await fetch("/api/billing/confirm-payment", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  paymentId,
+                  provider: "stripe",
+                  paymentIntentId,
+                }),
+              });
+              const confirmData = await confirmRes.json();
+              setStripeSession(null);
+              if (!confirmRes.ok || !confirmData?.success) {
+                showToast(confirmData?.error ?? "Payment confirmation failed.", "error");
+                return;
+              }
+              showToast("Subscription activated successfully.");
+              fetchOverview();
+            } catch {
+              setStripeSession(null);
+              showToast("Network error confirming payment.", "error");
+            }
+          }}
+        />
+      ) : null}
+
       {ToastUI}
     </div>
   );

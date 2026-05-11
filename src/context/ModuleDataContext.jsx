@@ -21,6 +21,7 @@ import {
   useMemo,
   useState,
 } from "react";
+import { usePathname } from "next/navigation";
 
 const KEY = "rms-modules-v3";
 
@@ -74,6 +75,11 @@ function normalizeInventoryItem(row) {
 
 export function ModuleDataProvider({ children }) {
   const { user, hydrated: authHydrated } = useUser();
+  const pathname = usePathname();
+  /** Staff previewing /home · /order/* · /account/* should see the same public menu as guests */
+  const isCustomerFacing =
+    typeof pathname === "string" &&
+    /^(\/home|\/order|\/account)(\/|$)/.test(pathname);
   const [hydrated, setHydrated] = useState(false);
   const [categories, setCategories] = useState(INITIAL_CATEGORIES);
   const [tableCategories, setTableCategories] = useState(INITIAL_TABLE_CATEGORIES);
@@ -93,138 +99,157 @@ export function ModuleDataProvider({ children }) {
   const [kitchenQueue, setKitchenQueue] = useState([]);
 
   useEffect(() => {
-    // Restore non-API session state (optional floor/staff fallback only)
     try {
       const raw = sessionStorage.getItem(KEY);
       if (raw) {
         const d = JSON.parse(raw);
         if (d.tableCategories) setTableCategories(d.tableCategories);
-        if (d.floorTables)     setFloorTables(d.floorTables);
-        if (d.staffRows)       setStaffRows(d.staffRows);
+        if (d.floorTables) setFloorTables(d.floorTables);
+        if (d.staffRows) setStaffRows(d.staffRows);
         if (d.inventoryHistory) setInventoryHistory(d.inventoryHistory);
       }
     } catch {
       sessionStorage.removeItem(KEY);
     }
 
-    // Wait for auth so we do not duplicate /api/auth/me (AuthContext already loads the user).
     if (!authHydrated) return;
-
-    // Guest/customer routes use public customer APIs for dynamic menu + categories.
-    if (!user) {
-      let cancelled = false;
-      async function fetchPublicCustomerData() {
-        try {
-          const [menuRes, catRes] = await Promise.all([
-            fetch("/api/customer/menu"),
-            fetch("/api/customer/categories"),
-          ]);
-          const [menuData, catData] = await Promise.all([
-            menuRes.json(),
-            catRes.json(),
-          ]);
-          if (menuData.success && Array.isArray(menuData.items)) {
-            setMenuItems(menuData.items);
-          }
-          if (catData.success && Array.isArray(catData.categories)) {
-            setCategories(catData.categories);
-          }
-        } catch (err) {
-          console.error("[ModuleDataContext] Failed to fetch customer data:", err.message);
-        } finally {
-          if (!cancelled) setHydrated(true);
-        }
-      }
-      fetchPublicCustomerData();
-      return () => {
-        cancelled = true;
-      };
-    }
-
-    // Tenant module APIs are for restaurant roles only — skip for super_admin.
-    if (user.role === "super_admin") {
-      setHydrated(true);
-      return;
-    }
 
     let cancelled = false;
 
-    async function fetchModuleData() {
-      try {
-        const [
-          menuRes,
-          catRes,
-          tablesRes,
-          areasRes,
-          customersRes,
-          reservationsRes,
-          inventoryRes,
-          ordersRes,
-        ] = await Promise.all([
-          fetch("/api/menu"),
-          fetch("/api/categories"),
-          fetch("/api/tables"),
-          fetch("/api/tables/areas"),
-          fetch("/api/customers"),
-          fetch("/api/reservations"),
-          fetch("/api/inventory"),
-          fetch("/api/orders"),
-        ]);
-        const [
-          menuData,
-          catData,
-          tablesData,
-          areasData,
-          customersData,
-          reservationsData,
-          inventoryData,
-          ordersData,
-        ] = await Promise.all([
-          menuRes.json(),
-          catRes.json(),
-          tablesRes.json(),
-          areasRes.json(),
-          customersRes.json(),
-          reservationsRes.json(),
-          inventoryRes.json(),
-          ordersRes.json(),
-        ]);
-        if (menuData.success   && Array.isArray(menuData.items))        setMenuItems(menuData.items);
-        if (catData.success    && Array.isArray(catData.categories))    setCategories(catData.categories);
-        if (tablesData.success && Array.isArray(tablesData.tables))     setFloorTables(tablesData.tables);
-        if (areasData.success  && Array.isArray(areasData.areas))       setTableCategories(areasData.areas);
-        if (customersData.success && Array.isArray(customersData.customers)) {
-          setCustomerRows(customersData.customers.map(normalizeCustomer));
-        }
-        if (reservationsData.success && Array.isArray(reservationsData.reservations)) {
-          setReservationRows(reservationsData.reservations.map(normalizeReservation));
-        }
-        if (inventoryData.success && Array.isArray(inventoryData.items)) {
-          setInventoryRows(inventoryData.items.map(normalizeInventoryItem));
-        }
-        if (ordersData.success && Array.isArray(ordersData.orders)) {
-          setOrderRows(ordersData.orders);
-          setKitchenQueue(
-            ordersData.orders.filter((o) => ["new", "preparing", "ready"].includes(o.status))
-          );
-        }
-      } catch (err) {
-        console.error("[ModuleDataContext] Failed to fetch module data:", err.message);
-      } finally {
-        if (!cancelled) setHydrated(true);
+    async function fetchPublicCustomerMenuCategories() {
+      const [menuRes, catRes] = await Promise.all([
+        fetch("/api/customer/menu"),
+        fetch("/api/customer/categories"),
+      ]);
+      const [menuData, catData] = await Promise.all([menuRes.json(), catRes.json()]);
+      if (cancelled) return;
+      if (menuData.success && Array.isArray(menuData.items)) {
+        setMenuItems(menuData.items);
+      }
+      if (catData.success && Array.isArray(catData.categories)) {
+        setCategories(catData.categories);
       }
     }
 
-    fetchModuleData();
+    async function fetchTenantModuleData() {
+      const [
+        menuRes,
+        catRes,
+        tablesRes,
+        areasRes,
+        customersRes,
+        reservationsRes,
+        inventoryRes,
+        ordersRes,
+      ] = await Promise.all([
+        fetch("/api/menu"),
+        fetch("/api/categories"),
+        fetch("/api/tables"),
+        fetch("/api/tables/areas"),
+        fetch("/api/customers"),
+        fetch("/api/reservations"),
+        fetch("/api/inventory"),
+        fetch("/api/orders"),
+      ]);
+      const [
+        menuData,
+        catData,
+        tablesData,
+        areasData,
+        customersData,
+        reservationsData,
+        inventoryData,
+        ordersData,
+      ] = await Promise.all([
+        menuRes.json(),
+        catRes.json(),
+        tablesRes.json(),
+        areasRes.json(),
+        customersRes.json(),
+        reservationsRes.json(),
+        inventoryRes.json(),
+        ordersRes.json(),
+      ]);
+      if (cancelled) return;
+      if (menuData.success && Array.isArray(menuData.items)) setMenuItems(menuData.items);
+      if (catData.success && Array.isArray(catData.categories)) setCategories(catData.categories);
+      if (tablesData.success && Array.isArray(tablesData.tables)) setFloorTables(tablesData.tables);
+      if (areasData.success && Array.isArray(areasData.areas)) setTableCategories(areasData.areas);
+      if (customersData.success && Array.isArray(customersData.customers)) {
+        setCustomerRows(customersData.customers.map(normalizeCustomer));
+      }
+      if (reservationsData.success && Array.isArray(reservationsData.reservations)) {
+        setReservationRows(reservationsData.reservations.map(normalizeReservation));
+      }
+      if (inventoryData.success && Array.isArray(inventoryData.items)) {
+        setInventoryRows(inventoryData.items.map(normalizeInventoryItem));
+      }
+      if (ordersData.success && Array.isArray(ordersData.orders)) {
+        setOrderRows(ordersData.orders);
+        setKitchenQueue(ordersData.orders.filter((o) => ["new", "preparing", "ready"].includes(o.status)));
+      }
+    }
+
+    (async () => {
+      try {
+        if (!user) {
+          try {
+            await fetchPublicCustomerMenuCategories();
+          } catch (err) {
+            console.error("[ModuleDataContext] Failed to fetch customer data:", err.message);
+          }
+          return;
+        }
+
+        if (user.role === "super_admin") {
+          if (isCustomerFacing) {
+            try {
+              await fetchPublicCustomerMenuCategories();
+            } catch (err) {
+              console.error("[ModuleDataContext] Failed to fetch customer data:", err.message);
+            }
+          }
+          return;
+        }
+
+        if (isCustomerFacing) {
+          try {
+            await fetchTenantModuleData();
+            await fetchPublicCustomerMenuCategories();
+          } catch (err) {
+            console.error("[ModuleDataContext] Failed to fetch module/storefront data:", err.message);
+          }
+          return;
+        }
+
+        try {
+          await fetchTenantModuleData();
+        } catch (err) {
+          console.error("[ModuleDataContext] Failed to fetch module data:", err.message);
+        }
+      } finally {
+        if (!cancelled) setHydrated(true);
+      }
+    })();
+
     return () => {
       cancelled = true;
     };
-  }, [authHydrated, user]);
+  }, [authHydrated, user, isCustomerFacing]);
 
   const refreshMenu = useCallback(async () => {
+    const usePublicStorefront = !user || isCustomerFacing;
+    const menuUrl = usePublicStorefront ? "/api/customer/menu" : "/api/menu";
+    const categoriesUrl = usePublicStorefront ? "/api/customer/categories" : "/api/categories";
     try {
-      const menuUrl = user ? "/api/menu" : "/api/customer/menu";
-      const categoriesUrl = user ? "/api/categories" : "/api/customer/categories";
+      if (usePublicStorefront && !user) {
+        const [menuRes, catRes] = await Promise.all([fetch(menuUrl), fetch(categoriesUrl)]);
+        const [menuData, catData] = await Promise.all([menuRes.json(), catRes.json()]);
+        if (menuData.success && Array.isArray(menuData.items)) setMenuItems(menuData.items);
+        if (catData.success && Array.isArray(catData.categories)) setCategories(catData.categories);
+        return;
+      }
+
       const [menuRes, catRes, tablesRes, areasRes] = await Promise.all([
         fetch(menuUrl),
         fetch(categoriesUrl),
@@ -237,14 +262,14 @@ export function ModuleDataProvider({ children }) {
         tablesRes.json(),
         areasRes.json(),
       ]);
-      if (menuData.success   && Array.isArray(menuData.items))     setMenuItems(menuData.items);
-      if (catData.success    && Array.isArray(catData.categories)) setCategories(catData.categories);
-      if (tablesData.success && Array.isArray(tablesData.tables))  setFloorTables(tablesData.tables);
-      if (areasData.success  && Array.isArray(areasData.areas))    setTableCategories(areasData.areas);
+      if (menuData.success && Array.isArray(menuData.items)) setMenuItems(menuData.items);
+      if (catData.success && Array.isArray(catData.categories)) setCategories(catData.categories);
+      if (tablesData.success && Array.isArray(tablesData.tables)) setFloorTables(tablesData.tables);
+      if (areasData.success && Array.isArray(areasData.areas)) setTableCategories(areasData.areas);
     } catch (err) {
       console.error("[ModuleDataContext] refreshMenu failed:", err.message);
     }
-  }, [user]);
+  }, [user, isCustomerFacing]);
 
   useEffect(() => {
     if (!hydrated) return;

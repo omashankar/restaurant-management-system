@@ -1,7 +1,9 @@
 "use client";
 
-import { useCustomer } from "@/context/CustomerContext";
+import StripePaymentModal from "@/components/payments/StripePaymentModal";
 import Modal from "@/components/ui/Modal";
+import { useCustomer } from "@/context/CustomerContext";
+import { formatCustomerMoney } from "@/lib/customerCurrency";
 import { Bike, ConciergeBell, Loader2, Phone, Store } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -49,6 +51,7 @@ export default function CheckoutPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [paying, setPaying] = useState(false);
+  const [stripeCheckout, setStripeCheckout] = useState(null);
   const [notes, setNotes] = useState("");
   const [checkoutMeta, setCheckoutMeta] = useState({
     taxPercentage: 8,
@@ -289,10 +292,20 @@ export default function CheckoutPage() {
       }
 
       if (payment?.gatewayProvider === "stripe" && payment?.checkout?.clientSecret) {
-        showToast(
-          "Stripe intent created. Configure Stripe.js client confirmation to complete payment.",
-          "error"
-        );
+        const publishableKey = payment.checkout.publishableKey || "";
+        if (!publishableKey) {
+          showToast(
+            "Stripe publishable key missing. Add it under Super Admin → Payment settings.",
+            "error"
+          );
+          return;
+        }
+        setPaying(true);
+        setStripeCheckout({
+          orderId: createdOrderId,
+          clientSecret: payment.checkout.clientSecret,
+          publishableKey,
+        });
         return;
       }
 
@@ -314,7 +327,7 @@ export default function CheckoutPage() {
       return;
     }
     if (found.minSubtotal && subtotal < Number(found.minSubtotal)) {
-      showToast(`Coupon valid on minimum $${Number(found.minSubtotal).toFixed(2)} subtotal.`, "error");
+      showToast(`Coupon valid on minimum ${formatCustomerMoney(Number(found.minSubtotal))} subtotal.`, "error");
       setAppliedCoupon(null);
       return;
     }
@@ -534,7 +547,7 @@ export default function CheckoutPage() {
               {lines.map((l) => (
                 <li key={l.id} className="flex items-start justify-between gap-2 text-sm">
                   <span className="text-zinc-600">{l.qty}× <span className="text-zinc-900">{l.name}</span></span>
-                  <span className="shrink-0 font-medium text-zinc-900">${(l.price * l.qty).toFixed(2)}</span>
+                  <span className="shrink-0 font-medium text-zinc-900">{formatCustomerMoney(l.price * l.qty)}</span>
                 </li>
               ))}
             </ul>
@@ -555,16 +568,16 @@ export default function CheckoutPage() {
                   Apply
                 </button>
               </div>
-              <div className="flex justify-between text-zinc-600"><span>Subtotal</span><span>${subtotal.toFixed(2)}</span></div>
-              <div className="flex justify-between text-zinc-600"><span>Tax ({taxRate.toFixed(2)}%)</span><span>${tax.toFixed(2)}</span></div>
+              <div className="flex justify-between text-zinc-600"><span>Subtotal</span><span>{formatCustomerMoney(subtotal)}</span></div>
+              <div className="flex justify-between text-zinc-600"><span>Tax ({taxRate.toFixed(2)}%)</span><span>{formatCustomerMoney(tax)}</span></div>
               {orderType === "delivery" ? (
-                <div className="flex justify-between text-zinc-600"><span>Delivery</span><span>${deliveryCharge.toFixed(2)}</span></div>
+                <div className="flex justify-between text-zinc-600"><span>Delivery</span><span>{formatCustomerMoney(deliveryCharge)}</span></div>
               ) : null}
               {appliedCoupon ? (
-                <div className="flex justify-between text-emerald-700"><span>Coupon ({appliedCoupon.code})</span><span>- ${couponDiscount.toFixed(2)}</span></div>
+                <div className="flex justify-between text-emerald-700"><span>Coupon ({appliedCoupon.code})</span><span>- {formatCustomerMoney(couponDiscount)}</span></div>
               ) : null}
               <div className="flex justify-between pt-1 text-base font-bold text-zinc-900">
-                <span>Total</span><span className="text-emerald-700">${total.toFixed(2)}</span>
+                <span>Total</span><span className="text-emerald-700">{formatCustomerMoney(total)}</span>
               </div>
               <div className="flex justify-between text-xs text-zinc-500">
                 <span>Payment</span>
@@ -584,7 +597,7 @@ export default function CheckoutPage() {
                 : authLoading
                   ? "Checking login..."
                   : authUser
-                    ? `Place Order · $${total.toFixed(2)}`
+                    ? `Place Order · ${formatCustomerMoney(total)}`
                     : "Login to Continue"}
             </button>
           </div>
@@ -685,6 +698,38 @@ export default function CheckoutPage() {
           )}
         </div>
       </Modal>
+
+      {stripeCheckout ? (
+        <StripePaymentModal
+          open={!!stripeCheckout}
+          publishableKey={stripeCheckout.publishableKey}
+          clientSecret={stripeCheckout.clientSecret}
+          title="Pay for your order"
+          returnUrl={
+            typeof window !== "undefined"
+              ? `${window.location.origin}/order/success?id=${encodeURIComponent(stripeCheckout.orderId)}`
+              : ""
+          }
+          onClose={() => {
+            setStripeCheckout(null);
+            setPaying(false);
+            showToast("Payment cancelled.", "error");
+          }}
+          onPaid={async (paymentIntentId) => {
+            const orderIdSafe = stripeCheckout.orderId;
+            const confirm = await confirmPayment(orderIdSafe, "stripe", {
+              paymentIntentId,
+            });
+            setStripeCheckout(null);
+            setPaying(false);
+            if (confirm?.success) {
+              finishSuccess(orderIdSafe);
+            } else {
+              showToast(confirm?.error || "Payment confirmation failed.", "error");
+            }
+          }}
+        />
+      ) : null}
     </div>
   );
 }

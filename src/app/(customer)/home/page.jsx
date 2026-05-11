@@ -2,6 +2,7 @@
 
 import { useCustomer } from "@/context/CustomerContext";
 import { useModuleData } from "@/context/ModuleDataContext";
+import { formatCustomerMoney } from "@/lib/customerCurrency";
 import {
   CUSTOMER_HOME_CATEGORIES,
   CUSTOMER_HOME_REVIEWS,
@@ -118,7 +119,7 @@ export default function CustomerHomePage() {
                   <p className="text-lg font-bold text-zinc-900">{heroDish.name}</p>
                   <p className="mt-1 line-clamp-2 text-sm text-zinc-600">{heroDish.description}</p>
                   <div className="mt-4 flex items-center justify-between text-sm">
-                    <span className="font-semibold text-emerald-700">${heroDish.price?.toFixed(2)}</span>
+                    <span className="font-semibold text-emerald-700">{formatCustomerMoney(heroDish.price ?? 0)}</span>
                     <span className="rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-semibold text-emerald-700">
                       {heroDish.prepTime ?? 20} min
                     </span>
@@ -231,7 +232,7 @@ export default function CustomerHomePage() {
                     </span>
                   )}
                   <span className="absolute bottom-3 right-3 rounded-lg bg-white/90 px-3 py-1 text-sm font-bold text-emerald-700 backdrop-blur-sm">
-                    ${item.price?.toFixed(2)}
+                    {formatCustomerMoney(item.price ?? 0)}
                   </span>
                 </div>
                 <div className="p-4">

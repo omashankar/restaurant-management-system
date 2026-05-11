@@ -1,6 +1,7 @@
 "use client";
 
 import { useCustomer } from "@/context/CustomerContext";
+import { formatCustomerMoney } from "@/lib/customerCurrency";
 import { Bike, Clock, ConciergeBell, Minus, Plus, ShoppingCart, Store, Trash2 } from "lucide-react";
 import Link from "next/link";
 
@@ -75,7 +76,7 @@ export default function CartPage() {
             )}
             <div className="min-w-0 flex-1">
               <p className="truncate text-sm font-semibold text-zinc-900">{line.name}</p>
-              <p className="mt-0.5 text-xs text-emerald-700">${line.price.toFixed(2)} each</p>
+              <p className="mt-0.5 text-xs text-emerald-700">{formatCustomerMoney(line.price)} each</p>
             </div>
             {/* Qty controls */}
             <div className="flex items-center gap-1.5">
@@ -96,7 +97,7 @@ export default function CartPage() {
               </button>
             </div>
             <p className="w-16 shrink-0 text-right text-sm font-bold text-zinc-900">
-              ${(line.price * line.qty).toFixed(2)}
+              {formatCustomerMoney(line.price * line.qty)}
             </p>
             <button
               type="button"
@@ -122,13 +123,13 @@ export default function CartPage() {
       <div className="mt-5 rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm">
         <div className="space-y-2.5 text-sm">
           <div className="flex justify-between text-zinc-600">
-            <span>Subtotal</span><span className="text-zinc-900">${subtotal.toFixed(2)}</span>
+            <span>Subtotal</span><span className="text-zinc-900">{formatCustomerMoney(subtotal)}</span>
           </div>
           <div className="flex justify-between text-zinc-600">
-            <span>Tax (8%)</span><span className="text-zinc-900">${tax.toFixed(2)}</span>
+            <span>Tax (8%)</span><span className="text-zinc-900">{formatCustomerMoney(tax)}</span>
           </div>
           <div className="flex justify-between border-t border-zinc-200 pt-3 text-base font-bold text-zinc-900">
-            <span>Total</span><span className="text-emerald-700">${total.toFixed(2)}</span>
+            <span>Total</span><span className="text-emerald-700">{formatCustomerMoney(total)}</span>
           </div>
         </div>
       </div>
@@ -139,7 +140,7 @@ export default function CartPage() {
           href="/order/checkout"
           className="cursor-pointer flex w-full items-center justify-center rounded-xl bg-emerald-500 py-3.5 text-sm font-bold text-zinc-950 shadow-lg shadow-emerald-500/20 transition-colors hover:bg-emerald-400"
         >
-          Proceed to Checkout → ${total.toFixed(2)}
+          Proceed to Checkout → {formatCustomerMoney(total)}
         </Link>
         <Link
           href="/order/menu"

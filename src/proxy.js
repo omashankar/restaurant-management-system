@@ -48,6 +48,8 @@ const PUBLIC_PATHS = [
   "/order",
   "/account",
   "/verify-email",
+  "/privacy",
+  "/terms",
 ];
 
 const PUBLIC_API_PREFIXES = ["/api/auth", "/api/landing-sections"];

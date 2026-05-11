@@ -1,14 +1,20 @@
 import { BarChart3, PackageSearch } from "lucide-react";
 import SectionTitle from "./SectionTitle";
 
-export default function DemoSection() {
+export default function DemoSection({ demo = {} }) {
+  const {
+    sectionId = "demo",
+    eyebrow = "Dashboard Preview",
+    title = "A control center for operations and growth",
+    subtext = "Monitor performance, track orders, and catch inventory risks before they become issues.",
+  } = demo;
+
   return (
-    <section id="demo" className="mx-auto w-full max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
-      <SectionTitle
-        eyebrow="Dashboard Preview"
-        title="A control center for operations and growth"
-        subtext="Monitor performance, track orders, and catch inventory risks before they become issues."
-      />
+    <section
+      id={sectionId}
+      className="scroll-mt-16 mx-auto w-full max-w-7xl px-4 py-20 sm:px-6 lg:px-8"
+    >
+      <SectionTitle eyebrow={eyebrow} title={title} subtext={subtext} />
 
       <div className="mt-12 grid gap-4 lg:grid-cols-3">
 
