@@ -97,6 +97,12 @@ export const customerCheckoutSchema = z.object({
     qty: z.number().int().positive("Item quantity must be positive."),
   })).min(1, "At least one item is required."),
   orderType: z.enum(["dine-in", "takeaway", "delivery"], { message: "Invalid orderType." }),
+  paymentMethod: z
+    .enum(["cod", "cashCounter", "upi", "card", "netBanking", "wallet", "payLater", "bankTransfer"], {
+      message: "Invalid payment method.",
+    })
+    .optional()
+    .default("cod"),
   customer: customerCheckoutInfoSchema,
   notes: z.string().trim().max(500).optional(),
 });

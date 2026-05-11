@@ -3,6 +3,7 @@
 import { Check, Star, X } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
+import { formatLandingCurrency } from "@/lib/formatLandingCurrency";
 import { getIcon } from "@/lib/iconMap";
 import SectionTitle from "./SectionTitle";
 
@@ -86,7 +87,7 @@ export function DynamicRoles({ roles = [] }) {
 /* ─────────────────────────────────────────
    PRICING SECTION
 ───────────────────────────────────────── */
-export function DynamicPricing({ pricing = [] }) {
+export function DynamicPricing({ pricing = [], currencyCode = "INR" }) {
   const [billingCycle, setBillingCycle] = useState("monthly");
   if (!pricing.length) return null;
   return (
@@ -140,7 +141,12 @@ export function DynamicPricing({ pricing = [] }) {
               </p>
               <div className="mt-3 flex items-end gap-1">
                 <span className={`text-4xl font-extrabold tabular-nums ${plan.highlight ? "text-white" : "text-slate-900"}`}>
-                  ${billingCycle === "yearly" ? (plan.price?.yearly ?? plan.price?.monthly ?? 0) : (plan.price?.monthly ?? 0)}
+                  {formatLandingCurrency(
+                    billingCycle === "yearly"
+                      ? (plan.price?.yearly ?? plan.price?.monthly ?? 0)
+                      : (plan.price?.monthly ?? 0),
+                    currencyCode,
+                  )}
                 </span>
                 <span className={`mb-1 text-sm ${plan.highlight ? "text-indigo-200" : "text-slate-400"}`}>
                   /{billingCycle === "yearly" ? "yr" : "mo"}

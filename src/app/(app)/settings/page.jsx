@@ -56,6 +56,10 @@ export default function SettingsPage() {
           // Guard: ensure openingHours is always an array (old DB docs may have it as object)
           const safe = {
             ...data.settings,
+            paymentMethods: {
+              ...EMPTY_SETTINGS.paymentMethods,
+              ...(data.settings.paymentMethods ?? {}),
+            },
             email: {
               ...EMPTY_SETTINGS.email,
               ...(data.settings.email ?? {}),
@@ -322,6 +326,118 @@ export default function SettingsPage() {
                     setSettings((prev) => ({
                       ...prev,
                       pos: { ...prev.pos, roundOffTotal: v },
+                    }))
+                  }
+                />
+              </div>
+            </SettingsFormSection>
+          ) : null}
+
+          {activeTab === "payments" ? (
+            <SettingsFormSection
+              title="Payment Methods"
+              description="Enable checkout payment options for customers."
+            >
+              <div className="grid gap-3 md:grid-cols-2">
+                <ToggleSwitch
+                  label="Cash on Delivery"
+                  checked={settings.paymentMethods.cod}
+                  onChange={(v) =>
+                    setSettings((prev) => ({
+                      ...prev,
+                      paymentMethods: { ...prev.paymentMethods, cod: v },
+                    }))
+                  }
+                />
+                <ToggleSwitch
+                  label="Cash at Counter"
+                  checked={settings.paymentMethods.cashCounter}
+                  onChange={(v) =>
+                    setSettings((prev) => ({
+                      ...prev,
+                      paymentMethods: { ...prev.paymentMethods, cashCounter: v },
+                    }))
+                  }
+                />
+                <ToggleSwitch
+                  label="UPI"
+                  checked={settings.paymentMethods.upi}
+                  onChange={(v) =>
+                    setSettings((prev) => ({
+                      ...prev,
+                      paymentMethods: { ...prev.paymentMethods, upi: v },
+                    }))
+                  }
+                />
+                <ToggleSwitch
+                  label="Card"
+                  checked={settings.paymentMethods.card}
+                  onChange={(v) =>
+                    setSettings((prev) => ({
+                      ...prev,
+                      paymentMethods: { ...prev.paymentMethods, card: v },
+                    }))
+                  }
+                />
+                <ToggleSwitch
+                  label="Net Banking"
+                  checked={settings.paymentMethods.netBanking}
+                  onChange={(v) =>
+                    setSettings((prev) => ({
+                      ...prev,
+                      paymentMethods: { ...prev.paymentMethods, netBanking: v },
+                    }))
+                  }
+                />
+                <ToggleSwitch
+                  label="Wallet"
+                  checked={settings.paymentMethods.wallet}
+                  onChange={(v) =>
+                    setSettings((prev) => ({
+                      ...prev,
+                      paymentMethods: { ...prev.paymentMethods, wallet: v },
+                    }))
+                  }
+                />
+                <ToggleSwitch
+                  label="Pay Later"
+                  checked={settings.paymentMethods.payLater}
+                  onChange={(v) =>
+                    setSettings((prev) => ({
+                      ...prev,
+                      paymentMethods: { ...prev.paymentMethods, payLater: v },
+                    }))
+                  }
+                />
+                <ToggleSwitch
+                  label="Bank Transfer"
+                  checked={settings.paymentMethods.bankTransfer}
+                  onChange={(v) =>
+                    setSettings((prev) => ({
+                      ...prev,
+                      paymentMethods: { ...prev.paymentMethods, bankTransfer: v },
+                    }))
+                  }
+                />
+              </div>
+              <div className="mt-4">
+                <InputField
+                  label="Default Payment Method"
+                  value={settings.paymentMethods.defaultMethod}
+                  options={[
+                    "cod",
+                    "cashCounter",
+                    "upi",
+                    "card",
+                    "netBanking",
+                    "wallet",
+                    "payLater",
+                    "bankTransfer",
+                  ]}
+                  onChange={(v) =>
+                    setSettings((prev) => ({
+                      ...prev,
+                      paymentMethods: { ...prev.paymentMethods, defaultMethod: v },
                     }))
                   }
                 />

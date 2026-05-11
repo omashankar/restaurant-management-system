@@ -1,5 +1,6 @@
 import {
   BarChart3,
+  CreditCard,
   BookOpen,
   FolderTree,
   LifeBuoy,
@@ -138,6 +139,13 @@ export const NAV_ITEMS = [
     label: "Analytics",
     Icon: BarChart3,
     roles: ["admin", "manager"],
+  },
+  {
+    type: "link",
+    href: "/billing",
+    label: "Billing",
+    Icon: CreditCard,
+    roles: ["admin"],
   },
   {
     type: "link",

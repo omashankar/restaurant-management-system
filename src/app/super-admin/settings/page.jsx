@@ -75,6 +75,15 @@ function AppSection({ data, onChange, onSave, saving }) {
               placeholder="RMS Platform" className={inputCls} />
           </Field>
         </div>
+        <div className="sm:col-span-2">
+          <Field
+            label="Legal / Registered Business Name"
+            hint="Printed on receipts and invoices (optional)."
+          >
+            <input value={data.legalName ?? ""} onChange={(e) => onChange("legalName", e.target.value)}
+              placeholder="ABC Restaurant Tech Pvt Ltd" className={inputCls} />
+          </Field>
+        </div>
         <Field label="Logo URL">
           <input value={data.logoUrl ?? ""} onChange={(e) => onChange("logoUrl", e.target.value)}
             placeholder="https://cdn.example.com/logo.png" className={inputCls} />
@@ -249,10 +258,40 @@ function PaymentSection({ data, onChange, onSave, saving }) {
             {["USD","EUR","GBP","INR","AUD","CAD","SGD","JPY"].map((c) => <option key={c} value={c}>{c}</option>)}
           </select>
         </Field>
-        <Field label="Tax Rate (%)" hint="Applied to all invoices.">
+        <Field label="Tax Rate (%)" hint="Applied to invoices and receipts.">
           <input type="number" min={0} max={100} step={0.01} value={data.taxPercent ?? 0}
             onChange={(e) => onChange("taxPercent", Number(e.target.value))} className={inputCls} />
         </Field>
+        <Field label="GSTIN / Tax ID" hint="Printed on subscription PDF receipts when set.">
+          <input value={data.gstNumber ?? ""} onChange={(e) => onChange("gstNumber", e.target.value)}
+            placeholder="e.g. 22AAAAA0000A1Z5" className={inputCls} />
+        </Field>
+        <Field label="HSN / SAC" hint="e.g. 998314 (software services). Shown on GST PDF.">
+          <input value={data.gstHsnSac ?? ""} onChange={(e) => onChange("gstHsnSac", e.target.value)}
+            placeholder="998314" className={inputCls} />
+        </Field>
+        <Field label="GST supply type" hint="Intra-state: CGST+SGST. Inter-state: IGST.">
+          <select
+            value={data.gstSupplyType === "inter_state" ? "inter_state" : "intra_state"}
+            onChange={(e) => onChange("gstSupplyType", e.target.value)}
+            className={`cursor-pointer ${inputCls}`}
+          >
+            <option value="intra_state">Intra-state (CGST + SGST)</option>
+            <option value="inter_state">Inter-state (IGST)</option>
+          </select>
+        </Field>
+        <Field label="Place of supply (optional)" hint="State name or code for the invoice PDF.">
+          <input value={data.gstPlaceOfSupply ?? ""} onChange={(e) => onChange("gstPlaceOfSupply", e.target.value)}
+            placeholder="Maharashtra / 27" className={inputCls} />
+        </Field>
+        <div className="sm:col-span-2">
+          <Toggle
+            checked={data.gstInclusivePricing !== false}
+            onChange={(v) => onChange("gstInclusivePricing", v)}
+            label="Subscription amounts include GST"
+            description="When on, receipt reverses taxable value from the paid total. When off, paid amount is treated as taxable value and GST is added for the breakdown display."
+          />
+        </div>
         <Field label="Trial Period (days)" hint="0 = no trial.">
           <input type="number" min={0} max={90} value={data.trialDays ?? 14}
             onChange={(e) => onChange("trialDays", Number(e.target.value))} className={inputCls} />

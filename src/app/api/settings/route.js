@@ -2,6 +2,16 @@ import { EMPTY_SETTINGS } from "@/config/settingsConfig";
 import { withTenant } from "@/lib/tenantDb";
 
 const SECRET_MASK = "********";
+const PAYMENT_METHOD_KEYS = [
+  "cod",
+  "cashCounter",
+  "upi",
+  "card",
+  "netBanking",
+  "wallet",
+  "payLater",
+  "bankTransfer",
+];
 
 function sanitizeEmailSection(incoming = {}) {
   const base = { ...EMPTY_SETTINGS.email };
@@ -25,6 +35,20 @@ function mergeEmailForSave(incoming, existingEmail) {
     clean.smtpPassword = existingEmail?.smtpPassword ?? "";
   }
   return clean;
+}
+
+function sanitizePaymentMethods(incoming = {}) {
+  const base = { ...EMPTY_SETTINGS.paymentMethods };
+  const out = { ...base, ...(incoming || {}) };
+  for (const key of PAYMENT_METHOD_KEYS) {
+    out[key] = Boolean(out[key]);
+  }
+  const fallbackDefault = PAYMENT_METHOD_KEYS.find((k) => out[k]) ?? "cod";
+  out.defaultMethod = PAYMENT_METHOD_KEYS.includes(String(out.defaultMethod))
+    ? String(out.defaultMethod)
+    : fallbackDefault;
+  if (!out[out.defaultMethod]) out.defaultMethod = fallbackDefault;
+  return out;
 }
 
 /* ── GET /api/settings ── */
@@ -77,6 +101,8 @@ export const PATCH = withTenant(["admin"], async ({ db, restaurantId }, request)
     }
     if (body.section === "email") {
       updateFields.email = mergeEmailForSave(body.data, existing?.email);
+    } else if (body.section === "paymentMethods") {
+      updateFields.paymentMethods = sanitizePaymentMethods(body.data);
     } else {
       updateFields[body.section] = body.data;
     }
@@ -85,6 +111,8 @@ export const PATCH = withTenant(["admin"], async ({ db, restaurantId }, request)
       if (!body[section]) continue;
       if (section === "email") {
         updateFields.email = mergeEmailForSave(body.email, existing?.email);
+      } else if (section === "paymentMethods") {
+        updateFields.paymentMethods = sanitizePaymentMethods(body.paymentMethods);
       } else {
         updateFields[section] = body[section];
       }

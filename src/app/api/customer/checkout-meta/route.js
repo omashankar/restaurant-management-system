@@ -28,6 +28,17 @@ export async function GET() {
         meta: {
           taxPercentage: 8,
           deliveryCharge: 0,
+          paymentMethods: {
+            defaultMethod: "cod",
+            cod: true,
+            cashCounter: true,
+            upi: true,
+            card: true,
+            netBanking: true,
+            wallet: true,
+            payLater: false,
+            bankTransfer: false,
+          },
           etaMinutes: { "dine-in": "15-20", takeaway: "20-30", delivery: "30-45" },
           coupons: [],
         },
@@ -36,16 +47,29 @@ export async function GET() {
 
     const settingsDoc = await db.collection("restaurant_settings").findOne(
       { restaurantId },
-      { projection: { pos: 1 } }
+      { projection: { pos: 1, paymentMethods: 1 } }
     );
     const taxPercentage = Number(settingsDoc?.pos?.taxPercentage ?? 8);
     const serviceCharge = Number(settingsDoc?.pos?.serviceCharge ?? 0);
+    const paymentMethods = {
+      defaultMethod: "cod",
+      cod: true,
+      cashCounter: true,
+      upi: true,
+      card: true,
+      netBanking: true,
+      wallet: true,
+      payLater: false,
+      bankTransfer: false,
+      ...(settingsDoc?.paymentMethods ?? {}),
+    };
 
     return Response.json({
       success: true,
       meta: {
         taxPercentage: Number.isFinite(taxPercentage) ? Math.max(0, taxPercentage) : 8,
         deliveryCharge: Number.isFinite(serviceCharge) ? Math.max(0, serviceCharge) : 0,
+        paymentMethods,
         etaMinutes: { "dine-in": "15-20", takeaway: "20-30", delivery: "30-45" },
         coupons: [
           { code: "SAVE10", label: "Save 10% up to $10", type: "percent", value: 10, maxDiscount: 10 },
