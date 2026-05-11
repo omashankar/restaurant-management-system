@@ -56,6 +56,7 @@ export default function CheckoutPage() {
   const [checkoutMeta, setCheckoutMeta] = useState({
     taxPercentage: 8,
     deliveryCharge: 0,
+    onlinePaymentsAvailable: false,
     paymentMethods: {
       defaultMethod: "cod",
       cod: true,
@@ -148,8 +149,6 @@ export default function CheckoutPage() {
         const data = await res.json();
         if (!mounted || !res.ok || !data?.success || !data.meta) return;
         setCheckoutMeta((prev) => ({ ...prev, ...data.meta }));
-      const nextDefault = String(data.meta.paymentMethods?.defaultMethod ?? "cod");
-      setPaymentMethod(nextDefault);
       } catch {
         // keep defaults
       }
@@ -159,6 +158,18 @@ export default function CheckoutPage() {
       mounted = false;
     };
   }, []);
+
+  /** Keep selected method valid after checkout-meta loads (e.g. online methods off without gateway). */
+  useEffect(() => {
+    const pm = checkoutMeta.paymentMethods ?? {};
+    const enabled = Object.keys(PAYMENT_LABEL).filter((key) => Boolean(pm[key]));
+    setPaymentMethod((current) => {
+      if (enabled.includes(current)) return current;
+      const d = String(pm.defaultMethod ?? "cod");
+      if (enabled.includes(d)) return d;
+      return enabled[0] ?? "cod";
+    });
+  }, [checkoutMeta.paymentMethods]);
 
   useEffect(() => {
     if (otpCooldown <= 0) return undefined;
@@ -535,6 +546,12 @@ export default function CheckoutPage() {
             </div>
             {!enabledPaymentMethods.length ? (
               <p className="mt-3 text-xs text-red-500">No payment method enabled. Contact restaurant admin.</p>
+            ) : null}
+            {checkoutMeta.onlinePaymentsAvailable === false ? (
+              <p className="mt-3 rounded-lg bg-amber-50 px-3 py-2 text-xs leading-relaxed text-amber-950 ring-1 ring-amber-200/80">
+                Card / UPI / wallet options need <strong>Stripe</strong> or <strong>Razorpay</strong> in platform payment
+                settings. Cash on delivery and pay-at-counter still work.
+              </p>
             ) : null}
           </div>
         </div>

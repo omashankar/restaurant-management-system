@@ -1,5 +1,24 @@
+import { isOnlinePaymentConfigured } from "@/lib/paymentGateway";
 import clientPromise from "@/lib/mongodb";
 import { ObjectId } from "mongodb";
+
+const ONLINE_KEYS = ["upi", "card", "netBanking", "wallet", "payLater", "bankTransfer"];
+
+function disableOnlinePaymentMethods(paymentMethods, onlineOk) {
+  if (onlineOk) return paymentMethods;
+  const next = { ...paymentMethods };
+  for (const k of ONLINE_KEYS) {
+    next[k] = false;
+  }
+  let def = String(next.defaultMethod ?? "cod");
+  if (ONLINE_KEYS.includes(def)) {
+    if (next.cod !== false) def = "cod";
+    else if (next.cashCounter !== false) def = "cashCounter";
+    else def = "cod";
+    next.defaultMethod = def;
+  }
+  return next;
+}
 
 async function getPublicRestaurantId(db) {
   const envRestaurantId = process.env.NEXT_PUBLIC_RESTAURANT_ID?.trim();
@@ -21,24 +40,28 @@ export async function GET() {
   try {
     const client = await clientPromise;
     const db = client.db();
+    const onlineOk = await isOnlinePaymentConfigured(db).catch(() => false);
+
     const restaurantId = await getPublicRestaurantId(db);
     if (!restaurantId) {
+      const basePm = {
+        defaultMethod: "cod",
+        cod: true,
+        cashCounter: true,
+        upi: true,
+        card: true,
+        netBanking: true,
+        wallet: true,
+        payLater: false,
+        bankTransfer: false,
+      };
       return Response.json({
         success: true,
         meta: {
           taxPercentage: 8,
           deliveryCharge: 0,
-          paymentMethods: {
-            defaultMethod: "cod",
-            cod: true,
-            cashCounter: true,
-            upi: true,
-            card: true,
-            netBanking: true,
-            wallet: true,
-            payLater: false,
-            bankTransfer: false,
-          },
+          paymentMethods: disableOnlinePaymentMethods(basePm, onlineOk),
+          onlinePaymentsAvailable: onlineOk,
           etaMinutes: { "dine-in": "15-20", takeaway: "20-30", delivery: "30-45" },
           coupons: [],
         },
@@ -51,18 +74,21 @@ export async function GET() {
     );
     const taxPercentage = Number(settingsDoc?.pos?.taxPercentage ?? 8);
     const serviceCharge = Number(settingsDoc?.pos?.serviceCharge ?? 0);
-    const paymentMethods = {
-      defaultMethod: "cod",
-      cod: true,
-      cashCounter: true,
-      upi: true,
-      card: true,
-      netBanking: true,
-      wallet: true,
-      payLater: false,
-      bankTransfer: false,
-      ...(settingsDoc?.paymentMethods ?? {}),
-    };
+    const paymentMethods = disableOnlinePaymentMethods(
+      {
+        defaultMethod: "cod",
+        cod: true,
+        cashCounter: true,
+        upi: true,
+        card: true,
+        netBanking: true,
+        wallet: true,
+        payLater: false,
+        bankTransfer: false,
+        ...(settingsDoc?.paymentMethods ?? {}),
+      },
+      onlineOk
+    );
 
     return Response.json({
       success: true,
@@ -70,10 +96,11 @@ export async function GET() {
         taxPercentage: Number.isFinite(taxPercentage) ? Math.max(0, taxPercentage) : 8,
         deliveryCharge: Number.isFinite(serviceCharge) ? Math.max(0, serviceCharge) : 0,
         paymentMethods,
+        onlinePaymentsAvailable: onlineOk,
         etaMinutes: { "dine-in": "15-20", takeaway: "20-30", delivery: "30-45" },
         coupons: [
-          { code: "SAVE10", label: "Save 10% up to $10", type: "percent", value: 10, maxDiscount: 10 },
-          { code: "FLAT5", label: "Flat $5 off on $30+", type: "flat", value: 5, minSubtotal: 30 },
+          { code: "SAVE10", label: "Save 10% (capped)", type: "percent", value: 10, maxDiscount: 10 },
+          { code: "FLAT5", label: "Flat 5 off on orders 30+", type: "flat", value: 5, minSubtotal: 30 },
         ],
       },
     });
