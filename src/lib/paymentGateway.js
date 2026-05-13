@@ -27,6 +27,14 @@ async function readPlatformSettings(db) {
   };
 }
 
+/** True if customer online methods (card/UPI/…) can create a Razorpay or Stripe session. */
+export async function isOnlinePaymentConfigured(db) {
+  const cfg = await readPlatformSettings(db);
+  return Boolean(
+    (cfg.razorpayKeyId && cfg.razorpayKeySecret) || cfg.stripeSecretKey
+  );
+}
+
 export async function createGatewayPaymentSession({
   db,
   amount,

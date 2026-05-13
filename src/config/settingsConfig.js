@@ -1,14 +1,21 @@
 import { DEFAULT_ACCESS_CONTROL } from "./accessControlConfig";
 
 export const SETTINGS_TABS = [
-  { id: "general", label: "General" },
-  { id: "pos", label: "POS & Charges" },
-  { id: "payments", label: "Payments" },
+  { id: "general",       label: "General" },
+  { id: "pos",           label: "POS & Charges" },
+  { id: "payments",      label: "Payment Methods" },
+  { id: "gateway",       label: "Gateway Settings" },
+  { id: "bank",          label: "Bank Account" },
+  { id: "settlement",    label: "Settlement" },
+  { id: "tax",           label: "Tax Settings" },
+  { id: "transactions",  label: "Transactions" },
+  { id: "refunds",       label: "Refunds" },
+  { id: "payouts",       label: "Payout Requests" },
   { id: "accessControl", label: "Access Control" },
   { id: "notifications", label: "Notifications" },
-  { id: "email", label: "Email / SMTP" },
-  { id: "hours", label: "Opening Hours" },
-  { id: "contact", label: "Contact" },
+  { id: "email",         label: "Email / SMTP" },
+  { id: "hours",         label: "Opening Hours" },
+  { id: "contact",       label: "Contact" },
 ];
 
 export const EMPTY_SETTINGS = {
