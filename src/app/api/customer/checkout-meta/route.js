@@ -2,7 +2,7 @@ import { isOnlinePaymentConfigured } from "@/lib/paymentGateway";
 import clientPromise from "@/lib/mongodb";
 import { ObjectId } from "mongodb";
 
-const ONLINE_KEYS = ["upi", "card", "netBanking", "wallet", "payLater", "bankTransfer"];
+const ONLINE_KEYS = ["upi", "card", "debitCard", "netBanking", "wallet", "qrCode", "payLater", "bankTransfer"];
 
 function disableOnlinePaymentMethods(paymentMethods, onlineOk) {
   if (onlineOk) return paymentMethods;
@@ -72,23 +72,37 @@ export async function GET() {
       { restaurantId },
       { projection: { pos: 1, paymentMethods: 1 } }
     );
-    const taxPercentage = Number(settingsDoc?.pos?.taxPercentage ?? 8);
-    const serviceCharge = Number(settingsDoc?.pos?.serviceCharge ?? 0);
-    const paymentMethods = disableOnlinePaymentMethods(
-      {
-        defaultMethod: "cod",
-        cod: true,
-        cashCounter: true,
-        upi: true,
-        card: true,
-        netBanking: true,
-        wallet: true,
-        payLater: false,
-        bankTransfer: false,
-        ...(settingsDoc?.paymentMethods ?? {}),
-      },
-      onlineOk
+    // Also check restaurant-specific payment settings (new system)
+    const paymentSettingsDoc = await db.collection("restaurant_payment_settings").findOne(
+      { restaurantId },
+      { projection: { methods: 1, tax: 1 } }
     );
+    const taxPercentage = Number(
+      paymentSettingsDoc?.tax?.gstPercentage ??
+      settingsDoc?.pos?.taxPercentage ?? 8
+    );
+    const serviceCharge = Number(settingsDoc?.pos?.serviceCharge ?? 0);
+
+    // Merge: new payment settings take priority over old paymentMethods
+    const baseMethods = {
+      defaultMethod: "cod",
+      cod: true,
+      cashCounter: true,
+      upi: true,
+      card: true,
+      debitCard: true,
+      netBanking: true,
+      wallet: true,
+      qrCode: false,
+      payLater: false,
+      bankTransfer: false,
+    };
+    const mergedMethods = {
+      ...baseMethods,
+      ...(settingsDoc?.paymentMethods ?? {}),
+      ...(paymentSettingsDoc?.methods ?? {}),
+    };
+    const paymentMethods = disableOnlinePaymentMethods(mergedMethods, onlineOk);
 
     return Response.json({
       success: true,
