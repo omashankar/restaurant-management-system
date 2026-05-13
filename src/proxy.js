@@ -11,12 +11,16 @@ const ROLE_PATHS = {
     "/super-admin",
     "/admin", "/dashboard", "/pos", "/orders", "/menu",
     "/tables", "/reservations", "/customers", "/staff",
-    "/inventory", "/analytics", "/settings", "/billing", "/support-tickets", "/kitchen", "/profile",
+    "/inventory", "/analytics", "/settings", "/billing",
+    "/support-tickets", "/kitchen", "/profile",
+    "/onboarding", "/qr-menu", "/whatsapp", "/printer-settings",
   ],
   admin: [
     "/admin", "/dashboard", "/pos", "/orders", "/menu",
     "/tables", "/reservations", "/customers", "/staff",
-    "/inventory", "/analytics", "/settings", "/billing", "/support-tickets", "/kitchen", "/profile",
+    "/inventory", "/analytics", "/settings", "/billing",
+    "/support-tickets", "/kitchen", "/profile",
+    "/onboarding", "/qr-menu", "/whatsapp", "/printer-settings",
   ],
   manager: [
     "/manager", "/dashboard", "/pos", "/orders", "/menu",

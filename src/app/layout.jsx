@@ -14,7 +14,14 @@ const geistMono = Geist_Mono({
 
 export const metadata = {
   title: "RMS · Restaurant Management",
-  description: "Restaurant Management System — role-based operations UI",
+  description: "Premium India-focused Restaurant POS & Food Ordering System",
+  manifest: "/manifest.json",
+  themeColor: "#10b981",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "RMS",
+  },
 };
 
 export default function RootLayout({ children }) {

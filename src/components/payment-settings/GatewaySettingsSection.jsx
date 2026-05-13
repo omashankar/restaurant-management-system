@@ -1,28 +1,26 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { Loader2, CheckCircle2, XCircle, Activity, AlertTriangle } from "lucide-react";
-import SectionCard, { Field, Input, Toggle } from "./SectionCard";
+import { useState } from "react";
+import { Loader2, CheckCircle2, XCircle, Zap, Lock, Settings2 } from "lucide-react";
+import Image from "next/image";
+import { Field, Input } from "./SectionCard";
 
 const GATEWAYS = [
-  { id: "razorpay",  label: "Razorpay",       color: "text-blue-400",    bg: "bg-blue-500/10 border-blue-500/20",    badge: "bg-blue-500/15 text-blue-300" },
-  { id: "cashfree",  label: "Cashfree",        color: "text-green-400",   bg: "bg-green-500/10 border-green-500/20",  badge: "bg-green-500/15 text-green-300" },
-  { id: "stripe",    label: "Stripe",          color: "text-violet-400",  bg: "bg-violet-500/10 border-violet-500/20",badge: "bg-violet-500/15 text-violet-300" },
-  { id: "paypal",    label: "PayPal",          color: "text-sky-400",     bg: "bg-sky-500/10 border-sky-500/20",      badge: "bg-sky-500/15 text-sky-300" },
-  { id: "paytm",     label: "Paytm",           color: "text-cyan-400",    bg: "bg-cyan-500/10 border-cyan-500/20",    badge: "bg-cyan-500/15 text-cyan-300" },
-  { id: "phonepe",   label: "PhonePe",         color: "text-purple-400",  bg: "bg-purple-500/10 border-purple-500/20",badge: "bg-purple-500/15 text-purple-300" },
-  { id: "payu",      label: "PayU",            color: "text-orange-400",  bg: "bg-orange-500/10 border-orange-500/20",badge: "bg-orange-500/15 text-orange-300" },
-  { id: "ccavenue",  label: "CCAvenue",        color: "text-rose-400",    bg: "bg-rose-500/10 border-rose-500/20",    badge: "bg-rose-500/15 text-rose-300" },
-  { id: "custom",    label: "Custom Gateway",  color: "text-zinc-300",    bg: "bg-zinc-800/60 border-zinc-700",       badge: "bg-zinc-700 text-zinc-300" },
+  { id: "razorpay", label: "Razorpay",  logo: "/logos/razorpay.svg",  desc: "Best for India — UPI, Cards, Net Banking", popular: true  },
+  { id: "cashfree", label: "Cashfree",  logo: "/logos/cashfree.svg",  desc: "Fast settlements, India",                  popular: false },
+  { id: "stripe",   label: "Stripe",    logo: "/logos/stripe.svg",    desc: "International payments",                   popular: false },
+  { id: "paypal",   label: "PayPal",    logo: "/logos/paypal.svg",    desc: "Global — 200+ countries",                  popular: false },
+  { id: "paytm",    label: "Paytm",     logo: "/logos/paytm.svg",     desc: "India — Wallet & UPI",                     popular: false },
+  { id: "phonepe",  label: "PhonePe",   logo: "/logos/phonepe.svg",   desc: "India — UPI payments",                     popular: false },
+  { id: "payu",     label: "PayU",      logo: "/logos/payu.svg",      desc: "India — All payment modes",                popular: false },
+  { id: "ccavenue", label: "CCAvenue",  logo: "/logos/ccavenue.svg",  desc: "India — Enterprise gateway",               popular: false },
+  { id: "custom",   label: "Custom",    logo: null,                   desc: "Manual / Bank transfer / UPI",             popular: false },
 ];
 
-const EMPTY_GW = { enabled: false, testMode: true, apiKey: "", secretKey: "", merchantId: "", webhookSecret: "", callbackUrl: "", successUrl: "", failedUrl: "", priority: 9 };
-const EMPTY_CUSTOM = { ...EMPTY_GW, testMode: false, gatewayName: "", apiEndpoint: "", paymentInstructions: "", upiId: "", bankDetails: "" };
-
-const HEALTH_COLOR = {
-  healthy:   "text-emerald-400",
-  unhealthy: "text-red-400",
-  unknown:   "text-zinc-500",
+const EMPTY_GW = {
+  enabled: false, testMode: true,
+  apiKey: "", secretKey: "", merchantId: "", webhookSecret: "",
+  callbackUrl: "", successUrl: "", failedUrl: "",
 };
 
 export default function GatewaySettingsSection({ data, onChange, onSave, showToast }) {
@@ -30,25 +28,9 @@ export default function GatewaySettingsSection({ data, onChange, onSave, showToa
   const [testing, setTesting]   = useState(false);
   const [testResult, setTestResult] = useState(null);
   const [saving, setSaving]     = useState(false);
-  const [health, setHealth]     = useState({});
-  const [healthLoading, setHealthLoading] = useState(false);
-
-  useEffect(() => {
-    async function loadHealth() {
-      setHealthLoading(true);
-      try {
-        const res = await fetch("/api/payment-settings/gateway-health");
-        const json = await res.json();
-        if (json.success) setHealth(json.health);
-      } catch { /* silent */ }
-      finally { setHealthLoading(false); }
-    }
-    loadHealth();
-  }, []);
 
   const isCustom = activeGw === "custom";
-  const emptyGw  = isCustom ? EMPTY_CUSTOM : EMPTY_GW;
-  const gw = data[activeGw] ?? emptyGw;
+  const gw = data[activeGw] ?? EMPTY_GW;
 
   function updateGw(patch) {
     onChange({ ...data, [activeGw]: { ...gw, ...patch } });
@@ -64,26 +46,14 @@ export default function GatewaySettingsSection({ data, onChange, onSave, showToa
   async function testConnection() {
     setTesting(true);
     setTestResult(null);
-    const start = Date.now();
     try {
-      const res  = await fetch("/api/payment-settings/test-gateway", {
+      const res = await fetch("/api/payment-settings/test-gateway", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ gateway: activeGw }),
       });
       const json = await res.json();
-      const latencyMs = Date.now() - start;
-      setTestResult({ success: json.success, message: json.message ?? json.error ?? "Unknown result.", latencyMs });
-      // Record health log
-      await fetch("/api/payment-settings/gateway-health", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ gateway: activeGw, status: json.success ? "healthy" : "unhealthy", latencyMs, error: json.error }),
-      }).catch(() => {});
-      setHealth((prev) => ({
-        ...prev,
-        [activeGw]: { ...prev[activeGw], status: json.success ? "healthy" : "unhealthy", latencyMs, lastChecked: new Date() },
-      }));
+      setTestResult({ success: json.success, message: json.message ?? json.error ?? "Unknown." });
     } catch {
       setTestResult({ success: false, message: "Network error." });
     } finally {
@@ -91,184 +61,204 @@ export default function GatewaySettingsSection({ data, onChange, onSave, showToa
     }
   }
 
-  const enabledCount = GATEWAYS.filter((g) => data[g.id]?.enabled).length;
+  const activeInfo = GATEWAYS.find((g) => g.id === activeGw);
+  const enabledGateways = GATEWAYS.filter((g) => data[g.id]?.enabled);
 
   return (
     <section className="rounded-2xl border border-zinc-800 bg-zinc-900/50 p-5 sm:p-6">
-      {/* Header */}
-      <div className="mb-5 flex items-start justify-between gap-4">
-        <div>
-          <h2 className="text-lg font-semibold text-zinc-100">Payment Gateway Settings</h2>
-          <p className="mt-1 text-sm text-zinc-500">
-            Configure payment gateways. Keys are AES-256 encrypted before storage.
-            {enabledCount > 0 && <span className="ml-2 text-emerald-400">{enabledCount} gateway{enabledCount > 1 ? "s" : ""} active</span>}
-          </p>
-        </div>
-        {healthLoading && <Loader2 className="size-4 animate-spin text-zinc-500 shrink-0 mt-1" />}
+      <div className="mb-5">
+        <h2 className="text-lg font-semibold text-zinc-100">Payment Gateway</h2>
+        <p className="mt-1 text-sm text-zinc-500">
+          Select a gateway and enter your API keys. Keys are encrypted before saving.
+          {enabledGateways.length > 0 && (
+            <span className="ml-2 inline-flex items-center gap-1 text-emerald-400">
+              <CheckCircle2 className="size-3" />
+              {enabledGateways.map((g) => g.label).join(", ")} active
+            </span>
+          )}
+        </p>
       </div>
 
-      {/* Gateway tabs */}
-      <div className="mb-5 flex flex-wrap gap-2">
+      {/* Gateway selector — card grid */}
+      <div className="mb-5 grid grid-cols-3 gap-2 sm:grid-cols-5">
         {GATEWAYS.map((g) => {
           const isEnabled = Boolean(data[g.id]?.enabled);
-          const h = health[g.id];
+          const isActive  = activeGw === g.id;
           return (
             <button key={g.id} type="button"
               onClick={() => { setActiveGw(g.id); setTestResult(null); }}
-              className={`cursor-pointer inline-flex items-center gap-2 rounded-xl border px-3 py-2 text-sm font-medium transition-all ${
-                activeGw === g.id ? `${g.bg} ${g.color} ring-1` : "border-zinc-800 bg-zinc-950/40 text-zinc-400 hover:border-zinc-700 hover:text-zinc-200"
-              }`}
-            >
-              {g.label}
+              className={`cursor-pointer relative rounded-xl border p-3 text-center transition-all ${
+                isActive
+                  ? "border-emerald-500/50 bg-emerald-500/10 ring-1 ring-emerald-500/30"
+                  : "border-zinc-800 bg-zinc-950/40 hover:border-zinc-700"
+              }`}>
+              {/* Enabled dot */}
               {isEnabled && (
-                <span className={`inline-block size-1.5 rounded-full ${
-                  h?.status === "healthy" ? "bg-emerald-400" :
-                  h?.status === "unhealthy" ? "bg-red-400" : "bg-zinc-500"
-                }`} />
+                <span className="absolute right-2 top-2 size-2 rounded-full bg-emerald-400" />
+              )}
+              {/* Logo or fallback icon */}
+              <div className="flex h-8 items-center justify-center mb-1.5">
+                {g.logo ? (
+                  <Image
+                    src={g.logo}
+                    alt={g.label}
+                    width={64}
+                    height={32}
+                    className="max-h-8 w-auto object-contain"
+                    onError={(e) => { e.currentTarget.style.display = "none"; e.currentTarget.nextSibling.style.display = "flex"; }}
+                  />
+                ) : (
+                  <Settings2 className="size-6 text-zinc-500" />
+                )}
+              </div>
+              <p className={`text-xs font-semibold ${isActive ? "text-emerald-400" : "text-zinc-300"}`}>
+                {g.label}
+              </p>
+              {g.popular && (
+                <span className="mt-1 inline-block rounded-full bg-amber-500/20 px-1.5 py-0.5 text-[10px] font-semibold text-amber-400">
+                  Popular
+                </span>
               )}
             </button>
           );
         })}
       </div>
 
-      {/* Health bar for active gateway */}
-      {health[activeGw] && (
-        <div className="mb-4 flex items-center gap-3 rounded-xl border border-zinc-800 bg-zinc-950/40 px-4 py-2.5">
-          <Activity className={`size-4 shrink-0 ${HEALTH_COLOR[health[activeGw].status]}`} />
-          <div className="flex flex-1 flex-wrap items-center gap-x-4 gap-y-1 text-xs">
-            <span className={`font-semibold capitalize ${HEALTH_COLOR[health[activeGw].status]}`}>
-              {health[activeGw].status}
-            </span>
-            {health[activeGw].uptime !== null && (
-              <span className="text-zinc-500">Uptime: <span className="text-zinc-300">{health[activeGw].uptime}%</span></span>
-            )}
-            {health[activeGw].latencyMs && (
-              <span className="text-zinc-500">Latency: <span className="text-zinc-300">{health[activeGw].latencyMs}ms</span></span>
-            )}
-            {health[activeGw].lastChecked && (
-              <span className="text-zinc-600">
-                Last checked: {new Date(health[activeGw].lastChecked).toLocaleTimeString()}
+      {/* Active gateway form */}
+      <div className="rounded-xl border border-zinc-800 bg-zinc-950/40 p-4">
+        {/* Gateway header */}
+        <div className="mb-4 flex items-center justify-between gap-3">
+          <div>
+            <p className="font-semibold text-zinc-100">
+              {activeInfo?.icon} {activeInfo?.label}
+            </p>
+            <p className="text-xs text-zinc-500">{activeInfo?.desc}</p>
+          </div>
+          <div className="flex items-center gap-3">
+            {/* Test mode badge */}
+            {!isCustom && gw.enabled && (
+              <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${
+                gw.testMode
+                  ? "bg-amber-500/15 text-amber-400"
+                  : "bg-emerald-500/15 text-emerald-400"
+              }`}>
+                {gw.testMode ? "Test Mode" : "Live Mode"}
               </span>
             )}
+            {/* Enable toggle */}
+            <label className="flex cursor-pointer items-center gap-2">
+              <span className="text-sm text-zinc-400">Enable</span>
+              <button type="button" role="switch" aria-checked={Boolean(gw.enabled)}
+                onClick={() => updateGw({ enabled: !gw.enabled })}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                  gw.enabled ? "bg-emerald-500" : "bg-zinc-700"
+                }`}>
+                <span className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform ${
+                  gw.enabled ? "translate-x-5" : "translate-x-0.5"
+                }`} />
+              </button>
+            </label>
           </div>
         </div>
-      )}
 
-      {/* Form */}
-      <div className="space-y-4">
-        <div className="grid gap-3 sm:grid-cols-2">
-          <Toggle label="Enable Gateway"
-            hint={`Allow customers to pay via ${GATEWAYS.find((g) => g.id === activeGw)?.label}`}
-            checked={Boolean(gw.enabled)} onChange={(v) => updateGw({ enabled: v })} />
-          {!isCustom && (
-            <Toggle label="Test / Sandbox Mode" hint="Use test credentials — no real charges"
-              checked={Boolean(gw.testMode)} onChange={(v) => updateGw({ testMode: v })} />
-          )}
-        </div>
-
-        {/* Custom gateway name */}
-        {isCustom && gw.enabled && (
-          <div className="grid gap-4 sm:grid-cols-2">
-            <Field label="Gateway Name">
-              <Input value={gw.gatewayName ?? ""} onChange={(v) => updateGw({ gatewayName: v })} placeholder="e.g. My Bank Transfer" />
-            </Field>
-            <Field label="Custom API Endpoint" hint="Optional — for automated verification">
-              <Input value={gw.apiEndpoint ?? ""} onChange={(v) => updateGw({ apiEndpoint: v })} placeholder="https://api.yourgateway.com/verify" />
-            </Field>
+        {!gw.enabled ? (
+          /* Disabled state */
+          <div className="flex flex-col items-center gap-2 py-6 text-center">
+            <Lock className="size-8 text-zinc-700" />
+            <p className="text-sm text-zinc-500">Enable {activeInfo?.label} to configure credentials</p>
           </div>
-        )}
-
-        {gw.enabled && (
-          <>
-            {/* Credentials */}
-            <div className="grid gap-4 sm:grid-cols-2">
-              <Field label="API Key / Client ID">
-                <Input value={gw.apiKey ?? ""} onChange={(v) => updateGw({ apiKey: v })}
-                  placeholder={activeGw === "razorpay" ? "rzp_live_…" : activeGw === "stripe" ? "pk_live_…" : activeGw === "cashfree" ? "CF…" : "API Key"} />
-              </Field>
-              <Field label="Secret Key">
-                <Input type="password" value={gw.secretKey ?? ""} onChange={(v) => updateGw({ secretKey: v })} placeholder="••••••••" />
-              </Field>
-              <Field label="Merchant ID" hint="Your merchant/account ID from gateway dashboard">
-                <Input value={gw.merchantId ?? ""} onChange={(v) => updateGw({ merchantId: v })} placeholder="MID_…" />
-              </Field>
-              <Field label="Webhook Secret" hint="From gateway dashboard → Webhooks">
-                <Input type="password" value={gw.webhookSecret ?? ""} onChange={(v) => updateGw({ webhookSecret: v })} placeholder="••••••••" />
-              </Field>
-            </div>
-
-            {/* URLs */}
-            <div className="grid gap-4 sm:grid-cols-3">
-              <Field label="Callback URL">
-                <Input value={gw.callbackUrl ?? ""} onChange={(v) => updateGw({ callbackUrl: v })} placeholder="https://yourdomain.com/api/webhooks/…" />
-              </Field>
-              <Field label="Payment Success URL">
-                <Input value={gw.successUrl ?? ""} onChange={(v) => updateGw({ successUrl: v })} placeholder="https://yourdomain.com/order/success" />
-              </Field>
-              <Field label="Payment Failed URL">
-                <Input value={gw.failedUrl ?? ""} onChange={(v) => updateGw({ failedUrl: v })} placeholder="https://yourdomain.com/order/failed" />
-              </Field>
-            </div>
-
-            {/* Custom gateway extra fields */}
-            {isCustom && (
-              <div className="space-y-4 rounded-xl border border-zinc-800 bg-zinc-950/40 p-4">
-                <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500">Manual Payment Details</p>
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <Field label="UPI ID" hint="Customers can pay via UPI scan">
-                    <Input value={gw.upiId ?? ""} onChange={(v) => updateGw({ upiId: v })} placeholder="yourname@upi" />
-                  </Field>
-                  <Field label="Bank Details" hint="Account number, IFSC for bank transfer">
-                    <Input value={gw.bankDetails ?? ""} onChange={(v) => updateGw({ bankDetails: v })} placeholder="Acc: 1234… IFSC: HDFC…" />
-                  </Field>
+        ) : (
+          <div className="space-y-4">
+            {/* Test/Live toggle */}
+            {!isCustom && (
+              <div className="flex items-center justify-between rounded-xl border border-zinc-800 bg-zinc-900/40 px-4 py-3">
+                <div>
+                  <p className="text-sm font-medium text-zinc-200">Sandbox / Test Mode</p>
+                  <p className="text-xs text-zinc-500">No real charges in test mode</p>
                 </div>
-                <Field label="Payment Instructions" hint="Shown to customer at checkout">
-                  <textarea value={gw.paymentInstructions ?? ""} onChange={(e) => updateGw({ paymentInstructions: e.target.value })}
-                    rows={3} placeholder="Please transfer the amount to the above account and upload screenshot…"
-                    className="w-full resize-none rounded-xl border border-zinc-800 bg-zinc-950/80 px-3 py-2.5 text-sm text-zinc-100 outline-none focus:border-emerald-500/45" />
+                <button type="button" role="switch" aria-checked={Boolean(gw.testMode)}
+                  onClick={() => updateGw({ testMode: !gw.testMode })}
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                    gw.testMode ? "bg-amber-500" : "bg-emerald-500"
+                  }`}>
+                  <span className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform ${
+                    gw.testMode ? "translate-x-5" : "translate-x-0.5"
+                  }`} />
+                </button>
+              </div>
+            )}
+
+            {/* Custom gateway name */}
+            {isCustom && (
+              <div className="grid gap-3 sm:grid-cols-2">
+                <Field label="Gateway Name">
+                  <Input value={gw.gatewayName ?? ""} onChange={(v) => updateGw({ gatewayName: v })}
+                    placeholder="e.g. Bank Transfer" />
+                </Field>
+                <Field label="UPI ID">
+                  <Input value={gw.upiId ?? ""} onChange={(v) => updateGw({ upiId: v })}
+                    placeholder="yourname@upi" />
+                </Field>
+                <Field label="Bank Details" hint="Account no, IFSC">
+                  <Input value={gw.bankDetails ?? ""} onChange={(v) => updateGw({ bankDetails: v })}
+                    placeholder="Acc: 1234… IFSC: HDFC…" />
+                </Field>
+                <Field label="Payment Instructions">
+                  <Input value={gw.paymentInstructions ?? ""} onChange={(v) => updateGw({ paymentInstructions: v })}
+                    placeholder="Transfer and share screenshot" />
                 </Field>
               </div>
             )}
 
-            {/* Priority */}
-            <Field label="Failover Priority" hint="Lower number = tried first when auto-failover is active">
-              <select value={gw.priority ?? 9} onChange={(e) => updateGw({ priority: Number(e.target.value) })}
-                className="w-full cursor-pointer rounded-xl border border-zinc-800 bg-zinc-950/80 px-3 py-2.5 text-sm text-zinc-100 outline-none focus:border-emerald-500/45">
-                {[1,2,3,4,5,6,7,8,9].map((n) => <option key={n} value={n}>Priority {n}</option>)}
-              </select>
-            </Field>
-          </>
-        )}
+            {/* API Credentials */}
+            {!isCustom && (
+              <div className="grid gap-3 sm:grid-cols-2">
+                <Field label="API Key" hint={activeGw === "razorpay" ? "Starts with rzp_" : activeGw === "stripe" ? "Starts with pk_" : ""}>
+                  <Input value={gw.apiKey ?? ""} onChange={(v) => updateGw({ apiKey: v })}
+                    placeholder={activeGw === "razorpay" ? "rzp_live_…" : activeGw === "stripe" ? "pk_live_…" : "API Key"} />
+                </Field>
+                <Field label="Secret Key">
+                  <Input type="password" value={gw.secretKey ?? ""} onChange={(v) => updateGw({ secretKey: v })}
+                    placeholder="••••••••" />
+                </Field>
+                <Field label="Merchant ID" hint="Optional">
+                  <Input value={gw.merchantId ?? ""} onChange={(v) => updateGw({ merchantId: v })}
+                    placeholder="MID_…" />
+                </Field>
+                <Field label="Webhook Secret" hint="From gateway dashboard">
+                  <Input type="password" value={gw.webhookSecret ?? ""} onChange={(v) => updateGw({ webhookSecret: v })}
+                    placeholder="••••••••" />
+                </Field>
+              </div>
+            )}
 
-        {/* Test result */}
-        {testResult && (
-          <div className={`flex items-center gap-2 rounded-xl border px-4 py-3 text-sm ${
-            testResult.success ? "border-emerald-500/25 bg-emerald-500/10 text-emerald-400" : "border-red-500/25 bg-red-500/10 text-red-400"
-          }`}>
-            {testResult.success ? <CheckCircle2 className="size-4 shrink-0" /> : <XCircle className="size-4 shrink-0" />}
-            <span>{testResult.message}</span>
-            {testResult.latencyMs && <span className="ml-auto text-xs opacity-60">{testResult.latencyMs}ms</span>}
+            {/* Test result */}
+            {testResult && (
+              <div className={`flex items-center gap-2 rounded-xl border px-4 py-3 text-sm ${
+                testResult.success
+                  ? "border-emerald-500/25 bg-emerald-500/10 text-emerald-400"
+                  : "border-red-500/25 bg-red-500/10 text-red-400"
+              }`}>
+                {testResult.success
+                  ? <CheckCircle2 className="size-4 shrink-0" />
+                  : <XCircle className="size-4 shrink-0" />}
+                {testResult.message}
+              </div>
+            )}
           </div>
         )}
       </div>
 
-      {/* Failover info */}
-      {enabledCount > 1 && (
-        <div className="mt-4 flex items-start gap-2 rounded-xl border border-amber-500/20 bg-amber-500/5 px-4 py-3 text-xs text-amber-400">
-          <AlertTriangle className="size-3.5 shrink-0 mt-0.5" />
-          <span>Auto-failover active — if the highest-priority gateway fails, the next enabled gateway is tried automatically.</span>
-        </div>
-      )}
-
       {/* Actions */}
-      <div className="mt-6 flex flex-wrap items-center justify-between gap-3 border-t border-zinc-800 pt-4">
-        <button type="button" onClick={testConnection} disabled={testing || !gw.enabled}
-          className="cursor-pointer inline-flex items-center gap-2 rounded-xl border border-zinc-700 px-4 py-2 text-sm font-medium text-zinc-300 transition-colors hover:border-zinc-500 hover:text-zinc-100 disabled:cursor-not-allowed disabled:opacity-40">
-          {testing ? <Loader2 className="size-4 animate-spin" /> : <Activity className="size-4" />}
+      <div className="mt-4 flex items-center justify-between gap-3">
+        <button type="button" onClick={testConnection}
+          disabled={testing || !gw.enabled || isCustom}
+          className="cursor-pointer inline-flex items-center gap-2 rounded-xl border border-zinc-700 px-4 py-2 text-sm font-medium text-zinc-300 hover:border-zinc-500 hover:text-zinc-100 disabled:cursor-not-allowed disabled:opacity-40 transition-colors">
+          {testing ? <Loader2 className="size-4 animate-spin" /> : <Zap className="size-4" />}
           {testing ? "Testing…" : "Test Connection"}
         </button>
         <button type="button" onClick={handleSave} disabled={saving}
-          className="cursor-pointer inline-flex items-center gap-2 rounded-xl bg-emerald-500 px-4 py-2 text-sm font-semibold text-zinc-950 transition-colors hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-50">
+          className="cursor-pointer inline-flex items-center gap-2 rounded-xl bg-emerald-500 px-5 py-2 text-sm font-semibold text-zinc-950 hover:bg-emerald-400 disabled:opacity-50 transition-colors">
           {saving && <Loader2 className="size-4 animate-spin" />}
           {saving ? "Saving…" : "Save Changes"}
         </button>

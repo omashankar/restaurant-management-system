@@ -3,6 +3,7 @@
 import { ROLES, roleLabel, useApp } from "@/context/AppProviders";
 import { useUser } from "@/context/AuthContext";
 import GlobalSearch from "@/components/rms/GlobalSearch";
+import LanguageSwitcher from "@/components/ui/LanguageSwitcher";
 import ChangePasswordModal from "@/components/rms/ChangePasswordModal";
 import InboxDropdown from "@/components/rms/InboxDropdown";
 import { useInbox } from "@/hooks/useInbox";
@@ -101,6 +102,9 @@ export default function TopNavbar({ onOpenSidebar, onToggleSidebar }) {
       <div className="flex items-center gap-3">
         {/* Global Search */}
         <GlobalSearch />
+
+        {/* Language Switcher */}
+        <LanguageSwitcher compact />
 
         <button
           type="button"

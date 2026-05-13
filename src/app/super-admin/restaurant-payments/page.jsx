@@ -19,7 +19,7 @@ const GATEWAY_COLORS = {
   custom:   "bg-zinc-700 text-zinc-300",
 };
 
-const TABS = ["overview", "transactions", "payouts"];
+const TABS = ["overview", "transactions"];
 
 export default function RestaurantPaymentsPage() {
   const [activeTab, setActiveTab]     = useState("overview");
@@ -59,7 +59,6 @@ export default function RestaurantPaymentsPage() {
 
   const totalRevenue    = restaurants.reduce((s, r) => s + (r.totalRevenue ?? 0), 0);
   const totalTx         = restaurants.reduce((s, r) => s + (r.txCount ?? 0), 0);
-  const pendingPayouts  = restaurants.reduce((s, r) => s + (r.pendingPayouts ?? 0), 0);
   const frozenCount     = restaurants.filter((r) => r.frozen).length;
 
   return (
@@ -92,7 +91,7 @@ export default function RestaurantPaymentsPage() {
       </div>
 
       {/* Summary cards */}
-      <div className="grid gap-3 sm:grid-cols-4">
+      <div className="grid gap-3 sm:grid-cols-3">
         <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/5 px-5 py-4">
           <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500">Total Revenue</p>
           <p className="mt-2 text-2xl font-bold tabular-nums text-emerald-400">₹{totalRevenue.toLocaleString()}</p>
@@ -102,11 +101,6 @@ export default function RestaurantPaymentsPage() {
           <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500">Restaurants</p>
           <p className="mt-2 text-2xl font-bold tabular-nums text-zinc-100">{pagination.total}</p>
           <p className="mt-1 text-xs text-zinc-600">Active tenants</p>
-        </div>
-        <div className="rounded-2xl border border-amber-500/20 bg-amber-500/5 px-5 py-4">
-          <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500">Pending Payouts</p>
-          <p className="mt-2 text-2xl font-bold tabular-nums text-amber-400">{pendingPayouts}</p>
-          <p className="mt-1 text-xs text-zinc-600">Awaiting approval</p>
         </div>
         <div className="rounded-2xl border border-red-500/20 bg-red-500/5 px-5 py-4">
           <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500">Frozen Accounts</p>
@@ -138,8 +132,6 @@ export default function RestaurantPaymentsPage() {
                     <th className="px-4 py-3">Active Gateways</th>
                     <th className="hidden px-4 py-3 md:table-cell">Revenue</th>
                     <th className="hidden px-4 py-3 md:table-cell">Txns</th>
-                    <th className="px-4 py-3">Settlement</th>
-                    <th className="px-4 py-3">Payouts</th>
                     <th className="px-4 py-3">Actions</th>
                   </tr>
                 </thead>
@@ -170,20 +162,6 @@ export default function RestaurantPaymentsPage() {
                         ₹{(r.totalRevenue ?? 0).toLocaleString()}
                       </td>
                       <td className="hidden px-4 py-3 text-zinc-400 md:table-cell">{r.txCount ?? 0}</td>
-                      <td className="px-4 py-3">
-                        <span className="inline-flex rounded-full bg-zinc-800 px-2.5 py-0.5 text-xs font-semibold capitalize text-zinc-300">
-                          {r.settlementFreq}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3">
-                        {r.pendingPayouts > 0 ? (
-                          <span className="inline-flex size-6 items-center justify-center rounded-full bg-amber-500 text-xs font-bold text-zinc-950">
-                            {r.pendingPayouts}
-                          </span>
-                        ) : (
-                          <span className="text-xs text-zinc-600">—</span>
-                        )}
-                      </td>
                       <td className="px-4 py-3">
                         {r.frozen ? (
                           <button type="button" disabled={Boolean(actionLoading)}

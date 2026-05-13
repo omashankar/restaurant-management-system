@@ -58,11 +58,6 @@ export const EMPTY_PAYMENT_SETTINGS = {
     accountHolderName: "", bankName: "", accountNumber: "",
     ifscCode: "", branchName: "", upiId: "", verified: false,
   },
-  settlement: {
-    frequency: "weekly",
-    autoSettle: false,
-    minWithdrawalAmount: 100,
-  },
   tax: {
     gstNumber: "", gstPercentage: "0",
     panNumber: "", invoicePrefix: "INV",
