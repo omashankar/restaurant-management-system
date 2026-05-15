@@ -16,12 +16,16 @@ export const metadata = {
   title: "RMS · Restaurant Management",
   description: "Premium India-focused Restaurant POS & Food Ordering System",
   manifest: "/manifest.json",
-  themeColor: "#10b981",
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
     title: "RMS",
   },
+};
+
+// Next.js 16: themeColor viewport export mein hona chahiye
+export const viewport = {
+  themeColor: "#10b981",
 };
 
 export default function RootLayout({ children }) {

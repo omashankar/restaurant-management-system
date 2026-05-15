@@ -263,6 +263,14 @@ export async function POST(request) {
       return Response.json({ success: false, error: "An account with this email already exists." }, { status: 409 });
     }
 
+    // Duplicate slug check
+    if (cleanSlug) {
+      const existingSlug = await db.collection("restaurants").findOne({ slug: cleanSlug });
+      if (existingSlug) {
+        return Response.json({ success: false, error: "Yeh customer URL (slug) pehle se use ho raha hai. Koi aur slug choose karein." }, { status: 409 });
+      }
+    }
+
     const session = client.startSession();
     let restaurantId;
     let ownerId;

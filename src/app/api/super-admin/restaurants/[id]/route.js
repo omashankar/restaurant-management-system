@@ -54,6 +54,25 @@ export async function PATCH(request, { params }) {
     const client = await clientPromise;
     const db     = client.db();
 
+    // Duplicate slug check (apne aap ko exclude karo)
+    if (update.slug) {
+      const existingSlug = await db.collection("restaurants").findOne({
+        slug: update.slug,
+        _id: { $ne: _id },
+      });
+      if (existingSlug) {
+        return Response.json({ success: false, error: "Yeh slug pehle se kisi aur restaurant ke paas hai." }, { status: 409 });
+      }
+    }
+
+    // Slug change hone par cache invalidate karo
+    if (update.slug !== undefined) {
+      const { invalidateRestaurantSlugCache } = await import("@/lib/restaurantResolver");
+      const oldDoc = await db.collection("restaurants").findOne({ _id }, { projection: { slug: 1 } });
+      if (oldDoc?.slug) invalidateRestaurantSlugCache(oldDoc.slug);
+      if (update.slug) invalidateRestaurantSlugCache(update.slug);
+    }
+
     const session = client.startSession();
     try {
       let notFound = false;

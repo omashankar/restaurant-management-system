@@ -8,6 +8,7 @@ import {
 } from "@/config/customerBookingContent";
 import { useCustomer } from "@/context/CustomerContext";
 import { useModuleData } from "@/context/ModuleDataContext";
+import { useRestaurantSlug } from "@/hooks/useRestaurantSlug";
 import {
   getCategoryActive,
   getCategoryHover,
@@ -54,6 +55,7 @@ function StepLine({ done }) {
 export default function TableBookingPage() {
   const { showToast } = useCustomer();
   const { floorTables, reservationRows, setReservationRows, tableCategories } = useModuleData();
+  const { link } = useRestaurantSlug();
 
   const [step, setStep]                   = useState(1);
   const [form, setForm]                   = useState({ name: "", phone: "", date: "", time: "19:00", guests: "2", notes: "" });
@@ -235,6 +237,10 @@ export default function TableBookingPage() {
           className="cursor-pointer rounded-xl border border-zinc-300 px-6 py-2.5 text-sm font-medium text-zinc-700 hover:border-zinc-400">
           Book Another Table
         </button>
+        <a href={link("/order/menu")}
+          className="cursor-pointer rounded-xl bg-emerald-500 px-6 py-2.5 text-sm font-bold text-zinc-950 hover:bg-emerald-400">
+          Browse Menu
+        </a>
       </div>
     );
   }

@@ -182,6 +182,7 @@ export default function RestaurantsPage() {
   // Create modal
   const [createOpen, setCreateOpen]   = useState(false);
   const [createForm, setCreateForm]   = useState(emptyForm);
+  const [slugManuallyEdited, setSlugManuallyEdited] = useState(false);
   const [createError, setCreateError] = useState("");
   const [creating, setCreating]       = useState(false);
   const [showPw, setShowPw]           = useState(false);
@@ -292,6 +293,7 @@ export default function RestaurantsPage() {
   /* Create */
   const handleCreate = async () => {
     if (!createForm.name.trim())       { setCreateError("Restaurant name is required."); return; }
+    if (!createForm.slug.trim())       { setCreateError("Customer site URL (slug) is required."); return; }
     if (!createForm.ownerEmail.trim()) { setCreateError("Owner email is required."); return; }
     if (!createForm.ownerPassword)     { setCreateError("Password is required."); return; }
     if (createForm.ownerPassword.length < 6) { setCreateError("Password must be at least 6 characters."); return; }
@@ -305,7 +307,7 @@ export default function RestaurantsPage() {
       const data = await res.json();
       if (!data.success) { setCreateError(data.error ?? "Failed to create."); return; }
       showToast(createForm.name + " created successfully.");
-      setCreateOpen(false); setCreateForm(emptyForm);
+      setCreateOpen(false); setCreateForm(emptyForm); setSlugManuallyEdited(false);
       setPage(1);
       await fetchRestaurants(1);
     } catch { setCreateError("Network error."); }
@@ -376,7 +378,7 @@ export default function RestaurantsPage() {
             className="cursor-pointer flex items-center gap-1.5 rounded-xl border border-zinc-700 px-3 py-2.5 text-sm font-medium text-zinc-400 hover:border-zinc-500 hover:text-zinc-200 transition-colors">
             <RefreshCw className={"size-4 " + (loading ? "animate-spin" : "")} />
           </button>
-          <button type="button" onClick={() => { setCreateForm(emptyForm); setCreateError(""); setShowPw(false); setCreateOpen(true); }}
+          <button type="button" onClick={() => { setCreateForm(emptyForm); setCreateError(""); setShowPw(false); setSlugManuallyEdited(false); setCreateOpen(true); }}
             className="cursor-pointer inline-flex items-center gap-2 rounded-xl bg-emerald-500 px-4 py-2.5 text-sm font-semibold text-zinc-950 hover:bg-emerald-400 transition-colors">
             <Plus className="size-4" /> Add Restaurant
           </button>
@@ -639,9 +641,13 @@ export default function RestaurantsPage() {
               <Field label="Restaurant Name" required>
                 <input value={createForm.name} onChange={(e) => {
                   const name = e.target.value;
-                  // Auto-generate slug from name
+                  // Agar user ne slug manually edit nahi kiya to auto-generate karo
                   const autoSlug = name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
-                  setCreateForm((f) => ({ ...f, name, slug: f.slug || autoSlug }));
+                  setCreateForm((f) => ({
+                    ...f,
+                    name,
+                    slug: slugManuallyEdited ? f.slug : autoSlug,
+                  }));
                 }}
                   placeholder="e.g. The Grand Kitchen" className={inputCls} />
               </Field>
@@ -654,7 +660,10 @@ export default function RestaurantsPage() {
                   </span>
                   <input
                     value={createForm.slug}
-                    onChange={(e) => setCreateForm((f) => ({ ...f, slug: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, "") }))}
+                    onChange={(e) => {
+                      setSlugManuallyEdited(true);
+                      setCreateForm((f) => ({ ...f, slug: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, "") }));
+                    }}
                     placeholder="pizza-palace"
                     className={inputCls + " rounded-l-none"}
                   />

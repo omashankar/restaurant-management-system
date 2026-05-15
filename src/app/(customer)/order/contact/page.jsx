@@ -1,13 +1,17 @@
 "use client";
 
 import { useCustomer } from "@/context/CustomerContext";
+import { useRestaurantSlug } from "@/hooks/useRestaurantSlug";
 import { Loader2, Mail, MapPin, Phone } from "lucide-react";
+import Link from "next/link";
 import { useState } from "react";
 
 export default function ContactPage() {
   const { showToast } = useCustomer();
+  const { link } = useRestaurantSlug();
   const [form, setForm] = useState({ name: "", email: "", message: "" });
   const [loading, setLoading] = useState(false);
+  const [sent, setSent] = useState(false);
 
   const set = (k, v) => setForm((f) => ({ ...f, [k]: v }));
 
@@ -21,6 +25,7 @@ export default function ContactPage() {
     await new Promise((r) => setTimeout(r, 700));
     setLoading(false);
     setForm({ name: "", email: "", message: "" });
+    setSent(true);
     showToast("Message sent! We'll get back to you soon.");
   };
 
@@ -49,6 +54,14 @@ export default function ContactPage() {
           <button type="submit" disabled={loading} className="cursor-pointer flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-500 py-3 text-sm font-bold text-zinc-950 hover:bg-emerald-400 disabled:opacity-50">
             {loading ? <><Loader2 className="size-4 animate-spin" /> Sending…</> : "Send Message"}
           </button>
+          {sent && (
+            <Link
+              href={link("/home")}
+              className="cursor-pointer flex w-full items-center justify-center rounded-xl border border-zinc-300 py-2.5 text-sm font-medium text-zinc-700 hover:border-zinc-400"
+            >
+              ← Back to Home
+            </Link>
+          )}
         </form>
 
         {/* Info */}

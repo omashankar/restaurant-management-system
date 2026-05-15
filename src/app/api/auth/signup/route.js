@@ -23,10 +23,10 @@ export async function POST(request) {
     return Response.json({ success: false, error: "Invalid JSON body." }, { status: 400 });
   }
 
-  const { name, email, phone, password, restaurantName } = body ?? {};
+  const { name, email, phone, password, restaurantName, slug } = body ?? {};
   const role = "admin";
 
-  /* ── Manual validation (no Zod dependency issues) ── */
+  /* ── Manual validation ── */
   if (!name?.trim())     return Response.json({ success: false, error: "Name is required." },     { status: 400 });
   if (!email?.trim())    return Response.json({ success: false, error: "Email is required." },    { status: 400 });
   if (!password)         return Response.json({ success: false, error: "Password is required." }, { status: 400 });
@@ -39,6 +39,12 @@ export async function POST(request) {
     return Response.json({ success: false, error: "Restaurant name is required." }, { status: 400 });
   }
 
+  // Slug clean aur validate karo
+  const cleanSlug = String(slug ?? "").toLowerCase().replace(/[^a-z0-9-]/g, "").trim();
+  if (!cleanSlug) {
+    return Response.json({ success: false, error: "Customer site URL (slug) is required." }, { status: 400 });
+  }
+
   try {
     const client = await clientPromise;
     const db     = client.db();
@@ -49,10 +55,18 @@ export async function POST(request) {
       return Response.json({ success: false, error: "Email already registered." }, { status: 409 });
     }
 
+    /* ── Duplicate slug check ── */
+    const existingSlug = await db.collection("restaurants").findOne({ slug: cleanSlug });
+    if (existingSlug) {
+      return Response.json({ success: false, error: "Yeh customer URL (slug) pehle se use ho raha hai. Koi aur slug choose karein." }, { status: 409 });
+    }
+
     /* ── Create restaurant for admin ── */
     const resResult = await db.collection("restaurants").insertOne({
       name: cleanRestaurantName,
+      slug: cleanSlug,
       ownerId: null,
+      status: "active",
       createdAt: new Date(),
     });
     const restaurantId = resResult.insertedId;
