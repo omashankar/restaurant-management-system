@@ -66,25 +66,32 @@ export default function QrMenuPage() {
   const [tableCount, setTableCount]  = useState(10);
   const [baseUrl, setBaseUrl]        = useState("");
   const [restaurantName, setRestaurantName] = useState("My Restaurant");
+  const [restaurantSlug, setRestaurantSlug] = useState("");
 
   useEffect(() => {
     setBaseUrl(window.location.origin);
-    // Try to get restaurant name from settings
+    // Try to get restaurant name + slug from settings
     fetch("/api/settings")
       .then((r) => r.json())
       .then((d) => {
         if (d.success && d.settings?.general?.restaurantName) {
           setRestaurantName(d.settings.general.restaurantName);
         }
+        if (d.restaurantSlug) {
+          setRestaurantSlug(d.restaurantSlug);
+        }
       })
       .catch(() => {});
   }, []);
 
   function getQrValue() {
+    // Agar slug hai to /r/[slug]/ URL use karo (multi-restaurant)
+    // Warna legacy /order/menu URL use karo
+    const prefix = restaurantSlug ? `/r/${restaurantSlug}` : "";
     if (qrType === "table") {
-      return `${baseUrl}/order/menu?table=${tableNumber}&type=dine-in`;
+      return `${baseUrl}${prefix}/order/menu?table=${tableNumber}&type=dine-in`;
     }
-    return `${baseUrl}/order/menu`;
+    return `${baseUrl}${prefix}/order/menu`;
   }
 
   function downloadQr() {
@@ -143,8 +150,9 @@ export default function QrMenuPage() {
 
   // Bulk print all tables
   function printAllTables() {
+    const prefix = restaurantSlug ? `/r/${restaurantSlug}` : "";
     const urls = Array.from({ length: tableCount }, (_, i) =>
-      `${baseUrl}/order/menu?table=${i + 1}&type=dine-in`
+      `${baseUrl}${prefix}/order/menu?table=${i + 1}&type=dine-in`
     );
 
     // Generate all QR codes as data URLs
@@ -206,6 +214,29 @@ export default function QrMenuPage() {
           Generate real scannable QR codes. Customers scan → menu opens → order placed.
         </p>
       </div>
+
+      {/* Slug info banner */}
+      {restaurantSlug ? (
+        <div className="flex items-center gap-3 rounded-xl border border-emerald-500/25 bg-emerald-500/10 px-4 py-3">
+          <span className="text-lg">🔗</span>
+          <div className="min-w-0">
+            <p className="text-sm font-semibold text-emerald-300">Multi-Restaurant URL Active</p>
+            <p className="mt-0.5 truncate text-xs text-emerald-400/80">
+              Customer site: <span className="font-mono">{baseUrl}/r/{restaurantSlug}/</span>
+            </p>
+          </div>
+        </div>
+      ) : (
+        <div className="flex items-center gap-3 rounded-xl border border-amber-500/25 bg-amber-500/10 px-4 py-3">
+          <span className="text-lg">⚠️</span>
+          <div>
+            <p className="text-sm font-semibold text-amber-300">Restaurant Slug Set Nahi Hai</p>
+            <p className="mt-0.5 text-xs text-amber-400/80">
+              Super Admin → Restaurants mein apna slug set karo taaki unique customer URL mile.
+            </p>
+          </div>
+        </div>
+      )}
 
       <div className="grid gap-6 lg:grid-cols-[1fr_300px]">
         {/* Left: Config */}

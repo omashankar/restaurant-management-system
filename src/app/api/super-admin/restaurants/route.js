@@ -128,6 +128,7 @@ export async function GET(request) {
           id:         r._id.toString(),
           ownerId:    r.ownerId?.toString() ?? null,
           name:       r.name,
+          slug:       r.slug ?? null,
           ownerEmail: owner?.email ?? r.ownerEmail ?? "—",
           ownerName:  owner?.name  ?? "—",
           ownerStatus: owner?.status ?? "inactive",
@@ -202,6 +203,7 @@ export async function GET(request) {
           id:         r._id.toString(),
           ownerId:    r.ownerId?.toString() ?? null,
           name:       r.name,
+          slug:       r.slug ?? null,
           ownerEmail: owner?.email ?? r.ownerEmail ?? "—",
           ownerName:  owner?.name  ?? "—",
           ownerStatus: owner?.status ?? "inactive",
@@ -235,7 +237,7 @@ export async function POST(request) {
   try { body = await request.json(); }
   catch { return Response.json({ success: false, error: "Invalid JSON." }, { status: 400 }); }
 
-  const { name, ownerEmail, ownerName, ownerPassword, plan = "free", phone = "", address = "", status = "active" } = body;
+  const { name, ownerEmail, ownerName, ownerPassword, plan = "free", phone = "", address = "", status = "active", slug = "" } = body;
   const allowedStatuses = ["active", "inactive", "suspended"];
 
   if (!name?.trim())        return Response.json({ success: false, error: "Restaurant name is required." }, { status: 400 });
@@ -244,6 +246,12 @@ export async function POST(request) {
   if (ownerPassword.length < 6) return Response.json({ success: false, error: "Password must be at least 6 characters." }, { status: 400 });
   if (!allowedStatuses.includes(status)) return Response.json({ success: false, error: "Invalid status." }, { status: 400 });
   if (!VALID_PLANS.includes(plan)) return Response.json({ success: false, error: "Invalid plan." }, { status: 400 });
+
+  // Slug validation
+  const cleanSlug = String(slug ?? "").toLowerCase().replace(/[^a-z0-9-]/g, "").trim();
+  if (cleanSlug && !/^[a-z0-9][a-z0-9-]*[a-z0-9]$/.test(cleanSlug) && cleanSlug.length > 1) {
+    return Response.json({ success: false, error: "Invalid slug format." }, { status: 400 });
+  }
 
   try {
     const client = await clientPromise;
@@ -264,6 +272,7 @@ export async function POST(request) {
         // Create restaurant first (get its _id as tenantId)
         const restaurantResult = await db.collection("restaurants").insertOne({
           name:       name.trim(),
+          slug:       cleanSlug || null,
           ownerEmail: ownerEmail.toLowerCase().trim(),
           phone:      phone?.trim() ?? "",
           address:    address?.trim() ?? "",

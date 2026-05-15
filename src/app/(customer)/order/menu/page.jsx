@@ -3,6 +3,7 @@
 import SafeDishImage from "@/components/customer/SafeDishImage";
 import { useCustomer } from "@/context/CustomerContext";
 import { useModuleData } from "@/context/ModuleDataContext";
+import { useRestaurantSlug } from "@/hooks/useRestaurantSlug";
 import {
   CUSTOMER_MENU_CONTENT,
   CUSTOMER_MENU_TYPE_FILTERS,
@@ -30,6 +31,7 @@ function typeButtonClass(type) {
 function CustomerMenuPageContent() {
   const { cart, setOrderTypeModalOpen, orderType, setOrderType, updateCustomer, showToast, setCartOpen } = useCustomer();
   const { menuItems, categories } = useModuleData();
+  const { link } = useRestaurantSlug();
   const searchParams = useSearchParams();
   const [search, setSearch] = useState("");
   const [activeCategory, setActiveCategory] = useState("all");
@@ -113,7 +115,7 @@ function CustomerMenuPageContent() {
           )}
           {cartBar && (
             <Link
-              href="/order/cart"
+              href={link("/order/cart")}
               className={`cursor-pointer inline-flex min-h-[40px] items-center gap-2 rounded-xl bg-emerald-500 px-4 py-2 text-xs font-bold text-zinc-950 shadow-md shadow-emerald-600/15 transition-colors hover:bg-emerald-400 ${focusRing}`}
             >
               <ShoppingCart className="size-3.5 shrink-0" aria-hidden />
@@ -298,7 +300,7 @@ function CustomerMenuPageContent() {
       {cartBar && (
         <div className="fixed bottom-0 left-0 right-0 z-40 p-4 pb-[max(1rem,env(safe-area-inset-bottom))] md:hidden">
           <Link
-            href="/order/cart"
+            href={link("/order/cart")}
             className={`mx-auto flex max-w-lg items-center justify-between gap-3 rounded-2xl bg-emerald-500 px-5 py-3.5 shadow-2xl shadow-emerald-900/20 ring-1 ring-emerald-400/30 ${focusRing}`}
           >
             <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-emerald-600 text-sm font-bold text-white shadow-inner">

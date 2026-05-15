@@ -5,23 +5,8 @@ import { logError, logInfo } from "@/lib/logger";
 import { createGatewayPaymentSession } from "@/lib/paymentGateway";
 import { customerCheckoutSchema, parseSchema } from "@/lib/validationSchemas";
 import { sendOrderWhatsApp } from "@/lib/whatsappService";
+import { getRestaurantIdFromRequest } from "@/lib/restaurantResolver";
 import { ObjectId } from "mongodb";
-
-async function getPublicRestaurantId(db) {
-  const envRestaurantId = process.env.NEXT_PUBLIC_RESTAURANT_ID?.trim();
-  if (envRestaurantId) {
-    try {
-      return new ObjectId(envRestaurantId);
-    } catch {
-      // ignore malformed env and fallback to active restaurant
-    }
-  }
-  const restaurant = await db.collection("restaurants").findOne(
-    { status: "active" },
-    { sort: { createdAt: 1 }, projection: { _id: 1 } }
-  );
-  return restaurant?._id ?? null;
-}
 
 export async function GET(request) {
   const token = getCustomerTokenFromRequest(request);
@@ -144,7 +129,7 @@ export async function POST(request) {
     const client = await clientPromise;
     const db = client.db();
 
-    const restaurantId = await getPublicRestaurantId(db);
+    const restaurantId = await getRestaurantIdFromRequest(db, request);
     if (!restaurantId) {
       return Response.json({ success: false, error: "No active restaurant available for ordering." }, { status: 404 });
     }

@@ -2,6 +2,7 @@
 
 import SafeDishImage from "@/components/customer/SafeDishImage";
 import { useCustomer } from "@/context/CustomerContext";
+import { useRestaurantSlug } from "@/hooks/useRestaurantSlug";
 import { formatCustomerMoney } from "@/lib/customerCurrency";
 import { Minus, Plus, ShoppingCart, Trash2, X } from "lucide-react";
 import Link from "next/link";
@@ -11,6 +12,7 @@ const focusRing =
 
 export default function CartDrawer() {
   const { cart, cartOpen, setCartOpen } = useCustomer();
+  const { link } = useRestaurantSlug();
   const { lines, removeItem, setQty, subtotal, itemCount } = cart;
 
   return (
@@ -59,7 +61,7 @@ export default function CartDrawer() {
               <p className="text-sm font-semibold text-zinc-800">Cart is empty</p>
               <p className="max-w-[220px] text-xs leading-relaxed text-zinc-500">Add dishes from the menu — they appear here.</p>
               <Link
-                href="/order/menu"
+                href={link("/order/menu")}
                 onClick={() => setCartOpen(false)}
                 className={`mt-1 cursor-pointer rounded-xl bg-emerald-500 px-6 py-2.5 text-sm font-bold text-zinc-950 shadow-md shadow-emerald-600/10 transition-colors hover:bg-emerald-400 ${focusRing}`}
               >
@@ -125,7 +127,7 @@ export default function CartDrawer() {
               <p className="text-xs text-zinc-500">Est. prep: ~{cart.maxPrepTime} min</p>
             )}
             <Link
-              href="/order/cart"
+              href={link("/order/cart")}
               onClick={() => setCartOpen(false)}
               className={`block w-full cursor-pointer rounded-xl bg-emerald-500 py-3 text-center text-sm font-bold text-zinc-950 shadow-md shadow-emerald-600/10 transition-colors hover:bg-emerald-400 ${focusRing}`}
             >

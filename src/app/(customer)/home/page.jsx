@@ -2,6 +2,7 @@
 
 import { useCustomer } from "@/context/CustomerContext";
 import { useModuleData } from "@/context/ModuleDataContext";
+import { useRestaurantSlug } from "@/hooks/useRestaurantSlug";
 import SafeDishImage from "@/components/customer/SafeDishImage";
 import { formatCustomerMoney } from "@/lib/customerCurrency";
 import {
@@ -67,6 +68,7 @@ const focusRing =
 export default function CustomerHomePage() {
   const { setOrderType, setOrderTypeModalOpen } = useCustomer();
   const { menuItems } = useModuleData();
+  const { link } = useRestaurantSlug();
   const router = useRouter();
 
   const featured = menuItems.filter((m) => m.badge && m.status === "active").slice(0, 3);
@@ -74,7 +76,7 @@ export default function CustomerHomePage() {
 
   const handleOrderType = (type) => {
     setOrderType(type);
-    router.push("/order/menu");
+    router.push(link("/order/menu"));
   };
 
   return (
@@ -113,7 +115,7 @@ export default function CustomerHomePage() {
                   Start ordering <ChevronRight className="size-4 shrink-0" aria-hidden />
                 </button>
                 <Link
-                  href="/order/table-booking"
+                  href={link("/order/table-booking")}
                   className={`cursor-pointer inline-flex min-h-[44px] items-center justify-center gap-2 rounded-xl border border-zinc-200 bg-white px-6 py-3 text-sm font-semibold text-zinc-800 shadow-sm transition-all hover:border-zinc-300 hover:bg-zinc-50 ${focusRing}`}
                 >
                   <CalendarClock className="size-4 shrink-0 text-zinc-500" aria-hidden />
@@ -147,7 +149,7 @@ export default function CustomerHomePage() {
                       </span>
                     </div>
                     <Link
-                      href="/order/menu"
+                      href={link("/order/menu")}
                       className="mt-3 inline-flex w-fit items-center gap-1 text-xs font-semibold text-emerald-700 underline-offset-4 hover:underline"
                     >
                       View on menu <ArrowRight className="size-3.5" aria-hidden />
@@ -157,7 +159,7 @@ export default function CustomerHomePage() {
               ) : (
                 <p className="mt-4 text-sm leading-relaxed text-zinc-600">
                   Chef specials are being updated.{" "}
-                  <Link href="/order/menu" className="font-semibold text-emerald-700 underline-offset-2 hover:underline">
+                  <Link href={link("/order/menu")} className="font-semibold text-emerald-700 underline-offset-2 hover:underline">
                     Browse the full menu
                   </Link>{" "}
                   for fresh picks.
@@ -228,7 +230,7 @@ export default function CustomerHomePage() {
           {CUSTOMER_HOME_CATEGORIES.map((cat) => (
             <Link
               key={cat.label}
-              href="/order/menu"
+              href={link("/order/menu")}
               className={`cursor-pointer group flex min-h-[120px] flex-col items-center justify-center gap-2 rounded-2xl border p-4 text-center transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md sm:min-h-[132px] sm:gap-3 sm:p-6 ${cat.color} ${focusRing}`}
             >
               <span className="text-2xl transition-transform duration-200 group-hover:scale-110 sm:text-3xl" aria-hidden>
@@ -249,7 +251,7 @@ export default function CustomerHomePage() {
               <h2 className="mt-1 text-2xl font-bold tracking-tight text-zinc-900 sm:text-3xl">Featured dishes</h2>
             </div>
             <Link
-              href="/order/menu"
+              href={link("/order/menu")}
               className={`inline-flex w-fit items-center gap-1.5 text-sm font-semibold text-emerald-700 transition-colors hover:text-emerald-800 ${focusRing} rounded-lg`}
             >
               View full menu <ArrowRight className="size-4" aria-hidden />
@@ -291,7 +293,7 @@ export default function CustomerHomePage() {
                       {item.prepTime != null ? `${item.prepTime} min` : "—"}
                     </span>
                     <Link
-                      href="/order/menu"
+                      href={link("/order/menu")}
                       className={`rounded-lg bg-emerald-500 px-3 py-1.5 text-xs font-bold text-zinc-950 shadow-sm transition-colors hover:bg-emerald-400 ${focusRing}`}
                     >
                       Add to order
@@ -376,7 +378,7 @@ export default function CustomerHomePage() {
               Order now
             </button>
             <Link
-              href="/order/table-booking"
+              href={link("/order/table-booking")}
               className={`cursor-pointer inline-flex min-h-[44px] items-center justify-center rounded-xl border border-white/35 bg-white/10 px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-white/20 ${focusRing}`}
             >
               Book table

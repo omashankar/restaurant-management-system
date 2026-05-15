@@ -1,6 +1,7 @@
 "use client";
 
 import { useCustomer } from "@/context/CustomerContext";
+import { useRestaurantSlug } from "@/hooks/useRestaurantSlug";
 import { Bike, Check, ConciergeBell, Store, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 
@@ -25,13 +26,14 @@ function typeCardClass(id, isSelected) {
 export default function OrderTypeModal() {
   const { orderTypeModalOpen, setOrderTypeModalOpen, setOrderType, orderType } = useCustomer();
   const router = useRouter();
+  const { link } = useRestaurantSlug();
 
   if (!orderTypeModalOpen) return null;
 
   const choose = (type) => {
     setOrderType(type);
     setOrderTypeModalOpen(false);
-    router.push("/order/menu");
+    router.push(link("/order/menu"));
   };
 
   return (

@@ -40,6 +40,11 @@ export async function PATCH(request, { params }) {
   if (body.name)    update.name    = body.name.trim();
   if (body.phone   != null) update.phone   = body.phone.trim();
   if (body.address != null) update.address = body.address.trim();
+  // Slug update
+  if (body.slug != null) {
+    const cleanSlug = String(body.slug).toLowerCase().replace(/[^a-z0-9-]/g, "").trim();
+    update.slug = cleanSlug || null;
+  }
   update.updatedAt = new Date();
   if (Object.keys(update).length === 1) {
     return Response.json({ success: false, error: "No valid fields to update." }, { status: 400 });

@@ -36,6 +36,7 @@ export default function SettingsPage() {
   const [testingSmtp, setTestingSmtp] = useState(false);
   const [smtpTestRecipient, setSmtpTestRecipient] = useState("");
   const [toast, setToast] = useState(null);
+  const [restaurantSlug, setRestaurantSlug] = useState(null);
 
   // Payment settings state (separate API)
   const [paySettings, setPaySettings] = useState(EMPTY_PAYMENT_SETTINGS);
@@ -66,6 +67,7 @@ export default function SettingsPage() {
           };
           setSettings(safe);
           setSavedSnapshot(safe);
+          if (data.restaurantSlug) setRestaurantSlug(data.restaurantSlug);
         }
       } catch { showToast("error", "Failed to load settings."); }
       finally { setIsLoading(false); }
@@ -189,6 +191,29 @@ export default function SettingsPage() {
           {/* ── GENERAL (with Notifications merged) ── */}
           {activeTab === "general" && (
             <div className="space-y-5">
+
+              {/* Customer Site URL card */}
+              <div className={`flex items-start gap-3 rounded-xl border px-4 py-3.5 ${
+                restaurantSlug
+                  ? "border-emerald-500/25 bg-emerald-500/8"
+                  : "border-amber-500/25 bg-amber-500/8"
+              }`}>
+                <span className="mt-0.5 text-xl">{restaurantSlug ? "🔗" : "⚠️"}</span>
+                <div className="min-w-0 flex-1">
+                  <p className={`text-sm font-semibold ${restaurantSlug ? "text-emerald-300" : "text-amber-300"}`}>
+                    {restaurantSlug ? "Customer Site URL" : "Customer URL Set Nahi Hai"}
+                  </p>
+                  {restaurantSlug ? (
+                    <p className="mt-0.5 truncate font-mono text-xs text-emerald-400/80">
+                      {typeof window !== "undefined" ? window.location.origin : ""}/r/{restaurantSlug}/home
+                    </p>
+                  ) : (
+                    <p className="mt-0.5 text-xs text-amber-400/80">
+                      Super Admin → Restaurants mein apna <strong>slug</strong> set karo taaki customers aapke restaurant ka URL use kar sakein.
+                    </p>
+                  )}
+                </div>
+              </div>
               <SettingsFormSection title="General Settings" description="Basic profile and localization for your restaurant.">
                 <div className="grid gap-4 md:grid-cols-2">
                   <InputField label="Restaurant Name" value={settings.general.restaurantName}
