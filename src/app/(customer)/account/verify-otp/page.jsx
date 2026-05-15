@@ -1,6 +1,7 @@
 "use client";
 
 import { useCustomer } from "@/context/CustomerContext";
+import { useRestaurantSlug } from "@/hooks/useRestaurantSlug";
 import { Loader2, ShieldCheck } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -11,6 +12,7 @@ const OTP_TTL_SEC = 120;
 export default function VerifyOtpPage() {
   const router = useRouter();
   const { refreshAuth } = useCustomer();
+  const { link } = useRestaurantSlug();
   const [phone, setPhone] = useState("");
   const [otp, setOtp] = useState("");
   const [loading, setLoading] = useState(false);
@@ -142,7 +144,7 @@ export default function VerifyOtpPage() {
               "Resend code"
             )}
           </button>
-          <Link href="/account/login" className="text-zinc-600 hover:text-zinc-900 hover:underline">
+          <Link href={link("/account/login")} className="text-zinc-600 hover:text-zinc-900 hover:underline">
             Use a different number
           </Link>
         </div>

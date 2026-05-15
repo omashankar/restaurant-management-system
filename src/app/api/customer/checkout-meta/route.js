@@ -1,6 +1,6 @@
 import { isOnlinePaymentConfigured } from "@/lib/paymentGateway";
 import clientPromise from "@/lib/mongodb";
-import { ObjectId } from "mongodb";
+import { getRestaurantIdFromRequest } from "@/lib/restaurantResolver";
 
 const ONLINE_KEYS = ["upi", "card", "debitCard", "netBanking", "wallet", "qrCode", "payLater", "bankTransfer"];
 
@@ -20,29 +20,13 @@ function disableOnlinePaymentMethods(paymentMethods, onlineOk) {
   return next;
 }
 
-async function getPublicRestaurantId(db) {
-  const envRestaurantId = process.env.NEXT_PUBLIC_RESTAURANT_ID?.trim();
-  if (envRestaurantId) {
-    try {
-      return new ObjectId(envRestaurantId);
-    } catch {
-      // ignore malformed env and fallback to active restaurant
-    }
-  }
-  const restaurant = await db.collection("restaurants").findOne(
-    { status: "active" },
-    { sort: { createdAt: 1 }, projection: { _id: 1 } }
-  );
-  return restaurant?._id ?? null;
-}
-
-export async function GET() {
+export async function GET(request) {
   try {
     const client = await clientPromise;
     const db = client.db();
     const onlineOk = await isOnlinePaymentConfigured(db).catch(() => false);
 
-    const restaurantId = await getPublicRestaurantId(db);
+    const restaurantId = await getRestaurantIdFromRequest(db, request);
     if (!restaurantId) {
       const basePm = {
         defaultMethod: "cod",

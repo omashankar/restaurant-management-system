@@ -1,6 +1,7 @@
 "use client";
 
 import { useCustomer } from "@/context/CustomerContext";
+import { useRestaurantSlug } from "@/hooks/useRestaurantSlug";
 import { Loader2, Phone } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -11,6 +12,7 @@ const PHONE_REGEX = /^\+?[0-9]{8,15}$/;
 function CustomerLoginContent() {
   const router = useRouter();
   const params = useSearchParams();
+  const { link } = useRestaurantSlug();
   const [phone, setPhone] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -83,7 +85,7 @@ function CustomerLoginContent() {
               Send OTP
             </button>
             <div className="pt-4 text-center">
-              <Link href="/order/menu" className="text-sm font-medium text-zinc-600 underline-offset-2 hover:text-zinc-900 hover:underline">
+              <Link href={link("/order/menu")} className="text-sm font-medium text-zinc-600 underline-offset-2 hover:text-zinc-900 hover:underline">
                 Continue as guest
               </Link>
             </div>

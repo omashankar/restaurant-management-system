@@ -3,6 +3,7 @@
 import StripePaymentModal from "@/components/payments/StripePaymentModal";
 import Modal from "@/components/ui/Modal";
 import { useCustomer } from "@/context/CustomerContext";
+import { useRestaurantSlug } from "@/hooks/useRestaurantSlug";
 import { formatCustomerMoney } from "@/lib/customerCurrency";
 import { Bike, ConciergeBell, Loader2, Phone, Store } from "lucide-react";
 import Link from "next/link";
@@ -49,6 +50,7 @@ export default function CheckoutPage() {
     refreshAuth,
   } = useCustomer();
   const router = useRouter();
+  const { link } = useRestaurantSlug();
   const [loading, setLoading] = useState(false);
   const [paying, setPaying] = useState(false);
   const [stripeCheckout, setStripeCheckout] = useState(null);
@@ -131,15 +133,15 @@ export default function CheckoutPage() {
   function finishSuccess(orderId) {
     clearCart();
     showToast("Order placed successfully.");
-    router.push(`/order/success?id=${encodeURIComponent(orderId)}`);
+    router.push(link(`/order/success?id=${encodeURIComponent(orderId)}`));
   }
 
   // Redirect to menu if cart is empty — must be in useEffect, not during render
   useEffect(() => {
     if (lines.length === 0) {
-      router.replace("/order/menu");
+      router.replace(link("/order/menu"));
     }
-  }, [lines.length, router]);
+  }, [lines.length, router, link]);
 
   useEffect(() => {
     let mounted = true;
@@ -429,7 +431,7 @@ export default function CheckoutPage() {
     <div className="mx-auto max-w-5xl px-4 py-10 sm:px-6 lg:px-8">
       <div className="mb-8 rounded-2xl border border-zinc-200 bg-white/85 px-5 py-4 shadow-sm">
         <div className="flex items-center gap-3">
-        <Link href="/order/cart" className="cursor-pointer text-sm text-zinc-500 hover:text-zinc-800">← Cart</Link>
+        <Link href={link("/order/cart")} className="cursor-pointer text-sm text-zinc-500 hover:text-zinc-800">← Cart</Link>
         <span className="text-zinc-400">/</span>
         <h1 className="text-2xl font-bold text-zinc-900">Checkout</h1>
         </div>

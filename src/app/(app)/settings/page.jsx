@@ -7,11 +7,7 @@ import TimePicker from "@/components/settings/TimePicker";
 import ToggleSwitch from "@/components/settings/ToggleSwitch";
 import GatewaySettingsSection from "@/components/payment-settings/GatewaySettingsSection";
 import BankAccountSection from "@/components/payment-settings/BankAccountSection";
-import SettlementSection from "@/components/payment-settings/SettlementSection";
 import TaxSettingsSection from "@/components/payment-settings/TaxSettingsSection";
-import PaymentTransactionsSection from "@/components/payment-settings/PaymentTransactionsSection";
-import RefundManagementSection from "@/components/payment-settings/RefundManagementSection";
-import PayoutRequestsSection from "@/components/payment-settings/PayoutRequestsSection";
 import {
   CURRENCY_OPTIONS,
   EMPTY_SETTINGS,
@@ -28,7 +24,7 @@ import { useUser } from "@/context/AuthContext";
 import { CheckCircle2, Loader2, Mail, Upload, XCircle } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 
-const PAYMENT_TABS = ["payments","gateway","bank","settlement","tax","transactions","refunds","payouts"];
+const PAYMENT_TABS = ["payments","billing"];
 
 export default function SettingsPage() {
   const { user, hydrated } = useUser();
@@ -40,6 +36,7 @@ export default function SettingsPage() {
   const [testingSmtp, setTestingSmtp] = useState(false);
   const [smtpTestRecipient, setSmtpTestRecipient] = useState("");
   const [toast, setToast] = useState(null);
+  const [restaurantSlug, setRestaurantSlug] = useState(null);
 
   // Payment settings state (separate API)
   const [paySettings, setPaySettings] = useState(EMPTY_PAYMENT_SETTINGS);
@@ -70,6 +67,7 @@ export default function SettingsPage() {
           };
           setSettings(safe);
           setSavedSnapshot(safe);
+          if (data.restaurantSlug) setRestaurantSlug(data.restaurantSlug);
         }
       } catch { showToast("error", "Failed to load settings."); }
       finally { setIsLoading(false); }
@@ -190,29 +188,69 @@ export default function SettingsPage() {
 
         <div className="space-y-4">
 
-          {/* ── GENERAL ── */}
+          {/* ── GENERAL (with Notifications merged) ── */}
           {activeTab === "general" && (
-            <SettingsFormSection title="General Settings" description="Basic profile and localization for your restaurant.">
-              <div className="grid gap-4 md:grid-cols-2">
-                <InputField label="Restaurant Name" value={settings.general.restaurantName}
-                  onChange={(v) => setSettings((p) => ({ ...p, general: { ...p.general, restaurantName: v } }))} />
-                <div>
-                  <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-zinc-500">Logo Upload</label>
-                  <label className="flex cursor-pointer items-center gap-2 rounded-xl border border-zinc-800 bg-zinc-950/80 px-3 py-2.5 text-sm text-zinc-300 hover:border-zinc-700">
-                    <Upload className="size-4 text-zinc-400" />
-                    <span>{settings.general.logoName || "Choose logo file"}</span>
-                    <input type="file" className="hidden" accept="image/*"
-                      onChange={(e) => setSettings((p) => ({ ...p, general: { ...p.general, logoName: e.target.files?.[0]?.name || "" } }))} />
-                  </label>
+            <div className="space-y-5">
+
+              {/* Customer Site URL card */}
+              <div className={`flex items-start gap-3 rounded-xl border px-4 py-3.5 ${
+                restaurantSlug
+                  ? "border-emerald-500/25 bg-emerald-500/8"
+                  : "border-amber-500/25 bg-amber-500/8"
+              }`}>
+                <span className="mt-0.5 text-xl">{restaurantSlug ? "🔗" : "⚠️"}</span>
+                <div className="min-w-0 flex-1">
+                  <p className={`text-sm font-semibold ${restaurantSlug ? "text-emerald-300" : "text-amber-300"}`}>
+                    {restaurantSlug ? "Customer Site URL" : "Customer URL Set Nahi Hai"}
+                  </p>
+                  {restaurantSlug ? (
+                    <p className="mt-0.5 truncate font-mono text-xs text-emerald-400/80">
+                      {typeof window !== "undefined" ? window.location.origin : ""}/r/{restaurantSlug}/home
+                    </p>
+                  ) : (
+                    <p className="mt-0.5 text-xs text-amber-400/80">
+                      Super Admin → Restaurants mein apna <strong>slug</strong> set karo taaki customers aapke restaurant ka URL use kar sakein.
+                    </p>
+                  )}
                 </div>
-                <InputField label="Currency" value={settings.general.currency} options={CURRENCY_OPTIONS}
-                  onChange={(v) => setSettings((p) => ({ ...p, general: { ...p.general, currency: v } }))} />
-                <InputField label="Timezone" value={settings.general.timezone} options={TIMEZONE_OPTIONS}
-                  onChange={(v) => setSettings((p) => ({ ...p, general: { ...p.general, timezone: v } }))} />
-                <InputField label="Language" value={settings.general.language} options={LANGUAGE_OPTIONS}
-                  onChange={(v) => setSettings((p) => ({ ...p, general: { ...p.general, language: v } }))} />
               </div>
-            </SettingsFormSection>
+              <SettingsFormSection title="General Settings" description="Basic profile and localization for your restaurant.">
+                <div className="grid gap-4 md:grid-cols-2">
+                  <InputField label="Restaurant Name" value={settings.general.restaurantName}
+                    onChange={(v) => setSettings((p) => ({ ...p, general: { ...p.general, restaurantName: v } }))} />
+                  <div>
+                    <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-zinc-500">Logo Upload</label>
+                    <label className="flex cursor-pointer items-center gap-2 rounded-xl border border-zinc-800 bg-zinc-950/80 px-3 py-2.5 text-sm text-zinc-300 hover:border-zinc-700">
+                      <Upload className="size-4 text-zinc-400" />
+                      <span>{settings.general.logoName || "Choose logo file"}</span>
+                      <input type="file" className="hidden" accept="image/*"
+                        onChange={(e) => setSettings((p) => ({ ...p, general: { ...p.general, logoName: e.target.files?.[0]?.name || "" } }))} />
+                    </label>
+                  </div>
+                  <InputField label="Currency" value={settings.general.currency} options={CURRENCY_OPTIONS}
+                    onChange={(v) => setSettings((p) => ({ ...p, general: { ...p.general, currency: v } }))} />
+                  <InputField label="Timezone" value={settings.general.timezone} options={TIMEZONE_OPTIONS}
+                    onChange={(v) => setSettings((p) => ({ ...p, general: { ...p.general, timezone: v } }))} />
+                  <InputField label="Language" value={settings.general.language} options={LANGUAGE_OPTIONS}
+                    onChange={(v) => setSettings((p) => ({ ...p, general: { ...p.general, language: v } }))} />
+                </div>
+              </SettingsFormSection>
+
+              <SettingsFormSection title="Notifications" description="Choose which alerts you want to receive.">
+                <div className="grid gap-3 md:grid-cols-2">
+                  <ToggleSwitch label="Order Notifications" checked={settings.notifications.orderNotifications}
+                    onChange={(v) => setSettings((p) => ({ ...p, notifications: { ...p.notifications, orderNotifications: v } }))} />
+                  <ToggleSwitch label="Reservation Alerts" checked={settings.notifications.reservationAlerts}
+                    onChange={(v) => setSettings((p) => ({ ...p, notifications: { ...p.notifications, reservationAlerts: v } }))} />
+                  <ToggleSwitch label="Low Stock Alerts" checked={settings.notifications.lowStockAlerts}
+                    onChange={(v) => setSettings((p) => ({ ...p, notifications: { ...p.notifications, lowStockAlerts: v } }))} />
+                  <ToggleSwitch label="Email Notifications" checked={settings.notifications.emailNotifications}
+                    onChange={(v) => setSettings((p) => ({ ...p, notifications: { ...p.notifications, emailNotifications: v } }))} />
+                  <ToggleSwitch label="SMS Notifications" checked={settings.notifications.smsNotifications}
+                    onChange={(v) => setSettings((p) => ({ ...p, notifications: { ...p.notifications, smsNotifications: v } }))} />
+                </div>
+              </SettingsFormSection>
+            </div>
           )}
 
           {/* ── POS ── */}
@@ -235,22 +273,47 @@ export default function SettingsPage() {
             </SettingsFormSection>
           )}
 
-          {/* ── PAYMENT METHODS ── */}
+          {/* ── PAYMENTS (Methods + Gateway merged) ── */}
           {activeTab === "payments" && (
-            <SettingsFormSection title="Payment Methods" description="Enable checkout payment options for customers.">
-              {payLoading ? (
-                <div className="flex h-32 items-center justify-center"><Loader2 className="size-5 animate-spin text-emerald-400" /></div>
-              ) : (
-                <>
-                  <div className="grid gap-3 md:grid-cols-2">
-                    {Object.keys(PAYMENT_METHOD_LABELS).map((key) => (
-                      <ToggleSwitch key={key} label={PAYMENT_METHOD_LABELS[key]}
-                        checked={Boolean(paySettings.methods?.[key])}
-                        onChange={(v) => setPaySettings((p) => ({ ...p, methods: { ...p.methods, [key]: v } }))} />
-                    ))}
+            payLoading ? (
+              <div className="flex h-32 items-center justify-center"><Loader2 className="size-5 animate-spin text-emerald-400" /></div>
+            ) : (
+              <div className="space-y-5">
+                {/* ── Section 1: Payment Methods ── */}
+                <SettingsFormSection
+                  title="Payment Methods"
+                  description="Tap to enable or disable. Enabled methods appear at customer checkout."
+                >
+                  {/* Method cards */}
+                  <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-5">
+                    {Object.entries(PAYMENT_METHOD_LABELS).map(([key, label]) => {
+                      const METHOD_ICONS = {
+                        cod: "💵", cashCounter: "🏪", upi: "📱",
+                        card: "💳", debitCard: "💳", netBanking: "🏦",
+                        wallet: "👛", qrCode: "📷", payLater: "⏰", bankTransfer: "🏧",
+                      };
+                      const enabled = Boolean(paySettings.methods?.[key]);
+                      return (
+                        <button key={key} type="button"
+                          onClick={() => setPaySettings((p) => ({ ...p, methods: { ...p.methods, [key]: !enabled } }))}
+                          className={`cursor-pointer rounded-xl border p-3 text-center transition-all ${
+                            enabled
+                              ? "border-emerald-500/40 bg-emerald-500/10 ring-1 ring-emerald-500/20"
+                              : "border-zinc-800 bg-zinc-950/40 opacity-50 hover:opacity-75"
+                          }`}>
+                          <div className="text-2xl mb-1">{METHOD_ICONS[key]}</div>
+                          <p className={`text-xs font-medium leading-tight ${enabled ? "text-emerald-400" : "text-zinc-400"}`}>
+                            {label}
+                          </p>
+                          <div className={`mt-1.5 mx-auto h-1 w-6 rounded-full ${enabled ? "bg-emerald-500" : "bg-zinc-700"}`} />
+                        </button>
+                      );
+                    })}
                   </div>
+
+                  {/* Default method */}
                   <div className="mt-4">
-                    <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-zinc-500">Default Payment Method</label>
+                    <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-zinc-500">Default at Checkout</label>
                     <select value={paySettings.methods?.defaultMethod ?? "cod"}
                       onChange={(e) => setPaySettings((p) => ({ ...p, methods: { ...p.methods, defaultMethod: e.target.value } }))}
                       className="w-full cursor-pointer rounded-xl border border-zinc-800 bg-zinc-950/80 px-3 py-2.5 text-sm text-zinc-100 outline-none focus:border-emerald-500/45">
@@ -259,57 +322,46 @@ export default function SettingsPage() {
                       ))}
                     </select>
                   </div>
-                </>
-              )}
-            </SettingsFormSection>
-          )}
 
-          {/* ── GATEWAY ── */}
-          {activeTab === "gateway" && (
-            payLoading
-              ? <div className="flex h-32 items-center justify-center"><Loader2 className="size-5 animate-spin text-emerald-400" /></div>
-              : <GatewaySettingsSection data={paySettings.gateways}
+                  <div className="mt-5 flex justify-end border-t border-zinc-800 pt-4">
+                    <button type="button" onClick={() => savePaySection("methods", paySettings.methods)}
+                      className="cursor-pointer inline-flex items-center gap-2 rounded-xl bg-emerald-500 px-4 py-2 text-sm font-semibold text-zinc-950 hover:bg-emerald-400 transition-colors">
+                      Save Methods
+                    </button>
+                  </div>
+                </SettingsFormSection>
+
+                {/* ── Section 2: Payment Gateway ── */}
+                <GatewaySettingsSection
+                  data={paySettings.gateways}
                   onChange={(d) => setPaySettings((p) => ({ ...p, gateways: d }))}
                   onSave={(d) => savePaySection("gateways", d)}
-                  showToast={showToast} />
+                  showToast={showToast}
+                />
+              </div>
+            )
           )}
 
-          {/* ── BANK ── */}
-          {activeTab === "bank" && (
-            payLoading
-              ? <div className="flex h-32 items-center justify-center"><Loader2 className="size-5 animate-spin text-emerald-400" /></div>
-              : <BankAccountSection data={paySettings.bank}
+          {/* ── BILLING INFO (Bank + Tax merged) ── */}
+          {activeTab === "billing" && (
+            payLoading ? (
+              <div className="flex h-32 items-center justify-center"><Loader2 className="size-5 animate-spin text-emerald-400" /></div>
+            ) : (
+              <div className="space-y-5">
+                {/* Bank Account */}
+                <BankAccountSection
+                  data={paySettings.bank}
                   onChange={(d) => setPaySettings((p) => ({ ...p, bank: d }))}
-                  onSave={(d) => savePaySection("bank", d)} />
-          )}
-
-          {/* ── SETTLEMENT ── */}
-          {activeTab === "settlement" && (
-            payLoading
-              ? <div className="flex h-32 items-center justify-center"><Loader2 className="size-5 animate-spin text-emerald-400" /></div>
-              : <SettlementSection data={paySettings.settlement}
-                  onChange={(d) => setPaySettings((p) => ({ ...p, settlement: d }))}
-                  onSave={(d) => savePaySection("settlement", d)} />
-          )}
-
-          {/* ── TAX ── */}
-          {activeTab === "tax" && (
-            payLoading
-              ? <div className="flex h-32 items-center justify-center"><Loader2 className="size-5 animate-spin text-emerald-400" /></div>
-              : <TaxSettingsSection data={paySettings.tax}
+                  onSave={(d) => savePaySection("bank", d)}
+                />
+                {/* Tax Settings */}
+                <TaxSettingsSection
+                  data={paySettings.tax}
                   onChange={(d) => setPaySettings((p) => ({ ...p, tax: d }))}
-                  onSave={(d) => savePaySection("tax", d)} />
-          )}
-
-          {/* ── TRANSACTIONS ── */}
-          {activeTab === "transactions" && <PaymentTransactionsSection showToast={showToast} />}
-
-          {/* ── REFUNDS ── */}
-          {activeTab === "refunds" && <RefundManagementSection showToast={showToast} />}
-
-          {/* ── PAYOUTS ── */}
-          {activeTab === "payouts" && (
-            <PayoutRequestsSection settlement={paySettings.settlement} showToast={showToast} />
+                  onSave={(d) => savePaySection("tax", d)}
+                />
+              </div>
+            )
           )}
 
           {/* ── EMAIL ── */}
@@ -349,24 +401,6 @@ export default function SettingsPage() {
                   {testingSmtp ? <Loader2 className="size-4 animate-spin" /> : <Mail className="size-4" />}
                   {testingSmtp ? "Sending…" : "Send test email"}
                 </button>
-              </div>
-            </SettingsFormSection>
-          )}
-
-          {/* ── NOTIFICATIONS ── */}
-          {activeTab === "notifications" && (
-            <SettingsFormSection title="Notifications" description="Choose where and when to receive important alerts.">
-              <div className="grid gap-3 md:grid-cols-2">
-                <ToggleSwitch label="Order Notifications" checked={settings.notifications.orderNotifications}
-                  onChange={(v) => setSettings((p) => ({ ...p, notifications: { ...p.notifications, orderNotifications: v } }))} />
-                <ToggleSwitch label="Reservation Alerts" checked={settings.notifications.reservationAlerts}
-                  onChange={(v) => setSettings((p) => ({ ...p, notifications: { ...p.notifications, reservationAlerts: v } }))} />
-                <ToggleSwitch label="Low Stock Alerts" checked={settings.notifications.lowStockAlerts}
-                  onChange={(v) => setSettings((p) => ({ ...p, notifications: { ...p.notifications, lowStockAlerts: v } }))} />
-                <ToggleSwitch label="Email Notifications" checked={settings.notifications.emailNotifications}
-                  onChange={(v) => setSettings((p) => ({ ...p, notifications: { ...p.notifications, emailNotifications: v } }))} />
-                <ToggleSwitch label="SMS Notifications" checked={settings.notifications.smsNotifications}
-                  onChange={(v) => setSettings((p) => ({ ...p, notifications: { ...p.notifications, smsNotifications: v } }))} />
               </div>
             </SettingsFormSection>
           )}

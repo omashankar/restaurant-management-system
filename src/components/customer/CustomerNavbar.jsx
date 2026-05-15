@@ -1,32 +1,39 @@
 "use client";
 
 import { useCustomer } from "@/context/CustomerContext";
+import { useRestaurantSlug } from "@/hooks/useRestaurantSlug";
 import { LogOut, Menu, ShoppingCart, UserRound, UtensilsCrossed, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 
-const NAV = [
-  { href: "/home",                label: "Home" },
-  { href: "/order/menu",          label: "Menu" },
-  { href: "/order/table-booking", label: "Book Table" },
-  { href: "/order/about",         label: "About" },
-  { href: "/order/contact",       label: "Contact" },
+const NAV_ITEMS = [
+  { path: "/home",                label: "Home" },
+  { path: "/order/menu",          label: "Menu" },
+  { path: "/order/table-booking", label: "Book Table" },
+  { path: "/order/about",         label: "About" },
+  { path: "/order/contact",       label: "Contact" },
 ];
 
 export default function CustomerNavbar() {
   const { cart, setOrderTypeModalOpen, setCartOpen, authUser, logoutCustomer } = useCustomer();
   const pathname = usePathname();
+  const { link, prefix } = useRestaurantSlug();
   const [open, setOpen] = useState(false);
 
-  const isActive = (href) => pathname === href || pathname.startsWith(href + "/");
+  // Active check — slug prefix ko ignore karke match karo
+  const isActive = (path) => {
+    // pathname se prefix hata ke compare karo
+    const stripped = prefix ? pathname.replace(prefix, "") || "/" : pathname;
+    return stripped === path || stripped.startsWith(path + "/");
+  };
 
   return (
     <header className="sticky top-0 z-50 border-b border-zinc-200/80 bg-white/90 shadow-sm backdrop-blur-md">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
 
         {/* Logo */}
-        <Link href="/home" className="cursor-pointer inline-flex shrink-0 items-center gap-2.5">
+        <Link href={link("/home")} className="cursor-pointer inline-flex shrink-0 items-center gap-2.5">
           <span className="flex size-9 items-center justify-center rounded-xl bg-emerald-500/15 text-emerald-600 ring-1 ring-emerald-500/20">
             <UtensilsCrossed className="size-5" aria-hidden />
           </span>
@@ -35,12 +42,12 @@ export default function CustomerNavbar() {
 
         {/* Desktop nav */}
         <nav className="hidden items-center gap-1 md:flex">
-          {NAV.map((n) => (
+          {NAV_ITEMS.map((n) => (
             <Link
-              key={n.href}
-              href={n.href}
+              key={n.path}
+              href={link(n.path)}
               className={`cursor-pointer rounded-lg px-3 py-2 text-sm font-medium transition-all ${
-                isActive(n.href)
+                isActive(n.path)
                   ? "bg-emerald-500/10 text-emerald-700 shadow-sm"
                   : "text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900"
               }`}
@@ -55,7 +62,7 @@ export default function CustomerNavbar() {
           {authUser ? (
             <>
               <Link
-                href="/account/dashboard"
+                href={link("/account/dashboard")}
                 className="hidden cursor-pointer items-center gap-1 rounded-xl border border-zinc-200 bg-white px-3 py-2 text-xs font-semibold text-zinc-700 hover:border-emerald-500/40 hover:text-emerald-700 sm:inline-flex"
               >
                 <UserRound className="size-3.5" />
@@ -72,7 +79,7 @@ export default function CustomerNavbar() {
             </>
           ) : (
             <Link
-              href="/account/login"
+              href={link("/account/login")}
               className="hidden cursor-pointer rounded-xl border border-zinc-200 bg-white px-4 py-2 text-xs font-bold text-zinc-700 hover:border-emerald-500/40 hover:text-emerald-700 sm:inline-flex"
             >
               Login
@@ -119,13 +126,13 @@ export default function CustomerNavbar() {
       {open && (
         <div className="border-t border-zinc-200 bg-white px-4 pb-4 pt-3 md:hidden">
           <div className="flex flex-col gap-1">
-            {NAV.map((n) => (
+            {NAV_ITEMS.map((n) => (
               <Link
-                key={n.href}
-                href={n.href}
+                key={n.path}
+                href={link(n.path)}
                 onClick={() => setOpen(false)}
                 className={`cursor-pointer rounded-xl px-3 py-2.5 text-sm font-medium transition-colors ${
-                  isActive(n.href)
+                  isActive(n.path)
                     ? "bg-emerald-500/10 text-emerald-700"
                     : "text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900"
                 }`}
@@ -143,7 +150,7 @@ export default function CustomerNavbar() {
             {authUser ? (
               <>
                 <Link
-                  href="/account/dashboard"
+                  href={link("/account/dashboard")}
                   onClick={() => setOpen(false)}
                   className="cursor-pointer rounded-xl px-3 py-2.5 text-sm font-medium text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900"
                 >
@@ -159,7 +166,7 @@ export default function CustomerNavbar() {
               </>
             ) : (
               <Link
-                href="/account/login"
+                href={link("/account/login")}
                 onClick={() => setOpen(false)}
                 className="cursor-pointer rounded-xl px-3 py-2.5 text-sm font-medium text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900"
               >

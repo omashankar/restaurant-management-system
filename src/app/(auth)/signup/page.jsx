@@ -17,9 +17,21 @@ export default function SignupPage() {
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [restaurantName, setRestaurantName] = useState("");
+  const [slug, setSlug] = useState("");
+  const [slugManuallyEdited, setSlugManuallyEdited] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [successMsg, setSuccessMsg] = useState("");
+
+  // Restaurant name se auto slug generate karo
+  const handleRestaurantNameChange = (val) => {
+    setRestaurantName(val);
+    // Sirf tab auto-generate karo jab user ne manually slug nahi badla
+    if (!slugManuallyEdited) {
+      const autoSlug = val.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+      setSlug(autoSlug);
+    }
+  };
 
   useEffect(() => {
     if (!hydrated) return;
@@ -36,7 +48,7 @@ export default function SignupPage() {
       const res = await fetch("/api/auth/signup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, phone, password, restaurantName }),
+        body: JSON.stringify({ name, email, phone, password, restaurantName, slug }),
       });
       const data = await res.json();
       if (!data.success) {
@@ -79,10 +91,36 @@ export default function SignupPage() {
               id="restaurantName"
               required
               value={restaurantName}
-              onChange={(e) => setRestaurantName(e.target.value)}
+              onChange={(e) => handleRestaurantNameChange(e.target.value)}
               placeholder="e.g. The Grand Kitchen"
               className={inputCls}
             />
+          </div>
+
+          {/* Slug field */}
+          <div>
+            <label htmlFor="slug" className="text-xs font-medium uppercase tracking-wider text-zinc-500">
+              Customer Site URL <span className="text-red-400">*</span>
+            </label>
+            <div className="mt-1.5 flex items-center overflow-hidden rounded-xl border border-zinc-700 bg-zinc-950/80 focus-within:border-emerald-500/50 focus-within:ring-2 focus-within:ring-emerald-500/20">
+              <span className="shrink-0 border-r border-zinc-700 bg-zinc-800/80 px-3 py-3 text-xs text-zinc-500 whitespace-nowrap">
+                yoursite.com/r/
+              </span>
+              <input
+                id="slug"
+                required
+                value={slug}
+                onChange={(e) => {
+                  setSlugManuallyEdited(true);
+                  setSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ""));
+                }}
+                placeholder="the-grand-kitchen"
+                className="w-full bg-transparent px-3 py-3 text-sm text-zinc-100 outline-none placeholder:text-zinc-600"
+              />
+            </div>
+            <p className="mt-1 text-[11px] text-zinc-600">
+              Yahi URL customers use karenge. Sirf lowercase letters, numbers aur hyphens.
+            </p>
           </div>
           <div>
             <label htmlFor="name" className="text-xs font-medium uppercase tracking-wider text-zinc-500">Your Name</label>

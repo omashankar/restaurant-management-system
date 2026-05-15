@@ -1,27 +1,11 @@
 import clientPromise from "@/lib/mongodb";
-import { ObjectId } from "mongodb";
-
-async function getPublicRestaurantId(db) {
-  const envRestaurantId = process.env.NEXT_PUBLIC_RESTAURANT_ID?.trim();
-  if (envRestaurantId) {
-    try {
-      return new ObjectId(envRestaurantId);
-    } catch {
-      // ignore malformed env and fallback to active restaurant
-    }
-  }
-  const restaurant = await db.collection("restaurants").findOne(
-    { status: "active" },
-    { sort: { createdAt: 1 }, projection: { _id: 1 } }
-  );
-  return restaurant?._id ?? null;
-}
+import { getRestaurantIdFromRequest } from "@/lib/restaurantResolver";
 
 export async function GET(request) {
   try {
     const client = await clientPromise;
     const db = client.db();
-    const restaurantId = await getPublicRestaurantId(db);
+    const restaurantId = await getRestaurantIdFromRequest(db, request);
     if (!restaurantId) {
       return Response.json({ success: true, items: [] });
     }

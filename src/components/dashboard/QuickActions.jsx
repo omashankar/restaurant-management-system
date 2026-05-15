@@ -5,7 +5,6 @@ import {
   BarChart3,
   ShoppingCart,
   Table2,
-  UserCog,
   UtensilsCrossed,
 } from "lucide-react";
 import Link from "next/link";
@@ -42,14 +41,6 @@ const ALL_ACTIONS = [
     Icon: Table2,
     accent: "amber",
     permission: "manage_tables",
-  },
-  {
-    href: "/staff",
-    label: "Manage Staff",
-    sub: "Team roster",
-    Icon: UserCog,
-    accent: "violet",
-    permission: "manage_staff",
   },
 ];
 

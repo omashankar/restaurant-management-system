@@ -40,6 +40,11 @@ export async function PATCH(request, { params }) {
   if (body.name)    update.name    = body.name.trim();
   if (body.phone   != null) update.phone   = body.phone.trim();
   if (body.address != null) update.address = body.address.trim();
+  // Slug update
+  if (body.slug != null) {
+    const cleanSlug = String(body.slug).toLowerCase().replace(/[^a-z0-9-]/g, "").trim();
+    update.slug = cleanSlug || null;
+  }
   update.updatedAt = new Date();
   if (Object.keys(update).length === 1) {
     return Response.json({ success: false, error: "No valid fields to update." }, { status: 400 });
@@ -48,6 +53,25 @@ export async function PATCH(request, { params }) {
   try {
     const client = await clientPromise;
     const db     = client.db();
+
+    // Duplicate slug check (apne aap ko exclude karo)
+    if (update.slug) {
+      const existingSlug = await db.collection("restaurants").findOne({
+        slug: update.slug,
+        _id: { $ne: _id },
+      });
+      if (existingSlug) {
+        return Response.json({ success: false, error: "Yeh slug pehle se kisi aur restaurant ke paas hai." }, { status: 409 });
+      }
+    }
+
+    // Slug change hone par cache invalidate karo
+    if (update.slug !== undefined) {
+      const { invalidateRestaurantSlugCache } = await import("@/lib/restaurantResolver");
+      const oldDoc = await db.collection("restaurants").findOne({ _id }, { projection: { slug: 1 } });
+      if (oldDoc?.slug) invalidateRestaurantSlugCache(oldDoc.slug);
+      if (update.slug) invalidateRestaurantSlugCache(update.slug);
+    }
 
     const session = client.startSession();
     try {

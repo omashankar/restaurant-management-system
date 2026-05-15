@@ -3,6 +3,7 @@
 import SafeDishImage from "@/components/customer/SafeDishImage";
 import { useCustomer } from "@/context/CustomerContext";
 import { useModuleData } from "@/context/ModuleDataContext";
+import { useRestaurantSlug } from "@/hooks/useRestaurantSlug";
 import {
   CUSTOMER_MENU_CONTENT,
   CUSTOMER_MENU_TYPE_FILTERS,
@@ -11,7 +12,8 @@ import { formatCustomerMoney } from "@/lib/customerCurrency";
 import { ITEM_TYPE_META } from "@/types/menu";
 import { Bike, Clock, ConciergeBell, Plus, Search, ShoppingCart, Store, UtensilsCrossed, Zap } from "lucide-react";
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
+import { useEffect, useMemo, useState, Suspense } from "react";
 
 const TYPE_ICON = { "dine-in": Store, takeaway: ConciergeBell, delivery: Bike };
 const TYPE_LABEL = { "dine-in": "Dine-In", takeaway: "Takeaway", delivery: "Delivery" };
@@ -26,13 +28,30 @@ function typeButtonClass(type) {
   return "";
 }
 
-export default function CustomerMenuPage() {
-  const { cart, setOrderTypeModalOpen, orderType, showToast, setCartOpen } = useCustomer();
+function CustomerMenuPageContent() {
+  const { cart, setOrderTypeModalOpen, orderType, setOrderType, updateCustomer, showToast, setCartOpen } = useCustomer();
   const { menuItems, categories } = useModuleData();
+  const { link } = useRestaurantSlug();
+  const searchParams = useSearchParams();
   const [search, setSearch] = useState("");
   const [activeCategory, setActiveCategory] = useState("all");
   const [activeType, setActiveType] = useState("all");
   const [fastOnly, setFastOnly] = useState(false);
+
+  // ✅ Auto-set order type + table number from QR URL params
+  // e.g. /order/menu?table=5&type=dine-in
+  useEffect(() => {
+    const tableParam = searchParams.get("table");
+    const typeParam  = searchParams.get("type");
+    if (typeParam && ["dine-in", "takeaway", "delivery"].includes(typeParam)) {
+      setOrderType(typeParam);
+    }
+    if (tableParam) {
+      updateCustomer({ tableNumber: tableParam });
+      if (!typeParam) setOrderType("dine-in"); // default to dine-in if table given
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const activeItems = useMemo(() => menuItems.filter((m) => m.status === "active"), [menuItems]);
 
@@ -96,7 +115,7 @@ export default function CustomerMenuPage() {
           )}
           {cartBar && (
             <Link
-              href="/order/cart"
+              href={link("/order/cart")}
               className={`cursor-pointer inline-flex min-h-[40px] items-center gap-2 rounded-xl bg-emerald-500 px-4 py-2 text-xs font-bold text-zinc-950 shadow-md shadow-emerald-600/15 transition-colors hover:bg-emerald-400 ${focusRing}`}
             >
               <ShoppingCart className="size-3.5 shrink-0" aria-hidden />
@@ -281,7 +300,7 @@ export default function CustomerMenuPage() {
       {cartBar && (
         <div className="fixed bottom-0 left-0 right-0 z-40 p-4 pb-[max(1rem,env(safe-area-inset-bottom))] md:hidden">
           <Link
-            href="/order/cart"
+            href={link("/order/cart")}
             className={`mx-auto flex max-w-lg items-center justify-between gap-3 rounded-2xl bg-emerald-500 px-5 py-3.5 shadow-2xl shadow-emerald-900/20 ring-1 ring-emerald-400/30 ${focusRing}`}
           >
             <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-emerald-600 text-sm font-bold text-white shadow-inner">
@@ -295,5 +314,13 @@ export default function CustomerMenuPage() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function CustomerMenuPage() {
+  return (
+    <Suspense fallback={<div className="flex min-h-screen items-center justify-center text-zinc-500 text-sm">Loading menu…</div>}>
+      <CustomerMenuPageContent />
+    </Suspense>
   );
 }

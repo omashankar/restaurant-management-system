@@ -1,0 +1,42 @@
+{
+  "name": "Restaurant Management System",
+  "short_name": "RMS",
+  "description": "Premium India-focused Restaurant POS & Food Ordering System",
+  "start_url": "/dashboard",
+  "display": "standalone",
+  "background_color": "#09090b",
+  "theme_color": "#10b981",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "/next.svg",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/next.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["food", "business", "productivity"],
+  "lang": "en-IN",
+  "shortcuts": [
+    {
+      "name": "POS",
+      "short_name": "POS",
+      "description": "Open Point of Sale",
+      "url": "/pos",
+      "icons": [{ "src": "/next.svg", "sizes": "96x96" }]
+    },
+    {
+      "name": "Orders",
+      "short_name": "Orders",
+      "description": "View Orders",
+      "url": "/orders",
+      "icons": [{ "src": "/next.svg", "sizes": "96x96" }]
+    }
+  ]
+}

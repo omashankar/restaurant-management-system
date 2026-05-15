@@ -31,8 +31,7 @@ export const GET = withTenant(
     const settings = {
       methods:    { ...EMPTY_PAYMENT_SETTINGS.methods,    ...(doc?.methods    ?? {}) },
       gateways:   {},
-      bank:       maskBank({ ...EMPTY_PAYMENT_SETTINGS.bank,       ...(doc?.bank       ?? {}) }),
-      settlement: { ...EMPTY_PAYMENT_SETTINGS.settlement, ...(doc?.settlement ?? {}) },
+      bank:       maskBank({ ...EMPTY_PAYMENT_SETTINGS.bank, ...(doc?.bank ?? {}) }),
       tax:        { ...EMPTY_PAYMENT_SETTINGS.tax,        ...(doc?.tax        ?? {}) },
     };
 
@@ -111,10 +110,6 @@ export const PATCH = withTenant(["admin"], async ({ db, restaurantId }, request)
     updateValue.gstPercentage = String(Number(updateValue.gstPercentage) || 0);
   } else if (section === "methods") {
     updateValue = { ...EMPTY_PAYMENT_SETTINGS.methods, ...(existing?.methods ?? {}), ...data };
-  } else if (section === "settlement") {
-    updateValue = { ...EMPTY_PAYMENT_SETTINGS.settlement, ...(existing?.settlement ?? {}), ...data };
-    updateValue.minWithdrawalAmount = Number(updateValue.minWithdrawalAmount) || 100;
-    updateValue.autoSettle = Boolean(updateValue.autoSettle);
   } else {
     updateValue = data;
   }

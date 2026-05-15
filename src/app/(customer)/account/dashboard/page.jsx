@@ -1,6 +1,7 @@
 "use client";
 
 import { useCustomer } from "@/context/CustomerContext";
+import { useRestaurantSlug } from "@/hooks/useRestaurantSlug";
 import { formatCustomerMoney } from "@/lib/customerCurrency";
 import { Calendar, ChevronRight, Heart, Loader2, LogOut, MapPin, ShoppingBag, UserRound, Wallet } from "lucide-react";
 import Link from "next/link";
@@ -26,6 +27,7 @@ function formatDate(iso) {
 export default function CustomerDashboardPage() {
   const router = useRouter();
   const { authUser, authLoading, refreshAuth, logoutCustomer, showToast } = useCustomer();
+  const { link } = useRestaurantSlug();
   const [orders, setOrders] = useState([]);
   const [bookings, setBookings] = useState([]);
   const [loadingData, setLoadingData] = useState(true);
@@ -43,7 +45,7 @@ export default function CustomerDashboardPage() {
 
   useEffect(() => {
     if (!authLoading && !authUser) {
-      router.replace("/account/login");
+      router.replace(link("/account/login"));
     }
   }, [authLoading, authUser, router]);
 
@@ -94,7 +96,7 @@ export default function CustomerDashboardPage() {
         return;
       }
       showToast("Reorder placed successfully.");
-      router.push(`/order/success?id=${encodeURIComponent(data.order.orderId)}`);
+      router.push(link(`/order/success?id=${encodeURIComponent(data.order.orderId)}`));
     } catch {
       showToast("Network error.", "error");
     } finally {
@@ -149,7 +151,7 @@ export default function CustomerDashboardPage() {
           type="button"
           onClick={async () => {
             await logoutCustomer();
-            router.push("/account/login");
+            router.push(link("/account/login"));
           }}
           className="inline-flex shrink-0 items-center gap-1.5 rounded-xl border border-zinc-300 bg-white px-3 py-2 text-sm font-medium text-zinc-700 hover:border-red-400 hover:text-red-600"
         >
@@ -206,7 +208,7 @@ export default function CustomerDashboardPage() {
             {orders.map((o) => (
               <li key={o.id}>
                 <Link
-                  href={`/account/orders/${o.id}`}
+                  href={link(`/account/orders/${o.id}`)}
                   className="flex items-center gap-3 py-3 transition hover:bg-zinc-50/80 sm:rounded-xl sm:px-2"
                 >
                   <div className="min-w-0 flex-1">

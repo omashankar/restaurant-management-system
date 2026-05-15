@@ -1,6 +1,7 @@
 "use client";
 
 import StripePaymentModal from "@/components/payments/StripePaymentModal";
+import PaymentTransactionsSection from "@/components/payment-settings/PaymentTransactionsSection";
 import { useToast } from "@/hooks/useToast";
 import { CheckCircle2, CreditCard, Loader2, RefreshCw } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -10,6 +11,11 @@ const PLAN_COLORS = [
   "border-indigo-500/30 bg-indigo-500/5",
   "border-emerald-500/30 bg-emerald-500/5",
   "border-amber-500/30 bg-amber-500/5",
+];
+
+const TABS = [
+  { id: "subscription", label: "Subscription" },
+  { id: "transactions", label: "Transactions" },
 ];
 
 async function loadRazorpayScript() {
@@ -26,6 +32,7 @@ async function loadRazorpayScript() {
 }
 
 export default function BillingPage() {
+  const [activeTab, setActiveTab] = useState("subscription");
   const [loading, setLoading] = useState(true);
   const [submittingPlan, setSubmittingPlan] = useState("");
   const [billingCycle, setBillingCycle] = useState("monthly");
@@ -171,6 +178,7 @@ export default function BillingPage() {
 
   return (
     <div className="space-y-6">
+      {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div className="flex items-start gap-3">
           <span className="mt-1 flex size-10 shrink-0 items-center justify-center rounded-xl bg-indigo-500/15 text-indigo-400 ring-1 ring-indigo-500/25">
@@ -178,18 +186,39 @@ export default function BillingPage() {
           </span>
           <div>
             <h1 className="text-2xl font-semibold tracking-tight text-zinc-50">Billing</h1>
-            <p className="mt-1 text-sm text-zinc-500">Choose plan and pay subscription to keep your restaurant active.</p>
+            <p className="mt-1 text-sm text-zinc-500">Manage your subscription plan and view payment transactions.</p>
           </div>
         </div>
-        <button
-          type="button"
-          onClick={fetchOverview}
-          className="cursor-pointer inline-flex items-center gap-2 rounded-xl border border-zinc-700 px-3 py-2 text-sm text-zinc-300 hover:border-zinc-500"
-        >
-          <RefreshCw className={`size-4 ${loading ? "animate-spin" : ""}`} />
-          Refresh
-        </button>
+        <div className="flex items-center gap-2">
+          {/* Tabs */}
+          <div className="flex rounded-xl border border-zinc-800 bg-zinc-900/60 p-1">
+            {TABS.map((tab) => (
+              <button key={tab.id} type="button" onClick={() => setActiveTab(tab.id)}
+                className={`cursor-pointer rounded-lg px-4 py-1.5 text-sm font-medium transition-colors ${
+                  activeTab === tab.id
+                    ? "bg-emerald-500 text-zinc-950"
+                    : "text-zinc-400 hover:text-zinc-200"
+                }`}>
+                {tab.label}
+              </button>
+            ))}
+          </div>
+          {activeTab === "subscription" && (
+            <button type="button" onClick={fetchOverview}
+              className="cursor-pointer inline-flex items-center gap-2 rounded-xl border border-zinc-700 px-3 py-2 text-sm text-zinc-300 hover:border-zinc-500">
+              <RefreshCw className={`size-4 ${loading ? "animate-spin" : ""}`} />
+            </button>
+          )}
+        </div>
       </div>
+
+      {/* Transactions Tab */}
+      {activeTab === "transactions" && (
+        <PaymentTransactionsSection showToast={showToast} />
+      )}
+
+      {/* Subscription Tab */}
+      {activeTab === "subscription" && (<>
 
       <div className="grid gap-4 md:grid-cols-3">
         <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-5 md:col-span-2">
@@ -330,6 +359,8 @@ export default function BillingPage() {
           }}
         />
       ) : null}
+
+      </>)}
 
       {ToastUI}
     </div>

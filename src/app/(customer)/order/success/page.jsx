@@ -1,5 +1,6 @@
 "use client";
 
+import { useRestaurantSlug } from "@/hooks/useRestaurantSlug";
 import { CheckCircle2, Clock, ShoppingBag, UtensilsCrossed } from "lucide-react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
@@ -8,6 +9,7 @@ import { Suspense } from "react";
 function SuccessContent() {
   const params = useSearchParams();
   const orderId = params.get("id") ?? "ORD-XXXX";
+  const { link } = useRestaurantSlug();
 
   return (
     <div className="mx-auto flex min-h-[85vh] max-w-3xl flex-col items-center justify-center px-4 py-16 text-center">
@@ -43,13 +45,13 @@ function SuccessContent() {
       {/* Actions */}
       <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
         <Link
-          href="/order/menu"
+          href={link("/order/menu")}
           className="cursor-pointer inline-flex items-center gap-2 rounded-xl bg-emerald-500 px-6 py-3 text-sm font-bold text-zinc-950 shadow-lg shadow-emerald-500/20 transition-colors hover:bg-emerald-400"
         >
           <UtensilsCrossed className="size-4" /> Order Again
         </Link>
         <Link
-          href="/home"
+          href={link("/home")}
           className="cursor-pointer inline-flex items-center rounded-xl border border-zinc-300 px-6 py-3 text-sm font-medium text-zinc-700 transition-colors hover:border-zinc-400 hover:text-zinc-900"
         >
           Back to Home

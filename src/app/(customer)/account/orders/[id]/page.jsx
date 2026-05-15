@@ -1,6 +1,7 @@
 "use client";
 
 import { useCustomer } from "@/context/CustomerContext";
+import { useRestaurantSlug } from "@/hooks/useRestaurantSlug";
 import { formatCustomerMoney } from "@/lib/customerCurrency";
 import { ArrowLeft, BellRing, Loader2, Receipt } from "lucide-react";
 import Link from "next/link";
@@ -22,6 +23,7 @@ export default function CustomerOrderDetailPage() {
   const params = useParams();
   const id = params?.id;
   const { authUser, authLoading } = useCustomer();
+  const { link } = useRestaurantSlug();
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -29,9 +31,9 @@ export default function CustomerOrderDetailPage() {
 
   useEffect(() => {
     if (!authLoading && !authUser) {
-      router.replace("/account/login");
+      router.replace(link("/account/login"));
     }
-  }, [authLoading, authUser, router]);
+  }, [authLoading, authUser, router, link]);
 
   useEffect(() => {
     if (!id || !authUser) return undefined;
@@ -98,7 +100,7 @@ export default function CustomerOrderDetailPage() {
   return (
     <div className="mx-auto max-w-lg px-4 py-8 sm:px-6">
       <Link
-        href="/account/dashboard#orders"
+        href={link("/account/dashboard")}
         className="mb-6 inline-flex items-center gap-1 text-sm font-medium text-zinc-600 hover:text-zinc-900"
       >
         <ArrowLeft className="size-4" aria-hidden />

@@ -1,6 +1,7 @@
 import { withTenant } from "@/lib/tenantDb";
 import { logInfo } from "@/lib/logger";
 import { orderPatchSchema, parseSchema } from "@/lib/validationSchemas";
+import { sendOrderWhatsApp } from "@/lib/whatsappService";
 import { ObjectId } from "mongodb";
 
 function getFilter(tenantFilter, id) {
@@ -59,6 +60,30 @@ export const PATCH = withTenant(
       ).catch(() => {});
     }
     logInfo("order.updated", { route: "/api/orders/[id]", orderId: params.id, status: parsed.status ?? null });
+
+    // ── WhatsApp triggers on status change ──
+    if (parsed.status && existing.customerInfo?.phone) {
+      const eventMap = {
+        preparing: "order_preparing",
+        ready:     "out_for_delivery",
+        completed: "order_delivered",
+      };
+      const event = eventMap[parsed.status];
+      if (event) {
+        const settingsDoc = await db.collection("restaurant_settings").findOne(
+          { restaurantId: existing.restaurantId },
+          { projection: { "general.restaurantName": 1 } }
+        ).catch(() => null);
+        sendOrderWhatsApp({
+          event,
+          order: { ...existing, ...update },
+          db,
+          restaurantId: existing.restaurantId,
+          restaurantName: settingsDoc?.general?.restaurantName ?? "Restaurant",
+        }).catch(() => {}); // fire-and-forget
+      }
+    }
+
     return Response.json({ success: true });
   }
 );

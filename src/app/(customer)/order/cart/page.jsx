@@ -2,6 +2,7 @@
 
 import SafeDishImage from "@/components/customer/SafeDishImage";
 import { useCustomer } from "@/context/CustomerContext";
+import { useRestaurantSlug } from "@/hooks/useRestaurantSlug";
 import { formatCustomerMoney } from "@/lib/customerCurrency";
 import { Bike, Clock, ConciergeBell, Minus, Plus, ShoppingCart, Store, Trash2 } from "lucide-react";
 import Link from "next/link";
@@ -21,6 +22,7 @@ function typeIconColor(type) {
 
 export default function CartPage() {
   const { cart, orderType, setOrderTypeModalOpen } = useCustomer();
+  const { link } = useRestaurantSlug();
   const { lines, removeItem, setQty, subtotal, maxPrepTime } = cart;
   const tax = subtotal * 0.08;
   const total = subtotal + tax;
@@ -37,7 +39,7 @@ export default function CartPage() {
           <p className="mt-2 text-sm leading-relaxed text-zinc-600">Add dishes from the menu — they&apos;ll show up here with quantities and totals.</p>
         </div>
         <Link
-          href="/order/menu"
+          href={link("/order/menu")}
           className={`cursor-pointer inline-flex min-h-[44px] items-center justify-center rounded-xl bg-emerald-500 px-8 py-3 text-sm font-bold text-zinc-950 shadow-lg shadow-emerald-600/15 transition-colors hover:bg-emerald-400 ${focusRing}`}
         >
           Browse menu
@@ -151,13 +153,13 @@ export default function CartPage() {
 
       <div className="mt-6 space-y-3">
         <Link
-          href="/order/checkout"
+          href={link("/order/checkout")}
           className={`cursor-pointer flex min-h-[48px] w-full items-center justify-center rounded-xl bg-emerald-500 py-3.5 text-sm font-bold text-zinc-950 shadow-lg shadow-emerald-600/15 transition-colors hover:bg-emerald-400 ${focusRing}`}
         >
           Proceed to checkout · {formatCustomerMoney(total)}
         </Link>
         <Link
-          href="/order/menu"
+          href={link("/order/menu")}
           className={`cursor-pointer flex min-h-[44px] w-full items-center justify-center rounded-xl border border-zinc-200 bg-white py-3 text-sm font-semibold text-zinc-700 transition-colors hover:border-zinc-300 hover:bg-zinc-50 ${focusRing}`}
         >
           ← Continue shopping

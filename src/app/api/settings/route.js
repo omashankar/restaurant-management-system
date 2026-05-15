@@ -79,7 +79,16 @@ export const GET = withTenant(
       settings.email = { ...settings.email, smtpPassword: SECRET_MASK };
     }
 
-    return Response.json({ success: true, settings });
+    // Restaurant slug (for multi-restaurant customer URL)
+    const restaurantDoc = restaurantId
+      ? await db.collection("restaurants").findOne(
+          { _id: restaurantId },
+          { projection: { slug: 1, name: 1 } }
+        )
+      : null;
+    const restaurantSlug = restaurantDoc?.slug ?? null;
+
+    return Response.json({ success: true, settings, restaurantSlug });
   }
 );
 

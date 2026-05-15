@@ -33,7 +33,7 @@ const PLAN_DOT = {
 };
 
 const emptyForm = {
-  name: "", ownerName: "", ownerEmail: "", ownerPassword: "",
+  name: "", slug: "", ownerName: "", ownerEmail: "", ownerPassword: "",
   phone: "", address: "", plan: "free", status: "active",
 };
 
@@ -182,6 +182,7 @@ export default function RestaurantsPage() {
   // Create modal
   const [createOpen, setCreateOpen]   = useState(false);
   const [createForm, setCreateForm]   = useState(emptyForm);
+  const [slugManuallyEdited, setSlugManuallyEdited] = useState(false);
   const [createError, setCreateError] = useState("");
   const [creating, setCreating]       = useState(false);
   const [showPw, setShowPw]           = useState(false);
@@ -292,6 +293,7 @@ export default function RestaurantsPage() {
   /* Create */
   const handleCreate = async () => {
     if (!createForm.name.trim())       { setCreateError("Restaurant name is required."); return; }
+    if (!createForm.slug.trim())       { setCreateError("Customer site URL (slug) is required."); return; }
     if (!createForm.ownerEmail.trim()) { setCreateError("Owner email is required."); return; }
     if (!createForm.ownerPassword)     { setCreateError("Password is required."); return; }
     if (createForm.ownerPassword.length < 6) { setCreateError("Password must be at least 6 characters."); return; }
@@ -305,7 +307,7 @@ export default function RestaurantsPage() {
       const data = await res.json();
       if (!data.success) { setCreateError(data.error ?? "Failed to create."); return; }
       showToast(createForm.name + " created successfully.");
-      setCreateOpen(false); setCreateForm(emptyForm);
+      setCreateOpen(false); setCreateForm(emptyForm); setSlugManuallyEdited(false);
       setPage(1);
       await fetchRestaurants(1);
     } catch { setCreateError("Network error."); }
@@ -315,7 +317,7 @@ export default function RestaurantsPage() {
   /* Open edit */
   const openEdit = (r) => {
     setEditTarget(r);
-    setEditForm({ name: r.name, plan: r.plan, phone: r.phone !== "—" ? r.phone : "", address: r.address ?? "" });
+    setEditForm({ name: r.name, slug: r.slug ?? "", plan: r.plan, phone: r.phone !== "—" ? r.phone : "", address: r.address ?? "" });
     setEditError("");
   };
 
@@ -376,7 +378,7 @@ export default function RestaurantsPage() {
             className="cursor-pointer flex items-center gap-1.5 rounded-xl border border-zinc-700 px-3 py-2.5 text-sm font-medium text-zinc-400 hover:border-zinc-500 hover:text-zinc-200 transition-colors">
             <RefreshCw className={"size-4 " + (loading ? "animate-spin" : "")} />
           </button>
-          <button type="button" onClick={() => { setCreateForm(emptyForm); setCreateError(""); setShowPw(false); setCreateOpen(true); }}
+          <button type="button" onClick={() => { setCreateForm(emptyForm); setCreateError(""); setShowPw(false); setSlugManuallyEdited(false); setCreateOpen(true); }}
             className="cursor-pointer inline-flex items-center gap-2 rounded-xl bg-emerald-500 px-4 py-2.5 text-sm font-semibold text-zinc-950 hover:bg-emerald-400 transition-colors">
             <Plus className="size-4" /> Add Restaurant
           </button>
@@ -472,7 +474,18 @@ export default function RestaurantsPage() {
                         </span>
                         <div className="min-w-0">
                           <p className="truncate font-semibold text-zinc-100">{r.name}</p>
-                          <p className="truncate text-xs text-zinc-600 md:hidden">{r.ownerEmail}</p>
+                          {r.slug ? (
+                            <a
+                              href={`/r/${r.slug}/home`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="truncate text-xs text-emerald-500 hover:text-emerald-400 hover:underline"
+                            >
+                              /r/{r.slug}
+                            </a>
+                          ) : (
+                            <p className="truncate text-xs text-zinc-600 md:hidden">{r.ownerEmail}</p>
+                          )}
                         </div>
                       </div>
                     </td>
@@ -626,8 +639,38 @@ export default function RestaurantsPage() {
           <div className="grid gap-3 sm:grid-cols-2">
             <div className="sm:col-span-2">
               <Field label="Restaurant Name" required>
-                <input value={createForm.name} onChange={(e) => setCreateForm((f) => ({ ...f, name: e.target.value }))}
+                <input value={createForm.name} onChange={(e) => {
+                  const name = e.target.value;
+                  // Agar user ne slug manually edit nahi kiya to auto-generate karo
+                  const autoSlug = name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+                  setCreateForm((f) => ({
+                    ...f,
+                    name,
+                    slug: slugManuallyEdited ? f.slug : autoSlug,
+                  }));
+                }}
                   placeholder="e.g. The Grand Kitchen" className={inputCls} />
+              </Field>
+            </div>
+            <div className="sm:col-span-2">
+              <Field label="URL Slug (Customer Site Address)" required>
+                <div className="flex items-center gap-0">
+                  <span className="rounded-l-xl border border-r-0 border-zinc-700 bg-zinc-800 px-3 py-2.5 text-xs text-zinc-500 whitespace-nowrap">
+                    yoursite.com/r/
+                  </span>
+                  <input
+                    value={createForm.slug}
+                    onChange={(e) => {
+                      setSlugManuallyEdited(true);
+                      setCreateForm((f) => ({ ...f, slug: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, "") }));
+                    }}
+                    placeholder="pizza-palace"
+                    className={inputCls + " rounded-l-none"}
+                  />
+                </div>
+                <p className="mt-1 text-[11px] text-zinc-600">
+                  Sirf lowercase letters, numbers aur hyphens. e.g. <span className="text-zinc-400">pizza-palace</span>
+                </p>
               </Field>
             </div>
             <Field label="Owner Name">
@@ -712,6 +755,24 @@ export default function RestaurantsPage() {
               <Field label="Restaurant Name" required>
                 <input value={editForm.name ?? ""} onChange={(e) => setEditForm((f) => ({ ...f, name: e.target.value }))}
                   className={inputCls} />
+              </Field>
+            </div>
+            <div className="sm:col-span-2">
+              <Field label="URL Slug (Customer Site Address)">
+                <div className="flex items-center gap-0">
+                  <span className="rounded-l-xl border border-r-0 border-zinc-700 bg-zinc-800 px-3 py-2.5 text-xs text-zinc-500 whitespace-nowrap">
+                    yoursite.com/r/
+                  </span>
+                  <input
+                    value={editForm.slug ?? ""}
+                    onChange={(e) => setEditForm((f) => ({ ...f, slug: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, "") }))}
+                    placeholder="pizza-palace"
+                    className={inputCls + " rounded-l-none"}
+                  />
+                </div>
+                <p className="mt-1 text-[11px] text-zinc-600">
+                  Slug change karne se purane QR codes kaam karna band kar denge.
+                </p>
               </Field>
             </div>
             <Field label="Phone">
