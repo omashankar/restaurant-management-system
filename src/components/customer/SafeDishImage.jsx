@@ -10,7 +10,7 @@ export default function SafeDishImage({
   src,
   alt = "",
   className = "",
-  iconClassName = "size-12 text-emerald-600/45",
+  iconClassName = "size-12 text-[#FF6B35]/40",
   loading = "lazy",
 }) {
   const [failed, setFailed] = useState(false);
@@ -18,7 +18,7 @@ export default function SafeDishImage({
   if (!url || failed) {
     return (
       <div
-        className={`flex items-center justify-center bg-gradient-to-br from-emerald-100/90 via-zinc-50 to-sky-50/80 ${className}`}
+        className={`flex items-center justify-center bg-gradient-to-br from-[#FFF8F3] via-[#FFE4D6]/30 to-white ${className}`}
         aria-hidden={!alt}
       >
         <UtensilsCrossed className={iconClassName} aria-hidden />

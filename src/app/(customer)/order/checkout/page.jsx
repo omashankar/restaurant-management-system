@@ -5,7 +5,8 @@ import Modal from "@/components/ui/Modal";
 import { useCustomer } from "@/context/CustomerContext";
 import { useRestaurantSlug } from "@/hooks/useRestaurantSlug";
 import { formatCustomerMoney } from "@/lib/customerCurrency";
-import { Bike, ConciergeBell, Loader2, Phone, Store } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Bike, ConciergeBell, Loader2, Phone, Store, ShoppingBag } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -27,7 +28,7 @@ const PAYMENT_LABEL = {
 function Field({ label, required, children }) {
   return (
     <div>
-      <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-zinc-500">
+      <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-[#6B7280]">
         {label}{required && <span className="ml-0.5 text-red-400">*</span>}
       </label>
       {children}
@@ -35,7 +36,7 @@ function Field({ label, required, children }) {
   );
 }
 
-const inputCls = "w-full rounded-xl border border-zinc-300 bg-white px-3.5 py-3 text-sm text-zinc-900 outline-none transition-all focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/15 placeholder:text-zinc-500";
+const inputCls = "w-full rounded-xl border border-[#FFE4D6] bg-white px-3.5 py-3 text-sm text-[#111827] outline-none transition-all focus:border-[#FF6B35]/50 focus:ring-2 focus:ring-[#FF6B35]/10 placeholder:text-[#6B7280]";
 
 export default function CheckoutPage() {
   const {
@@ -183,16 +184,28 @@ export default function CheckoutPage() {
 
   if (!orderType) {
     return (
-      <div className="flex min-h-[60vh] flex-col items-center justify-center gap-5 px-4 text-center">
-        <p className="text-zinc-700">Please select an order type first.</p>
-        <button
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        className="flex min-h-[60vh] flex-col items-center justify-center gap-5 px-4 text-center"
+      >
+        <div className="flex size-20 items-center justify-center rounded-3xl bg-[#FFF8F3]">
+          <ShoppingBag className="size-10 text-[#FF6B35]/40" />
+        </div>
+        <div>
+          <p className="font-poppins text-lg font-bold text-[#111827]">No Order Type Selected</p>
+          <p className="mt-1 text-sm text-[#6B7280]">Please select how you&apos;d like to order first.</p>
+        </div>
+        <motion.button
+          whileHover={{ scale: 1.03 }}
+          whileTap={{ scale: 0.97 }}
           type="button"
           onClick={() => setOrderTypeModalOpen(true)}
-          className="cursor-pointer rounded-xl bg-emerald-500 px-6 py-3 text-sm font-bold text-zinc-950 hover:bg-emerald-400"
+          className="rounded-xl gradient-primary px-7 py-3 text-sm font-bold text-white shadow-lg shadow-[#FF6B35]/25"
         >
           Select Order Type
-        </button>
-      </div>
+        </motion.button>
+      </motion.div>
     );
   }
 
@@ -293,7 +306,7 @@ export default function CheckoutPage() {
               showToast("Payment cancelled.", "error");
             },
           },
-          theme: { color: "#10b981" },
+          theme: { color: "#FF6B35" },
         };
         const rz = new window.Razorpay(options);
         rz.on("payment.failed", () => {
@@ -428,55 +441,75 @@ export default function CheckoutPage() {
   };
 
   return (
-    <div className="mx-auto max-w-5xl px-4 py-10 sm:px-6 lg:px-8">
-      <div className="mb-8 rounded-2xl border border-zinc-200 bg-white/85 px-5 py-4 shadow-sm">
-        <div className="flex items-center gap-3">
-        <Link href={link("/order/cart")} className="cursor-pointer text-sm text-zinc-500 hover:text-zinc-800">← Cart</Link>
-        <span className="text-zinc-400">/</span>
-        <h1 className="text-2xl font-bold text-zinc-900">Checkout</h1>
+    <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
+      {/* Header */}
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="mb-6 overflow-hidden rounded-2xl border border-[#FFE4D6] bg-white shadow-sm"
+      >
+        <div className="h-1 gradient-primary" />
+        <div className="px-5 py-4">
+          <div className="flex items-center gap-3">
+            <Link href={link("/order/cart")} className="text-sm text-[#6B7280] transition-colors hover:text-[#FF6B35]">← Cart</Link>
+            <span className="text-[#FFE4D6]">/</span>
+            <h1 className="font-poppins text-2xl font-bold text-[#111827]">Checkout</h1>
+          </div>
+          <p className="mt-1 text-xs text-[#6B7280]">Complete your details to place order securely.</p>
         </div>
-        <p className="mt-1 text-xs text-zinc-600">Complete your details to place order securely.</p>
-      </div>
+      </motion.div>
 
       <div className="grid gap-6 lg:grid-cols-3">
 
         {/* ── Form ── */}
         <div className="space-y-5 lg:col-span-2">
           {!authLoading && !authUser ? (
-            <div className="rounded-2xl border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-800">
-              Checkout complete karne ke liye login required hai.
-              {" "}
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="rounded-2xl border border-[#F59E0B]/30 bg-[#F59E0B]/8 px-4 py-3.5 text-sm text-[#92400E]"
+            >
+              🔐 Login required to complete checkout.{" "}
               <button
                 type="button"
                 onClick={() => setIsAuthModalOpen(true)}
-                className="font-semibold underline underline-offset-2 hover:text-amber-900"
+                className="font-bold text-[#FF6B35] underline underline-offset-2 hover:text-[#E85A24]"
               >
-                OTP login karein
+                Login with OTP
               </button>
-              .
-            </div>
+            </motion.div>
           ) : null}
 
           {/* Order type */}
-          <div className="flex items-center justify-between rounded-2xl border border-zinc-200 bg-white px-4 py-3.5 shadow-sm">
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            className="flex items-center justify-between rounded-2xl border border-[#FFE4D6] bg-white px-4 py-3.5 shadow-sm"
+          >
             <div className="flex items-center gap-2.5">
-              {TypeIcon && <TypeIcon className="size-4 text-emerald-600" />}
-              <span className="text-sm font-medium text-zinc-900">{TYPE_LABEL[orderType]}</span>
+              {TypeIcon && <TypeIcon className="size-4 text-[#FF6B35]" />}
+              <span className="font-poppins text-sm font-semibold text-[#111827]">{TYPE_LABEL[orderType]}</span>
             </div>
             <button
               type="button"
               onClick={() => setOrderTypeModalOpen(true)}
-              className="cursor-pointer rounded-lg border border-zinc-300 px-3 py-1.5 text-xs font-semibold text-zinc-700 hover:border-emerald-500/40 hover:text-emerald-700"
+              className="rounded-xl border border-[#FFE4D6] px-3 py-1.5 text-xs font-semibold text-[#6B7280] transition-colors hover:border-[#FF6B35]/30 hover:text-[#FF6B35]"
             >
               Change
             </button>
-          </div>
+          </motion.div>
 
           {/* Customer details */}
-          <div className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm">
-            <h2 className="mb-5 text-sm font-bold uppercase tracking-wider text-zinc-600">Your Details</h2>
-            <p className="mb-4 text-xs text-zinc-500">
-              <span className="text-red-400">*</span> Name is required. You must also provide <strong>either</strong> a phone number <strong>or</strong> a valid email.
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.15 }}
+            className="rounded-2xl border border-[#FFE4D6] bg-white p-6 shadow-sm"
+          >
+            <h2 className="mb-4 font-poppins text-sm font-bold uppercase tracking-wider text-[#111827]">Your Details</h2>
+            <p className="mb-4 text-xs text-[#6B7280]">
+              <span className="text-red-400">*</span> Name required. Phone <strong>or</strong> Email required.
             </p>
             <div className="grid gap-4 sm:grid-cols-2">
               <Field label="Full Name" required>
@@ -526,192 +559,129 @@ export default function CheckoutPage() {
                 </Field>
               </div>
             </div>
-          </div>
+          </motion.div>
 
-          <div className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm">
-            <h2 className="mb-4 text-sm font-bold uppercase tracking-wider text-zinc-600">Payment Method</h2>
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="rounded-2xl border border-[#FFE4D6] bg-white p-6 shadow-sm"
+          >
+            <h2 className="mb-4 font-poppins text-sm font-bold uppercase tracking-wider text-[#111827]">Payment Method</h2>
             <div className="grid gap-2 sm:grid-cols-2">
               {enabledPaymentMethods.map((methodKey) => (
-                <button
+                <motion.button
                   key={methodKey}
+                  whileTap={{ scale: 0.97 }}
                   type="button"
                   onClick={() => setPaymentMethod(methodKey)}
-                  className={`cursor-pointer rounded-xl border px-3 py-2.5 text-left text-sm transition-colors ${
+                  className={`rounded-xl border px-3 py-2.5 text-left text-sm font-medium transition-all ${
                     paymentMethod === methodKey
-                      ? "border-emerald-500/50 bg-emerald-50 text-emerald-700"
-                      : "border-zinc-300 bg-white text-zinc-700 hover:border-emerald-500/40"
-                  }`}
-                >
+                      ? "border-[#FF6B35]/50 bg-[#FF6B35]/8 text-[#FF6B35] shadow-sm"
+                      : "border-[#FFE4D6] bg-white text-[#6B7280] hover:border-[#FF6B35]/30 hover:text-[#111827]"
+                  }`}>
                   {PAYMENT_LABEL[methodKey] ?? methodKey}
-                </button>
+                </motion.button>
               ))}
             </div>
-            {!enabledPaymentMethods.length ? (
-              <p className="mt-3 text-xs text-red-500">No payment method enabled. Contact restaurant admin.</p>
-            ) : null}
-            {checkoutMeta.onlinePaymentsAvailable === false ? (
-              <p className="mt-3 rounded-lg bg-amber-50 px-3 py-2 text-xs leading-relaxed text-amber-950 ring-1 ring-amber-200/80">
-                Card / UPI / wallet options need <strong>Stripe</strong> or <strong>Razorpay</strong> in platform payment
-                settings. Cash on delivery and pay-at-counter still work.
+            {!enabledPaymentMethods.length && <p className="mt-3 text-xs text-red-500">No payment method enabled.</p>}
+            {checkoutMeta.onlinePaymentsAvailable === false && (
+              <p className="mt-3 rounded-xl border border-[#F59E0B]/30 bg-[#F59E0B]/8 px-3 py-2.5 text-xs text-[#92400E]">
+                💳 Card/UPI needs <strong>Stripe</strong> or <strong>Razorpay</strong>. Cash on delivery works.
               </p>
-            ) : null}
-          </div>
+            )}
+          </motion.div>
         </div>
 
         {/* ── Order summary ── */}
         <div className="lg:col-span-1">
-          <div className="sticky top-24 rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm">
-            <h2 className="mb-4 text-sm font-bold uppercase tracking-wider text-zinc-600">Order Summary</h2>
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.25 }}
+            className="sticky top-24 overflow-hidden rounded-2xl border border-[#FFE4D6] bg-white shadow-sm"
+          >
+            <div className="h-1 gradient-primary" />
+            <div className="p-5">
+            <h2 className="mb-4 font-poppins text-sm font-bold uppercase tracking-wider text-[#111827]">Order Summary</h2>
             <ul className="space-y-2.5">
               {lines.map((l) => (
                 <li key={l.id} className="flex items-start justify-between gap-2 text-sm">
-                  <span className="text-zinc-600">{l.qty}× <span className="text-zinc-900">{l.name}</span></span>
-                  <span className="shrink-0 font-medium text-zinc-900">{formatCustomerMoney(l.price * l.qty)}</span>
+                  <span className="text-[#6B7280]">{l.qty}× <span className="font-medium text-[#111827]">{l.name}</span></span>
+                  <span className="shrink-0 font-semibold text-[#111827]">{formatCustomerMoney(l.price * l.qty)}</span>
                 </li>
               ))}
             </ul>
-            <div className="mt-4 space-y-2 border-t border-zinc-200 pt-4 text-sm">
-              <p className="text-xs text-zinc-500">Estimated time: {etaLabel} mins</p>
+            <div className="mt-4 space-y-2.5 border-t border-[#FFE4D6] pt-4 text-sm">
+              <p className="text-xs text-[#6B7280]">⏱ Est. time: <span className="font-semibold text-[#111827]">{etaLabel} mins</span></p>
               <div className="flex gap-2">
-                <input
-                  value={couponCode}
-                  onChange={(e) => setCouponCode(e.target.value)}
-                  placeholder="Coupon code"
-                  className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-xs outline-none focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/15"
-                />
-                <button
-                  type="button"
-                  onClick={applyCoupon}
-                  className="cursor-pointer rounded-lg border border-zinc-300 px-3 py-2 text-xs font-semibold text-zinc-700 hover:border-emerald-500/40 hover:text-emerald-700"
-                >
+                <input value={couponCode} onChange={(e) => setCouponCode(e.target.value)} placeholder="Coupon code"
+                  className="w-full rounded-xl border border-[#FFE4D6] px-3 py-2 text-xs outline-none focus:border-[#FF6B35]/40 focus:ring-2 focus:ring-[#FF6B35]/10" />
+                <button type="button" onClick={applyCoupon}
+                  className="rounded-xl border border-[#FFE4D6] px-3 py-2 text-xs font-semibold text-[#6B7280] hover:border-[#FF6B35]/30 hover:text-[#FF6B35]">
                   Apply
                 </button>
               </div>
-              <div className="flex justify-between text-zinc-600"><span>Subtotal</span><span>{formatCustomerMoney(subtotal)}</span></div>
-              <div className="flex justify-between text-zinc-600"><span>Tax ({taxRate.toFixed(2)}%)</span><span>{formatCustomerMoney(tax)}</span></div>
-              {orderType === "delivery" ? (
-                <div className="flex justify-between text-zinc-600"><span>Delivery</span><span>{formatCustomerMoney(deliveryCharge)}</span></div>
-              ) : null}
-              {appliedCoupon ? (
-                <div className="flex justify-between text-emerald-700"><span>Coupon ({appliedCoupon.code})</span><span>- {formatCustomerMoney(couponDiscount)}</span></div>
-              ) : null}
-              <div className="flex justify-between pt-1 text-base font-bold text-zinc-900">
-                <span>Total</span><span className="text-emerald-700">{formatCustomerMoney(total)}</span>
+              <div className="flex justify-between text-[#6B7280]"><span>Subtotal</span><span className="font-medium text-[#111827]">{formatCustomerMoney(subtotal)}</span></div>
+              <div className="flex justify-between text-[#6B7280]"><span>Tax ({taxRate.toFixed(2)}%)</span><span className="font-medium text-[#111827]">{formatCustomerMoney(tax)}</span></div>
+              {orderType === "delivery" && <div className="flex justify-between text-[#6B7280]"><span>Delivery</span><span className="font-medium text-[#111827]">{formatCustomerMoney(deliveryCharge)}</span></div>}
+              {appliedCoupon && <div className="flex justify-between text-[#22C55E]"><span>Coupon ({appliedCoupon.code})</span><span>- {formatCustomerMoney(couponDiscount)}</span></div>}
+              <div className="flex justify-between border-t border-[#FFE4D6] pt-2.5 font-poppins text-base font-bold text-[#111827]">
+                <span>Total</span><span className="text-[#FF6B35]">{formatCustomerMoney(total)}</span>
               </div>
-              <div className="flex justify-between text-xs text-zinc-500">
-                <span>Payment</span>
-                <span>{PAYMENT_LABEL[paymentMethod] ?? paymentMethod}</span>
+              <div className="flex justify-between text-xs text-[#6B7280]">
+                <span>Payment</span><span className="font-medium text-[#111827]">{PAYMENT_LABEL[paymentMethod] ?? paymentMethod}</span>
               </div>
             </div>
-            <button
-              type="button"
-              onClick={placeOrder}
-              disabled={loading || authLoading || paying}
-              className="cursor-pointer mt-5 flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-500 py-3.5 text-sm font-bold text-zinc-950 shadow-lg shadow-emerald-500/20 transition-colors hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              {loading
-                ? <><Loader2 className="size-4 animate-spin" /> Placing Order…</>
-                : paying
-                  ? <><Loader2 className="size-4 animate-spin" /> Processing Payment…</>
-                : authLoading
-                  ? "Checking login..."
-                  : authUser
-                    ? `Place Order · ${formatCustomerMoney(total)}`
-                    : "Login to Continue"}
+            <button type="button" onClick={placeOrder} disabled={loading || authLoading || paying}
+              className="mt-5 flex w-full items-center justify-center gap-2 rounded-xl gradient-primary py-3.5 text-sm font-bold text-white shadow-lg shadow-[#FF6B35]/25 transition-all hover:shadow-xl disabled:cursor-not-allowed disabled:opacity-50">
+              {loading ? <><Loader2 className="size-4 animate-spin" /> Placing Order…</>
+                : paying ? <><Loader2 className="size-4 animate-spin" /> Processing…</>
+                : authLoading ? "Checking login..."
+                : authUser ? `Place Order · ${formatCustomerMoney(total)}`
+                : "Login to Continue"}
             </button>
-          </div>
+            </div>
+          </motion.div>
         </div>
-
       </div>
-      <Modal
-        open={isAuthModalOpen}
-        onClose={() => {
-          setIsAuthModalOpen(false);
-          setOtpStep("phone");
-          setOtpError("");
-        }}
-        title="Login to continue checkout"
-      >
+
+      <Modal open={isAuthModalOpen} onClose={() => { setIsAuthModalOpen(false); setOtpStep("phone"); setOtpError(""); }} title="Login to continue checkout">
         <div className="space-y-4">
-          {otpError ? (
-            <p className="rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-xs text-red-300">
-              {otpError}
-            </p>
-          ) : null}
-          {otpDevHint ? (
-            <p className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs text-amber-300">
-              {otpDevHint}
-            </p>
-          ) : null}
+          {otpError && <p className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700">{otpError}</p>}
+          {otpDevHint && <p className="rounded-xl border border-[#F59E0B]/30 bg-[#F59E0B]/8 px-3 py-2 text-xs text-[#92400E]">{otpDevHint}</p>}
           {otpStep === "phone" ? (
             <>
-              <p className="text-sm text-zinc-400">Enter mobile number to receive OTP.</p>
-              <input
-                value={otpPhone}
-                onChange={(e) => setOtpPhone(e.target.value)}
-                inputMode="tel"
-                autoComplete="tel"
-                placeholder="+1 555 000 0000"
-                className="w-full rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-3 text-sm text-zinc-100 outline-none focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/15"
-              />
-              <button
-                type="button"
-                disabled={otpLoading}
-                onClick={requestOtp}
-                className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-500 py-3 text-sm font-semibold text-zinc-950 hover:bg-emerald-400 disabled:opacity-50"
-              >
-                {otpLoading ? <Loader2 className="size-4 animate-spin" /> : <Phone className="size-4" />}
-                Send OTP
+              <p className="text-sm text-[#6B7280]">Enter mobile number to receive OTP.</p>
+              <input value={otpPhone} onChange={(e) => setOtpPhone(e.target.value)} inputMode="tel" autoComplete="tel" placeholder="+1 555 000 0000"
+                className="w-full rounded-xl border border-[#FFE4D6] bg-white px-3 py-3 text-sm text-[#111827] outline-none focus:border-[#FF6B35]/50 focus:ring-2 focus:ring-[#FF6B35]/10" />
+              <button type="button" disabled={otpLoading} onClick={requestOtp}
+                className="inline-flex w-full items-center justify-center gap-2 rounded-xl gradient-primary py-3 text-sm font-semibold text-white shadow-md disabled:opacity-50">
+                {otpLoading ? <Loader2 className="size-4 animate-spin" /> : <Phone className="size-4" />} Send OTP
               </button>
             </>
           ) : (
             <>
-              <p className="text-sm text-zinc-400">Enter the 6-digit code sent to {otpPhone}.</p>
+              <p className="text-sm text-[#6B7280]">6-digit code sent to <span className="font-semibold text-[#111827]">{otpPhone}</span>.</p>
               <div className="flex items-center justify-between gap-2">
                 {otpDigits.map((digit, idx) => (
-                  <input
-                    key={idx}
-                    ref={(el) => {
-                      otpRefs.current[idx] = el;
-                    }}
-                    value={digit}
+                  <input key={idx} ref={(el) => { otpRefs.current[idx] = el; }} value={digit}
                     onChange={(e) => handleOtpDigitChange(idx, e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Backspace" && !otpDigits[idx] && idx > 0) {
-                        otpRefs.current[idx - 1]?.focus();
-                      }
-                    }}
-                    inputMode="numeric"
-                    maxLength={1}
-                    className="h-12 w-11 rounded-lg border border-zinc-700 bg-zinc-950/60 text-center text-lg font-semibold text-zinc-100 outline-none focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/15"
-                  />
+                    onKeyDown={(e) => { if (e.key === "Backspace" && !otpDigits[idx] && idx > 0) otpRefs.current[idx - 1]?.focus(); }}
+                    inputMode="numeric" maxLength={1}
+                    className="h-12 w-11 rounded-xl border border-[#FFE4D6] bg-white text-center text-lg font-bold text-[#111827] outline-none focus:border-[#FF6B35]/50 focus:ring-2 focus:ring-[#FF6B35]/10" />
                 ))}
               </div>
               <div className="flex items-center justify-between">
-                <button
-                  type="button"
-                  onClick={() => setOtpStep("phone")}
-                  className="text-xs text-zinc-400 hover:text-zinc-200"
-                >
-                  Change number
-                </button>
-                <button
-                  type="button"
-                  disabled={otpCooldown > 0 || otpLoading}
-                  onClick={resendOtp}
-                  className="text-xs font-semibold text-emerald-400 disabled:text-zinc-500"
-                >
+                <button type="button" onClick={() => setOtpStep("phone")} className="text-xs text-[#6B7280] hover:text-[#111827]">Change number</button>
+                <button type="button" disabled={otpCooldown > 0 || otpLoading} onClick={resendOtp}
+                  className="text-xs font-semibold text-[#FF6B35] disabled:text-[#6B7280]">
                   {otpCooldown > 0 ? `Resend in ${Math.floor(otpCooldown / 60)}:${String(otpCooldown % 60).padStart(2, "0")}` : "Resend OTP"}
                 </button>
               </div>
-              <button
-                type="button"
-                disabled={otpLoading}
-                onClick={verifyOtp}
-                className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-500 py-3 text-sm font-semibold text-zinc-950 hover:bg-emerald-400 disabled:opacity-50"
-              >
-                {otpLoading ? <Loader2 className="size-4 animate-spin" /> : null}
-                Verify & Continue
+              <button type="button" disabled={otpLoading} onClick={verifyOtp}
+                className="inline-flex w-full items-center justify-center gap-2 rounded-xl gradient-primary py-3 text-sm font-semibold text-white shadow-md disabled:opacity-50">
+                {otpLoading && <Loader2 className="size-4 animate-spin" />} Verify & Continue
               </button>
             </>
           )}

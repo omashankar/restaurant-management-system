@@ -3,7 +3,12 @@
 import { useCustomer } from "@/context/CustomerContext";
 import { useRestaurantSlug } from "@/hooks/useRestaurantSlug";
 import { formatCustomerMoney } from "@/lib/customerCurrency";
-import { Calendar, ChevronRight, Heart, Loader2, LogOut, MapPin, ShoppingBag, UserRound, Wallet } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  Calendar, ChevronRight, Heart, Loader2, LogOut,
+  MapPin, ShoppingBag, UserRound, Wallet, Star,
+  Package, Edit3, Check, X
+} from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -17,12 +22,17 @@ function displayName(u) {
 
 function formatDate(iso) {
   if (!iso) return "—";
-  try {
-    return new Date(iso).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" });
-  } catch {
-    return "—";
-  }
+  try { return new Date(iso).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" }); }
+  catch { return "—"; }
 }
+
+const STATUS_COLORS = {
+  new:        "bg-blue-100 text-blue-700",
+  preparing:  "bg-[#F59E0B]/15 text-[#F59E0B]",
+  ready:      "bg-[#22C55E]/15 text-[#22C55E]",
+  delivered:  "bg-[#22C55E]/15 text-[#22C55E]",
+  cancelled:  "bg-red-100 text-red-600",
+};
 
 export default function CustomerDashboardPage() {
   const router = useRouter();
@@ -31,45 +41,35 @@ export default function CustomerDashboardPage() {
   const [orders, setOrders] = useState([]);
   const [bookings, setBookings] = useState([]);
   const [loadingData, setLoadingData] = useState(true);
-  const [summary, setSummary] = useState({
-    favorites: [],
-    savedAddresses: [],
-    rewardPoints: 0,
-    walletBalance: 0,
-  });
+  const [summary, setSummary] = useState({ favorites: [], savedAddresses: [], rewardPoints: 0, walletBalance: 0 });
   const [reorderingId, setReorderingId] = useState("");
   const [editName, setEditName] = useState("");
   const [editEmail, setEditEmail] = useState("");
   const [savingProfile, setSavingProfile] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState("orders");
 
   useEffect(() => {
-    if (!authLoading && !authUser) {
-      router.replace(link("/account/login"));
-    }
-  }, [authLoading, authUser, router]);
+    if (!authLoading && !authUser) router.replace(link("/account/login"));
+  }, [authLoading, authUser, router, link]);
 
   useEffect(() => {
-    if (authUser) {
-      setEditName(authUser.name ?? "");
-      setEditEmail(authUser.email ?? "");
-    }
+    if (authUser) { setEditName(authUser.name ?? ""); setEditEmail(authUser.email ?? ""); }
   }, [authUser]);
 
   useEffect(() => {
     async function loadData() {
       if (!authUser) return;
       setLoadingData(true);
-      const [ordersRes, bookingsRes] = await Promise.all([
+      const [ordersRes, bookingsRes, summaryRes] = await Promise.all([
         fetch("/api/customer/orders", { cache: "no-store" }),
         fetch("/api/customer/auth/bookings", { cache: "no-store" }),
+        fetch("/api/customer/dashboard/summary", { cache: "no-store" }),
       ]);
       const [ordersData, bookingsData, summaryData] = await Promise.all([
         ordersRes.json().catch(() => ({ success: false, orders: [] })),
         bookingsRes.json().catch(() => ({ success: false, bookings: [] })),
-        fetch("/api/customer/dashboard/summary", { cache: "no-store" })
-          .then((r) => r.json())
-          .catch(() => ({ success: false, summary: null })),
+        summaryRes.json().catch(() => ({ success: false, summary: null })),
       ]);
       setOrders(Array.isArray(ordersData.orders) ? ordersData.orders : []);
       setBookings(Array.isArray(bookingsData.bookings) ? bookingsData.bookings : []);
@@ -91,17 +91,11 @@ export default function CustomerDashboardPage() {
     try {
       const res = await fetch(`/api/customer/orders/${orderId}/reorder`, { method: "POST" });
       const data = await res.json();
-      if (!res.ok || !data?.success) {
-        showToast(data?.error ?? "Could not reorder.", "error");
-        return;
-      }
+      if (!res.ok || !data?.success) { showToast(data?.error ?? "Could not reorder.", "error"); return; }
       showToast("Reorder placed successfully.");
       router.push(link(`/order/success?id=${encodeURIComponent(data.order.orderId)}`));
-    } catch {
-      showToast("Network error.", "error");
-    } finally {
-      setReorderingId("");
-    }
+    } catch { showToast("Network error.", "error"); }
+    finally { setReorderingId(""); }
   };
 
   const saveProfile = async () => {
@@ -113,280 +107,295 @@ export default function CustomerDashboardPage() {
         body: JSON.stringify({ name: editName, email: editEmail }),
       });
       const data = await res.json();
-      if (!res.ok || !data?.success) {
-        showToast(data?.error ?? "Could not save profile.", "error");
-        return;
-      }
+      if (!res.ok || !data?.success) { showToast(data?.error ?? "Could not save.", "error"); return; }
       await refreshAuth();
       showToast("Profile saved.");
       setProfileOpen(false);
-    } catch {
-      showToast("Network error.", "error");
-    } finally {
-      setSavingProfile(false);
-    }
+    } catch { showToast("Network error.", "error"); }
+    finally { setSavingProfile(false); }
   };
 
   if (authLoading || (!authUser && !authLoading)) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center">
-        <Loader2 className="size-6 animate-spin text-emerald-600" aria-hidden />
+        <Loader2 className="size-8 animate-spin text-[#FF6B35]" />
       </div>
     );
   }
 
+  const TABS = [
+    { id: "orders",    label: "Orders",    icon: ShoppingBag, count: orders.length },
+    { id: "bookings",  label: "Bookings",  icon: Calendar,    count: bookings.length },
+    { id: "favorites", label: "Favorites", icon: Heart,       count: summary.favorites.length },
+    { id: "profile",   label: "Profile",   icon: UserRound,   count: null },
+  ];
+
   return (
-    <div className="mx-auto max-w-lg px-4 py-8 sm:max-w-2xl sm:px-6">
-      <header className="mb-8 flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <p className="text-sm font-medium text-zinc-500">Welcome back</p>
-          <h1 className="text-2xl font-bold tracking-tight text-zinc-900 sm:text-3xl">{displayName(authUser)}</h1>
-          {authUser.phone ? (
-            <p className="mt-1 text-sm text-zinc-600">{authUser.phone}</p>
-          ) : authUser.email ? (
-            <p className="mt-1 text-sm text-zinc-600">{authUser.email}</p>
-          ) : null}
-        </div>
-        <button
-          type="button"
-          onClick={async () => {
-            await logoutCustomer();
-            router.push(link("/account/login"));
-          }}
-          className="inline-flex shrink-0 items-center gap-1.5 rounded-xl border border-zinc-300 bg-white px-3 py-2 text-sm font-medium text-zinc-700 hover:border-red-400 hover:text-red-600"
-        >
-          <LogOut className="size-4" aria-hidden />
-          Log out
-        </button>
-      </header>
+    <div className="mx-auto max-w-2xl px-4 py-8 sm:px-6">
 
-      <nav className="mb-10 grid grid-cols-3 gap-2 sm:gap-3" aria-label="Quick actions">
-        <a
-          href="#orders"
-          className="flex flex-col items-center gap-2 rounded-2xl border border-zinc-200 bg-white p-4 text-center shadow-sm transition hover:border-emerald-300 hover:shadow-md"
-        >
-          <span className="flex size-11 items-center justify-center rounded-xl bg-emerald-500/15 text-emerald-700">
-            <ShoppingBag className="size-5" aria-hidden />
-          </span>
-          <span className="text-xs font-semibold text-zinc-900">My Orders</span>
-        </a>
-        <a
-          href="#bookings"
-          className="flex flex-col items-center gap-2 rounded-2xl border border-zinc-200 bg-white p-4 text-center shadow-sm transition hover:border-emerald-300 hover:shadow-md"
-        >
-          <span className="flex size-11 items-center justify-center rounded-xl bg-sky-500/15 text-sky-800">
-            <Calendar className="size-5" aria-hidden />
-          </span>
-          <span className="text-xs font-semibold text-zinc-900">Bookings</span>
-        </a>
-        <button
-          type="button"
-          onClick={() => {
-            setProfileOpen((v) => !v);
-            setTimeout(() => document.getElementById("profile")?.scrollIntoView({ behavior: "smooth" }), 0);
-          }}
-          className="flex flex-col items-center gap-2 rounded-2xl border border-zinc-200 bg-white p-4 text-center shadow-sm transition hover:border-emerald-300 hover:shadow-md"
-        >
-          <span className="flex size-11 items-center justify-center rounded-xl bg-violet-500/15 text-violet-800">
-            <UserRound className="size-5" aria-hidden />
-          </span>
-          <span className="text-xs font-semibold text-zinc-900">Profile</span>
-        </button>
-      </nav>
-
-      <section id="orders" className="scroll-mt-24 rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm">
-        <h2 className="text-base font-bold text-zinc-900">Order history</h2>
-        <p className="mt-0.5 text-sm text-zinc-600">Track status for recent orders.</p>
-        {loadingData ? (
-          <div className="mt-6 flex justify-center py-8">
-            <Loader2 className="size-6 animate-spin text-emerald-600" aria-hidden />
+      {/* Header card */}
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="mb-6 overflow-hidden rounded-3xl border border-[#FFE4D6] bg-white shadow-sm"
+      >
+        <div className="h-1.5 gradient-primary" />
+        <div className="flex flex-wrap items-center justify-between gap-4 p-5">
+          <div className="flex items-center gap-3">
+            <div className="flex size-14 items-center justify-center rounded-2xl gradient-primary shadow-lg shadow-[#FF6B35]/20">
+              <span className="font-poppins text-xl font-bold text-white">
+                {displayName(authUser)[0]?.toUpperCase()}
+              </span>
+            </div>
+            <div>
+              <p className="text-xs text-[#6B7280]">Welcome back</p>
+              <h1 className="font-poppins text-xl font-bold text-[#111827]">{displayName(authUser)}</h1>
+              <p className="text-xs text-[#6B7280]">{authUser.phone || authUser.email || ""}</p>
+            </div>
           </div>
-        ) : orders.length === 0 ? (
-          <p className="mt-4 text-sm text-zinc-500">No orders yet. Browse the menu to place your first order.</p>
-        ) : (
-          <ul className="mt-4 divide-y divide-zinc-100">
-            {orders.map((o) => (
-              <li key={o.id}>
-                <Link
-                  href={link(`/account/orders/${o.id}`)}
-                  className="flex items-center gap-3 py-3 transition hover:bg-zinc-50/80 sm:rounded-xl sm:px-2"
-                >
-                  <div className="min-w-0 flex-1">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <span className="font-semibold text-zinc-900">{o.orderId}</span>
-                      <span
-                        className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold ring-1 ${o.chipClass ?? ""}`}
-                      >
-                        <span aria-hidden>{o.statusEmoji}</span>
-                        {o.statusLabel ?? o.status}
-                      </span>
-                    </div>
-                    <p className="mt-0.5 text-xs text-zinc-500">{formatDate(o.createdAt)}</p>
-                  </div>
-                  <div className="flex shrink-0 items-center gap-1">
-                    <span className="font-semibold text-zinc-900">{formatCustomerMoney(Number(o.total ?? 0))}</span>
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        reorder(o.id);
-                      }}
-                      disabled={reorderingId === o.id}
-                      className="ml-2 rounded-lg border border-zinc-300 px-2 py-1 text-[11px] font-semibold text-zinc-700 hover:border-emerald-500/40 hover:text-emerald-700 disabled:opacity-50"
-                    >
-                      {reorderingId === o.id ? "Reordering..." : "Reorder"}
-                    </button>
-                    <ChevronRight className="size-4 text-zinc-400" aria-hidden />
-                  </div>
-                </Link>
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
-
-      <section id="bookings" className="scroll-mt-24 mt-6 rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm">
-        <h2 className="text-base font-bold text-zinc-900">My bookings</h2>
-        <p className="mt-0.5 text-sm text-zinc-600">Table reservations linked to your phone.</p>
-        {loadingData ? (
-          <div className="mt-6 flex justify-center py-6">
-            <Loader2 className="size-6 animate-spin text-emerald-600" aria-hidden />
-          </div>
-        ) : bookings.length === 0 ? (
-          <p className="mt-4 text-sm text-zinc-500">No bookings yet.</p>
-        ) : (
-          <ul className="mt-4 space-y-2">
-            {bookings.slice(0, 12).map((b) => (
-              <li key={b.id} className="rounded-xl border border-zinc-100 bg-zinc-50 px-3 py-2 text-sm">
-                <p className="font-semibold text-zinc-900">
-                  {b.date} at {b.time}
-                </p>
-                <p className="mt-0.5 text-xs text-zinc-500">
-                  Table {b.tableNumber || "—"} · {b.guests} guests · {b.status}
-                </p>
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
-
-      <section className="scroll-mt-24 mt-6 rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm">
-        <div className="grid gap-4 sm:grid-cols-2">
-          <div className="rounded-xl border border-zinc-200 bg-zinc-50 p-4">
-            <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500">Wallet</p>
-            <p className="mt-1 inline-flex items-center gap-2 text-xl font-bold text-zinc-900">
-              <Wallet className="size-5 text-emerald-600" />
-              {formatCustomerMoney(summary.walletBalance)}
-            </p>
-            <p className="mt-1 text-xs text-zinc-500">Stored value for quick checkout.</p>
-          </div>
-          <div className="rounded-xl border border-zinc-200 bg-zinc-50 p-4">
-            <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500">Reward Points</p>
-            <p className="mt-1 text-xl font-bold text-zinc-900">{summary.rewardPoints}</p>
-            <p className="mt-1 text-xs text-zinc-500">Earn more points on every order.</p>
-          </div>
-        </div>
-      </section>
-
-      <section className="scroll-mt-24 mt-6 rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm">
-        <h2 className="text-base font-bold text-zinc-900">Favorite items</h2>
-        <p className="mt-0.5 text-sm text-zinc-600">Based on your recent order history.</p>
-        {summary.favorites.length === 0 ? (
-          <p className="mt-3 text-sm text-zinc-500">No favorites yet. Order a few items to build your list.</p>
-        ) : (
-          <ul className="mt-4 grid gap-2 sm:grid-cols-2">
-            {summary.favorites.map((f) => (
-              <li key={f.name} className="flex items-center justify-between rounded-xl border border-zinc-100 bg-zinc-50 px-3 py-2 text-sm">
-                <span className="inline-flex items-center gap-2 font-medium text-zinc-900">
-                  <Heart className="size-4 text-rose-500" />
-                  {f.name}
-                </span>
-                <span className="text-xs text-zinc-500">{f.count}x</span>
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
-
-      <section className="scroll-mt-24 mt-6 rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm">
-        <h2 className="text-base font-bold text-zinc-900">Saved addresses</h2>
-        <p className="mt-0.5 text-sm text-zinc-600">Delivery addresses used in your past orders.</p>
-        {summary.savedAddresses.length === 0 ? (
-          <p className="mt-3 text-sm text-zinc-500">No saved addresses yet.</p>
-        ) : (
-          <ul className="mt-4 space-y-2">
-            {summary.savedAddresses.map((address) => (
-              <li key={address} className="inline-flex w-full items-start gap-2 rounded-xl border border-zinc-100 bg-zinc-50 px-3 py-2 text-sm text-zinc-700">
-                <MapPin className="mt-0.5 size-4 shrink-0 text-emerald-600" />
-                <span>{address}</span>
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
-
-      <section id="profile" className="scroll-mt-24 mt-6 rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm">
-        <div className="flex items-start justify-between gap-3">
-          <div>
-            <h2 className="text-base font-bold text-zinc-900">Profile</h2>
-            <p className="mt-0.5 text-sm text-zinc-600">Update how we address you and contact you.</p>
-          </div>
-          <button
+          <motion.button
+            whileTap={{ scale: 0.95 }}
             type="button"
-            onClick={() => setProfileOpen((v) => !v)}
-            className="text-sm font-semibold text-emerald-700 hover:underline"
+            onClick={async () => { await logoutCustomer(); router.push(link("/account/login")); }}
+            className="flex items-center gap-1.5 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm font-medium text-red-600 transition-colors hover:bg-red-100"
           >
-            {profileOpen ? "Close" : "Edit"}
-          </button>
+            <LogOut className="size-4" /> Log out
+          </motion.button>
         </div>
 
-        {!profileOpen ? (
-          <dl className="mt-4 space-y-2 text-sm">
-            <div>
-              <dt className="text-zinc-500">Name</dt>
-              <dd className="font-medium text-zinc-900">{authUser.name || "—"}</dd>
+        {/* Stats row */}
+        <div className="grid grid-cols-3 divide-x divide-[#FFE4D6] border-t border-[#FFE4D6]">
+          {[
+            { label: "Orders", value: orders.length, icon: Package },
+            { label: "Wallet", value: formatCustomerMoney(summary.walletBalance), icon: Wallet },
+            { label: "Points", value: summary.rewardPoints, icon: Star },
+          ].map(({ label, value, icon: Icon }) => (
+            <div key={label} className="flex flex-col items-center gap-1 py-3">
+              <Icon className="size-4 text-[#FF6B35]" />
+              <p className="font-poppins text-base font-bold text-[#111827]">{value}</p>
+              <p className="text-[10px] text-[#6B7280]">{label}</p>
             </div>
-            <div>
-              <dt className="text-zinc-500">Phone</dt>
-              <dd className="font-medium text-zinc-900">{authUser.phone || "—"}</dd>
+          ))}
+        </div>
+      </motion.div>
+
+      {/* Tabs */}
+      <div className="mb-5 flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none]">
+        {TABS.map((tab) => (
+          <motion.button
+            key={tab.id}
+            whileTap={{ scale: 0.95 }}
+            type="button"
+            onClick={() => setActiveTab(tab.id)}
+            className={`flex shrink-0 items-center gap-1.5 rounded-xl px-4 py-2 text-xs font-semibold transition-all ${
+              activeTab === tab.id
+                ? "gradient-primary text-white shadow-md shadow-[#FF6B35]/20"
+                : "border border-[#FFE4D6] bg-white text-[#6B7280] hover:border-[#FF6B35]/30"
+            }`}
+          >
+            <tab.icon className="size-3.5" />
+            {tab.label}
+            {tab.count !== null && tab.count > 0 && (
+              <span className={`rounded-full px-1.5 py-0.5 text-[10px] font-bold ${activeTab === tab.id ? "bg-white/20 text-white" : "bg-[#FF6B35]/10 text-[#FF6B35]"}`}>
+                {tab.count}
+              </span>
+            )}
+          </motion.button>
+        ))}
+      </div>
+
+      {/* Tab content */}
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={activeTab}
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -10 }}
+          transition={{ duration: 0.2 }}
+        >
+
+          {/* ORDERS */}
+          {activeTab === "orders" && (
+            <div className="rounded-2xl border border-[#FFE4D6] bg-white shadow-sm">
+              <div className="border-b border-[#FFE4D6] px-5 py-4">
+                <h2 className="font-poppins text-base font-bold text-[#111827]">Order History</h2>
+                <p className="text-xs text-[#6B7280]">Track status for recent orders</p>
+              </div>
+              {loadingData ? (
+                <div className="flex justify-center py-12"><Loader2 className="size-6 animate-spin text-[#FF6B35]" /></div>
+              ) : orders.length === 0 ? (
+                <div className="flex flex-col items-center gap-3 py-12 text-center">
+                  <ShoppingBag className="size-10 text-[#FF6B35]/30" />
+                  <p className="text-sm text-[#6B7280]">No orders yet.</p>
+                  <Link href={link("/order/menu")} className="rounded-xl gradient-primary px-5 py-2.5 text-xs font-bold text-white shadow-md">
+                    Browse Menu
+                  </Link>
+                </div>
+              ) : (
+                <ul className="divide-y divide-[#FFE4D6]">
+                  {orders.map((o) => (
+                    <li key={o.id}>
+                      <Link href={link(`/account/orders/${o.id}`)}
+                        className="flex items-center gap-3 px-5 py-4 transition-colors hover:bg-[#FFF8F3]">
+                        <div className="min-w-0 flex-1">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <span className="font-poppins font-semibold text-[#111827]">{o.orderId}</span>
+                            <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${STATUS_COLORS[o.statusKey] ?? "bg-[#6B7280]/10 text-[#6B7280]"}`}>
+                              {o.statusEmoji} {o.statusLabel ?? o.status}
+                            </span>
+                          </div>
+                          <p className="mt-0.5 text-xs text-[#6B7280]">{formatDate(o.createdAt)}</p>
+                        </div>
+                        <div className="flex shrink-0 items-center gap-2">
+                          <span className="font-poppins font-bold text-[#111827]">{formatCustomerMoney(Number(o.total ?? 0))}</span>
+                          <button type="button" onClick={(e) => { e.preventDefault(); reorder(o.id); }}
+                            disabled={reorderingId === o.id}
+                            className="rounded-lg border border-[#FFE4D6] px-2 py-1 text-[11px] font-semibold text-[#FF6B35] transition-colors hover:bg-[#FF6B35]/8 disabled:opacity-50">
+                            {reorderingId === o.id ? "..." : "Reorder"}
+                          </button>
+                          <ChevronRight className="size-4 text-[#6B7280]" />
+                        </div>
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              )}
             </div>
-            <div>
-              <dt className="text-zinc-500">Email</dt>
-              <dd className="font-medium text-zinc-900">{authUser.email || "—"}</dd>
+          )}
+
+          {/* BOOKINGS */}
+          {activeTab === "bookings" && (
+            <div className="rounded-2xl border border-[#FFE4D6] bg-white shadow-sm">
+              <div className="border-b border-[#FFE4D6] px-5 py-4">
+                <h2 className="font-poppins text-base font-bold text-[#111827]">My Bookings</h2>
+                <p className="text-xs text-[#6B7280]">Table reservations linked to your phone</p>
+              </div>
+              {loadingData ? (
+                <div className="flex justify-center py-12"><Loader2 className="size-6 animate-spin text-[#FF6B35]" /></div>
+              ) : bookings.length === 0 ? (
+                <div className="flex flex-col items-center gap-3 py-12 text-center">
+                  <Calendar className="size-10 text-[#FF6B35]/30" />
+                  <p className="text-sm text-[#6B7280]">No bookings yet.</p>
+                  <Link href={link("/order/table-booking")} className="rounded-xl gradient-primary px-5 py-2.5 text-xs font-bold text-white shadow-md">
+                    Book a Table
+                  </Link>
+                </div>
+              ) : (
+                <ul className="divide-y divide-[#FFE4D6]">
+                  {bookings.slice(0, 12).map((b) => (
+                    <li key={b.id} className="px-5 py-4">
+                      <p className="font-poppins font-semibold text-[#111827]">{b.date} at {b.time}</p>
+                      <p className="mt-0.5 text-xs text-[#6B7280]">Table {b.tableNumber || "—"} · {b.guests} guests · <span className="capitalize">{b.status}</span></p>
+                    </li>
+                  ))}
+                </ul>
+              )}
             </div>
-          </dl>
-        ) : (
-          <div className="mt-4 space-y-3">
-            <div>
-              <label className="block text-xs font-medium text-zinc-600">Name</label>
-              <input
-                value={editName}
-                onChange={(e) => setEditName(e.target.value)}
-                className="mt-1 w-full rounded-xl border border-zinc-300 px-3 py-2.5 text-sm outline-none focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/20"
-              />
+          )}
+
+          {/* FAVORITES */}
+          {activeTab === "favorites" && (
+            <div className="rounded-2xl border border-[#FFE4D6] bg-white shadow-sm">
+              <div className="border-b border-[#FFE4D6] px-5 py-4">
+                <h2 className="font-poppins text-base font-bold text-[#111827]">Favorite Items</h2>
+                <p className="text-xs text-[#6B7280]">Based on your order history</p>
+              </div>
+              {summary.favorites.length === 0 ? (
+                <div className="flex flex-col items-center gap-3 py-12 text-center">
+                  <Heart className="size-10 text-[#FF6B35]/30" />
+                  <p className="text-sm text-[#6B7280]">Order a few items to build your favorites list.</p>
+                </div>
+              ) : (
+                <ul className="divide-y divide-[#FFE4D6]">
+                  {summary.favorites.map((f) => (
+                    <li key={f.name} className="flex items-center justify-between px-5 py-3.5">
+                      <div className="flex items-center gap-2.5">
+                        <div className="flex size-8 items-center justify-center rounded-xl bg-[#FF6B35]/10">
+                          <Heart className="size-4 text-[#FF6B35]" />
+                        </div>
+                        <span className="font-medium text-[#111827]">{f.name}</span>
+                      </div>
+                      <span className="rounded-full bg-[#FF6B35]/10 px-2.5 py-1 text-xs font-bold text-[#FF6B35]">{f.count}x</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+              {summary.savedAddresses.length > 0 && (
+                <div className="border-t border-[#FFE4D6] px-5 py-4">
+                  <p className="mb-3 font-poppins text-sm font-bold text-[#111827]">Saved Addresses</p>
+                  <ul className="space-y-2">
+                    {summary.savedAddresses.map((addr) => (
+                      <li key={addr} className="flex items-start gap-2 text-sm text-[#6B7280]">
+                        <MapPin className="mt-0.5 size-4 shrink-0 text-[#FF6B35]" />
+                        <span>{addr}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
             </div>
-            <div>
-              <label className="block text-xs font-medium text-zinc-600">Email</label>
-              <input
-                type="email"
-                value={editEmail}
-                onChange={(e) => setEditEmail(e.target.value)}
-                className="mt-1 w-full rounded-xl border border-zinc-300 px-3 py-2.5 text-sm outline-none focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/20"
-              />
+          )}
+
+          {/* PROFILE */}
+          {activeTab === "profile" && (
+            <div className="rounded-2xl border border-[#FFE4D6] bg-white shadow-sm">
+              <div className="flex items-center justify-between border-b border-[#FFE4D6] px-5 py-4">
+                <div>
+                  <h2 className="font-poppins text-base font-bold text-[#111827]">Profile</h2>
+                  <p className="text-xs text-[#6B7280]">Update your personal details</p>
+                </div>
+                <motion.button whileTap={{ scale: 0.95 }} type="button" onClick={() => setProfileOpen((v) => !v)}
+                  className="flex items-center gap-1.5 rounded-xl border border-[#FFE4D6] px-3 py-2 text-xs font-semibold text-[#FF6B35] transition-colors hover:bg-[#FF6B35]/8">
+                  <Edit3 className="size-3.5" /> {profileOpen ? "Cancel" : "Edit"}
+                </motion.button>
+              </div>
+
+              <div className="p-5">
+                {!profileOpen ? (
+                  <dl className="space-y-3 text-sm">
+                    {[
+                      { label: "Name",  value: authUser.name  || "—" },
+                      { label: "Phone", value: authUser.phone || "—" },
+                      { label: "Email", value: authUser.email || "—" },
+                    ].map(({ label, value }) => (
+                      <div key={label} className="flex items-center justify-between rounded-xl bg-[#FFF8F3] px-4 py-3">
+                        <dt className="text-xs font-semibold uppercase tracking-wider text-[#6B7280]">{label}</dt>
+                        <dd className="font-medium text-[#111827]">{value}</dd>
+                      </div>
+                    ))}
+                  </dl>
+                ) : (
+                  <div className="space-y-3">
+                    {[
+                      { label: "Name",  value: editName,  setter: setEditName,  type: "text",  placeholder: "Your name" },
+                      { label: "Email", value: editEmail, setter: setEditEmail, type: "email", placeholder: "you@example.com" },
+                    ].map(({ label, value, setter, type, placeholder }) => (
+                      <div key={label}>
+                        <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-[#6B7280]">{label}</label>
+                        <input type={type} value={value} onChange={(e) => setter(e.target.value)} placeholder={placeholder}
+                          className="w-full rounded-xl border border-[#FFE4D6] bg-white px-3.5 py-3 text-sm text-[#111827] outline-none focus:border-[#FF6B35]/50 focus:ring-2 focus:ring-[#FF6B35]/10" />
+                      </div>
+                    ))}
+                    <p className="text-xs text-[#6B7280]">Phone is verified via OTP and cannot be changed here.</p>
+                    <div className="flex gap-2">
+                      <motion.button whileTap={{ scale: 0.97 }} type="button" disabled={savingProfile} onClick={saveProfile}
+                        className="flex flex-1 items-center justify-center gap-2 rounded-xl gradient-primary py-3 text-sm font-bold text-white shadow-md disabled:opacity-60">
+                        {savingProfile ? <Loader2 className="size-4 animate-spin" /> : <Check className="size-4" />}
+                        Save Changes
+                      </motion.button>
+                      <button type="button" onClick={() => setProfileOpen(false)}
+                        className="flex size-12 items-center justify-center rounded-xl border border-[#FFE4D6] text-[#6B7280] hover:bg-[#FFF8F3]">
+                        <X className="size-4" />
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
-            <p className="text-xs text-zinc-500">Phone is verified via OTP login and cannot be changed here.</p>
-            <button
-              type="button"
-              disabled={savingProfile}
-              onClick={saveProfile}
-              className="inline-flex items-center justify-center rounded-xl bg-emerald-500 px-4 py-2.5 text-sm font-bold text-zinc-950 hover:bg-emerald-400 disabled:opacity-60"
-            >
-              {savingProfile ? <Loader2 className="size-4 animate-spin" aria-hidden /> : null}
-              Save changes
-            </button>
-          </div>
-        )}
-      </section>
+          )}
+
+        </motion.div>
+      </AnimatePresence>
     </div>
   );
 }

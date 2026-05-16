@@ -2,7 +2,8 @@
 
 import { useCustomer } from "@/context/CustomerContext";
 import { useRestaurantSlug } from "@/hooks/useRestaurantSlug";
-import { Loader2, ShieldCheck } from "lucide-react";
+import { motion } from "framer-motion";
+import { Loader2, ShieldCheck, ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
@@ -47,10 +48,7 @@ export default function VerifyOtpPage() {
         body: JSON.stringify({ phone }),
       });
       const data = await res.json();
-      if (!res.ok || !data?.success) {
-        setError(data?.error ?? "Could not resend code.");
-        return;
-      }
+      if (!res.ok || !data?.success) { setError(data?.error ?? "Could not resend code."); return; }
       if (data.devOtp) setDevHint(`Dev OTP: ${data.devOtp}`);
       setCooldown(OTP_TTL_SEC);
     } catch {
@@ -61,10 +59,7 @@ export default function VerifyOtpPage() {
   }, [phone, cooldown]);
 
   const verify = async () => {
-    if (otp.trim().length < 6) {
-      setError("Enter the 6-digit code.");
-      return;
-    }
+    if (otp.trim().length < 6) { setError("Enter the 6-digit code."); return; }
     setLoading(true);
     setError("");
     try {
@@ -74,12 +69,9 @@ export default function VerifyOtpPage() {
         body: JSON.stringify({ phone, otp }),
       });
       const data = await res.json();
-      if (!res.ok || !data?.success) {
-        setError(data?.error ?? "That code didn’t work.");
-        return;
-      }
+      if (!res.ok || !data?.success) { setError(data?.error ?? "That code didn't work."); return; }
       await refreshAuth();
-      router.push(nextPath);
+      router.push(link(nextPath));
     } catch {
       setError("Network error. Please try again.");
     } finally {
@@ -91,64 +83,101 @@ export default function VerifyOtpPage() {
   const ss = String(cooldown % 60).padStart(2, "0");
 
   return (
-    <div className="mx-auto max-w-md px-4 py-8 sm:px-6 sm:py-12">
-      <div className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm">
-        <div className="mb-3 inline-flex rounded-xl bg-emerald-500/10 p-2 text-emerald-700">
-          <ShieldCheck className="size-5" aria-hidden />
-        </div>
-        <h1 className="text-xl font-bold text-zinc-900 sm:text-2xl">Enter verification code</h1>
-        <p className="mt-1 text-sm text-zinc-600">
-          We sent a code to <span className="font-semibold text-zinc-900">{phone || "your phone"}</span>. Codes expire in 2 minutes.
-        </p>
+    <div className="flex min-h-[80vh] items-center justify-center px-4 py-12">
+      <motion.div
+        initial={{ opacity: 0, y: 30 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4 }}
+        className="w-full max-w-md"
+      >
+        <div className="overflow-hidden rounded-3xl border border-[#FFE4D6] bg-white shadow-2xl shadow-[#FF6B35]/8">
+          <div className="h-1.5 w-full gradient-primary" />
+          <div className="p-8">
+            {/* Header */}
+            <div className="mb-6 flex flex-col items-center text-center">
+              <motion.div
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ type: "spring", stiffness: 200 }}
+                className="mb-4 flex size-16 items-center justify-center rounded-2xl bg-[#22C55E]/15"
+              >
+                <ShieldCheck className="size-8 text-[#22C55E]" />
+              </motion.div>
+              <h1 className="font-poppins text-2xl font-bold text-[#111827]">Verify OTP</h1>
+              <p className="mt-1 text-sm text-[#6B7280]">
+                Code sent to <span className="font-semibold text-[#111827]">{phone || "your phone"}</span>
+              </p>
+              <p className="text-xs text-[#6B7280]">Expires in 2 minutes</p>
+            </div>
 
-        {error ? <p className="mt-4 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-800">{error}</p> : null}
-        {devHint ? <p className="mt-2 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900">{devHint}</p> : null}
-
-        <div className="mt-5">
-          <label className="block text-xs font-medium text-zinc-600">6-digit code</label>
-          <input
-            value={otp}
-            onChange={(e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
-            className="mt-1.5 w-full rounded-xl border border-zinc-300 px-3 py-3 text-center text-lg tracking-[0.35em] outline-none focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/20"
-            placeholder="••••••"
-            inputMode="numeric"
-            autoComplete="one-time-code"
-          />
-        </div>
-
-        <button
-          type="button"
-          onClick={verify}
-          disabled={loading || !phone}
-          className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-500 py-3.5 text-sm font-bold text-zinc-950 hover:bg-emerald-400 disabled:opacity-60"
-        >
-          {loading ? <Loader2 className="size-4 animate-spin" aria-hidden /> : null}
-          Verify & continue
-        </button>
-
-        <div className="mt-4 flex flex-col items-center gap-2 text-sm">
-          <button
-            type="button"
-            onClick={resendOtp}
-            disabled={resendLoading || cooldown > 0 || !phone}
-            className="font-medium text-emerald-700 disabled:text-zinc-400 hover:underline disabled:no-underline"
-          >
-            {resendLoading ? (
-              <span className="inline-flex items-center gap-1">
-                <Loader2 className="size-3.5 animate-spin" aria-hidden />
-                Sending…
-              </span>
-            ) : cooldown > 0 ? (
-              `Resend code in ${mm}:${ss}`
-            ) : (
-              "Resend code"
+            {/* Errors */}
+            {error && (
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+                className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-xs text-red-700">
+                {error}
+              </motion.div>
             )}
-          </button>
-          <Link href={link("/account/login")} className="text-zinc-600 hover:text-zinc-900 hover:underline">
-            Use a different number
-          </Link>
+            {devHint && (
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+                className="mb-4 rounded-xl border border-[#F59E0B]/30 bg-[#F59E0B]/8 px-4 py-3 text-xs text-[#92400E]">
+                {devHint}
+              </motion.div>
+            )}
+
+            {/* OTP Input */}
+            <div className="space-y-4">
+              <div>
+                <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-[#6B7280]">
+                  6-Digit Code
+                </label>
+                <input
+                  value={otp}
+                  onChange={(e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                  onKeyDown={(e) => e.key === "Enter" && verify()}
+                  className="min-h-[56px] w-full rounded-xl border border-[#FFE4D6] bg-white text-center font-poppins text-2xl font-bold tracking-[0.5em] text-[#111827] outline-none transition-all placeholder:text-[#6B7280] focus:border-[#FF6B35]/50 focus:ring-2 focus:ring-[#FF6B35]/10"
+                  placeholder="••••••"
+                  inputMode="numeric"
+                  autoComplete="one-time-code"
+                />
+              </div>
+
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.97 }}
+                type="button"
+                onClick={verify}
+                disabled={loading || !phone}
+                className="flex min-h-[52px] w-full items-center justify-center gap-2 rounded-xl gradient-primary text-sm font-bold text-white shadow-lg shadow-[#FF6B35]/25 disabled:opacity-60"
+              >
+                {loading ? <Loader2 className="size-4 animate-spin" /> : <ShieldCheck className="size-4" />}
+                {loading ? "Verifying..." : "Verify & Continue"}
+              </motion.button>
+
+              {/* Resend + Back */}
+              <div className="flex flex-col items-center gap-2 text-sm">
+                <button
+                  type="button"
+                  onClick={resendOtp}
+                  disabled={resendLoading || cooldown > 0 || !phone}
+                  className="font-semibold text-[#FF6B35] disabled:text-[#6B7280] hover:underline disabled:no-underline"
+                >
+                  {resendLoading ? (
+                    <span className="flex items-center gap-1"><Loader2 className="size-3.5 animate-spin" /> Sending…</span>
+                  ) : cooldown > 0 ? (
+                    `Resend code in ${mm}:${ss}`
+                  ) : (
+                    "Resend code"
+                  )}
+                </button>
+                <Link href={link("/account/login")}
+                  className="flex items-center gap-1 text-[#6B7280] transition-colors hover:text-[#111827]">
+                  <ArrowLeft className="size-3.5" /> Use a different number
+                </Link>
+              </div>
+            </div>
+          </div>
         </div>
-      </div>
+      </motion.div>
     </div>
   );
 }

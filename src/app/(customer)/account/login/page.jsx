@@ -2,7 +2,8 @@
 
 import { useCustomer } from "@/context/CustomerContext";
 import { useRestaurantSlug } from "@/hooks/useRestaurantSlug";
-import { Loader2, Phone } from "lucide-react";
+import { motion } from "framer-motion";
+import { Loader2, Phone, ShieldCheck, UtensilsCrossed } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useState } from "react";
@@ -39,11 +40,9 @@ function CustomerLoginContent() {
         setError(data?.error ?? "Could not send OTP.");
         return;
       }
-      if (data.devOtp) {
-        setDevOtpHint(`Dev OTP: ${data.devOtp}`);
-      }
+      if (data.devOtp) setDevOtpHint(`Dev OTP: ${data.devOtp}`);
       const q = new URLSearchParams({ phone: normalized, next: nextPath });
-      router.push(`/account/verify-otp?${q.toString()}`);
+      router.push(link(`/account/verify-otp?${q.toString()}`));
     } catch {
       setError("Network error. Please try again.");
     } finally {
@@ -52,58 +51,122 @@ function CustomerLoginContent() {
   };
 
   return (
-    <div className="mx-auto max-w-md px-4 py-8 sm:px-6 sm:py-12">
-      <div className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm">
-        <h1 className="text-xl font-bold tracking-tight text-zinc-900 sm:text-2xl">Login with Mobile OTP</h1>
-        <p className="mt-1 text-sm text-zinc-600">Enter your phone number to continue checkout and track orders.</p>
+    <div className="flex min-h-[80vh] items-center justify-center px-4 py-12">
+      <motion.div
+        initial={{ opacity: 0, y: 30 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4 }}
+        className="w-full max-w-md"
+      >
+        {/* Card */}
+        <div className="overflow-hidden rounded-3xl border border-[#FFE4D6] bg-white shadow-2xl shadow-[#FF6B35]/8">
+          <div className="h-1.5 w-full gradient-primary" />
 
-        {error ? (
-          <p className="mt-4 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-800">{error}</p>
-        ) : null}
-        {devOtpHint ? (
-          <p className="mt-2 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900">{devOtpHint}</p>
-        ) : null}
+          <div className="p-8">
+            {/* Logo */}
+            <div className="mb-6 flex flex-col items-center text-center">
+              <motion.div
+                whileHover={{ rotate: 10, scale: 1.1 }}
+                className="mb-4 flex size-16 items-center justify-center rounded-2xl gradient-primary shadow-lg shadow-[#FF6B35]/25"
+              >
+                <UtensilsCrossed className="size-8 text-white" />
+              </motion.div>
+              <h1 className="font-poppins text-2xl font-bold text-[#111827]">Welcome Back</h1>
+              <p className="mt-1 text-sm text-[#6B7280]">Login with your mobile number to continue</p>
+            </div>
 
-          <div className="mt-6">
-            <label className="block text-xs font-medium text-zinc-600">Mobile number</label>
-            <input
-              inputMode="tel"
-              autoComplete="tel"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              className="mt-1.5 w-full rounded-xl border border-zinc-300 px-3 py-3 text-base outline-none ring-emerald-500/0 transition focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/20"
-              placeholder="+1 555 000 0000"
-            />
-            <p className="mt-2 text-xs text-zinc-500">We’ll text you a one-time code. New accounts are created automatically after verification.</p>
-            <button
-              type="button"
-              disabled={loading}
-              onClick={requestOtp}
-              className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-500 py-3.5 text-sm font-bold text-zinc-950 hover:bg-emerald-400 disabled:opacity-60"
-            >
-              {loading ? <Loader2 className="size-4 animate-spin" aria-hidden /> : <Phone className="size-4" aria-hidden />}
-              Send OTP
-            </button>
-            <div className="pt-4 text-center">
-              <Link href={link("/order/menu")} className="text-sm font-medium text-zinc-600 underline-offset-2 hover:text-zinc-900 hover:underline">
-                Continue as guest
-              </Link>
+            {/* Error */}
+            {error && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-xs text-red-700"
+              >
+                {error}
+              </motion.div>
+            )}
+            {devOtpHint && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="mb-4 rounded-xl border border-[#F59E0B]/30 bg-[#F59E0B]/8 px-4 py-3 text-xs text-[#92400E]"
+              >
+                {devOtpHint}
+              </motion.div>
+            )}
+
+            {/* Phone input */}
+            <div className="space-y-4">
+              <div>
+                <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-[#6B7280]">
+                  Mobile Number
+                </label>
+                <div className="relative">
+                  <Phone className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-[#6B7280]" />
+                  <input
+                    inputMode="tel"
+                    autoComplete="tel"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && requestOtp()}
+                    className="min-h-[52px] w-full rounded-xl border border-[#FFE4D6] bg-white py-3 pl-11 pr-4 text-base text-[#111827] outline-none transition-all placeholder:text-[#6B7280] focus:border-[#FF6B35]/50 focus:ring-2 focus:ring-[#FF6B35]/10"
+                    placeholder="+91 98765 43210"
+                  />
+                </div>
+                <p className="mt-1.5 text-xs text-[#6B7280]">
+                  We&apos;ll send a one-time code. New accounts are created automatically.
+                </p>
+              </div>
+
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.97 }}
+                type="button"
+                disabled={loading}
+                onClick={requestOtp}
+                className="flex min-h-[52px] w-full items-center justify-center gap-2 rounded-xl gradient-primary text-sm font-bold text-white shadow-lg shadow-[#FF6B35]/25 transition-all hover:shadow-xl disabled:opacity-60"
+              >
+                {loading ? <Loader2 className="size-4 animate-spin" /> : <ShieldCheck className="size-4" />}
+                {loading ? "Sending OTP..." : "Send OTP"}
+              </motion.button>
+
+              <div className="text-center">
+                <Link
+                  href={link("/order/menu")}
+                  className="text-sm font-medium text-[#6B7280] underline-offset-2 transition-colors hover:text-[#FF6B35] hover:underline"
+                >
+                  Continue as guest →
+                </Link>
+              </div>
+            </div>
+
+            {/* Divider */}
+            <div className="mt-6 flex items-center gap-3">
+              <div className="h-px flex-1 bg-[#FFE4D6]" />
+              <span className="text-xs text-[#6B7280]">Secure & Fast</span>
+              <div className="h-px flex-1 bg-[#FFE4D6]" />
+            </div>
+
+            {/* Trust badges */}
+            <div className="mt-4 flex items-center justify-center gap-6 text-xs text-[#6B7280]">
+              <span className="flex items-center gap-1">🔒 Encrypted</span>
+              <span className="flex items-center gap-1">⚡ Instant</span>
+              <span className="flex items-center gap-1">✅ Verified</span>
             </div>
           </div>
-      </div>
+        </div>
+      </motion.div>
     </div>
   );
 }
 
 export default function CustomerLoginPage() {
   return (
-    <Suspense
-      fallback={
-        <div className="flex min-h-[40vh] items-center justify-center">
-          <Loader2 className="size-8 animate-spin text-emerald-600" aria-hidden />
-        </div>
-      }
-    >
+    <Suspense fallback={
+      <div className="flex min-h-[80vh] items-center justify-center">
+        <Loader2 className="size-8 animate-spin text-[#FF6B35]" />
+      </div>
+    }>
       <CustomerLoginContent />
     </Suspense>
   );
