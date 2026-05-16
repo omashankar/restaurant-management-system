@@ -6,19 +6,43 @@ import CustomerFooter from "@/components/customer/CustomerFooter";
 import CustomerNavbar from "@/components/customer/CustomerNavbar";
 import CustomerToasts from "@/components/customer/CustomerToasts";
 import OrderTypeModal from "@/components/customer/OrderTypeModal";
+import { AnimatePresence, motion } from "framer-motion";
+import { usePathname } from "next/navigation";
+
+function PageTransition({ children }) {
+  const pathname = usePathname();
+  return (
+    <AnimatePresence mode="wait">
+      <motion.div
+        key={pathname}
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -8 }}
+        transition={{ duration: 0.25, ease: "easeInOut" }}
+      >
+        {children}
+      </motion.div>
+    </AnimatePresence>
+  );
+}
 
 export default function CustomerLayout({ children }) {
   return (
     <CustomerProvider>
-      <div className="relative flex min-h-screen flex-col overflow-x-hidden bg-zinc-50 text-zinc-900">
-        <div className="pointer-events-none absolute inset-0">
-          <div className="absolute inset-x-0 top-0 h-48 bg-gradient-to-b from-emerald-100/70 to-transparent" />
-          <div className="absolute left-[-80px] top-[-80px] h-80 w-80 rounded-full bg-emerald-300/25 blur-3xl" />
-          <div className="absolute bottom-[-120px] right-[-80px] h-96 w-96 rounded-full bg-sky-300/20 blur-3xl" />
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_15%_15%,rgba(16,185,129,0.08),transparent_45%),radial-gradient(circle_at_85%_80%,rgba(14,165,233,0.08),transparent_42%)]" />
+      <div className="customer-theme relative flex min-h-screen flex-col overflow-x-hidden">
+        {/* Background blobs */}
+        <div className="pointer-events-none fixed inset-0 z-0 overflow-hidden">
+          <div className="absolute -top-40 -right-40 h-96 w-96 rounded-full bg-[#FF6B35]/8 blur-3xl" />
+          <div className="absolute top-1/2 -left-40 h-80 w-80 rounded-full bg-[#FF9F1C]/6 blur-3xl" />
+          <div className="absolute -bottom-40 right-1/3 h-96 w-96 rounded-full bg-[#FF6B35]/5 blur-3xl" />
         </div>
+
         <CustomerNavbar />
-        <main className="relative z-10 flex-1">{children}</main>
+
+        <main className="relative z-10 flex-1">
+          <PageTransition>{children}</PageTransition>
+        </main>
+
         <CustomerFooter />
         <CustomerToasts />
         <OrderTypeModal />

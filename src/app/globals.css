@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&family=Inter:wght@300;400;500;600&display=swap');
 @import "tailwindcss";
 
 /* Ensure customer-side files are always scanned */
@@ -65,4 +66,122 @@ body {
     opacity: 1;
     transform: translateY(0);
   }
+}
+
+/* ═══════════════════════════════════════
+   CUSTOMER THEME — Premium Restaurant UI
+═══════════════════════════════════════ */
+
+/* Customer page override */
+.customer-theme {
+  font-family: 'Inter', system-ui, sans-serif;
+  background: #FFF8F3;
+  color: #111827;
+  color-scheme: light;
+}
+
+.customer-theme h1,
+.customer-theme h2,
+.customer-theme h3,
+.customer-theme h4 {
+  font-family: 'Poppins', system-ui, sans-serif;
+}
+
+/* Glassmorphism navbar */
+.glass-nav {
+  background: rgba(255, 248, 243, 0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(255, 107, 53, 0.1);
+}
+
+.glass-nav-dark {
+  background: rgba(15, 23, 42, 0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(51, 65, 85, 0.5);
+}
+
+/* Premium gradient */
+.gradient-primary {
+  background: linear-gradient(135deg, #FF6B35 0%, #FF9F1C 100%);
+}
+
+.gradient-text {
+  background: linear-gradient(135deg, #FF6B35 0%, #FF9F1C 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Glow effects */
+.glow-orange {
+  box-shadow: 0 0 30px rgba(255, 107, 53, 0.3);
+}
+
+.glow-orange-sm {
+  box-shadow: 0 0 15px rgba(255, 107, 53, 0.2);
+}
+
+/* Card hover lift */
+.card-lift {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+.card-lift:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 20px 40px rgba(255, 107, 53, 0.15);
+}
+
+/* Skeleton loading */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.skeleton {
+  background: linear-gradient(90deg, #f0e6df 25%, #ffe4d6 50%, #f0e6df 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: 8px;
+}
+
+/* Smooth scroll */
+.customer-theme {
+  scroll-behavior: smooth;
+}
+
+/* Custom scrollbar for customer */
+.customer-theme * {
+  scrollbar-width: thin;
+  scrollbar-color: #FF6B35 #FFE4D6;
+}
+
+/* Floating animation */
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+}
+
+.float-animation {
+  animation: float 3s ease-in-out infinite;
+}
+
+/* Pulse glow */
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 15px rgba(255, 107, 53, 0.3); }
+  50% { box-shadow: 0 0 30px rgba(255, 107, 53, 0.6); }
+}
+
+.pulse-glow {
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+/* Dark mode customer */
+.customer-dark {
+  background: #0F172A;
+  color: #F8FAFC;
+}
+
+.customer-dark .glass-nav {
+  background: rgba(15, 23, 42, 0.85);
 }

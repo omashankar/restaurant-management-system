@@ -4,11 +4,9 @@ import SafeDishImage from "@/components/customer/SafeDishImage";
 import { useCustomer } from "@/context/CustomerContext";
 import { useRestaurantSlug } from "@/hooks/useRestaurantSlug";
 import { formatCustomerMoney } from "@/lib/customerCurrency";
-import { Minus, Plus, ShoppingCart, Trash2, X } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Minus, Plus, ShoppingCart, Trash2, X, ArrowRight, ShoppingBag } from "lucide-react";
 import Link from "next/link";
-
-const focusRing =
-  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2";
 
 export default function CartDrawer() {
   const { cart, cartOpen, setCartOpen } = useCustomer();
@@ -16,126 +14,163 @@ export default function CartDrawer() {
   const { lines, removeItem, setQty, subtotal, itemCount } = cart;
 
   return (
-    <>
+    <AnimatePresence>
       {cartOpen && (
-        <button
-          type="button"
-          aria-label="Close cart"
-          className="fixed inset-0 z-40 cursor-pointer bg-black/40 backdrop-blur-[2px] transition-opacity"
-          onClick={() => setCartOpen(false)}
-        />
-      )}
-
-      <div
-        className={`fixed right-0 top-0 z-50 flex h-full w-full max-w-sm flex-col border-l border-zinc-200/90 bg-white shadow-2xl shadow-zinc-900/10 transition-transform duration-300 ease-out ${
-          cartOpen ? "translate-x-0" : "translate-x-full"
-        }`}
-        aria-hidden={!cartOpen}
-      >
-        <div className="flex items-center justify-between border-b border-zinc-200 px-4 py-4 sm:px-5">
-          <div className="flex items-center gap-2">
-            <ShoppingCart className="size-5 text-emerald-600" aria-hidden />
-            <h2 className="text-base font-bold tracking-tight text-zinc-900">Your cart</h2>
-            {itemCount > 0 && (
-              <span className="rounded-full bg-emerald-500 px-2 py-0.5 text-[11px] font-bold text-zinc-950 tabular-nums">
-                {itemCount}
-              </span>
-            )}
-          </div>
-          <button
-            type="button"
+        <>
+          {/* Overlay */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm"
             onClick={() => setCartOpen(false)}
-            className={`cursor-pointer rounded-xl p-2 text-zinc-500 transition-colors hover:bg-zinc-100 hover:text-zinc-900 ${focusRing}`}
-            aria-label="Close"
+          />
+
+          {/* Drawer */}
+          <motion.div
+            initial={{ x: "100%" }}
+            animate={{ x: 0 }}
+            exit={{ x: "100%" }}
+            transition={{ type: "spring", stiffness: 300, damping: 30 }}
+            className="fixed right-0 top-0 z-50 flex h-full w-full max-w-sm flex-col bg-white shadow-2xl"
           >
-            <X className="size-5" aria-hidden />
-          </button>
-        </div>
-
-        <div className="flex-1 overflow-y-auto overscroll-contain px-4 py-4 sm:px-5">
-          {lines.length === 0 ? (
-            <div className="flex flex-col items-center justify-center gap-3 py-16 text-center">
-              <span className="flex size-16 items-center justify-center rounded-2xl border border-zinc-100 bg-zinc-50 text-zinc-400">
-                <ShoppingCart className="size-8" aria-hidden />
-              </span>
-              <p className="text-sm font-semibold text-zinc-800">Cart is empty</p>
-              <p className="max-w-[220px] text-xs leading-relaxed text-zinc-500">Add dishes from the menu — they appear here.</p>
-              <Link
-                href={link("/order/menu")}
+            {/* Header */}
+            <div className="flex items-center justify-between border-b border-[#FFE4D6] px-5 py-4">
+              <div className="flex items-center gap-2.5">
+                <div className="flex size-9 items-center justify-center rounded-xl gradient-primary shadow-md">
+                  <ShoppingCart className="size-4 text-white" />
+                </div>
+                <div>
+                  <h2 className="font-poppins text-base font-bold text-[#111827]">Your Cart</h2>
+                  <p className="text-xs text-[#6B7280]">{itemCount} item{itemCount !== 1 ? "s" : ""}</p>
+                </div>
+              </div>
+              <motion.button
+                whileTap={{ scale: 0.9 }}
+                type="button"
                 onClick={() => setCartOpen(false)}
-                className={`mt-1 cursor-pointer rounded-xl bg-emerald-500 px-6 py-2.5 text-sm font-bold text-zinc-950 shadow-md shadow-emerald-600/10 transition-colors hover:bg-emerald-400 ${focusRing}`}
+                className="flex size-9 items-center justify-center rounded-xl border border-[#FFE4D6] text-[#6B7280] transition-colors hover:bg-[#FFF8F3] hover:text-[#111827]"
               >
-                Browse menu
-              </Link>
+                <X className="size-5" />
+              </motion.button>
             </div>
-          ) : (
-            <ul className="space-y-3">
-              {lines.map((line) => (
-                <li key={line.id} className="flex gap-3 rounded-xl border border-zinc-200/90 bg-zinc-50/80 p-3 ring-1 ring-zinc-100">
-                  <SafeDishImage
-                    src={line.image}
-                    alt=""
-                    className="size-14 shrink-0 rounded-lg object-cover"
-                    iconClassName="size-7 text-emerald-600/35"
-                  />
-                  <div className="flex min-w-0 flex-1 flex-col gap-1.5">
-                    <div className="flex items-start justify-between gap-2">
-                      <p className="text-sm font-semibold leading-snug text-zinc-900">{line.name}</p>
-                      <button
-                        type="button"
-                        onClick={() => removeItem(line.id)}
-                        className={`shrink-0 rounded-lg p-1.5 text-zinc-400 transition-colors hover:bg-red-50 hover:text-red-600 ${focusRing}`}
-                        aria-label={`Remove ${line.name}`}
-                      >
-                        <Trash2 className="size-3.5" aria-hidden />
-                      </button>
-                    </div>
-                    <p className="text-xs font-bold tabular-nums text-emerald-700">{formatCustomerMoney(line.price * line.qty)}</p>
-                    <div className="flex items-center gap-2">
-                      <button
-                        type="button"
-                        onClick={() => (line.qty === 1 ? removeItem(line.id) : setQty(line.id, line.qty - 1))}
-                        className={`flex size-8 cursor-pointer items-center justify-center rounded-lg border border-zinc-200 bg-white text-zinc-700 transition-colors hover:border-red-300 hover:bg-red-50 ${focusRing}`}
-                        aria-label="Decrease quantity"
-                      >
-                        <Minus className="size-3.5" aria-hidden />
-                      </button>
-                      <span className="min-w-[1.75rem] text-center text-sm font-bold tabular-nums text-zinc-900">{line.qty}</span>
-                      <button
-                        type="button"
-                        onClick={() => setQty(line.id, line.qty + 1)}
-                        className={`flex size-8 cursor-pointer items-center justify-center rounded-lg border border-zinc-200 bg-white text-zinc-700 transition-colors hover:border-emerald-400 hover:bg-emerald-50 ${focusRing}`}
-                        aria-label="Increase quantity"
-                      >
-                        <Plus className="size-3.5" aria-hidden />
-                      </button>
-                    </div>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
 
-        {lines.length > 0 && (
-          <div className="space-y-3 border-t border-zinc-200 bg-white px-4 py-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:px-5">
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-zinc-600">Subtotal</span>
-              <span className="font-bold tabular-nums text-zinc-900">{formatCustomerMoney(subtotal)}</span>
+            {/* Items */}
+            <div className="flex-1 overflow-y-auto overscroll-contain px-4 py-4">
+              <AnimatePresence>
+                {lines.length === 0 ? (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="flex flex-col items-center justify-center gap-4 py-16 text-center"
+                  >
+                    <div className="flex size-20 items-center justify-center rounded-2xl bg-[#FFF8F3]">
+                      <ShoppingBag className="size-10 text-[#FF6B35]/40" />
+                    </div>
+                    <div>
+                      <p className="font-poppins text-base font-bold text-[#111827]">Cart is Empty</p>
+                      <p className="mt-1 max-w-[200px] text-xs text-[#6B7280]">Add delicious dishes from our menu</p>
+                    </div>
+                    <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
+                      <Link
+                        href={link("/order/menu")}
+                        onClick={() => setCartOpen(false)}
+                        className="inline-flex items-center gap-2 rounded-xl gradient-primary px-6 py-2.5 text-sm font-bold text-white shadow-md shadow-[#FF6B35]/20"
+                      >
+                        Browse Menu <ArrowRight className="size-4" />
+                      </Link>
+                    </motion.div>
+                  </motion.div>
+                ) : (
+                  <ul className="space-y-3">
+                    {lines.map((line) => (
+                      <motion.li
+                        key={line.id}
+                        layout
+                        initial={{ opacity: 0, x: 20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: -20, height: 0 }}
+                        transition={{ duration: 0.2 }}
+                        className="flex gap-3 rounded-2xl border border-[#FFE4D6] bg-[#FFF8F3]/50 p-3"
+                      >
+                        <SafeDishImage
+                          src={line.image}
+                          alt={line.name}
+                          className="size-16 shrink-0 rounded-xl object-cover"
+                          iconClassName="size-7 text-[#FF6B35]/30"
+                        />
+                        <div className="flex min-w-0 flex-1 flex-col gap-1.5">
+                          <div className="flex items-start justify-between gap-2">
+                            <p className="text-sm font-semibold leading-snug text-[#111827]">{line.name}</p>
+                            <motion.button
+                              whileTap={{ scale: 0.85 }}
+                              type="button"
+                              onClick={() => removeItem(line.id)}
+                              className="shrink-0 rounded-lg p-1.5 text-[#6B7280] transition-colors hover:bg-red-50 hover:text-red-500"
+                            >
+                              <Trash2 className="size-3.5" />
+                            </motion.button>
+                          </div>
+                          <p className="text-xs font-bold text-[#FF6B35]">{formatCustomerMoney(line.price * line.qty)}</p>
+                          <div className="flex items-center gap-2">
+                            <motion.button
+                              whileTap={{ scale: 0.85 }}
+                              type="button"
+                              onClick={() => (line.qty === 1 ? removeItem(line.id) : setQty(line.id, line.qty - 1))}
+                              className="flex size-7 items-center justify-center rounded-lg border border-[#FFE4D6] bg-white text-[#6B7280] transition-colors hover:border-red-300 hover:bg-red-50 hover:text-red-500"
+                            >
+                              <Minus className="size-3" />
+                            </motion.button>
+                            <span className="min-w-[1.5rem] text-center text-sm font-bold text-[#111827]">{line.qty}</span>
+                            <motion.button
+                              whileTap={{ scale: 0.85 }}
+                              type="button"
+                              onClick={() => setQty(line.id, line.qty + 1)}
+                              className="flex size-7 items-center justify-center rounded-lg border border-[#FFE4D6] bg-white text-[#6B7280] transition-colors hover:border-[#FF6B35]/40 hover:bg-[#FFF8F3] hover:text-[#FF6B35]"
+                            >
+                              <Plus className="size-3" />
+                            </motion.button>
+                          </div>
+                        </div>
+                      </motion.li>
+                    ))}
+                  </ul>
+                )}
+              </AnimatePresence>
             </div>
-            {cart.maxPrepTime > 0 && (
-              <p className="text-xs text-zinc-500">Est. prep: ~{cart.maxPrepTime} min</p>
-            )}
-            <Link
-              href={link("/order/cart")}
-              onClick={() => setCartOpen(false)}
-              className={`block w-full cursor-pointer rounded-xl bg-emerald-500 py-3 text-center text-sm font-bold text-zinc-950 shadow-md shadow-emerald-600/10 transition-colors hover:bg-emerald-400 ${focusRing}`}
-            >
-              View cart & checkout
-            </Link>
-          </div>
-        )}
-      </div>
-    </>
+
+            {/* Footer */}
+            <AnimatePresence>
+              {lines.length > 0 && (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="space-y-3 border-t border-[#FFE4D6] bg-white px-4 py-4 pb-[max(1rem,env(safe-area-inset-bottom))]"
+                >
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-[#6B7280]">Subtotal</span>
+                    <span className="font-poppins font-bold text-[#111827]">{formatCustomerMoney(subtotal)}</span>
+                  </div>
+                  {cart.maxPrepTime > 0 && (
+                    <p className="text-xs text-[#6B7280]">⏱ Est. prep: ~{cart.maxPrepTime} min</p>
+                  )}
+                  <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                    <Link
+                      href={link("/order/cart")}
+                      onClick={() => setCartOpen(false)}
+                      className="flex w-full items-center justify-between rounded-xl gradient-primary px-5 py-3.5 shadow-lg shadow-[#FF6B35]/25 transition-all hover:shadow-xl hover:shadow-[#FF6B35]/35"
+                    >
+                      <span className="text-sm font-bold text-white">View Cart & Checkout</span>
+                      <span className="font-poppins text-sm font-bold text-white">{formatCustomerMoney(subtotal)}</span>
+                    </Link>
+                  </motion.div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </motion.div>
+        </>
+      )}
+    </AnimatePresence>
   );
 }

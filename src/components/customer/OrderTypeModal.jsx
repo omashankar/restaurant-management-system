@@ -2,33 +2,50 @@
 
 import { useCustomer } from "@/context/CustomerContext";
 import { useRestaurantSlug } from "@/hooks/useRestaurantSlug";
+import { motion, AnimatePresence } from "framer-motion";
 import { Bike, Check, ConciergeBell, Store, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 const TYPES = [
-  { id: "dine-in",  label: "Dine-In",  desc: "Eat at our restaurant",  Icon: Store },
-  { id: "takeaway", label: "Takeaway", desc: "Pick up your order",      Icon: ConciergeBell },
-  { id: "delivery", label: "Delivery", desc: "Delivered to your door",  Icon: Bike },
+  {
+    id: "dine-in",
+    label: "Dine-In",
+    desc: "Eat at our restaurant",
+    Icon: Store,
+    gradient: "from-orange-400 to-[#FF6B35]",
+    bg: "bg-orange-50",
+    border: "border-orange-200",
+    active: "border-[#FF6B35] bg-[#FF6B35]/5",
+    dot: "bg-[#FF6B35]",
+  },
+  {
+    id: "takeaway",
+    label: "Takeaway",
+    desc: "Pick up your order",
+    Icon: ConciergeBell,
+    gradient: "from-amber-400 to-amber-500",
+    bg: "bg-amber-50",
+    border: "border-amber-200",
+    active: "border-amber-500 bg-amber-50",
+    dot: "bg-amber-500",
+  },
+  {
+    id: "delivery",
+    label: "Delivery",
+    desc: "Delivered to your door",
+    Icon: Bike,
+    gradient: "from-rose-400 to-rose-500",
+    bg: "bg-rose-50",
+    border: "border-rose-200",
+    active: "border-rose-500 bg-rose-50",
+    dot: "bg-rose-500",
+  },
 ];
-
-function typeCardClass(id, isSelected) {
-  if (isSelected) {
-    if (id === "dine-in")  return "border-emerald-500/60 bg-emerald-500/10 ring-1 ring-emerald-500/25";
-    if (id === "takeaway") return "border-indigo-500/60 bg-indigo-500/10 ring-1 ring-indigo-500/25";
-    if (id === "delivery") return "border-sky-500/60 bg-sky-500/10 ring-1 ring-sky-500/25";
-  }
-  if (id === "dine-in")  return "border-zinc-200 bg-zinc-50 hover:border-emerald-500/40 hover:bg-emerald-500/5";
-  if (id === "takeaway") return "border-zinc-200 bg-zinc-50 hover:border-indigo-500/40 hover:bg-indigo-500/5";
-  if (id === "delivery") return "border-zinc-200 bg-zinc-50 hover:border-sky-500/40 hover:bg-sky-500/5";
-  return "border-zinc-200 bg-zinc-50";
-}
 
 export default function OrderTypeModal() {
   const { orderTypeModalOpen, setOrderTypeModalOpen, setOrderType, orderType } = useCustomer();
   const router = useRouter();
   const { link } = useRestaurantSlug();
-
-  if (!orderTypeModalOpen) return null;
 
   const choose = (type) => {
     setOrderType(type);
@@ -37,54 +54,99 @@ export default function OrderTypeModal() {
   };
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-      <button
-        type="button"
-        className="cursor-pointer absolute inset-0 bg-black/35 backdrop-blur-sm"
-        onClick={() => setOrderTypeModalOpen(false)}
-        aria-label="Close"
-      />
-      <div className="relative z-10 w-full max-w-md rounded-2xl border border-zinc-200 bg-white p-6 shadow-xl">
-        <div className="flex items-center justify-between gap-4">
-          <div>
-            <h2 className="text-lg font-semibold text-zinc-900">How would you like to order?</h2>
-            <p className="mt-1 text-xs text-zinc-600">Choose your preferred order method</p>
-          </div>
-          <button
-            type="button"
+    <AnimatePresence>
+      {orderTypeModalOpen && (
+        <div className="fixed inset-0 z-[100] flex items-end justify-center p-4 sm:items-center">
+          {/* Backdrop */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="absolute inset-0 bg-black/50 backdrop-blur-sm"
             onClick={() => setOrderTypeModalOpen(false)}
-            className="cursor-pointer rounded-lg p-2 text-zinc-500 hover:bg-zinc-100 hover:text-zinc-800"
+          />
+
+          {/* Modal */}
+          <motion.div
+            initial={{ opacity: 0, y: 60, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 60, scale: 0.95 }}
+            transition={{ type: "spring", stiffness: 300, damping: 28 }}
+            className="relative z-10 w-full max-w-md overflow-hidden rounded-3xl bg-white shadow-2xl"
           >
-            <X className="size-5" />
-          </button>
-        </div>
-        <div className="mt-5 grid gap-3">
-          {TYPES.map(({ id, label, desc, Icon }) => {
-            const isSelected = orderType === id;
-            return (
-              <button
-                key={id}
-                type="button"
-                onClick={() => choose(id)}
-                className={`cursor-pointer flex items-center gap-4 rounded-xl border p-4 text-left transition-all duration-200 ${typeCardClass(id, isSelected)}`}
-              >
-                <span className={`flex size-11 shrink-0 items-center justify-center rounded-xl transition-colors ${isSelected ? "bg-emerald-600 text-white" : "border border-zinc-200 bg-white text-zinc-700"}`}>
-                  <Icon className="size-5" />
-                </span>
-                <div className="flex-1">
-                  <p className="font-semibold text-zinc-900">{label}</p>
-                  <p className="text-xs text-zinc-600">{desc}</p>
+            {/* Header */}
+            <div className="relative overflow-hidden px-6 pb-4 pt-6">
+              <div className="pointer-events-none absolute inset-0 gradient-primary opacity-5" />
+              <div className="flex items-start justify-between">
+                <div>
+                  <h2 className="font-poppins text-xl font-bold text-[#111827]">
+                    How would you like to order?
+                  </h2>
+                  <p className="mt-1 text-sm text-[#6B7280]">
+                    Choose your preferred dining style
+                  </p>
                 </div>
-                {isSelected && (
-                  <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-emerald-500 text-zinc-950">
-                    <Check className="size-3.5" strokeWidth={3} />
-                  </span>
-                )}
-              </button>
-            );
-          })}
+                <motion.button
+                  whileTap={{ scale: 0.9 }}
+                  type="button"
+                  onClick={() => setOrderTypeModalOpen(false)}
+                  className="flex size-9 items-center justify-center rounded-xl border border-[#FFE4D6] text-[#6B7280] transition-colors hover:bg-[#FFF8F3]"
+                >
+                  <X className="size-5" />
+                </motion.button>
+              </div>
+            </div>
+
+            {/* Options */}
+            <div className="space-y-3 px-6 pb-6">
+              {TYPES.map(({ id, label, desc, Icon, gradient, active, border, dot }, i) => {
+                const isSelected = orderType === id;
+                return (
+                  <motion.button
+                    key={id}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: i * 0.07 }}
+                    whileHover={{ x: 4 }}
+                    whileTap={{ scale: 0.98 }}
+                    type="button"
+                    onClick={() => choose(id)}
+                    className={`flex w-full items-center gap-4 rounded-2xl border-2 p-4 text-left transition-all duration-200 ${
+                      isSelected ? active : `border-[#FFE4D6] bg-white hover:border-[#FF6B35]/30 hover:bg-[#FFF8F3]`
+                    }`}
+                  >
+                    {/* Icon */}
+                    <div className={`flex size-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br ${gradient} shadow-md`}>
+                      <Icon className="size-6 text-white" />
+                    </div>
+
+                    {/* Text */}
+                    <div className="flex-1">
+                      <p className="font-poppins font-semibold text-[#111827]">{label}</p>
+                      <p className="text-xs text-[#6B7280]">{desc}</p>
+                    </div>
+
+                    {/* Check */}
+                    <AnimatePresence>
+                      {isSelected && (
+                        <motion.div
+                          initial={{ scale: 0 }}
+                          animate={{ scale: 1 }}
+                          exit={{ scale: 0 }}
+                          className="flex size-6 shrink-0 items-center justify-center rounded-full gradient-primary shadow-sm"
+                        >
+                          <Check className="size-3.5 text-white" strokeWidth={3} />
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </motion.button>
+                );
+              })}
+            </div>
+          </motion.div>
         </div>
-      </div>
-    </div>
+      )}
+    </AnimatePresence>
   );
 }
