@@ -21,6 +21,7 @@ const ROLE_PATHS = {
     "/inventory", "/analytics", "/settings", "/billing",
     "/support-tickets", "/kitchen", "/profile",
     "/onboarding", "/qr-menu", "/whatsapp", "/printer-settings",
+    "/customer-site",
   ],
   manager: [
     "/manager", "/dashboard", "/pos", "/orders", "/menu",

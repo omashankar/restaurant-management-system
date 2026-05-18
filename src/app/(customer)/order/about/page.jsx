@@ -1,6 +1,8 @@
 "use client";
 
 import { useRestaurantSlug } from "@/hooks/useRestaurantSlug";
+import { useRestaurantInfo } from "@/hooks/useRestaurantInfo";
+import { useRestaurantCms } from "@/hooks/useRestaurantCms";
 import { motion, useInView } from "framer-motion";
 import { Clock, MapPin, Phone, Star, UtensilsCrossed, Award, Zap, Heart, ArrowRight } from "lucide-react";
 import Link from "next/link";
@@ -30,10 +32,10 @@ const STATS = [
   { value: "4.9★", label: "Rating" },
   { value: "2K+", label: "Happy Customers" },
   { value: "5 yrs", label: "Experience" },
-];
-
-export default function AboutPage() {
+];export default function AboutPage() {
   const { link } = useRestaurantSlug();
+  const { info } = useRestaurantInfo();
+  const { content: cms } = useRestaurantCms();
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-12 sm:px-6 lg:px-8">
@@ -48,10 +50,10 @@ export default function AboutPage() {
             <UtensilsCrossed className="size-10 text-white" />
           </motion.div>
           <h1 className="font-poppins text-3xl font-black text-[#111827] sm:text-4xl">
-            About <span className="gradient-text">RMS Restaurant</span>
+            About <span className="gradient-text">{info.name}</span>
           </h1>
           <p className="mx-auto mt-3 max-w-xl text-sm leading-relaxed text-[#6B7280] sm:text-base">
-            A modern dining experience built on fresh ingredients, bold flavors, and warm hospitality — every single day.
+            {cms.about?.description || "A modern dining experience built on fresh ingredients, bold flavors, and warm hospitality — every single day."}
           </p>
           <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
             <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
@@ -70,9 +72,9 @@ export default function AboutPage() {
         </div>
       </motion.div>
 
-      {/* Stats */}
+      {/* Stats — CMS se ya default */}
       <AnimatedSection className="mb-10 grid grid-cols-2 gap-4 sm:grid-cols-4">
-        {STATS.map(({ value, label }) => (
+        {(cms.about?.stats?.length > 0 ? cms.about.stats : STATS).map(({ value, label }) => (
           <motion.div key={label} variants={fadeUp} whileHover={{ y: -4 }}
             className="rounded-2xl border border-[#FFE4D6] bg-white p-5 text-center shadow-sm transition-all hover:shadow-md hover:shadow-[#FF6B35]/8">
             <p className="font-poppins text-2xl font-black text-[#FF6B35]">{value}</p>
@@ -104,9 +106,9 @@ export default function AboutPage() {
             <h2 className="mb-5 font-poppins text-lg font-bold text-[#111827]">Visit Us</h2>
             <div className="grid gap-4 sm:grid-cols-3">
               {[
-                { Icon: MapPin, label: "Address", value: "123 Restaurant Street, Food City, FC 10001", color: "bg-[#FF6B35]/10 text-[#FF6B35]" },
-                { Icon: Phone,  label: "Phone",   value: "+1 (555) 123-4567",                          color: "bg-[#22C55E]/10 text-[#22C55E]" },
-                { Icon: Clock,  label: "Hours",   value: "Mon–Sun · 11 AM – 11 PM",                   color: "bg-[#F59E0B]/10 text-[#F59E0B]" },
+                { Icon: MapPin, label: "Address", value: info.address || "123 Restaurant Street, Food City, FC 10001", color: "bg-[#FF6B35]/10 text-[#FF6B35]" },
+                { Icon: Phone,  label: "Phone",   value: info.phone   || "+1 (555) 123-4567",                          color: "bg-[#22C55E]/10 text-[#22C55E]" },
+                { Icon: Clock,  label: "Hours",   value: info.hoursSummary || "Mon–Sun · 11 AM – 11 PM",              color: "bg-[#F59E0B]/10 text-[#F59E0B]" },
               ].map(({ Icon, label, value, color }) => (
                 <div key={label} className="flex items-start gap-3 rounded-xl bg-[#FFF8F3] p-4">
                   <div className={`flex size-9 shrink-0 items-center justify-center rounded-xl ${color}`}>
