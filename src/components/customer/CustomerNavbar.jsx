@@ -2,6 +2,7 @@
 
 import { useCustomer } from "@/context/CustomerContext";
 import { useRestaurantSlug } from "@/hooks/useRestaurantSlug";
+import { useRestaurantInfo } from "@/hooks/useRestaurantInfo";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   LogOut, Menu, ShoppingCart, UserRound,
@@ -23,6 +24,7 @@ export default function CustomerNavbar() {
   const { cart, setOrderTypeModalOpen, setCartOpen, authUser, logoutCustomer } = useCustomer();
   const pathname = usePathname();
   const { link, prefix } = useRestaurantSlug();
+  const { info } = useRestaurantInfo();
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [dark, setDark] = useState(false);
@@ -67,10 +69,16 @@ export default function CustomerNavbar() {
               transition={{ type: "spring", stiffness: 400 }}
               className="flex size-9 items-center justify-center rounded-xl gradient-primary text-white shadow-md shadow-[#FF6B35]/30"
             >
-              <UtensilsCrossed className="size-5" />
+              {info.logoUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={info.logoUrl} alt={info.name} className="size-7 rounded-lg object-cover" />
+              ) : (
+                <UtensilsCrossed className="size-5" />
+              )}
             </motion.div>
             <span className="font-poppins text-sm font-bold tracking-tight text-[#111827]">
-              RMS <span className="gradient-text">Restaurant</span>
+              {info.name.split(" ").slice(0, -1).join(" ") || info.name}{" "}
+              <span className="gradient-text">{info.name.split(" ").slice(-1)[0]}</span>
             </span>
           </Link>
 

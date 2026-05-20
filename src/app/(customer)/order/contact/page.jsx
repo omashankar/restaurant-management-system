@@ -2,8 +2,9 @@
 
 import { useCustomer } from "@/context/CustomerContext";
 import { useRestaurantSlug } from "@/hooks/useRestaurantSlug";
+import { useRestaurantInfo } from "@/hooks/useRestaurantInfo";
 import { motion, AnimatePresence } from "framer-motion";
-import { Loader2, Mail, MapPin, Phone, Send, CheckCircle2, MessageSquare } from "lucide-react";
+import { Loader2, Mail, MapPin, Phone, Send, CheckCircle2, MessageSquare, Clock } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 
@@ -12,6 +13,7 @@ const inputCls = "w-full rounded-xl border border-[#FFE4D6] bg-white px-4 py-3 t
 export default function ContactPage() {
   const { showToast } = useCustomer();
   const { link } = useRestaurantSlug();
+  const { info } = useRestaurantInfo();
   const [form, setForm] = useState({ name: "", email: "", subject: "", message: "" });
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
@@ -33,9 +35,9 @@ export default function ContactPage() {
   };
 
   const CONTACT_INFO = [
-    { Icon: MapPin, label: "Address",  value: "123 Restaurant Street, Food City, FC 10001", color: "bg-[#FF6B35]/10 text-[#FF6B35]" },
-    { Icon: Phone,  label: "Phone",    value: "+1 (555) 123-4567",                          color: "bg-[#22C55E]/10 text-[#22C55E]" },
-    { Icon: Mail,   label: "Email",    value: "hello@rmsrestaurant.com",                    color: "bg-blue-100 text-blue-600" },
+    { Icon: MapPin, label: "Address", value: info.address || "123 Restaurant Street, Food City, FC 10001", color: "bg-[#FF6B35]/10 text-[#FF6B35]" },
+    { Icon: Phone,  label: "Phone",   value: info.phone   || "+1 (555) 123-4567",                          color: "bg-[#22C55E]/10 text-[#22C55E]" },
+    { Icon: Mail,   label: "Email",   value: info.email   || "hello@rmsrestaurant.com",                    color: "bg-blue-100 text-blue-600" },
   ];
 
   return (
@@ -145,11 +147,31 @@ export default function ContactPage() {
             className="rounded-2xl border border-[#FFE4D6] bg-white p-5 shadow-sm">
             <p className="mb-3 text-[10px] font-bold uppercase tracking-wider text-[#6B7280]">Opening Hours</p>
             <div className="space-y-2 text-sm">
-              <div className="flex justify-between"><span className="text-[#6B7280]">Mon – Fri</span><span className="font-semibold text-[#111827]">11 AM – 10 PM</span></div>
-              <div className="flex justify-between"><span className="text-[#6B7280]">Sat – Sun</span><span className="font-semibold text-[#111827]">10 AM – 11 PM</span></div>
+              {info.openingHours.length > 0 ? (() => {
+                const groups = [];
+                let cur = null;
+                for (const h of info.openingHours) {
+                  const lbl = h.closed ? "Closed" : `${h.openTime} – ${h.closeTime}`;
+                  if (cur && cur.label === lbl) { cur.end = h.day; }
+                  else { cur = { start: h.day, end: h.day, label: lbl }; groups.push(cur); }
+                }
+                return groups.slice(0, 3).map((g) => (
+                  <div key={g.start} className="flex justify-between">
+                    <span className="text-[#6B7280]">{g.start === g.end ? g.start.slice(0, 3) : `${g.start.slice(0, 3)} – ${g.end.slice(0, 3)}`}</span>
+                    <span className="font-semibold text-[#111827]">{g.label}</span>
+                  </div>
+                ));
+              })() : (
+                <>
+                  <div className="flex justify-between"><span className="text-[#6B7280]">Mon – Fri</span><span className="font-semibold text-[#111827]">11 AM – 10 PM</span></div>
+                  <div className="flex justify-between"><span className="text-[#6B7280]">Sat – Sun</span><span className="font-semibold text-[#111827]">10 AM – 11 PM</span></div>
+                </>
+              )}
               <div className="mt-3 flex items-center gap-2 rounded-xl bg-[#22C55E]/10 px-3 py-2">
-                <span className="size-2 animate-pulse rounded-full bg-[#22C55E]" />
-                <span className="text-xs font-bold text-[#22C55E]">Open Now</span>
+                <span className={`size-2 rounded-full ${info.isOpenToday ? "animate-pulse bg-[#22C55E]" : "bg-red-400"}`} />
+                <span className={`text-xs font-bold ${info.isOpenToday ? "text-[#22C55E]" : "text-red-500"}`}>
+                  {info.isOpenToday ? `Open · ${info.todayLabel}` : "Closed Today"}
+                </span>
               </div>
             </div>
           </motion.div>

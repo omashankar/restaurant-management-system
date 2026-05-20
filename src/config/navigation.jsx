@@ -3,6 +3,7 @@ import {
   CreditCard,
   BookOpen,
   FolderTree,
+  Globe,
   LifeBuoy,
   LayoutDashboard,
   LayoutGrid,
@@ -155,6 +156,13 @@ export const NAV_ITEMS = [
     href: "/qr-menu",
     label: "QR Menu",
     Icon: QrCode,
+    roles: ["admin"],
+  },
+  {
+    type: "link",
+    href: "/customer-site",
+    label: "Customer Site",
+    Icon: Globe,
     roles: ["admin"],
   },
   {

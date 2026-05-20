@@ -38,7 +38,7 @@ const DEFAULTS = {
     stripePublicKey:  "",
     stripeSecretKey:  "",
     webhookSecret:    "",
-    currency:         "USD",
+    currency:         "INR",
     taxPercent:       0,
     gstNumber:        "",
     gstHsnSac:        "",
@@ -46,6 +46,7 @@ const DEFAULTS = {
     gstInclusivePricing: true,
     gstPlaceOfSupply: "",
     trialDays:        14,
+    gateways: {},
   },
   theme: {
     primaryColor: "#10b981",
@@ -162,6 +163,10 @@ function sanitizeSectionData(section, incoming = {}) {
     }
     clean.gstHsnSac = String(clean.gstHsnSac ?? "").trim().slice(0, 20);
     clean.gstPlaceOfSupply = String(clean.gstPlaceOfSupply ?? "").trim().slice(0, 80);
+    // Preserve gateways object as-is (handled separately)
+    if (incoming.gateways && typeof incoming.gateways === "object") {
+      clean.gateways = incoming.gateways;
+    }
   }
   if (section === "email") {
     const port = Number(clean.smtpPort ?? base.smtpPort);

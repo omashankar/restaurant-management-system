@@ -3,6 +3,8 @@
 import { useCustomer } from "@/context/CustomerContext";
 import { useModuleData } from "@/context/ModuleDataContext";
 import { useRestaurantSlug } from "@/hooks/useRestaurantSlug";
+import { useRestaurantInfo } from "@/hooks/useRestaurantInfo";
+import { useRestaurantCms } from "@/hooks/useRestaurantCms";
 import SafeDishImage from "@/components/customer/SafeDishImage";
 import { formatCustomerMoney } from "@/lib/customerCurrency";
 import { CUSTOMER_HOME_CATEGORIES, CUSTOMER_HOME_REVIEWS, CUSTOMER_HOME_STEPS, CUSTOMER_ORDER_TYPES } from "@/config/customerContent";
@@ -74,6 +76,8 @@ export default function CustomerHomePage() {
   const { setOrderType, setOrderTypeModalOpen } = useCustomer();
   const { menuItems } = useModuleData();
   const { link } = useRestaurantSlug();
+  const { info } = useRestaurantInfo();
+  const { content: cms } = useRestaurantCms();
   const router = useRouter();
 
   const featured = menuItems.filter((m) => m.badge && m.status === "active").slice(0, 6);
@@ -87,7 +91,24 @@ export default function CustomerHomePage() {
   return (
     <div className="pb-16">
 
-      {/* ══ HERO ══ */}
+      {/* ══ ANNOUNCEMENT BANNER ══ */}
+      {cms.announcement?.enabled && cms.announcement?.text && (
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="relative z-20 px-4 py-2.5 text-center text-sm font-semibold"
+          style={{ backgroundColor: cms.announcement.bgColor || "#FF6B35", color: cms.announcement.textColor || "#ffffff" }}
+        >
+          {cms.announcement.link ? (
+            <a href={cms.announcement.link} className="hover:underline underline-offset-2">
+              {cms.announcement.text}
+              {cms.announcement.linkLabel && <span className="ml-2 underline">{cms.announcement.linkLabel}</span>}
+            </a>
+          ) : (
+            <span>{cms.announcement.text}</span>
+          )}
+        </motion.div>
+      )}
       <section className="relative overflow-hidden px-4 pb-16 pt-8 sm:px-6 sm:pb-20 sm:pt-12 lg:px-8">
         <div className="mx-auto max-w-7xl">
           <div className="grid gap-8 lg:grid-cols-2 lg:items-center lg:gap-16">
@@ -108,19 +129,25 @@ export default function CustomerHomePage() {
                 <span className="flex size-5 items-center justify-center rounded-full gradient-primary">
                   <Flame className="size-3 text-white" />
                 </span>
-                <span className="text-xs font-semibold text-[#FF6B35]">Chef Crafted · Fresh · Premium</span>
+                <span className="text-xs font-semibold text-[#FF6B35]">{cms.hero.badge || "Chef Crafted · Fresh · Premium"}</span>
               </motion.div>
 
               {/* Heading */}
               <h1 className="font-poppins text-4xl font-black leading-[1.1] tracking-tight text-[#111827] sm:text-5xl lg:text-6xl">
-                Delicious Food,{" "}
-                <span className="gradient-text">Delivered</span>{" "}
-                <br className="hidden sm:block" />
-                to Your Door
+                {cms.hero.headline ? (
+                  cms.hero.headline
+                ) : (
+                  <>
+                    Delicious Food,{" "}
+                    <span className="gradient-text">Delivered</span>
+                    <br className="hidden sm:block" />
+                    {" "}to Your Door
+                  </>
+                )}
               </h1>
 
               <p className="mt-5 max-w-lg text-base leading-relaxed text-[#6B7280] sm:text-lg">
-                Explore our kitchen specials, book a table, or order for takeaway and delivery — all in one seamless experience.
+                {cms.hero.subheadline || "Explore our kitchen specials, book a table, or order for takeaway and delivery — all in one seamless experience."}
               </p>
 
               {/* CTAs */}
@@ -132,7 +159,7 @@ export default function CustomerHomePage() {
                   onClick={() => setOrderTypeModalOpen(true)}
                   className="inline-flex items-center gap-2 rounded-xl gradient-primary px-7 py-3.5 text-sm font-bold text-white shadow-lg shadow-[#FF6B35]/30 transition-all"
                 >
-                  Order Now <ChevronRight className="size-4" />
+                  {cms.hero.ctaPrimaryLabel || "Order Now"} <ChevronRight className="size-4" />
                 </motion.button>
                 <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
                   <Link
@@ -140,18 +167,21 @@ export default function CustomerHomePage() {
                     className="inline-flex items-center gap-2 rounded-xl border-2 border-[#FFE4D6] bg-white px-7 py-3.5 text-sm font-bold text-[#111827] shadow-sm transition-all hover:border-[#FF6B35]/40 hover:shadow-md"
                   >
                     <CalendarClock className="size-4 text-[#FF6B35]" />
-                    Book a Table
+                    {cms.hero.ctaSecondaryLabel || "Book a Table"}
                   </Link>
                 </motion.div>
               </div>
 
-              {/* Stats */}
+              {/* Stats — CMS se ya default */}
               <div className="mt-10 flex flex-wrap gap-6">
-                {[
-                  { value: "50+", label: "Dishes", icon: ChefHat },
-                  { value: "4.9★", label: "Rating", icon: Star },
-                  { value: "20 min", label: "Avg. Prep", icon: Clock },
-                ].map(({ value, label, icon: Icon }) => (
+                {(cms.about?.stats?.length > 0
+                  ? cms.about.stats.slice(0, 3).map((s) => ({ value: s.value, label: s.label, icon: Star }))
+                  : [
+                      { value: "50+", label: "Dishes", icon: ChefHat },
+                      { value: "4.9★", label: "Rating", icon: Star },
+                      { value: "20 min", label: "Avg. Prep", icon: Clock },
+                    ]
+                ).map(({ value, label, icon: Icon }) => (
                   <motion.div
                     key={label}
                     whileHover={{ y: -2 }}
@@ -216,29 +246,51 @@ export default function CustomerHomePage() {
                       </div>
                     </>
                   ) : (
-                    <div className="flex h-full flex-col items-center justify-center gap-4 p-8 text-center">
-                      <div className="flex size-20 items-center justify-center rounded-2xl gradient-primary shadow-lg">
-                        <ChefHat className="size-10 text-white" />
+                    <div className="flex h-full flex-col justify-between p-6">
+                      {/* Top — Restaurant branding */}
+                      <div className="flex items-center gap-3">
+                        <div className="flex size-12 items-center justify-center rounded-2xl gradient-primary shadow-lg shadow-[#FF6B35]/25">
+                          <ChefHat className="size-6 text-white" />
+                        </div>
+                        <div>
+                          <p className="font-poppins text-base font-bold text-[#111827]">{info.name}</p>
+                          <p className="text-xs text-[#6B7280]">Premium Dining Experience</p>
+                        </div>
                       </div>
-                      <div>
-                        <p className="font-poppins text-xl font-bold text-[#111827]">Menu Coming Soon</p>
-                        <p className="mt-1 text-sm text-[#6B7280]">Chef is preparing something special</p>
+
+                      {/* Middle — Quick info */}
+                      <div className="space-y-3 py-4">
+                        {[
+                          { emoji: "🍽️", label: "Dine-In", desc: "Reserve your table" },
+                          { emoji: "🛵", label: "Delivery", desc: "Fresh to your door" },
+                          { emoji: "🥡", label: "Takeaway", desc: "Pick up your order" },
+                        ].map(({ emoji, label, desc }) => (
+                          <div key={label} className="flex items-center gap-3 rounded-xl bg-[#FFF8F3] px-3 py-2.5">
+                            <span className="text-xl">{emoji}</span>
+                            <div>
+                              <p className="text-xs font-bold text-[#111827]">{label}</p>
+                              <p className="text-[10px] text-[#6B7280]">{desc}</p>
+                            </div>
+                          </div>
+                        ))}
                       </div>
+
+                      {/* Bottom — CTA */}
                       <Link href={link("/order/menu")}
-                        className="rounded-xl gradient-primary px-6 py-2.5 text-sm font-bold text-white shadow-md">
-                        Browse Menu
+                        className="flex items-center justify-center gap-2 rounded-xl gradient-primary py-3 text-sm font-bold text-white shadow-lg shadow-[#FF6B35]/25 transition-all hover:shadow-xl">
+                        <ChefHat className="size-4" /> View Our Menu
                       </Link>
                     </div>
                   )}
                 </div>
               </div>
 
-              {/* Floating order count badge */}
+              {/* Floating order count badge — bottom left */}
               <motion.div
-                initial={{ opacity: 0, scale: 0 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: 0.8, type: "spring" }}
-                className="absolute -bottom-4 -left-4 flex items-center gap-2 rounded-2xl bg-white px-4 py-3 shadow-xl"
+                initial={{ opacity: 0, scale: 0, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                transition={{ delay: 0.8, type: "spring", stiffness: 200 }}
+                className="absolute -bottom-5 left-4 flex items-center gap-2 rounded-2xl bg-white px-4 py-3 shadow-xl border border-[#FFE4D6]"
               >
                 <div className="flex -space-x-2">
                   {["🧑", "👩", "👨"].map((e, i) => (

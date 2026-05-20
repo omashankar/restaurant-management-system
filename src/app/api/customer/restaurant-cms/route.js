@@ -1,0 +1,29 @@
+/**
+ * GET /api/customer/restaurant-cms
+ * Public endpoint — no auth required.
+ * Returns restaurant CMS content for customer site.
+ */
+
+import clientPromise from "@/lib/mongodb";
+import { getRestaurantIdFromRequest } from "@/lib/restaurantResolver";
+import { getRestaurantCmsContent } from "@/lib/restaurantCmsService";
+
+export async function GET(request) {
+  try {
+    const client = await clientPromise;
+    const db = client.db();
+    const restaurantId = await getRestaurantIdFromRequest(db, request);
+    if (!restaurantId) {
+      const { DEFAULTS } = await import("@/lib/restaurantCmsService");
+      return Response.json({ success: true, content: DEFAULTS });
+    }
+    const { content } = await getRestaurantCmsContent(restaurantId);
+    return Response.json({ success: true, content }, {
+      headers: { "Cache-Control": "public, s-maxage=60, stale-while-revalidate=30" },
+    });
+  } catch (err) {
+    console.error("customer.restaurant-cms.GET failed:", err.message);
+    const { DEFAULTS } = await import("@/lib/restaurantCmsService");
+    return Response.json({ success: true, content: DEFAULTS });
+  }
+}

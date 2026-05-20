@@ -4,20 +4,43 @@ import { getRestaurantIdFromRequest } from "@/lib/restaurantResolver";
 
 const ONLINE_KEYS = ["upi", "card", "debitCard", "netBanking", "wallet", "qrCode", "payLater", "bankTransfer"];
 
-function disableOnlinePaymentMethods(paymentMethods, onlineOk) {
-  if (onlineOk) return paymentMethods;
-  const next = { ...paymentMethods };
-  for (const k of ONLINE_KEYS) {
-    next[k] = false;
+/**
+ * Option C — Auto-detect payment methods from gateway config.
+ * If gateway is configured → online methods available
+ * If no gateway → only COD + Cash at Counter
+ */
+function buildAutoPaymentMethods(onlineOk, storedMethods = {}) {
+  // Always available — no gateway needed
+  const base = {
+    cod:         storedMethods.cod         !== false,  // default ON
+    cashCounter: storedMethods.cashCounter !== false,  // default ON
+  };
+
+  if (!onlineOk) {
+    // No gateway configured — only cash methods
+    return {
+      ...base,
+      upi: false, card: false, debitCard: false,
+      netBanking: false, wallet: false, qrCode: false,
+      payLater: false, bankTransfer: false,
+      defaultMethod: "cod",
+    };
   }
-  let def = String(next.defaultMethod ?? "cod");
-  if (ONLINE_KEYS.includes(def)) {
-    if (next.cod !== false) def = "cod";
-    else if (next.cashCounter !== false) def = "cashCounter";
-    else def = "cod";
-    next.defaultMethod = def;
-  }
-  return next;
+
+  // Gateway configured — enable online methods
+  // Respect stored preferences if admin has set them, otherwise default ON
+  return {
+    ...base,
+    upi:         storedMethods.upi         !== false,
+    card:        storedMethods.card        !== false,
+    debitCard:   storedMethods.debitCard   !== false,
+    netBanking:  storedMethods.netBanking  !== false,
+    wallet:      storedMethods.wallet      !== false,
+    qrCode:      Boolean(storedMethods.qrCode),       // default OFF
+    payLater:    Boolean(storedMethods.payLater),      // default OFF
+    bankTransfer:Boolean(storedMethods.bankTransfer),  // default OFF
+    defaultMethod: storedMethods.defaultMethod ?? "cod",
+  };
 }
 
 export async function GET(request) {
@@ -28,23 +51,12 @@ export async function GET(request) {
 
     const restaurantId = await getRestaurantIdFromRequest(db, request);
     if (!restaurantId) {
-      const basePm = {
-        defaultMethod: "cod",
-        cod: true,
-        cashCounter: true,
-        upi: true,
-        card: true,
-        netBanking: true,
-        wallet: true,
-        payLater: false,
-        bankTransfer: false,
-      };
       return Response.json({
         success: true,
         meta: {
           taxPercentage: 8,
           deliveryCharge: 0,
-          paymentMethods: disableOnlinePaymentMethods(basePm, onlineOk),
+          paymentMethods: buildAutoPaymentMethods(onlineOk),
           onlinePaymentsAvailable: onlineOk,
           etaMinutes: { "dine-in": "15-20", takeaway: "20-30", delivery: "30-45" },
           coupons: [],
@@ -56,37 +68,25 @@ export async function GET(request) {
       { restaurantId },
       { projection: { pos: 1, paymentMethods: 1 } }
     );
-    // Also check restaurant-specific payment settings (new system)
     const paymentSettingsDoc = await db.collection("restaurant_payment_settings").findOne(
       { restaurantId },
       { projection: { methods: 1, tax: 1 } }
     );
+
     const taxPercentage = Number(
       paymentSettingsDoc?.tax?.gstPercentage ??
       settingsDoc?.pos?.taxPercentage ?? 8
     );
     const serviceCharge = Number(settingsDoc?.pos?.serviceCharge ?? 0);
 
-    // Merge: new payment settings take priority over old paymentMethods
-    const baseMethods = {
-      defaultMethod: "cod",
-      cod: true,
-      cashCounter: true,
-      upi: true,
-      card: true,
-      debitCard: true,
-      netBanking: true,
-      wallet: true,
-      qrCode: false,
-      payLater: false,
-      bankTransfer: false,
-    };
-    const mergedMethods = {
-      ...baseMethods,
+    // Merge stored methods — new system takes priority
+    const storedMethods = {
       ...(settingsDoc?.paymentMethods ?? {}),
       ...(paymentSettingsDoc?.methods ?? {}),
     };
-    const paymentMethods = disableOnlinePaymentMethods(mergedMethods, onlineOk);
+
+    // Auto-detect based on gateway config
+    const paymentMethods = buildAutoPaymentMethods(onlineOk, storedMethods);
 
     return Response.json({
       success: true,
