@@ -273,65 +273,26 @@ export default function SettingsPage() {
             </SettingsFormSection>
           )}
 
-          {/* ── PAYMENTS (Methods + Gateway merged) ── */}
+          {/* ── PAYMENTS (Gateway only — Methods auto-detected) ── */}
           {activeTab === "payments" && (
             payLoading ? (
               <div className="flex h-32 items-center justify-center"><Loader2 className="size-5 animate-spin text-emerald-400" /></div>
             ) : (
               <div className="space-y-5">
-                {/* ── Section 1: Payment Methods ── */}
-                <SettingsFormSection
-                  title="Payment Methods"
-                  description="Tap to enable or disable. Enabled methods appear at customer checkout."
-                >
-                  {/* Method cards */}
-                  <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-5">
-                    {Object.entries(PAYMENT_METHOD_LABELS).map(([key, label]) => {
-                      const METHOD_ICONS = {
-                        cod: "💵", cashCounter: "🏪", upi: "📱",
-                        card: "💳", debitCard: "💳", netBanking: "🏦",
-                        wallet: "👛", qrCode: "📷", payLater: "⏰", bankTransfer: "🏧",
-                      };
-                      const enabled = Boolean(paySettings.methods?.[key]);
-                      return (
-                        <button key={key} type="button"
-                          onClick={() => setPaySettings((p) => ({ ...p, methods: { ...p.methods, [key]: !enabled } }))}
-                          className={`cursor-pointer rounded-xl border p-3 text-center transition-all ${
-                            enabled
-                              ? "border-emerald-500/40 bg-emerald-500/10 ring-1 ring-emerald-500/20"
-                              : "border-zinc-800 bg-zinc-950/40 opacity-50 hover:opacity-75"
-                          }`}>
-                          <div className="text-2xl mb-1">{METHOD_ICONS[key]}</div>
-                          <p className={`text-xs font-medium leading-tight ${enabled ? "text-emerald-400" : "text-zinc-400"}`}>
-                            {label}
-                          </p>
-                          <div className={`mt-1.5 mx-auto h-1 w-6 rounded-full ${enabled ? "bg-emerald-500" : "bg-zinc-700"}`} />
-                        </button>
-                      );
-                    })}
+                {/* ── Info card — auto-detection notice ── */}
+                <div className="flex items-start gap-3 rounded-xl border border-emerald-500/25 bg-emerald-500/8 px-4 py-3.5">
+                  <span className="mt-0.5 text-lg">⚡</span>
+                  <div>
+                    <p className="text-sm font-semibold text-emerald-300">Payment Methods — Auto Detected</p>
+                    <p className="mt-0.5 text-xs text-emerald-400/80">
+                      Payment methods are automatically enabled based on your gateway configuration.
+                      Configure your gateway below — UPI, Card, Net Banking will be available automatically.
+                      Cash on Delivery is always available.
+                    </p>
                   </div>
+                </div>
 
-                  {/* Default method */}
-                  <div className="mt-4">
-                    <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-zinc-500">Default at Checkout</label>
-                    <select value={paySettings.methods?.defaultMethod ?? "cod"}
-                      onChange={(e) => setPaySettings((p) => ({ ...p, methods: { ...p.methods, defaultMethod: e.target.value } }))}
-                      className="w-full cursor-pointer rounded-xl border border-zinc-800 bg-zinc-950/80 px-3 py-2.5 text-sm text-zinc-100 outline-none focus:border-emerald-500/45">
-                      {Object.entries(PAYMENT_METHOD_LABELS).filter(([k]) => paySettings.methods?.[k]).map(([k, v]) => (
-                        <option key={k} value={k}>{v}</option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div className="mt-5 flex justify-end border-t border-zinc-800 pt-4">
-                    <button type="button" onClick={() => savePaySection("methods", paySettings.methods)}
-                      className="cursor-pointer inline-flex items-center gap-2 rounded-xl bg-emerald-500 px-4 py-2 text-sm font-semibold text-zinc-950 hover:bg-emerald-400 transition-colors">
-                      Save Methods
-                    </button>
-                  </div>
-                </SettingsFormSection>
-
-                {/* ── Section 2: Payment Gateway ── */}
+                {/* ── Payment Gateway ── */}
                 <GatewaySettingsSection
                   data={paySettings.gateways}
                   onChange={(d) => setPaySettings((p) => ({ ...p, gateways: d }))}

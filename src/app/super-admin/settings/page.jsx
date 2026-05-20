@@ -3,7 +3,7 @@
 import { useToast } from "@/hooks/useToast";
 import {
   Bell, CheckCircle2, Copy, CreditCard, Database, DollarSign, Globe,
-  Key, Loader2, Lock, Palette, Save, Settings, Shield, Smartphone,
+  Key, Loader2, Lock, Palette, Save, Settings, Settings2, Shield, Smartphone,
   ToggleLeft, Webhook, XCircle, Zap,
 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -246,7 +246,7 @@ const PLATFORM_GATEWAYS = [
   { id: "phonepe",  label: "PhonePe",   logo: "/logos/phonepe.svg",   desc: "India — UPI payments",            popular: false, fields: ["merchantId","apiKey","webhookSecret"] },
   { id: "payu",     label: "PayU",      logo: "/logos/payu.svg",      desc: "India — All payment modes",       popular: false, fields: ["apiKey","secretKey","webhookSecret"] },
   { id: "ccavenue", label: "CCAvenue",  logo: "/logos/ccavenue.svg",  desc: "India — Enterprise gateway",      popular: false, fields: ["merchantId","apiKey","webhookSecret"] },
-  { id: "offline",  label: "Offline",   logo: null,                   desc: "Bank Transfer / Manual / UPI",    popular: false, fields: ["instructions","upiId","bankDetails"] },
+  { id: "offline",  label: "Offline",   logo: null,                   desc: "Bank Transfer / Manual / UPI",    popular: false, fields: ["instructions","upiId","bankDetails"], icon: "🏦" },
 ];
 
 const FIELD_LABELS = {
@@ -277,13 +277,14 @@ function GatewayLogo({ gateway }) {
   const [imgError, setImgError] = useState(false);
 
   if (!gateway.logo || imgError) {
-    // Premium text fallback with gradient background
-    return (
-      <div className="flex size-8 items-center justify-center rounded-lg gradient-bg text-white text-xs font-bold"
-        style={{ background: "linear-gradient(135deg, #6366f1, #8b5cf6)" }}>
-        {gateway.label.slice(0, 2).toUpperCase()}
-      </div>
-    );
+    if (gateway.icon) {
+      return (
+        <div className="flex size-8 items-center justify-center rounded-lg border border-zinc-700 bg-zinc-800 text-xl">
+          {gateway.icon}
+        </div>
+      );
+    }
+    return <Settings2 className="size-6 text-zinc-500" />;
   }
 
   return (
@@ -291,7 +292,9 @@ function GatewayLogo({ gateway }) {
     <img
       src={gateway.logo}
       alt={gateway.label}
-      className="max-h-7 max-w-[64px] w-auto object-contain"
+      width={64}
+      height={32}
+      className="max-h-8 w-auto object-contain"
       onError={() => setImgError(true)}
     />
   );
@@ -365,40 +368,29 @@ function PaymentSection({ data, onChange, onSave, saving }) {
           </div>
 
           {/* Gateway selector */}
-          <div className="grid grid-cols-3 gap-2 sm:grid-cols-5">
+          <div className="mb-5 grid grid-cols-3 gap-2 sm:grid-cols-5">
             {PLATFORM_GATEWAYS.map((g) => {
               const isEnabled = Boolean(gateways[g.id]?.enabled);
               const isActive = activeGw === g.id;
               return (
                 <button key={g.id} type="button"
                   onClick={() => { setActiveGw(g.id); setTestResult(null); }}
-                  className={`relative flex flex-col items-center justify-between gap-2 rounded-xl border p-3 text-center transition-all duration-200 hover:scale-[1.02] ${
+                  className={`cursor-pointer relative rounded-xl border p-3 text-center transition-all ${
                     isActive
-                      ? "border-emerald-500/60 bg-emerald-500/10 ring-1 ring-emerald-500/30 shadow-lg shadow-emerald-500/10"
-                      : "border-zinc-800 bg-zinc-950/60 hover:border-zinc-600 hover:bg-zinc-900/80"
-                  }`}
-                  style={{ minHeight: "80px" }}
-                >
-                  {/* Active/enabled indicator */}
+                      ? "border-emerald-500/50 bg-emerald-500/10 ring-1 ring-emerald-500/30"
+                      : "border-zinc-800 bg-zinc-950/40 hover:border-zinc-700"
+                  }`}>
                   {isEnabled && (
-                    <span className="absolute right-1.5 top-1.5 size-2 rounded-full bg-emerald-400 shadow-sm shadow-emerald-400/50" />
+                    <span className="absolute right-2 top-2 size-2 rounded-full bg-emerald-400" />
                   )}
-
-                  {/* Logo area — fixed height */}
-                  <div className="flex h-9 w-full items-center justify-center">
+                  <div className="flex h-8 items-center justify-center mb-1.5">
                     <GatewayLogo gateway={g} />
                   </div>
-
-                  {/* Label — always below logo */}
-                  <p className={`w-full truncate text-[11px] font-semibold leading-tight ${
-                    isActive ? "text-emerald-400" : "text-zinc-400"
-                  }`}>
+                  <p className={`text-xs font-semibold ${isActive ? "text-emerald-400" : "text-zinc-300"}`}>
                     {g.label}
                   </p>
-
-                  {/* Popular badge */}
                   {g.popular && (
-                    <span className="rounded-full bg-amber-500/20 px-1.5 py-0.5 text-[9px] font-bold text-amber-400 ring-1 ring-amber-500/20">
+                    <span className="mt-1 inline-block rounded-full bg-amber-500/20 px-1.5 py-0.5 text-[10px] font-semibold text-amber-400">
                       Popular
                     </span>
                   )}
