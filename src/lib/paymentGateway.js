@@ -17,13 +17,41 @@ async function readPlatformSettings(db) {
     { _id: "platform" },
     { projection: { payment: 1, integrations: 1 } }
   );
+
+  // New structure: payment.gateways[gwId].{apiKey, secretKey, webhookSecret, enabled, testMode}
+  const gateways = doc?.payment?.gateways ?? {};
+
+  // Razorpay — new structure first, fallback to old integrations fields
+  const rzpGw = gateways?.razorpay ?? {};
+  const razorpayKeyId     = String(rzpGw.apiKey     || doc?.integrations?.razorpayKeyId     || "").trim();
+  const razorpayKeySecret = String(rzpGw.secretKey  || doc?.integrations?.razorpayKeySecret || "").trim();
+  const razorpayWebhookSecret = String(rzpGw.webhookSecret || doc?.integrations?.webhookSecret || "").trim();
+
+  // Stripe — new structure first, fallback to old payment fields
+  const stripeGw = gateways?.stripe ?? {};
+  const stripeSecretKey    = String(stripeGw.secretKey  || doc?.payment?.stripeSecretKey  || "").trim();
+  const stripePublicKey    = String(stripeGw.publicKey  || doc?.payment?.stripePublicKey  || "").trim();
+  const stripeWebhookSecret = String(stripeGw.webhookSecret || doc?.payment?.webhookSecret || "").trim();
+
+  // Cashfree
+  const cashfreeGw = gateways?.cashfree ?? {};
+  const cashfreeApiKey    = String(cashfreeGw.apiKey    || "").trim();
+  const cashfreeSecretKey = String(cashfreeGw.secretKey || "").trim();
+
   return {
-    stripeSecretKey: String(doc?.payment?.stripeSecretKey || "").trim(),
-    stripePublicKey: String(doc?.payment?.stripePublicKey || "").trim(),
-    stripeWebhookSecret: String(doc?.payment?.webhookSecret || "").trim(),
-    razorpayKeyId: String(doc?.integrations?.razorpayKeyId || "").trim(),
-    razorpayKeySecret: String(doc?.integrations?.razorpayKeySecret || "").trim(),
-    razorpayWebhookSecret: String(doc?.integrations?.webhookSecret || "").trim(),
+    // Razorpay
+    razorpayKeyId,
+    razorpayKeySecret,
+    razorpayWebhookSecret,
+    // Stripe
+    stripeSecretKey,
+    stripePublicKey,
+    stripeWebhookSecret,
+    // Cashfree
+    cashfreeApiKey,
+    cashfreeSecretKey,
+    // Raw gateways for future use
+    gateways,
   };
 }
 
@@ -31,7 +59,9 @@ async function readPlatformSettings(db) {
 export async function isOnlinePaymentConfigured(db) {
   const cfg = await readPlatformSettings(db);
   return Boolean(
-    (cfg.razorpayKeyId && cfg.razorpayKeySecret) || cfg.stripeSecretKey
+    (cfg.razorpayKeyId && cfg.razorpayKeySecret) ||
+    cfg.stripeSecretKey ||
+    (cfg.cashfreeApiKey && cfg.cashfreeSecretKey)
   );
 }
 

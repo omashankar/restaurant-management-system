@@ -2,9 +2,9 @@
 
 import { useToast } from "@/hooks/useToast";
 import {
-  Bell, CreditCard, Database, DollarSign, Globe,
-  Key, Palette, Save, Settings, Shield, Smartphone,
-  ToggleLeft, Webhook,
+  Bell, CheckCircle2, Copy, CreditCard, Database, DollarSign, Globe,
+  Key, Loader2, Lock, Palette, Save, Settings, Shield, Smartphone,
+  ToggleLeft, Webhook, XCircle, Zap,
 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 
@@ -233,71 +233,332 @@ function LanguageSection({ data, onChange, onSave, saving }) {
   );
 }
 
+/* ════════════════════════════════════════
+   PAYMENT SECTION — Multi-gateway + Restaurant Settings
+════════════════════════════════════════ */
+
+const PLATFORM_GATEWAYS = [
+  { id: "razorpay", label: "Razorpay",  logo: "/logos/razorpay.svg",  desc: "India — UPI, Cards, Net Banking", popular: true,  fields: ["apiKey","secretKey","webhookSecret"] },
+  { id: "stripe",   label: "Stripe",    logo: "/logos/stripe.svg",    desc: "International payments",          popular: false, fields: ["publicKey","secretKey","webhookSecret"] },
+  { id: "cashfree", label: "Cashfree",  logo: "/logos/cashfree.svg",  desc: "India — Fast settlements",        popular: false, fields: ["apiKey","secretKey","webhookSecret"] },
+  { id: "paypal",   label: "PayPal",    logo: "/logos/paypal.svg",    desc: "Global — 200+ countries",         popular: false, fields: ["clientId","secretKey","webhookSecret"] },
+  { id: "paytm",    label: "Paytm",     logo: "/logos/paytm.svg",     desc: "India — Wallet & UPI",            popular: false, fields: ["merchantId","apiKey","webhookSecret"] },
+  { id: "phonepe",  label: "PhonePe",   logo: "/logos/phonepe.svg",   desc: "India — UPI payments",            popular: false, fields: ["merchantId","apiKey","webhookSecret"] },
+  { id: "payu",     label: "PayU",      logo: "/logos/payu.svg",      desc: "India — All payment modes",       popular: false, fields: ["apiKey","secretKey","webhookSecret"] },
+  { id: "ccavenue", label: "CCAvenue",  logo: "/logos/ccavenue.svg",  desc: "India — Enterprise gateway",      popular: false, fields: ["merchantId","apiKey","webhookSecret"] },
+  { id: "offline",  label: "Offline",   logo: null,                   desc: "Bank Transfer / Manual / UPI",    popular: false, fields: ["instructions","upiId","bankDetails"] },
+];
+
+const FIELD_LABELS = {
+  apiKey:        "API Key",
+  publicKey:     "Publishable Key",
+  secretKey:     "Secret Key",
+  merchantId:    "Merchant ID",
+  clientId:      "Client ID",
+  webhookSecret: "Webhook Secret",
+  instructions:  "Payment Instructions",
+  upiId:         "UPI ID",
+  bankDetails:   "Bank Details",
+};
+
+const FIELD_PLACEHOLDERS = {
+  razorpay: { apiKey: "rzp_live_XXXXXXXXXX", secretKey: "••••••••", webhookSecret: "••••••••" },
+  stripe:   { publicKey: "pk_live_XXXXXXXXXX", secretKey: "sk_live_••••••••", webhookSecret: "whsec_••••••••" },
+  cashfree: { apiKey: "CF_APP_ID", secretKey: "••••••••", webhookSecret: "••••••••" },
+  paypal:   { clientId: "AXxx…", secretKey: "••••••••", webhookSecret: "••••••••" },
+  paytm:    { merchantId: "MID_XXXX", apiKey: "••••••••", webhookSecret: "••••••••" },
+  phonepe:  { merchantId: "PGTESTPAYUAT", apiKey: "••••••••", webhookSecret: "••••••••" },
+  payu:     { apiKey: "PAYU_KEY", secretKey: "••••••••", webhookSecret: "••••••••" },
+  ccavenue: { merchantId: "MID_XXXX", apiKey: "••••••••", webhookSecret: "••••••••" },
+  offline:  { instructions: "Transfer to account and share screenshot", upiId: "yourname@upi", bankDetails: "Acc: 1234… IFSC: HDFC…" },
+};
+
+function GatewayLogo({ gateway }) {
+  const [imgError, setImgError] = useState(false);
+
+  if (!gateway.logo || imgError) {
+    // Premium text fallback with gradient background
+    return (
+      <div className="flex size-8 items-center justify-center rounded-lg gradient-bg text-white text-xs font-bold"
+        style={{ background: "linear-gradient(135deg, #6366f1, #8b5cf6)" }}>
+        {gateway.label.slice(0, 2).toUpperCase()}
+      </div>
+    );
+  }
+
+  return (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src={gateway.logo}
+      alt={gateway.label}
+      className="max-h-7 max-w-[64px] w-auto object-contain"
+      onError={() => setImgError(true)}
+    />
+  );
+}
+
 function PaymentSection({ data, onChange, onSave, saving }) {
+  const [activeGw, setActiveGw] = useState("razorpay");
+  const [testing, setTesting] = useState(false);
+  const [testResult, setTestResult] = useState(null);
+  const { showToast } = useToast();
+
+  // Gateway data stored under data.gateways[gwId]
+  const gateways = data.gateways ?? {};
+
+  const gw = gateways[activeGw] ?? { enabled: false, testMode: true };
+  const gwInfo = PLATFORM_GATEWAYS.find((g) => g.id === activeGw);
+  const isOffline = activeGw === "offline";
+
+  function updateGw(patch) {
+    onChange("gateways", { ...gateways, [activeGw]: { ...gw, ...patch } });
+    setTestResult(null);
+  }
+
+  async function testConnection() {
+    setTesting(true);
+    setTestResult(null);
+    try {
+      const res = await fetch("/api/super-admin/settings/test-gateway", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ gateway: activeGw, credentials: gw }),
+      });
+      const json = await res.json();
+      setTestResult({ success: json.success, message: json.message ?? json.error ?? "Unknown." });
+    } catch {
+      setTestResult({ success: false, message: "Network error." });
+    } finally {
+      setTesting(false);
+    }
+  }
+
+  function copyWebhookUrl(gwId) {
+    const origin = typeof window !== "undefined" ? window.location.origin : "";
+    const urls = {
+      razorpay: `${origin}/api/webhooks/razorpay`,
+      stripe:   `${origin}/api/webhooks/stripe`,
+    };
+    const url = urls[gwId] ?? `${origin}/api/webhooks/${gwId}`;
+    navigator.clipboard.writeText(url).then(() => showToast("Webhook URL copied!"));
+  }
+
+  const enabledCount = PLATFORM_GATEWAYS.filter((g) => gateways[g.id]?.enabled).length;
+
   return (
     <div className="space-y-5">
-      <SectionHeader icon={CreditCard} title="Payment Settings" description="Payment gateway keys and billing defaults." />
-      <div className="grid gap-4 sm:grid-cols-2">
-        <Field label="Stripe Publishable Key">
-          <input value={data.stripePublicKey ?? ""} onChange={(e) => onChange("stripePublicKey", e.target.value)}
-            placeholder="pk_live_…" className={`${inputCls} font-mono text-xs`} />
-        </Field>
-        <Field label="Stripe Secret Key">
-          <input type="password" value={data.stripeSecretKey ?? ""} onChange={(e) => onChange("stripeSecretKey", e.target.value)}
-            placeholder="sk_live_…" autoComplete="new-password" className={`${inputCls} font-mono text-xs`} />
-        </Field>
-        <div className="sm:col-span-2">
-          <Field label="Webhook Secret" hint="From your Stripe dashboard → Webhooks.">
-            <input type="password" value={data.webhookSecret ?? ""} onChange={(e) => onChange("webhookSecret", e.target.value)}
-              placeholder="whsec_…" autoComplete="new-password" className={`${inputCls} font-mono text-xs`} />
-          </Field>
+      <SectionHeader icon={CreditCard} title="Payment Settings"
+        description="Configure payment gateways for subscription billing and restaurant payments." />
+
+      {/* No tab bar needed — single tab, just show content directly */}
+
+      {/* Payment Settings content */}
+      <div className="space-y-4">
+          {/* Status bar */}
+          <div className="flex items-center gap-2 rounded-xl border border-zinc-800 bg-zinc-900/40 px-4 py-2.5">
+            <CheckCircle2 className="size-4 text-emerald-400" />
+            <span className="text-xs text-zinc-400">
+              {enabledCount > 0
+                ? <><span className="font-semibold text-emerald-400">{enabledCount} gateway{enabledCount > 1 ? "s" : ""} active</span> — {PLATFORM_GATEWAYS.filter((g) => gateways[g.id]?.enabled).map((g) => g.label).join(", ")}</>
+                : <span className="text-zinc-500">No gateways configured yet</span>}
+            </span>
+          </div>
+
+          {/* Gateway selector */}
+          <div className="grid grid-cols-3 gap-2 sm:grid-cols-5">
+            {PLATFORM_GATEWAYS.map((g) => {
+              const isEnabled = Boolean(gateways[g.id]?.enabled);
+              const isActive = activeGw === g.id;
+              return (
+                <button key={g.id} type="button"
+                  onClick={() => { setActiveGw(g.id); setTestResult(null); }}
+                  className={`relative flex flex-col items-center justify-between gap-2 rounded-xl border p-3 text-center transition-all duration-200 hover:scale-[1.02] ${
+                    isActive
+                      ? "border-emerald-500/60 bg-emerald-500/10 ring-1 ring-emerald-500/30 shadow-lg shadow-emerald-500/10"
+                      : "border-zinc-800 bg-zinc-950/60 hover:border-zinc-600 hover:bg-zinc-900/80"
+                  }`}
+                  style={{ minHeight: "80px" }}
+                >
+                  {/* Active/enabled indicator */}
+                  {isEnabled && (
+                    <span className="absolute right-1.5 top-1.5 size-2 rounded-full bg-emerald-400 shadow-sm shadow-emerald-400/50" />
+                  )}
+
+                  {/* Logo area — fixed height */}
+                  <div className="flex h-9 w-full items-center justify-center">
+                    <GatewayLogo gateway={g} />
+                  </div>
+
+                  {/* Label — always below logo */}
+                  <p className={`w-full truncate text-[11px] font-semibold leading-tight ${
+                    isActive ? "text-emerald-400" : "text-zinc-400"
+                  }`}>
+                    {g.label}
+                  </p>
+
+                  {/* Popular badge */}
+                  {g.popular && (
+                    <span className="rounded-full bg-amber-500/20 px-1.5 py-0.5 text-[9px] font-bold text-amber-400 ring-1 ring-amber-500/20">
+                      Popular
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Gateway config form */}
+          <div className="rounded-xl border border-zinc-800 bg-zinc-950/40 p-4">
+            {/* Header */}
+            <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <p className="font-semibold text-zinc-100">{gwInfo?.label}</p>
+                <p className="text-xs text-zinc-500">{gwInfo?.desc}</p>
+              </div>
+              <div className="flex items-center gap-3">
+                {!isOffline && gw.enabled && (
+                  <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${
+                    gw.testMode ? "bg-amber-500/15 text-amber-400" : "bg-emerald-500/15 text-emerald-400"
+                  }`}>
+                    {gw.testMode ? "Test Mode" : "Live Mode"}
+                  </span>
+                )}
+                <label className="flex cursor-pointer items-center gap-2">
+                  <span className="text-sm text-zinc-400">Enable</span>
+                  <button type="button" role="switch" aria-checked={Boolean(gw.enabled)}
+                    onClick={() => updateGw({ enabled: !gw.enabled })}
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${gw.enabled ? "bg-emerald-500" : "bg-zinc-700"}`}>
+                    <span className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform ${gw.enabled ? "translate-x-5" : "translate-x-0.5"}`} />
+                  </button>
+                </label>
+              </div>
+            </div>
+
+            {!gw.enabled ? (
+              <div className="flex flex-col items-center gap-2 py-6 text-center">
+                <Lock className="size-8 text-zinc-700" />
+                <p className="text-sm text-zinc-500">Enable {gwInfo?.label} to configure credentials</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {/* Test/Live toggle */}
+                {!isOffline && (
+                  <div className="flex items-center justify-between rounded-xl border border-zinc-800 bg-zinc-900/40 px-4 py-3">
+                    <div>
+                      <p className="text-sm font-medium text-zinc-200">Environment</p>
+                      <p className="text-xs text-zinc-500">{gw.testMode ? "Test mode — no real charges" : "Live mode — real payments"}</p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className={`text-xs font-semibold ${gw.testMode ? "text-amber-400" : "text-zinc-500"}`}>TEST</span>
+                      <button type="button" role="switch" aria-checked={!gw.testMode}
+                        onClick={() => updateGw({ testMode: !gw.testMode })}
+                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${!gw.testMode ? "bg-emerald-500" : "bg-amber-500"}`}>
+                        <span className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform ${!gw.testMode ? "translate-x-5" : "translate-x-0.5"}`} />
+                      </button>
+                      <span className={`text-xs font-semibold ${!gw.testMode ? "text-emerald-400" : "text-zinc-500"}`}>LIVE</span>
+                    </div>
+                  </div>
+                )}
+
+                {/* Credential fields */}
+                <div className="grid gap-3 sm:grid-cols-2">
+                  {(gwInfo?.fields ?? []).map((fieldKey) => {
+                    const isSecret = ["secretKey","webhookSecret"].includes(fieldKey);
+                    return (
+                      <Field key={fieldKey} label={FIELD_LABELS[fieldKey] ?? fieldKey}
+                        hint={fieldKey === "webhookSecret" ? "From gateway dashboard → Webhooks" : ""}>
+                        <input
+                          type={isSecret ? "password" : "text"}
+                          value={gw[fieldKey] ?? ""}
+                          onChange={(e) => updateGw({ [fieldKey]: e.target.value })}
+                          placeholder={FIELD_PLACEHOLDERS[activeGw]?.[fieldKey] ?? ""}
+                          autoComplete="new-password"
+                          className={`${inputCls} font-mono text-xs`}
+                        />
+                      </Field>
+                    );
+                  })}
+                </div>
+
+                {/* Webhook URL */}
+                {!isOffline && ["razorpay","stripe"].includes(activeGw) && (
+                  <div>
+                    <label className={labelCls}>Webhook URL <span className="text-zinc-600">(copy to gateway dashboard)</span></label>
+                    <div className="flex gap-2">
+                      <input readOnly
+                        value={typeof window !== "undefined" ? `${window.location.origin}/api/webhooks/${activeGw}` : `/api/webhooks/${activeGw}`}
+                        className={`${inputCls} font-mono text-xs text-zinc-500`} />
+                      <button type="button" onClick={() => copyWebhookUrl(activeGw)}
+                        className="flex shrink-0 items-center gap-1.5 rounded-xl border border-zinc-700 px-3 py-2 text-xs font-semibold text-zinc-300 hover:border-emerald-500/40 hover:text-emerald-400 transition-colors">
+                        <Copy className="size-3.5" /> Copy
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* Test result */}
+                {testResult && (
+                  <div className={`flex items-center gap-2 rounded-xl border px-4 py-3 text-sm ${
+                    testResult.success
+                      ? "border-emerald-500/25 bg-emerald-500/10 text-emerald-400"
+                      : "border-red-500/25 bg-red-500/10 text-red-400"
+                  }`}>
+                    {testResult.success ? <CheckCircle2 className="size-4 shrink-0" /> : <XCircle className="size-4 shrink-0" />}
+                    {testResult.message}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Actions */}
+          <div className="flex items-center justify-between gap-3">
+            <button type="button" onClick={testConnection}
+              disabled={testing || !gw.enabled || isOffline}
+              className="inline-flex items-center gap-2 rounded-xl border border-zinc-700 px-4 py-2 text-sm font-medium text-zinc-300 hover:border-zinc-500 hover:text-zinc-100 disabled:cursor-not-allowed disabled:opacity-40 transition-colors">
+              {testing ? <Loader2 className="size-4 animate-spin" /> : <Zap className="size-4" />}
+              {testing ? "Testing…" : "Test Connection"}
+            </button>
+            <SaveButton saving={saving} onClick={onSave} />
+          </div>
+
+          {/* GST / Billing settings */}
+          <div className="border-t border-zinc-800 pt-5">
+            <p className="mb-4 text-xs font-semibold uppercase tracking-wider text-zinc-500">Billing & Tax Settings</p>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Field label="Default Currency">
+                <select value={data.currency ?? "INR"} onChange={(e) => onChange("currency", e.target.value)}
+                  className={`cursor-pointer ${inputCls}`}>
+                  {["INR","USD","EUR","GBP","AUD","CAD","SGD","JPY"].map((c) => <option key={c} value={c}>{c}</option>)}
+                </select>
+              </Field>
+              <Field label="Tax Rate (%)" hint="Applied to invoices and receipts.">
+                <input type="number" min={0} max={100} step={0.01} value={data.taxPercent ?? 0}
+                  onChange={(e) => onChange("taxPercent", Number(e.target.value))} className={inputCls} />
+              </Field>
+              <Field label="GSTIN / Tax ID" hint="Printed on subscription PDF receipts.">
+                <input value={data.gstNumber ?? ""} onChange={(e) => onChange("gstNumber", e.target.value)}
+                  placeholder="22AAAAA0000A1Z5" className={inputCls} />
+              </Field>
+              <Field label="HSN / SAC Code">
+                <input value={data.gstHsnSac ?? ""} onChange={(e) => onChange("gstHsnSac", e.target.value)}
+                  placeholder="998314" className={inputCls} />
+              </Field>
+              <Field label="GST Supply Type">
+                <select value={data.gstSupplyType === "inter_state" ? "inter_state" : "intra_state"}
+                  onChange={(e) => onChange("gstSupplyType", e.target.value)}
+                  className={`cursor-pointer ${inputCls}`}>
+                  <option value="intra_state">Intra-state (CGST + SGST)</option>
+                  <option value="inter_state">Inter-state (IGST)</option>
+                </select>
+              </Field>
+              <Field label="Trial Period (days)" hint="0 = no trial.">
+                <input type="number" min={0} max={90} value={data.trialDays ?? 14}
+                  onChange={(e) => onChange("trialDays", Number(e.target.value))} className={inputCls} />
+              </Field>
+            </div>
+          </div>
         </div>
-        <Field label="Default Currency">
-          <select value={data.currency ?? "USD"} onChange={(e) => onChange("currency", e.target.value)}
-            className={`cursor-pointer ${inputCls}`}>
-            {["USD","EUR","GBP","INR","AUD","CAD","SGD","JPY"].map((c) => <option key={c} value={c}>{c}</option>)}
-          </select>
-        </Field>
-        <Field label="Tax Rate (%)" hint="Applied to invoices and receipts.">
-          <input type="number" min={0} max={100} step={0.01} value={data.taxPercent ?? 0}
-            onChange={(e) => onChange("taxPercent", Number(e.target.value))} className={inputCls} />
-        </Field>
-        <Field label="GSTIN / Tax ID" hint="Printed on subscription PDF receipts when set.">
-          <input value={data.gstNumber ?? ""} onChange={(e) => onChange("gstNumber", e.target.value)}
-            placeholder="e.g. 22AAAAA0000A1Z5" className={inputCls} />
-        </Field>
-        <Field label="HSN / SAC" hint="e.g. 998314 (software services). Shown on GST PDF.">
-          <input value={data.gstHsnSac ?? ""} onChange={(e) => onChange("gstHsnSac", e.target.value)}
-            placeholder="998314" className={inputCls} />
-        </Field>
-        <Field label="GST supply type" hint="Intra-state: CGST+SGST. Inter-state: IGST.">
-          <select
-            value={data.gstSupplyType === "inter_state" ? "inter_state" : "intra_state"}
-            onChange={(e) => onChange("gstSupplyType", e.target.value)}
-            className={`cursor-pointer ${inputCls}`}
-          >
-            <option value="intra_state">Intra-state (CGST + SGST)</option>
-            <option value="inter_state">Inter-state (IGST)</option>
-          </select>
-        </Field>
-        <Field label="Place of supply (optional)" hint="State name or code for the invoice PDF.">
-          <input value={data.gstPlaceOfSupply ?? ""} onChange={(e) => onChange("gstPlaceOfSupply", e.target.value)}
-            placeholder="Maharashtra / 27" className={inputCls} />
-        </Field>
-        <div className="sm:col-span-2">
-          <Toggle
-            checked={data.gstInclusivePricing !== false}
-            onChange={(v) => onChange("gstInclusivePricing", v)}
-            label="Subscription amounts include GST"
-            description="When on, receipt reverses taxable value from the paid total. When off, paid amount is treated as taxable value and GST is added for the breakdown display."
-          />
-        </div>
-        <Field label="Trial Period (days)" hint="0 = no trial.">
-          <input type="number" min={0} max={90} value={data.trialDays ?? 14}
-            onChange={(e) => onChange("trialDays", Number(e.target.value))} className={inputCls} />
-        </Field>
-      </div>
-      <SaveButton saving={saving} onClick={onSave} />
     </div>
   );
 }
@@ -745,28 +1006,11 @@ function IntegrationsSection({ data, onChange, onSave, saving }) {
         </Field>
       </div>
 
-      <div className="space-y-4 border-t border-zinc-800 pt-4">
-        <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500">Razorpay</p>
-        <div className="grid gap-4 sm:grid-cols-2">
-          <Field label="Razorpay Key ID">
-            <input
-              value={data.razorpayKeyId ?? ""}
-              onChange={(e) => onChange("razorpayKeyId", e.target.value)}
-              placeholder="rzp_live_XXXXXXXXXX"
-              className={`${inputCls} font-mono text-xs`}
-            />
-          </Field>
-          <Field label="Razorpay Key Secret">
-            <input
-              type="password"
-              value={data.razorpayKeySecret ?? ""}
-              onChange={(e) => onChange("razorpayKeySecret", e.target.value)}
-              placeholder="••••••••"
-              autoComplete="new-password"
-              className={`${inputCls} font-mono text-xs`}
-            />
-          </Field>
-        </div>
+      <div className="rounded-xl border border-zinc-800 bg-zinc-900/40 px-4 py-3">
+        <p className="text-sm font-medium text-zinc-200">💡 Razorpay & Stripe</p>
+        <p className="mt-0.5 text-xs text-zinc-500">
+          Razorpay and Stripe keys are now managed in the <strong className="text-zinc-300">Payment Settings</strong> tab above.
+        </p>
       </div>
 
       <SaveButton saving={saving} onClick={onSave} />
