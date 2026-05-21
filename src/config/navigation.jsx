@@ -85,18 +85,6 @@ export const NAV_ITEMS = [
   },
   {
     type: "group",
-    id: "menu",
-    label: "Menu",
-    Icon: UtensilsCrossed,
-    roles: ["admin", "manager"],
-    children: [
-      { href: "/menu/items", label: "Menu Items", Icon: ListOrdered },
-      { href: "/menu/categories", label: "Categories", Icon: FolderTree },
-      { href: "/menu/recipes", label: "Recipes", Icon: BookOpen },
-    ],
-  },
-  {
-    type: "group",
     id: "tables",
     label: "Tables",
     Icon: Table2,
@@ -113,6 +101,18 @@ export const NAV_ITEMS = [
     Icon: Wine,
     roles: ["admin", "manager", "waiter"],
     limited: true,
+  },
+  {
+    type: "group",
+    id: "menu",
+    label: "Menu",
+    Icon: UtensilsCrossed,
+    roles: ["admin", "manager"],
+    children: [
+      { href: "/menu/items",      label: "Menu Items",  Icon: ListOrdered },
+      { href: "/menu/categories", label: "Categories",  Icon: FolderTree },
+      { href: "/menu/recipes",    label: "Recipes",     Icon: BookOpen },
+    ],
   },
   {
     type: "link",

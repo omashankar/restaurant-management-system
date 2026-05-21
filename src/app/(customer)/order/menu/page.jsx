@@ -1,10 +1,11 @@
 "use client";
 
 import SafeDishImage from "@/components/customer/SafeDishImage";
+import FoodTypeIndicator from "@/components/customer/FoodTypeIndicator";
 import { useCustomer } from "@/context/CustomerContext";
 import { useModuleData } from "@/context/ModuleDataContext";
 import { useRestaurantSlug } from "@/hooks/useRestaurantSlug";
-import { CUSTOMER_MENU_CONTENT, CUSTOMER_MENU_TYPE_FILTERS } from "@/config/customerMenuContent";
+import { CUSTOMER_MENU_CONTENT } from "@/config/customerMenuContent";
 import { formatCustomerMoney } from "@/lib/customerCurrency";
 import { ITEM_TYPE_META } from "@/types/menu";
 import { motion, AnimatePresence } from "framer-motion";
@@ -39,6 +40,7 @@ function CustomerMenuPageContent() {
   const [search, setSearch] = useState("");
   const [activeCategory, setActiveCategory] = useState("all");
   const [activeType, setActiveType] = useState("all");
+  const [vegOnly, setVegOnly] = useState(false);
   const [fastOnly, setFastOnly] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
 
@@ -55,6 +57,20 @@ function CustomerMenuPageContent() {
   }, []);
 
   const activeItems = useMemo(() => menuItems.filter((m) => m.status === "active"), [menuItems]);
+
+  // Only show categories that have at least one active menu item
+  const activeCategories = useMemo(() => {
+    const catIdsWithItems = new Set(activeItems.map((m) => m.categoryId));
+    return categories.filter((c) => catIdsWithItems.has(c.id));
+  }, [categories, activeItems]);
+
+  // Only show type filters that have at least one active item
+  const availableTypes = useMemo(() => {
+    const typesWithItems = new Set(activeItems.map((m) => m.itemType).filter(Boolean));
+    return ["all", "veg", "non-veg", "egg", "drink", "halal", "other"].filter(
+      (t) => t === "all" || typesWithItems.has(t)
+    );
+  }, [activeItems]);
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -165,7 +181,7 @@ function CustomerMenuPageContent() {
 
       {/* Category tabs */}
       <div className="-mx-1 mb-4 flex gap-2 overflow-x-auto px-1 pb-1 [scrollbar-width:none] snap-x snap-mandatory sm:mx-0 sm:px-0">
-        {[{ id: "all", name: CUSTOMER_MENU_CONTENT.allCategoryLabel }, ...categories].map((c) => (
+        {[{ id: "all", name: CUSTOMER_MENU_CONTENT.allCategoryLabel }, ...activeCategories].map((c) => (
           <motion.button
             key={c.id}
             whileTap={{ scale: 0.95 }}
@@ -184,8 +200,9 @@ function CustomerMenuPageContent() {
 
       {/* Type + Fast filters */}
       <div className="mb-6 flex flex-wrap gap-2">
-        {CUSTOMER_MENU_TYPE_FILTERS.map((t) => {
+        {availableTypes.map((t) => {
           const meta = ITEM_TYPE_META[t];
+          const isActive = activeType === t;
           return (
             <motion.button
               key={t}
@@ -193,18 +210,32 @@ function CustomerMenuPageContent() {
               type="button"
               onClick={() => setActiveType(t)}
               className={`inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-semibold transition-all ${
-                activeType === t
+                isActive
                   ? t === "all"
                     ? "bg-[#111827] text-white shadow-sm"
-                    : `${meta?.badge ?? ""} ring-1 ring-black/5`
+                    : "bg-[#FF6B35]/10 text-[#FF6B35] ring-1 ring-[#FF6B35]/30"
                   : "border border-[#FFE4D6] bg-white text-[#6B7280] hover:border-[#FF6B35]/30 hover:text-[#111827]"
               }`}
             >
-              {t !== "all" && <span className={`size-1.5 shrink-0 rounded-full ${meta?.dot}`} />}
+              {t === "veg" && (
+                <span className="inline-flex shrink-0 items-center justify-center" style={{ width: 12, height: 12, border: "2px solid #16a34a", borderRadius: 2, backgroundColor: "#fff" }}>
+                  <span style={{ width: 5, height: 5, borderRadius: "50%", backgroundColor: "#16a34a", display: "block" }} />
+                </span>
+              )}
+              {t === "non-veg" && (
+                <span className="inline-flex shrink-0 items-center justify-center" style={{ width: 12, height: 12, border: "2px solid #92400e", borderRadius: 2, backgroundColor: "#fff" }}>
+                  <span style={{ width: 5, height: 5, borderRadius: "50%", backgroundColor: "#92400e", display: "block" }} />
+                </span>
+              )}
+              {t === "egg"   && <span className="text-[11px] leading-none">🥚</span>}
+              {t === "drink" && <span className="text-[11px] leading-none">🥤</span>}
+              {t === "halal" && <span className="text-[11px] leading-none">🍖</span>}
               {t === "all" ? CUSTOMER_MENU_CONTENT.allTypesLabel : meta?.label}
             </motion.button>
           );
         })}
+
+        {/* Fast filter */}
         <motion.button
           whileTap={{ scale: 0.95 }}
           type="button"
@@ -267,7 +298,6 @@ function CustomerMenuPageContent() {
           className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
         >
           {filtered.map((item, i) => {
-            const typeMeta = ITEM_TYPE_META[item.itemType] ?? null;
             const inCart = cart.lines.find((l) => l.id === item.id);
             const isFast = (item.prepTime ?? 99) < 10;
             return (
@@ -287,12 +317,6 @@ function CustomerMenuPageContent() {
                     iconClassName="size-14 text-[#FF6B35]/25"
                   />
                   <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
-                  {typeMeta && (
-                    <span className={`absolute left-2.5 top-2.5 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide ring-1 backdrop-blur-sm ${typeMeta.badge}`}>
-                      <span className={`size-1.5 shrink-0 rounded-full ${typeMeta.dot}`} />
-                      {typeMeta.label}
-                    </span>
-                  )}
                   {item.prepTime != null && (
                     <span className={`absolute right-2.5 top-2.5 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold backdrop-blur-sm ${
                       isFast ? "bg-[#F59E0B] text-white shadow-sm" : "bg-white/95 text-[#6B7280] ring-1 ring-black/5"
@@ -306,7 +330,10 @@ function CustomerMenuPageContent() {
                   </span>
                 </div>
                 <div className="flex flex-1 flex-col gap-1 p-3.5 sm:p-4">
-                  <h3 className="font-poppins line-clamp-1 text-sm font-semibold text-[#111827]">{item.name}</h3>
+                  <h3 className="font-poppins line-clamp-1 text-sm font-semibold text-[#111827] flex items-center gap-1.5">
+                    <FoodTypeIndicator type={item.itemType} size={13} />
+                    {item.name}
+                  </h3>
                   {item.description && (
                     <p className="line-clamp-2 text-[11px] leading-relaxed text-[#6B7280] sm:text-xs">{item.description}</p>
                   )}

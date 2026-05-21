@@ -6,6 +6,7 @@ import { useRestaurantSlug } from "@/hooks/useRestaurantSlug";
 import { useRestaurantInfo } from "@/hooks/useRestaurantInfo";
 import { useRestaurantCms } from "@/hooks/useRestaurantCms";
 import SafeDishImage from "@/components/customer/SafeDishImage";
+import FoodTypeIndicator from "@/components/customer/FoodTypeIndicator";
 import { formatCustomerMoney } from "@/lib/customerCurrency";
 import { CUSTOMER_HOME_CATEGORIES, CUSTOMER_HOME_REVIEWS, CUSTOMER_HOME_STEPS, CUSTOMER_ORDER_TYPES } from "@/config/customerContent";
 import { motion, useInView } from "framer-motion";
@@ -413,7 +414,10 @@ export default function CustomerHomePage() {
                     </span>
                   </div>
                   <div className="flex flex-col p-4 sm:p-5">
-                    <h3 className="font-poppins font-semibold text-[#111827]">{item.name}</h3>
+                    <h3 className="font-poppins font-semibold text-[#111827] flex items-center gap-2">
+                      <FoodTypeIndicator type={item.itemType} size={14} />
+                      {item.name}
+                    </h3>
                     <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-[#6B7280] sm:text-sm">{item.description}</p>
                     <div className="mt-4 flex items-center justify-between gap-2 border-t border-[#FFE4D6] pt-4">
                       <span className="inline-flex items-center gap-1.5 text-xs text-[#6B7280]">

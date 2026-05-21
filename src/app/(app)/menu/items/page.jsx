@@ -4,7 +4,8 @@ import MenuCard from "@/components/menu/MenuCard";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import EmptyState from "@/components/ui/EmptyState";
 import Modal from "@/components/ui/Modal";
-import { DEFAULT_KITCHEN_FOR_TYPE, KITCHEN_TYPE_LABELS } from "@/types/menu";
+import { DEFAULT_KITCHEN_FOR_TYPE, ITEM_TYPE_META, KITCHEN_TYPE_LABELS } from "@/types/menu";
+import AdminFoodTypeIndicator from "@/components/menu/AdminFoodTypeIndicator";
 import { useToast } from "@/hooks/useToast";
 import { LayoutGrid, List, Plus, RefreshCw, Search, UtensilsCrossed } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -74,6 +75,12 @@ export default function MenuItemsPage() {
              String(item.price).includes(q);
     });
   }, [items, activeCategory, search]);
+
+  // Only show categories that have at least one menu item
+  const categoriesWithItems = useMemo(() => {
+    const catIds = new Set(items.map((m) => m.categoryId));
+    return categories.filter((c) => catIds.has(c.id));
+  }, [categories, items]);
 
   const stats = useMemo(() => ({
     total:    items.length,
@@ -210,7 +217,7 @@ export default function MenuItemsPage() {
         {/* Category pills */}
         <div className="flex-1 overflow-x-auto pb-1 [scrollbar-width:none]">
           <div className="flex min-w-max gap-2">
-            {[{ id: "all", name: "All" }, ...categories].map((cat) => (
+            {[{ id: "all", name: "All" }, ...categoriesWithItems].map((cat) => (
               <button key={cat.id} type="button" onClick={() => setActiveCategory(cat.id)}
                 className={`cursor-pointer rounded-full px-4 py-2 text-sm font-semibold transition-all ${
                   activeCategory === cat.id
@@ -267,7 +274,6 @@ export default function MenuItemsPage() {
                 <th className="px-4 py-3">Name</th>
                 <th className="px-4 py-3">Category</th>
                 <th className="px-4 py-3">Price</th>
-                <th className="px-4 py-3">Type</th>
                 <th className="px-4 py-3">Status</th>
                 <th className="px-4 py-3 text-right">Actions</th>
               </tr>
@@ -275,10 +281,14 @@ export default function MenuItemsPage() {
             <tbody className="divide-y divide-zinc-800/80">
               {filtered.map((item) => (
                 <tr key={item.id} className="transition-colors hover:bg-zinc-800/40">
-                  <td className="px-4 py-3 font-medium text-zinc-100">{item.name}</td>
+                  <td className="px-4 py-3 font-medium text-zinc-100">
+                    <span className="inline-flex items-center gap-1.5">
+                      <AdminFoodTypeIndicator type={item.itemType} size={13} />
+                      {item.name}
+                    </span>
+                  </td>
                   <td className="px-4 py-3 text-zinc-400">{item.categoryName}</td>
                   <td className="px-4 py-3 font-semibold text-emerald-400">${Number(item.price).toFixed(2)}</td>
-                  <td className="px-4 py-3 capitalize text-zinc-500 text-xs">{item.itemType}</td>
                   <td className="px-4 py-3">
                     <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold ring-1 ${
                       item.status === "active"
@@ -349,7 +359,12 @@ export default function MenuItemsPage() {
               <select value={form.itemType}
                 onChange={(e) => setForm((f) => ({ ...f, itemType: e.target.value, kitchenType: DEFAULT_KITCHEN_FOR_TYPE[e.target.value] ?? "default_kitchen" }))}
                 className="cursor-pointer mt-1 w-full rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus:border-emerald-500/40">
-                {ITEM_TYPES.map((t) => <option key={t} value={t}>{t.charAt(0).toUpperCase() + t.slice(1)}</option>)}
+                {ITEM_TYPES.map((t) => {
+                  const meta = ITEM_TYPE_META[t];
+                  const label = t.charAt(0).toUpperCase() + t.slice(1);
+                  const prefix = meta?.emoji || (t === "veg" ? "🟢" : t === "non-veg" ? "🟫" : "");
+                  return <option key={t} value={t}>{prefix ? `${prefix} ` : ""}{label}</option>;
+                })}
               </select>
             </div>
             <div>

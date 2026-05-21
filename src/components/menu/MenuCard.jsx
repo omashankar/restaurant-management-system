@@ -8,8 +8,8 @@
  */
 
 import { ITEM_TYPE_META } from "@/types/menu";
+import AdminFoodTypeIndicator from "@/components/menu/AdminFoodTypeIndicator";
 import { Clock, Pencil, Plus, Trash2, Zap } from "lucide-react";
-import Image from "next/image";
 import { useState } from "react";
 
 // ── constants ────────────────────────────────────────────────────────────────
@@ -23,12 +23,6 @@ const BORDER_ACCENT = {
   egg:       "border-l-yellow-400",
   halal:     "border-l-teal-500",
   other:     "border-l-zinc-600",
-};
-
-const KITCHEN_SHORT = {
-  default_kitchen: null,
-  veg_kitchen:     "Veg Kitchen",
-  non_veg_kitchen: "Non-Veg Kitchen",
 };
 
 // stock status helpers (POS only)
@@ -62,11 +56,10 @@ export default function MenuCard({
   const isPOS  = variant === "pos";
   const isMenu = variant === "menu";
 
-  const imgSrc     = imgError || !item.image ? FALLBACK : item.image;
-  const typeMeta   = item.itemType ? ITEM_TYPE_META[item.itemType] : null;
+  const imgSrc      = imgError || !item.image ? FALLBACK : item.image;
+  const typeMeta    = item.itemType ? ITEM_TYPE_META[item.itemType] : null;
   const accentBorder = BORDER_ACCENT[item.itemType] ?? "border-l-zinc-700";
-  const kitchenLabel = KITCHEN_SHORT[item.kitchenType] ?? null;
-  const isFast     = item.prepTime != null && item.prepTime < 10;
+  const isFast      = item.prepTime != null && item.prepTime < 10;
   const stockStatus = isPOS ? getStockStatus(item) : null;
   const isDisabled  = stockStatus === "out";
   const stockMeta   = stockStatus ? STOCK_META[stockStatus] : null;
@@ -97,19 +90,12 @@ export default function MenuCard({
         />
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-zinc-950/70 via-zinc-950/10 to-transparent" />
 
-        {/* top-left: category (menu) OR type badge (pos) */}
+        {/* top-left: category (menu variant) */}
         {isMenu && (
           <span className="absolute left-2.5 top-2.5 rounded-md bg-zinc-950/75 px-2 py-0.5 text-[9px] font-bold uppercase tracking-widest text-emerald-400 backdrop-blur-sm">
             {item.categoryName}
           </span>
         )}
-        {isPOS && typeMeta && (
-          <span className={`absolute left-2 top-2 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[9px] font-bold ring-1 backdrop-blur-sm ${typeMeta.badge}`}>
-            <span className={`size-1.5 shrink-0 rounded-full ${typeMeta.dot}`} aria-hidden />
-            {typeMeta.label}
-          </span>
-        )}
-
         {/* top-right: status (menu) OR prep time (pos) */}
         {isMenu && (
           <span className={`absolute right-2.5 top-2.5 rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide ${
@@ -146,25 +132,18 @@ export default function MenuCard({
       <div className="flex flex-1 flex-col gap-1.5 p-3">
 
         {/* Name */}
-        <h3 className={`line-clamp-1 text-sm font-semibold text-zinc-100 transition-colors ${!isDisabled ? "group-hover:text-white" : ""}`}>
+        <h3 className={`line-clamp-1 flex items-center gap-1.5 text-sm font-semibold text-zinc-100 transition-colors ${!isDisabled ? "group-hover:text-white" : ""}`}>
+          <AdminFoodTypeIndicator type={item.itemType} size={13} />
           {item.name}
         </h3>
 
-        {/* Description (menu only) */}
-        {isMenu && item.description && (
-          <p className="line-clamp-1 text-[11px] text-zinc-500">{item.description}</p>
+        {/* Description — shown in both variants */}
+        {item.description && (
+          <p className="line-clamp-2 text-[11px] leading-relaxed text-zinc-500">{item.description}</p>
         )}
 
         {/* Badges row */}
         <div className="flex flex-wrap items-center gap-1">
-          {/* Type badge (menu only — POS shows it on image) */}
-          {isMenu && typeMeta && (
-            <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[9px] font-semibold ring-1 ${typeMeta.badge}`}>
-              <span className={`size-1.5 shrink-0 rounded-full ${typeMeta.dot}`} aria-hidden />
-              {typeMeta.label}
-            </span>
-          )}
-
           {/* Prep time (menu only) */}
           {isMenu && item.prepTime != null && (
             <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[9px] font-medium ring-1 ${
@@ -174,13 +153,6 @@ export default function MenuCard({
             }`}>
               {isFast ? <Zap className="size-2.5 shrink-0" aria-hidden /> : <Clock className="size-2.5 shrink-0" aria-hidden />}
               {item.prepTime} min
-            </span>
-          )}
-
-          {/* Kitchen type */}
-          {kitchenLabel && (
-            <span className="rounded-full bg-indigo-500/10 px-2 py-0.5 text-[9px] font-medium text-indigo-400 ring-1 ring-indigo-500/20">
-              {kitchenLabel}
             </span>
           )}
 
