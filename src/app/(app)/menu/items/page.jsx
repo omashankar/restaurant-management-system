@@ -360,10 +360,8 @@ export default function MenuItemsPage() {
                 onChange={(e) => setForm((f) => ({ ...f, itemType: e.target.value, kitchenType: DEFAULT_KITCHEN_FOR_TYPE[e.target.value] ?? "default_kitchen" }))}
                 className="cursor-pointer mt-1 w-full rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus:border-emerald-500/40">
                 {ITEM_TYPES.map((t) => {
-                  const meta = ITEM_TYPE_META[t];
                   const label = t.charAt(0).toUpperCase() + t.slice(1);
-                  const prefix = meta?.emoji || (t === "veg" ? "🟢" : t === "non-veg" ? "🟫" : "");
-                  return <option key={t} value={t}>{prefix ? `${prefix} ` : ""}{label}</option>;
+                  return <option key={t} value={t}>{label}</option>;
                 })}
               </select>
             </div>

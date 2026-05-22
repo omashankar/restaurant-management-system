@@ -270,9 +270,9 @@ function PosPageContent() {
                       <span style={{ width: 4, height: 4, borderRadius: "50%", backgroundColor: "#92400e", display: "block" }} />
                     </span>
                   )}
-                  {t === "egg"   && <span className="text-[11px] leading-none">🥚</span>}
-                  {t === "drink" && <span className="text-[11px] leading-none">🥤</span>}
-                  {t === "halal" && <span className="text-[11px] leading-none">🍖</span>}
+                  {t === "egg"   && <span className="size-2 shrink-0 rounded-full bg-yellow-400" />}
+                  {t === "drink" && <span className="text-sm leading-none">🥤</span>}
+                  {t === "halal" && <span className="text-sm leading-none">🍖</span>}
                   {LABELS[t]}
                 </button>
               );
