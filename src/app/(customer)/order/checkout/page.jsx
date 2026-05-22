@@ -36,7 +36,7 @@ function Field({ label, required, children }) {
   );
 }
 
-const inputCls = "w-full rounded-xl border border-[#FFE4D6] bg-white px-3.5 py-3 text-sm text-[#111827] outline-none transition-all focus:border-[#FF6B35]/50 focus:ring-2 focus:ring-[#FF6B35]/10 placeholder:text-[#6B7280]";
+const inputCls = "w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-800 outline-none transition-all focus:border-[#FF6B35]/40 focus:bg-white focus:ring-2 focus:ring-[#FF6B35]/10 placeholder:text-gray-400";
 
 export default function CheckoutPage() {
   const {
@@ -441,74 +441,54 @@ export default function CheckoutPage() {
   };
 
   return (
-    <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
-      {/* Header */}
-      <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="mb-6 overflow-hidden rounded-2xl border border-[#FFE4D6] bg-white shadow-sm"
-      >
-        <div className="h-1 gradient-primary" />
-        <div className="px-5 py-4">
+    <div className="bg-gray-50 min-h-screen">
+      {/* Hero */}
+      <div className="bg-white border-b border-gray-100">
+        <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
           <div className="flex items-center gap-3">
-            <Link href={link("/order/cart")} className="text-sm text-[#6B7280] transition-colors hover:text-[#FF6B35]">← Cart</Link>
-            <span className="text-[#FFE4D6]">/</span>
-            <h1 className="font-poppins text-2xl font-bold text-[#111827]">Checkout</h1>
+            <Link href={link("/order/cart")} className="text-sm text-gray-400 transition-colors hover:text-[#FF6B35]">← Cart</Link>
+            <span className="text-gray-200">/</span>
+            <h1 className="font-poppins text-3xl font-black text-[#111827]">Checkout</h1>
           </div>
-          <p className="mt-1 text-xs text-[#6B7280]">Complete your details to place order securely.</p>
+          <p className="mt-1 text-sm text-gray-500">Complete your details to place order securely.</p>
         </div>
-      </motion.div>
+      </div>
+
+      <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
 
       <div className="grid gap-6 lg:grid-cols-3">
 
         {/* ── Form ── */}
         <div className="space-y-5 lg:col-span-2">
           {!authLoading && !authUser ? (
-            <motion.div
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="rounded-2xl border border-[#F59E0B]/30 bg-[#F59E0B]/8 px-4 py-3.5 text-sm text-[#92400E]"
-            >
-              🔐 Login required to complete checkout.{" "}
-              <button
-                type="button"
-                onClick={() => setIsAuthModalOpen(true)}
-                className="font-bold text-[#FF6B35] underline underline-offset-2 hover:text-[#E85A24]"
-              >
+            <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}
+              className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3.5 text-sm text-amber-800">
+              Login required to complete checkout.{" "}
+              <button type="button" onClick={() => setIsAuthModalOpen(true)}
+                className="font-bold text-[#FF6B35] underline underline-offset-2 hover:text-[#E85A24]">
                 Login with OTP
               </button>
             </motion.div>
           ) : null}
 
           {/* Order type */}
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-            className="flex items-center justify-between rounded-2xl border border-[#FFE4D6] bg-white px-4 py-3.5 shadow-sm"
-          >
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
+            className="flex items-center justify-between rounded-2xl bg-white px-4 py-3.5 shadow-sm">
             <div className="flex items-center gap-2.5">
               {TypeIcon && <TypeIcon className="size-4 text-[#FF6B35]" />}
-              <span className="font-poppins text-sm font-semibold text-[#111827]">{TYPE_LABEL[orderType]}</span>
+              <span className="font-poppins text-sm font-bold text-[#111827]">{TYPE_LABEL[orderType]}</span>
             </div>
-            <button
-              type="button"
-              onClick={() => setOrderTypeModalOpen(true)}
-              className="rounded-xl border border-[#FFE4D6] px-3 py-1.5 text-xs font-semibold text-[#6B7280] transition-colors hover:border-[#FF6B35]/30 hover:text-[#FF6B35]"
-            >
+            <button type="button" onClick={() => setOrderTypeModalOpen(true)}
+              className="rounded-full border border-gray-200 px-3.5 py-1.5 text-xs font-semibold text-gray-500 transition-colors hover:border-[#FF6B35]/30 hover:text-[#FF6B35]">
               Change
             </button>
           </motion.div>
 
           {/* Customer details */}
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.15 }}
-            className="rounded-2xl border border-[#FFE4D6] bg-white p-6 shadow-sm"
-          >
-            <h2 className="mb-4 font-poppins text-sm font-bold uppercase tracking-wider text-[#111827]">Your Details</h2>
-            <p className="mb-4 text-xs text-[#6B7280]">
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}
+            className="rounded-3xl bg-white p-6 shadow-sm">
+            <h2 className="mb-1 font-poppins text-lg font-black text-[#111827]">Your Details</h2>
+            <p className="mb-5 text-xs text-gray-400">
               <span className="text-red-400">*</span> Name required. Phone <strong>or</strong> Email required.
             </p>
             <div className="grid gap-4 sm:grid-cols-2">
@@ -561,24 +541,17 @@ export default function CheckoutPage() {
             </div>
           </motion.div>
 
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className="rounded-2xl border border-[#FFE4D6] bg-white p-6 shadow-sm"
-          >
-            <h2 className="mb-4 font-poppins text-sm font-bold uppercase tracking-wider text-[#111827]">Payment Method</h2>
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
+            className="rounded-3xl bg-white p-6 shadow-sm">
+            <h2 className="mb-5 font-poppins text-lg font-black text-[#111827]">Payment Method</h2>
             <div className="grid gap-2 sm:grid-cols-2">
               {enabledPaymentMethods.map((methodKey) => (
-                <motion.button
-                  key={methodKey}
-                  whileTap={{ scale: 0.97 }}
-                  type="button"
+                <motion.button key={methodKey} whileTap={{ scale: 0.97 }} type="button"
                   onClick={() => setPaymentMethod(methodKey)}
-                  className={`rounded-xl border px-3 py-2.5 text-left text-sm font-medium transition-all ${
+                  className={`rounded-2xl border px-4 py-3 text-left text-sm font-semibold transition-all ${
                     paymentMethod === methodKey
-                      ? "border-[#FF6B35]/50 bg-[#FF6B35]/8 text-[#FF6B35] shadow-sm"
-                      : "border-[#FFE4D6] bg-white text-[#6B7280] hover:border-[#FF6B35]/30 hover:text-[#111827]"
+                      ? "border-[#FF6B35]/40 bg-[#FF6B35]/8 text-[#FF6B35] shadow-sm"
+                      : "border-gray-200 bg-white text-gray-600 hover:border-[#FF6B35]/30 hover:text-[#111827]"
                   }`}>
                   {PAYMENT_LABEL[methodKey] ?? methodKey}
                 </motion.button>
@@ -586,8 +559,8 @@ export default function CheckoutPage() {
             </div>
             {!enabledPaymentMethods.length && <p className="mt-3 text-xs text-red-500">No payment method enabled.</p>}
             {checkoutMeta.onlinePaymentsAvailable === false && (
-              <p className="mt-3 rounded-xl border border-[#F59E0B]/30 bg-[#F59E0B]/8 px-3 py-2.5 text-xs text-[#92400E]">
-                💳 Card/UPI needs <strong>Stripe</strong> or <strong>Razorpay</strong>. Cash on delivery works.
+              <p className="mt-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-800">
+                Card/UPI needs <strong>Stripe</strong> or <strong>Razorpay</strong>. Cash on delivery works.
               </p>
             )}
           </motion.div>
@@ -595,46 +568,42 @@ export default function CheckoutPage() {
 
         {/* ── Order summary ── */}
         <div className="lg:col-span-1">
-          <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.25 }}
-            className="sticky top-24 overflow-hidden rounded-2xl border border-[#FFE4D6] bg-white shadow-sm"
-          >
+          <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.25 }}
+            className="sticky top-24 rounded-3xl bg-white shadow-sm overflow-hidden">
             <div className="h-1 gradient-primary" />
-            <div className="p-5">
-            <h2 className="mb-4 font-poppins text-sm font-bold uppercase tracking-wider text-[#111827]">Order Summary</h2>
+            <div className="p-6">
+            <h2 className="mb-5 font-poppins text-lg font-black text-[#111827]">Order Summary</h2>
             <ul className="space-y-2.5">
               {lines.map((l) => (
                 <li key={l.id} className="flex items-start justify-between gap-2 text-sm">
-                  <span className="text-[#6B7280]">{l.qty}× <span className="font-medium text-[#111827]">{l.name}</span></span>
-                  <span className="shrink-0 font-semibold text-[#111827]">{formatCustomerMoney(l.price * l.qty)}</span>
+                  <span className="text-gray-500">{l.qty}× <span className="font-semibold text-[#111827]">{l.name}</span></span>
+                  <span className="shrink-0 font-bold text-[#111827]">{formatCustomerMoney(l.price * l.qty)}</span>
                 </li>
               ))}
             </ul>
-            <div className="mt-4 space-y-2.5 border-t border-[#FFE4D6] pt-4 text-sm">
-              <p className="text-xs text-[#6B7280]">⏱ Est. time: <span className="font-semibold text-[#111827]">{etaLabel} mins</span></p>
+            <div className="mt-5 space-y-2.5 border-t border-gray-100 pt-5 text-sm">
+              <p className="text-xs text-gray-400">Est. time: <span className="font-bold text-[#111827]">{etaLabel} mins</span></p>
               <div className="flex gap-2">
                 <input value={couponCode} onChange={(e) => setCouponCode(e.target.value)} placeholder="Coupon code"
-                  className="w-full rounded-xl border border-[#FFE4D6] px-3 py-2 text-xs outline-none focus:border-[#FF6B35]/40 focus:ring-2 focus:ring-[#FF6B35]/10" />
+                  className="w-full rounded-full border border-gray-200 bg-gray-50 px-4 py-2 text-xs outline-none focus:border-[#FF6B35]/40 focus:bg-white focus:ring-2 focus:ring-[#FF6B35]/10" />
                 <button type="button" onClick={applyCoupon}
-                  className="rounded-xl border border-[#FFE4D6] px-3 py-2 text-xs font-semibold text-[#6B7280] hover:border-[#FF6B35]/30 hover:text-[#FF6B35]">
+                  className="rounded-full border border-gray-200 px-4 py-2 text-xs font-semibold text-gray-500 hover:border-[#FF6B35]/30 hover:text-[#FF6B35]">
                   Apply
                 </button>
               </div>
-              <div className="flex justify-between text-[#6B7280]"><span>Subtotal</span><span className="font-medium text-[#111827]">{formatCustomerMoney(subtotal)}</span></div>
-              <div className="flex justify-between text-[#6B7280]"><span>Tax ({taxRate.toFixed(2)}%)</span><span className="font-medium text-[#111827]">{formatCustomerMoney(tax)}</span></div>
-              {orderType === "delivery" && <div className="flex justify-between text-[#6B7280]"><span>Delivery</span><span className="font-medium text-[#111827]">{formatCustomerMoney(deliveryCharge)}</span></div>}
-              {appliedCoupon && <div className="flex justify-between text-[#22C55E]"><span>Coupon ({appliedCoupon.code})</span><span>- {formatCustomerMoney(couponDiscount)}</span></div>}
-              <div className="flex justify-between border-t border-[#FFE4D6] pt-2.5 font-poppins text-base font-bold text-[#111827]">
+              <div className="flex justify-between text-gray-500"><span>Subtotal</span><span className="font-semibold text-[#111827]">{formatCustomerMoney(subtotal)}</span></div>
+              <div className="flex justify-between text-gray-500"><span>Tax ({taxRate.toFixed(2)}%)</span><span className="font-semibold text-[#111827]">{formatCustomerMoney(tax)}</span></div>
+              {orderType === "delivery" && <div className="flex justify-between text-gray-500"><span>Delivery</span><span className="font-semibold text-[#111827]">{formatCustomerMoney(deliveryCharge)}</span></div>}
+              {appliedCoupon && <div className="flex justify-between text-green-600"><span>Coupon ({appliedCoupon.code})</span><span>- {formatCustomerMoney(couponDiscount)}</span></div>}
+              <div className="flex justify-between border-t border-gray-100 pt-3 font-poppins text-base font-black text-[#111827]">
                 <span>Total</span><span className="text-[#FF6B35]">{formatCustomerMoney(total)}</span>
               </div>
-              <div className="flex justify-between text-xs text-[#6B7280]">
-                <span>Payment</span><span className="font-medium text-[#111827]">{PAYMENT_LABEL[paymentMethod] ?? paymentMethod}</span>
+              <div className="flex justify-between text-xs text-gray-400">
+                <span>Payment</span><span className="font-semibold text-[#111827]">{PAYMENT_LABEL[paymentMethod] ?? paymentMethod}</span>
               </div>
             </div>
             <button type="button" onClick={placeOrder} disabled={loading || authLoading || paying}
-              className="mt-5 flex w-full items-center justify-center gap-2 rounded-xl gradient-primary py-3.5 text-sm font-bold text-white shadow-lg shadow-[#FF6B35]/25 transition-all hover:shadow-xl disabled:cursor-not-allowed disabled:opacity-50">
+              className="mt-5 flex w-full items-center justify-center gap-2 rounded-full gradient-primary py-3.5 text-sm font-bold text-white shadow-lg shadow-[#FF6B35]/25 transition-all hover:shadow-xl disabled:cursor-not-allowed disabled:opacity-50">
               {loading ? <><Loader2 className="size-4 animate-spin" /> Placing Order…</>
                 : paying ? <><Loader2 className="size-4 animate-spin" /> Processing…</>
                 : authLoading ? "Checking login..."
@@ -645,6 +614,7 @@ export default function CheckoutPage() {
           </motion.div>
         </div>
       </div>
+    </div>
 
       <Modal open={isAuthModalOpen} onClose={() => { setIsAuthModalOpen(false); setOtpStep("phone"); setOtpError(""); }} title="Login to continue checkout">
         <div className="space-y-4">

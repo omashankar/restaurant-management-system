@@ -1,4 +1,3 @@
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&family=Inter:wght@300;400;500;600&display=swap');
 @import "tailwindcss";
 
 /* Ensure customer-side files are always scanned */
@@ -7,14 +6,16 @@
 @source "../src/context/CustomerContext.jsx";
 
 @theme inline {
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-  --color-rms-bg: #09090b;
-  --color-rms-surface: #18181b;
-  --color-rms-elevated: #27272a;
-  --color-rms-border: #3f3f46;
-  --color-rms-accent: #10b981;
-  --color-rms-accent-dim: #059669;
+  --font-sans:    var(--font-geist-sans);
+  --font-mono:    var(--font-geist-mono);
+  --font-poppins: var(--font-poppins);
+  --font-inter:   var(--font-inter);
+  --color-rms-bg:          #09090b;
+  --color-rms-surface:     #18181b;
+  --color-rms-elevated:    #27272a;
+  --color-rms-border:      #3f3f46;
+  --color-rms-accent:      #10b981;
+  --color-rms-accent-dim:  #059669;
 }
 
 /*
@@ -74,17 +75,79 @@ body {
 
 /* Customer page override */
 .customer-theme {
-  font-family: 'Inter', system-ui, sans-serif;
-  background: #FFF8F3;
+  font-family: var(--font-inter), 'Inter', system-ui, sans-serif;
+  background: #ffffff;
   color: #111827;
   color-scheme: light;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
 }
 
-.customer-theme h1,
-.customer-theme h2,
-.customer-theme h3,
-.customer-theme h4 {
-  font-family: 'Poppins', system-ui, sans-serif;
+/* ── Headings — Poppins, tight tracking ── */
+.customer-theme h1 {
+  font-family: var(--font-poppins), system-ui, sans-serif;
+  font-weight: 900;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+}
+.customer-theme h2 {
+  font-family: var(--font-poppins), system-ui, sans-serif;
+  font-weight: 800;
+  letter-spacing: -0.025em;
+  line-height: 1.15;
+}
+.customer-theme h3 {
+  font-family: var(--font-poppins), system-ui, sans-serif;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+.customer-theme h4,
+.customer-theme h5,
+.customer-theme h6 {
+  font-family: var(--font-poppins), system-ui, sans-serif;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  line-height: 1.3;
+}
+
+/* font-poppins utility class */
+.customer-theme .font-poppins {
+  font-family: var(--font-poppins), system-ui, sans-serif;
+  letter-spacing: -0.02em;
+}
+
+/* ── Body text — Inter, comfortable reading ── */
+.customer-theme p {
+  font-family: var(--font-inter), system-ui, sans-serif;
+  line-height: 1.7;
+  color: #374151;
+}
+.customer-theme label {
+  font-family: var(--font-inter), system-ui, sans-serif;
+  line-height: 1.5;
+}
+
+/* ── Inputs ── */
+.customer-theme input,
+.customer-theme textarea,
+.customer-theme select {
+  font-family: var(--font-inter), system-ui, sans-serif;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: #111827;
+}
+
+/* ── Buttons ── */
+.customer-theme button {
+  font-family: var(--font-inter), system-ui, sans-serif;
+  letter-spacing: 0.01em;
+}
+
+/* ── Links ── */
+.customer-theme a {
+  font-family: inherit;
 }
 
 /* Glassmorphism navbar */

@@ -4,7 +4,6 @@ import CategoryTabs from "@/components/pos/CategoryTabs";
 import MenuCard from "@/components/menu/MenuCard";
 import OrderSummary from "@/components/pos/OrderSummary";
 import PrintInvoice from "@/components/pos/PrintInvoice";
-import ItemTypeFilter from "@/components/filters/ItemTypeFilter";
 import ListToolbar from "@/components/ui/ListToolbar";
 import Modal from "@/components/ui/Modal";
 import { useMenuFilter } from "@/hooks/useMenuFilter";
@@ -23,7 +22,16 @@ function PosPageContent() {
   const searchParams = useSearchParams();
 
   const activeMenuItems = useMemo(() => menuItems.filter((m) => m.status === "active"), [menuItems]);
-  const posCategories = useMemo(() => [{ id: "all", name: "All" }, ...categories], [categories]);
+  // Only show categories that have at least one active menu item
+  const posCategories = useMemo(() => {
+    const catIds = new Set(activeMenuItems.map((m) => m.categoryId));
+    return [{ id: "all", name: "All" }, ...categories.filter((c) => catIds.has(c.id))];
+  }, [categories, activeMenuItems]);
+
+  // Only show item types that have at least one active menu item
+  const availableItemTypes = useMemo(() => {
+    return [...new Set(activeMenuItems.map((m) => m.itemType).filter(Boolean))];
+  }, [activeMenuItems]);
   const [orderType, setOrderType] = useState("dine-in");
   const [selectedTableId, setSelectedTableId] = useState("");
   const [delivery, setDelivery] = useState({ name: "", phone: "", address: "" });
@@ -233,7 +241,57 @@ function PosPageContent() {
         {/* ── Menu panel ── */}
         <section className="space-y-4 xl:col-span-7">
           <CategoryTabs categories={posCategories} activeCategory={activeCategory} onChange={setActiveCategory} />
-          <ItemTypeFilter activeItemType={activeItemType} onItemTypeChange={setActiveItemType} fastOnly={fastOnly} onFastToggle={setFastOnly} />
+          {/* Item type filters with signs */}
+          <div className="flex flex-wrap items-center gap-2">
+            {["all", "veg", "non-veg", "egg", "drink", "halal", "other"].filter((t) =>
+              t === "all" || availableItemTypes.includes(t)
+            ).map((t) => {
+              const active = activeItemType === t;
+              const LABELS = { all: "All Types", veg: "Veg", "non-veg": "Non-Veg", egg: "Egg", drink: "Drink", halal: "Halal", other: "Other" };
+              return (
+                <button
+                  key={t}
+                  type="button"
+                  onClick={() => setActiveItemType(t)}
+                  className={`cursor-pointer inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold transition-all duration-150 ${
+                    active
+                      ? "bg-emerald-500/20 text-emerald-300 ring-1 ring-emerald-500/30"
+                      : "bg-zinc-900 text-zinc-400 ring-1 ring-zinc-800 hover:text-zinc-200"
+                  }`}
+                  aria-pressed={active}
+                >
+                  {t === "veg" && (
+                    <span className="inline-flex shrink-0 items-center justify-center" style={{ width: 11, height: 11, border: "2px solid #16a34a", borderRadius: 2, backgroundColor: "transparent" }}>
+                      <span style={{ width: 4, height: 4, borderRadius: "50%", backgroundColor: "#16a34a", display: "block" }} />
+                    </span>
+                  )}
+                  {t === "non-veg" && (
+                    <span className="inline-flex shrink-0 items-center justify-center" style={{ width: 11, height: 11, border: "2px solid #92400e", borderRadius: 2, backgroundColor: "transparent" }}>
+                      <span style={{ width: 4, height: 4, borderRadius: "50%", backgroundColor: "#92400e", display: "block" }} />
+                    </span>
+                  )}
+                  {t === "egg"   && <span className="size-2 shrink-0 rounded-full bg-yellow-400" />}
+                  {t === "drink" && <span className="text-sm leading-none">🥤</span>}
+                  {t === "halal" && <span className="text-sm leading-none">🍖</span>}
+                  {LABELS[t]}
+                </button>
+              );
+            })}
+            {/* Fast toggle */}
+            <button
+              type="button"
+              onClick={() => setFastOnly((v) => !v)}
+              className={`cursor-pointer inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold transition-all duration-150 ${
+                fastOnly
+                  ? "bg-amber-500/20 text-amber-300 ring-1 ring-amber-500/30"
+                  : "bg-zinc-900 text-zinc-400 ring-1 ring-zinc-800 hover:text-zinc-200"
+              }`}
+              aria-pressed={fastOnly}
+            >
+              <svg className="size-3" viewBox="0 0 24 24" fill="currentColor"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+              Fast (&lt;10 min)
+            </button>
+          </div>
           <ListToolbar
             search={search}
             onSearchChange={setSearch}

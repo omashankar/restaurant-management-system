@@ -3,17 +3,23 @@
 import { ITEM_TYPE_META } from "@/types/menu";
 import { Zap } from "lucide-react";
 
-const TYPES = ["all", "veg", "non-veg", "drink", "egg", "halal", "other"];
+const ALL_TYPES = ["all", "veg", "non-veg", "drink", "egg", "halal", "other"];
 
 export default function ItemTypeFilter({
   activeItemType,
   onItemTypeChange,
   fastOnly,
   onFastToggle,
+  availableTypes, // optional — if provided, only show types that exist in items
 }) {
+  // If availableTypes passed, filter to only those + "all"; else show all
+  const types = availableTypes
+    ? ["all", ...ALL_TYPES.filter((t) => t !== "all" && availableTypes.includes(t))]
+    : ALL_TYPES;
+
   return (
     <div className="flex flex-wrap items-center gap-2">
-      {TYPES.map((t) => {
+      {types.map((t) => {
         const active = activeItemType === t;
         const meta = ITEM_TYPE_META[t];
         return (

@@ -15,4 +15,4 @@ export const CUSTOMER_MENU_CONTENT = {
   viewCartLabel: "View Cart",
 };
 
-export const CUSTOMER_MENU_TYPE_FILTERS = ["all", "veg", "non-veg", "drink"];
+export const CUSTOMER_MENU_TYPE_FILTERS = ["all", "veg", "non-veg", "egg", "drink", "halal", "other"];

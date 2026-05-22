@@ -18,7 +18,6 @@ export function useMenuFilter(items) {
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
     return items.filter((item) => {
-      // Support both field names: categoryName (from DB) and category (legacy)
       const itemCategory = item.categoryName ?? item.category ?? "";
       if (activeCategory !== "All" && itemCategory !== activeCategory) return false;
       if (activeItemType !== "all" && item.itemType !== activeItemType) return false;
