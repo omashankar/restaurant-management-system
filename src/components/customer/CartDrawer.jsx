@@ -50,7 +50,7 @@ export default function CartDrawer() {
                 whileTap={{ scale: 0.9 }}
                 type="button"
                 onClick={() => setCartOpen(false)}
-                className="flex size-9 items-center justify-center rounded-xl border border-[#FFE4D6] text-[#6B7280] transition-colors hover:bg-[#FFF8F3] hover:text-[#111827]"
+                className="flex size-9 cursor-pointer items-center justify-center rounded-xl border border-[#FFE4D6] text-[#6B7280] transition-colors hover:bg-[#FFF8F3] hover:text-[#111827]"
               >
                 <X className="size-5" />
               </motion.button>

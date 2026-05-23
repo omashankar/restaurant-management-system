@@ -231,7 +231,7 @@ export default function CustomerFooter() {
               whileHover={{ scale: 1.03 }}
               whileTap={{ scale: 0.97 }}
               type="submit"
-              className="shrink-0 rounded-xl gradient-primary px-4 py-2.5 text-xs font-bold text-white shadow-md"
+              className="shrink-0 cursor-pointer rounded-xl gradient-primary px-4 py-2.5 text-xs font-bold text-white shadow-md"
             >
               {subscribed ? "✓ Done!" : "Subscribe"}
             </motion.button>

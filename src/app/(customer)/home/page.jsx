@@ -334,7 +334,7 @@ export default function CustomerHomePage() {
                   whileHover={{ scale: 1.04 }}
                   whileTap={{ scale: 0.96 }}
                   type="submit"
-                  className="rounded-full gradient-primary px-5 py-2 text-xs font-bold text-white shadow-sm"
+                  className="rounded-full cursor-pointer gradient-primary px-5 py-2 text-xs font-bold text-white shadow-sm"
                 >
                   Search
                 </motion.button>
@@ -358,7 +358,7 @@ export default function CustomerHomePage() {
                     key={q}
                     type="button"
                     onClick={() => router.push(link(`/order/menu?q=${q}`))}
-                    className="rounded-full border border-gray-200 bg-white px-3.5 py-1.5 text-xs font-medium text-gray-600 shadow-sm transition-all hover:border-[#FF6B35]/40 hover:text-[#FF6B35]"
+                    className="rounded-full cursor-pointer border border-gray-200 bg-white px-3.5 py-1.5 text-xs font-medium text-gray-600 shadow-sm transition-all hover:border-[#FF6B35]/40 hover:text-[#FF6B35]"
                   >
                     {label}
                   </button>
@@ -399,7 +399,7 @@ export default function CustomerHomePage() {
                   whileTap={{ scale: 0.97 }}
                   type="button"
                   onClick={() => setOrderTypeModalOpen(true)}
-                  className="inline-flex items-center gap-2 rounded-full gradient-primary px-7 py-3.5 text-sm font-bold text-white shadow-lg shadow-[#FF6B35]/25"
+                  className="inline-flex cursor-pointer items-center gap-2 rounded-full gradient-primary px-7 py-3.5 text-sm font-bold text-white shadow-lg shadow-[#FF6B35]/25"
                 >
                   {cms.hero.ctaPrimaryLabel || "Order Now"} <ChevronRight className="size-4" />
                 </motion.button>
@@ -528,11 +528,11 @@ export default function CustomerHomePage() {
                   <motion.button key={type.id} variants={fadeUp}
                     whileHover={{ y: -8, boxShadow: "0 24px 48px rgba(255,107,53,0.12)" }}
                     whileTap={{ scale: 0.98 }} type="button" onClick={() => handleOrderType(type.id)}
-                    className="group flex flex-col items-start rounded-3xl border border-gray-100 bg-white p-7 text-left shadow-sm transition-all duration-300 hover:border-[#FF6B35]/20">
+                    className="group cursor-pointer flex flex-col items-start rounded-3xl border border-gray-100 bg-white p-7 text-left shadow-sm transition-all duration-300 hover:border-[#FF6B35]/20">
                     <div className={`mb-5 flex size-16 items-center justify-center rounded-2xl ${ui?.iconBg} shadow-lg shadow-[#FF6B35]/20`}>
                       <Icon className="size-8 text-white" />
                     </div>
-                    <h3 className="font-poppins text-xl font-bold text-[#111827]">{type.title}</h3>
+                    <h3 className="font-poppins cu text-xl font-bold text-[#111827]">{type.title}</h3>
                     <p className="mt-2 flex-1 text-sm leading-relaxed text-gray-500">{type.description}</p>
                     <div className={`mt-5 flex items-center gap-1.5 text-sm font-bold ${ui?.accent}`}>
                       Start ordering <ChevronRight className="size-4 transition-transform group-hover:translate-x-1" />
@@ -653,7 +653,7 @@ export default function CustomerHomePage() {
               <motion.div variants={fadeUp} className="-mx-1 mb-7 flex gap-2 overflow-x-auto px-1 pb-1 [scrollbar-width:none] sm:mx-0 sm:px-0">
                 {[{ id: "all", name: "All" }, ...previewCategories].map((c) => (
                   <button key={c.id} type="button" onClick={() => setPreviewCategory(c.id)}
-                    className={`shrink-0 rounded-full px-5 py-2 text-xs font-semibold transition-all ${previewCategory === c.id ? "gradient-primary text-white shadow-md shadow-[#FF6B35]/20" : "border border-gray-200 bg-white text-gray-500 hover:border-[#FF6B35]/30 hover:text-[#FF6B35]"}`}>
+                    className={`shrink-0 rounded-full cursor-pointer px-5 py-2 text-xs font-semibold transition-all ${previewCategory === c.id ? "gradient-primary text-white shadow-md shadow-[#FF6B35]/20" : "border border-gray-200 bg-white text-gray-500 hover:border-[#FF6B35]/30 hover:text-[#FF6B35]"}`}>
                     {c.name}
                   </button>
                 ))}
@@ -769,7 +769,7 @@ export default function CustomerHomePage() {
               <div className="relative mt-7 flex flex-col gap-3 sm:flex-row sm:justify-center md:mt-0 md:shrink-0">
                 <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.97 }}
                   type="button" onClick={() => setOrderTypeModalOpen(true)}
-                  className="inline-flex items-center justify-center gap-2 rounded-full bg-white px-8 py-3.5 text-sm font-bold text-[#FF6B35] shadow-lg transition-all hover:shadow-xl">
+                  className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-full bg-white px-8 py-3.5 text-sm font-bold text-[#FF6B35] shadow-lg transition-all hover:shadow-xl">
                   Order Now <ChevronRight className="size-4" />
                 </motion.button>
                 <Link href={link("/order/table-booking")}

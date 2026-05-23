@@ -107,7 +107,7 @@ function CustomerMenuPageContent() {
               </button>
             ) : (
               <button type="button" onClick={() => setOrderTypeModalOpen(true)}
-                className="inline-flex items-center gap-2 rounded-full border border-[#FF6B35]/30 bg-[#FF6B35]/5 px-4 py-1.5 text-xs font-semibold text-[#FF6B35]">
+                className="inline-flex cursor-pointer items-center gap-2 rounded-full border border-[#FF6B35]/30 bg-[#FF6B35]/5 px-4 py-1.5 text-xs font-semibold text-[#FF6B35]">
                 Select Order Type
               </button>
             )}
@@ -159,12 +159,12 @@ function CustomerMenuPageContent() {
           {/* Category row */}
           <div className="flex gap-1.5 overflow-x-auto [scrollbar-width:none]">
             <button type="button" onClick={() => setActiveCategory("all")}
-              className={`shrink-0 rounded-full px-4 py-2 text-sm font-semibold transition-all ${
+              className={`shrink-0 cursor-pointer rounded-full px-4 py-2 text-sm font-semibold transition-all ${
                 activeCategory === "all" ? "gradient-primary text-white shadow-sm" : "border border-gray-200 bg-white text-gray-500 hover:border-[#FF6B35]/30 hover:text-[#FF6B35]"
               }`}>All</button>
             {activeCategories.map((c) => (
               <button key={c.id} type="button" onClick={() => setActiveCategory(c.id)}
-                className={`shrink-0 rounded-full px-4 py-2 text-sm font-semibold transition-all ${
+                className={`shrink-0 cursor-pointer rounded-full px-4 py-2 text-sm font-semibold transition-all ${
                   activeCategory === c.id ? "gradient-primary text-white shadow-sm" : "border border-gray-200 bg-white text-gray-500 hover:border-[#FF6B35]/30 hover:text-[#FF6B35]"
                 }`}>{c.name}</button>
             ))}
@@ -172,7 +172,7 @@ function CustomerMenuPageContent() {
           {/* Type + fast row */}
           <div className="flex flex-wrap gap-1.5">
             <button type="button" onClick={() => setActiveType("all")}
-              className={`shrink-0 rounded-full px-3.5 py-1.5 text-xs font-semibold transition-all ${
+              className={`shrink-0 cursor-pointer rounded-full px-3.5 py-1.5 text-xs font-semibold transition-all ${
                 activeType === "all" ? "bg-[#111827] text-white" : "border border-gray-200 bg-white text-gray-500 hover:border-[#FF6B35]/30 hover:text-[#FF6B35]"
               }`}>All Types</button>
             {availableTypes.map((t) => {
@@ -180,7 +180,7 @@ function CustomerMenuPageContent() {
               const isActive = activeType === t;
               return (
                 <button key={t} type="button" onClick={() => setActiveType(isActive ? "all" : t)}
-                  className={`shrink-0 inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-semibold transition-all ${
+                  className={`shrink-0 cursor-pointer inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-semibold transition-all ${
                     isActive ? "bg-[#FF6B35]/10 text-[#FF6B35] ring-1 ring-[#FF6B35]/30" : "border border-gray-200 bg-white text-gray-500 hover:border-[#FF6B35]/30 hover:text-[#FF6B35]"
                   }`}>
                   {t === "veg" && <span className="inline-flex shrink-0 items-center justify-center" style={{ width: 11, height: 11, border: "2px solid #16a34a", borderRadius: 2, backgroundColor: "#fff" }}><span style={{ width: 4, height: 4, borderRadius: "50%", backgroundColor: "#16a34a", display: "block" }} /></span>}
@@ -193,7 +193,7 @@ function CustomerMenuPageContent() {
               );
             })}
             <button type="button" onClick={() => setFastOnly((v) => !v)}
-              className={`shrink-0 inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-semibold transition-all ${
+              className={`cursor-pointer shrink-0 inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-semibold transition-all ${
                 fastOnly ? "bg-amber-50 text-amber-600 ring-1 ring-amber-300" : "border border-gray-200 bg-white text-gray-500 hover:border-amber-300"
               }`}>
               <Zap className="size-3 shrink-0" /> Fast (&lt;10 min)
@@ -281,7 +281,7 @@ function CustomerMenuPageContent() {
                       <p className="line-clamp-2 text-xs leading-relaxed text-gray-400 mb-3">{item.description}</p>
                     )}
                     <button type="button" onClick={() => handleAdd(item)}
-                      className={`mt-auto flex w-full items-center justify-center gap-2 rounded-full py-2.5 text-sm font-bold transition-all ${
+                      className={`mt-auto cursor-pointer flex w-full items-center justify-center gap-2 rounded-full py-2.5 text-sm font-bold transition-all ${
                         inCart
                           ? "border-2 border-[#FF6B35] bg-white text-[#FF6B35]"
                           : "gradient-primary text-white shadow-md shadow-[#FF6B35]/25 hover:shadow-lg hover:shadow-[#FF6B35]/35"

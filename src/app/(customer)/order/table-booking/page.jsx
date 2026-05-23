@@ -183,7 +183,7 @@ export default function TableBookingPage() {
 
             <div className="mt-7 flex gap-3">
               <button type="button" onClick={reset}
-                className="flex-1 rounded-full border border-gray-200 py-3 text-sm font-semibold text-gray-600 hover:border-[#FF6B35]/30">
+                className="flex-1 cursor-pointer rounded-full border border-gray-200 py-3 text-sm font-semibold text-gray-600 hover:border-[#FF6B35]/30">
                 Book Another
               </button>
               <Link href={link("/order/menu")}
@@ -275,7 +275,7 @@ export default function TableBookingPage() {
               </div>
               <motion.button whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.98 }}
                 type="button" disabled={!step1Valid} onClick={() => setStep(2)}
-                className="mt-6 flex w-full items-center justify-center gap-2 rounded-full gradient-primary py-3.5 text-sm font-bold text-white shadow-lg shadow-[#FF6B35]/25 disabled:cursor-not-allowed disabled:opacity-40">
+                className="mt-6 cursor-pointer flex w-full items-center justify-center gap-2 rounded-full gradient-primary py-3.5 text-sm font-bold text-white shadow-lg shadow-[#FF6B35]/25 disabled:cursor-not-allowed disabled:opacity-40">
                 Next: Choose Area <ChevronRight className="size-4" />
               </motion.button>
             </motion.div>
@@ -307,7 +307,7 @@ export default function TableBookingPage() {
                         initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
                         whileHover={{ y: -4 }} whileTap={{ scale: 0.97 }}
                         onClick={() => { setSelectedCatId(cat.id); setSelectedTable(null); }}
-                        className={`flex flex-col overflow-hidden rounded-2xl border-2 text-left transition-all duration-200 ${
+                        className={`flex cursor-pointer flex-col overflow-hidden rounded-2xl border-2 text-left transition-all duration-200 ${
                           isActive ? "border-[#FF6B35] shadow-lg shadow-[#FF6B35]/15" : "border-gray-100 bg-white hover:border-[#FF6B35]/30 hover:shadow-md"
                         }`}>
                         {imageUrl ? (
@@ -334,12 +334,12 @@ export default function TableBookingPage() {
               )}
               <div className="mt-6 flex gap-3">
                 <button type="button" onClick={() => setStep(1)}
-                  className="flex items-center gap-1.5 rounded-full border border-gray-200 px-5 py-2.5 text-sm font-semibold text-gray-500 hover:border-[#FF6B35]/30">
+                  className="flex cursor-pointer items-center gap-1.5 rounded-full border border-gray-200 px-5 py-2.5 text-sm font-semibold text-gray-500 hover:border-[#FF6B35]/30">
                   <ChevronLeft className="size-4" /> Back
                 </button>
                 <motion.button whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.98 }}
                   type="button" disabled={!selectedCatId} onClick={() => setStep(3)}
-                  className="flex flex-1 items-center justify-center gap-2 rounded-full gradient-primary py-2.5 text-sm font-bold text-white shadow-lg shadow-[#FF6B35]/20 disabled:cursor-not-allowed disabled:opacity-40">
+                  className="flex cursor-pointer flex-1 items-center justify-center gap-2 rounded-full gradient-primary py-2.5 text-sm font-bold text-white shadow-lg shadow-[#FF6B35]/20 disabled:cursor-not-allowed disabled:opacity-40">
                   Next: Pick Table <ChevronRight className="size-4" />
                 </motion.button>
               </div>
@@ -358,7 +358,7 @@ export default function TableBookingPage() {
                 <div className="flex flex-wrap gap-1.5">
                   {CUSTOMER_BOOKING_CAPACITY_FILTERS.map((f) => (
                     <button key={f.id} type="button" onClick={() => { setCapFilter(f.id); setSelectedTable(null); }}
-                      className={`rounded-full px-3 py-1.5 text-xs font-semibold transition-all ${
+                      className={`rounded-full cursor-pointer px-3 py-1.5 text-xs font-semibold transition-all ${
                         capFilter === f.id ? "gradient-primary text-white shadow-sm" : "border border-gray-200 bg-white text-gray-500 hover:border-[#FF6B35]/30"
                       }`}>
                       {f.label}
@@ -392,12 +392,12 @@ export default function TableBookingPage() {
               )}
               <div className="mt-6 flex gap-3">
                 <button type="button" onClick={() => setStep(2)}
-                  className="flex items-center gap-1.5 rounded-full border border-gray-200 px-5 py-2.5 text-sm font-semibold text-gray-500 hover:border-[#FF6B35]/30">
+                  className="flex cursor-pointer items-center gap-1.5 rounded-full border border-gray-200 px-5 py-2.5 text-sm font-semibold text-gray-500 hover:border-[#FF6B35]/30">
                   <ChevronLeft className="size-4" /> Back
                 </button>
                 <motion.button whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.98 }}
                   type="button" disabled={!selectedTable} onClick={() => setStep(4)}
-                  className="flex flex-1 items-center justify-center gap-2 rounded-full gradient-primary py-2.5 text-sm font-bold text-white shadow-lg shadow-[#FF6B35]/20 disabled:cursor-not-allowed disabled:opacity-40">
+                  className="flex cursor-pointer flex-1 items-center justify-center gap-2 rounded-full gradient-primary py-2.5 text-sm font-bold text-white shadow-lg shadow-[#FF6B35]/20 disabled:cursor-not-allowed disabled:opacity-40">
                   Review Booking <ChevronRight className="size-4" />
                 </motion.button>
               </div>
@@ -430,12 +430,12 @@ export default function TableBookingPage() {
               )}
               <div className="mt-6 flex gap-3">
                 <button type="button" onClick={() => { setStep(3); setConflictError(null); }}
-                  className="flex items-center gap-1.5 rounded-full border border-gray-200 px-5 py-3 text-sm font-semibold text-gray-500 hover:border-[#FF6B35]/30">
+                  className="flex cursor-pointer items-center gap-1.5 rounded-full border border-gray-200 px-5 py-3 text-sm font-semibold text-gray-500 hover:border-[#FF6B35]/30">
                   <ChevronLeft className="size-4" /> Back
                 </button>
                 <motion.button whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.98 }}
                   type="button" onClick={submit} disabled={loading}
-                  className="flex flex-1 items-center justify-center gap-2 rounded-full gradient-primary py-3 text-sm font-bold text-white shadow-lg shadow-[#FF6B35]/25 disabled:opacity-50">
+                  className="flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-full gradient-primary py-3 text-sm font-bold text-white shadow-lg shadow-[#FF6B35]/25 disabled:opacity-50">
                   {loading ? <><Loader2 className="size-4 animate-spin" /> Sending…</> : <><CheckCircle2 className="size-4" /> Confirm Booking</>}
                 </motion.button>
               </div>
