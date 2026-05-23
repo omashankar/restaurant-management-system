@@ -84,7 +84,7 @@ export default function CustomerNavbar() {
             )}
             <div className="h-3 w-px bg-gray-200" />
             <button type="button" onClick={() => setDark(v => !v)}
-              className="flex items-center gap-1 text-xs text-gray-500 hover:text-[#FF6B35] transition-colors">
+              className="flex cursor-pointer items-center gap-1 text-xs text-gray-500 hover:text-[#FF6B35] transition-colors">
               {dark ? <Sun className="size-3.5" /> : <Moon className="size-3.5" />}
               <span>{dark ? "Light" : "Dark"}</span>
             </button>
@@ -150,7 +150,7 @@ export default function CustomerNavbar() {
               whileTap={{ scale: 0.9 }}
               type="button"
               onClick={() => setSearchOpen(v => !v)}
-              className="flex size-9 items-center justify-center rounded-full text-gray-500 hover:bg-gray-100 hover:text-[#FF6B35] transition-colors"
+              className="flex cursor-pointer size-9 items-center justify-center rounded-full text-gray-500 hover:bg-gray-100 hover:text-[#FF6B35] transition-colors"
               aria-label="Search"
             >
               <Search className="size-4.5" />
@@ -160,7 +160,7 @@ export default function CustomerNavbar() {
             <motion.button
               whileTap={{ scale: 0.9 }}
               type="button"
-              className="hidden size-9 items-center justify-center rounded-full text-gray-500 hover:bg-gray-100 hover:text-[#FF6B35] transition-colors sm:flex"
+              className="hidden cursor-pointer size-9 items-center justify-center rounded-full text-gray-500 hover:bg-gray-100 hover:text-[#FF6B35] transition-colors sm:flex"
               aria-label="Wishlist"
             >
               <svg className="size-4.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8}>
@@ -173,7 +173,7 @@ export default function CustomerNavbar() {
               whileTap={{ scale: 0.9 }}
               type="button"
               onClick={() => setCartOpen(true)}
-              className="relative flex size-9 items-center justify-center rounded-full text-gray-500 hover:bg-gray-100 hover:text-[#FF6B35] transition-colors"
+              className="relative cursor-pointer flex size-9 items-center justify-center rounded-full text-gray-500 hover:bg-gray-100 hover:text-[#FF6B35] transition-colors"
               aria-label="Cart"
             >
               <ShoppingCart className="size-4.5" />
@@ -200,7 +200,7 @@ export default function CustomerNavbar() {
                   <UserRound className="size-4.5" />
                 </Link>
                 <button type="button" onClick={logoutCustomer}
-                  className="flex size-9 items-center justify-center rounded-full text-gray-400 hover:bg-red-50 hover:text-red-500 transition-colors"
+                  className="flex cursor-pointer size-9 items-center justify-center rounded-full text-gray-400 hover:bg-red-50 hover:text-red-500 transition-colors"
                   aria-label="Logout">
                   <LogOut className="size-4" />
                 </button>
@@ -219,7 +219,7 @@ export default function CustomerNavbar() {
               whileTap={{ scale: 0.97 }}
               type="button"
               onClick={() => setOrderTypeModalOpen(true)}
-              className="hidden rounded-full gradient-primary px-5 py-2 text-xs font-bold text-white shadow-sm shadow-[#FF6B35]/25 transition-all hover:shadow-md sm:inline-flex"
+              className="hidden rounded-full cursor-pointer gradient-primary px-5 py-2 text-xs font-bold text-white shadow-sm shadow-[#FF6B35]/25 transition-all hover:shadow-md sm:inline-flex"
             >
               Order Now
             </motion.button>
@@ -259,11 +259,11 @@ export default function CustomerNavbar() {
                   className="flex-1 bg-transparent text-sm text-gray-800 outline-none placeholder:text-gray-400"
                 />
                 <button type="submit"
-                  className="rounded-full gradient-primary px-4 py-1.5 text-xs font-bold text-white">
+                  className="rounded-full cursor-pointer gradient-primary px-4 py-1.5 text-xs font-bold text-white">
                   Search
                 </button>
                 <button type="button" onClick={() => setSearchOpen(false)}
-                  className="text-gray-400 hover:text-gray-600">
+                  className="text-gray-400 cursor-pointer hover:text-gray-600">
                   <X className="size-4" />
                 </button>
               </form>

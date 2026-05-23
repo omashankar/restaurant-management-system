@@ -157,7 +157,7 @@ export default function CustomerDashboardPage() {
             whileTap={{ scale: 0.95 }}
             type="button"
             onClick={async () => { await logoutCustomer(); router.push(link("/account/login")); }}
-            className="flex items-center gap-1.5 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm font-medium text-red-600 transition-colors hover:bg-red-100"
+            className="flex cursor-pointer items-center gap-1.5 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm font-medium text-red-600 transition-colors hover:bg-red-100"
           >
             <LogOut className="size-4" /> Log out
           </motion.button>
@@ -187,7 +187,7 @@ export default function CustomerDashboardPage() {
             whileTap={{ scale: 0.95 }}
             type="button"
             onClick={() => setActiveTab(tab.id)}
-            className={`flex shrink-0 items-center gap-1.5 rounded-xl px-4 py-2 text-xs font-semibold transition-all ${
+            className={`flex cursor-pointer shrink-0 items-center gap-1.5 rounded-xl px-4 py-2 text-xs font-semibold transition-all ${
               activeTab === tab.id
                 ? "gradient-primary text-white shadow-md shadow-[#FF6B35]/20"
                 : "border border-[#FFE4D6] bg-white text-[#6B7280] hover:border-[#FF6B35]/30"
@@ -345,7 +345,7 @@ export default function CustomerDashboardPage() {
                   <p className="text-xs text-[#6B7280]">Update your personal details</p>
                 </div>
                 <motion.button whileTap={{ scale: 0.95 }} type="button" onClick={() => setProfileOpen((v) => !v)}
-                  className="flex items-center gap-1.5 rounded-xl border border-[#FFE4D6] px-3 py-2 text-xs font-semibold text-[#FF6B35] transition-colors hover:bg-[#FF6B35]/8">
+                  className="flex cursor-pointer items-center gap-1.5 rounded-xl border border-[#FFE4D6] px-3 py-2 text-xs font-semibold text-[#FF6B35] transition-colors hover:bg-[#FF6B35]/8">
                   <Edit3 className="size-3.5" /> {profileOpen ? "Cancel" : "Edit"}
                 </motion.button>
               </div>

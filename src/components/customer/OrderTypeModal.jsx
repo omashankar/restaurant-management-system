@@ -91,7 +91,7 @@ export default function OrderTypeModal() {
                   whileTap={{ scale: 0.9 }}
                   type="button"
                   onClick={() => setOrderTypeModalOpen(false)}
-                  className="flex size-9 items-center justify-center rounded-xl border border-[#FFE4D6] text-[#6B7280] transition-colors hover:bg-[#FFF8F3]"
+                  className="flex cursor-pointer size-9 items-center justify-center rounded-xl border border-[#FFE4D6] text-[#6B7280] transition-colors hover:bg-[#FFF8F3]"
                 >
                   <X className="size-5" />
                 </motion.button>
@@ -112,7 +112,7 @@ export default function OrderTypeModal() {
                     whileTap={{ scale: 0.98 }}
                     type="button"
                     onClick={() => choose(id)}
-                    className={`flex w-full items-center gap-4 rounded-2xl border-2 p-4 text-left transition-all duration-200 ${
+                    className={`flex cursor-pointer w-full items-center gap-4 rounded-2xl border-2 p-4 text-left transition-all duration-200 ${
                       isSelected ? active : `border-[#FFE4D6] bg-white hover:border-[#FF6B35]/30 hover:bg-[#FFF8F3]`
                     }`}
                   >
