@@ -1,8 +1,11 @@
-﻿"use client";
+"use client";
 
 import InputField from "@/components/settings/InputField";
+import RestaurantLogoField from "@/components/settings/RestaurantLogoField";
 import SettingsFormSection from "@/components/settings/SettingsFormSection";
 import SettingsSidebar from "@/components/settings/SettingsSidebar";
+import { invalidateRestaurantBrandingCache } from "@/hooks/useRestaurantBranding";
+import { invalidateRestaurantInfoCache } from "@/hooks/useRestaurantInfo";
 import TimePicker from "@/components/settings/TimePicker";
 import ToggleSwitch from "@/components/settings/ToggleSwitch";
 import GatewaySettingsSection from "@/components/payment-settings/GatewaySettingsSection";
@@ -21,7 +24,7 @@ import {
   normalizeAccessControl,
 } from "@/config/accessControlConfig";
 import { useUser } from "@/context/AuthContext";
-import { CheckCircle2, Loader2, Mail, Upload, XCircle } from "lucide-react";
+import { CheckCircle2, Loader2, Mail, XCircle } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 
 const PAYMENT_TABS = ["payments","billing"];
@@ -143,7 +146,12 @@ export default function SettingsPage() {
         body: JSON.stringify(settings),
       });
       const data = await res.json();
-      if (data.success) { setSavedSnapshot(settings); showToast("success", "Settings saved successfully."); }
+      if (data.success) {
+        setSavedSnapshot(settings);
+        invalidateRestaurantInfoCache();
+        invalidateRestaurantBrandingCache();
+        showToast("success", "Settings saved successfully.");
+      }
       else showToast("error", data.error || "Failed to save settings.");
     } catch { showToast("error", "Network error. Please try again."); }
     finally { setIsSaving(false); }
@@ -218,15 +226,11 @@ export default function SettingsPage() {
                 <div className="grid gap-4 md:grid-cols-2">
                   <InputField label="Restaurant Name" value={settings.general.restaurantName}
                     onChange={(v) => setSettings((p) => ({ ...p, general: { ...p.general, restaurantName: v } }))} />
-                  <div>
-                    <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-zinc-500">Logo Upload</label>
-                    <label className="flex cursor-pointer items-center gap-2 rounded-xl border border-zinc-800 bg-zinc-950/80 px-3 py-2.5 text-sm text-zinc-300 hover:border-zinc-700">
-                      <Upload className="size-4 text-zinc-400" />
-                      <span>{settings.general.logoName || "Choose logo file"}</span>
-                      <input type="file" className="hidden" accept="image/*"
-                        onChange={(e) => setSettings((p) => ({ ...p, general: { ...p.general, logoName: e.target.files?.[0]?.name || "" } }))} />
-                    </label>
-                  </div>
+                  <RestaurantLogoField
+                    logoUrl={settings.general.logoUrl ?? ""}
+                    onChange={(v) => setSettings((p) => ({ ...p, general: { ...p.general, logoUrl: v } }))}
+                    disabled={isSaving}
+                  />
                   <InputField label="Currency" value={settings.general.currency} options={CURRENCY_OPTIONS}
                     onChange={(v) => setSettings((p) => ({ ...p, general: { ...p.general, currency: v } }))} />
                   <InputField label="Timezone" value={settings.general.timezone} options={TIMEZONE_OPTIONS}

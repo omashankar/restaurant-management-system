@@ -50,13 +50,13 @@ export const CUSTOMER_HOME_REVIEWS = [
 ];
 
 export const CUSTOMER_HOME_CATEGORIES = [
-  { label: "Starters",    image: "https://images.unsplash.com/photo-1541014741259-de529411b96a?w=120&q=80" },
-  { label: "Main Course", image: "https://images.unsplash.com/photo-1574484284002-952d92456975?w=120&q=80" },
-  { label: "Beverages",   image: "https://images.unsplash.com/photo-1544145945-f90425340c7e?w=120&q=80" },
-  { label: "Desserts",    image: "https://images.unsplash.com/photo-1551024506-0bccd828d307?w=120&q=80" },
-  { label: "Burgers",     image: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=120&q=80" },
-  { label: "Pizza",       image: "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=120&q=80" },
-  { label: "Salads",      image: "https://images.unsplash.com/photo-1540189549336-e6e99c3679fe?w=120&q=80" },
+  { label: "Starters",    image: "https://images.unsplash.com/photo-1541014741259-de529411b96a?w=480&q=85&fit=crop" },
+  { label: "Main Course", image: "https://images.unsplash.com/photo-1574484284002-952d92456975?w=480&q=85&fit=crop" },
+  { label: "Beverages",   image: "https://images.unsplash.com/photo-1544145945-f90425340c7e?w=480&q=85&fit=crop" },
+  { label: "Desserts",    image: "https://images.unsplash.com/photo-1551024506-0bccd828d307?w=480&q=85&fit=crop" },
+  { label: "Burgers",     image: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=480&q=85&fit=crop" },
+  { label: "Pizza",       image: "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=480&q=85&fit=crop" },
+  { label: "Salads",      image: "https://images.unsplash.com/photo-1540189549336-e6e99c3679fe?w=480&q=85&fit=crop" },
 ];
 
 export const CUSTOMER_ORDER_TYPES = [

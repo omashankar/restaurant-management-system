@@ -61,7 +61,7 @@ function mapPlansToLandingPricing(plans = []) {
         ? normalizedPrice
         : Number((normalizedPrice * 12).toFixed(2)));
     return {
-      id: plan.slug || String(plan._id),
+      id: plan._id ? String(plan._id) : `${plan.slug ?? "plan"}-${index}`,
       order: index + 1,
       name: plan.name,
       slug: plan.slug,

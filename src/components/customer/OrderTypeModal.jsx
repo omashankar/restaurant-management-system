@@ -12,11 +12,11 @@ const TYPES = [
     label: "Dine-In",
     desc: "Eat at our restaurant",
     Icon: Store,
-    gradient: "from-orange-400 to-[#FF6B35]",
+    gradient: "from-orange-400 to-customer-primary",
     bg: "bg-orange-50",
     border: "border-orange-200",
-    active: "border-[#FF6B35] bg-[#FF6B35]/5",
-    dot: "bg-[#FF6B35]",
+    active: "border-customer-primary bg-customer-primary/5",
+    dot: "bg-customer-primary",
   },
   {
     id: "takeaway",
@@ -80,10 +80,10 @@ export default function OrderTypeModal() {
               <div className="pointer-events-none absolute inset-0 gradient-primary opacity-5" />
               <div className="flex items-start justify-between">
                 <div>
-                  <h2 className="font-poppins text-xl font-bold text-[#111827]">
+                  <h2 className="font-poppins text-xl font-bold text-customer-text">
                     How would you like to order?
                   </h2>
-                  <p className="mt-1 text-sm text-[#6B7280]">
+                  <p className="mt-1 text-sm text-customer-muted">
                     Choose your preferred dining style
                   </p>
                 </div>
@@ -91,7 +91,7 @@ export default function OrderTypeModal() {
                   whileTap={{ scale: 0.9 }}
                   type="button"
                   onClick={() => setOrderTypeModalOpen(false)}
-                  className="flex cursor-pointer size-9 items-center justify-center rounded-xl border border-[#FFE4D6] text-[#6B7280] transition-colors hover:bg-[#FFF8F3]"
+                  className="flex cursor-pointer size-9 items-center justify-center rounded-xl border border-customer-border text-customer-muted transition-colors hover:bg-customer-cream"
                 >
                   <X className="size-5" />
                 </motion.button>
@@ -113,7 +113,7 @@ export default function OrderTypeModal() {
                     type="button"
                     onClick={() => choose(id)}
                     className={`flex cursor-pointer w-full items-center gap-4 rounded-2xl border-2 p-4 text-left transition-all duration-200 ${
-                      isSelected ? active : `border-[#FFE4D6] bg-white hover:border-[#FF6B35]/30 hover:bg-[#FFF8F3]`
+                      isSelected ? active : `border-customer-border bg-white hover:border-customer-primary/30 hover:bg-customer-cream`
                     }`}
                   >
                     {/* Icon */}
@@ -123,8 +123,8 @@ export default function OrderTypeModal() {
 
                     {/* Text */}
                     <div className="flex-1">
-                      <p className="font-poppins font-semibold text-[#111827]">{label}</p>
-                      <p className="text-xs text-[#6B7280]">{desc}</p>
+                      <p className="font-poppins font-semibold text-customer-text">{label}</p>
+                      <p className="text-xs text-customer-muted">{desc}</p>
                     </div>
 
                     {/* Check */}

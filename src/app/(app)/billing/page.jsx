@@ -272,9 +272,10 @@ export default function BillingPage() {
           {plans.map((plan, idx) => {
             const isCurrent = plan.slug === currentPlanSlug;
             const amount = billingCycle === "yearly" ? plan.yearlyPrice : plan.monthlyPrice;
+            const planKey = plan.id ?? plan.slug ?? `plan-${idx}`;
             return (
               <div
-                key={plan.id}
+                key={planKey}
                 className={`rounded-2xl border p-5 ${PLAN_COLORS[idx % PLAN_COLORS.length]} ${isCurrent ? "ring-1 ring-emerald-500/30" : ""}`}
               >
                 <div className="flex items-start justify-between gap-2">

@@ -6,6 +6,7 @@
 
 import clientPromise from "@/lib/mongodb";
 import { getRestaurantIdFromRequest } from "@/lib/restaurantResolver";
+import { DEFAULTS } from "@/lib/restaurantCmsDefaults";
 import { getRestaurantCmsContent } from "@/lib/restaurantCmsService";
 
 export async function GET(request) {
@@ -14,7 +15,6 @@ export async function GET(request) {
     const db = client.db();
     const restaurantId = await getRestaurantIdFromRequest(db, request);
     if (!restaurantId) {
-      const { DEFAULTS } = await import("@/lib/restaurantCmsService");
       return Response.json({ success: true, content: DEFAULTS });
     }
     const { content } = await getRestaurantCmsContent(restaurantId);
@@ -23,7 +23,6 @@ export async function GET(request) {
     });
   } catch (err) {
     console.error("customer.restaurant-cms.GET failed:", err.message);
-    const { DEFAULTS } = await import("@/lib/restaurantCmsService");
     return Response.json({ success: true, content: DEFAULTS });
   }
 }

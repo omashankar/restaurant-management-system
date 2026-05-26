@@ -272,11 +272,11 @@ export default function BillingPage() {
                 <p className="text-sm text-zinc-600">No data.</p>
               ) : (
                 <div className="space-y-3">
-                  {billing.planBreakdown.map((p) => {
+                  {billing.planBreakdown.map((p, planIdx) => {
                     const total = billing.overview?.totalRestaurants || 1;
                     const pct   = Math.round((p.count / total) * 100);
                     return (
-                      <div key={p.plan}>
+                      <div key={`plan-dist-${p.plan}-${planIdx}`}>
                         <div className="flex items-center justify-between mb-1.5">
                           <span className={"inline-flex rounded-full px-2 py-0.5 text-xs font-semibold capitalize ring-1 " + (PLAN_BADGE[p.plan] ?? PLAN_BADGE.free)}>
                             {p.plan}

@@ -1,42 +1,94 @@
 "use client";
 
+import { useCheckoutMeta } from "@/hooks/useCheckoutMeta";
 import { useRestaurantSlug } from "@/hooks/useRestaurantSlug";
+import RestaurantLogo from "@/components/customer/RestaurantLogo";
 import { motion } from "framer-motion";
-import { CheckCircle2, ChefHat, Clock, Home, Package, ShoppingBag, Truck, UtensilsCrossed } from "lucide-react";
+import {
+  CheckCircle2,
+  ChefHat,
+  Clock,
+  Home,
+  Loader2,
+  Package,
+  ShoppingBag,
+  Truck,
+  UtensilsCrossed,
+} from "lucide-react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { Suspense } from "react";
+import { Suspense, useEffect, useState } from "react";
 
 const ORDER_STEPS = [
-  { icon: CheckCircle2, label: "Confirmed",  desc: "Order received" },
-  { icon: ChefHat,      label: "Preparing",  desc: "Kitchen is cooking" },
-  { icon: Package,      label: "Ready",      desc: "Almost there" },
-  { icon: Truck,        label: "On the way", desc: "Out for delivery" },
+  { icon: CheckCircle2, label: "Confirmed", desc: "Order received" },
+  { icon: ChefHat, label: "Preparing", desc: "Kitchen is cooking" },
+  { icon: Package, label: "Ready", desc: "Ready to serve" },
+  { icon: Truck, label: "Done", desc: "Completed" },
 ];
 
+const STEP_INDEX = {
+  pending: 0,
+  preparing: 1,
+  ready: 2,
+  completed: 3,
+  cancelled: -1,
+};
+
 function SuccessContent() {
-  const params  = useSearchParams();
-  const orderId = params.get("id") ?? "ORD-XXXX";
+  const params = useSearchParams();
+  const orderId = params.get("id") ?? "";
   const { link } = useRestaurantSlug();
+  const { meta } = useCheckoutMeta();
+  const [tracked, setTracked] = useState(null);
+  const [loading, setLoading] = useState(Boolean(orderId));
+
+  useEffect(() => {
+    if (!orderId) {
+      setLoading(false);
+      return undefined;
+    }
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch(
+          `/api/customer/orders/track?orderId=${encodeURIComponent(orderId)}`,
+          { cache: "no-store" }
+        );
+        const data = await res.json();
+        if (!cancelled && data?.success && data.order) setTracked(data.order);
+      } catch {
+        /* keep fallback UI */
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [orderId]);
+
+  const displayId = tracked?.orderId || orderId || "—";
+  const etaLabel =
+    tracked?.etaLabel ??
+    meta.etaMinutes?.[tracked?.orderType ?? "takeaway"] ??
+    meta.etaMinutes?.takeaway ??
+    "20-30";
+  const activeStep = tracked?.statusKey
+    ? STEP_INDEX[tracked.statusKey] ?? 0
+    : 0;
 
   return (
-    <div className="bg-gray-50 min-h-screen">
-
-      {/* ══ TOP CONFETTI BAR ══ */}
+    <div className="ct-page-shell">
       <div className="h-1.5 w-full gradient-primary" />
 
       <div className="mx-auto max-w-lg px-4 py-14 sm:px-6">
-
-        {/* ── Success card ── */}
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, ease: "easeOut" }}
-          className="rounded-3xl bg-white shadow-xl shadow-black/5 overflow-hidden"
+          className="overflow-hidden ct-surface-card rounded-3xl shadow-xl shadow-black/5"
         >
-          {/* Green top section */}
           <div className="bg-gradient-to-br from-green-50 to-emerald-50 px-8 py-10 text-center">
-            {/* Animated checkmark */}
             <motion.div
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
@@ -55,78 +107,103 @@ function SuccessContent() {
                 initial={{ scale: 0, rotate: -20 }}
                 animate={{ scale: 1, rotate: 0 }}
                 transition={{ delay: 0.5, type: "spring" }}
-                className="absolute -right-1 -top-1 flex size-9 items-center justify-center rounded-full gradient-primary shadow-lg shadow-[#FF6B35]/30"
+                className="absolute -right-1 -top-1 flex size-9 items-center justify-center rounded-full gradient-primary shadow-lg shadow-[var(--customer-primary-shadow)]/30"
               >
                 <ShoppingBag className="size-4 text-white" />
               </motion.div>
             </motion.div>
 
-            <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
-              <h1 className="font-poppins text-3xl font-black text-[#111827]">Order Placed!</h1>
-              <p className="mt-2 text-sm text-gray-500">
-                Your order has been received and is being prepared with love.
+            <motion.div
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+            >
+              <h1 className="font-poppins text-3xl font-black text-customer-text">Order Placed!</h1>
+              <p className="mt-2 text-sm text-customer-muted">
+                {tracked?.statusLabel
+                  ? `Status: ${tracked.statusEmoji ?? ""} ${tracked.statusLabel}`
+                  : "Your order has been received and is being prepared."}
               </p>
             </motion.div>
           </div>
 
-          <div className="px-8 py-7 space-y-5">
-
-            {/* Order ID */}
-            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}
-              className="flex items-center justify-between rounded-2xl bg-gray-50 px-5 py-4">
+          <div className="space-y-5 px-8 py-7">
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.4 }}
+              className="flex items-center justify-between rounded-2xl bg-[var(--customer-cream)] px-5 py-4"
+            >
               <div>
-                <p className="text-xs font-bold uppercase tracking-widest text-gray-400">Order ID</p>
-                <p className="mt-0.5 font-poppins text-xl font-black text-[#FF6B35]">{orderId}</p>
+                <p className="text-xs font-bold uppercase tracking-widest text-customer-muted">Order ID</p>
+                <p className="mt-0.5 font-poppins text-xl font-black text-customer-primary">
+                  {loading ? "…" : displayId}
+                </p>
               </div>
-              <div className="flex size-12 items-center justify-center rounded-2xl bg-[#FF6B35]/10">
-                <UtensilsCrossed className="size-6 text-[#FF6B35]" />
+              <div className="flex size-12 items-center justify-center rounded-2xl bg-customer-primary/10">
+                {loading ? (
+                  <Loader2 className="size-6 animate-spin text-customer-primary" />
+                ) : (
+                  <RestaurantLogo size="sm" imageOnly />
+                )}
               </div>
             </motion.div>
 
-            {/* Est. time */}
-            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.45 }}
-              className="flex items-center gap-3 rounded-2xl bg-amber-50 px-5 py-3.5">
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.45 }}
+              className="flex items-center gap-3 rounded-2xl bg-amber-50 px-5 py-3.5"
+            >
               <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-amber-100">
                 <Clock className="size-5 text-amber-600" />
               </div>
               <div>
                 <p className="text-xs font-bold text-amber-700">Estimated Time</p>
-                <p className="text-sm font-black text-amber-900">20 – 30 minutes</p>
+                <p className="text-sm font-black text-amber-900">{etaLabel} minutes</p>
               </div>
             </motion.div>
 
-            {/* Order progress steps */}
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.55 }}>
-              <p className="mb-4 text-xs font-bold uppercase tracking-widest text-gray-400">Order Progress</p>
+              <p className="mb-4 text-xs font-bold uppercase tracking-widest text-customer-muted">
+                Order Progress
+              </p>
               <div className="flex items-start justify-between">
                 {ORDER_STEPS.map((s, i) => {
                   const Icon = s.icon;
-                  const isFirst = i === 0;
+                  const done = i <= activeStep;
                   return (
                     <div key={s.label} className="flex flex-1 flex-col items-center gap-1.5">
-                      {/* Icon + line */}
                       <div className="flex w-full items-center">
                         {i > 0 && (
-                          <div className={`h-0.5 flex-1 ${isFirst ? "gradient-primary" : "bg-gray-200"}`} />
+                          <div
+                            className={`h-0.5 flex-1 ${i <= activeStep ? "gradient-primary" : "bg-[var(--customer-border)]"}`}
+                          />
                         )}
                         <motion.div
                           initial={{ scale: 0 }}
                           animate={{ scale: 1 }}
                           transition={{ delay: 0.6 + i * 0.1, type: "spring" }}
                           className={`flex size-10 shrink-0 items-center justify-center rounded-full ${
-                            isFirst
-                              ? "gradient-primary shadow-md shadow-[#FF6B35]/25"
-                              : "border-2 border-gray-200 bg-white"
+                            done
+                              ? "gradient-primary shadow-md shadow-[var(--customer-primary-shadow)]/25"
+                              : "border-2 border-customer-border bg-white"
                           }`}
                         >
-                          <Icon className={`size-4 ${isFirst ? "text-white" : "text-gray-300"}`} strokeWidth={1.8} />
+                          <Icon
+                            className={`size-4 ${done ? "text-white" : "text-customer-muted"}`}
+                            strokeWidth={1.8}
+                          />
                         </motion.div>
                         {i < ORDER_STEPS.length - 1 && (
-                          <div className="h-0.5 flex-1 bg-gray-200" />
+                          <div
+                            className={`h-0.5 flex-1 ${i < activeStep ? "gradient-primary" : "bg-[var(--customer-border)]"}`}
+                          />
                         )}
                       </div>
-                      {/* Label */}
-                      <p className={`text-center text-[10px] font-bold ${isFirst ? "text-[#FF6B35]" : "text-gray-300"}`}>
+                      <p
+                        className={`text-center text-[10px] font-bold ${done ? "text-customer-primary" : "text-customer-muted"}`}
+                      >
                         {s.label}
                       </p>
                     </div>
@@ -135,34 +212,45 @@ function SuccessContent() {
               </div>
             </motion.div>
 
-            {/* Actions */}
-            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.75 }}
-              className="flex flex-col gap-3 pt-2">
-              <Link href={link("/order/menu")}
-                className="flex items-center justify-center gap-2 rounded-full gradient-primary py-3.5 text-sm font-bold text-white shadow-lg shadow-[#FF6B35]/25 transition-all hover:scale-[1.02] hover:shadow-xl">
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.75 }}
+              className="flex flex-col gap-3 pt-2"
+            >
+              <Link
+                href={link("/account/dashboard")}
+                className="flex items-center justify-center gap-2 rounded-full border border-customer-border bg-white py-3 text-sm font-semibold text-customer-muted transition-all hover:border-customer-primary/30 hover:text-customer-text"
+              >
+                Track in My Account
+              </Link>
+              <Link
+                href={link("/order/menu")}
+                className="flex items-center justify-center gap-2 rounded-full gradient-primary py-3.5 text-sm font-bold text-white shadow-lg shadow-[var(--customer-primary-shadow)]/25 transition-all hover:scale-[1.02] hover:shadow-xl"
+              >
                 <UtensilsCrossed className="size-4" /> Order Again
               </Link>
-              <Link href={link("/home")}
-                className="flex items-center justify-center gap-2 rounded-full border border-gray-200 bg-white py-3 text-sm font-semibold text-gray-600 transition-all hover:border-[#FF6B35]/30 hover:text-[#111827]">
+              <Link
+                href={link("/home")}
+                className="flex items-center justify-center gap-2 rounded-full border border-customer-border bg-white py-3 text-sm font-semibold text-customer-muted transition-all hover:border-customer-primary/30 hover:text-customer-text"
+              >
                 <Home className="size-4" /> Back to Home
               </Link>
             </motion.div>
           </div>
         </motion.div>
 
-        {/* ── Bottom tip ── */}
         <motion.p
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.9 }}
-          className="mt-6 text-center text-xs text-gray-400"
+          className="mt-6 text-center text-xs text-customer-muted"
         >
-          Questions? Contact us at{" "}
-          <Link href={link("/order/contact")} className="font-semibold text-[#FF6B35] hover:underline">
-            our support page
+          Questions?{" "}
+          <Link href={link("/order/contact")} className="font-semibold text-customer-primary hover:underline">
+            Contact support
           </Link>
         </motion.p>
-
       </div>
     </div>
   );
@@ -170,11 +258,13 @@ function SuccessContent() {
 
 export default function SuccessPage() {
   return (
-    <Suspense fallback={
-      <div className="flex min-h-screen items-center justify-center bg-gray-50">
-        <div className="skeleton size-24 rounded-full" />
-      </div>
-    }>
+    <Suspense
+      fallback={
+        <div className="ct-page-shell flex min-h-screen items-center justify-center">
+          <Loader2 className="size-10 animate-spin text-customer-primary" />
+        </div>
+      }
+    >
       <SuccessContent />
     </Suspense>
   );

@@ -46,7 +46,10 @@ export async function GET(request) {
                  || "";
 
     const email   = settingsDoc?.contact?.email?.trim() || "";
-    const logoUrl = restaurantDoc?.logoUrl ?? null;
+    const logoUrl =
+      restaurantDoc?.logoUrl?.trim() ||
+      settingsDoc?.general?.logoUrl?.trim() ||
+      null;
     const slug    = restaurantDoc?.slug ?? null;
     const currency = settingsDoc?.general?.currency || "USD";
 

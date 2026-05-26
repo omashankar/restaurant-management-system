@@ -4,7 +4,9 @@ import StripePaymentModal from "@/components/payments/StripePaymentModal";
 import Modal from "@/components/ui/Modal";
 import { useCustomer } from "@/context/CustomerContext";
 import { useRestaurantSlug } from "@/hooks/useRestaurantSlug";
+import { calcOrderTotals, useCheckoutMeta } from "@/hooks/useCheckoutMeta";
 import { formatCustomerMoney } from "@/lib/customerCurrency";
+import { customerClasses, customerPage, customerType } from "@/lib/customerTheme";
 import { motion, AnimatePresence } from "framer-motion";
 import { Bike, ConciergeBell, Loader2, Phone, Store, ShoppingBag } from "lucide-react";
 import Link from "next/link";
@@ -28,7 +30,7 @@ const PAYMENT_LABEL = {
 function Field({ label, required, children }) {
   return (
     <div>
-      <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-[#6B7280]">
+      <label className={customerPage.label}>
         {label}{required && <span className="ml-0.5 text-red-400">*</span>}
       </label>
       {children}
@@ -36,7 +38,7 @@ function Field({ label, required, children }) {
   );
 }
 
-const inputCls = "w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-800 outline-none transition-all focus:border-[#FF6B35]/40 focus:bg-white focus:ring-2 focus:ring-[#FF6B35]/10 placeholder:text-gray-400";
+const inputCls = customerClasses.field;
 
 export default function CheckoutPage() {
   const {
@@ -56,24 +58,7 @@ export default function CheckoutPage() {
   const [paying, setPaying] = useState(false);
   const [stripeCheckout, setStripeCheckout] = useState(null);
   const [notes, setNotes] = useState("");
-  const [checkoutMeta, setCheckoutMeta] = useState({
-    taxPercentage: 8,
-    deliveryCharge: 0,
-    onlinePaymentsAvailable: false,
-    paymentMethods: {
-      defaultMethod: "cod",
-      cod: true,
-      cashCounter: true,
-      upi: true,
-      card: true,
-      netBanking: true,
-      wallet: true,
-      payLater: false,
-      bankTransfer: false,
-    },
-    etaMinutes: { "dine-in": "15-20", takeaway: "20-30", delivery: "30-45" },
-    coupons: [],
-  });
+  const { meta: checkoutMeta } = useCheckoutMeta();
   const [paymentMethod, setPaymentMethod] = useState("cod");
   const [couponCode, setCouponCode] = useState("");
   const [appliedCoupon, setAppliedCoupon] = useState(null);
@@ -88,10 +73,6 @@ export default function CheckoutPage() {
   const otpRefs = useRef([]);
 
   const { lines, subtotal, clearCart } = cart;
-  const taxRate = Number(checkoutMeta.taxPercentage ?? 8);
-  const deliveryCharge =
-    orderType === "delivery" ? Number(checkoutMeta.deliveryCharge ?? 0) : 0;
-  const tax = subtotal * (taxRate / 100);
   const couponDiscount = useMemo(() => {
     if (!appliedCoupon) return 0;
     if (appliedCoupon.type === "percent") {
@@ -101,7 +82,13 @@ export default function CheckoutPage() {
     }
     return Number(appliedCoupon.value ?? 0);
   }, [appliedCoupon, subtotal]);
-  const total = Math.max(0, subtotal + tax + deliveryCharge - couponDiscount);
+  const { tax, delivery: deliveryCharge, total, taxRate } = calcOrderTotals({
+    subtotal,
+    orderType,
+    taxPercentage: checkoutMeta.taxPercentage,
+    deliveryCharge: checkoutMeta.deliveryCharge,
+    couponDiscount,
+  });
   const etaLabel = checkoutMeta.etaMinutes?.[orderType] ?? "20-30";
   const enabledPaymentMethods = useMemo(() => {
     const pm = checkoutMeta.paymentMethods ?? {};
@@ -144,24 +131,6 @@ export default function CheckoutPage() {
     }
   }, [lines.length, router, link]);
 
-  useEffect(() => {
-    let mounted = true;
-    async function loadCheckoutMeta() {
-      try {
-        const res = await fetch("/api/customer/checkout-meta", { cache: "no-store" });
-        const data = await res.json();
-        if (!mounted || !res.ok || !data?.success || !data.meta) return;
-        setCheckoutMeta((prev) => ({ ...prev, ...data.meta }));
-      } catch {
-        // keep defaults
-      }
-    }
-    loadCheckoutMeta();
-    return () => {
-      mounted = false;
-    };
-  }, []);
-
   /** Keep selected method valid after checkout-meta loads (e.g. online methods off without gateway). */
   useEffect(() => {
     const pm = checkoutMeta.paymentMethods ?? {};
@@ -189,19 +158,19 @@ export default function CheckoutPage() {
         animate={{ opacity: 1, scale: 1 }}
         className="flex min-h-[60vh] flex-col items-center justify-center gap-5 px-4 text-center"
       >
-        <div className="flex size-20 items-center justify-center rounded-3xl bg-[#FFF8F3]">
-          <ShoppingBag className="size-10 text-[#FF6B35]/40" />
+        <div className="flex size-20 items-center justify-center rounded-3xl bg-customer-cream">
+          <ShoppingBag className="size-10 text-customer-primary/40" />
         </div>
         <div>
-          <p className="font-poppins text-lg font-bold text-[#111827]">No Order Type Selected</p>
-          <p className="mt-1 text-sm text-[#6B7280]">Please select how you&apos;d like to order first.</p>
+          <p className="font-poppins text-lg font-bold text-customer-text">No Order Type Selected</p>
+          <p className="mt-1 text-sm text-customer-muted">Please select how you&apos;d like to order first.</p>
         </div>
         <motion.button
           whileHover={{ scale: 1.03 }}
           whileTap={{ scale: 0.97 }}
           type="button"
           onClick={() => setOrderTypeModalOpen(true)}
-          className="rounded-xl gradient-primary px-7 py-3 text-sm font-bold text-white shadow-lg shadow-[#FF6B35]/25"
+          className="rounded-xl gradient-primary px-7 py-3 text-sm font-bold text-white shadow-lg shadow-[var(--customer-primary-shadow)]/25"
         >
           Select Order Type
         </motion.button>
@@ -306,7 +275,7 @@ export default function CheckoutPage() {
               showToast("Payment cancelled.", "error");
             },
           },
-          theme: { color: "#FF6B35" },
+          theme: { color: "var(--customer-primary)" },
         };
         const rz = new window.Razorpay(options);
         rz.on("payment.failed", () => {
@@ -441,16 +410,16 @@ export default function CheckoutPage() {
   };
 
   return (
-    <div className="bg-gray-50 min-h-screen">
+    <div className="ct-page-shell">
       {/* Hero */}
-      <div className="bg-white border-b border-gray-100">
+      <div className="ct-page-header">
         <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
-          <div className="flex items-center gap-3">
-            <Link href={link("/order/cart")} className="text-sm text-gray-400 transition-colors hover:text-[#FF6B35]">← Cart</Link>
-            <span className="text-gray-200">/</span>
-            <h1 className="font-poppins text-3xl font-black text-[#111827]">Checkout</h1>
+          <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1">
+            <Link href={link("/order/cart")} className="text-sm text-customer-muted transition-colors hover:text-customer-primary">← Cart</Link>
+            <span className="hidden text-customer-border sm:inline">/</span>
+            <h1 className={`${customerType.heroTitle} text-2xl sm:text-3xl`}>Checkout</h1>
           </div>
-          <p className="mt-1 text-sm text-gray-500">Complete your details to place order securely.</p>
+          <p className="mt-1 text-sm text-customer-muted">Complete your details to place order securely.</p>
         </div>
       </div>
 
@@ -465,7 +434,7 @@ export default function CheckoutPage() {
               className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3.5 text-sm text-amber-800">
               Login required to complete checkout.{" "}
               <button type="button" onClick={() => setIsAuthModalOpen(true)}
-                className="font-bold text-[#FF6B35] underline underline-offset-2 hover:text-[#E85A24]">
+                className="font-bold text-customer-primary underline underline-offset-2 hover:text-[#E85A24]">
                 Login with OTP
               </button>
             </motion.div>
@@ -473,22 +442,22 @@ export default function CheckoutPage() {
 
           {/* Order type */}
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
-            className="flex items-center justify-between rounded-2xl bg-white px-4 py-3.5 shadow-sm">
+            className="flex items-center justify-between ct-surface-card px-4 py-3.5 shadow-sm">
             <div className="flex items-center gap-2.5">
-              {TypeIcon && <TypeIcon className="size-4 text-[#FF6B35]" />}
-              <span className="font-poppins text-sm font-bold text-[#111827]">{TYPE_LABEL[orderType]}</span>
+              {TypeIcon && <TypeIcon className="size-4 text-customer-primary" />}
+              <span className="font-poppins text-sm font-bold text-customer-text">{TYPE_LABEL[orderType]}</span>
             </div>
             <button type="button" onClick={() => setOrderTypeModalOpen(true)}
-              className="rounded-full border border-gray-200 px-3.5 py-1.5 text-xs font-semibold text-gray-500 transition-colors hover:border-[#FF6B35]/30 hover:text-[#FF6B35]">
+              className="rounded-full border border-customer-border px-3.5 py-1.5 text-xs font-semibold text-customer-muted transition-colors hover:border-customer-primary/30 hover:text-customer-primary">
               Change
             </button>
           </motion.div>
 
           {/* Customer details */}
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}
-            className="rounded-3xl bg-white p-6 shadow-sm">
-            <h2 className="mb-1 font-poppins text-lg font-black text-[#111827]">Your Details</h2>
-            <p className="mb-5 text-xs text-gray-400">
+            className="ct-surface-card rounded-3xl p-6 shadow-sm">
+            <h2 className="mb-1 font-poppins text-lg font-black text-customer-text">Your Details</h2>
+            <p className="mb-5 text-xs text-customer-muted">
               <span className="text-red-400">*</span> Name required. Phone <strong>or</strong> Email required.
             </p>
             <div className="grid gap-4 sm:grid-cols-2">
@@ -542,16 +511,16 @@ export default function CheckoutPage() {
           </motion.div>
 
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
-            className="rounded-3xl bg-white p-6 shadow-sm">
-            <h2 className="mb-5 font-poppins text-lg font-black text-[#111827]">Payment Method</h2>
+            className="ct-surface-card rounded-3xl p-6 shadow-sm">
+            <h2 className="mb-5 font-poppins text-lg font-black text-customer-text">Payment Method</h2>
             <div className="grid gap-2 sm:grid-cols-2">
               {enabledPaymentMethods.map((methodKey) => (
                 <motion.button key={methodKey} whileTap={{ scale: 0.97 }} type="button"
                   onClick={() => setPaymentMethod(methodKey)}
                   className={`rounded-2xl border px-4 py-3 text-left text-sm font-semibold transition-all ${
                     paymentMethod === methodKey
-                      ? "border-[#FF6B35]/40 bg-[#FF6B35]/8 text-[#FF6B35] shadow-sm"
-                      : "border-gray-200 bg-white text-gray-600 hover:border-[#FF6B35]/30 hover:text-[#111827]"
+                      ? "border-customer-primary/40 bg-customer-primary/8 text-customer-primary shadow-sm"
+                      : "border-customer-border bg-white text-customer-muted hover:border-customer-primary/30 hover:text-customer-text"
                   }`}>
                   {PAYMENT_LABEL[methodKey] ?? methodKey}
                 </motion.button>
@@ -569,41 +538,41 @@ export default function CheckoutPage() {
         {/* ── Order summary ── */}
         <div className="lg:col-span-1">
           <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.25 }}
-            className="sticky top-24 rounded-3xl bg-white shadow-sm overflow-hidden">
+            className="ct-surface-card overflow-hidden rounded-3xl shadow-sm lg:sticky lg:top-24">
             <div className="h-1 gradient-primary" />
             <div className="p-6">
-            <h2 className="mb-5 font-poppins text-lg font-black text-[#111827]">Order Summary</h2>
+            <h2 className="mb-5 font-poppins text-lg font-black text-customer-text">Order Summary</h2>
             <ul className="space-y-2.5">
               {lines.map((l) => (
                 <li key={l.id} className="flex items-start justify-between gap-2 text-sm">
-                  <span className="text-gray-500">{l.qty}× <span className="font-semibold text-[#111827]">{l.name}</span></span>
-                  <span className="shrink-0 font-bold text-[#111827]">{formatCustomerMoney(l.price * l.qty)}</span>
+                  <span className="text-customer-muted">{l.qty}× <span className="font-semibold text-customer-text">{l.name}</span></span>
+                  <span className="shrink-0 font-bold text-customer-text">{formatCustomerMoney(l.price * l.qty)}</span>
                 </li>
               ))}
             </ul>
-            <div className="mt-5 space-y-2.5 border-t border-gray-100 pt-5 text-sm">
-              <p className="text-xs text-gray-400">Est. time: <span className="font-bold text-[#111827]">{etaLabel} mins</span></p>
+            <div className="mt-5 space-y-2.5 border-t border-customer-border pt-5 text-sm">
+              <p className="text-xs text-customer-muted">Est. time: <span className="font-bold text-customer-text">{etaLabel} mins</span></p>
               <div className="flex gap-2">
                 <input value={couponCode} onChange={(e) => setCouponCode(e.target.value)} placeholder="Coupon code"
-                  className="w-full rounded-full border border-gray-200 bg-gray-50 px-4 py-2 text-xs outline-none focus:border-[#FF6B35]/40 focus:bg-white focus:ring-2 focus:ring-[#FF6B35]/10" />
+                  className={`${customerClasses.field} rounded-full py-2 text-xs`} />
                 <button type="button" onClick={applyCoupon}
-                  className="rounded-full border border-gray-200 px-4 py-2 text-xs font-semibold text-gray-500 hover:border-[#FF6B35]/30 hover:text-[#FF6B35]">
+                  className="rounded-full border border-customer-border px-4 py-2 text-xs font-semibold text-customer-muted hover:border-customer-primary/30 hover:text-customer-primary">
                   Apply
                 </button>
               </div>
-              <div className="flex justify-between text-gray-500"><span>Subtotal</span><span className="font-semibold text-[#111827]">{formatCustomerMoney(subtotal)}</span></div>
-              <div className="flex justify-between text-gray-500"><span>Tax ({taxRate.toFixed(2)}%)</span><span className="font-semibold text-[#111827]">{formatCustomerMoney(tax)}</span></div>
-              {orderType === "delivery" && <div className="flex justify-between text-gray-500"><span>Delivery</span><span className="font-semibold text-[#111827]">{formatCustomerMoney(deliveryCharge)}</span></div>}
+              <div className="flex justify-between text-customer-muted"><span>Subtotal</span><span className="font-semibold text-customer-text">{formatCustomerMoney(subtotal)}</span></div>
+              <div className="flex justify-between text-customer-muted"><span>Tax ({taxRate.toFixed(2)}%)</span><span className="font-semibold text-customer-text">{formatCustomerMoney(tax)}</span></div>
+              {orderType === "delivery" && <div className="flex justify-between text-customer-muted"><span>Delivery</span><span className="font-semibold text-customer-text">{formatCustomerMoney(deliveryCharge)}</span></div>}
               {appliedCoupon && <div className="flex justify-between text-green-600"><span>Coupon ({appliedCoupon.code})</span><span>- {formatCustomerMoney(couponDiscount)}</span></div>}
-              <div className="flex justify-between border-t border-gray-100 pt-3 font-poppins text-base font-black text-[#111827]">
-                <span>Total</span><span className="text-[#FF6B35]">{formatCustomerMoney(total)}</span>
+              <div className="flex justify-between border-t border-customer-border pt-3 font-poppins text-base font-black text-customer-text">
+                <span>Total</span><span className="text-customer-primary">{formatCustomerMoney(total)}</span>
               </div>
-              <div className="flex justify-between text-xs text-gray-400">
-                <span>Payment</span><span className="font-semibold text-[#111827]">{PAYMENT_LABEL[paymentMethod] ?? paymentMethod}</span>
+              <div className="flex justify-between text-xs text-customer-muted">
+                <span>Payment</span><span className="font-semibold text-customer-text">{PAYMENT_LABEL[paymentMethod] ?? paymentMethod}</span>
               </div>
             </div>
             <button type="button" onClick={placeOrder} disabled={loading || authLoading || paying}
-              className="mt-5 flex w-full items-center justify-center gap-2 rounded-full gradient-primary py-3.5 text-sm font-bold text-white shadow-lg shadow-[#FF6B35]/25 transition-all hover:shadow-xl disabled:cursor-not-allowed disabled:opacity-50">
+              className="mt-5 flex w-full items-center justify-center gap-2 rounded-full gradient-primary py-3.5 text-sm font-bold text-white shadow-lg shadow-[var(--customer-primary-shadow)]/25 transition-all hover:shadow-xl disabled:cursor-not-allowed disabled:opacity-50">
               {loading ? <><Loader2 className="size-4 animate-spin" /> Placing Order…</>
                 : paying ? <><Loader2 className="size-4 animate-spin" /> Processing…</>
                 : authLoading ? "Checking login..."
@@ -622,9 +591,9 @@ export default function CheckoutPage() {
           {otpDevHint && <p className="rounded-xl border border-[#F59E0B]/30 bg-[#F59E0B]/8 px-3 py-2 text-xs text-[#92400E]">{otpDevHint}</p>}
           {otpStep === "phone" ? (
             <>
-              <p className="text-sm text-[#6B7280]">Enter mobile number to receive OTP.</p>
+              <p className="text-sm text-customer-muted">Enter mobile number to receive OTP.</p>
               <input value={otpPhone} onChange={(e) => setOtpPhone(e.target.value)} inputMode="tel" autoComplete="tel" placeholder="+1 555 000 0000"
-                className="w-full rounded-xl border border-[#FFE4D6] bg-white px-3 py-3 text-sm text-[#111827] outline-none focus:border-[#FF6B35]/50 focus:ring-2 focus:ring-[#FF6B35]/10" />
+                className="w-full rounded-xl border border-customer-border bg-white px-3 py-3 text-sm text-customer-text outline-none focus:border-customer-primary/50 focus:ring-2 focus:ring-[var(--customer-primary)]/10" />
               <button type="button" disabled={otpLoading} onClick={requestOtp}
                 className="inline-flex w-full items-center justify-center gap-2 rounded-xl gradient-primary py-3 text-sm font-semibold text-white shadow-md disabled:opacity-50">
                 {otpLoading ? <Loader2 className="size-4 animate-spin" /> : <Phone className="size-4" />} Send OTP
@@ -632,20 +601,20 @@ export default function CheckoutPage() {
             </>
           ) : (
             <>
-              <p className="text-sm text-[#6B7280]">6-digit code sent to <span className="font-semibold text-[#111827]">{otpPhone}</span>.</p>
+              <p className="text-sm text-customer-muted">6-digit code sent to <span className="font-semibold text-customer-text">{otpPhone}</span>.</p>
               <div className="flex items-center justify-between gap-2">
                 {otpDigits.map((digit, idx) => (
                   <input key={idx} ref={(el) => { otpRefs.current[idx] = el; }} value={digit}
                     onChange={(e) => handleOtpDigitChange(idx, e.target.value)}
                     onKeyDown={(e) => { if (e.key === "Backspace" && !otpDigits[idx] && idx > 0) otpRefs.current[idx - 1]?.focus(); }}
                     inputMode="numeric" maxLength={1}
-                    className="h-12 w-11 rounded-xl border border-[#FFE4D6] bg-white text-center text-lg font-bold text-[#111827] outline-none focus:border-[#FF6B35]/50 focus:ring-2 focus:ring-[#FF6B35]/10" />
+                    className="h-12 w-11 rounded-xl border border-customer-border bg-white text-center text-lg font-bold text-customer-text outline-none focus:border-customer-primary/50 focus:ring-2 focus:ring-[var(--customer-primary)]/10" />
                 ))}
               </div>
               <div className="flex items-center justify-between">
-                <button type="button" onClick={() => setOtpStep("phone")} className="text-xs text-[#6B7280] hover:text-[#111827]">Change number</button>
+                <button type="button" onClick={() => setOtpStep("phone")} className="text-xs text-customer-muted hover:text-customer-text">Change number</button>
                 <button type="button" disabled={otpCooldown > 0 || otpLoading} onClick={resendOtp}
-                  className="text-xs font-semibold text-[#FF6B35] disabled:text-[#6B7280]">
+                  className="text-xs font-semibold text-customer-primary disabled:text-customer-muted">
                   {otpCooldown > 0 ? `Resend in ${Math.floor(otpCooldown / 60)}:${String(otpCooldown % 60).padStart(2, "0")}` : "Resend OTP"}
                 </button>
               </div>

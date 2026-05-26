@@ -1,13 +1,14 @@
 "use client";
 
+import SidebarBrand from "@/components/rms/SidebarBrand";
 import { navForRole } from "@/config/navigation";
 import { useApp } from "@/context/AppProviders";
 import { useAccessControlSettings } from "@/hooks/useAccessControlSettings";
+import { useRestaurantBranding } from "@/hooks/useRestaurantBranding";
 import {
   ChevronDown,
   ChevronLeft,
   ChevronRight,
-  UtensilsCrossed,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -21,6 +22,8 @@ export default function Sidebar({
   allowCollapse = true,
 }) {
   const { user } = useApp();
+  const { name: brandName, tagline: brandTagline, logoUrl: brandLogoUrl } =
+    useRestaurantBranding();
   const accessControl = useAccessControlSettings();
   const pathname = usePathname();
   const [openGroups, setOpenGroups] = useState(() => ({
@@ -117,19 +120,12 @@ export default function Sidebar({
       }`}
     >
       <div className="flex h-16 items-center justify-between gap-2 border-b border-zinc-800 px-3">
-        <div className="flex min-w-0 items-center gap-2">
-          <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-emerald-500/15 text-emerald-400 ring-1 ring-emerald-500/25">
-            <UtensilsCrossed className="size-5" aria-hidden />
-          </span>
-          {!collapsed ? (
-            <div className="min-w-0">
-              <p className="truncate text-sm font-semibold tracking-tight text-zinc-100">
-                RMS
-              </p>
-              <p className="truncate text-[11px] text-zinc-500">Restaurant OS</p>
-            </div>
-          ) : null}
-        </div>
+        <SidebarBrand
+          collapsed={collapsed}
+          name={brandName}
+          tagline={brandTagline}
+          logoUrl={brandLogoUrl}
+        />
 
         {allowCollapse ? (
           <button
@@ -358,9 +354,9 @@ export default function Sidebar({
             className={`text-center text-xs text-zinc-500 ${
               collapsed ? "px-0" : "px-2"
             }`}
-            title={collapsed ? "RMS © 2026" : undefined}
+            title={collapsed ? `${brandName} © ${new Date().getFullYear()}` : undefined}
           >
-            {collapsed ? "©" : "RMS © 2026"}
+            {collapsed ? "©" : `${brandName} © ${new Date().getFullYear()}`}
           </p>
         </div>
       </div>

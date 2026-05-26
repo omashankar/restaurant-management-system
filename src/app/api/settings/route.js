@@ -83,10 +83,16 @@ export const GET = withTenant(
     const restaurantDoc = restaurantId
       ? await db.collection("restaurants").findOne(
           { _id: restaurantId },
-          { projection: { slug: 1, name: 1 } }
+          { projection: { slug: 1, name: 1, logoUrl: 1 } }
         )
       : null;
     const restaurantSlug = restaurantDoc?.slug ?? null;
+    if (settings.general) {
+      settings.general = {
+        ...settings.general,
+        logoUrl: restaurantDoc?.logoUrl?.trim() || settings.general.logoUrl?.trim() || "",
+      };
+    }
 
     return Response.json({ success: true, settings, restaurantSlug });
   }
@@ -112,6 +118,12 @@ export const PATCH = withTenant(["admin"], async ({ db, restaurantId }, request)
       updateFields.email = mergeEmailForSave(body.data, existing?.email);
     } else if (body.section === "paymentMethods") {
       updateFields.paymentMethods = sanitizePaymentMethods(body.data);
+    } else if (body.section === "general") {
+      updateFields.general = {
+        ...EMPTY_SETTINGS.general,
+        ...(existing?.general ?? {}),
+        ...body.data,
+      };
     } else {
       updateFields[body.section] = body.data;
     }
@@ -122,6 +134,12 @@ export const PATCH = withTenant(["admin"], async ({ db, restaurantId }, request)
         updateFields.email = mergeEmailForSave(body.email, existing?.email);
       } else if (section === "paymentMethods") {
         updateFields.paymentMethods = sanitizePaymentMethods(body.paymentMethods);
+      } else if (section === "general") {
+        updateFields.general = {
+          ...EMPTY_SETTINGS.general,
+          ...(existing?.general ?? {}),
+          ...body[section],
+        };
       } else {
         updateFields[section] = body[section];
       }
@@ -139,6 +157,22 @@ export const PATCH = withTenant(["admin"], async ({ db, restaurantId }, request)
     { $set: updateFields },
     { upsert: true }
   );
+
+  if (updateFields.general && restaurantId) {
+    const restaurantPatch = { updatedAt: new Date() };
+    const name = updateFields.general.restaurantName?.trim();
+    if (name) restaurantPatch.name = name;
+    if ("logoUrl" in updateFields.general) {
+      const url = String(updateFields.general.logoUrl ?? "").trim();
+      restaurantPatch.logoUrl = url || null;
+    }
+    if (Object.keys(restaurantPatch).length > 1) {
+      await db.collection("restaurants").updateOne(
+        { _id: restaurantId },
+        { $set: restaurantPatch }
+      );
+    }
+  }
 
   return Response.json({ success: true });
 });

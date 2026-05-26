@@ -118,7 +118,7 @@ export default function CustomerDashboardPage() {
   if (authLoading || (!authUser && !authLoading)) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center">
-        <Loader2 className="size-8 animate-spin text-[#FF6B35]" />
+        <Loader2 className="size-8 animate-spin text-customer-primary" />
       </div>
     );
   }
@@ -137,20 +137,20 @@ export default function CustomerDashboardPage() {
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="mb-6 overflow-hidden rounded-3xl border border-[#FFE4D6] bg-white shadow-sm"
+        className="mb-6 overflow-hidden rounded-3xl border border-customer-border bg-white shadow-sm"
       >
         <div className="h-1.5 gradient-primary" />
         <div className="flex flex-wrap items-center justify-between gap-4 p-5">
           <div className="flex items-center gap-3">
-            <div className="flex size-14 items-center justify-center rounded-2xl gradient-primary shadow-lg shadow-[#FF6B35]/20">
+            <div className="flex size-14 items-center justify-center rounded-2xl gradient-primary shadow-lg shadow-[var(--customer-primary-shadow)]/20">
               <span className="font-poppins text-xl font-bold text-white">
                 {displayName(authUser)[0]?.toUpperCase()}
               </span>
             </div>
             <div>
-              <p className="text-xs text-[#6B7280]">Welcome back</p>
-              <h1 className="font-poppins text-xl font-bold text-[#111827]">{displayName(authUser)}</h1>
-              <p className="text-xs text-[#6B7280]">{authUser.phone || authUser.email || ""}</p>
+              <p className="text-xs text-customer-muted">Welcome back</p>
+              <h1 className="font-poppins text-xl font-bold text-customer-text">{displayName(authUser)}</h1>
+              <p className="text-xs text-customer-muted">{authUser.phone || authUser.email || ""}</p>
             </div>
           </div>
           <motion.button
@@ -164,16 +164,16 @@ export default function CustomerDashboardPage() {
         </div>
 
         {/* Stats row */}
-        <div className="grid grid-cols-3 divide-x divide-[#FFE4D6] border-t border-[#FFE4D6]">
+        <div className="grid grid-cols-3 divide-x divide-customer-border border-t border-customer-border">
           {[
             { label: "Orders", value: orders.length, icon: Package },
             { label: "Wallet", value: formatCustomerMoney(summary.walletBalance), icon: Wallet },
             { label: "Points", value: summary.rewardPoints, icon: Star },
           ].map(({ label, value, icon: Icon }) => (
             <div key={label} className="flex flex-col items-center gap-1 py-3">
-              <Icon className="size-4 text-[#FF6B35]" />
-              <p className="font-poppins text-base font-bold text-[#111827]">{value}</p>
-              <p className="text-[10px] text-[#6B7280]">{label}</p>
+              <Icon className="size-4 text-customer-primary" />
+              <p className="font-poppins text-base font-bold text-customer-text">{value}</p>
+              <p className="text-[10px] text-customer-muted">{label}</p>
             </div>
           ))}
         </div>
@@ -189,14 +189,14 @@ export default function CustomerDashboardPage() {
             onClick={() => setActiveTab(tab.id)}
             className={`flex cursor-pointer shrink-0 items-center gap-1.5 rounded-xl px-4 py-2 text-xs font-semibold transition-all ${
               activeTab === tab.id
-                ? "gradient-primary text-white shadow-md shadow-[#FF6B35]/20"
-                : "border border-[#FFE4D6] bg-white text-[#6B7280] hover:border-[#FF6B35]/30"
+                ? "gradient-primary text-white shadow-md shadow-[var(--customer-primary-shadow)]/20"
+                : "border border-customer-border bg-white text-customer-muted hover:border-customer-primary/30"
             }`}
           >
             <tab.icon className="size-3.5" />
             {tab.label}
             {tab.count !== null && tab.count > 0 && (
-              <span className={`rounded-full px-1.5 py-0.5 text-[10px] font-bold ${activeTab === tab.id ? "bg-white/20 text-white" : "bg-[#FF6B35]/10 text-[#FF6B35]"}`}>
+              <span className={`rounded-full px-1.5 py-0.5 text-[10px] font-bold ${activeTab === tab.id ? "bg-white/20 text-white" : "bg-customer-primary/10 text-customer-primary"}`}>
                 {tab.count}
               </span>
             )}
@@ -216,44 +216,44 @@ export default function CustomerDashboardPage() {
 
           {/* ORDERS */}
           {activeTab === "orders" && (
-            <div className="rounded-2xl border border-[#FFE4D6] bg-white shadow-sm">
-              <div className="border-b border-[#FFE4D6] px-5 py-4">
-                <h2 className="font-poppins text-base font-bold text-[#111827]">Order History</h2>
-                <p className="text-xs text-[#6B7280]">Track status for recent orders</p>
+            <div className="rounded-2xl border border-customer-border bg-white shadow-sm">
+              <div className="border-b border-customer-border px-5 py-4">
+                <h2 className="font-poppins text-base font-bold text-customer-text">Order History</h2>
+                <p className="text-xs text-customer-muted">Track status for recent orders</p>
               </div>
               {loadingData ? (
-                <div className="flex justify-center py-12"><Loader2 className="size-6 animate-spin text-[#FF6B35]" /></div>
+                <div className="flex justify-center py-12"><Loader2 className="size-6 animate-spin text-customer-primary" /></div>
               ) : orders.length === 0 ? (
                 <div className="flex flex-col items-center gap-3 py-12 text-center">
-                  <ShoppingBag className="size-10 text-[#FF6B35]/30" />
-                  <p className="text-sm text-[#6B7280]">No orders yet.</p>
+                  <ShoppingBag className="size-10 text-customer-primary/30" />
+                  <p className="text-sm text-customer-muted">No orders yet.</p>
                   <Link href={link("/order/menu")} className="rounded-xl gradient-primary px-5 py-2.5 text-xs font-bold text-white shadow-md">
                     Browse Menu
                   </Link>
                 </div>
               ) : (
-                <ul className="divide-y divide-[#FFE4D6]">
+                <ul className="divide-y divide-customer-border">
                   {orders.map((o) => (
                     <li key={o.id}>
                       <Link href={link(`/account/orders/${o.id}`)}
-                        className="flex items-center gap-3 px-5 py-4 transition-colors hover:bg-[#FFF8F3]">
+                        className="flex items-center gap-3 px-5 py-4 transition-colors hover:bg-customer-cream">
                         <div className="min-w-0 flex-1">
                           <div className="flex flex-wrap items-center gap-2">
-                            <span className="font-poppins font-semibold text-[#111827]">{o.orderId}</span>
-                            <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${STATUS_COLORS[o.statusKey] ?? "bg-[#6B7280]/10 text-[#6B7280]"}`}>
+                            <span className="font-poppins font-semibold text-customer-text">{o.orderId}</span>
+                            <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${STATUS_COLORS[o.statusKey] ?? "bg-[#6B7280]/10 text-customer-muted"}`}>
                               {o.statusEmoji} {o.statusLabel ?? o.status}
                             </span>
                           </div>
-                          <p className="mt-0.5 text-xs text-[#6B7280]">{formatDate(o.createdAt)}</p>
+                          <p className="mt-0.5 text-xs text-customer-muted">{formatDate(o.createdAt)}</p>
                         </div>
                         <div className="flex shrink-0 items-center gap-2">
-                          <span className="font-poppins font-bold text-[#111827]">{formatCustomerMoney(Number(o.total ?? 0))}</span>
+                          <span className="font-poppins font-bold text-customer-text">{formatCustomerMoney(Number(o.total ?? 0))}</span>
                           <button type="button" onClick={(e) => { e.preventDefault(); reorder(o.id); }}
                             disabled={reorderingId === o.id}
-                            className="rounded-lg border border-[#FFE4D6] px-2 py-1 text-[11px] font-semibold text-[#FF6B35] transition-colors hover:bg-[#FF6B35]/8 disabled:opacity-50">
+                            className="rounded-lg border border-customer-border px-2 py-1 text-[11px] font-semibold text-customer-primary transition-colors hover:bg-customer-primary/8 disabled:opacity-50">
                             {reorderingId === o.id ? "..." : "Reorder"}
                           </button>
-                          <ChevronRight className="size-4 text-[#6B7280]" />
+                          <ChevronRight className="size-4 text-customer-muted" />
                         </div>
                       </Link>
                     </li>
@@ -265,27 +265,27 @@ export default function CustomerDashboardPage() {
 
           {/* BOOKINGS */}
           {activeTab === "bookings" && (
-            <div className="rounded-2xl border border-[#FFE4D6] bg-white shadow-sm">
-              <div className="border-b border-[#FFE4D6] px-5 py-4">
-                <h2 className="font-poppins text-base font-bold text-[#111827]">My Bookings</h2>
-                <p className="text-xs text-[#6B7280]">Table reservations linked to your phone</p>
+            <div className="rounded-2xl border border-customer-border bg-white shadow-sm">
+              <div className="border-b border-customer-border px-5 py-4">
+                <h2 className="font-poppins text-base font-bold text-customer-text">My Bookings</h2>
+                <p className="text-xs text-customer-muted">Table reservations linked to your phone</p>
               </div>
               {loadingData ? (
-                <div className="flex justify-center py-12"><Loader2 className="size-6 animate-spin text-[#FF6B35]" /></div>
+                <div className="flex justify-center py-12"><Loader2 className="size-6 animate-spin text-customer-primary" /></div>
               ) : bookings.length === 0 ? (
                 <div className="flex flex-col items-center gap-3 py-12 text-center">
-                  <Calendar className="size-10 text-[#FF6B35]/30" />
-                  <p className="text-sm text-[#6B7280]">No bookings yet.</p>
+                  <Calendar className="size-10 text-customer-primary/30" />
+                  <p className="text-sm text-customer-muted">No bookings yet.</p>
                   <Link href={link("/order/table-booking")} className="rounded-xl gradient-primary px-5 py-2.5 text-xs font-bold text-white shadow-md">
                     Book a Table
                   </Link>
                 </div>
               ) : (
-                <ul className="divide-y divide-[#FFE4D6]">
+                <ul className="divide-y divide-customer-border">
                   {bookings.slice(0, 12).map((b) => (
                     <li key={b.id} className="px-5 py-4">
-                      <p className="font-poppins font-semibold text-[#111827]">{b.date} at {b.time}</p>
-                      <p className="mt-0.5 text-xs text-[#6B7280]">Table {b.tableNumber || "—"} · {b.guests} guests · <span className="capitalize">{b.status}</span></p>
+                      <p className="font-poppins font-semibold text-customer-text">{b.date} at {b.time}</p>
+                      <p className="mt-0.5 text-xs text-customer-muted">Table {b.tableNumber || "—"} · {b.guests} guests · <span className="capitalize">{b.status}</span></p>
                     </li>
                   ))}
                 </ul>
@@ -295,38 +295,38 @@ export default function CustomerDashboardPage() {
 
           {/* FAVORITES */}
           {activeTab === "favorites" && (
-            <div className="rounded-2xl border border-[#FFE4D6] bg-white shadow-sm">
-              <div className="border-b border-[#FFE4D6] px-5 py-4">
-                <h2 className="font-poppins text-base font-bold text-[#111827]">Favorite Items</h2>
-                <p className="text-xs text-[#6B7280]">Based on your order history</p>
+            <div className="rounded-2xl border border-customer-border bg-white shadow-sm">
+              <div className="border-b border-customer-border px-5 py-4">
+                <h2 className="font-poppins text-base font-bold text-customer-text">Favorite Items</h2>
+                <p className="text-xs text-customer-muted">Based on your order history</p>
               </div>
               {summary.favorites.length === 0 ? (
                 <div className="flex flex-col items-center gap-3 py-12 text-center">
-                  <Heart className="size-10 text-[#FF6B35]/30" />
-                  <p className="text-sm text-[#6B7280]">Order a few items to build your favorites list.</p>
+                  <Heart className="size-10 text-customer-primary/30" />
+                  <p className="text-sm text-customer-muted">Order a few items to build your favorites list.</p>
                 </div>
               ) : (
-                <ul className="divide-y divide-[#FFE4D6]">
+                <ul className="divide-y divide-customer-border">
                   {summary.favorites.map((f) => (
                     <li key={f.name} className="flex items-center justify-between px-5 py-3.5">
                       <div className="flex items-center gap-2.5">
-                        <div className="flex size-8 items-center justify-center rounded-xl bg-[#FF6B35]/10">
-                          <Heart className="size-4 text-[#FF6B35]" />
+                        <div className="flex size-8 items-center justify-center rounded-xl bg-customer-primary/10">
+                          <Heart className="size-4 text-customer-primary" />
                         </div>
-                        <span className="font-medium text-[#111827]">{f.name}</span>
+                        <span className="font-medium text-customer-text">{f.name}</span>
                       </div>
-                      <span className="rounded-full bg-[#FF6B35]/10 px-2.5 py-1 text-xs font-bold text-[#FF6B35]">{f.count}x</span>
+                      <span className="rounded-full bg-customer-primary/10 px-2.5 py-1 text-xs font-bold text-customer-primary">{f.count}x</span>
                     </li>
                   ))}
                 </ul>
               )}
               {summary.savedAddresses.length > 0 && (
-                <div className="border-t border-[#FFE4D6] px-5 py-4">
-                  <p className="mb-3 font-poppins text-sm font-bold text-[#111827]">Saved Addresses</p>
+                <div className="border-t border-customer-border px-5 py-4">
+                  <p className="mb-3 font-poppins text-sm font-bold text-customer-text">Saved Addresses</p>
                   <ul className="space-y-2">
                     {summary.savedAddresses.map((addr) => (
-                      <li key={addr} className="flex items-start gap-2 text-sm text-[#6B7280]">
-                        <MapPin className="mt-0.5 size-4 shrink-0 text-[#FF6B35]" />
+                      <li key={addr} className="flex items-start gap-2 text-sm text-customer-muted">
+                        <MapPin className="mt-0.5 size-4 shrink-0 text-customer-primary" />
                         <span>{addr}</span>
                       </li>
                     ))}
@@ -338,14 +338,14 @@ export default function CustomerDashboardPage() {
 
           {/* PROFILE */}
           {activeTab === "profile" && (
-            <div className="rounded-2xl border border-[#FFE4D6] bg-white shadow-sm">
-              <div className="flex items-center justify-between border-b border-[#FFE4D6] px-5 py-4">
+            <div className="rounded-2xl border border-customer-border bg-white shadow-sm">
+              <div className="flex items-center justify-between border-b border-customer-border px-5 py-4">
                 <div>
-                  <h2 className="font-poppins text-base font-bold text-[#111827]">Profile</h2>
-                  <p className="text-xs text-[#6B7280]">Update your personal details</p>
+                  <h2 className="font-poppins text-base font-bold text-customer-text">Profile</h2>
+                  <p className="text-xs text-customer-muted">Update your personal details</p>
                 </div>
                 <motion.button whileTap={{ scale: 0.95 }} type="button" onClick={() => setProfileOpen((v) => !v)}
-                  className="flex cursor-pointer items-center gap-1.5 rounded-xl border border-[#FFE4D6] px-3 py-2 text-xs font-semibold text-[#FF6B35] transition-colors hover:bg-[#FF6B35]/8">
+                  className="flex cursor-pointer items-center gap-1.5 rounded-xl border border-customer-border px-3 py-2 text-xs font-semibold text-customer-primary transition-colors hover:bg-customer-primary/8">
                   <Edit3 className="size-3.5" /> {profileOpen ? "Cancel" : "Edit"}
                 </motion.button>
               </div>
@@ -358,9 +358,9 @@ export default function CustomerDashboardPage() {
                       { label: "Phone", value: authUser.phone || "—" },
                       { label: "Email", value: authUser.email || "—" },
                     ].map(({ label, value }) => (
-                      <div key={label} className="flex items-center justify-between rounded-xl bg-[#FFF8F3] px-4 py-3">
-                        <dt className="text-xs font-semibold uppercase tracking-wider text-[#6B7280]">{label}</dt>
-                        <dd className="font-medium text-[#111827]">{value}</dd>
+                      <div key={label} className="flex items-center justify-between rounded-xl bg-customer-cream px-4 py-3">
+                        <dt className="text-xs font-semibold uppercase tracking-wider text-customer-muted">{label}</dt>
+                        <dd className="font-medium text-customer-text">{value}</dd>
                       </div>
                     ))}
                   </dl>
@@ -371,12 +371,12 @@ export default function CustomerDashboardPage() {
                       { label: "Email", value: editEmail, setter: setEditEmail, type: "email", placeholder: "you@example.com" },
                     ].map(({ label, value, setter, type, placeholder }) => (
                       <div key={label}>
-                        <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-[#6B7280]">{label}</label>
+                        <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-customer-muted">{label}</label>
                         <input type={type} value={value} onChange={(e) => setter(e.target.value)} placeholder={placeholder}
-                          className="w-full rounded-xl border border-[#FFE4D6] bg-white px-3.5 py-3 text-sm text-[#111827] outline-none focus:border-[#FF6B35]/50 focus:ring-2 focus:ring-[#FF6B35]/10" />
+                          className="w-full rounded-xl border border-customer-border bg-white px-3.5 py-3 text-sm text-customer-text outline-none focus:border-customer-primary/50 focus:ring-2 focus:ring-[var(--customer-primary)]/10" />
                       </div>
                     ))}
-                    <p className="text-xs text-[#6B7280]">Phone is verified via OTP and cannot be changed here.</p>
+                    <p className="text-xs text-customer-muted">Phone is verified via OTP and cannot be changed here.</p>
                     <div className="flex gap-2">
                       <motion.button whileTap={{ scale: 0.97 }} type="button" disabled={savingProfile} onClick={saveProfile}
                         className="flex flex-1 items-center justify-center gap-2 rounded-xl gradient-primary py-3 text-sm font-bold text-white shadow-md disabled:opacity-60">
@@ -384,7 +384,7 @@ export default function CustomerDashboardPage() {
                         Save Changes
                       </motion.button>
                       <button type="button" onClick={() => setProfileOpen(false)}
-                        className="flex size-12 items-center justify-center rounded-xl border border-[#FFE4D6] text-[#6B7280] hover:bg-[#FFF8F3]">
+                        className="flex size-12 items-center justify-center rounded-xl border border-customer-border text-customer-muted hover:bg-customer-cream">
                         <X className="size-4" />
                       </button>
                     </div>

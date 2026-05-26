@@ -284,12 +284,12 @@ export default function SuperAdminAnalyticsPage() {
               <div className="flex items-center gap-5">
                 <DonutChart segments={planSegments} size={100} />
                 <div className="flex-1 space-y-2">
-                  {(data.planBreakdown ?? []).map((p) => {
+                  {(data.planBreakdown ?? []).map((p, planIdx) => {
                     const total = (data.planBreakdown ?? []).reduce((s, x) => s + x.count, 0) || 1;
                     const pct   = Math.round((p.count / total) * 100);
                     const c     = PLAN_COLOR[p.plan] ?? PLAN_COLOR.free;
                     return (
-                      <div key={p.plan}>
+                      <div key={`plan-dist-${p.plan}-${planIdx}`}>
                         <div className="flex items-center justify-between mb-1">
                           <span className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-semibold capitalize ring-1 ${c.badge}`}>
                             {p.plan}

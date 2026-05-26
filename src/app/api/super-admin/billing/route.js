@@ -1,6 +1,7 @@
 import { getTokenFromRequest } from "@/lib/authCookies";
 import { verifyToken } from "@/lib/jwt";
 import clientPromise from "@/lib/mongodb";
+import { normalizePlanBreakdown } from "@/lib/planBreakdown";
 
 function superAdminOnly(request) {
   const token   = getTokenFromRequest(request);
@@ -110,10 +111,7 @@ export async function GET(request) {
         revenue: r.revenue,
         count:   r.count,
       })),
-      planBreakdown: planBreakdown.map((p) => ({
-        plan:  p._id ?? "unknown",
-        count: p.count,
-      })),
+      planBreakdown: normalizePlanBreakdown(planBreakdown, { defaultPlan: "free" }),
       subscriptions: subscriptions.map((r) => ({
         id:         r.restaurantId?.toString() ?? "",
         name:       r.name,
