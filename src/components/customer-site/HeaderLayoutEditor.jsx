@@ -58,7 +58,7 @@ export default function HeaderLayoutEditor({
           value={header.logoUrl ?? ""}
           onChange={(v) => setHeader({ logoUrl: v })}
           disabled={saving === "theme"}
-          previewClassName="h-14 w-full max-w-xs object-contain object-left bg-white rounded-lg p-2"
+          previewClassName="ct-brand-logo ct-brand-logo--sm w-full max-w-xs bg-white rounded-lg p-3"
         />
         <CmsImageField
           label="Dark mode logo"
@@ -66,7 +66,7 @@ export default function HeaderLayoutEditor({
           value={header.logoDarkUrl ?? ""}
           onChange={(v) => setHeader({ logoDarkUrl: v })}
           disabled={saving === "theme"}
-          previewClassName="h-14 w-full max-w-xs object-contain object-left bg-[#111827] rounded-lg p-2"
+          previewClassName="ct-brand-logo ct-brand-logo--md w-full max-w-xs bg-[#111827] rounded-lg p-3"
         />
       </div>
       <LayoutToggle

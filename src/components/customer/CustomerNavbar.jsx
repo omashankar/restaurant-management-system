@@ -99,12 +99,12 @@ export default function CustomerNavbar() {
 
       {/* ── Main navbar ── */}
       <div className="border-b border-black/5" style={{ backgroundColor: headerBg }}>
-        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-2 px-4 sm:gap-4 sm:px-6 lg:px-8">
+        <div className="mx-auto flex min-h-[4.25rem] max-w-7xl items-center justify-between gap-2 px-4 py-2 sm:min-h-[4.5rem] sm:gap-4 sm:px-6 lg:px-8">
 
           {/* Logo — image only (full mark from CMS) */}
           <Link href={link("/home")} className="flex shrink-0 items-center min-w-0">
             <motion.div whileHover={{ scale: 1.02 }} transition={{ type: "spring", stiffness: 400 }}>
-              <RestaurantLogo size="sm" mode="light" imageOnly />
+              <RestaurantLogo size="md" mode="light" imageOnly />
             </motion.div>
           </Link>
 

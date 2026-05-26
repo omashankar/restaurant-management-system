@@ -79,7 +79,7 @@ export default function CustomerFooter() {
           {/* Brand */}
           <div className="lg:col-span-1">
             <Link href={link("/home")} className="inline-flex items-center min-w-0">
-              <RestaurantLogo size="md" mode="dark" imageOnly className="max-w-[220px]" />
+              <RestaurantLogo size="lg" mode="dark" imageOnly />
             </Link>
             {footerCfg.showDescription !== false && (
             <p className="ct-footer-muted mt-4 text-sm leading-relaxed">

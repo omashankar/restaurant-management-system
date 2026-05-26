@@ -97,7 +97,7 @@ export default function VerifyOtpPage() {
             {/* Header */}
             <div className="mb-6 flex flex-col items-center text-center">
               <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="mb-3">
-                <RestaurantLogo size="lg" imageOnly className="mx-auto max-w-[200px]" />
+                <RestaurantLogo size="lg" mode="light" imageOnly className="mx-auto" />
               </motion.div>
               <motion.div
                 initial={{ scale: 0 }}

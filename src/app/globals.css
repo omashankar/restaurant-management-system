@@ -317,6 +317,55 @@ body {
   margin-right: auto;
 }
 
+/* Full brand image (icon + wordmark + tagline in one file) — fixed height scales wide assets up */
+.ct-brand-logo {
+  display: block;
+  width: auto;
+  object-fit: contain;
+  object-position: left center;
+}
+
+.ct-brand-logo--xs {
+  height: 2rem;
+  max-width: min(140px, 42vw);
+}
+
+.ct-brand-logo--sm {
+  height: 2.75rem;
+  max-width: min(220px, 58vw);
+}
+
+@media (min-width: 640px) {
+  .ct-brand-logo--sm {
+    height: 3.25rem;
+    max-width: min(260px, 36vw);
+  }
+}
+
+.ct-brand-logo--md {
+  height: 3rem;
+  max-width: min(260px, 72vw);
+}
+
+@media (min-width: 640px) {
+  .ct-brand-logo--md {
+    height: 3.5rem;
+    max-width: min(300px, 40vw);
+  }
+}
+
+.ct-brand-logo--lg {
+  height: 4rem;
+  max-width: min(320px, 85vw);
+}
+
+@media (min-width: 640px) {
+  .ct-brand-logo--lg {
+    height: 4.5rem;
+    max-width: min(360px, 70vw);
+  }
+}
+
 /* ── Typography scale ── */
 .ct-hero-title {
   font-family: var(--font-poppins, var(--customer-font));

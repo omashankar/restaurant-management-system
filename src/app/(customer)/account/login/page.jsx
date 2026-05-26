@@ -67,7 +67,7 @@ function CustomerLoginContent() {
             {/* Logo */}
             <div className="mb-6 flex flex-col items-center text-center">
               <motion.div whileHover={{ scale: 1.05 }} className="mb-4">
-                <RestaurantLogo size="lg" imageOnly className="mx-auto max-w-[200px]" />
+                <RestaurantLogo size="lg" mode="light" imageOnly className="mx-auto" />
               </motion.div>
               <h1 className="font-poppins text-2xl font-bold text-customer-text">Welcome Back</h1>
               <p className="mt-1 text-sm text-customer-muted">Login with your mobile number to continue</p>
