@@ -4,8 +4,10 @@ import { useCustomer } from "@/context/CustomerContext";
 import { useRestaurantSlug } from "@/hooks/useRestaurantSlug";
 import { useRestaurantInfo } from "@/hooks/useRestaurantInfo";
 import { useRestaurantCms } from "@/hooks/useRestaurantCms";
+import SocialMediaIcons from "@/components/customer/SocialMediaIcons";
 import { DEFAULTS } from "@/lib/restaurantCmsDefaults";
 import { mergeCmsSection } from "@/lib/customerCmsMerge";
+import { resolveSiteSocialLinks } from "@/lib/resolveLayoutTheme";
 import {
   customerClasses,
   customerInteractive,
@@ -24,6 +26,7 @@ export default function ContactPage() {
   const { info } = useRestaurantInfo();
   const { content: cms } = useRestaurantCms();
   const contactCms = mergeCmsSection(DEFAULTS.contact, cms.contact);
+  const socialLinks = resolveSiteSocialLinks(cms.theme, cms.social);
   const [form, setForm] = useState({ name: "", email: "", subject: "", message: "" });
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
@@ -108,6 +111,20 @@ export default function ContactPage() {
               </motion.div>
             ))}
           </div>
+
+          {socialLinks.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.35 }}
+              className="mt-10 flex flex-col items-center text-center"
+            >
+              <p className="text-xs font-bold uppercase tracking-wider text-customer-muted">
+                Follow us on social media
+              </p>
+              <SocialMediaIcons links={socialLinks} variant="inline" className="mt-4 justify-center" />
+            </motion.div>
+          )}
         </div>
       </section>
 

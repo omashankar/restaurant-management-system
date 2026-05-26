@@ -30,15 +30,25 @@ export function resolveFooterAccountLinks(cmsTheme) {
   return activeNavItems(theme.footer?.accountLinks, DEFAULT_FOOTER_ACCOUNT_LINKS);
 }
 
-export function resolveFooterSocialLinks(cmsTheme, cmsSocial = {}) {
+function resolveSocialLinksFromCms(cmsTheme, cmsSocial = {}) {
   const theme = resolveTheme(cmsTheme);
-  if (theme.footer?.showSocialLinks === false) return [];
-  const fromTheme = ensureNavItems(theme.footer?.socialLinks, DEFAULT_FOOTER_SOCIAL_LINKS)
+  return ensureNavItems(theme.footer?.socialLinks, DEFAULT_FOOTER_SOCIAL_LINKS)
     .filter((i) => i.enabled !== false)
     .map((i) => ({
       ...i,
       href: i.url?.trim() || cmsSocial[i.id]?.trim() || "",
     }))
     .filter((i) => i.href);
-  return fromTheme;
+}
+
+/** Footer — respects footer “Social media icons” toggle */
+export function resolveFooterSocialLinks(cmsTheme, cmsSocial = {}) {
+  const theme = resolveTheme(cmsTheme);
+  if (theme.footer?.showSocialLinks === false) return [];
+  return resolveSocialLinksFromCms(cmsTheme, cmsSocial);
+}
+
+/** Header / contact — any configured URL with enabled platform */
+export function resolveSiteSocialLinks(cmsTheme, cmsSocial = {}) {
+  return resolveSocialLinksFromCms(cmsTheme, cmsSocial);
 }

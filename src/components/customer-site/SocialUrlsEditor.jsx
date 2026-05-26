@@ -17,8 +17,8 @@ export default function SocialUrlsEditor({ social, setSocial, saving, onSaveDraf
       <div>
         <p className="text-sm font-semibold text-zinc-200">Social media links</p>
         <p className="mt-1 text-xs text-zinc-500">
-          One place for all URLs — shown in the header top bar and footer icons. Turn icons on/off in
-          Footer editor.
+          One place for all URLs — header icons, footer, contact page, and mobile menu. Enable or disable
+          each platform in Footer editor → Social media icons.
         </p>
       </div>
       <div className="grid gap-3 sm:grid-cols-2">

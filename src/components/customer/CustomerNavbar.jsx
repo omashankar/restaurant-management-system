@@ -4,8 +4,9 @@ import { useCustomer } from "@/context/CustomerContext";
 import { useRestaurantSlug } from "@/hooks/useRestaurantSlug";
 import { useRestaurantInfo } from "@/hooks/useRestaurantInfo";
 import { useRestaurantCms } from "@/hooks/useRestaurantCms";
-import { resolveHeaderMenu, resolveTheme } from "@/lib/resolveLayoutTheme";
+import { resolveHeaderMenu, resolveSiteSocialLinks, resolveTheme } from "@/lib/resolveLayoutTheme";
 import RestaurantLogo from "@/components/customer/RestaurantLogo";
+import SocialMediaIcons from "@/components/customer/SocialMediaIcons";
 import ThemeSwitcher from "@/components/customer/theme/ThemeSwitcher";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -26,6 +27,7 @@ export default function CustomerNavbar() {
   const theme = resolveTheme(cms.theme);
   const headerCfg = theme.header ?? {};
   const navItems = resolveHeaderMenu(cms.theme);
+  const socialLinks = resolveSiteSocialLinks(cms.theme, cms.social);
   const headerColors = headerCfg.colors ?? {};
   const locationText =
     headerCfg.locationLabel?.trim() ||
@@ -77,20 +79,19 @@ export default function CustomerNavbar() {
             <svg className="size-3 text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><path d="M6 9l6 6 6-6"/></svg>
           </button>
 
-          {/* Right — dark mode + social */}
-          <div className="flex items-center gap-3">
-            {/* Social quick links */}
-            {cms.social?.instagram && (
-              <a href={cms.social.instagram} target="_blank" rel="noopener noreferrer"
-                className="text-xs transition-colors hover:text-customer-primary"
-                style={{ color: headerIcon }}>Instagram</a>
+          {/* Right — social icons + theme */}
+          <div className="flex items-center gap-2">
+            {socialLinks.length > 0 && (
+              <SocialMediaIcons
+                links={socialLinks}
+                variant="header"
+                className="gap-1.5"
+                animated={false}
+              />
             )}
-            {cms.social?.facebook && (
-              <a href={cms.social.facebook} target="_blank" rel="noopener noreferrer"
-                className="text-xs transition-colors hover:text-customer-primary"
-                style={{ color: headerIcon }}>Facebook</a>
+            {socialLinks.length > 0 && (
+              <div className="h-3 w-px opacity-20" style={{ backgroundColor: headerFont }} />
             )}
-            <div className="h-3 w-px opacity-20" style={{ backgroundColor: headerFont }} />
             <ThemeSwitcher showLabel />
           </div>
         </div>
@@ -171,6 +172,24 @@ export default function CustomerNavbar() {
                 )}
               </AnimatePresence>
             </motion.button>
+
+            {/* Social — mobile main bar (top bar is sm+ only) */}
+            {socialLinks.length > 0 && headerCfg.showLocationBar !== false && (
+              <SocialMediaIcons
+                links={socialLinks}
+                variant="header"
+                className="flex gap-1 sm:hidden"
+                animated={false}
+              />
+            )}
+            {socialLinks.length > 0 && headerCfg.showLocationBar === false && (
+              <SocialMediaIcons
+                links={socialLinks}
+                variant="header"
+                className="hidden gap-1 sm:flex"
+                animated={false}
+              />
+            )}
 
             {/* User */}
             {authUser ? (
@@ -278,6 +297,14 @@ export default function CustomerNavbar() {
                     </Link>
                   </motion.div>
                 ))}
+                {socialLinks.length > 0 && (
+                  <div className="mt-3 border-t border-black/5 pt-3">
+                    <p className="mb-2 px-1 text-[10px] font-bold uppercase tracking-wider opacity-50" style={{ color: headerFont }}>
+                      Follow us
+                    </p>
+                    <SocialMediaIcons links={socialLinks} variant="header" animated={false} />
+                  </div>
+                )}
                 <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-black/5 pt-3">
                   <ThemeSwitcher showLabel className="w-full justify-center sm:w-auto" />
                   <button type="button" onClick={() => { setOpen(false); setOrderTypeModalOpen(true); }}
