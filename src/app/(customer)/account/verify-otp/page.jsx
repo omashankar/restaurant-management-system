@@ -7,6 +7,7 @@ import { motion } from "framer-motion";
 import { Loader2, ShieldCheck, ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { normalizePhoneForOtp } from "@/lib/phoneUtils";
 import { useCallback, useEffect, useState } from "react";
 
 const OTP_TTL_SEC = 120;
@@ -26,7 +27,8 @@ export default function VerifyOtpPage() {
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    setPhone(params.get("phone") ?? "");
+    const raw = params.get("phone") ?? "";
+    setPhone(normalizePhoneForOtp(raw) || raw);
     const next = params.get("next");
     if (next && next.startsWith("/")) setNextPath(next);
   }, []);

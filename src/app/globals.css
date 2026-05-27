@@ -1009,6 +1009,24 @@ body {
   padding-right: 2.75rem;
 }
 
+/* Mobile input with fixed country prefix (+91) inside the field */
+.ct-field-wrap--prefix .ct-field-prefix {
+  position: absolute;
+  left: 1rem;
+  top: 50%;
+  z-index: 1;
+  transform: translateY(-50%);
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--customer-muted);
+  pointer-events: none;
+  user-select: none;
+}
+
+.ct-field-wrap--prefix .ct-field {
+  padding-left: 3.35rem;
+}
+
 .ct-field-wrap .ct-field[type="date"] {
   color-scheme: light;
 }

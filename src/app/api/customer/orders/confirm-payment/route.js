@@ -2,7 +2,7 @@ import clientPromise from "@/lib/mongodb";
 import { getCustomerTokenFromRequest, verifyCustomerToken } from "@/lib/customerAuth";
 import {
   assertStripePaymentIntentForOrder,
-  getPlatformPaymentSecrets,
+  getPaymentSecrets,
   verifyRazorpayCheckoutSignature,
 } from "@/lib/paymentGateway";
 
@@ -40,7 +40,7 @@ export async function POST(request) {
       if (!razorpayOrderId || !razorpayPaymentId || !razorpaySignature) {
         return Response.json({ success: false, error: "Incomplete Razorpay payload." }, { status: 400 });
       }
-      const secrets = await getPlatformPaymentSecrets(db);
+      const secrets = await getPaymentSecrets(db, order.restaurantId);
       const ok = verifyRazorpayCheckoutSignature({
         orderId: razorpayOrderId,
         paymentId: razorpayPaymentId,
@@ -72,7 +72,7 @@ export async function POST(request) {
         return Response.json({ success: false, error: "paymentIntentId is required." }, { status: 400 });
       }
       try {
-        await assertStripePaymentIntentForOrder(db, paymentIntentId, orderId);
+        await assertStripePaymentIntentForOrder(db, paymentIntentId, orderId, order.restaurantId);
       } catch (err) {
         return Response.json({ success: false, error: err.message || "Stripe verification failed." }, { status: 400 });
       }

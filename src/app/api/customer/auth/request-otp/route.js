@@ -3,6 +3,7 @@ import {
   customerOtpRequestLimiter,
   getClientIp,
 } from "@/lib/rateLimit";
+import { normalizePhoneForOtp } from "@/lib/phoneUtils";
 import bcrypt from "bcryptjs";
 
 const OTP_EXPIRY_MINUTES = 2;
@@ -22,11 +23,11 @@ export async function POST(request) {
   }
 
   const body = await request.json().catch(() => null);
-  const phone = String(body?.phone ?? "").trim();
+  const phone = normalizePhoneForOtp(body?.phone);
   const name = String(body?.name ?? "").trim();
   const email = String(body?.email ?? "").trim().toLowerCase();
-  if (!/^\+?[0-9]{8,15}$/.test(phone.replace(/\s|-/g, ""))) {
-    return Response.json({ success: false, error: "Enter a valid phone number." }, { status: 400 });
+  if (!phone) {
+    return Response.json({ success: false, error: "Enter a valid 10-digit mobile number." }, { status: 400 });
   }
 
   try {

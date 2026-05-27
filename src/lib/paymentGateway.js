@@ -1,4 +1,5 @@
 import crypto from "node:crypto";
+import { decryptSecret, isSecretMask } from "@/lib/cryptoUtils";
 
 function toLowerCurrency(value) {
   return String(value || "USD").trim().toLowerCase();
@@ -9,7 +10,32 @@ function toMinorUnits(amount) {
 }
 
 function isOnlineMethod(method) {
-  return ["upi", "card", "netBanking", "wallet", "payLater", "bankTransfer"].includes(method);
+  return ["upi", "card", "debitCard", "netBanking", "wallet", "payLater", "bankTransfer"].includes(method);
+}
+
+const EMPTY_SECRETS = {
+  razorpayKeyId: "",
+  razorpayKeySecret: "",
+  razorpayWebhookSecret: "",
+  stripeSecretKey: "",
+  stripePublicKey: "",
+  stripeWebhookSecret: "",
+  cashfreeApiKey: "",
+  cashfreeSecretKey: "",
+  gateways: {},
+};
+
+function pickGatewayField(gw, field) {
+  if (!gw?.enabled) return "";
+  const raw = String(gw[field] ?? "").trim();
+  if (!raw) return "";
+  if (isSecretMask(raw)) return "";
+  const decrypted = decryptSecret(raw);
+  if (decrypted) return decrypted;
+  // Legacy plaintext in DB (not yet encrypted)
+  if (field === "apiKey" && /^rzp_|^pk_|^CF_/i.test(raw)) return raw;
+  if (field === "secretKey" && raw.length >= 8 && !/^•/.test(raw)) return raw;
+  return "";
 }
 
 async function readPlatformSettings(db) {
@@ -18,46 +44,83 @@ async function readPlatformSettings(db) {
     { projection: { payment: 1, integrations: 1 } }
   );
 
-  // New structure: payment.gateways[gwId].{apiKey, secretKey, webhookSecret, enabled, testMode}
   const gateways = doc?.payment?.gateways ?? {};
-
-  // Razorpay — new structure first, fallback to old integrations fields
   const rzpGw = gateways?.razorpay ?? {};
-  const razorpayKeyId     = String(rzpGw.apiKey     || doc?.integrations?.razorpayKeyId     || "").trim();
-  const razorpayKeySecret = String(rzpGw.secretKey  || doc?.integrations?.razorpayKeySecret || "").trim();
+  const razorpayKeyId = String(rzpGw.apiKey || doc?.integrations?.razorpayKeyId || "").trim();
+  const razorpayKeySecret = String(rzpGw.secretKey || doc?.integrations?.razorpayKeySecret || "").trim();
   const razorpayWebhookSecret = String(rzpGw.webhookSecret || doc?.integrations?.webhookSecret || "").trim();
 
-  // Stripe — new structure first, fallback to old payment fields
   const stripeGw = gateways?.stripe ?? {};
-  const stripeSecretKey    = String(stripeGw.secretKey  || doc?.payment?.stripeSecretKey  || "").trim();
-  const stripePublicKey    = String(stripeGw.publicKey  || doc?.payment?.stripePublicKey  || "").trim();
+  const stripeSecretKey = String(stripeGw.secretKey || doc?.payment?.stripeSecretKey || "").trim();
+  const stripePublicKey = String(stripeGw.publicKey || doc?.payment?.stripePublicKey || "").trim();
   const stripeWebhookSecret = String(stripeGw.webhookSecret || doc?.payment?.webhookSecret || "").trim();
 
-  // Cashfree
   const cashfreeGw = gateways?.cashfree ?? {};
-  const cashfreeApiKey    = String(cashfreeGw.apiKey    || "").trim();
+  const cashfreeApiKey = String(cashfreeGw.apiKey || "").trim();
   const cashfreeSecretKey = String(cashfreeGw.secretKey || "").trim();
 
   return {
-    // Razorpay
     razorpayKeyId,
     razorpayKeySecret,
     razorpayWebhookSecret,
-    // Stripe
     stripeSecretKey,
     stripePublicKey,
     stripeWebhookSecret,
-    // Cashfree
     cashfreeApiKey,
     cashfreeSecretKey,
-    // Raw gateways for future use
     gateways,
   };
 }
 
-/** True if customer online methods (card/UPI/…) can create a Razorpay or Stripe session. */
-export async function isOnlinePaymentConfigured(db) {
-  const cfg = await readPlatformSettings(db);
+/** Restaurant admin → Settings → Payments (encrypted keys). */
+async function readRestaurantGatewaySettings(db, restaurantId) {
+  if (!restaurantId) return { ...EMPTY_SECRETS };
+
+  const doc = await db.collection("restaurant_payment_settings").findOne(
+    { restaurantId },
+    { projection: { gateways: 1 } }
+  );
+  const gateways = doc?.gateways ?? {};
+  const rzp = gateways.razorpay ?? {};
+  const stripe = gateways.stripe ?? {};
+  const cashfree = gateways.cashfree ?? {};
+
+  return {
+    razorpayKeyId: pickGatewayField(rzp, "apiKey"),
+    razorpayKeySecret: pickGatewayField(rzp, "secretKey"),
+    razorpayWebhookSecret: pickGatewayField(rzp, "webhookSecret"),
+    stripeSecretKey: pickGatewayField(stripe, "secretKey"),
+    stripePublicKey: pickGatewayField(stripe, "publicKey"),
+    stripeWebhookSecret: pickGatewayField(stripe, "webhookSecret"),
+    cashfreeApiKey: pickGatewayField(cashfree, "apiKey"),
+    cashfreeSecretKey: pickGatewayField(cashfree, "secretKey"),
+    gateways,
+  };
+}
+
+function mergePaymentSecrets(platform, restaurant) {
+  return {
+    razorpayKeyId: restaurant.razorpayKeyId || platform.razorpayKeyId,
+    razorpayKeySecret: restaurant.razorpayKeySecret || platform.razorpayKeySecret,
+    razorpayWebhookSecret: restaurant.razorpayWebhookSecret || platform.razorpayWebhookSecret,
+    stripeSecretKey: restaurant.stripeSecretKey || platform.stripeSecretKey,
+    stripePublicKey: restaurant.stripePublicKey || platform.stripePublicKey,
+    stripeWebhookSecret: restaurant.stripeWebhookSecret || platform.stripeWebhookSecret,
+    cashfreeApiKey: restaurant.cashfreeApiKey || platform.cashfreeApiKey,
+    cashfreeSecretKey: restaurant.cashfreeSecretKey || platform.cashfreeSecretKey,
+    gateways: { ...platform.gateways, ...restaurant.gateways },
+  };
+}
+
+/** Platform + restaurant keys (restaurant Settings → Payment Gateway wins when enabled). */
+export async function getPaymentSecrets(db, restaurantId = null) {
+  const platform = await readPlatformSettings(db);
+  if (!restaurantId) return platform;
+  const restaurant = await readRestaurantGatewaySettings(db, restaurantId);
+  return mergePaymentSecrets(platform, restaurant);
+}
+
+function isConfigured(cfg) {
   return Boolean(
     (cfg.razorpayKeyId && cfg.razorpayKeySecret) ||
     cfg.stripeSecretKey ||
@@ -65,8 +128,15 @@ export async function isOnlinePaymentConfigured(db) {
   );
 }
 
+/** True if customer online methods (card/UPI/…) can create a gateway session. */
+export async function isOnlinePaymentConfigured(db, restaurantId = null) {
+  const cfg = await getPaymentSecrets(db, restaurantId);
+  return isConfigured(cfg);
+}
+
 export async function createGatewayPaymentSession({
   db,
+  restaurantId = null,
   amount,
   currency,
   orderId,
@@ -74,11 +144,10 @@ export async function createGatewayPaymentSession({
 }) {
   if (!isOnlineMethod(method)) return null;
 
-  const cfg = await readPlatformSettings(db);
+  const cfg = await getPaymentSecrets(db, restaurantId);
   const ccy = toLowerCurrency(currency);
   const minor = toMinorUnits(amount);
 
-  // Prefer Razorpay when configured (good fit for INR/UPI), fallback to Stripe.
   if (cfg.razorpayKeyId && cfg.razorpayKeySecret) {
     const res = await fetch("https://api.razorpay.com/v1/orders", {
       method: "POST",
@@ -150,12 +219,13 @@ export async function createGatewayPaymentSession({
   throw new Error("No online payment gateway configured.");
 }
 
-/**
- * Fetch PaymentIntent from Stripe and verify it succeeded for metadata.orderId.
- * @param {import("mongodb").Db} db
- */
-export async function assertStripePaymentIntentForOrder(db, paymentIntentId, expectedMetadataOrderId) {
-  const cfg = await readPlatformSettings(db);
+export async function assertStripePaymentIntentForOrder(
+  db,
+  paymentIntentId,
+  expectedMetadataOrderId,
+  restaurantId = null
+) {
+  const cfg = await getPaymentSecrets(db, restaurantId);
   if (!cfg.stripeSecretKey) {
     throw new Error("Stripe is not configured.");
   }
@@ -211,6 +281,7 @@ export function verifyStripeWebhook(body, signature, secret) {
   return crypto.timingSafeEqual(Buffer.from(expected), Buffer.from(v1Part.slice(3)));
 }
 
+/** @deprecated Use getPaymentSecrets(db, restaurantId) */
 export async function getPlatformPaymentSecrets(db) {
   return readPlatformSettings(db);
 }

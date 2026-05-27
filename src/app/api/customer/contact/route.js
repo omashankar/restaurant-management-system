@@ -11,8 +11,8 @@ export async function POST(request) {
     const subject = String(body?.subject ?? "").trim();
     const message = String(body?.message ?? "").trim();
 
-    if (!name || name.length < 2) {
-      return Response.json({ success: false, error: "Please enter your name." }, { status: 400 });
+    if (!name || name.length < 2 || !/[a-zA-Z\u0900-\u097F]/.test(name)) {
+      return Response.json({ success: false, error: "Please enter a valid name (at least 2 letters)." }, { status: 400 });
     }
     if (!email || !EMAIL_RE.test(email)) {
       return Response.json({ success: false, error: "Please enter a valid email." }, { status: 400 });

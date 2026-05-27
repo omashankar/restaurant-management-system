@@ -38,6 +38,20 @@ export default function GatewaySettingsSection({ data, onChange, onSave, showToa
   }
 
   async function handleSave() {
+    const active = data[activeGw] ?? EMPTY_GW;
+    if (active.enabled && !isCustom) {
+      const key = String(active.apiKey ?? "").trim();
+      const secret = String(active.secretKey ?? "").trim();
+      const keyOk = key && !/^•{4,}/.test(key);
+      const secretOk = secret && !/^•{4,}/.test(secret);
+      if (!keyOk || !secretOk) {
+        setTestResult({
+          success: false,
+          message: "Enter full API Key and Secret Key, then Save (masked dots are not enough).",
+        });
+        return;
+      }
+    }
     setSaving(true);
     await onSave(data);
     setSaving(false);

@@ -7,6 +7,7 @@ import {
   setCustomerTokenCookie,
   signCustomerToken,
 } from "@/lib/customerAuth";
+import { normalizePhoneForOtp } from "@/lib/phoneUtils";
 import bcrypt from "bcryptjs";
 
 export async function POST(request) {
@@ -20,7 +21,7 @@ export async function POST(request) {
   }
 
   const body = await request.json().catch(() => null);
-  const phone = String(body?.phone ?? "").trim();
+  const phone = normalizePhoneForOtp(body?.phone);
   const otp = String(body?.otp ?? "").trim();
   if (!phone || !otp) {
     return Response.json({ success: false, error: "Phone and OTP are required." }, { status: 400 });

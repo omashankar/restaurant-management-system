@@ -1,13 +1,26 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { readStoredCartLines, writeStoredCartLines } from "@/lib/customerSessionStorage";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 /**
- * Customer cart state.
+ * Customer cart state — persisted per restaurant in sessionStorage.
  * Each line: { id, name, price, image, itemType, prepTime, qty }
  */
-export function useCart() {
+export function useCart(storageScope = "default") {
   const [lines, setLines] = useState([]);
+  const [hydrated, setHydrated] = useState(false);
+
+  useEffect(() => {
+    setHydrated(false);
+    setLines(readStoredCartLines(storageScope));
+    setHydrated(true);
+  }, [storageScope]);
+
+  useEffect(() => {
+    if (!hydrated) return;
+    writeStoredCartLines(storageScope, lines);
+  }, [lines, storageScope, hydrated]);
 
   const addItem = useCallback((item) => {
     setLines((prev) => {
@@ -17,7 +30,18 @@ export function useCart() {
         next[idx] = { ...next[idx], qty: next[idx].qty + 1 };
         return next;
       }
-      return [...prev, { id: item.id, name: item.name, price: item.price, image: item.image ?? null, itemType: item.itemType ?? null, prepTime: item.prepTime ?? null, qty: 1 }];
+      return [
+        ...prev,
+        {
+          id: item.id,
+          name: item.name,
+          price: item.price,
+          image: item.image ?? null,
+          itemType: item.itemType ?? null,
+          prepTime: item.prepTime ?? null,
+          qty: 1,
+        },
+      ];
     });
   }, []);
 
@@ -27,7 +51,7 @@ export function useCart() {
 
   const setQty = useCallback((id, qty) => {
     const q = Math.max(1, parseInt(qty, 10) || 1);
-    setLines((prev) => prev.map((l) => l.id === id ? { ...l, qty: q } : l));
+    setLines((prev) => prev.map((l) => (l.id === id ? { ...l, qty: q } : l)));
   }, []);
 
   const clearCart = useCallback(() => setLines([]), []);
@@ -36,5 +60,5 @@ export function useCart() {
   const itemCount = useMemo(() => lines.reduce((s, l) => s + l.qty, 0), [lines]);
   const maxPrepTime = useMemo(() => Math.max(0, ...lines.map((l) => l.prepTime ?? 0)), [lines]);
 
-  return { lines, addItem, removeItem, setQty, clearCart, subtotal, itemCount, maxPrepTime };
+  return { lines, addItem, removeItem, setQty, clearCart, subtotal, itemCount, maxPrepTime, hydrated };
 }

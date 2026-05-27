@@ -169,13 +169,14 @@ export async function POST(request) {
     const deliveryCharge = orderType === "delivery" ? Number(safeServiceCharge.toFixed(2)) : 0;
     const total = Number((subtotal + tax + deliveryCharge).toFixed(2));
     const now = new Date();
-    const currency = String(settingsDoc?.general?.currency || "USD").toUpperCase();
+    const currency = String(settingsDoc?.general?.currency || "INR").toUpperCase();
     const orderId = `ORD-C-${Date.now()}`;
     let gatewaySession = null;
-    if (["upi", "card", "netBanking", "wallet", "payLater", "bankTransfer"].includes(paymentMethod)) {
+    if (["upi", "card", "debitCard", "netBanking", "wallet", "payLater", "bankTransfer"].includes(paymentMethod)) {
       try {
         gatewaySession = await createGatewayPaymentSession({
           db,
+          restaurantId,
           amount: total,
           currency,
           orderId,
@@ -214,7 +215,7 @@ export async function POST(request) {
       payment: {
         method: paymentMethod,
         status: paymentMethod === "cod" || paymentMethod === "cashCounter" ? "pending" : "initiated",
-        provider: ["upi", "card", "netBanking", "wallet", "payLater"].includes(paymentMethod)
+        provider: ["upi", "card", "debitCard", "netBanking", "wallet", "payLater"].includes(paymentMethod)
           ? "gateway"
           : "offline",
         currency,

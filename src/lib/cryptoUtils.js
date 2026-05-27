@@ -56,6 +56,12 @@ export function maskSecret(value, visibleChars = 4) {
 }
 
 export const SECRET_MASK = "••••••••";
+/** True when UI shows a masked placeholder (do not re-encrypt as a new secret). */
 export function isSecretMask(value) {
-  return !value || value === SECRET_MASK || /^•+$/.test(String(value));
+  const s = String(value ?? "").trim();
+  if (!s) return true;
+  if (s === SECRET_MASK) return true;
+  // maskSecret() → ••••••••abcd
+  if (/^•{4,}/.test(s)) return true;
+  return /^•+$/.test(s);
 }

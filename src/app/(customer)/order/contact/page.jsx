@@ -18,6 +18,11 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import { CheckCircle2, Clock, Loader2, Mail, MapPin, Phone, Send } from "lucide-react";
 import Link from "next/link";
+import {
+  isValidContactMessage,
+  isValidEmail,
+  isValidGuestName,
+} from "@/lib/customerFormValidation";
 import { useState } from "react";
 
 export default function ContactPage() {
@@ -35,8 +40,16 @@ export default function ContactPage() {
 
   const submit = async (e) => {
     e.preventDefault();
-    if (!form.name.trim() || !form.email.trim() || !form.message.trim()) {
-      showToast("Please fill name, email, and message.", "error");
+    if (!isValidGuestName(form.name)) {
+      showToast("Please enter a valid name (at least 2 letters).", "error");
+      return;
+    }
+    if (!isValidEmail(form.email)) {
+      showToast("Please enter a valid email address.", "error");
+      return;
+    }
+    if (!isValidContactMessage(form.message)) {
+      showToast("Message must be at least 10 characters.", "error");
       return;
     }
     setLoading(true);
@@ -187,8 +200,16 @@ export default function ContactPage() {
                       </div>
                       <div>
                         <label className={customerPage.label}>Message *</label>
-                        <textarea rows={5} value={form.message} onChange={(e) => set("message", e.target.value)}
-                          placeholder="Your message…" className={inputCls + " resize-none"} />
+                        <textarea
+                          rows={5}
+                          value={form.message}
+                          onChange={(e) => set("message", e.target.value)}
+                          placeholder="Your message…"
+                          className={inputCls + " resize-none"}
+                        />
+                        {form.message.trim() && !isValidContactMessage(form.message) ? (
+                          <p className="mt-1 text-[11px] text-red-500">Message must be at least 10 characters.</p>
+                        ) : null}
                       </div>
                       <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
                         type="submit" disabled={loading}

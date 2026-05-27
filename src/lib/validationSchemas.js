@@ -1,5 +1,11 @@
 import { z } from "zod";
 
+const guestNameSchema = z
+  .string()
+  .trim()
+  .min(2, "Customer name must be at least 2 characters.")
+  .refine((v) => /[a-zA-Z\u0900-\u097F]/.test(v), "Customer name must include letters.");
+
 export const signupSchema = z.object({
   name: z
     .string({ required_error: "Name is required." })
@@ -70,20 +76,29 @@ export const orderPatchSchema = z.object({
 
 const customerCheckoutInfoSchema = z
   .object({
-    name: z.string().min(1, "Customer name is required."),
+    name: guestNameSchema,
     phone: z.string().optional().default(""),
     email: z.union([z.string().email("Invalid email address."), z.literal("")]).optional().default(""),
     address: z.string().optional(),
     tableNumber: z.string().optional(),
   })
   .superRefine((data, ctx) => {
-    const phoneOk = String(data.phone ?? "").trim().length > 0;
+    const rawPhone = String(data.phone ?? "").trim();
+    const digits = rawPhone.replace(/^\+91/, "").replace(/\D/g, "").slice(-10);
+    const phoneOk = /^[6-9]\d{9}$/.test(digits);
     const em = String(data.email ?? "").trim();
     const emailOk = em.length > 0 && z.string().email().safeParse(em).success;
     if (!phoneOk && !emailOk) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: "Provide a phone number or a valid email for contact.",
+        message: "Provide a valid mobile number or email for contact.",
+        path: ["phone"],
+      });
+    }
+    if (rawPhone && !phoneOk) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Enter a valid 10-digit Indian mobile number.",
         path: ["phone"],
       });
     }

@@ -77,6 +77,7 @@ export const customerInteractive = {
   fieldWrap: "ct-field-wrap",
   fieldWrapPadLeft: "ct-field-wrap ct-field-wrap--pad-left",
   fieldWrapPadRight: "ct-field-wrap ct-field-wrap--pad-right",
+  fieldWrapPrefix: "ct-field-wrap ct-field-wrap--prefix",
   linkArrow: "ct-link-arrow",
   mediaZoom: "ct-media-zoom",
   cardMotion: "ct-card ct-card-motion ct-card-hover-shadow",

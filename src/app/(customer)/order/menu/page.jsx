@@ -38,7 +38,7 @@ function SkeletonCard() {
 }
 
 function CustomerMenuPageContent() {
-  const { cart, setOrderTypeModalOpen, orderType, setOrderType, updateCustomer, showToast, setCartOpen } = useCustomer();
+  const { cart, setOrderTypeModalOpen, orderType, setOrderType, updateCustomer, tryAddToCart } = useCustomer();
   const { menuItems, categories } = useModuleData();
   const { link } = useRestaurantSlug();
   const { content: cms } = useRestaurantCms();
@@ -89,12 +89,7 @@ function CustomerMenuPageContent() {
     });
   }, [activeItems, search, activeCategory, activeType, fastOnly]);
 
-  const handleAdd = (item) => {
-    if (!orderType) { setOrderTypeModalOpen(true); return; }
-    cart.addItem(item);
-    showToast(`${item.name} added to cart`);
-    setCartOpen(true);
-  };
+  const handleAdd = (item) => tryAddToCart(item);
 
   const OrderTypeIcon = orderType ? TYPE_ICON[orderType] : null;
   const cartBar    = cart.itemCount > 0;

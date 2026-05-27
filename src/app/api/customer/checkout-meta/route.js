@@ -47,9 +47,9 @@ export async function GET(request) {
   try {
     const client = await clientPromise;
     const db = client.db();
-    const onlineOk = await isOnlinePaymentConfigured(db).catch(() => false);
-
     const restaurantId = await getRestaurantIdFromRequest(db, request);
+    const onlineOk = await isOnlinePaymentConfigured(db, restaurantId).catch(() => false);
+
     if (!restaurantId) {
       return Response.json({
         success: true,

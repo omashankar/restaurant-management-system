@@ -212,7 +212,7 @@ function PromoBannerSlider({ banners, link }) {
 }
 
 export default function CustomerHomePage() {
-  const { setOrderType, setOrderTypeModalOpen } = useCustomer();
+  const { setOrderType, setOrderTypeModalOpen, tryAddToCart } = useCustomer();
   const { menuItems, categories } = useModuleData();
   const { link } = useRestaurantSlug();
   const { info } = useRestaurantInfo();
@@ -680,9 +680,13 @@ export default function CustomerHomePage() {
                           {(item.prepTime ?? 99) < 10 ? <Zap className="size-3.5 text-amber-400" /> : <Clock className="size-3.5 text-customer-muted" />}
                           {item.prepTime != null ? `${item.prepTime} min` : "—"}
                         </span>
-                        <Link href={link("/order/menu")} className={`${customerClasses.btnPrimary} px-5 py-2 text-xs`}>
-                          Add to Order
-                        </Link>
+                        <button
+                          type="button"
+                          onClick={() => tryAddToCart(item)}
+                          className={`${customerClasses.btnPrimary} cursor-pointer px-5 py-2 text-xs`}
+                        >
+                          Add to Cart
+                        </button>
                       </div>
                     </div>
                   </motion.article>
@@ -735,9 +739,13 @@ export default function CustomerHomePage() {
                         <FoodTypeIndicator type={item.itemType} size={13} />{item.name}
                       </h3>
                       {item.description && <p className="mt-1 line-clamp-2 text-[11px] leading-relaxed text-customer-muted">{item.description}</p>}
-                      <Link href={link("/order/menu")} className={`${customerClasses.btnPrimary} mt-auto flex w-full items-center justify-center gap-1.5 py-2.5 pt-3 text-xs`}>
-                        <Plus className="size-3.5" /> Add to Order
-                      </Link>
+                      <button
+                        type="button"
+                        onClick={() => tryAddToCart(item)}
+                        className={`${customerClasses.btnPrimary} mt-auto flex w-full cursor-pointer items-center justify-center gap-1.5 py-2.5 pt-3 text-xs`}
+                      >
+                        <Plus className="size-3.5" /> Add to Cart
+                      </button>
                     </div>
                   </motion.div>
                 ))}

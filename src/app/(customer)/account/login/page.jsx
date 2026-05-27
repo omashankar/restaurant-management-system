@@ -4,12 +4,12 @@ import { useCustomer } from "@/context/CustomerContext";
 import { useRestaurantSlug } from "@/hooks/useRestaurantSlug";
 import { motion } from "framer-motion";
 import RestaurantLogo from "@/components/customer/RestaurantLogo";
-import { Loader2, Phone, ShieldCheck } from "lucide-react";
+import CustomerMobileInput from "@/components/customer/CustomerMobileInput";
+import { normalizePhoneForOtp } from "@/lib/phoneUtils";
+import { Loader2, ShieldCheck } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useState } from "react";
-
-const PHONE_REGEX = /^\+?[0-9]{8,15}$/;
 
 function CustomerLoginContent() {
   const router = useRouter();
@@ -95,22 +95,15 @@ function CustomerLoginContent() {
 
             {/* Phone input */}
             <div className="space-y-4">
-              <div>
-                <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-customer-muted">
-                  Mobile Number
-                </label>
-                <div className="relative">
-                  <Phone className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-customer-muted" />
-                  <input
-                    inputMode="tel"
-                    autoComplete="tel"
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    onKeyDown={(e) => e.key === "Enter" && requestOtp()}
-                    className="min-h-[52px] w-full rounded-xl border border-customer-border bg-white py-3 pl-11 pr-4 text-base text-customer-text outline-none transition-all placeholder:text-customer-muted focus:border-customer-primary/50 focus:ring-2 focus:ring-[var(--customer-primary)]/10"
-                    placeholder="+91 98765 43210"
-                  />
-                </div>
+              <div onKeyDown={(e) => e.key === "Enter" && requestOtp()}>
+                <CustomerMobileInput
+                  id="login-mobile"
+                  label="Mobile number"
+                  required
+                  value={phone}
+                  onChange={setPhone}
+                  labelClassName="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-customer-muted"
+                />
                 <p className="mt-1.5 text-xs text-customer-muted">
                   We&apos;ll send a one-time code. New accounts are created automatically.
                 </p>

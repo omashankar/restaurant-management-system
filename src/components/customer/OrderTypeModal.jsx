@@ -4,7 +4,7 @@ import { useCustomer } from "@/context/CustomerContext";
 import { useRestaurantSlug } from "@/hooks/useRestaurantSlug";
 import { motion, AnimatePresence } from "framer-motion";
 import { Bike, Check, ConciergeBell, Store, X } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 
 const TYPES = [
   {
@@ -13,10 +13,7 @@ const TYPES = [
     desc: "Eat at our restaurant",
     Icon: Store,
     gradient: "from-orange-400 to-customer-primary",
-    bg: "bg-orange-50",
-    border: "border-orange-200",
     active: "border-customer-primary bg-customer-primary/5",
-    dot: "bg-customer-primary",
   },
   {
     id: "takeaway",
@@ -24,10 +21,7 @@ const TYPES = [
     desc: "Pick up your order",
     Icon: ConciergeBell,
     gradient: "from-amber-400 to-amber-500",
-    bg: "bg-amber-50",
-    border: "border-amber-200",
     active: "border-amber-500 bg-amber-50",
-    dot: "bg-amber-500",
   },
   {
     id: "delivery",
@@ -35,39 +29,48 @@ const TYPES = [
     desc: "Delivered to your door",
     Icon: Bike,
     gradient: "from-rose-400 to-rose-500",
-    bg: "bg-rose-50",
-    border: "border-rose-200",
     active: "border-rose-500 bg-rose-50",
-    dot: "bg-rose-500",
   },
 ];
 
 export default function OrderTypeModal() {
-  const { orderTypeModalOpen, setOrderTypeModalOpen, setOrderType, orderType } = useCustomer();
+  const {
+    orderTypeModalOpen,
+    closeOrderTypeModal,
+    completeOrderTypeChoice,
+    orderType,
+    pendingCartItem,
+  } = useCustomer();
   const router = useRouter();
+  const pathname = usePathname();
   const { link } = useRestaurantSlug();
 
   const choose = (type) => {
-    setOrderType(type);
-    setOrderTypeModalOpen(false);
-    router.push(link("/order/menu"));
+    const hadPendingItem = completeOrderTypeChoice(type);
+    const menuHref = link("/order/menu");
+    const onMenuPage =
+      pathname === menuHref ||
+      pathname?.endsWith("/order/menu") ||
+      pathname?.includes("/order/menu");
+
+    if (hadPendingItem && !onMenuPage) {
+      router.push(menuHref);
+    }
   };
 
   return (
     <AnimatePresence>
       {orderTypeModalOpen && (
         <div className="fixed inset-0 z-[100] flex items-end justify-center p-4 sm:items-center">
-          {/* Backdrop */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
             className="absolute inset-0 bg-black/50 backdrop-blur-sm"
-            onClick={() => setOrderTypeModalOpen(false)}
+            onClick={closeOrderTypeModal}
           />
 
-          {/* Modal */}
           <motion.div
             initial={{ opacity: 0, y: 60, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -75,7 +78,6 @@ export default function OrderTypeModal() {
             transition={{ type: "spring", stiffness: 300, damping: 28 }}
             className="relative z-10 w-full max-w-md overflow-hidden rounded-3xl bg-white shadow-2xl"
           >
-            {/* Header */}
             <div className="relative overflow-hidden px-6 pb-4 pt-6">
               <div className="pointer-events-none absolute inset-0 gradient-primary opacity-5" />
               <div className="flex items-start justify-between">
@@ -84,23 +86,25 @@ export default function OrderTypeModal() {
                     How would you like to order?
                   </h2>
                   <p className="mt-1 text-sm text-customer-muted">
-                    Choose your preferred dining style
+                    {pendingCartItem
+                      ? `We'll add "${pendingCartItem.name}" to your cart right after you choose.`
+                      : "Choose your preferred dining style. You can change this anytime."}
                   </p>
                 </div>
                 <motion.button
                   whileTap={{ scale: 0.9 }}
                   type="button"
-                  onClick={() => setOrderTypeModalOpen(false)}
+                  onClick={closeOrderTypeModal}
                   className="flex cursor-pointer size-9 items-center justify-center rounded-xl border border-customer-border text-customer-muted transition-colors hover:bg-customer-cream"
+                  aria-label="Close"
                 >
                   <X className="size-5" />
                 </motion.button>
               </div>
             </div>
 
-            {/* Options */}
             <div className="space-y-3 px-6 pb-6">
-              {TYPES.map(({ id, label, desc, Icon, gradient, active, border, dot }, i) => {
+              {TYPES.map(({ id, label, desc, Icon, gradient, active }, i) => {
                 const isSelected = orderType === id;
                 return (
                   <motion.button
@@ -113,21 +117,20 @@ export default function OrderTypeModal() {
                     type="button"
                     onClick={() => choose(id)}
                     className={`flex cursor-pointer w-full items-center gap-4 rounded-2xl border-2 p-4 text-left transition-all duration-200 ${
-                      isSelected ? active : `border-customer-border bg-white hover:border-customer-primary/30 hover:bg-customer-cream`
+                      isSelected
+                        ? active
+                        : "border-customer-border bg-white hover:border-customer-primary/30 hover:bg-customer-cream"
                     }`}
                   >
-                    {/* Icon */}
-                    <div className={`flex size-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br ${gradient} shadow-md`}>
+                    <div
+                      className={`flex size-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br ${gradient} shadow-md`}
+                    >
                       <Icon className="size-6 text-white" />
                     </div>
-
-                    {/* Text */}
                     <div className="flex-1">
                       <p className="font-poppins font-semibold text-customer-text">{label}</p>
                       <p className="text-xs text-customer-muted">{desc}</p>
                     </div>
-
-                    {/* Check */}
                     <AnimatePresence>
                       {isSelected && (
                         <motion.div

@@ -112,8 +112,14 @@ export default function SettingsPage() {
         body: JSON.stringify({ section, data }),
       });
       const json = await res.json();
-      if (json.success) showToast("success", "Saved successfully.");
-      else showToast("error", json.error ?? "Failed to save.");
+      if (json.success) {
+        showToast("success", section === "gateways" ? "Payment gateway saved. Refresh customer checkout to see UPI/Card." : "Saved successfully.");
+        if (section === "gateways") {
+          const reload = await fetch("/api/payment-settings");
+          const data2 = await reload.json();
+          if (data2.success) setPaySettings((p) => ({ ...p, ...data2.settings }));
+        }
+      } else showToast("error", json.error ?? "Failed to save.");
     } catch { showToast("error", "Network error."); }
   }
 

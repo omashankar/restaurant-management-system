@@ -1,11 +1,18 @@
 "use client";
 
+import CustomerMobileInput from "@/components/customer/CustomerMobileInput";
 import StripePaymentModal from "@/components/payments/StripePaymentModal";
 import Modal from "@/components/ui/Modal";
 import { useCustomer } from "@/context/CustomerContext";
 import { useRestaurantSlug } from "@/hooks/useRestaurantSlug";
 import { calcOrderTotals, useCheckoutMeta } from "@/hooks/useCheckoutMeta";
+import {
+  isValidGuestName,
+  isValidEmail,
+  validateCheckoutContact,
+} from "@/lib/customerFormValidation";
 import { formatCustomerMoney } from "@/lib/customerCurrency";
+import { normalizePhoneForOtp } from "@/lib/phoneUtils";
 import { customerClasses, customerPage, customerType } from "@/lib/customerTheme";
 import { motion, AnimatePresence } from "framer-motion";
 import { Bike, ConciergeBell, Loader2, Phone, Store, ShoppingBag } from "lucide-react";
@@ -71,6 +78,8 @@ export default function CheckoutPage() {
   const [otpError, setOtpError] = useState("");
   const [otpDevHint, setOtpDevHint] = useState("");
   const otpRefs = useRef([]);
+  const [availableTables, setAvailableTables] = useState([]);
+  const [tablesLoading, setTablesLoading] = useState(false);
 
   const { lines, subtotal, clearCart } = cart;
   const couponDiscount = useMemo(() => {
@@ -151,6 +160,33 @@ export default function CheckoutPage() {
     return () => clearInterval(t);
   }, [otpCooldown]);
 
+  // Load available dine-in tables for dropdown selection
+  useEffect(() => {
+    if (orderType !== "dine-in") {
+      setAvailableTables([]);
+      setTablesLoading(false);
+      return;
+    }
+    let cancelled = false;
+    setTablesLoading(true);
+    fetch("/api/customer/tables?status=available", { cache: "no-store" })
+      .then((r) => r.json())
+      .then((data) => {
+        if (cancelled) return;
+        const list = Array.isArray(data?.tables) ? data.tables : [];
+        setAvailableTables(list);
+      })
+      .catch(() => {
+        if (!cancelled) setAvailableTables([]);
+      })
+      .finally(() => {
+        if (!cancelled) setTablesLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [orderType]);
+
   if (!orderType) {
     return (
       <motion.div
@@ -185,18 +221,24 @@ export default function CheckoutPage() {
       setIsAuthModalOpen(true);
       return;
     }
-    if (!customer.name.trim()) {
-      showToast("Name is required.", "error");
+    if (!isValidGuestName(customer.name)) {
+      showToast("Please enter a valid full name (at least 2 letters).", "error");
       return;
     }
-    const phoneOk = customer.phone.trim().length > 0;
-    const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(customer.email ?? "").trim());
-    if (!phoneOk && !emailOk) {
-      showToast("Please add a phone number or a valid email for contact.", "error");
+    const contact = validateCheckoutContact({
+      phone: customer.phone,
+      email: customer.email,
+    });
+    if (!contact.ok) {
+      showToast(contact.error, "error");
       return;
     }
-    if (orderType === "delivery" && !customer.address.trim()) {
-      showToast("Delivery address is required.", "error"); return;
+    if (orderType === "delivery") {
+      const addr = customer.address.trim();
+      if (addr.length < 10) {
+        showToast("Please enter a complete delivery address (at least 10 characters).", "error");
+        return;
+      }
     }
     if (orderType === "dine-in" && !customer.tableNumber.trim()) {
       showToast("Table number is required.", "error"); return;
@@ -221,8 +263,8 @@ export default function CheckoutPage() {
           })),
           customer: {
             name: customer.name.trim(),
-            phone: customer.phone.trim(),
-            email: customer.email.trim(),
+            phone: contact.phoneE164 || customer.phone.trim(),
+            email: contact.email || customer.email.trim(),
             address: customer.address.trim(),
             tableNumber: customer.tableNumber.trim(),
           },
@@ -258,7 +300,7 @@ export default function CheckoutPage() {
           prefill: {
             name: customer.name.trim(),
             email: customer.email.trim(),
-            contact: customer.phone.trim(),
+            contact: contact.phoneE164 || customer.phone.trim(),
           },
           handler: async (response) => {
             const confirm = await confirmPayment(createdOrderId, "razorpay", response);
@@ -331,9 +373,9 @@ export default function CheckoutPage() {
   };
 
   const requestOtp = async () => {
-    const normalized = otpPhone.replace(/\s|-/g, "");
-    if (!/^\+?[0-9]{8,15}$/.test(normalized)) {
-      setOtpError("Please enter a valid mobile number.");
+    const normalized = normalizePhoneForOtp(otpPhone);
+    if (!normalized) {
+      setOtpError("Please enter a valid 10-digit mobile number.");
       return;
     }
     setOtpLoading(true);
@@ -462,18 +504,25 @@ export default function CheckoutPage() {
             </p>
             <div className="grid gap-4 sm:grid-cols-2">
               <Field label="Full Name" required>
-                <input value={customer.name} onChange={(e) => updateCustomer({ name: e.target.value })} placeholder="Your name" className={inputCls} />
-              </Field>
-              <Field label="Phone">
                 <input
-                  value={customer.phone}
-                  onChange={(e) => updateCustomer({ phone: e.target.value })}
-                  placeholder="+1 555 000 0000"
+                  value={customer.name}
+                  onChange={(e) => updateCustomer({ name: e.target.value })}
+                  placeholder="Your name"
                   className={inputCls}
-                  inputMode="tel"
-                  autoComplete="tel"
+                  autoComplete="name"
                 />
+                {customer.name.trim() && !isValidGuestName(customer.name) ? (
+                  <p className="mt-1 text-[11px] text-red-500">Use at least 2 letters (not numbers only).</p>
+                ) : null}
               </Field>
+              <CustomerMobileInput
+                id="checkout-mobile"
+                label="Mobile number"
+                value={customer.phone}
+                onChange={(digits) => updateCustomer({ phone: digits })}
+                labelClassName={customerPage.label}
+                className="sm:col-span-1"
+              />
               <Field label="Email">
                 <input
                   type="email"
@@ -483,10 +532,44 @@ export default function CheckoutPage() {
                   className={inputCls}
                   autoComplete="email"
                 />
+                {customer.email.trim() && !isValidEmail(customer.email) ? (
+                  <p className="mt-1 text-[11px] text-red-500">Enter a valid email address.</p>
+                ) : null}
               </Field>
               {orderType === "dine-in" && (
                 <Field label="Table Number" required>
-                  <input value={customer.tableNumber} onChange={(e) => updateCustomer({ tableNumber: e.target.value })} placeholder="e.g. T04" className={inputCls} />
+                  {availableTables.length > 0 ? (
+                    <select
+                      value={customer.tableNumber}
+                      onChange={(e) => updateCustomer({ tableNumber: String(e.target.value).trim().toUpperCase() })}
+                      className={`${inputCls} cursor-pointer`}
+                      disabled={tablesLoading}
+                    >
+                      <option value="">
+                        {tablesLoading ? "Loading tables…" : "Select your table"}
+                      </option>
+                      {availableTables.map((t) => (
+                        <option key={t.id ?? t.tableNumber} value={t.tableNumber}>
+                          {t.tableNumber}
+                          {t.capacity ? ` (Seats ${t.capacity})` : ""}
+                          {t.zone ? ` · ${t.zone}` : ""}
+                        </option>
+                      ))}
+                    </select>
+                  ) : (
+                    <div className="space-y-2">
+                      <input
+                        value={customer.tableNumber}
+                        onChange={(e) => updateCustomer({ tableNumber: String(e.target.value).trim().toUpperCase() })}
+                        placeholder={tablesLoading ? "Loading tables…" : "e.g. T04"}
+                        className={inputCls}
+                        disabled={tablesLoading}
+                      />
+                      <p className="text-[11px] text-customer-muted">
+                        Table list not available yet — please type the table number shown on your table.
+                      </p>
+                    </div>
+                  )}
                 </Field>
               )}
               {orderType === "delivery" && (
@@ -592,8 +675,14 @@ export default function CheckoutPage() {
           {otpStep === "phone" ? (
             <>
               <p className="text-sm text-customer-muted">Enter mobile number to receive OTP.</p>
-              <input value={otpPhone} onChange={(e) => setOtpPhone(e.target.value)} inputMode="tel" autoComplete="tel" placeholder="+1 555 000 0000"
-                className="w-full rounded-xl border border-customer-border bg-white px-3 py-3 text-sm text-customer-text outline-none focus:border-customer-primary/50 focus:ring-2 focus:ring-[var(--customer-primary)]/10" />
+              <CustomerMobileInput
+                id="checkout-otp-mobile"
+                label="Mobile number"
+                required
+                value={otpPhone}
+                onChange={setOtpPhone}
+                labelClassName="mb-1.5 block text-xs font-semibold text-customer-muted"
+              />
               <button type="button" disabled={otpLoading} onClick={requestOtp}
                 className="inline-flex w-full items-center justify-center gap-2 rounded-xl gradient-primary py-3 text-sm font-semibold text-white shadow-md disabled:opacity-50">
                 {otpLoading ? <Loader2 className="size-4 animate-spin" /> : <Phone className="size-4" />} Send OTP

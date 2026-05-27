@@ -1,5 +1,6 @@
 "use client";
 
+import CustomerMobileInput from "@/components/customer/CustomerMobileInput";
 import TableCard from "@/components/table/TableCard";
 import {
   CUSTOMER_BOOKING_CAPACITY_FILTERS,
@@ -17,6 +18,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { AlertCircle, CalendarClock, CheckCircle2, ChevronLeft, ChevronRight, Loader2, Users, ArrowRight } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { isValidGuestName, isValidGuestCount } from "@/lib/customerFormValidation";
+import { isValidIndianMobile, toIndianE164 } from "@/lib/phoneUtils";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 const fadeUp = customerMotion.fadeUpSm;
@@ -71,6 +74,7 @@ export default function TableBookingPage() {
   const [conflictError, setConflictError] = useState(null);
   const [customerAreaImages, setCustomerAreaImages] = useState({});
   const dateInputRef = useRef(null);
+  const minBookingDate = useMemo(() => new Date().toISOString().slice(0, 10), []);
 
   const set = (k, v) => setForm((f) => ({ ...f, [k]: v }));
   const normalizeAreaKey = (name) => String(name ?? "").trim().toLowerCase();
@@ -132,7 +136,11 @@ export default function TableBookingPage() {
     return getTablesAvailability({ tables: tablesInCat, date: form.date, time: form.time, reservations: reservationRows });
   }, [tablesInCat, form.date, form.time, reservationRows]);
 
-  const step1Valid = form.name.trim() && form.phone.trim() && form.date;
+  const step1Valid =
+    isValidGuestName(form.name) &&
+    isValidIndianMobile(form.phone) &&
+    isValidGuestCount(form.guests) &&
+    Boolean(form.date);
   const selectedCat = tableCategories.find((c) => c.id === selectedCatId);
 
   const submit = async () => {
@@ -147,7 +155,7 @@ export default function TableBookingPage() {
     setLoading(true);
     await new Promise((r) => setTimeout(r, 700));
     setReservationRows((prev) => [...prev, {
-      id: `res-c-${Date.now()}`, customerName: form.name.trim(), phone: form.phone.trim(),
+      id: `res-c-${Date.now()}`, customerName: form.name.trim(), phone: toIndianE164(form.phone),
       date: form.date, time: form.time, guests: parseInt(form.guests, 10) || 2,
       tableNumber: selectedTable?.tableNumber ?? "TBD", area: selectedCat?.name ?? "—",
       status: "pending", notes: form.notes.trim(), createdAt: new Date().toISOString(),
@@ -247,12 +255,24 @@ export default function TableBookingPage() {
               <div className="grid gap-4 sm:grid-cols-2">
                 <div>
                   <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-customer-muted">Full Name *</label>
-                  <input value={form.name} onChange={(e) => set("name", e.target.value)} placeholder="Your name" className={inputCls} />
+                  <input
+                    value={form.name}
+                    onChange={(e) => set("name", e.target.value)}
+                    placeholder="Your name"
+                    className={inputCls}
+                    autoComplete="name"
+                  />
+                  {form.name.trim() && !isValidGuestName(form.name) ? (
+                    <p className="mt-1 text-[11px] text-red-500">Use at least 2 letters (not numbers only).</p>
+                  ) : null}
                 </div>
-                <div>
-                  <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-customer-muted">Phone *</label>
-                  <input value={form.phone} onChange={(e) => set("phone", e.target.value)} placeholder="+1 555 000 0000" className={inputCls} />
-                </div>
+                <CustomerMobileInput
+                  id="booking-mobile"
+                  label="Mobile number"
+                  required
+                  value={form.phone}
+                  onChange={(digits) => set("phone", digits)}
+                />
                 <div>
                   <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-customer-muted">Date *</label>
                   <div className={customerClasses.fieldWrapPadRight}>
@@ -262,6 +282,7 @@ export default function TableBookingPage() {
                       value={form.date}
                       onChange={(e) => set("date", e.target.value)}
                       onClick={openDatePicker}
+                      min={minBookingDate}
                       className={inputCls}
                       aria-label="Reservation date"
                     />
@@ -292,11 +313,17 @@ export default function TableBookingPage() {
                       min={1}
                       max={20}
                       value={form.guests}
-                      onChange={(e) => set("guests", e.target.value)}
+                      onChange={(e) => {
+                        const v = e.target.value.replace(/\D/g, "").slice(0, 2);
+                        set("guests", v);
+                      }}
                       className={`${inputCls} ct-field--number`}
                       aria-label="Number of guests"
                     />
                   </div>
+                  {form.guests && !isValidGuestCount(form.guests) ? (
+                    <p className="mt-1 text-[11px] text-red-500">Guests must be between 1 and 20.</p>
+                  ) : null}
                 </div>
               </div>
               <div className="mt-4">
@@ -305,7 +332,23 @@ export default function TableBookingPage() {
                   placeholder="Allergies, occasion, seating preference…" className={inputCls + " resize-none"} />
               </div>
               <motion.button whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.98 }}
-                type="button" disabled={!step1Valid} onClick={() => setStep(2)}
+                type="button"
+                disabled={!step1Valid}
+                onClick={() => {
+                  if (!isValidGuestName(form.name)) {
+                    showToast("Please enter a valid full name (at least 2 letters).", "error");
+                    return;
+                  }
+                  if (!isValidIndianMobile(form.phone)) {
+                    showToast("Please enter a valid 10-digit mobile number.", "error");
+                    return;
+                  }
+                  if (!form.date) {
+                    showToast("Please select a date.", "error");
+                    return;
+                  }
+                  setStep(2);
+                }}
                 className="mt-6 flex w-full cursor-pointer items-center justify-center gap-2 rounded-full gradient-primary py-3.5 text-sm font-bold text-[var(--customer-btn-primary-fg,#ffffff)] shadow-lg shadow-[var(--customer-primary-shadow)]/25 disabled:cursor-not-allowed disabled:brightness-[0.92] disabled:saturate-50">
                 Next: Choose Area <ChevronRight className="size-4" />
               </motion.button>
@@ -441,7 +484,7 @@ export default function TableBookingPage() {
               className="ct-surface-card rounded-3xl p-8 shadow-sm">
               <h2 className="mb-6 font-poppins text-xl font-black text-customer-text">{bookingCms.confirmTitle}</h2>
               <div className="overflow-hidden rounded-2xl border border-customer-border">
-                {[{ label: "Name", value: form.name }, { label: "Phone", value: form.phone },
+                {[{ label: "Name", value: form.name }, { label: "Mobile", value: toIndianE164(form.phone) || form.phone },
                   { label: "Date", value: form.date }, { label: "Time", value: `${form.time} (~90 min)` },
                   { label: "Guests", value: `${form.guests} persons` }, { label: "Area", value: selectedCat?.name ?? "—" },
                   { label: "Table", value: selectedTable?.tableNumber }, { label: "Capacity", value: `${selectedTable?.capacity} persons` },
