@@ -1,5 +1,6 @@
 "use client";
 
+import { formatAdminMoney } from "@/lib/adminCurrency";
 import {
   Bar, BarChart, CartesianGrid, Cell,
   Line, LineChart, Pie, PieChart,
@@ -15,15 +16,15 @@ function ChartCard({ title, children, className = "" }) {
   );
 }
 
-function CustomTooltip({ active, payload, label }) {
+function CustomTooltip({ active, payload, label, currency = "INR" }) {
   if (!active || !payload?.length) return null;
   return (
     <div className="rounded-xl border border-zinc-700 bg-zinc-900 px-3 py-2 shadow-xl text-xs">
       <p className="mb-1 font-semibold text-zinc-300">{label}</p>
       {payload.map((p) => (
         <p key={p.name} style={{ color: p.color }}>
-          {p.name}: {typeof p.value === "number" && p.name.toLowerCase().includes("revenue")
-            ? `$${p.value.toFixed(2)}`
+          {p.name}: {typeof p.value === "number" && String(p.name).toLowerCase().includes("revenue")
+            ? formatAdminMoney(p.value, currency)
             : p.value}
         </p>
       ))}
@@ -34,7 +35,8 @@ function CustomTooltip({ active, payload, label }) {
 /**
  * Lazy-loaded chart bundle (recharts) for tenant analytics page.
  */
-export default function TenantAnalyticsCharts({ chartData, topItems, orderTypes }) {
+export default function TenantAnalyticsCharts({ chartData, topItems, orderTypes, currency = "INR" }) {
+  const fmtAxis = (v) => formatAdminMoney(v, currency, { decimals: 0 });
   return (
     <>
       <div className="grid gap-6 lg:grid-cols-2">
@@ -46,8 +48,8 @@ export default function TenantAnalyticsCharts({ chartData, topItems, orderTypes 
               <LineChart data={chartData} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#27272a" />
                 <XAxis dataKey="label" tick={{ fill: "#71717a", fontSize: 11 }} tickLine={false} axisLine={false} />
-                <YAxis tick={{ fill: "#71717a", fontSize: 11 }} tickLine={false} axisLine={false} tickFormatter={(v) => `$${v}`} />
-                <Tooltip content={<CustomTooltip />} />
+                <YAxis tick={{ fill: "#71717a", fontSize: 11 }} tickLine={false} axisLine={false} tickFormatter={fmtAxis} />
+                <Tooltip content={<CustomTooltip currency={currency} />} />
                 <Line type="monotone" dataKey="revenue" name="Revenue" stroke="#10b981" strokeWidth={2} dot={false} activeDot={{ r: 4, fill: "#10b981" }} />
               </LineChart>
             </ResponsiveContainer>

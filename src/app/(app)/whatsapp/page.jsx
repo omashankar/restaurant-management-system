@@ -37,6 +37,7 @@ function Toggle({ checked, onChange, label, hint }) {
 
 export default function WhatsAppPage() {
   const [loading, setLoading]           = useState(true);
+  const [loadError, setLoadError]       = useState(null);
   const [saving, setSaving]             = useState(false);
   const [saveResult, setSaveResult]     = useState(null); // { success, message }
   const [testPhone, setTestPhone]       = useState("");
@@ -48,11 +49,13 @@ export default function WhatsAppPage() {
   const [enabled, setEnabled]           = useState(false);
   const [token, setToken]               = useState("");
   const [phoneNumberId, setPhoneNumberId] = useState("");
+  const [alertPhone, setAlertPhone]     = useState("");
   const [templates, setTemplates]       = useState({});
 
   // Load settings on mount
   useEffect(() => {
     async function load() {
+      setLoadError(null);
       try {
         const res  = await fetch("/api/whatsapp-settings");
         const data = await res.json();
@@ -60,9 +63,14 @@ export default function WhatsAppPage() {
           setEnabled(data.settings.enabled);
           setToken(data.settings.token ?? "");
           setPhoneNumberId(data.settings.phoneNumberId ?? "");
+          setAlertPhone(data.settings.alertPhone ?? "");
           setTemplates(data.settings.templates ?? {});
+        } else {
+          setLoadError(data.error ?? "Failed to load WhatsApp settings.");
         }
-      } catch { /* silent */ }
+      } catch {
+        setLoadError("Could not load WhatsApp settings. Check your connection.");
+      }
       finally { setLoading(false); }
     }
     load();
@@ -79,7 +87,7 @@ export default function WhatsAppPage() {
       const res = await fetch("/api/whatsapp-settings", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ enabled, token, phoneNumberId, templates }),
+        body: JSON.stringify({ enabled, token, phoneNumberId, alertPhone, templates }),
       });
       const data = await res.json();
       setSaveResult({ success: data.success, message: data.success ? "Settings saved." : (data.error ?? "Failed.") });
@@ -138,6 +146,14 @@ export default function WhatsAppPage() {
         </button>
       </div>
 
+      {/* Load error */}
+      {loadError && (
+        <div className="flex items-center gap-2 rounded-xl border border-red-500/25 bg-red-500/10 px-4 py-3 text-sm text-red-400">
+          <XCircle className="size-4 shrink-0" />
+          {loadError}
+        </div>
+      )}
+
       {/* Save result */}
       {saveResult && (
         <div className={`flex items-center gap-2 rounded-xl border px-4 py-3 text-sm ${
@@ -189,6 +205,20 @@ export default function WhatsAppPage() {
               />
               <p className="mt-1 text-xs text-zinc-600">
                 Meta Business → WhatsApp → Phone Numbers → Phone Number ID
+              </p>
+            </div>
+            <div className="sm:col-span-2">
+              <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-zinc-500">
+                Alert Phone (Restaurant)
+              </label>
+              <input
+                value={alertPhone}
+                onChange={(e) => setAlertPhone(e.target.value.replace(/[^\d+\s-]/g, ""))}
+                placeholder="9876543210 — for new order & low stock alerts"
+                className={inputCls}
+              />
+              <p className="mt-1 text-xs text-zinc-600">
+                Leave blank to use phone from Settings → Contact. Used for New Order Alert and Low Stock templates.
               </p>
             </div>
           </div>

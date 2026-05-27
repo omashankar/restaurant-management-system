@@ -10,8 +10,8 @@ const typeStyles = {
 
 export default function AiInsights({ insights = [] }) {
   return (
-    <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-5">
-      <div className="flex items-center gap-2">
+    <div className="rms-dashboard-card rms-dashboard-card--md flex flex-col rounded-2xl border border-zinc-800 bg-zinc-900/60 p-5">
+      <div className="flex shrink-0 items-center gap-2">
         <span className="flex size-8 items-center justify-center rounded-lg bg-violet-500/15 text-violet-400 ring-1 ring-violet-500/20">
           <Sparkles className="size-4" />
         </span>
@@ -27,19 +27,21 @@ export default function AiInsights({ insights = [] }) {
       {insights.length === 0 ? (
         <p className="mt-6 text-center text-sm text-zinc-600">No insights yet — place some orders first.</p>
       ) : (
-        <div className="mt-4 grid gap-2 sm:grid-cols-2 xl:grid-cols-1 2xl:grid-cols-2">
-          {insights.map((insight, i) => {
-            const Icon = iconMap[insight.icon] ?? TrendingUp;
-            const s = typeStyles[insight.type] ?? typeStyles.info;
-            return (
-              <div key={i} className={`flex items-start gap-3 rounded-xl border p-3 ${s.card}`}>
-                <span className={`mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-lg ring-1 ${s.icon}`}>
-                  <Icon className="size-3.5" />
-                </span>
-                <p className={`text-xs leading-relaxed ${s.text}`}>{insight.text}</p>
-              </div>
-            );
-          })}
+        <div className="rms-dashboard-card__body rms-dashboard-card__body--y mt-4 min-h-0 flex-1 pr-1">
+          <div className="grid gap-2 sm:grid-cols-2">
+            {insights.map((insight, i) => {
+              const Icon = iconMap[insight.icon] ?? TrendingUp;
+              const s = typeStyles[insight.type] ?? typeStyles.info;
+              return (
+                <div key={i} className={`flex items-start gap-3 rounded-xl border p-3 ${s.card}`}>
+                  <span className={`mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-lg ring-1 ${s.icon}`}>
+                    <Icon className="size-3.5" />
+                  </span>
+                  <p className={`text-xs leading-relaxed ${s.text}`}>{insight.text}</p>
+                </div>
+              );
+            })}
+          </div>
         </div>
       )}
     </div>

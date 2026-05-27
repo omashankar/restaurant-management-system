@@ -6,13 +6,14 @@ import EmptyState from "@/components/ui/EmptyState";
 import Modal from "@/components/ui/Modal";
 import { DEFAULT_KITCHEN_FOR_TYPE, ITEM_TYPE_META, KITCHEN_TYPE_LABELS } from "@/types/menu";
 import AdminFoodTypeIndicator from "@/components/menu/AdminFoodTypeIndicator";
+import { useModuleData } from "@/context/ModuleDataContext";
 import { useToast } from "@/hooks/useToast";
 import { LayoutGrid, List, Plus, RefreshCw, Search, UtensilsCrossed } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 const ITEM_TYPES    = ["veg", "non-veg", "egg", "drink", "halal", "other"];
 const KITCHEN_TYPES = ["default_kitchen", "veg_kitchen", "non_veg_kitchen"];
-const emptyForm = { name: "", categoryId: "", price: "", description: "", status: "active", imageUrl: "", itemType: "veg", prepTime: "", kitchenType: "default_kitchen" };
+const emptyForm = { name: "", categoryId: "", price: "", description: "", status: "active", imageUrl: "", itemType: "veg", prepTime: "", kitchenType: "default_kitchen", badge: "" };
 
 function GridSkeleton() {
   return (
@@ -45,6 +46,7 @@ export default function MenuItemsPage() {
   const [formError, setFormError]   = useState("");
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [deleting, setDeleting]         = useState(false);
+  const { refreshMenu } = useModuleData();
   const { showToast, ToastUI }          = useToast();
 
   /* ── Fetch items + categories ── */
@@ -104,6 +106,7 @@ export default function MenuItemsPage() {
       imageUrl: row.image ?? "", itemType: row.itemType ?? "veg",
       prepTime: row.prepTime != null ? String(row.prepTime) : "",
       kitchenType: row.kitchenType ?? "default_kitchen",
+      badge: row.badge ?? "",
     });
     setFormError("");
     setModalOpen(true);
@@ -129,6 +132,7 @@ export default function MenuItemsPage() {
       prepTime: form.prepTime !== "" ? parseInt(form.prepTime, 10) : null,
       kitchenType: form.kitchenType,
       image: form.imageUrl.trim() || null,
+      badge: form.badge.trim() || null,
     };
 
     try {
@@ -137,12 +141,14 @@ export default function MenuItemsPage() {
         const data = await res.json();
         if (!data.success) { setFormError(data.error ?? "Failed to update."); return; }
         setItems((prev) => prev.map((m) => m.id === editingId ? { ...m, ...body } : m));
+        await Promise.all([refreshMenu(), fetchAll()]);
         showToast("Item updated successfully.");
       } else {
         const res  = await fetch("/api/menu", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
         const data = await res.json();
         if (!data.success) { setFormError(data.error ?? "Failed to create."); return; }
         setItems((prev) => [data.item, ...prev]);
+        await Promise.all([refreshMenu(), fetchAll()]);
         showToast("Item created successfully.");
       }
       setModalOpen(false);
@@ -158,6 +164,7 @@ export default function MenuItemsPage() {
       const data = await res.json();
       if (!data.success) { showToast(data.error ?? "Failed to delete.", "error"); return; }
       setItems((prev) => prev.filter((m) => m.id !== deleteTarget.id));
+      await Promise.all([refreshMenu(), fetchAll()]);
       showToast(`"${deleteTarget.name}" deleted.`);
       setDeleteTarget(null);
     } catch { showToast("Network error.", "error"); }
@@ -386,6 +393,12 @@ export default function MenuItemsPage() {
                 <option value="active">Active</option>
                 <option value="inactive">Inactive</option>
               </select>
+            </div>
+            <div className="sm:col-span-2">
+              <label className="text-xs font-medium text-zinc-500">Featured badge (optional)</label>
+              <input value={form.badge} onChange={(e) => setForm((f) => ({ ...f, badge: e.target.value }))}
+                placeholder="e.g. Chef's Pick — shows on customer home"
+                className="mt-1 w-full rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus:border-emerald-500/40 placeholder:text-zinc-600" />
             </div>
             <div className="sm:col-span-2">
               <label className="text-xs font-medium text-zinc-500">Description</label>

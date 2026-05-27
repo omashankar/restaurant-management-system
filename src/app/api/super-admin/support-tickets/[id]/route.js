@@ -108,6 +108,25 @@ export async function PATCH(request, { params }) {
     if (!ticket) {
       return Response.json({ success: false, error: "Ticket not found." }, { status: 404 });
     }
+
+    if (ticket.restaurantId && updates.length) {
+      const summary =
+        note ||
+        (status ? `Status changed to ${status}` : priority ? `Priority changed to ${priority}` : "Ticket updated");
+      await db.collection("platform_messages").insertOne({
+        role: "tenant",
+        restaurantId: ticket.restaurantId,
+        title: `Support update · ${ticket.ticketCode}`,
+        body: summary,
+        meta: {
+          ticketId: ticket._id,
+          ticketCode: ticket.ticketCode,
+          href: "/support-tickets",
+        },
+        createdAt: new Date(),
+      }).catch(() => {});
+    }
+
     return Response.json({ success: true, ticket });
   } catch (err) {
     console.error("super-admin.support-tickets.PATCH failed:", err.message);

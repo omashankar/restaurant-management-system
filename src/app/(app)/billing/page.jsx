@@ -34,6 +34,7 @@ async function loadRazorpayScript() {
 export default function BillingPage() {
   const [activeTab, setActiveTab] = useState("subscription");
   const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState(null);
   const [submittingPlan, setSubmittingPlan] = useState("");
   const [billingCycle, setBillingCycle] = useState("monthly");
   const [profile, setProfile] = useState(null);
@@ -44,18 +45,23 @@ export default function BillingPage() {
 
   const fetchOverview = useCallback(async () => {
     setLoading(true);
+    setFetchError(null);
     try {
       const res = await fetch("/api/billing/overview", { cache: "no-store" });
       const data = await res.json();
       if (!res.ok || !data?.success) {
-        showToast(data?.error ?? "Failed to load billing data.", "error");
+        const msg = data?.error ?? "Failed to load billing data.";
+        setFetchError(msg);
+        showToast(msg, "error");
         return;
       }
       setProfile(data.profile ?? null);
       setSubscription(data.subscription ?? null);
       setPlans(Array.isArray(data.plans) ? data.plans : []);
     } catch {
-      showToast("Failed to load billing data.", "error");
+      const msg = "Failed to load billing data.";
+      setFetchError(msg);
+      showToast(msg, "error");
     } finally {
       setLoading(false);
     }
@@ -220,6 +226,12 @@ export default function BillingPage() {
       {/* Subscription Tab */}
       {activeTab === "subscription" && (<>
 
+      {fetchError ? (
+        <div className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">
+          {fetchError}
+        </div>
+      ) : null}
+
       <div className="grid gap-4 md:grid-cols-3">
         <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-5 md:col-span-2">
           <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500">Current Plan</p>
@@ -300,7 +312,11 @@ export default function BillingPage() {
                 </ul>
                 <button
                   type="button"
-                  disabled={isCurrent || submittingPlan === plan.slug}
+                  disabled={
+                    isCurrent ||
+                    submittingPlan === plan.slug ||
+                    Number(amount ?? 0) <= 0
+                  }
                   onClick={() => startSubscription(plan)}
                   className="mt-5 inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-emerald-500 px-4 py-2.5 text-sm font-semibold text-zinc-950 hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-50"
                 >
@@ -309,6 +325,10 @@ export default function BillingPage() {
                       <Loader2 className="size-4 animate-spin" />
                       Processing...
                     </>
+                  ) : isCurrent ? (
+                    "Current plan"
+                  ) : Number(amount ?? 0) <= 0 ? (
+                    "Included"
                   ) : (
                     "Upgrade / Renew"
                   )}
@@ -326,7 +346,7 @@ export default function BillingPage() {
           title={`Subscribe — ${stripeSession.planName}`}
           returnUrl={
             typeof window !== "undefined"
-              ? `${window.location.origin}/admin/dashboard`
+              ? `${window.location.origin}/dashboard`
               : ""
           }
           onClose={() => {

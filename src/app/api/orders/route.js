@@ -1,7 +1,21 @@
 import { withTenant } from "@/lib/tenantDb";
 import { logInfo } from "@/lib/logger";
 import { orderCreateSchema, parseSchema } from "@/lib/validationSchemas";
+import { sendNewOrderAlertWhatsApp } from "@/lib/whatsappService";
 import { ObjectId } from "mongodb";
+
+/** Fetch restaurant tax/service-charge settings. Falls back to 0 if not set. */
+async function fetchPosSettings(db, restaurantId) {
+  const doc = await db.collection("restaurant_settings").findOne(
+    { restaurantId },
+    { projection: { pos: 1 } }
+  ).catch(() => null);
+  const pos = doc?.pos ?? {};
+  return {
+    taxPercent:           parseFloat(pos.taxPercentage ?? "0")    || 0,
+    serviceChargePercent: parseFloat(pos.serviceCharge  ?? "0")   || 0,
+  };
+}
 
 /* GET /api/orders */
 export const GET = withTenant(
@@ -36,10 +50,30 @@ export const POST = withTenant(
     } catch (err) {
       return Response.json({ success: false, error: err.message }, { status: 400 });
     }
-    const { items, orderType, tableNumber, customer, notes } = parsed;
+    const { items, orderType, tableNumber, customer, notes, paymentMethod, paymentStatus } = parsed;
 
-    const total = items.reduce((s, i) => s + (i.price * i.qty), 0);
-    const orderId = `ORD-${Date.now()}`;
+    const subtotal = items.reduce((s, i) => s + (i.price * i.qty), 0);
+    const orderId  = `ORD-${Date.now()}`;
+
+    // Use client-supplied breakdown if provided (POS sends it); otherwise read
+    // from restaurant settings so server always stores correct values.
+    let taxPercent           = parsed.taxPercent           ?? null;
+    let serviceChargePercent = parsed.serviceChargePercent ?? null;
+
+    if (taxPercent === null || serviceChargePercent === null) {
+      const settings = await fetchPosSettings(db, restaurantId);
+      if (taxPercent           === null) taxPercent           = settings.taxPercent;
+      if (serviceChargePercent === null) serviceChargePercent = settings.serviceChargePercent;
+    }
+
+    const taxAmount      = parseFloat(((subtotal * taxPercent)           / 100).toFixed(2));
+    const scAmount       = parseFloat(((subtotal * serviceChargePercent) / 100).toFixed(2));
+    const total          = parseFloat((subtotal + taxAmount + scAmount).toFixed(2));
+
+    const method = paymentMethod ?? "cashCounter";
+    const status =
+      paymentStatus ??
+      (method === "cod" || method === "payLater" ? "pending" : "paid");
 
     const doc = {
       ...tenantFilter,
@@ -49,7 +83,13 @@ export const POST = withTenant(
       tableNumber: tableNumber ?? null,
       customer: customer?.trim() || "Walk-in",
       notes: notes?.trim() ?? "",
+      subtotal,
+      taxPercent,
+      taxAmount,
+      serviceChargePercent,
+      serviceCharge: scAmount,
       total,
+      payment: { method, status },
       status: "new",
       createdBy: new ObjectId(payload.id),
       createdAt: new Date(),
@@ -64,6 +104,18 @@ export const POST = withTenant(
       ).catch(() => {});
     }
     logInfo("order.created", { route: "/api/orders", orderId, actorId: payload.id, restaurantId });
+
+    const settingsDoc = await db.collection("restaurant_settings").findOne(
+      { restaurantId },
+      { projection: { "general.restaurantName": 1 } }
+    ).catch(() => null);
+    sendNewOrderAlertWhatsApp({
+      order: doc,
+      db,
+      restaurantId,
+      restaurantName: settingsDoc?.general?.restaurantName ?? "Restaurant",
+    }).catch(() => {});
+
     return Response.json({
       success: true,
       order: { ...doc, id: result.insertedId.toString(), _id: undefined },

@@ -63,6 +63,7 @@ export default function SuperAdminSupportTicketsPage() {
       setTickets((prev) =>
         prev.map((t) => (String(t._id) === ticketId ? { ...t, ...data.ticket } : t))
       );
+      if (selectedTicketId === ticketId) setSelectedTicket(data.ticket);
     } catch {
       showToast("error", "Network error.");
     }
@@ -156,12 +157,13 @@ export default function SuperAdminSupportTicketsPage() {
       </div>
 
       <div className="overflow-hidden rounded-2xl border border-zinc-800">
-        <div className="grid grid-cols-[150px_1fr_160px_130px_150px] gap-2 border-b border-zinc-800 bg-zinc-950/70 px-4 py-2 text-xs uppercase tracking-wide text-zinc-500">
+        <div className="grid grid-cols-[130px_1fr_140px_110px_120px_80px] gap-2 border-b border-zinc-800 bg-zinc-950/70 px-4 py-2 text-xs uppercase tracking-wide text-zinc-500">
           <span>Ticket</span>
           <span>Subject</span>
           <span>Restaurant</span>
           <span>Priority</span>
           <span>Status</span>
+          <span>Action</span>
         </div>
 
         {loading ? (
@@ -176,7 +178,7 @@ export default function SuperAdminSupportTicketsPage() {
             {tickets.map((ticket) => (
               <div
                 key={String(ticket._id)}
-                className="grid grid-cols-[150px_1fr_160px_130px_150px] gap-2 px-4 py-3 text-sm text-zinc-200"
+                className="grid grid-cols-[130px_1fr_140px_110px_120px_80px] gap-2 px-4 py-3 text-sm text-zinc-200"
               >
                 <div>
                   <p className="font-medium">{ticket.ticketCode}</p>

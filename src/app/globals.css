@@ -1468,3 +1468,50 @@ body {
 .customer-dark .glass-nav {
   background: color-mix(in srgb, var(--customer-bg) 85%, transparent);
 }
+
+/* Admin dashboard — scrollable card bodies when content is long */
+.rms-dashboard-card {
+  display: flex;
+  flex-direction: column;
+  max-height: min(24rem, 52vh);
+  min-height: 10rem;
+  overflow: hidden;
+}
+
+.rms-dashboard-card--lg {
+  max-height: min(32rem, 65vh);
+}
+
+.rms-dashboard-card--md {
+  max-height: min(20rem, 44vh);
+}
+
+.rms-dashboard-card__body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+.rms-dashboard-card__body--y {
+  overflow-x: hidden;
+}
+
+.rms-dashboard-card__scroll::-webkit-scrollbar,
+.rms-dashboard-card__body::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.rms-dashboard-card__scroll::-webkit-scrollbar-thumb,
+.rms-dashboard-card__body::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: #3f3f46;
+}
+
+.rms-dashboard-card__scroll::-webkit-scrollbar-track,
+.rms-dashboard-card__body::-webkit-scrollbar-track {
+  background: transparent;
+}

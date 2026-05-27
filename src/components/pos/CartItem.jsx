@@ -4,17 +4,21 @@ import { Minus, Plus, Trash2 } from "lucide-react";
 
 export default function CartItem({
   line,
+  currency = "INR",
   onInc,
   onDec,
   onRemove,
   onSetQuantity,
+  onSetLineNote,
 }) {
   return (
     <li className="rounded-xl border border-zinc-800 bg-zinc-950/50 p-3">
       <div className="flex items-start justify-between gap-2">
         <div>
           <p className="text-sm font-medium text-zinc-100">{line.name}</p>
-          <p className="text-xs text-zinc-500">${line.price.toFixed(2)} each</p>
+          <p className="text-xs text-zinc-500">
+            {currency} {line.price.toFixed(2)} each
+          </p>
         </div>
         <button
           type="button"
@@ -54,9 +58,17 @@ export default function CartItem({
           </button>
         </div>
         <p className="text-sm font-semibold text-zinc-100">
-          ${(line.price * line.qty).toFixed(2)}
+          {currency} {(line.price * line.qty).toFixed(2)}
         </p>
       </div>
+
+      <input
+        type="text"
+        value={line.note ?? ""}
+        onChange={(e) => onSetLineNote?.(line.id, e.target.value)}
+        placeholder="Item note (e.g. less spicy)"
+        className="mt-2 w-full rounded-lg border border-zinc-800 bg-zinc-950/80 px-2.5 py-1.5 text-[11px] text-zinc-200 outline-none placeholder:text-zinc-600 focus:border-emerald-500/40"
+      />
     </li>
   );
 }

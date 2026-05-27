@@ -1,5 +1,8 @@
+import { isReservationSlotAvailable } from "@/lib/reservationConflict";
 import { withTenant } from "@/lib/tenantDb";
 import { ObjectId } from "mongodb";
+
+const ALLOWED_STATUS = ["pending", "confirmed", "completed", "cancelled"];
 
 export const GET = withTenant(
   ["admin", "manager", "waiter"],
@@ -27,9 +30,46 @@ export const POST = withTenant(
   ["admin", "manager", "waiter"],
   async ({ db, tenantFilter, payload }, request) => {
     const body = await request.json();
-    const { customerName, phone, date, time, guests, tableNumber, notes } = body;
-    if (!customerName || !date || !time) return Response.json({ success: false, error: "customerName, date and time are required." }, { status: 400 });
-    const doc = { ...tenantFilter, customerName, phone: phone ?? "", date, time, guests: guests ?? 2, tableNumber: tableNumber ?? "TBD", notes: notes ?? "", status: "pending", createdBy: new ObjectId(payload.id), createdAt: new Date() };
+    const { customerName, phone, date, time, guests, tableNumber, notes, area, status } = body;
+    if (!customerName?.trim() || !date || !time) {
+      return Response.json({ success: false, error: "customerName, date and time are required." }, { status: 400 });
+    }
+    const tableNum = tableNumber?.trim() || "TBD";
+    const statusVal = ALLOWED_STATUS.includes(status) ? status : "pending";
+
+    if (tableNum !== "TBD") {
+      const existing = await db.collection("reservations")
+        .find({ ...tenantFilter, date, status: { $ne: "cancelled" } })
+        .toArray();
+      const slot = isReservationSlotAvailable(existing, {
+        tableNumber: tableNum,
+        date,
+        time,
+      });
+      if (!slot.available) {
+        return Response.json({
+          success: false,
+          error: slot.nextAvailableTime
+            ? `Table is already booked. Next free slot: ${slot.nextAvailableTime}`
+            : "Table is already booked for this time.",
+        }, { status: 409 });
+      }
+    }
+
+    const doc = {
+      ...tenantFilter,
+      customerName: customerName.trim(),
+      phone: phone?.trim() ?? "",
+      date,
+      time,
+      guests: guests ?? 2,
+      tableNumber: tableNum,
+      area: area?.trim() ?? "",
+      notes: notes?.trim() ?? "",
+      status: statusVal,
+      createdBy: new ObjectId(payload.id),
+      createdAt: new Date(),
+    };
     const result = await db.collection("reservations").insertOne(doc);
     return Response.json({ success: true, id: result.insertedId.toString() }, { status: 201 });
   }

@@ -18,13 +18,26 @@ const ORDER_TYPES = [
   { id: "delivery", label: "Delivery", Icon: Bike },
 ];
 
+const POS_PAYMENT_METHODS = [
+  { id: "cashCounter", label: "Cash" },
+  { id: "upi",         label: "UPI" },
+  { id: "card",        label: "Card" },
+  { id: "cod",         label: "COD" },
+];
+
 export default function OrderSummary({
   cart,
-  subtotal, tax, total,
+  subtotal,
+  taxAmount = 0, taxPercent = 0,
+  serviceCharge = 0, serviceChargePercent = 0,
+  total,
+  currency = "INR",
   canPlaceOrder,
   onPlaceOrder, onClearCart,
-  onInc, onDec, onRemove, onSetQuantity,
+  onInc, onDec, onRemove, onSetQuantity, onSetLineNote,
   orderType, onOrderTypeChange,
+  paymentMethod = "cashCounter", onPaymentMethodChange,
+  paymentStatus = "paid", onPaymentStatusChange,
   selectedTableId, onTableSelect,
   delivery, onDeliveryChange,
   onCustomerSelect,
@@ -173,28 +186,31 @@ export default function OrderSummary({
         {/* ── Delivery fields ── */}
         {orderType === "delivery" && (
           <div className="space-y-2 border-b border-zinc-800 p-3">
-            <p className="text-[10px] font-semibold uppercase tracking-wider text-zinc-500">Delivery Details</p>
+            <p className="text-[10px] font-semibold uppercase tracking-wider text-zinc-500">Delivery Details *</p>
+            <p className="text-[10px] text-zinc-600">Name, phone & address — customer auto-saved on place order</p>
             {["name", "phone", "address"].map((field) => (
               <input key={field} value={delivery[field]}
                 onChange={(e) => onDeliveryChange(field, e.target.value)}
-                placeholder={field.charAt(0).toUpperCase() + field.slice(1)}
+                placeholder={field === "address" ? "Full delivery address" : field.charAt(0).toUpperCase() + field.slice(1)}
                 className="w-full rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2 text-xs text-zinc-100 outline-none focus:border-emerald-500/40" />
             ))}
           </div>
         )}
 
-        {/* ── Customer search — enabled only after table selected for dine-in ── */}
-        <div className="border-b border-zinc-800 p-3">
-          <div className="mb-1.5 flex items-center justify-between">
-            <p className="text-[10px] font-semibold uppercase tracking-wider text-zinc-500">Customer *</p>
-            {orderType === "dine-in" && !selectedTableId && (
-              <span className="text-[10px] text-zinc-600">Select table first</span>
-            )}
+        {/* ── Customer search (dine-in / takeaway only) ── */}
+        {orderType !== "delivery" && (
+          <div className="border-b border-zinc-800 p-3">
+            <div className="mb-1.5 flex items-center justify-between">
+              <p className="text-[10px] font-semibold uppercase tracking-wider text-zinc-500">Customer *</p>
+              {orderType === "dine-in" && !selectedTableId && (
+                <span className="text-[10px] text-zinc-600">Select table first</span>
+              )}
+            </div>
+            <div className={orderType === "dine-in" && !selectedTableId ? "pointer-events-none opacity-40" : ""}>
+              <CustomerSearch onCustomerSelect={onCustomerSelect} />
+            </div>
           </div>
-          <div className={orderType === "dine-in" && !selectedTableId ? "pointer-events-none opacity-40" : ""}>
-            <CustomerSearch onCustomerSelect={onCustomerSelect} />
-          </div>
-        </div>
+        )}
 
         {/* ── Cart header ── */}
         <div className="px-4 pt-3">
@@ -208,8 +224,16 @@ export default function OrderSummary({
           ) : (
             <ul className="space-y-2">
               {cart.map((line) => (
-                <CartItem key={line.id} line={line}
-                  onInc={onInc} onDec={onDec} onRemove={onRemove} onSetQuantity={onSetQuantity} />
+                <CartItem
+                  key={line.id}
+                  line={line}
+                  currency={currency}
+                  onInc={onInc}
+                  onDec={onDec}
+                  onRemove={onRemove}
+                  onSetQuantity={onSetQuantity}
+                  onSetLineNote={onSetLineNote}
+                />
               ))}
             </ul>
           )}
@@ -235,13 +259,24 @@ export default function OrderSummary({
           )}
           <div className="space-y-1 text-xs">
             <div className="flex justify-between text-zinc-400">
-              <span>Subtotal</span><span className="text-zinc-200">${subtotal.toFixed(2)}</span>
+              <span>Subtotal</span>
+              <span className="text-zinc-200">{currency} {subtotal.toFixed(2)}</span>
             </div>
-            <div className="flex justify-between text-zinc-400">
-              <span>Tax (8%)</span><span className="text-zinc-200">${tax.toFixed(2)}</span>
-            </div>
+            {taxAmount > 0 && (
+              <div className="flex justify-between text-zinc-400">
+                <span>Tax {taxPercent > 0 ? `(${taxPercent}%)` : ""}</span>
+                <span className="text-zinc-200">{currency} {taxAmount.toFixed(2)}</span>
+              </div>
+            )}
+            {serviceCharge > 0 && (
+              <div className="flex justify-between text-zinc-400">
+                <span>Service Charge {serviceChargePercent > 0 ? `(${serviceChargePercent}%)` : ""}</span>
+                <span className="text-zinc-200">{currency} {serviceCharge.toFixed(2)}</span>
+              </div>
+            )}
             <div className="flex justify-between border-t border-zinc-800 pt-1.5 text-sm font-semibold text-zinc-100">
-              <span>Total</span><span>${total.toFixed(2)}</span>
+              <span>Total</span>
+              <span>{currency} {total.toFixed(2)}</span>
             </div>
           </div>
 
@@ -259,6 +294,54 @@ export default function OrderSummary({
             <p className="rounded-lg border border-amber-500/20 bg-amber-500/10 px-3 py-1.5 text-xs text-amber-400">
               Add a customer to continue
             </p>
+          )}
+          {orderType === "delivery" && cart.length > 0 && !(delivery.name?.trim() && delivery.phone?.trim() && delivery.address?.trim()) && (
+            <p className="rounded-lg border border-amber-500/20 bg-amber-500/10 px-3 py-1.5 text-xs text-amber-400">
+              Fill delivery name, phone & address
+            </p>
+          )}
+
+          {cart.length > 0 && (
+            <div className="space-y-2 rounded-xl border border-zinc-800 bg-zinc-950/40 p-2.5">
+              <p className="text-[10px] font-semibold uppercase tracking-wider text-zinc-500">Payment</p>
+              <div className="flex flex-wrap gap-1">
+                {POS_PAYMENT_METHODS.map(({ id, label }) => (
+                  <button
+                    key={id}
+                    type="button"
+                    onClick={() => onPaymentMethodChange?.(id)}
+                    className={`cursor-pointer rounded-lg px-2.5 py-1.5 text-[11px] font-semibold transition-all ${
+                      paymentMethod === id
+                        ? "bg-emerald-500/20 text-emerald-300 ring-1 ring-emerald-500/30"
+                        : "text-zinc-500 hover:bg-zinc-800 hover:text-zinc-300"
+                    }`}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+              <div className="flex gap-1">
+                {[
+                  { id: "paid", label: "Paid" },
+                  { id: "pending", label: "Pending" },
+                ].map(({ id, label }) => (
+                  <button
+                    key={id}
+                    type="button"
+                    onClick={() => onPaymentStatusChange?.(id)}
+                    className={`cursor-pointer flex-1 rounded-lg py-1.5 text-[11px] font-semibold transition-all ${
+                      paymentStatus === id
+                        ? id === "paid"
+                          ? "bg-emerald-500 text-zinc-950"
+                          : "bg-amber-500/20 text-amber-300 ring-1 ring-amber-500/30"
+                        : "bg-zinc-900 text-zinc-500 hover:text-zinc-300"
+                    }`}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+            </div>
           )}
 
           <button type="button" onClick={onPlaceOrder} disabled={!canPlaceOrder || isPlacing}

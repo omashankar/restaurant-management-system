@@ -78,7 +78,13 @@ export default function ContactPage() {
 
   const missingHint = "Add in Settings → Contact";
   const CONTACT_INFO = [
-    { Icon: MapPin, label: "Address", value: info.address?.trim() || missingHint, color: "bg-customer-primary/10 text-customer-primary" },
+    {
+      Icon: MapPin,
+      label: "Address",
+      value: info.address?.trim() || missingHint,
+      color: "bg-customer-primary/10 text-customer-primary",
+      href: info.googleMapsLink?.trim() || "",
+    },
     { Icon: Phone,  label: "Phone",   value: info.phone?.trim()   || missingHint, color: "bg-green-100 text-green-600" },
     { Icon: Mail,   label: "Email",   value: info.email?.trim()   || missingHint, color: "bg-blue-100 text-blue-600" },
   ];
@@ -108,7 +114,7 @@ export default function ContactPage() {
       <section className="bg-[var(--customer-cream)] py-10">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="grid gap-5 sm:grid-cols-3">
-            {CONTACT_INFO.map(({ Icon, label, value, color }, i) => (
+            {CONTACT_INFO.map(({ Icon, label, value, color, href }, i) => (
               <motion.div key={label}
                 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }}
                 whileHover={customerMotion.cardHoverSm}
@@ -120,6 +126,16 @@ export default function ContactPage() {
                 <div>
                   <p className="text-xs font-bold uppercase tracking-wider text-customer-muted">{label}</p>
                   <p className="mt-1 text-sm font-semibold text-customer-text">{value}</p>
+                  {label === "Address" && href ? (
+                    <a
+                      href={href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="mt-1 inline-block text-xs font-semibold text-customer-primary underline-offset-2 hover:underline"
+                    >
+                      Open in Maps
+                    </a>
+                  ) : null}
                 </div>
               </motion.div>
             ))}

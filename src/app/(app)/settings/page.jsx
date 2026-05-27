@@ -35,6 +35,7 @@ export default function SettingsPage() {
   const [settings, setSettings] = useState(EMPTY_SETTINGS);
   const [savedSnapshot, setSavedSnapshot] = useState(EMPTY_SETTINGS);
   const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
   const [testingSmtp, setTestingSmtp] = useState(false);
   const [smtpTestRecipient, setSmtpTestRecipient] = useState("");
@@ -57,23 +58,31 @@ export default function SettingsPage() {
 
   useEffect(() => {
     async function load() {
+      setLoadError(null);
       try {
         const res = await fetch("/api/settings");
         const data = await res.json();
-        if (data.success) {
-          const safe = {
-            ...data.settings,
-            paymentMethods: { ...EMPTY_SETTINGS.paymentMethods, ...(data.settings.paymentMethods ?? {}) },
-            email: { ...EMPTY_SETTINGS.email, ...(data.settings.email ?? {}) },
-            openingHours: Array.isArray(data.settings.openingHours) ? data.settings.openingHours : EMPTY_SETTINGS.openingHours,
-            accessControl: normalizeAccessControl(data.settings.accessControl),
-          };
-          setSettings(safe);
-          setSavedSnapshot(safe);
-          if (data.restaurantSlug) setRestaurantSlug(data.restaurantSlug);
+        if (!res.ok || !data.success) {
+          const msg = data.error ?? "Failed to load settings.";
+          setLoadError(msg);
+          showToast("error", msg);
+          return;
         }
-      } catch { showToast("error", "Failed to load settings."); }
-      finally { setIsLoading(false); }
+        const safe = {
+          ...data.settings,
+          paymentMethods: { ...EMPTY_SETTINGS.paymentMethods, ...(data.settings.paymentMethods ?? {}) },
+          email: { ...EMPTY_SETTINGS.email, ...(data.settings.email ?? {}) },
+          openingHours: Array.isArray(data.settings.openingHours) ? data.settings.openingHours : EMPTY_SETTINGS.openingHours,
+          accessControl: normalizeAccessControl(data.settings.accessControl),
+        };
+        setSettings(safe);
+        setSavedSnapshot(safe);
+        if (data.restaurantSlug) setRestaurantSlug(data.restaurantSlug);
+      } catch {
+        const msg = "Could not load settings.";
+        setLoadError(msg);
+        showToast("error", msg);
+      } finally { setIsLoading(false); }
     }
     load();
   }, []);
@@ -197,6 +206,12 @@ export default function SettingsPage() {
         <p className="mt-1 text-sm text-zinc-500">Configure restaurant preferences, POS behavior, and notifications.</p>
       </div>
 
+      {loadError && (
+        <div className="rounded-xl border border-red-500/25 bg-red-500/10 px-4 py-3 text-sm text-red-400">
+          {loadError}
+        </div>
+      )}
+
       <div className="grid gap-5 lg:grid-cols-[240px_1fr]">
         <SettingsSidebar tabs={sidebarTabs} activeTab={activeTab} onTabChange={setActiveTab} />
 
@@ -246,7 +261,7 @@ export default function SettingsPage() {
                 </div>
               </SettingsFormSection>
 
-              <SettingsFormSection title="Notifications" description="Choose which alerts you want to receive.">
+              <SettingsFormSection title="Notifications" description="Saved preferences (in-app alerts still show from live orders, reservations, and stock).">
                 <div className="grid gap-3 md:grid-cols-2">
                   <ToggleSwitch label="Order Notifications" checked={settings.notifications.orderNotifications}
                     onChange={(v) => setSettings((p) => ({ ...p, notifications: { ...p.notifications, orderNotifications: v } }))} />

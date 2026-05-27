@@ -1,21 +1,10 @@
 "use client";
 
+import { printInvoiceInBrowser } from "@/lib/posPrint";
 import { Printer } from "lucide-react";
 
 /**
- * PrintInvoice
- * Renders a print-ready invoice and triggers window.print().
- *
- * Props:
- *   orderId      {string}
- *   orderType    {string}
- *   tableNumber  {string|null}
- *   customer     {string}
- *   items        {Array<{name, qty, price}>}
- *   subtotal     {number}
- *   tax          {number}
- *   total        {number}
- *   restaurantName {string}
+ * PrintInvoice — browser print dialog for POS bills (USB / Bluetooth / default printer).
  */
 export default function PrintInvoice({
   orderId,
@@ -24,97 +13,33 @@ export default function PrintInvoice({
   customer,
   items = [],
   subtotal,
-  tax,
+  taxAmount = 0,
+  taxPercent = 0,
+  serviceCharge = 0,
+  serviceChargePercent = 0,
   total,
+  currency = "INR",
   restaurantName = "Restaurant",
+  paperSize = "80mm",
 }) {
   function handlePrint() {
-    const date = new Date().toLocaleString("en-US", {
-      dateStyle: "medium",
-      timeStyle: "short",
-    });
-
-    const rows = items
-      .map(
-        (i) =>
-          `<tr>
-            <td style="padding:4px 0;font-size:13px">${i.name}</td>
-            <td style="padding:4px 0;font-size:13px;text-align:center">${i.qty}</td>
-            <td style="padding:4px 0;font-size:13px;text-align:right">$${(i.price * i.qty).toFixed(2)}</td>
-          </tr>`
-      )
-      .join("");
-
-    const html = `
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <meta charset="utf-8"/>
-        <title>Invoice ${orderId}</title>
-        <style>
-          * { box-sizing: border-box; margin: 0; padding: 0; }
-          body { font-family: 'Courier New', monospace; width: 300px; margin: 0 auto; padding: 16px; color: #111; }
-          h1 { font-size: 18px; text-align: center; margin-bottom: 2px; }
-          .sub { font-size: 11px; text-align: center; color: #555; margin-bottom: 12px; }
-          .divider { border-top: 1px dashed #999; margin: 8px 0; }
-          table { width: 100%; border-collapse: collapse; }
-          th { font-size: 11px; text-transform: uppercase; color: #555; padding: 4px 0; border-bottom: 1px solid #ccc; }
-          th:last-child, td:last-child { text-align: right; }
-          th:nth-child(2), td:nth-child(2) { text-align: center; }
-          .totals td { padding: 3px 0; font-size: 13px; }
-          .totals .grand td { font-size: 15px; font-weight: bold; border-top: 1px solid #111; padding-top: 6px; }
-          .footer { text-align: center; font-size: 11px; color: #777; margin-top: 14px; }
-          @media print { @page { margin: 0; } body { padding: 8px; } }
-        </style>
-      </head>
-      <body>
-        <h1>${restaurantName}</h1>
-        <p class="sub">${date}</p>
-        <div class="divider"></div>
-        <table>
-          <tr><td style="font-size:12px;color:#555">Order</td><td colspan="2" style="font-size:12px;text-align:right">${orderId}</td></tr>
-          <tr><td style="font-size:12px;color:#555">Type</td><td colspan="2" style="font-size:12px;text-align:right;text-transform:capitalize">${orderType}</td></tr>
-          ${tableNumber ? `<tr><td style="font-size:12px;color:#555">Table</td><td colspan="2" style="font-size:12px;text-align:right">${tableNumber}</td></tr>` : ""}
-          <tr><td style="font-size:12px;color:#555">Customer</td><td colspan="2" style="font-size:12px;text-align:right">${customer}</td></tr>
-        </table>
-        <div class="divider"></div>
-        <table>
-          <thead>
-            <tr>
-              <th style="text-align:left">Item</th>
-              <th>Qty</th>
-              <th>Amount</th>
-            </tr>
-          </thead>
-          <tbody>${rows}</tbody>
-        </table>
-        <div class="divider"></div>
-        <table class="totals">
-          <tr><td>Subtotal</td><td style="text-align:right">$${subtotal.toFixed(2)}</td></tr>
-          <tr><td>Tax (8%)</td><td style="text-align:right">$${tax.toFixed(2)}</td></tr>
-          <tr class="grand"><td>Total</td><td style="text-align:right">$${total.toFixed(2)}</td></tr>
-        </table>
-        <p class="footer">Thank you for dining with us!</p>
-      </body>
-      </html>
-    `;
-
-    const win = window.open("", "_blank", "width=360,height=600");
-    if (!win) {
-      window.alert("Unable to open print preview. Please allow popups for this site and try again.");
-      return;
-    }
-    win.document.write(html);
-    win.document.close();
-    win.focus();
-
-    // Wait for print dialog; close only after print completes.
-    win.onload = () => {
-      win.onafterprint = () => {
-        win.close();
-      };
-      win.print();
-    };
+    printInvoiceInBrowser(
+      {
+        orderId,
+        orderType,
+        tableNumber,
+        customer,
+        items,
+        subtotal,
+        taxAmount,
+        taxPercent,
+        serviceCharge,
+        serviceChargePercent,
+        total,
+        currency,
+      },
+      { restaurantName, paperSize, currency }
+    );
   }
 
   return (

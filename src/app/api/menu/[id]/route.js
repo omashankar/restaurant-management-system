@@ -33,6 +33,15 @@ export async function PATCH(request, { params }) {
       if (!_id) return Response.json({ success: false, error: "Invalid ID." }, { status: 400 });
 
       const body = await request.json();
+
+      const existing = await db.collection("menuItems").findOne(
+        { ...tenantFilter, _id },
+        { projection: { categoryId: 1 } }
+      );
+      if (!existing) {
+        return Response.json({ success: false, error: "Item not found." }, { status: 404 });
+      }
+
       const update = {};
 
       if (body.name)          update.name         = body.name.trim();
@@ -45,6 +54,7 @@ export async function PATCH(request, { params }) {
       if (body.kitchenType)   update.kitchenType   = body.kitchenType;
       if (body.prepTime != null) update.prepTime   = body.prepTime;
       if ("image" in body)    update.image         = body.image;
+      if ("badge" in body)    update.badge         = body.badge?.trim() || null;
       update.updatedAt = new Date();
 
       const result = await db.collection("menuItems").updateOne(
@@ -54,6 +64,27 @@ export async function PATCH(request, { params }) {
 
       if (result.matchedCount === 0) {
         return Response.json({ success: false, error: "Item not found." }, { status: 404 });
+      }
+
+      const newCategoryId = body.categoryId;
+      const oldCategoryId = existing.categoryId;
+      if (newCategoryId && oldCategoryId && newCategoryId !== oldCategoryId) {
+        try {
+          const oldCatId = toObjectId(oldCategoryId);
+          const newCatId = toObjectId(newCategoryId);
+          if (oldCatId) {
+            await db.collection("categories").updateOne(
+              { ...tenantFilter, _id: oldCatId },
+              { $inc: { itemCount: -1 } }
+            );
+          }
+          if (newCatId) {
+            await db.collection("categories").updateOne(
+              { ...tenantFilter, _id: newCatId },
+              { $inc: { itemCount: 1 } }
+            );
+          }
+        } catch { /* non-fatal */ }
       }
 
       return Response.json({ success: true });

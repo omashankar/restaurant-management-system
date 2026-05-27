@@ -39,7 +39,7 @@ function SkeletonCard() {
 
 function CustomerMenuPageContent() {
   const { cart, setOrderTypeModalOpen, orderType, setOrderType, updateCustomer, tryAddToCart } = useCustomer();
-  const { menuItems, categories } = useModuleData();
+  const { menuItems, categories, hydrated } = useModuleData();
   const { link } = useRestaurantSlug();
   const { content: cms } = useRestaurantCms();
   const L = mergeCmsSection(DEFAULTS.menu, cms.menu);
@@ -218,7 +218,7 @@ function CustomerMenuPageContent() {
             </AnimatePresence>
           </div>
         </div>
-        {!isLoaded ? (
+        {!hydrated || !isLoaded ? (
           <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {Array.from({ length: 8 }).map((_, i) => <SkeletonCard key={i} />)}
           </div>

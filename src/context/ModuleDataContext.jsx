@@ -213,11 +213,11 @@ export function ModuleDataProvider({ children }) {
         }
 
         if (isCustomerFacing) {
+          // Customer storefront: slug-scoped public menu only (matches guest experience).
           try {
-            await fetchTenantModuleData();
             await fetchPublicCustomerMenuCategories();
           } catch (err) {
-            console.error("[ModuleDataContext] Failed to fetch module/storefront data:", err.message);
+            console.error("[ModuleDataContext] Failed to fetch customer menu:", err.message);
           }
           return;
         }

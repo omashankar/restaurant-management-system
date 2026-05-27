@@ -5,6 +5,7 @@ import {
   BarChart3, DollarSign, RefreshCw,
   ShoppingBag, TrendingUp, Trophy,
 } from "lucide-react";
+import { formatAdminMoney } from "@/lib/adminCurrency";
 import { useCallback, useEffect, useState } from "react";
 
 const TenantAnalyticsCharts = dynamic(
@@ -55,16 +56,27 @@ const RANGES = [
 export default function AnalyticsPage() {
   const [data, setData]     = useState(null);
   const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState(null);
   const [range, setRange]   = useState("30");
 
   const fetchAnalytics = useCallback(async () => {
     setLoading(true);
+    setFetchError(null);
     try {
-      const res  = await fetch(`/api/analytics?range=${range}`);
+      const res  = await fetch(`/api/analytics?range=${range}`, { cache: "no-store" });
       const json = await res.json();
-      if (json.success) setData(json);
-    } catch { /* keep existing */ }
-    finally { setLoading(false); }
+      if (res.ok && json.success) {
+        setData(json);
+      } else {
+        setFetchError(json?.error ?? "Could not load analytics.");
+        setData(null);
+      }
+    } catch {
+      setFetchError("Network error while loading analytics.");
+      setData(null);
+    } finally {
+      setLoading(false);
+    }
   }, [range]);
 
   useEffect(() => { fetchAnalytics(); }, [fetchAnalytics]);
@@ -88,10 +100,12 @@ export default function AnalyticsPage() {
     );
   }
 
+  const currency    = data?.currency ?? "INR";
   const kpis        = data?.kpis        ?? {};
   const topItems    = data?.topItems    ?? [];
   const dailyRev    = data?.dailyRevenue ?? [];
   const orderTypes  = data?.ordersByType ?? [];
+  const fmt = (n) => formatAdminMoney(n, currency);
 
   const chartData = dailyRev.map((d) => ({
     ...d,
@@ -129,14 +143,20 @@ export default function AnalyticsPage() {
         </div>
       </div>
 
+      {fetchError ? (
+        <div className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">
+          {fetchError}
+        </div>
+      ) : null}
+
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <KpiCard title="Total Revenue"   value={`$${kpis.totalRevenue?.toLocaleString() ?? 0}`}  subtitle={`Last ${range} days`} icon={DollarSign}  color="emerald" />
+        <KpiCard title="Total Revenue"   value={fmt(kpis.totalRevenue ?? 0)}  subtitle={`Last ${range} days · non-cancelled`} icon={DollarSign}  color="emerald" />
         <KpiCard title="Total Orders"    value={kpis.totalOrders?.toLocaleString() ?? 0}          subtitle={`Last ${range} days`} icon={ShoppingBag} color="indigo"  />
-        <KpiCard title="Avg Order Value" value={`$${kpis.avgOrderValue?.toFixed(2) ?? "0.00"}`}   subtitle="Per transaction"      icon={TrendingUp}  color="amber"   />
-        <KpiCard title="Completed"       value={kpis.completedOrders?.toLocaleString() ?? 0}      subtitle={`${kpis.cancelledOrders ?? 0} cancelled`} icon={Trophy} color="sky" />
+        <KpiCard title="Avg Order Value" value={fmt(kpis.avgOrderValue ?? 0)}   subtitle="Per order (non-cancelled)"      icon={TrendingUp}  color="amber"   />
+        <KpiCard title="Fulfilled"       value={kpis.completedOrders?.toLocaleString() ?? 0}      subtitle={`${kpis.cancelledOrders ?? 0} cancelled`} icon={Trophy} color="sky" />
       </div>
 
-      <TenantAnalyticsCharts chartData={chartData} topItems={topItems} orderTypes={orderTypes} />
+      <TenantAnalyticsCharts chartData={chartData} topItems={topItems} orderTypes={orderTypes} currency={currency} />
 
       {topItems.length > 0 && (
         <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 overflow-hidden">
@@ -160,7 +180,7 @@ export default function AnalyticsPage() {
                   <td className="px-5 py-3 font-medium text-zinc-100">{item.name}</td>
                   <td className="px-5 py-3 text-right tabular-nums text-zinc-300">{item.qty}</td>
                   <td className="px-5 py-3 text-right tabular-nums font-semibold text-emerald-400">
-                    ${item.revenue.toFixed(2)}
+                    {fmt(item.revenue)}
                   </td>
                 </tr>
               ))}

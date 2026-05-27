@@ -45,6 +45,7 @@ export default function ReservationsPage() {
   } = useModuleData();
 
   const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState(null);
   const [search, setSearch] = useState("");
   const [dateFilter, setDateFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -65,15 +66,18 @@ export default function ReservationsPage() {
     let alive = true;
     async function loadReservations() {
       setLoading(true);
+      setFetchError(null);
       try {
         const res = await fetch("/api/reservations", { cache: "no-store" });
         const data = await res.json();
         if (!alive) return;
         if (res.ok && data?.success && Array.isArray(data.reservations)) {
           setReservationRows(data.reservations.map(normalizeReservation));
+        } else {
+          setFetchError(data?.error ?? "Could not load reservations.");
         }
       } catch {
-        // Keep fallback/session data when API is unavailable.
+        if (alive) setFetchError("Network error while loading reservations.");
       } finally {
         if (alive) setLoading(false);
       }
@@ -142,33 +146,39 @@ export default function ReservationsPage() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(body),
         });
+        const data = await res.json();
         if (!res.ok) {
-          showToast("Reservation update failed.", "error");
-          return;
+          const msg = data?.error ?? "Reservation update failed.";
+          showToast(msg, "error");
+          return { ok: false, error: msg };
         }
         setReservationRows((prev) =>
           prev.map((x) => (x.id === editing.id ? { ...x, ...body } : x))
         );
         showToast("Reservation updated.");
-      } else {
-        const res = await fetch("/api/reservations", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(body),
-        });
-        const data = await res.json();
-        if (!res.ok || !data?.id) {
-          showToast(data?.error ?? "Reservation creation failed.", "error");
-          return;
-        }
-        setReservationRows((prev) => [
-          ...prev,
-          normalizeReservation({ ...payload, id: data.id }),
-        ]);
-        showToast("Reservation created.");
+        return { ok: true };
       }
+      const res = await fetch("/api/reservations", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      const data = await res.json();
+      if (!res.ok || !data?.id) {
+        const msg = data?.error ?? "Reservation creation failed.";
+        showToast(msg, "error");
+        return { ok: false, error: msg };
+      }
+      setReservationRows((prev) => [
+        ...prev,
+        normalizeReservation({ ...payload, id: data.id }),
+      ]);
+      showToast("Reservation created.");
+      return { ok: true };
     } catch {
-      showToast("Network error while saving reservation.", "error");
+      const msg = "Network error while saving reservation.";
+      showToast(msg, "error");
+      return { ok: false, error: msg };
     }
   };
 
@@ -236,6 +246,12 @@ export default function ReservationsPage() {
               Add Reservation
             </button>
           </div>
+
+          {fetchError ? (
+            <div className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">
+              {fetchError}
+            </div>
+          ) : null}
 
           <SearchFilterBar
             search={search}

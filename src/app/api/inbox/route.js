@@ -85,7 +85,7 @@ async function buildSuperAdminItems(db) {
 }
 
 async function buildTenantItems(db, tenantFilter) {
-  const [orders, reservations, lowStock, requests] = await Promise.all([
+  const [orders, reservations, lowStock, requests, supportUpdates, settingsDoc] = await Promise.all([
     db
       .collection("orders")
       .find({ ...tenantFilter, status: { $in: ["new", "preparing"] } }, { projection: { orderId: 1, status: 1, createdAt: 1 } })
@@ -111,29 +111,66 @@ async function buildTenantItems(db, tenantFilter) {
       .limit(8)
       .toArray()
       .catch(() => []),
+    tenantFilter.restaurantId
+      ? db
+          .collection("platform_messages")
+          .find(
+            { role: "tenant", restaurantId: tenantFilter.restaurantId },
+            { projection: { title: 1, body: 1, createdAt: 1, meta: 1 } }
+          )
+          .sort({ createdAt: -1 })
+          .limit(5)
+          .toArray()
+          .catch(() => [])
+      : Promise.resolve([]),
+    db
+      .collection("restaurant_settings")
+      .findOne(
+        { restaurantId: tenantFilter.restaurantId },
+        { projection: { notifications: 1 } }
+      )
+      .catch(() => null),
   ]);
 
+  const notificationPrefs = settingsDoc?.notifications ?? {};
+  const allowOrder = notificationPrefs.orderNotifications !== false;
+  const allowReservation = notificationPrefs.reservationAlerts !== false;
+  const allowLowStock = notificationPrefs.lowStockAlerts !== false;
+
   const notifications = [
-    ...orders.map((row) => ({
+    ...(allowOrder
+      ? orders.map((row) => ({
       key: `order:${row._id}`,
       title: `Order ${row.orderId ?? ""} is ${row.status}`,
       body: "Kitchen/dispatch attention needed.",
       createdAt: toIso(row.createdAt),
       href: "/orders",
-    })),
-    ...reservations.map((row) => ({
+      }))
+      : []),
+    ...(allowReservation
+      ? reservations.map((row) => ({
       key: `reservation:${row._id}`,
       title: "Reservation update",
       body: `${row.customerName ?? "Guest"} • ${Number(row.guests ?? 0)} guests`,
       createdAt: toIso(row.createdAt),
       href: "/reservations",
-    })),
-    ...lowStock.map((row) => ({
+      }))
+      : []),
+    ...(allowLowStock
+      ? lowStock.map((row) => ({
       key: `stock:${row._id}`,
       title: `Low stock: ${row.name ?? "Item"}`,
       body: `${Number(row.quantity ?? 0)} left (reorder at ${Number(row.reorderLevel ?? 0)}).`,
       createdAt: toIso(row.updatedAt),
       href: "/inventory",
+      }))
+      : []),
+    ...supportUpdates.map((row) => ({
+      key: `support:${row._id}`,
+      title: row.title ?? "Support ticket update",
+      body: row.body ?? "Your support ticket was updated.",
+      createdAt: toIso(row.createdAt),
+      href: row.meta?.href ?? "/support-tickets",
     })),
   ]
     .sort((a, b) => new Date(b.createdAt ?? 0) - new Date(a.createdAt ?? 0))

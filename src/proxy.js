@@ -35,7 +35,7 @@ const ROLE_PATHS = {
 /* ── Role home (redirect after login or unauthorized access) ── */
 const ROLE_HOME = {
   super_admin: "/super-admin/dashboard",
-  admin: "/admin/dashboard",
+  admin: "/dashboard",
   manager: "/manager/dashboard",
   waiter: "/waiter/dashboard",
   chef: "/chef/dashboard",

@@ -9,8 +9,18 @@
  * Per-restaurant overrides are stored in restaurant_whatsapp_settings collection.
  */
 
+import { decryptSecret } from "@/lib/cryptoUtils";
+
 const META_API_VERSION = "v19.0";
 const META_BASE = `https://graph.facebook.com/${META_API_VERSION}`;
+
+/** Normalize to E.164 digits without + (defaults 10-digit IN numbers to 91 prefix). */
+export function normalizeWhatsAppPhone(raw) {
+  const digits = String(raw ?? "").replace(/\D/g, "");
+  if (!digits) return "";
+  if (digits.length === 10 && /^[6-9]/.test(digits)) return `91${digits}`;
+  return digits;
+}
 
 /**
  * Resolve WhatsApp credentials for a restaurant.
@@ -22,13 +32,26 @@ async function resolveCredentials(db, restaurantId) {
       .collection("restaurant_whatsapp_settings")
       .findOne({ restaurantId });
     if (doc?.enabled && doc?.token && doc?.phoneNumberId) {
-      return { token: doc.token, phoneNumberId: doc.phoneNumberId };
+      const token = decryptSecret(doc.token) || String(doc.token).trim();
+      if (token) {
+        return { token, phoneNumberId: String(doc.phoneNumberId).trim() };
+      }
     }
   }
-  const token       = process.env.WHATSAPP_TOKEN?.trim();
+  const token = process.env.WHATSAPP_TOKEN?.trim();
   const phoneNumberId = process.env.WHATSAPP_PHONE_ID?.trim();
   if (token && phoneNumberId) return { token, phoneNumberId };
   return null;
+}
+
+async function getRestaurantAlertPhone(db, restaurantId, whatsappSettings) {
+  const override = String(whatsappSettings?.alertPhone ?? "").trim();
+  if (override) return override;
+  const doc = await db.collection("restaurant_settings").findOne(
+    { restaurantId },
+    { projection: { "contact.phoneNumber": 1 } }
+  ).catch(() => null);
+  return doc?.contact?.phoneNumber ?? null;
 }
 
 /**
@@ -36,6 +59,24 @@ async function resolveCredentials(db, restaurantId) {
  */
 export function interpolate(template, vars = {}) {
   return template.replace(/\{(\w+)\}/g, (_, key) => vars[key] ?? `{${key}}`);
+}
+
+function buildOrderVars(order, restaurantName = "Restaurant") {
+  return {
+    customer_name: order.customerInfo?.name ?? order.customer ?? "Customer",
+    order_id: order.orderId ?? "—",
+    restaurant_name: restaurantName,
+    amount: String(order.total ?? 0),
+    eta: order.orderType === "dine-in" ? "15-20" : order.orderType === "delivery" ? "30-45" : "20-30",
+    order_type: order.orderType ?? "—",
+    customer_phone: order.customerInfo?.phone ?? "",
+    invoice_link: "",
+    tracking_link: "",
+    feedback_link: "",
+    item_name: "",
+    quantity: "",
+    unit: "",
+  };
 }
 
 /**
@@ -46,11 +87,10 @@ export function interpolate(template, vars = {}) {
 export async function sendWhatsAppMessage({ to, message, db, restaurantId }) {
   const creds = await resolveCredentials(db, restaurantId);
   if (!creds) {
-    return { success: false, error: "WhatsApp not configured. Add WHATSAPP_TOKEN and WHATSAPP_PHONE_ID to .env" };
+    return { success: false, error: "WhatsApp not configured. Save API Token and Phone Number ID, or set WHATSAPP_TOKEN in .env." };
   }
 
-  // Normalize phone — must be E.164 format without +
-  const phone = String(to).replace(/\D/g, "");
+  const phone = normalizeWhatsAppPhone(to);
   if (!phone || phone.length < 7) {
     return { success: false, error: "Invalid phone number." };
   }
@@ -97,35 +137,85 @@ export async function getWhatsAppSettings(db, restaurantId) {
 }
 
 /**
- * Send order-event WhatsApp message using stored template.
- * @param {{ event: string, order: object, db: object, restaurantId: object, restaurantName?: string }} params
+ * Send a templated message to a specific phone (customer or staff).
  */
-export async function sendOrderWhatsApp({ event, order, db, restaurantId, restaurantName = "Restaurant" }) {
+export async function sendTemplateWhatsApp({ event, to, vars = {}, db, restaurantId }) {
   const settings = await getWhatsAppSettings(db, restaurantId);
   if (!settings?.enabled) return { success: false, error: "WhatsApp disabled." };
 
   const templateConfig = settings.templates?.[event];
   if (!templateConfig?.enabled) return { success: false, error: "Template disabled." };
 
-  const phone = order.customerInfo?.phone;
-  if (!phone) return { success: false, error: "No customer phone." };
-
-  const vars = {
-    customer_name:   order.customerInfo?.name ?? "Customer",
-    order_id:        order.orderId ?? "—",
-    restaurant_name: restaurantName,
-    amount:          String(order.total ?? 0),
-    eta:             order.orderType === "dine-in" ? "15-20" : order.orderType === "delivery" ? "30-45" : "20-30",
-    order_type:      order.orderType ?? "—",
-    customer_phone:  phone,
-    invoice_link:    "",
-    tracking_link:   "",
-    feedback_link:   "",
-    item_name:       "",
-    quantity:        "",
-    unit:            "",
-  };
+  const phone = String(to ?? "").trim();
+  if (!phone) return { success: false, error: "No recipient phone." };
 
   const message = interpolate(templateConfig.message, vars);
   return sendWhatsAppMessage({ to: phone, message, db, restaurantId });
+}
+
+/**
+ * Send order-event WhatsApp message to the customer using stored template.
+ */
+export async function sendOrderWhatsApp({ event, order, db, restaurantId, restaurantName = "Restaurant" }) {
+  const phone = order.customerInfo?.phone;
+  if (!phone) return { success: false, error: "No customer phone." };
+
+  return sendTemplateWhatsApp({
+    event,
+    to: phone,
+    vars: buildOrderVars(order, restaurantName),
+    db,
+    restaurantId,
+  });
+}
+
+/**
+ * Send alert to restaurant owner/manager (new order, low stock, etc.).
+ */
+export async function sendRestaurantAlertWhatsApp({ event, vars = {}, db, restaurantId }) {
+  const settings = await getWhatsAppSettings(db, restaurantId);
+  if (!settings?.enabled) return { success: false, error: "WhatsApp disabled." };
+
+  const alertPhone = await getRestaurantAlertPhone(db, restaurantId, settings);
+  if (!alertPhone) {
+    return { success: false, error: "No alert phone. Set it below or in Settings → Contact." };
+  }
+
+  return sendTemplateWhatsApp({ event, to: alertPhone, vars, db, restaurantId });
+}
+
+/** Map order status + type to WhatsApp template event (null = skip). */
+export function getOrderStatusWhatsAppEvent(status, orderType) {
+  if (status === "preparing") return "order_preparing";
+  if (status === "ready" && orderType === "delivery") return "out_for_delivery";
+  if (status === "completed") return "order_delivered";
+  return null;
+}
+
+/**
+ * Notify restaurant of a new order (POS or online).
+ */
+export async function sendNewOrderAlertWhatsApp({ order, db, restaurantId, restaurantName = "Restaurant" }) {
+  return sendRestaurantAlertWhatsApp({
+    event: "new_order_alert",
+    vars: buildOrderVars(order, restaurantName),
+    db,
+    restaurantId,
+  });
+}
+
+/**
+ * Notify restaurant when inventory drops to/below reorder level.
+ */
+export async function sendLowStockAlertWhatsApp({ item, db, restaurantId }) {
+  return sendRestaurantAlertWhatsApp({
+    event: "low_stock",
+    vars: {
+      item_name: item.name ?? "Item",
+      quantity: String(item.quantity ?? 0),
+      unit: item.unit ?? "unit",
+    },
+    db,
+    restaurantId,
+  });
 }

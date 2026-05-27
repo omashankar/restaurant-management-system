@@ -19,6 +19,7 @@ const DEFAULT_INFO = {
   address: "123 Restaurant St, Food City",
   phone: "+1 (555) 123-4567",
   email: "hello@rmsrestaurant.com",
+  googleMapsLink: "",
   logoUrl: null,
   slug: null,
   currency: "USD",

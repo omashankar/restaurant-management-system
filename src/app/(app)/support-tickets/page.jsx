@@ -14,6 +14,7 @@ export default function SupportTicketsPage() {
   const { user } = useUser();
   const [tickets, setTickets] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(null);
   const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState(null);
   const [statusFilter, setStatusFilter] = useState("all");
@@ -37,15 +38,22 @@ export default function SupportTicketsPage() {
 
   async function loadTickets() {
     setLoading(true);
+    setLoadError(null);
     try {
       const params = new URLSearchParams();
       if (statusFilter !== "all") params.set("status", statusFilter);
       const res = await fetch(`/api/support/tickets?${params.toString()}`, { cache: "no-store" });
       const data = await res.json();
       if (data.success) setTickets(data.tickets || []);
-      else showToast("error", data.error || "Failed to load tickets.");
+      else {
+        const msg = data.error || "Failed to load tickets.";
+        setLoadError(msg);
+        showToast("error", msg);
+      }
     } catch {
-      showToast("error", "Network error.");
+      const msg = "Could not load support tickets.";
+      setLoadError(msg);
+      showToast("error", msg);
     } finally {
       setLoading(false);
     }
@@ -98,6 +106,7 @@ export default function SupportTicketsPage() {
       }
       showToast("success", "Ticket updated.");
       setTickets((prev) => prev.map((t) => (String(t._id) === ticketId ? data.ticket : t)));
+      if (selectedTicketId === ticketId) setSelectedTicket(data.ticket);
     } catch {
       showToast("error", "Network error.");
     }
@@ -164,6 +173,12 @@ export default function SupportTicketsPage() {
           Raise issues for platform support and track progress.
         </p>
       </div>
+
+      {loadError && (
+        <div className="rounded-xl border border-red-500/25 bg-red-500/10 px-4 py-3 text-sm text-red-400">
+          {loadError}
+        </div>
+      )}
 
       <div className="grid gap-3 sm:grid-cols-5">
         {[

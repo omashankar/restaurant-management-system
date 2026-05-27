@@ -59,6 +59,7 @@ export const orderItemSchema = z.object({
   qty: z.number().int().positive("Item quantity must be positive."),
   price: z.number().nonnegative("Item price cannot be negative."),
   menuItemId: z.string().optional(),
+  note: z.string().trim().max(200).optional(),
 });
 
 export const orderCreateSchema = z.object({
@@ -67,11 +68,21 @@ export const orderCreateSchema = z.object({
   tableNumber: z.string().trim().nullable().optional(),
   customer: z.string().trim().optional(),
   notes: z.string().trim().max(500).optional(),
+  subtotal: z.number().nonnegative().optional(),
+  taxAmount: z.number().nonnegative().optional(),
+  serviceCharge: z.number().nonnegative().optional(),
+  taxPercent: z.number().nonnegative().optional(),
+  serviceChargePercent: z.number().nonnegative().optional(),
+  paymentMethod: z
+    .enum(["cod", "cashCounter", "upi", "card", "netBanking", "wallet", "payLater", "bankTransfer"])
+    .optional(),
+  paymentStatus: z.enum(["paid", "pending", "initiated", "processing", "failed"]).optional(),
 });
 
 export const orderPatchSchema = z.object({
   status: z.enum(["new", "preparing", "ready", "completed", "cancelled"]).optional(),
   notes: z.string().trim().max(500).optional(),
+  paymentStatus: z.enum(["paid", "pending", "initiated", "processing", "failed"]).optional(),
 });
 
 const customerCheckoutInfoSchema = z

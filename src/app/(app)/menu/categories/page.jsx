@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import DataTableShell from "@/components/ui/DataTableShell";
@@ -7,6 +7,7 @@ import ListToolbar from "@/components/ui/ListToolbar";
 import Modal from "@/components/ui/Modal";
 import PaginationBar from "@/components/ui/PaginationBar";
 import TableSkeleton from "@/components/ui/TableSkeleton";
+import { useModuleData } from "@/context/ModuleDataContext";
 import { useToast } from "@/hooks/useToast";
 import { usePaginatedList } from "@/hooks/usePaginatedList";
 import { FolderTree, Pencil, Plus, RefreshCw, Trash2 } from "lucide-react";
@@ -22,6 +23,7 @@ export default function CategoriesPage() {
   const [form, setForm]         = useState({ name: "", description: "" });
   const [formError, setFormError] = useState("");
   const [deleteTarget, setDeleteTarget] = useState(null);
+  const { refreshMenu } = useModuleData();
   const { showToast, ToastUI } = useToast();
 
   const fetchCategories = useCallback(async () => {
@@ -59,6 +61,7 @@ export default function CategoriesPage() {
         showToast("Category created.");
       }
       setModalOpen(false);
+      await Promise.all([refreshMenu(), fetchCategories()]);
     } catch { setFormError("Network error."); }
     finally { setSaving(false); }
   };
@@ -71,6 +74,7 @@ export default function CategoriesPage() {
       const data = await res.json();
       if (!data.success) { showToast(data.error ?? "Failed to delete.", "error"); return; }
       setCategories((prev) => prev.filter((c) => c.id !== deleteTarget.id));
+      await Promise.all([refreshMenu(), fetchCategories()]);
       showToast(`"${deleteTarget.name}" deleted.`);
       setDeleteTarget(null);
     } catch { showToast("Network error.", "error"); }
@@ -92,7 +96,7 @@ export default function CategoriesPage() {
         </div>
       </div>
 
-      <ListToolbar search={search} onSearchChange={setSearch} searchPlaceholder="Search categoriesâ€¦" />
+      <ListToolbar search={search} onSearchChange={setSearch} searchPlaceholder="Search categories…" />
 
       {total === 0 ? (
         <EmptyState title="No categories" description="Create categories like Starters, Main Course, Drinks."
@@ -126,7 +130,7 @@ export default function CategoriesPage() {
       <Modal open={modalOpen} onClose={() => setModalOpen(false)} title={editingId ? "Edit Category" : "Add Category"}
         footer={<div className="flex justify-end gap-2">
           <button type="button" onClick={() => setModalOpen(false)} className="cursor-pointer rounded-xl border border-zinc-700 px-4 py-2 text-sm text-zinc-300 hover:border-zinc-500">Cancel</button>
-          <button type="button" onClick={save} disabled={saving} className="cursor-pointer rounded-xl bg-emerald-500 px-4 py-2 text-sm font-semibold text-zinc-950 hover:bg-emerald-400 disabled:opacity-40">{saving ? "Savingâ€¦" : "Save"}</button>
+          <button type="button" onClick={save} disabled={saving} className="cursor-pointer rounded-xl bg-emerald-500 px-4 py-2 text-sm font-semibold text-zinc-950 hover:bg-emerald-400 disabled:opacity-40">{saving ? "Saving…" : "Save"}</button>
         </div>}>
         <div className="space-y-4">
           {formError && <p className="rounded-xl border border-red-500/20 bg-red-500/10 px-3 py-2 text-xs text-red-400">{formError}</p>}
@@ -137,7 +141,7 @@ export default function CategoriesPage() {
 
       <ConfirmDialog open={!!deleteTarget} title="Delete category?"
         message={deleteTarget ? `"${deleteTarget.name}" will be removed. Its menu items will be uncategorized.` : ""}
-        confirmLabel={deleting ? "Deletingâ€¦" : "Delete"}
+        confirmLabel={deleting ? "Deleting…" : "Delete"}
         onCancel={() => setDeleteTarget(null)} onConfirm={confirmDelete} />
       {ToastUI}
     </div>

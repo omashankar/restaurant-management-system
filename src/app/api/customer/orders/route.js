@@ -4,7 +4,7 @@ import { getCustomerTokenFromRequest, verifyCustomerToken } from "@/lib/customer
 import { logError, logInfo } from "@/lib/logger";
 import { createGatewayPaymentSession } from "@/lib/paymentGateway";
 import { customerCheckoutSchema, parseSchema } from "@/lib/validationSchemas";
-import { sendOrderWhatsApp } from "@/lib/whatsappService";
+import { sendOrderWhatsApp, sendNewOrderAlertWhatsApp } from "@/lib/whatsappService";
 import { getRestaurantIdFromRequest } from "@/lib/restaurantResolver";
 import { ObjectId } from "mongodb";
 
@@ -236,7 +236,7 @@ export async function POST(request) {
     }
     logInfo("customer.order.created", { route: "/api/customer/orders", orderId: doc.orderId });
 
-    // ── WhatsApp: Order Confirmed ──
+    // ── WhatsApp: Order Confirmed + restaurant alert ──
     const restaurantName = settingsDoc?.general?.restaurantName ?? "Restaurant";
     sendOrderWhatsApp({
       event: "order_confirmed",
@@ -244,7 +244,13 @@ export async function POST(request) {
       db,
       restaurantId,
       restaurantName,
-    }).catch(() => {}); // fire-and-forget, never block the response
+    }).catch(() => {});
+    sendNewOrderAlertWhatsApp({
+      order: doc,
+      db,
+      restaurantId,
+      restaurantName,
+    }).catch(() => {});
 
     return Response.json({
       success: true,

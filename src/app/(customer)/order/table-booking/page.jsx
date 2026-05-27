@@ -72,6 +72,7 @@ export default function TableBookingPage() {
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState(false);
   const [conflictError, setConflictError] = useState(null);
+  const [dateReservations, setDateReservations] = useState([]);
   const [customerAreaImages, setCustomerAreaImages] = useState({});
   const dateInputRef = useRef(null);
   const minBookingDate = useMemo(() => new Date().toISOString().slice(0, 10), []);
@@ -99,6 +100,40 @@ export default function TableBookingPage() {
     return () => { active = false; };
   }, []);
 
+  useEffect(() => {
+    if (!form.date) {
+      setDateReservations([]);
+      return;
+    }
+    let active = true;
+    async function loadDateBookings() {
+      try {
+        const res = await fetch(
+          `/api/customer/reservations?date=${encodeURIComponent(form.date)}`,
+          { cache: "no-store" }
+        );
+        const data = await res.json();
+        if (active && data?.success && Array.isArray(data.reservations)) {
+          setDateReservations(data.reservations);
+        }
+      } catch {
+        /* keep previous */
+      }
+    }
+    loadDateBookings();
+    return () => { active = false; };
+  }, [form.date]);
+
+  const activeReservations = useMemo(() => {
+    if (!form.date) return reservationRows;
+    const byId = new Map();
+    for (const r of dateReservations) byId.set(r.id, r);
+    for (const r of reservationRows) {
+      if (r.date === form.date) byId.set(r.id, r);
+    }
+    return [...byId.values()];
+  }, [form.date, dateReservations, reservationRows]);
+
   const openDatePicker = () => {
     const input = dateInputRef.current;
     if (!input) return;
@@ -117,8 +152,8 @@ export default function TableBookingPage() {
       });
       return map;
     }
-    return getCategoryAvailabilityCounts({ tables: floorTables, date: form.date, time: form.time, reservations: reservationRows });
-  }, [floorTables, reservationRows, form.date, form.time]);
+    return getCategoryAvailabilityCounts({ tables: floorTables, date: form.date, time: form.time, reservations: activeReservations });
+  }, [floorTables, activeReservations, form.date, form.time]);
 
   const tablesInCat = useMemo(() => {
     if (!selectedCatId) return [];
@@ -146,24 +181,58 @@ export default function TableBookingPage() {
   const submit = async () => {
     setConflictError(null);
     if (selectedTable && form.date && form.time) {
-      const check = getTableAvailability({ tableNumber: selectedTable.tableNumber, date: form.date, time: form.time, reservations: reservationRows });
+      const check = getTableAvailability({
+        tableNumber: selectedTable.tableNumber,
+        date: form.date,
+        time: form.time,
+        reservations: activeReservations,
+      });
       if (!check.available) {
-        setConflictError(`Table ${selectedTable.tableNumber} was just booked. ${check.nextAvailableTime ? `Next: ${check.nextAvailableTime}` : "Choose another."}`);
+        setConflictError(
+          `Table ${selectedTable.tableNumber} was just booked. ${check.nextAvailableTime ? `Next: ${check.nextAvailableTime}` : "Choose another."}`
+        );
         return;
       }
     }
     setLoading(true);
-    await new Promise((r) => setTimeout(r, 700));
-    setReservationRows((prev) => [...prev, {
-      id: `res-c-${Date.now()}`, customerName: form.name.trim(), phone: toIndianE164(form.phone),
-      date: form.date, time: form.time, guests: parseInt(form.guests, 10) || 2,
-      tableNumber: selectedTable?.tableNumber ?? "TBD", area: selectedCat?.name ?? "—",
-      status: "pending", notes: form.notes.trim(), createdAt: new Date().toISOString(),
-      confirmedAt: null, completedAt: null, cancelledAt: null,
-    }]);
-    setLoading(false);
-    setDone(true);
-    showToast("Table booking request sent!");
+    try {
+      const res = await fetch("/api/customer/reservations", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          customerName: form.name.trim(),
+          phone: toIndianE164(form.phone),
+          date: form.date,
+          time: form.time,
+          guests: parseInt(form.guests, 10) || 2,
+          tableNumber: selectedTable?.tableNumber ?? "TBD",
+          area: selectedCat?.name ?? "",
+          notes: form.notes.trim(),
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data?.success) {
+        setConflictError(data?.error ?? "Booking failed. Please try again.");
+        return;
+      }
+      if (data.reservation) {
+        const row = {
+          ...data.reservation,
+          createdAt: data.reservation.createdAt ?? new Date().toISOString(),
+          confirmedAt: null,
+          completedAt: null,
+          cancelledAt: null,
+        };
+        setReservationRows((prev) => [...prev, row]);
+        setDateReservations((prev) => [...prev, row]);
+      }
+      setDone(true);
+      showToast("Table booking request sent!");
+    } catch {
+      setConflictError("Network error. Please check your connection and try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const reset = () => {

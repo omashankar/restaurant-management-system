@@ -1,15 +1,20 @@
 import { withTenant } from "@/lib/tenantDb";
 
+const COMPLETED_STATUSES = ["completed", "ready"];
+const ACTIVE_STATUSES = ["new", "preparing", "ready", "completed"];
+
 export const GET = withTenant(
   ["admin", "manager"],
-  async ({ db, tenantFilter }, request) => {
+  async ({ db, tenantFilter, restaurantId }, request) => {
     const { searchParams } = new URL(request.url);
     const range = searchParams.get("range") ?? "30"; // days
     const days  = parseInt(range, 10) || 30;
 
     const since = new Date();
     since.setDate(since.getDate() - days);
+    since.setHours(0, 0, 0, 0);
     const dateFilter = { ...tenantFilter, createdAt: { $gte: since } };
+    const revenueMatch = { ...dateFilter, status: { $ne: "cancelled" } };
 
     /* ── Run all aggregations in parallel ── */
     const [
@@ -18,15 +23,16 @@ export const GET = withTenant(
       topItemsAgg,
       dailyRevenueAgg,
       orderTypeAgg,
+      settingsDoc,
     ] = await Promise.all([
 
-      /* Total revenue */
+      /* Total revenue — all non-cancelled orders in range */
       db.collection("orders").aggregate([
-        { $match: { ...dateFilter, status: { $in: ["completed", "ready"] } } },
+        { $match: revenueMatch },
         { $group: { _id: null, total: { $sum: "$total" }, count: { $sum: 1 } } },
       ]).toArray(),
 
-      /* Orders in range grouped by status (used for totals + completed/cancelled KPIs) */
+      /* Orders in range grouped by status */
       db.collection("orders").aggregate([
         { $match: dateFilter },
         { $group: { _id: "$status", count: { $sum: 1 } } },
@@ -34,7 +40,7 @@ export const GET = withTenant(
 
       /* Top selling items */
       db.collection("orders").aggregate([
-        { $match: { ...dateFilter, status: { $in: ["completed", "ready", "preparing"] } } },
+        { $match: { ...dateFilter, status: { $in: ACTIVE_STATUSES } } },
         { $unwind: "$items" },
         { $group: {
           _id: "$items.name",
@@ -47,7 +53,7 @@ export const GET = withTenant(
 
       /* Daily revenue (last N days) */
       db.collection("orders").aggregate([
-        { $match: { ...dateFilter, status: { $in: ["completed", "ready"] } } },
+        { $match: { ...dateFilter, status: { $in: COMPLETED_STATUSES } } },
         { $group: {
           _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
           revenue: { $sum: "$total" },
@@ -58,26 +64,39 @@ export const GET = withTenant(
 
       /* Orders by type */
       db.collection("orders").aggregate([
-        { $match: dateFilter },
+        { $match: { ...dateFilter, status: { $ne: "cancelled" } } },
         { $group: { _id: "$orderType", count: { $sum: 1 } } },
       ]).toArray(),
+
+      restaurantId
+        ? db.collection("restaurant_settings").findOne(
+            { restaurantId },
+            { projection: { "general.currency": 1 } }
+          )
+        : Promise.resolve(null),
     ]);
 
     const totalRevenue = revenueAgg[0]?.total ?? 0;
-    const totalOrders  = ordersAgg.reduce((s, o) => s + o.count, 0);
-    const avgOrder     = totalOrders > 0 ? totalRevenue / (revenueAgg[0]?.count ?? 1) : 0;
-
+    const revenueOrderCount = revenueAgg[0]?.count ?? 0;
     const statusMap = Object.fromEntries(ordersAgg.map((s) => [s._id, s.count]));
+    const totalOrders = Object.entries(statusMap).reduce(
+      (sum, [status, count]) => (status === "cancelled" ? sum : sum + count),
+      0
+    );
+    const avgOrder = revenueOrderCount > 0 ? totalRevenue / revenueOrderCount : 0;
     const typeMap   = Object.fromEntries(orderTypeAgg.map((t) => [t._id, t.count]));
+    const currency =
+      settingsDoc?.general?.currency?.trim()?.toUpperCase() || "INR";
 
     return Response.json({
       success: true,
       range: days,
+      currency,
       kpis: {
         totalRevenue:  Math.round(totalRevenue * 100) / 100,
         totalOrders,
         avgOrderValue: Math.round(avgOrder * 100) / 100,
-        completedOrders: statusMap.completed ?? 0,
+        completedOrders: (statusMap.completed ?? 0) + (statusMap.ready ?? 0),
         cancelledOrders: statusMap.cancelled ?? 0,
       },
       topItems: topItemsAgg.map((i) => ({

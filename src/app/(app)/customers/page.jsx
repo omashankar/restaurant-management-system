@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import DataTableShell from "@/components/ui/DataTableShell";
@@ -33,6 +33,7 @@ export default function CustomersModulePage() {
   const { user } = useApp();
   const { hydrated, customerRows, setCustomerRows } = useModuleData();
   const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState(null);
   const [visitFilter, setVisitFilter] = useState("all");
   const [modalOpen, setModalOpen] = useState(false);
   const [editingId, setEditingId] = useState(null);
@@ -52,15 +53,18 @@ export default function CustomersModulePage() {
     let alive = true;
     async function loadCustomers() {
       setLoading(true);
+      setFetchError(null);
       try {
         const res = await fetch("/api/customers", { cache: "no-store" });
         const data = await res.json();
         if (!alive) return;
         if (res.ok && data?.success && Array.isArray(data.customers)) {
           setCustomerRows(data.customers.map(normalizeCustomer));
+        } else {
+          setFetchError(data?.error ?? "Could not load customers.");
         }
       } catch {
-        // Keep existing fallback rows if API is temporarily unavailable.
+        if (alive) setFetchError("Network error while loading customers.");
       } finally {
         if (alive) setLoading(false);
       }
@@ -117,7 +121,10 @@ export default function CustomersModulePage() {
   };
 
   const saveCustomer = async () => {
-    if (!form.name.trim()) return;
+    if (!form.name.trim() || !form.phone.trim()) {
+      showToast("Name and phone are required.", "error");
+      return;
+    }
     const payload = {
       name: form.name.trim(),
       phone: form.phone.trim(),
@@ -131,8 +138,9 @@ export default function CustomersModulePage() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
         });
+        const data = await res.json();
         if (!res.ok) {
-          showToast("Customer update failed.", "error");
+          showToast(data?.error ?? "Customer update failed.", "error");
           return;
         }
         setCustomerRows((prev) =>
@@ -228,10 +236,16 @@ export default function CustomersModulePage() {
         </button>
       </div>
 
+      {fetchError ? (
+        <div className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">
+          {fetchError}
+        </div>
+      ) : null}
+
       <ListToolbar
         search={search}
         onSearchChange={setSearch}
-        searchPlaceholder="Search name, phone, emailâ€¦"
+        searchPlaceholder="Search name, phone, email…"
         filterSlot={
           <select
             value={visitFilter}
@@ -239,8 +253,8 @@ export default function CustomersModulePage() {
             className="rounded-xl border border-zinc-800 bg-zinc-900/60 px-3 py-2 text-sm text-zinc-200"
           >
             <option value="all">All visits</option>
-            <option value="1-5">1â€“5 visits</option>
-            <option value="6-15">6â€“15 visits</option>
+            <option value="1-5">1–5 visits</option>
+            <option value="6-15">6–15 visits</option>
             <option value="16+">16+ visits</option>
           </select>
         }

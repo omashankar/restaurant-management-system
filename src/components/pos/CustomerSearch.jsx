@@ -23,9 +23,16 @@ export default function CustomerSearch({ onCustomerSelect }) {
     setShowAddForm(false);
   };
 
-  const handleAdd = () => {
+  const [addError, setAddError] = useState("");
+
+  const handleAdd = async () => {
     if (!newForm.name.trim() || !newForm.phone.trim()) return;
-    const c = addCustomer(newForm);
+    setAddError("");
+    const c = await addCustomer(newForm);
+    if (!c) {
+      setAddError("Could not add customer. Phone may already exist.");
+      return;
+    }
     onCustomerSelect?.(c);
     setNewForm({ name: "", phone: "", email: "" });
     setShowAddForm(false);
@@ -145,6 +152,9 @@ export default function CustomerSearch({ onCustomerSelect }) {
             placeholder="Email (optional)"
             className="w-full rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2 text-sm text-zinc-100 outline-none focus:border-emerald-500/40"
           />
+          {addError && (
+            <p className="text-xs text-red-400">{addError}</p>
+          )}
           <div className="flex gap-2 pt-1">
             <button
               type="button"

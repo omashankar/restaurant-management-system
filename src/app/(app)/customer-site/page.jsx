@@ -113,6 +113,7 @@ export default function CustomerSitePage() {
   const panelRef = useRef(null);
   const publishedRef = useRef(null);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(null);
   const [saving, setSaving] = useState(null);
   const [siteUrl, setSiteUrl] = useState("");
   const [draftSections, setDraftSections] = useState([]);
@@ -151,13 +152,20 @@ export default function CustomerSitePage() {
 
   useEffect(() => {
     async function load() {
+      setLoadError(null);
       try {
         const [cmsRes, settingsRes] = await Promise.all([
           fetch("/api/restaurant-cms"),
           fetch("/api/settings"),
         ]);
         const [cmsData, settingsData] = await Promise.all([cmsRes.json(), settingsRes.json()]);
-        if (cmsData.success && cmsData.content) {
+
+        if (!cmsRes.ok || !cmsData?.success) {
+          setLoadError(cmsData?.error ?? "Failed to load site content.");
+          return;
+        }
+
+        if (cmsData.content) {
           const c = cmsData.content;
           if (c.hero) {
             const merged = mergeCmsSection(DEFAULTS.hero, c.hero);
@@ -205,7 +213,9 @@ export default function CustomerSitePage() {
           }
         }
       } catch {
-        showToast("Failed to load content.", "error");
+        const msg = "Could not load customer site content.";
+        setLoadError(msg);
+        showToast(msg, "error");
       } finally {
         setLoading(false);
       }
@@ -328,6 +338,10 @@ export default function CustomerSitePage() {
       }
       invalidateRestaurantCmsCache();
       setDraftSections((prev) => prev.filter((s) => s !== section));
+      publishedRef.current = {
+        ...(publishedRef.current ?? {}),
+        [section]: data,
+      };
       showToast(`${publishHeadlineForSection(section)} is now live!`);
     } catch {
       showToast("Network error.", "error");
@@ -351,6 +365,15 @@ export default function CustomerSitePage() {
       }
       invalidateRestaurantCmsCache();
       setDraftSections([]);
+      try {
+        const refresh = await fetch("/api/restaurant-cms", { cache: "no-store" });
+        const refreshData = await refresh.json();
+        if (refreshData.success && refreshData.published) {
+          publishedRef.current = refreshData.published;
+        }
+      } catch {
+        /* keep local publishedRef updates from single publishes */
+      }
       showToast("All drafts published to your live site!");
     } catch {
       showToast("Network error.", "error");
@@ -427,6 +450,22 @@ export default function CustomerSitePage() {
             <p className="text-xs font-semibold text-emerald-300">Customer site URL</p>
             <p className="truncate font-mono text-xs text-emerald-400/80">{siteUrl}</p>
           </div>
+        </div>
+      )}
+
+      {!siteUrl && !loading && (
+        <div className="rounded-xl border border-amber-500/25 bg-amber-500/8 px-4 py-3 text-sm text-amber-200/90">
+          <p className="font-semibold text-amber-300">Restaurant slug not set</p>
+          <p className="mt-1 text-xs text-amber-200/70">
+            Set a slug in Super Admin → Restaurants (or during signup) so your public site opens at{" "}
+            <span className="font-mono">/r/your-slug/home</span>.
+          </p>
+        </div>
+      )}
+
+      {loadError && (
+        <div className="rounded-xl border border-red-500/25 bg-red-500/10 px-4 py-3 text-sm text-red-400">
+          {loadError}
         </div>
       )}
 

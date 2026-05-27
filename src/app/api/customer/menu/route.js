@@ -16,7 +16,13 @@ export async function GET(request) {
 
     const filter = { restaurantId };
     if (categoryId) filter.categoryId = categoryId;
-    if (status && status !== "all") filter.status = status;
+    if (status === "all") {
+      /* no status filter */
+    } else if (status) {
+      filter.status = status;
+    } else {
+      filter.status = "active";
+    }
 
     const rawLimit = parseInt(searchParams.get("limit") ?? "500", 10);
     const limit = Number.isFinite(rawLimit)
