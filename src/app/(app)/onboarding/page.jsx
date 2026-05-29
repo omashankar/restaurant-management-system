@@ -93,6 +93,9 @@ export default function OnboardingPage() {
   const [otp, setOtp] = useState("");
   const [otpLoading, setOtpLoading] = useState(false);
   const [autoSaveMsg, setAutoSaveMsg] = useState("");
+  const [saveError, setSaveError] = useState("");
+  const [otpError, setOtpError] = useState("");
+  const [otpHint, setOtpHint] = useState("");
   const autoSaveTimer = useRef(null);
 
   // Auto-save draft to localStorage
@@ -126,21 +129,61 @@ export default function OnboardingPage() {
   async function sendOtp() {
     if (!draft.mobile || draft.mobile.length < 10) return;
     setOtpLoading(true);
-    // Simulate OTP send (real implementation would call SMS API)
-    await new Promise((r) => setTimeout(r, 1000));
-    setOtpSent(true);
-    setOtpLoading(false);
+    setOtpError("");
+    setOtpHint("");
+    try {
+      const res = await fetch("/api/auth/onboarding/request-otp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ phone: draft.mobile }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.success) {
+        setOtpError(data?.error ?? "Failed to send OTP.");
+        return;
+      }
+      setOtpSent(true);
+      if (data.devOtp) {
+        setOtpHint(`Dev OTP: ${data.devOtp}`);
+      } else if (!data.smsSent) {
+        setOtpHint("SMS not sent — configure platform SMS in Super Admin settings.");
+      }
+    } catch {
+      setOtpError("Network error. Try again.");
+    } finally {
+      setOtpLoading(false);
+    }
   }
 
   async function verifyOtp() {
+    if (otp.length < 6) return;
     setOtpLoading(true);
-    await new Promise((r) => setTimeout(r, 800));
-    // In production: verify OTP via API
-    update({ mobileVerified: true });
-    setOtpLoading(false);
+    setOtpError("");
+    try {
+      const res = await fetch("/api/auth/onboarding/verify-otp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ phone: draft.mobile, otp }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.success) {
+        setOtpError(data?.error ?? "Invalid OTP.");
+        return;
+      }
+      update({ mobileVerified: true });
+      setOtpHint("");
+    } catch {
+      setOtpError("Network error. Try again.");
+    } finally {
+      setOtpLoading(false);
+    }
   }
 
   function nextStep() {
+    if (step === 1 && !draft.mobileVerified) {
+      setOtpError("Please verify your mobile number before continuing.");
+      return;
+    }
     if (step < TOTAL_STEPS) setStep((s) => s + 1);
   }
 
@@ -149,10 +192,16 @@ export default function OnboardingPage() {
   }
 
   async function finishOnboarding() {
+    if (!draft.mobileVerified) {
+      setSaveError("Please verify your mobile number in Step 1 before launching.");
+      setStep(1);
+      return;
+    }
+
     setSaving(true);
+    setSaveError("");
     try {
-      // Save restaurant settings from onboarding draft
-      await fetch("/api/settings", {
+      const res = await fetch("/api/settings", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -176,12 +225,28 @@ export default function OnboardingPage() {
           openingHours: draft.openingHours,
         }),
       });
-      // Clear draft
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.success) {
+        setSaveError(data?.error ?? "Could not save settings. Please try again.");
+        return;
+      }
+
+      if (draft.categories?.length > 0) {
+        await Promise.allSettled(
+          draft.categories.map((name) =>
+            fetch("/api/categories", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ name, description: "" }),
+            }),
+          ),
+        );
+      }
+
       localStorage.removeItem("rms-onboarding-draft");
       router.push("/dashboard");
     } catch {
-      // Still redirect
-      router.push("/dashboard");
+      setSaveError("Network error. Check your connection and try again.");
     } finally {
       setSaving(false);
     }
@@ -213,6 +278,17 @@ export default function OnboardingPage() {
                 </div>
               </Field>
 
+              {otpError && (
+                <div className="rounded-xl border border-red-500/25 bg-red-500/10 px-4 py-3 text-sm text-red-300">
+                  {otpError}
+                </div>
+              )}
+              {otpHint && (
+                <div className="rounded-xl border border-amber-500/25 bg-amber-500/10 px-4 py-3 text-sm text-amber-200">
+                  {otpHint}
+                </div>
+              )}
+
               {!otpSent ? (
                 <button type="button" onClick={sendOtp} disabled={otpLoading || draft.mobile.length < 10}
                   className="cursor-pointer w-full rounded-xl bg-emerald-500 py-2.5 text-sm font-semibold text-zinc-950 hover:bg-emerald-400 disabled:opacity-50 transition-colors">
@@ -224,11 +300,12 @@ export default function OnboardingPage() {
                     <input value={otp} onChange={(e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
                       placeholder="Enter 6-digit OTP" className={inputCls} maxLength={6} />
                   </Field>
-                  <button type="button" onClick={verifyOtp} disabled={otpLoading || otp.length < 4}
+                  <button type="button" onClick={verifyOtp} disabled={otpLoading || otp.length < 6}
                     className="cursor-pointer w-full rounded-xl bg-emerald-500 py-2.5 text-sm font-semibold text-zinc-950 hover:bg-emerald-400 disabled:opacity-50 transition-colors">
                     {otpLoading ? <Loader2 className="mx-auto size-4 animate-spin" /> : "Verify OTP"}
                   </button>
-                  <button type="button" onClick={sendOtp} className="cursor-pointer w-full text-sm text-zinc-500 hover:text-zinc-300 transition-colors">
+                  <button type="button" onClick={sendOtp} disabled={otpLoading}
+                    className="cursor-pointer w-full text-sm text-zinc-500 hover:text-zinc-300 transition-colors disabled:opacity-50">
                     {t("onboarding.resendOtp")}
                   </button>
                 </div>
@@ -461,6 +538,12 @@ export default function OnboardingPage() {
         )}
 
         {/* Navigation */}
+        {saveError && (
+          <div className="mt-6 rounded-xl border border-red-500/25 bg-red-500/10 px-4 py-3 text-sm text-red-300">
+            {saveError}
+          </div>
+        )}
+
         <div className="mt-6 flex items-center justify-between">
           <button type="button" onClick={prevStep} disabled={step === 1}
             className="cursor-pointer rounded-xl border border-zinc-700 px-5 py-2.5 text-sm font-medium text-zinc-400 hover:border-zinc-500 hover:text-zinc-200 disabled:opacity-30 transition-colors">

@@ -4,6 +4,7 @@ import SidebarBrand from "@/components/rms/SidebarBrand";
 import { navForRole } from "@/config/navigation";
 import { useApp } from "@/context/AppProviders";
 import { useAccessControlSettings } from "@/hooks/useAccessControlSettings";
+import { usePlatformConfig } from "@/hooks/usePlatformConfig";
 import { useRestaurantBranding } from "@/hooks/useRestaurantBranding";
 import {
   ChevronDown,
@@ -25,6 +26,7 @@ export default function Sidebar({
   const { name: brandName, tagline: brandTagline, logoUrl: brandLogoUrl } =
     useRestaurantBranding();
   const accessControl = useAccessControlSettings();
+  const { features: platformFeatures } = usePlatformConfig();
   const pathname = usePathname();
   const [openGroups, setOpenGroups] = useState(() => ({
     menu:   pathname.startsWith("/menu"),
@@ -35,8 +37,8 @@ export default function Sidebar({
   const triggerRefs = useRef({});
   const popoverRef = useRef(null);
   const items = useMemo(
-    () => (user ? navForRole(user.role, accessControl) : []),
-    [accessControl, user]
+    () => (user ? navForRole(user.role, accessControl, platformFeatures) : []),
+    [accessControl, platformFeatures, user]
   );
   const collapsedPopoverEnabled = collapsed && allowCollapse;
   const popoverItem = useMemo(() => {

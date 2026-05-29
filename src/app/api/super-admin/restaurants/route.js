@@ -1,7 +1,12 @@
+import { writeAuditLog } from "@/lib/auditLog";
 import { getTokenFromRequest } from "@/lib/authCookies";
 import { verifyToken } from "@/lib/jwt";
 import clientPromise from "@/lib/mongodb";
+import { getClientIp } from "@/lib/rateLimit";
 import bcrypt from "bcryptjs";
+import { getPlatformSettings } from "@/lib/platformSettings";
+import { validatePlatformPassword } from "@/lib/platformPassword";
+import { notifyPlatformEvent } from "@/lib/platformNotify";
 
 const VALID_PLANS = ["free", "starter", "pro", "enterprise"];
 
@@ -229,7 +234,8 @@ export async function GET(request) {
 
 /* ── POST /api/super-admin/restaurants — create restaurant + owner account ── */
 export async function POST(request) {
-  if (!superAdminOnly(request)) {
+  const sa = superAdminOnly(request);
+  if (!sa) {
     return Response.json({ success: false, error: "Forbidden." }, { status: 403 });
   }
 
@@ -243,7 +249,6 @@ export async function POST(request) {
   if (!name?.trim())        return Response.json({ success: false, error: "Restaurant name is required." }, { status: 400 });
   if (!ownerEmail?.trim())  return Response.json({ success: false, error: "Owner email is required." },     { status: 400 });
   if (!ownerPassword)       return Response.json({ success: false, error: "Owner password is required." },  { status: 400 });
-  if (ownerPassword.length < 6) return Response.json({ success: false, error: "Password must be at least 6 characters." }, { status: 400 });
   if (!allowedStatuses.includes(status)) return Response.json({ success: false, error: "Invalid status." }, { status: 400 });
   if (!VALID_PLANS.includes(plan)) return Response.json({ success: false, error: "Invalid plan." }, { status: 400 });
 
@@ -256,6 +261,11 @@ export async function POST(request) {
   try {
     const client = await clientPromise;
     const db     = client.db();
+    const platform = await getPlatformSettings(db);
+    const pwdCheck = validatePlatformPassword(ownerPassword, platform.security);
+    if (!pwdCheck.valid) {
+      return Response.json({ success: false, error: pwdCheck.error }, { status: 400 });
+    }
 
     // Duplicate email check
     const existingUser = await db.collection("users").findOne({ email: ownerEmail.toLowerCase().trim() });
@@ -317,6 +327,28 @@ export async function POST(request) {
     } finally {
       await session.endSession();
     }
+
+    await writeAuditLog({
+      action: "restaurant.created",
+      category: "restaurant",
+      actorId: sa.id,
+      targetId: restaurantId.toString(),
+      targetName: name.trim(),
+      meta: { plan, status },
+      ip: getClientIp(request),
+    });
+
+    notifyPlatformEvent(db, {
+      event: "restaurant.created",
+      webhookData: { name: name.trim(), ownerEmail, plan, status },
+      pushTitle: "Restaurant created",
+      pushBody: name.trim(),
+      emailType: "newRestaurant",
+      emailContent: {
+        subject: `[RMS] New restaurant: ${name.trim()}`,
+        text: `Created by super admin.\nOwner: ${ownerEmail}\nPlan: ${plan}`,
+      },
+    }).catch(() => {});
 
     return Response.json({
       success: true,

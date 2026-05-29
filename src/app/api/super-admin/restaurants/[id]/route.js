@@ -1,6 +1,8 @@
+import { writeAuditLog } from "@/lib/auditLog";
 import { getTokenFromRequest } from "@/lib/authCookies";
 import { verifyToken } from "@/lib/jwt";
 import clientPromise from "@/lib/mongodb";
+import { getClientIp } from "@/lib/rateLimit";
 import { ObjectId } from "mongodb";
 
 function superAdminOnly(request) {
@@ -17,7 +19,8 @@ const VALID_PLANS = ["free", "starter", "pro", "enterprise"];
 
 /* ── PATCH /api/super-admin/restaurants/:id — update status / plan ── */
 export async function PATCH(request, { params }) {
-  if (!superAdminOnly(request)) {
+  const sa = superAdminOnly(request);
+  if (!sa) {
     return Response.json({ success: false, error: "Forbidden." }, { status: 403 });
   }
 
@@ -107,6 +110,24 @@ export async function PATCH(request, { params }) {
       await session.endSession();
     }
 
+    const restaurant = await db.collection("restaurants").findOne(
+      { _id },
+      { projection: { name: 1, status: 1 } },
+    );
+    let action = "restaurant.updated";
+    if (body.status === "active") action = "restaurant.activated";
+    else if (body.status === "inactive" || body.status === "suspended") action = "restaurant.deactivated";
+
+    await writeAuditLog({
+      action,
+      category: "restaurant",
+      actorId: sa.id,
+      targetId: id,
+      targetName: restaurant?.name ?? id,
+      meta: { fields: Object.keys(update).filter((k) => k !== "updatedAt") },
+      ip: getClientIp(request),
+    });
+
     return Response.json({ success: true });
   } catch (err) {
     console.error("PATCH restaurant error:", err.message);
@@ -116,7 +137,8 @@ export async function PATCH(request, { params }) {
 
 /* ── DELETE /api/super-admin/restaurants/:id ── */
 export async function DELETE(request, { params }) {
-  if (!superAdminOnly(request)) {
+  const sa = superAdminOnly(request);
+  if (!sa) {
     return Response.json({ success: false, error: "Forbidden." }, { status: 403 });
   }
 
@@ -127,6 +149,11 @@ export async function DELETE(request, { params }) {
   try {
     const client = await clientPromise;
     const db     = client.db();
+
+    const existing = await db.collection("restaurants").findOne(
+      { _id },
+      { projection: { name: 1 } },
+    );
 
     const session = client.startSession();
     let notFound = false;
@@ -146,6 +173,15 @@ export async function DELETE(request, { params }) {
     } finally {
       await session.endSession();
     }
+
+    await writeAuditLog({
+      action: "restaurant.deleted",
+      category: "restaurant",
+      actorId: sa.id,
+      targetId: id,
+      targetName: existing?.name ?? id,
+      ip: getClientIp(request),
+    });
 
     return Response.json({ success: true });
   } catch (err) {

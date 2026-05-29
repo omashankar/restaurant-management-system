@@ -1,10 +1,12 @@
 "use client";
 
+import { formatSaMoney } from "@/lib/formatSaMoney";
 import { useToast } from "@/hooks/useToast";
 import {
   CheckCircle2, ChevronLeft, ChevronRight,
   Clock, DollarSign, Download, FileText, RefreshCw, Search, XCircle,
 } from "lucide-react";
+import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 
 const STATUS_BADGE = {
@@ -29,6 +31,7 @@ export default function PaymentsPage() {
   const [summary, setSummary]     = useState({ totalRevenue: 0, paidCount: 0 });
   const [pagination, setPagination] = useState({ page: 1, pages: 1, total: 0 });
   const [loading, setLoading]     = useState(true);
+  const [loadError, setLoadError] = useState("");
   const [search, setSearch]       = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [page, setPage]           = useState(1);
@@ -37,18 +40,24 @@ export default function PaymentsPage() {
 
   const fetchPayments = useCallback(async () => {
     setLoading(true);
+    setLoadError("");
     try {
-      const params = new URLSearchParams({ page: String(page) });
+      const params = new URLSearchParams({ page: String(page), paymentType: "subscription" });
       if (search)              params.set("search", search);
       if (statusFilter !== "all") params.set("status", statusFilter);
       const res  = await fetch(`/api/super-admin/payments?${params}`);
       const data = await res.json();
-      if (data.success) {
-        setPayments(data.payments);
-        setSummary(data.summary);
-        setPagination(data.pagination);
+      if (!res.ok || !data.success) {
+        setLoadError(data?.error ?? "Failed to load subscription payments.");
+        return;
       }
-    } catch { showToast("Failed to load payments.", "error"); }
+      setPayments(data.payments);
+      setSummary(data.summary);
+      setPagination(data.pagination);
+    } catch {
+      setLoadError("Could not load subscription payments.");
+      showToast("Failed to load payments.", "error");
+    }
     finally { setLoading(false); }
   }, [page, search, statusFilter, showToast]);
 
@@ -57,7 +66,11 @@ export default function PaymentsPage() {
   /* Reset to page 1 when filters change */
   useEffect(() => { setPage(1); }, [search, statusFilter]);
 
-  const invoiceRows = payments.filter((p) => p.status === "paid" && p.paymentType === "subscription");
+  const invoiceRows = payments.filter(
+    (p) =>
+      p.status === "paid" &&
+      (p.paymentType === "subscription" || p.paymentType === "subscription_renewal"),
+  );
 
   const downloadReceipt = async (payment) => {
     setDownloadingId(payment.id);
@@ -101,8 +114,13 @@ export default function PaymentsPage() {
             <DollarSign className="size-5" />
           </span>
           <div>
-            <h1 className="text-2xl font-semibold tracking-tight text-zinc-50">Payments</h1>
-            <p className="mt-1 text-sm text-zinc-500">Transaction history across all tenants.</p>
+            <h1 className="text-2xl font-semibold tracking-tight text-zinc-50">Subscription Payments</h1>
+            <p className="mt-1 text-sm text-zinc-500">
+              Money received when restaurants pay for a plan.{" "}
+              <Link href="/super-admin/billing" className="text-indigo-400 hover:text-indigo-300 underline-offset-2 hover:underline">
+                Manage plans &amp; expiry →
+              </Link>
+            </p>
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -146,13 +164,19 @@ export default function PaymentsPage() {
         </div>
       </div>
 
+      {loadError && (
+        <div className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">
+          {loadError}
+        </div>
+      )}
+
       {/* Summary cards */}
       {activeTab === "overview" && (
       <div className="grid gap-3 sm:grid-cols-3">
         <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/5 px-5 py-4">
           <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500">Total Revenue</p>
           <p className="mt-2 text-3xl font-bold tabular-nums text-emerald-400">
-            ${summary.totalRevenue.toLocaleString()}
+            {formatSaMoney(summary.totalRevenue)}
           </p>
           <p className="mt-1 text-xs text-zinc-600">{summary.paidCount} paid transactions</p>
         </div>
@@ -231,7 +255,7 @@ export default function PaymentsPage() {
                     </td>
                     <td className="px-4 py-3">
                       <p className="font-semibold tabular-nums text-zinc-100">
-                        ${p.amount.toLocaleString()} <span className="text-xs font-normal text-zinc-500">{p.currency}</span>
+                        {formatSaMoney(p.amount, p.currency)}
                       </p>
                     </td>
                     <td className="px-4 py-3">
@@ -322,7 +346,7 @@ export default function PaymentsPage() {
                     </td>
                     <td className="px-4 py-3">
                       <p className="font-semibold tabular-nums text-zinc-100">
-                        ${p.amount.toLocaleString()} <span className="text-xs font-normal text-zinc-500">{p.currency}</span>
+                        {formatSaMoney(p.amount, p.currency)}
                       </p>
                     </td>
                     <td className="hidden px-4 py-3 text-xs text-zinc-600 md:table-cell">

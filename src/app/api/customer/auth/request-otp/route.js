@@ -5,6 +5,7 @@ import {
 } from "@/lib/rateLimit";
 import { normalizePhoneForOtp } from "@/lib/phoneUtils";
 import bcrypt from "bcryptjs";
+import { sendPlatformSms } from "@/lib/smsService";
 
 const OTP_EXPIRY_MINUTES = 2;
 
@@ -62,14 +63,22 @@ export async function POST(request) {
       );
     }
 
+    const smsResult = await sendPlatformSms(
+      db,
+      phone,
+      `Your RMS login OTP is ${otp}. Valid for ${OTP_EXPIRY_MINUTES} minutes.`,
+    );
+
     const response = {
       success: true,
-      message: "OTP sent successfully.",
+      message: smsResult.sent
+        ? "OTP sent to your mobile."
+        : "OTP generated. Check SMS settings if you did not receive a text.",
       expiresInSec: OTP_EXPIRY_MINUTES * 60,
+      smsSent: smsResult.sent,
     };
 
-    // Dev convenience; remove in production.
-    if (process.env.NODE_ENV !== "production") {
+    if (!smsResult.sent && process.env.NODE_ENV !== "production") {
       response.devOtp = otp;
     }
 

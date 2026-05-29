@@ -57,6 +57,9 @@ function actionLabel(action) {
     "billing.plan_assigned":"Plan assigned",
     "billing.plan_cancelled":"Subscription cancelled",
     "billing.plan_renewed": "Subscription renewed",
+    "billing.plan_created": "Plan created",
+    "billing.plan_updated": "Plan updated",
+    "billing.plan_deleted": "Plan deleted",
     "settings.updated":     "Settings updated",
     "auth.login":           "Admin logged in",
     "auth.logout":          "Admin logged out",
@@ -92,6 +95,7 @@ export default function LogsPage() {
   const [pagination, setPagination]   = useState({ page: 1, pages: 1, total: 0 });
   const [categoryCounts, setCategoryCounts] = useState({});
   const [loading, setLoading]         = useState(true);
+  const [loadError, setLoadError]     = useState("");
   const [category, setCategory]       = useState("all");
   const [search, setSearch]           = useState("");
   const [page, setPage]               = useState(1);
@@ -99,6 +103,7 @@ export default function LogsPage() {
 
   const fetchLogs = useCallback(async () => {
     setLoading(true);
+    setLoadError("");
     try {
       const params = new URLSearchParams({ page: String(page) });
       if (category !== "all") params.set("category", category);
@@ -111,10 +116,14 @@ export default function LogsPage() {
         setPagination(data.pagination);
         setCategoryCounts(data.categoryCounts ?? {});
       } else {
-        showToast(data.error ?? "Failed to load logs.", "error");
+        const message = data.error ?? "Failed to load logs.";
+        setLoadError(message);
+        showToast(message, "error");
       }
     } catch {
-      showToast("Network error.", "error");
+      const message = "Network error.";
+      setLoadError(message);
+      showToast(message, "error");
     } finally {
       setLoading(false);
     }
@@ -154,6 +163,12 @@ export default function LogsPage() {
           Refresh
         </button>
       </div>
+
+      {loadError && (
+        <div className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">
+          {loadError}
+        </div>
+      )}
 
       {/* ── Category filter tabs ── */}
       <div className="flex flex-wrap gap-1.5">

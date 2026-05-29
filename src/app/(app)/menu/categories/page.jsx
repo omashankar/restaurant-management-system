@@ -23,17 +23,24 @@ export default function CategoriesPage() {
   const [form, setForm]         = useState({ name: "", description: "" });
   const [formError, setFormError] = useState("");
   const [deleteTarget, setDeleteTarget] = useState(null);
+  const [fetchError, setFetchError] = useState("");
   const { refreshMenu } = useModuleData();
   const { showToast, ToastUI } = useToast();
 
   const fetchCategories = useCallback(async () => {
     setLoading(true);
+    setFetchError("");
     try {
       const res  = await fetch("/api/categories");
       const data = await res.json();
-      if (data.success) setCategories(data.categories);
-    } catch { /* keep */ }
-    finally { setLoading(false); }
+      if (!res.ok || !data.success) {
+        setFetchError(data?.error ?? "Could not load categories.");
+        return;
+      }
+      setCategories(data.categories);
+    } catch {
+      setFetchError("Could not load categories. Check your connection and try again.");
+    } finally { setLoading(false); }
   }, []);
 
   useEffect(() => { fetchCategories(); }, [fetchCategories]);
@@ -85,6 +92,11 @@ export default function CategoriesPage() {
 
   return (
     <div className="space-y-6">
+      {fetchError && (
+        <div className="rounded-xl border border-red-500/25 bg-red-500/10 px-4 py-3 text-sm text-red-300">
+          {fetchError}
+        </div>
+      )}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div className="flex items-start gap-3">
           <span className="mt-1 flex size-10 shrink-0 items-center justify-center rounded-xl bg-emerald-500/15 text-emerald-400 ring-1 ring-emerald-500/25"><FolderTree className="size-5" /></span>

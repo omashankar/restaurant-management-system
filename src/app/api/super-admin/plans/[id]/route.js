@@ -1,6 +1,8 @@
+import { writeAuditLog } from "@/lib/auditLog";
 import { getTokenFromRequest } from "@/lib/authCookies";
 import { verifyToken } from "@/lib/jwt";
 import clientPromise from "@/lib/mongodb";
+import { getClientIp } from "@/lib/rateLimit";
 import { ObjectId } from "mongodb";
 
 function superAdminOnly(request) {
@@ -14,9 +16,18 @@ function toOid(id) {
   try { return new ObjectId(id); } catch { return null; }
 }
 
+function toPlanSlug(name) {
+  return String(name ?? "")
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
 /* ── PATCH /api/super-admin/plans/:id ── */
 export async function PATCH(request, { params }) {
-  if (!superAdminOnly(request)) return Response.json({ success: false, error: "Forbidden." }, { status: 403 });
+  const sa = superAdminOnly(request);
+  if (!sa) return Response.json({ success: false, error: "Forbidden." }, { status: 403 });
 
   const { id } = await params;
   const _id = toOid(id);
@@ -32,8 +43,12 @@ export async function PATCH(request, { params }) {
   if (body.name != null) {
     const trimmed = String(body.name).trim();
     if (!trimmed) return Response.json({ success: false, error: "Plan name cannot be empty." }, { status: 400 });
+    const slug = toPlanSlug(trimmed);
+    if (!slug) {
+      return Response.json({ success: false, error: "Plan name must include letters or numbers." }, { status: 400 });
+    }
     update.name = trimmed;
-    update.slug = trimmed.toLowerCase().replace(/\s+/g, "-");
+    update.slug = slug;
   }
   if (body.price != null) {
     const price = Number(body.price);
@@ -97,6 +112,18 @@ export async function PATCH(request, { params }) {
 
     const result = await db.collection("plans").updateOne({ _id }, { $set: update });
     if (result.matchedCount === 0) return Response.json({ success: false, error: "Plan not found." }, { status: 404 });
+
+    const plan = await db.collection("plans").findOne({ _id }, { projection: { name: 1, slug: 1 } });
+    await writeAuditLog({
+      action: "billing.plan_updated",
+      category: "billing",
+      actorId: sa.id,
+      targetId: id,
+      targetName: plan?.name ?? id,
+      meta: { slug: plan?.slug },
+      ip: getClientIp(request),
+    });
+
     return Response.json({ success: true });
   } catch (err) {
     console.error("PATCH plan error:", err.message);
@@ -106,7 +133,8 @@ export async function PATCH(request, { params }) {
 
 /* ── DELETE /api/super-admin/plans/:id ── */
 export async function DELETE(request, { params }) {
-  if (!superAdminOnly(request)) return Response.json({ success: false, error: "Forbidden." }, { status: 403 });
+  const sa = superAdminOnly(request);
+  if (!sa) return Response.json({ success: false, error: "Forbidden." }, { status: 403 });
 
   const { id } = await params;
   const _id = toOid(id);
@@ -129,6 +157,17 @@ export async function DELETE(request, { params }) {
     }
 
     await db.collection("plans").deleteOne({ _id });
+
+    await writeAuditLog({
+      action: "billing.plan_deleted",
+      category: "billing",
+      actorId: sa.id,
+      targetId: id,
+      targetName: plan.name,
+      meta: { slug: plan.slug },
+      ip: getClientIp(request),
+    });
+
     return Response.json({ success: true });
   } catch (err) {
     console.error("DELETE plan error:", err.message);

@@ -120,12 +120,24 @@ export async function getPaymentSecrets(db, restaurantId = null) {
   return mergePaymentSecrets(platform, restaurant);
 }
 
+function gatewayEnabled(cfg, id) {
+  const gw = cfg.gateways?.[id];
+  if (gw && gw.enabled === false) return false;
+  return true;
+}
+
 function isConfigured(cfg) {
-  return Boolean(
-    (cfg.razorpayKeyId && cfg.razorpayKeySecret) ||
-    cfg.stripeSecretKey ||
-    (cfg.cashfreeApiKey && cfg.cashfreeSecretKey)
-  );
+  const rzp =
+    gatewayEnabled(cfg, "razorpay") && cfg.razorpayKeyId && cfg.razorpayKeySecret;
+  const stripe = gatewayEnabled(cfg, "stripe") && cfg.stripeSecretKey;
+  const cashfree =
+    gatewayEnabled(cfg, "cashfree") && cfg.cashfreeApiKey && cfg.cashfreeSecretKey;
+  const payuGw = cfg.gateways?.payu ?? {};
+  const payu =
+    gatewayEnabled(cfg, "payu") &&
+    String(payuGw.apiKey ?? "").trim() &&
+    String(payuGw.secretKey ?? "").trim();
+  return Boolean(rzp || stripe || cashfree || payu);
 }
 
 /** True if customer online methods (card/UPI/…) can create a gateway session. */
@@ -148,7 +160,7 @@ export async function createGatewayPaymentSession({
   const ccy = toLowerCurrency(currency);
   const minor = toMinorUnits(amount);
 
-  if (cfg.razorpayKeyId && cfg.razorpayKeySecret) {
+  if (gatewayEnabled(cfg, "razorpay") && cfg.razorpayKeyId && cfg.razorpayKeySecret) {
     const res = await fetch("https://api.razorpay.com/v1/orders", {
       method: "POST",
       headers: {
@@ -182,7 +194,46 @@ export async function createGatewayPaymentSession({
     };
   }
 
-  if (cfg.stripeSecretKey) {
+  if (gatewayEnabled(cfg, "cashfree") && cfg.cashfreeApiKey && cfg.cashfreeSecretKey) {
+    const orderIdCf = `cf_${String(orderId).replace(/[^a-zA-Z0-9_-]/g, "").slice(0, 40)}`;
+    const res = await fetch("https://api.cashfree.com/pg/orders", {
+      method: "POST",
+      headers: {
+        "x-client-id": cfg.cashfreeApiKey,
+        "x-client-secret": cfg.cashfreeSecretKey,
+        "x-api-version": "2023-08-01",
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        order_id: orderIdCf,
+        order_amount: Number(amount),
+        order_currency: String(currency || "INR").toUpperCase(),
+        customer_details: {
+          customer_id: String(orderId).slice(0, 50),
+        },
+        order_meta: {
+          return_url: `${process.env.NEXT_PUBLIC_APP_URL ?? ""}/order/checkout?orderId=${encodeURIComponent(orderId)}`,
+        },
+      }),
+    });
+    if (!res.ok) {
+      const txt = await res.text();
+      throw new Error(`Cashfree order failed: ${txt || res.status}`);
+    }
+    const data = await res.json();
+    return {
+      provider: "cashfree",
+      providerOrderId: data.order_id ?? data.cf_order_id,
+      amountMinor: minor,
+      currency: String(currency || "INR").toUpperCase(),
+      checkout: {
+        paymentSessionId: data.payment_session_id,
+        orderId: data.order_id,
+      },
+    };
+  }
+
+  if (gatewayEnabled(cfg, "stripe") && cfg.stripeSecretKey) {
     const form = new URLSearchParams();
     form.set("amount", String(minor));
     form.set("currency", ccy);

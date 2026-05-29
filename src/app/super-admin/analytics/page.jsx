@@ -121,17 +121,26 @@ function DonutChart({ segments, size = 120 }) {
 export default function SuperAdminAnalyticsPage() {
   const [data, setData]       = useState(null);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
   const { showToast, ToastUI } = useToast();
+  const formatMoney = (value) => `₹${Number(value ?? 0).toLocaleString("en-IN")}`;
 
   const fetchAnalytics = useCallback(async () => {
     setLoading(true);
+    setLoadError("");
     try {
       const res  = await fetch("/api/super-admin/analytics");
       const json = await res.json();
-      if (json.success) setData(json);
-      else showToast(json.error ?? "Failed to load analytics.", "error");
+      if (res.ok && json.success) setData(json);
+      else {
+        const msg = json.error ?? "Failed to load analytics.";
+        setLoadError(msg);
+        showToast(msg, "error");
+      }
     } catch {
-      showToast("Network error.", "error");
+      const msg = "Network error.";
+      setLoadError(msg);
+      showToast(msg, "error");
     } finally {
       setLoading(false);
     }
@@ -204,6 +213,11 @@ export default function SuperAdminAnalyticsPage() {
 
       {data && (
         <>
+          {loadError ? (
+            <div className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">
+              {loadError}
+            </div>
+          ) : null}
           {/* ── Overview stat cards ── */}
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <StatCard
@@ -212,7 +226,7 @@ export default function SuperAdminAnalyticsPage() {
               icon={Building2} color="text-emerald-400" bg="bg-emerald-500/5" border="border-emerald-500/20"
             />
             <StatCard
-              label="Total Revenue" value={`$${(ov.totalRevenue ?? 0).toLocaleString()}`}
+              label="Total Revenue" value={formatMoney(ov.totalRevenue)}
               sub={`${ov.totalPayments ?? 0} transactions`}
               icon={DollarSign} color="text-indigo-400" bg="bg-indigo-500/5" border="border-indigo-500/20"
             />
@@ -248,7 +262,7 @@ export default function SuperAdminAnalyticsPage() {
                   labelKey="label"
                   color="bg-emerald-500"
                   height={160}
-                  prefix="$"
+                  prefix="₹"
                 />
               )}
             </div>
@@ -354,7 +368,7 @@ export default function SuperAdminAnalyticsPage() {
                         <p className="text-[10px] text-zinc-600">{r.txCount} transaction{r.txCount !== 1 ? "s" : ""}</p>
                       </div>
                       <span className="shrink-0 text-xs font-semibold tabular-nums text-emerald-400">
-                        ${r.revenue.toLocaleString()}
+                        {formatMoney(r.revenue)}
                       </span>
                     </li>
                   ))}
@@ -368,9 +382,11 @@ export default function SuperAdminAnalyticsPage() {
             <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 px-5 py-4">
               <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500">Avg Revenue / Restaurant</p>
               <p className="mt-2 text-2xl font-bold tabular-nums text-zinc-100">
-                ${ov.totalRestaurants
-                  ? Math.round((ov.totalRevenue ?? 0) / ov.totalRestaurants).toLocaleString()
-                  : 0}
+                {formatMoney(
+                  ov.totalRestaurants
+                    ? Math.round((ov.totalRevenue ?? 0) / ov.totalRestaurants)
+                    : 0
+                )}
               </p>
             </div>
             <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 px-5 py-4">

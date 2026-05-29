@@ -3,9 +3,12 @@
  * Trigger a manual backup. Records timestamp in DB.
  * In production you'd kick off a real backup job here.
  */
+import { writeAuditLog } from "@/lib/auditLog";
 import { getTokenFromRequest } from "@/lib/authCookies";
 import { verifyToken } from "@/lib/jwt";
 import clientPromise from "@/lib/mongodb";
+import { runPlatformBackup } from "@/lib/platformBackup";
+import { getClientIp } from "@/lib/rateLimit";
 
 function superAdminOnly(request) {
   const token   = getTokenFromRequest(request);
@@ -15,7 +18,8 @@ function superAdminOnly(request) {
 }
 
 export async function POST(request) {
-  if (!superAdminOnly(request)) {
+  const sa = superAdminOnly(request);
+  if (!sa) {
     return Response.json({ success: false, error: "Forbidden." }, { status: 403 });
   }
 
@@ -46,10 +50,19 @@ export async function POST(request) {
       .limit(10)
       .toArray();
 
+    await writeAuditLog({
+      action: "system.backup",
+      category: "system",
+      actorId: sa.id,
+      ip: getClientIp(request),
+    });
+
+    const settings = await db.collection("settings").findOne({ _id: "platform" });
+
     return Response.json({
       success: true,
       message: "Backup completed.",
-      lastBackupAt: now,
+      lastBackupAt: settings?.backup?.lastBackupAt ?? new Date(),
       backups: backups.map((b) => ({
         id:        b._id.toString(),
         createdAt: b.createdAt,

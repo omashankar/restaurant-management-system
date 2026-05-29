@@ -7,7 +7,6 @@ import {
   ChevronRight,
   ClipboardList,
   CreditCard,
-  DollarSign,
   Globe,
   LayoutDashboard,
   LifeBuoy,
@@ -24,7 +23,7 @@ const STORAGE_KEY = "sa-sidebar-collapsed";
 const NAV = [
   { href: "/super-admin/dashboard",     label: "Dashboard",     Icon: LayoutDashboard },
   { href: "/super-admin/restaurants",   label: "Restaurants",   Icon: Building2       },
-  { href: "/super-admin/payments",      label: "Payments",      Icon: DollarSign      },
+  { href: "/super-admin/payments",      label: "Subscription Payments", Icon: Receipt  },
   { href: "/super-admin/plans",         label: "Plans",         Icon: CreditCard      },
   { href: "/super-admin/billing",       label: "Billing",       Icon: Receipt         },
   { href: "/super-admin/analytics",     label: "Analytics",     Icon: BarChart3       },

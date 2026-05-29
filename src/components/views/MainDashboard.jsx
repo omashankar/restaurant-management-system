@@ -58,6 +58,7 @@ export default function MainDashboard() {
         ordersToday={dashboard.ordersToday}
         customerCount={dashboard.customerCount}
         reservationsToday={dashboard.reservationsToday}
+        reservationsCalendarDate={dashboard.reservationsCalendarDate}
       />
 
       <Can permission="view_sales">

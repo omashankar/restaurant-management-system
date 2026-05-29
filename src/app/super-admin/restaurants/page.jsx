@@ -171,6 +171,7 @@ export default function RestaurantsPage() {
     total: 0, active: 0, inactive: 0, suspended: 0,
   });
   const [loading, setLoading]           = useState(true);
+  const [loadError, setLoadError]       = useState("");
   const [search, setSearch]             = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [planFilter, setPlanFilter]     = useState("all");
@@ -210,6 +211,7 @@ export default function RestaurantsPage() {
   const fetchRestaurants = useCallback(async (pageOverride) => {
     const effectivePage = typeof pageOverride === "number" ? pageOverride : page;
     setLoading(true);
+    setLoadError("");
     try {
       const params = new URLSearchParams();
       if (search)              params.set("search", search);
@@ -220,29 +222,37 @@ export default function RestaurantsPage() {
       params.set("pageSize", String(PAGE_SIZE));
       const res  = await fetch("/api/super-admin/restaurants?" + params);
       const data = await res.json();
-      if (data.success) {
-        const rows = data.restaurants ?? [];
-        if (rows.length === 0 && effectivePage > 1) {
-          setPage((p) => Math.max(1, p - 1));
-          return;
-        }
-        setRestaurants(rows);
-        if (typeof data.total === "number") {
-          setTotalCount(data.total);
-          if (data.stats) setListStats(data.stats);
-        } else {
-          setTotalCount(rows.length);
-          setListStats({
-            total:     rows.length,
-            active:    rows.filter((r) => r.status === "active").length,
-            inactive:  rows.filter((r) => r.status === "inactive").length,
-            suspended: rows.filter((r) => r.status === "suspended").length,
-          });
-        }
+      if (!res.ok || !data.success) {
+        const msg = data?.error ?? "Failed to load restaurants.";
+        setLoadError(msg);
+        showToast(msg, "error");
+        return;
       }
-    } catch { /* keep */ }
+      const rows = data.restaurants ?? [];
+      if (rows.length === 0 && effectivePage > 1) {
+        setPage((p) => Math.max(1, p - 1));
+        return;
+      }
+      setRestaurants(rows);
+      if (typeof data.total === "number") {
+        setTotalCount(data.total);
+        if (data.stats) setListStats(data.stats);
+      } else {
+        setTotalCount(rows.length);
+        setListStats({
+          total:     rows.length,
+          active:    rows.filter((r) => r.status === "active").length,
+          inactive:  rows.filter((r) => r.status === "inactive").length,
+          suspended: rows.filter((r) => r.status === "suspended").length,
+        });
+      }
+    } catch {
+      const msg = "Could not load restaurants.";
+      setLoadError(msg);
+      showToast(msg, "error");
+    }
     finally { setLoading(false); }
-  }, [search, statusFilter, planFilter, ownerStatusFilter, page]);
+  }, [search, statusFilter, planFilter, ownerStatusFilter, page, showToast]);
 
   useEffect(() => { fetchRestaurants(); }, [fetchRestaurants]);
 
@@ -262,6 +272,7 @@ export default function RestaurantsPage() {
       if (!data.success) { showToast(data.error ?? "Failed.", "error"); return; }
       setRestaurants((prev) => prev.map((x) => x.id === r.id ? { ...x, status: newStatus } : x));
       showToast(r.name + " " + (newStatus === "active" ? "activated." : "deactivated."));
+      fetchRestaurants();
     } catch { showToast("Network error.", "error"); }
     finally { setTogglingId(null); }
   };
@@ -283,6 +294,7 @@ export default function RestaurantsPage() {
       if (!data.success) { showToast(data.error ?? "Failed.", "error"); return; }
       setRestaurants((prev) => prev.map((x) => x.id === r.id ? { ...x, ownerStatus: next } : x));
       showToast(next === "blocked" ? "Owner admin blocked." : "Owner admin unblocked.");
+      fetchRestaurants();
     } catch {
       showToast("Network error.", "error");
     } finally {
@@ -338,6 +350,7 @@ export default function RestaurantsPage() {
       ));
       showToast(editForm.name + " updated.");
       setEditTarget(null);
+      fetchRestaurants();
     } catch { setEditError("Network error."); }
     finally { setSaving(false); }
   };
@@ -386,6 +399,11 @@ export default function RestaurantsPage() {
       </div>
 
       {/* Stats */}
+      {loadError && (
+        <div className="rounded-xl border border-red-500/25 bg-red-500/10 px-4 py-3 text-sm text-red-300">
+          {loadError}
+        </div>
+      )}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         {[
           { label: "Total",     value: stats.total,     color: "text-zinc-100"    },

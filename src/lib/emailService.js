@@ -345,3 +345,27 @@ export async function testEmailConnection() {
     return { success: false, error: err.message };
   }
 }
+
+/** Notify restaurant contact email when a new order is placed. */
+export async function sendNewOrderAlertEmail({ order, db, restaurantId, toEmail }) {
+  const recipient = String(toEmail ?? "").trim();
+  if (!recipient) return { success: false, error: "No alert email configured." };
+
+  try {
+    const { transporter, from } = await resolveMailSendingContext(db, restaurantId ?? null);
+    const customer = order.customer ?? order.customerInfo?.name ?? "Customer";
+    const total = Number(order.total ?? 0).toFixed(2);
+
+    await transporter.sendMail({
+      from,
+      to: recipient,
+      subject: `New order ${order.orderId ?? ""}`.trim(),
+      text: `New ${order.orderType ?? "order"} from ${customer}. Total: ${total}. Order ID: ${order.orderId ?? "—"}.`,
+      html: `<p>New <strong>${order.orderType ?? "order"}</strong> from ${customer}.</p><p>Total: <strong>${total}</strong></p><p>Order ID: ${order.orderId ?? "—"}</p>`,
+    });
+    return { success: true };
+  } catch (err) {
+    console.error("New order alert email failed:", err.message);
+    return { success: false, error: err.message };
+  }
+}

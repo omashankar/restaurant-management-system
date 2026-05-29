@@ -1,3 +1,4 @@
+import { getCalendarDateInTimeZone } from "@/lib/restaurantDate";
 import { withTenant } from "@/lib/tenantDb";
 
 const COMPLETED_STATUSES = ["completed", "ready"];
@@ -38,11 +39,19 @@ function mapRecentOrder(o) {
 }
 
 export const GET = withTenant(["admin", "manager"], async ({ db, tenantFilter, restaurantId }) => {
+  const settingsDoc = restaurantId
+    ? await db.collection("restaurant_settings").findOne(
+        { restaurantId },
+        { projection: { "general.currency": 1, "general.restaurantName": 1, "general.timezone": 1 } },
+      )
+    : null;
+
+  const timeZone = settingsDoc?.general?.timezone || "Asia/Kolkata";
+  const todayStr = getCalendarDateInTimeZone(timeZone);
   const todayStart = startOfToday();
   const weekStart = daysAgo(7);
   const monthStart = daysAgo(30);
   const fortnightStart = daysAgo(14);
-  const todayStr = todayStart.toISOString().slice(0, 10);
 
   const [
     todayOrdersAgg,
@@ -57,7 +66,6 @@ export const GET = withTenant(["admin", "manager"], async ({ db, tenantFilter, r
     tables,
     customerCount,
     reservationsToday,
-    settingsDoc,
   ] = await Promise.all([
     db.collection("orders").aggregate([
       {
@@ -195,15 +203,8 @@ export const GET = withTenant(["admin", "manager"], async ({ db, tenantFilter, r
     db.collection("reservations").countDocuments({
       ...tenantFilter,
       date: todayStr,
-      status: { $nin: ["cancelled", "completed"] },
+      status: { $in: ["pending", "confirmed"] },
     }),
-
-    restaurantId
-      ? db.collection("restaurant_settings").findOne(
-          { restaurantId },
-          { projection: { "general.currency": 1, "general.restaurantName": 1 } }
-        )
-      : Promise.resolve(null),
   ]);
 
   const todayKpi = todayOrdersAgg[0] ?? {};
@@ -240,6 +241,8 @@ export const GET = withTenant(["admin", "manager"], async ({ db, tenantFilter, r
     },
     customerCount,
     reservationsToday,
+    reservationsCalendarDate: todayStr,
+    timezone: timeZone,
     lowStockCount: lowStockItems.length,
     lowStockItems: lowStockItems.slice(0, 5).map((i) => ({
       name: i.name,

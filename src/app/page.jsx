@@ -34,7 +34,7 @@ import clientPromise from "@/lib/mongodb";
 import { CheckCircle2, MonitorSmartphone, Star, TrendingUp } from "lucide-react";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { cache } from "react";
+import { unstable_cache } from "next/cache";
 
 function redirectForRole(role) {
   switch (role) {
@@ -78,7 +78,7 @@ function mapPlansToLandingPricing(plans = []) {
 }
 
 /* ── Fetch landing page content directly (no internal HTTP hop) ── */
-const getLandingContent = cache(async function getLandingContent() {
+const getLandingContent = unstable_cache(async function getLandingContent() {
   /** Deterministic full defaults when DB is unavailable (e.g. production build phase). */
   if (process.env.NEXT_PHASE === "phase-production-build") {
     return mergeWithDefaults(null);
@@ -120,6 +120,9 @@ const getLandingContent = cache(async function getLandingContent() {
     }
     return defaults;
   }
+}, ["landing-home-content"], {
+  tags: ["landing"],
+  revalidate: 60,
 });
 
 export async function generateMetadata() {

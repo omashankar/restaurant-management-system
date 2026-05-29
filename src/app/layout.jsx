@@ -1,6 +1,8 @@
 import { Geist, Geist_Mono, Poppins, Inter } from "next/font/google";
 import "./globals.css";
 import Providers from "./providers";
+import PlatformScripts from "@/components/PlatformScripts";
+import PlatformThemeStyles from "@/components/PlatformThemeStyles";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -50,6 +52,8 @@ export default function RootLayout({ children }) {
       suppressHydrationWarning
     >
       <body className="min-h-full" suppressHydrationWarning>
+        <PlatformThemeStyles />
+        <PlatformScripts />
         <Providers>{children}</Providers>
       </body>
     </html>

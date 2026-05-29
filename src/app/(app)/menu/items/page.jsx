@@ -46,22 +46,34 @@ export default function MenuItemsPage() {
   const [formError, setFormError]   = useState("");
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [deleting, setDeleting]         = useState(false);
+  const [fetchError, setFetchError]       = useState("");
   const { refreshMenu } = useModuleData();
   const { showToast, ToastUI }          = useToast();
 
   /* ── Fetch items + categories ── */
   const fetchAll = useCallback(async () => {
     setLoading(true);
+    setFetchError("");
     try {
       const [itemsRes, catsRes] = await Promise.all([
         fetch("/api/menu"),
         fetch("/api/categories"),
       ]);
       const [itemsData, catsData] = await Promise.all([itemsRes.json(), catsRes.json()]);
+      if (!itemsRes.ok || !catsRes.ok) {
+        setFetchError(
+          itemsData?.error ?? catsData?.error ?? "Could not load menu data."
+        );
+        return;
+      }
       if (itemsData.success)  setItems(itemsData.items);
       if (catsData.success)   setCategories(catsData.categories);
-    } catch { /* keep existing */ }
-    finally { setLoading(false); }
+      if (!itemsData.success || !catsData.success) {
+        setFetchError("Could not load menu data.");
+      }
+    } catch {
+      setFetchError("Could not load menu data. Check your connection and try again.");
+    } finally { setLoading(false); }
   }, []);
 
   useEffect(() => { fetchAll(); }, [fetchAll]);
@@ -182,6 +194,11 @@ export default function MenuItemsPage() {
 
   return (
     <div className="space-y-6">
+      {fetchError && (
+        <div className="rounded-xl border border-red-500/25 bg-red-500/10 px-4 py-3 text-sm text-red-300">
+          {fetchError}
+        </div>
+      )}
       {/* Header */}
       <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div className="flex items-start gap-3">

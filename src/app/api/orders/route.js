@@ -1,5 +1,7 @@
 import { withTenant } from "@/lib/tenantDb";
 import { logInfo } from "@/lib/logger";
+import { sendNewOrderAlertEmail } from "@/lib/emailService";
+import { getRestaurantNotificationPrefs } from "@/lib/restaurantNotificationPrefs";
 import { orderCreateSchema, parseSchema } from "@/lib/validationSchemas";
 import { sendNewOrderAlertWhatsApp } from "@/lib/whatsappService";
 import { ObjectId } from "mongodb";
@@ -14,6 +16,7 @@ async function fetchPosSettings(db, restaurantId) {
   return {
     taxPercent:           parseFloat(pos.taxPercentage ?? "0")    || 0,
     serviceChargePercent: parseFloat(pos.serviceCharge  ?? "0")   || 0,
+    roundOffTotal:        Boolean(pos.roundOffTotal),
   };
 }
 
@@ -59,16 +62,18 @@ export const POST = withTenant(
     // from restaurant settings so server always stores correct values.
     let taxPercent           = parsed.taxPercent           ?? null;
     let serviceChargePercent = parsed.serviceChargePercent ?? null;
+    const posSettings        = await fetchPosSettings(db, restaurantId);
 
-    if (taxPercent === null || serviceChargePercent === null) {
-      const settings = await fetchPosSettings(db, restaurantId);
-      if (taxPercent           === null) taxPercent           = settings.taxPercent;
-      if (serviceChargePercent === null) serviceChargePercent = settings.serviceChargePercent;
-    }
+    if (taxPercent === null) taxPercent = posSettings.taxPercent;
+    if (serviceChargePercent === null) serviceChargePercent = posSettings.serviceChargePercent;
 
     const taxAmount      = parseFloat(((subtotal * taxPercent)           / 100).toFixed(2));
     const scAmount       = parseFloat(((subtotal * serviceChargePercent) / 100).toFixed(2));
-    const total          = parseFloat((subtotal + taxAmount + scAmount).toFixed(2));
+    let total            = parseFloat((subtotal + taxAmount + scAmount).toFixed(2));
+
+    if (posSettings.roundOffTotal) {
+      total = Math.round(total);
+    }
 
     const method = paymentMethod ?? "cashCounter";
     const status =
@@ -105,16 +110,31 @@ export const POST = withTenant(
     }
     logInfo("order.created", { route: "/api/orders", orderId, actorId: payload.id, restaurantId });
 
-    const settingsDoc = await db.collection("restaurant_settings").findOne(
-      { restaurantId },
-      { projection: { "general.restaurantName": 1 } }
-    ).catch(() => null);
-    sendNewOrderAlertWhatsApp({
-      order: doc,
-      db,
-      restaurantId,
-      restaurantName: settingsDoc?.general?.restaurantName ?? "Restaurant",
-    }).catch(() => {});
+    const [settingsDoc, notificationPrefs] = await Promise.all([
+      db.collection("restaurant_settings").findOne(
+        { restaurantId },
+        { projection: { "general.restaurantName": 1 } }
+      ).catch(() => null),
+      getRestaurantNotificationPrefs(db, restaurantId),
+    ]);
+
+    if (notificationPrefs.smsNotifications) {
+      sendNewOrderAlertWhatsApp({
+        order: doc,
+        db,
+        restaurantId,
+        restaurantName: settingsDoc?.general?.restaurantName ?? "Restaurant",
+      }).catch(() => {});
+    }
+
+    if (notificationPrefs.emailNotifications && notificationPrefs.alertEmail) {
+      sendNewOrderAlertEmail({
+        order: doc,
+        db,
+        restaurantId,
+        toEmail: notificationPrefs.alertEmail,
+      }).catch(() => {});
+    }
 
     return Response.json({
       success: true,

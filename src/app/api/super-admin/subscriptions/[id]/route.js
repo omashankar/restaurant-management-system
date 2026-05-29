@@ -1,6 +1,8 @@
+import { writeAuditLog } from "@/lib/auditLog";
 import { getTokenFromRequest } from "@/lib/authCookies";
 import { verifyToken } from "@/lib/jwt";
 import clientPromise from "@/lib/mongodb";
+import { getClientIp } from "@/lib/rateLimit";
 import { ObjectId } from "mongodb";
 
 function superAdminOnly(request) {
@@ -13,7 +15,8 @@ function superAdminOnly(request) {
 function toOid(id) { try { return new ObjectId(id); } catch { return null; } }
 
 export async function PATCH(request, { params }) {
-  if (!superAdminOnly(request)) return Response.json({ success: false, error: "Forbidden." }, { status: 403 });
+  const sa = superAdminOnly(request);
+  if (!sa) return Response.json({ success: false, error: "Forbidden." }, { status: 403 });
 
   const { id } = await params;
   const _id = toOid(id);
@@ -77,11 +80,32 @@ export async function PATCH(request, { params }) {
       }
     );
   }
+
+  const restaurant = sub.restaurantId
+    ? await db.collection("restaurants").findOne({ _id: sub.restaurantId }, { projection: { name: 1 } })
+    : null;
+  const action = update.status === "cancelled"
+    ? "billing.plan_cancelled"
+    : update.status === "active"
+      ? "billing.plan_renewed"
+      : "billing.plan_updated";
+
+  await writeAuditLog({
+    action,
+    category: "billing",
+    actorId: sa.id,
+    targetId: sub.restaurantId?.toString() ?? id,
+    targetName: restaurant?.name ?? sub.plan ?? id,
+    meta: { status: update.status, plan: sub.plan },
+    ip: getClientIp(request),
+  });
+
   return Response.json({ success: true });
 }
 
 export async function DELETE(request, { params }) {
-  if (!superAdminOnly(request)) return Response.json({ success: false, error: "Forbidden." }, { status: 403 });
+  const sa = superAdminOnly(request);
+  if (!sa) return Response.json({ success: false, error: "Forbidden." }, { status: 403 });
 
   const { id } = await params;
   const _id = toOid(id);
@@ -99,6 +123,21 @@ export async function DELETE(request, { params }) {
         { $set: { subscriptionStatus: "cancelled", plan: "free", updatedAt: new Date() } }
       );
     }
+
+    const restaurant = sub.restaurantId
+      ? await db.collection("restaurants").findOne({ _id: sub.restaurantId }, { projection: { name: 1 } })
+      : null;
+
+    await writeAuditLog({
+      action: "billing.plan_cancelled",
+      category: "billing",
+      actorId: sa.id,
+      targetId: sub.restaurantId?.toString() ?? id,
+      targetName: restaurant?.name ?? sub.plan ?? id,
+      meta: { plan: sub.plan },
+      ip: getClientIp(request),
+    });
+
     return Response.json({ success: true });
   } catch (err) {
     return Response.json({ success: false, error: "Something went wrong." }, { status: 500 });

@@ -13,6 +13,7 @@ import {
   User,
   XCircle,
 } from "lucide-react";
+import TwoFactorSetup from "@/components/TwoFactorSetup";
 import { useRef, useState } from "react";
 
 function Field({ label, icon: Icon, type = "text", value, onChange, readOnly, placeholder }) {
@@ -146,6 +147,8 @@ export default function SuperAdminProfilePage() {
           </button>
         </div>
       </Section>
+
+      <TwoFactorSetup />
 
       {toast ? (
         <div

@@ -9,6 +9,7 @@ const STATUSES = ["open", "in_progress", "resolved", "closed"];
 export default function SuperAdminSupportTicketsPage() {
   const [tickets, setTickets] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [priorityFilter, setPriorityFilter] = useState("all");
   const [toast, setToast] = useState(null);
@@ -25,6 +26,7 @@ export default function SuperAdminSupportTicketsPage() {
 
   async function loadTickets() {
     setLoading(true);
+    setLoadError("");
     try {
       const params = new URLSearchParams();
       if (statusFilter !== "all") params.set("status", statusFilter);
@@ -34,9 +36,15 @@ export default function SuperAdminSupportTicketsPage() {
       });
       const data = await res.json();
       if (data.success) setTickets(data.tickets || []);
-      else showToast("error", data.error || "Failed to load tickets.");
+      else {
+        const message = data.error || "Failed to load tickets.";
+        setLoadError(message);
+        showToast("error", message);
+      }
     } catch {
-      showToast("error", "Network error.");
+      const message = "Network error.";
+      setLoadError(message);
+      showToast("error", message);
     } finally {
       setLoading(false);
     }
@@ -120,6 +128,12 @@ export default function SuperAdminSupportTicketsPage() {
         <h1 className="text-2xl font-semibold tracking-tight text-zinc-50">Support Tickets</h1>
         <p className="mt-1 text-sm text-zinc-500">Platform-wide tenant support queue.</p>
       </div>
+
+      {loadError && (
+        <div className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">
+          {loadError}
+        </div>
+      )}
 
       <div className="flex flex-wrap items-center gap-2 rounded-xl border border-zinc-800 bg-zinc-900/40 p-3">
         <select

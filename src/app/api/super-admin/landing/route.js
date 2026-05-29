@@ -1,6 +1,8 @@
+import { writeAuditLog } from "@/lib/auditLog";
 import { getTokenFromRequest } from "@/lib/authCookies";
 import { verifyToken } from "@/lib/jwt";
 import { getLandingContent, replaceAll, replaceSection, VALID_SECTIONS } from "@/lib/landingService";
+import { getClientIp } from "@/lib/rateLimit";
 import { revalidatePath, revalidateTag } from "next/cache";
 
 /* ── Auth guard ── */
@@ -58,6 +60,15 @@ export async function PATCH(request) {
     /* Purge the public landing page cache immediately */
     revalidateTag("landing"); // invalidates the tagged fetch in page.jsx
     revalidatePath("/");      // also purge the page route cache
+
+    await writeAuditLog({
+      action: "settings.updated",
+      category: "settings",
+      actorId: sa.id,
+      targetName: `landing:${section}`,
+      meta: { section },
+      ip: getClientIp(request),
+    });
 
     return Response.json({ success: true, section, updatedAt: new Date() });
   } catch (err) {

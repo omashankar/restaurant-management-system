@@ -4,6 +4,9 @@ import crypto from "crypto";
 import { sendVerificationEmail } from "@/lib/emailService";
 import { logError, logInfo } from "@/lib/logger";
 import clientPromise from "@/lib/mongodb";
+import { getPlatformSettings } from "@/lib/platformSettings";
+import { validatePlatformPassword } from "@/lib/platformPassword";
+import { notifyPlatformEvent } from "@/lib/platformNotify";
 
 export async function POST(request) {
   /* ── Rate limit ── */
@@ -30,7 +33,6 @@ export async function POST(request) {
   if (!name?.trim())     return Response.json({ success: false, error: "Name is required." },     { status: 400 });
   if (!email?.trim())    return Response.json({ success: false, error: "Email is required." },    { status: 400 });
   if (!password)         return Response.json({ success: false, error: "Password is required." }, { status: 400 });
-  if (password.length < 6) return Response.json({ success: false, error: "Password must be at least 6 characters." }, { status: 400 });
   const cleanEmail          = email.toLowerCase().trim();
   const cleanPhone          = String(phone ?? "").trim();
   const cleanRestaurantName = restaurantName?.trim() || null;
@@ -108,6 +110,18 @@ export async function POST(request) {
         console.error("Signup verification email failed:", err.message);
       });
     }
+
+    notifyPlatformEvent(db, {
+      event: "restaurant.signup",
+      webhookData: { restaurantName: cleanRestaurantName, slug: cleanSlug, email: cleanEmail },
+      pushTitle: "New restaurant signup",
+      pushBody: cleanRestaurantName,
+      emailType: "newRestaurant",
+      emailContent: {
+        subject: `[RMS] New restaurant signup: ${cleanRestaurantName}`,
+        text: `A new restaurant registered.\n\n${cleanRestaurantName}\nSlug: ${cleanSlug}\nOwner: ${cleanEmail}`,
+      },
+    }).catch(() => {});
 
     logInfo("auth.signup.success", { email: cleanEmail, role });
     return Response.json({

@@ -28,6 +28,7 @@ export default function TableAreasPage() {
   const [previewUrl, setPreviewUrl] = useState("");
   const [uploadingImage, setUploadingImage] = useState(false);
   const [removeCurrentImage, setRemoveCurrentImage] = useState(false);
+  const [fetchError, setFetchError] = useState("");
   const { showToast, ToastUI } = useToast();
 
   const set = (k, v) => setForm((f) => ({ ...f, [k]: v }));
@@ -41,6 +42,7 @@ export default function TableAreasPage() {
   /* ── Fetch areas + table counts ── */
   const fetchAreas = useCallback(async () => {
     setLoading(true);
+    setFetchError("");
     try {
       const [areasRes, tablesRes] = await Promise.all([
         fetch("/api/tables/areas"),
@@ -48,6 +50,12 @@ export default function TableAreasPage() {
       ]);
       const [areasData, tablesData] = await Promise.all([areasRes.json(), tablesRes.json()]);
 
+      if (!areasRes.ok || !tablesRes.ok) {
+        setFetchError(
+          areasData?.error ?? tablesData?.error ?? "Could not load table areas.",
+        );
+        return;
+      }
       if (areasData.success)  setAreas(areasData.areas);
       if (tablesData.success) {
         const counts = {};
@@ -56,8 +64,12 @@ export default function TableAreasPage() {
         });
         setTableCounts(counts);
       }
-    } catch { /* keep existing */ }
-    finally { setLoading(false); }
+      if (!areasData.success || !tablesData.success) {
+        setFetchError("Could not load table areas.");
+      }
+    } catch {
+      setFetchError("Could not load table areas. Check your connection and try again.");
+    } finally { setLoading(false); }
   }, []);
 
   useEffect(() => { fetchAreas(); }, [fetchAreas]);
@@ -179,6 +191,11 @@ export default function TableAreasPage() {
 
   return (
     <div className="space-y-6">
+      {fetchError && (
+        <div className="rounded-xl border border-red-500/25 bg-red-500/10 px-4 py-3 text-sm text-red-300">
+          {fetchError}
+        </div>
+      )}
       {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div className="flex items-start gap-3">

@@ -4,6 +4,7 @@ import StatsCard from "@/components/rms/StatsCard";
 import { formatAdminMoney } from "@/lib/adminCurrency";
 import { usePermission } from "@/hooks/usePermission";
 import { BookOpen, DollarSign, ShoppingBag, Users } from "lucide-react";
+import Link from "next/link";
 
 export default function DashboardStats({
   currency = "INR",
@@ -11,6 +12,7 @@ export default function DashboardStats({
   ordersToday = 0,
   customerCount = 0,
   reservationsToday = 0,
+  reservationsCalendarDate = "",
 }) {
   const { hasPermission } = usePermission();
 
@@ -44,12 +46,19 @@ export default function DashboardStats({
       )}
 
       {hasPermission("view_reservations") && (
-        <StatsCard
-          title="Reservations"
-          value={String(reservationsToday)}
-          subtitle="Active for today"
-          icon={BookOpen}
-        />
+        <Link href="/reservations" className="block rounded-2xl focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50">
+          <StatsCard
+            title="Reservations"
+            value={String(reservationsToday)}
+            subtitle={
+              reservationsCalendarDate
+                ? `Pending & confirmed · ${reservationsCalendarDate}`
+                : "Pending & confirmed for today"
+            }
+            icon={BookOpen}
+            className="h-full"
+          />
+        </Link>
       )}
     </div>
   );

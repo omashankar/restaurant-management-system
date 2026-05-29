@@ -1,6 +1,10 @@
+import { writeAuditLog } from "@/lib/auditLog";
 import { getTokenFromRequest } from "@/lib/authCookies";
 import { verifyToken } from "@/lib/jwt";
 import { assignPlan } from "@/lib/subscription";
+import clientPromise from "@/lib/mongodb";
+import { getClientIp } from "@/lib/rateLimit";
+import { ObjectId } from "mongodb";
 
 function superAdminOnly(request) {
   const token   = getTokenFromRequest(request);
@@ -10,7 +14,8 @@ function superAdminOnly(request) {
 }
 
 export async function PATCH(request, { params }) {
-  if (!superAdminOnly(request)) return Response.json({ success: false, error: "Forbidden." }, { status: 403 });
+  const sa = superAdminOnly(request);
+  if (!sa) return Response.json({ success: false, error: "Forbidden." }, { status: 403 });
 
   const { id } = await params;
 
@@ -23,6 +28,29 @@ export async function PATCH(request, { params }) {
 
   try {
     await assignPlan(id, plan.trim(), { startDate, endDate, trialDays });
+
+    let targetName = id;
+    try {
+      const client = await clientPromise;
+      const restaurant = await client.db().collection("restaurants").findOne(
+        { _id: new ObjectId(id) },
+        { projection: { name: 1 } },
+      );
+      targetName = restaurant?.name ?? id;
+    } catch {
+      /* keep id as fallback */
+    }
+
+    await writeAuditLog({
+      action: "billing.plan_assigned",
+      category: "billing",
+      actorId: sa.id,
+      targetId: id,
+      targetName,
+      meta: { plan: plan.trim() },
+      ip: getClientIp(request),
+    });
+
     return Response.json({ success: true, plan: plan.trim() });
   } catch (err) {
     const status = err.message.includes("not found") ? 404 : 500;

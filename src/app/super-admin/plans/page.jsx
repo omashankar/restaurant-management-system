@@ -150,7 +150,7 @@ function PricingCard({ plan, onAssign, pricingView }) {
           <span className={`text-4xl font-extrabold tabular-nums tracking-tight ${accent.price}`}>
             {(() => {
               const value = pricingView === "yearly" ? Number(plan.yearlyPrice ?? 0) : Number(plan.monthlyPrice ?? 0);
-              return value === 0 ? "Free" : `$${value}`;
+              return value === 0 ? "Free" : `₹${value}`;
             })()}
           </span>
           {(pricingView === "yearly" ? Number(plan.yearlyPrice ?? 0) : Number(plan.monthlyPrice ?? 0)) > 0 && (
@@ -216,6 +216,7 @@ export default function PlansPage() {
   const [pricingView, setPricingView] = useState("monthly");
   const [activeTab, setActiveTab] = useState("preview");
   const [loading, setLoading]     = useState(true);
+  const [loadError, setLoadError] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [form, setForm]           = useState(emptyForm);
@@ -232,13 +233,24 @@ export default function PlansPage() {
 
   const fetchPlans = useCallback(async () => {
     setLoading(true);
+    setLoadError("");
     try {
       const res  = await fetch("/api/super-admin/plans");
       const data = await res.json();
-      if (data.success) setPlans(data.plans);
-    } catch { /* keep */ }
+      if (!res.ok || !data.success) {
+        const msg = data?.error ?? "Failed to load plans.";
+        setLoadError(msg);
+        showToast(msg, "error");
+        return;
+      }
+      setPlans(data.plans);
+    } catch {
+      const msg = "Could not load plans.";
+      setLoadError(msg);
+      showToast(msg, "error");
+    }
     finally { setLoading(false); }
-  }, []);
+  }, [showToast]);
 
   useEffect(() => { fetchPlans(); }, [fetchPlans]);
 
@@ -404,6 +416,11 @@ export default function PlansPage() {
       {/* ══════════════════════════════════════════
           PRICING TABLE
       ══════════════════════════════════════════ */}
+      {loadError && (
+        <div className="rounded-xl border border-red-500/25 bg-red-500/10 px-4 py-3 text-sm text-red-300">
+          {loadError}
+        </div>
+      )}
       {activeTab === "preview" && (
       <section>
         <div className="mb-8 text-center">
@@ -495,7 +512,7 @@ export default function PlansPage() {
                         const value = pricingView === "yearly"
                           ? Number(p.yearlyPrice ?? ((p.monthlyPrice ?? p.price ?? 0) * 12))
                           : Number(p.monthlyPrice ?? p.price ?? 0);
-                        return value === 0 ? "Free" : `$${value}`;
+                        return value === 0 ? "Free" : `₹${value}`;
                       })()}
                     </span>
                     {((pricingView === "yearly"

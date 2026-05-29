@@ -1,12 +1,22 @@
+import { writeAuditLog } from "@/lib/auditLog";
 import { getTokenFromRequest } from "@/lib/authCookies";
 import { verifyToken } from "@/lib/jwt";
 import clientPromise from "@/lib/mongodb";
+import { getClientIp } from "@/lib/rateLimit";
 
 function superAdminOnly(request) {
   const token   = getTokenFromRequest(request);
   const payload = token ? verifyToken(token) : null;
   if (!payload || payload.role !== "super_admin") return null;
   return payload;
+}
+
+function toPlanSlug(name) {
+  return String(name ?? "")
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
 }
 
 /* ── GET /api/super-admin/plans ── */
@@ -55,7 +65,8 @@ export async function GET(request) {
 
 /* ── POST /api/super-admin/plans — create plan ── */
 export async function POST(request) {
-  if (!superAdminOnly(request)) {
+  const sa = superAdminOnly(request);
+  if (!sa) {
     return Response.json({ success: false, error: "Forbidden." }, { status: 403 });
   }
   let body;
@@ -86,7 +97,10 @@ export async function POST(request) {
     return Response.json({ success: false, error: "Invalid billingCycle." }, { status: 400 });
   }
 
-  const slug = name.trim().toLowerCase().replace(/\s+/g, "-");
+  const slug = toPlanSlug(name);
+  if (!slug) {
+    return Response.json({ success: false, error: "Plan name must include letters or numbers." }, { status: 400 });
+  }
 
   try {
     const client = await clientPromise;
@@ -113,6 +127,16 @@ export async function POST(request) {
       limits,
       isActive:     true,
       createdAt:    new Date(),
+    });
+
+    await writeAuditLog({
+      action: "billing.plan_created",
+      category: "billing",
+      actorId: sa.id,
+      targetId: result.insertedId.toString(),
+      targetName: name.trim(),
+      meta: { slug },
+      ip: getClientIp(request),
     });
 
     return Response.json({

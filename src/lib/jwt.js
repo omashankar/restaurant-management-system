@@ -10,8 +10,10 @@ if (!SECRET && process.env.NODE_ENV === "production") {
 const EFFECTIVE_SECRET = SECRET ?? "dev-only-secret";
 
 /** Sign a JWT token */
-export function signToken(payload) {
-  return jwt.sign(payload, EFFECTIVE_SECRET, { expiresIn: ACCESS_EXPIRES_IN });
+export function signToken(payload, expiresIn) {
+  return jwt.sign(payload, EFFECTIVE_SECRET, {
+    expiresIn: expiresIn ?? ACCESS_EXPIRES_IN,
+  });
 }
 
 export function signRefreshToken(payload) {

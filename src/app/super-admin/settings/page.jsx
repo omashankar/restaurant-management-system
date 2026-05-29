@@ -1,6 +1,8 @@
 "use client";
 
+import PushNotificationEnable from "@/components/PushNotificationEnable";
 import { useToast } from "@/hooks/useToast";
+import { invalidatePlatformConfigCache } from "@/hooks/usePlatformConfig";
 import {
   Bell, CheckCircle2, Copy, CreditCard, Database, DollarSign, Globe,
   Key, Loader2, Lock, Palette, Save, Settings, Settings2, Shield, Smartphone,
@@ -613,6 +615,9 @@ function NotificationsSection({ data, onChange, onSave, saving }) {
               <input type="password" value={data.pushVapidPrivateKey ?? ""} onChange={(e) => onChange("pushVapidPrivateKey", e.target.value)}
                 placeholder="••••••••" autoComplete="new-password" className={`${inputCls} font-mono text-xs`} />
             </Field>
+            <div className="sm:col-span-2">
+              <PushNotificationEnable vapidPublicKey={data.pushVapidPublicKey} />
+            </div>
           </div>
         )}
       </div>
@@ -1132,22 +1137,39 @@ const TABS = [
 ];
 
 /* ── Main page ── */
+const VALID_TAB_IDS = new Set(TABS.map((t) => t.id));
+
 export default function SuperAdminSettingsPage() {
   const [activeTab, setActiveTab] = useState("app");
   const [settings, setSettings]   = useState(null);
   const [fetching, setFetching]   = useState(true);
+  const [loadError, setLoadError] = useState("");
   const [saving, setSaving]       = useState(false);
   const { showToast, ToastUI }    = useToast();
   const panelRef                  = useRef(null);
 
   useEffect(() => {
+    const tab = new URLSearchParams(window.location.search).get("tab");
+    if (tab && VALID_TAB_IDS.has(tab)) setActiveTab(tab);
+  }, []);
+
+  useEffect(() => {
     (async () => {
+      setLoadError("");
       try {
         const res  = await fetch("/api/super-admin/settings");
         const data = await res.json();
         if (data.success) setSettings(data.settings);
-        else showToast(data.error ?? "Failed to load.", "error");
-      } catch { showToast("Network error.", "error"); }
+        else {
+          const message = data.error ?? "Failed to load.";
+          setLoadError(message);
+          showToast(message, "error");
+        }
+      } catch {
+        const message = "Network error.";
+        setLoadError(message);
+        showToast(message, "error");
+      }
       finally { setFetching(false); }
     })();
   }, [showToast]);
@@ -1170,6 +1192,7 @@ export default function SuperAdminSettingsPage() {
       });
       const data = await res.json();
       if (!data.success) { showToast(data.error ?? "Failed to save.", "error"); return; }
+      invalidatePlatformConfigCache();
       showToast("Settings saved.");
     } catch { showToast("Network error.", "error"); }
     finally { setSaving(false); }
@@ -1194,6 +1217,12 @@ export default function SuperAdminSettingsPage() {
           <p className="mt-1 text-sm text-zinc-500">Centralized platform configuration.</p>
         </div>
       </div>
+
+      {loadError && (
+        <div className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">
+          {loadError}
+        </div>
+      )}
 
       <div className="flex flex-col gap-4 lg:flex-row lg:gap-6">
         {/* Tab list */}

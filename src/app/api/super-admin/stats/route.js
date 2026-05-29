@@ -36,6 +36,9 @@ export async function GET(request) {
     ]);
 
     const totalRevenue = revenueResult[0]?.total ?? 0;
+    const dbPing = await db.command({ ping: 1 }).catch(() => null);
+    const dbConnected = Boolean(dbPing?.ok);
+    const systemStatus = dbConnected ? "online" : "degraded";
 
     return Response.json({
       success: true,
@@ -45,6 +48,9 @@ export async function GET(request) {
         activeAdmins,
         inactiveAdmins: totalAdmins - activeAdmins,
         totalRevenue,
+        dbConnected,
+        systemStatus,
+        generatedAt: new Date().toISOString(),
       },
       recentUsers: recentAdmins.map((u) => ({
         id:        u._id.toString(),

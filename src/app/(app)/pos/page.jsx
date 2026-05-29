@@ -65,6 +65,7 @@ function PosPageContent() {
   // ── POS settings: tax % and service charge % from restaurant settings ──
   const [taxPercent, setTaxPercent]                     = useState(0);
   const [serviceChargePercent, setServiceChargePercent] = useState(0);
+  const [roundOffTotal, setRoundOffTotal]               = useState(false);
   const [currency, setCurrency]                         = useState("INR");
   const [restaurantName, setRestaurantName]             = useState("Restaurant");
   const [printers, setPrinters]                         = useState([]);
@@ -79,6 +80,7 @@ function PosPageContent() {
         if (d.success) {
           setTaxPercent(parseFloat(d.settings?.pos?.taxPercentage ?? "0")    || 0);
           setServiceChargePercent(parseFloat(d.settings?.pos?.serviceCharge ?? "0") || 0);
+          setRoundOffTotal(Boolean(d.settings?.pos?.roundOffTotal));
           setCurrency(d.settings?.general?.currency ?? "INR");
           setRestaurantName(d.settings?.general?.restaurantName?.trim() || "Restaurant");
         }
@@ -103,7 +105,11 @@ function PosPageContent() {
   const subtotal      = useMemo(() => cart.reduce((s, l) => s + l.price * l.qty, 0), [cart]);
   const taxAmount     = parseFloat(((subtotal * taxPercent)           / 100).toFixed(2));
   const serviceCharge = parseFloat(((subtotal * serviceChargePercent) / 100).toFixed(2));
-  const total         = parseFloat((subtotal + taxAmount + serviceCharge).toFixed(2));
+  const total         = useMemo(() => {
+    let value = parseFloat((subtotal + taxAmount + serviceCharge).toFixed(2));
+    if (roundOffTotal) value = Math.round(value);
+    return value;
+  }, [subtotal, taxAmount, serviceCharge, roundOffTotal]);
 
   const addItem = (item) => {
     setCart((prev) => {

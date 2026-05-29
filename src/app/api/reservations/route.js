@@ -1,5 +1,6 @@
 import { isReservationSlotAvailable } from "@/lib/reservationConflict";
 import { withTenant } from "@/lib/tenantDb";
+import { assertPlatformFeatureForPath } from "@/lib/platformFeatureGuard";
 import { ObjectId } from "mongodb";
 
 const ALLOWED_STATUS = ["pending", "confirmed", "completed", "cancelled"];
@@ -7,6 +8,8 @@ const ALLOWED_STATUS = ["pending", "confirmed", "completed", "cancelled"];
 export const GET = withTenant(
   ["admin", "manager", "waiter"],
   async ({ db, tenantFilter }, request) => {
+    const blocked = await assertPlatformFeatureForPath("/api/reservations", db);
+    if (blocked) return blocked;
     const { searchParams } = new URL(request.url);
     const date   = searchParams.get("date");
     const status = searchParams.get("status");
@@ -29,6 +32,9 @@ export const GET = withTenant(
 export const POST = withTenant(
   ["admin", "manager", "waiter"],
   async ({ db, tenantFilter, payload }, request) => {
+    const blocked = await assertPlatformFeatureForPath("/api/reservations", db);
+    if (blocked) return blocked;
+
     const body = await request.json();
     const { customerName, phone, date, time, guests, tableNumber, notes, area, status } = body;
     if (!customerName?.trim() || !date || !time) {

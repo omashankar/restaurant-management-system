@@ -65,7 +65,7 @@ async function buildSuperAdminItems(db) {
     .collection("platform_messages")
     .find(
       { $or: [{ role: "super_admin" }, { role: "all" }] },
-      { projection: { title: 1, body: 1, createdAt: 1 } }
+      { projection: { title: 1, body: 1, createdAt: 1, meta: 1 } }
     )
     .sort({ createdAt: -1 })
     .limit(8)
@@ -78,7 +78,7 @@ async function buildSuperAdminItems(db) {
       title: row.title ?? "Platform update",
       body: row.body ?? "New platform message received.",
       createdAt: toIso(row.createdAt),
-      href: "/super-admin/logs",
+      href: row.meta?.href ?? "/super-admin/support-tickets",
     })),
     notifications,
   };

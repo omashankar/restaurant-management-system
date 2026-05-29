@@ -1,5 +1,6 @@
 import { withTenant } from "@/lib/tenantDb";
 import { sendLowStockAlertWhatsApp } from "@/lib/whatsappService";
+import { getRestaurantNotificationPrefs } from "@/lib/restaurantNotificationPrefs";
 import { ObjectId } from "mongodb";
 
 const PATCH_FIELDS = [
@@ -70,11 +71,14 @@ export const PATCH = withTenant(
       const wasAbove = Number(existing.quantity ?? 0) > Number(reorderLevel);
       const nowLow = update.quantity <= Number(reorderLevel);
       if (wasAbove && nowLow && reorderLevel > 0) {
-        sendLowStockAlertWhatsApp({
-          item: { ...existing, ...update, quantity: update.quantity },
-          db,
-          restaurantId: tenantFilter.restaurantId,
-        }).catch(() => {});
+        const prefs = await getRestaurantNotificationPrefs(db, tenantFilter.restaurantId);
+        if (prefs.lowStockAlerts && prefs.smsNotifications) {
+          sendLowStockAlertWhatsApp({
+            item: { ...existing, ...update, quantity: update.quantity },
+            db,
+            restaurantId: tenantFilter.restaurantId,
+          }).catch(() => {});
+        }
       }
     }
 

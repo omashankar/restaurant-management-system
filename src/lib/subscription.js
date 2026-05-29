@@ -68,7 +68,22 @@ export async function assignPlan(restaurantId, planSlug, options = {}) {
     ? new Date(options.endDate)
     : computeEndDate(startDate, plan.billingCycle ?? "monthly");
 
-  const trialDays = options.trialDays ?? plan.trialDays ?? 0;
+  let trialDays = options.trialDays;
+  if (trialDays == null || trialDays === undefined) {
+    const platformDoc = await db.collection("settings").findOne(
+      { _id: "platform" },
+      { projection: { "payment.trialDays": 1 } },
+    );
+    const platformTrial = Number(platformDoc?.payment?.trialDays);
+    trialDays =
+      Number.isFinite(plan.trialDays) && plan.trialDays > 0
+        ? plan.trialDays
+        : Number.isFinite(platformTrial) && platformTrial >= 0
+          ? platformTrial
+          : 0;
+  } else {
+    trialDays = Number(trialDays) || 0;
+  }
   const trialEnd  = trialDays > 0 ? addDays(startDate, trialDays) : null;
   const status    = trialEnd && trialEnd > now ? "trial" : "active";
 

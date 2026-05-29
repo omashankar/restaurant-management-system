@@ -1,4 +1,5 @@
 import clientPromise from "@/lib/mongodb";
+import { notifyPlatformEvent } from "@/lib/platformNotify";
 import { getPlatformPaymentSecrets, verifyRazorpayWebhook } from "@/lib/paymentGateway";
 
 export async function POST(request) {
@@ -24,7 +25,7 @@ export async function POST(request) {
     const failed = event?.event === "payment.failed";
     if (!paid && !failed) return Response.json({ success: true });
 
-    await db.collection("orders").updateOne(
+    const update = await db.collection("orders").updateOne(
       { "payment.gatewayOrderId": gatewayOrderId },
       {
         $set: {
@@ -34,6 +35,21 @@ export async function POST(request) {
         },
       }
     );
+
+    if (failed && update.matchedCount > 0) {
+      notifyPlatformEvent(db, {
+        event: "payment.failed",
+        webhookData: { provider: "razorpay", gatewayOrderId },
+        pushTitle: "Payment failed",
+        pushBody: `Razorpay · ${gatewayOrderId}`,
+        emailType: "paymentFailed",
+        emailContent: {
+          subject: "[RMS] Payment failed (Razorpay)",
+          text: `Order: ${gatewayOrderId}`,
+        },
+      }).catch(() => {});
+    }
+
     return Response.json({ success: true });
   } catch (err) {
     console.error("razorpay webhook failed:", err.message);

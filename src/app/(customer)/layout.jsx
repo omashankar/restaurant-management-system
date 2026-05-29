@@ -7,6 +7,7 @@ import CustomerFooter from "@/components/customer/CustomerFooter";
 import CustomerNavbar from "@/components/customer/CustomerNavbar";
 import CustomerToasts from "@/components/customer/CustomerToasts";
 import OrderTypeModal from "@/components/customer/OrderTypeModal";
+import PlatformFeatureGate from "@/components/customer/PlatformFeatureGate";
 import { AnimatePresence, motion } from "framer-motion";
 import { usePathname } from "next/navigation";
 
@@ -34,7 +35,9 @@ export default function CustomerLayout({ children }) {
         <div className="flex min-h-screen flex-col overflow-x-hidden bg-[var(--customer-bg,#fff)] text-[var(--customer-text,#111827)]">
           <CustomerNavbar />
           <main className="flex-1">
-            <PageTransition>{children}</PageTransition>
+            <PageTransition>
+              <PlatformFeatureGate>{children}</PlatformFeatureGate>
+            </PageTransition>
           </main>
           <CustomerFooter />
           <CustomerToasts />

@@ -6,14 +6,17 @@ import ListToolbar from "@/components/ui/ListToolbar";
 import Modal from "@/components/ui/Modal";
 import PaginationBar from "@/components/ui/PaginationBar";
 import TableSkeleton from "@/components/ui/TableSkeleton";
-import { useModuleData } from "@/context/ModuleDataContext";
 import { usePaginatedList } from "@/hooks/usePaginatedList";
-import { BookOpen, Eye, Pencil, Plus, X } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useToast } from "@/hooks/useToast";
+import { BookOpen, Eye, Pencil, Plus, RefreshCw, X } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
 
 export default function RecipesPage() {
-  const { hydrated, recipes, setRecipes, menuItems } = useModuleData();
+  const [recipes, setRecipes] = useState([]);
+  const [menuItems, setMenuItems] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [fetchError, setFetchError] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
   const [detailRecipe, setDetailRecipe] = useState(null);
   const [editingId, setEditingId] = useState(null);
@@ -23,12 +26,41 @@ export default function RecipesPage() {
     ingredients: [""],
     steps: "",
   });
+  const { showToast, ToastUI } = useToast();
+
+  const fetchAll = useCallback(async () => {
+    setLoading(true);
+    setFetchError("");
+    try {
+      const [recipesRes, menuRes] = await Promise.all([
+        fetch("/api/recipes"),
+        fetch("/api/menu"),
+      ]);
+      const [recipesData, menuData] = await Promise.all([
+        recipesRes.json(),
+        menuRes.json(),
+      ]);
+      if (!recipesRes.ok || !menuRes.ok) {
+        setFetchError(
+          recipesData?.error ?? menuData?.error ?? "Could not load recipes."
+        );
+        return;
+      }
+      if (recipesData.success) setRecipes(recipesData.recipes ?? []);
+      if (menuData.success) setMenuItems(menuData.items ?? []);
+      if (!recipesData.success || !menuData.success) {
+        setFetchError("Could not load recipes.");
+      }
+    } catch {
+      setFetchError("Could not load recipes. Check your connection and try again.");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
-    if (!hydrated) return;
-    const t = setTimeout(() => setLoading(false), 420);
-    return () => clearTimeout(t);
-  }, [hydrated]);
+    fetchAll();
+  }, [fetchAll]);
 
   const {
     search,
@@ -69,30 +101,42 @@ export default function RecipesPage() {
     setModalOpen(true);
   };
 
-  const saveRecipe = () => {
+  const saveRecipe = async () => {
     const mi = menuItems.find((m) => m.id === form.menuItemId);
-    if (!mi || !form.name.trim()) return;
+    if (!mi || !form.name.trim()) {
+      showToast("Recipe name and menu item are required.", "error");
+      return;
+    }
     const ing = form.ingredients.map((s) => s.trim()).filter(Boolean);
-    const preview =
-      ing.slice(0, 2).join(", ") + (ing.length > 2 ? "â€¦" : "");
-
     const payload = {
       name: form.name.trim(),
       menuItemId: mi.id,
       menuItemName: mi.name,
-      ingredientsPreview: preview || "â€”",
       ingredients: ing,
       steps: form.steps.trim(),
     };
 
-    if (editingId) {
-      setRecipes((prev) =>
-        prev.map((r) => (r.id === editingId ? { ...r, ...payload, id: editingId } : r))
-      );
-    } else {
-      setRecipes((prev) => [...prev, { ...payload, id: `r-${Date.now()}` }]);
+    setSaving(true);
+    try {
+      const url = editingId ? `/api/recipes/${editingId}` : "/api/recipes";
+      const res = await fetch(url, {
+        method: editingId ? "PATCH" : "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        showToast(data?.error ?? "Failed to save recipe.", "error");
+        return;
+      }
+      await fetchAll();
+      showToast(editingId ? "Recipe updated." : "Recipe added.");
+      setModalOpen(false);
+    } catch {
+      showToast("Network error.", "error");
+    } finally {
+      setSaving(false);
     }
-    setModalOpen(false);
   };
 
   const addIngredientRow = () =>
@@ -111,7 +155,7 @@ export default function RecipesPage() {
       ingredients: f.ingredients.filter((_, idx) => idx !== i),
     }));
 
-  if (!hydrated || loading) {
+  if (loading) {
     return (
       <div className="space-y-6">
         <div className="h-8 w-40 rounded-lg bg-zinc-800 animate-pulse" />
@@ -122,6 +166,11 @@ export default function RecipesPage() {
 
   return (
     <div className="space-y-6">
+      {fetchError && (
+        <div className="rounded-xl border border-red-500/25 bg-red-500/10 px-4 py-3 text-sm text-red-300">
+          {fetchError}
+        </div>
+      )}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight text-zinc-50">
@@ -131,21 +180,31 @@ export default function RecipesPage() {
             Linked to menu items for kitchen consistency.
           </p>
         </div>
-        <button
-          type="button"
-          onClick={openCreate}
-          disabled={activeMenuItems.length === 0}
-          className="cursor-pointer inline-flex items-center gap-2 rounded-xl bg-emerald-500 px-4 py-2.5 text-sm font-semibold text-zinc-950 hover:bg-emerald-400 disabled:opacity-40"
-        >
-          <Plus className="size-4" />
-          Add recipe
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={fetchAll}
+            className="cursor-pointer flex items-center gap-1.5 rounded-xl border border-zinc-700 px-3 py-2.5 text-sm font-medium text-zinc-400 hover:border-zinc-500 hover:text-zinc-200 transition-colors"
+            aria-label="Refresh"
+          >
+            <RefreshCw className="size-4" />
+          </button>
+          <button
+            type="button"
+            onClick={openCreate}
+            disabled={activeMenuItems.length === 0}
+            className="cursor-pointer inline-flex items-center gap-2 rounded-xl bg-emerald-500 px-4 py-2.5 text-sm font-semibold text-zinc-950 hover:bg-emerald-400 disabled:opacity-40"
+          >
+            <Plus className="size-4" />
+            Add recipe
+          </button>
+        </div>
       </div>
 
       <ListToolbar
         search={search}
         onSearchChange={setSearch}
-        searchPlaceholder="Search recipes or linked itemâ€¦"
+        searchPlaceholder="Search recipes or linked item…"
       />
 
       {total === 0 ? (
@@ -241,9 +300,10 @@ export default function RecipesPage() {
             <button
               type="button"
               onClick={saveRecipe}
-              className="cursor-pointer rounded-xl bg-emerald-500 px-4 py-2 text-sm font-semibold text-zinc-950 hover:bg-emerald-400"
+              disabled={saving}
+              className="cursor-pointer rounded-xl bg-emerald-500 px-4 py-2 text-sm font-semibold text-zinc-950 hover:bg-emerald-400 disabled:opacity-50"
             >
-              Save
+              {saving ? "Saving…" : "Save"}
             </button>
           </div>
         }
@@ -270,7 +330,7 @@ export default function RecipesPage() {
             >
               {activeMenuItems.map((m) => (
                 <option key={m.id} value={m.id}>
-                  {m.name} Â· ${m.price}
+                  {m.name} · ₹{m.price}
                 </option>
               ))}
             </select>
@@ -372,6 +432,7 @@ export default function RecipesPage() {
           </div>
         ) : null}
       </Modal>
+      {ToastUI}
     </div>
   );
 }

@@ -1,12 +1,16 @@
 import clientPromise from "@/lib/mongodb";
 import { isReservationSlotAvailable } from "@/lib/reservationConflict";
 import { getRestaurantIdFromRequest } from "@/lib/restaurantResolver";
+import { assertPlatformFeatureForPath } from "@/lib/platformFeatureGuard";
 
 /**
  * GET /api/customer/reservations?date=YYYY-MM-DD — bookings for availability UI
  * POST /api/customer/reservations — public table booking (customer site)
  */
 export async function GET(request) {
+  const blocked = await assertPlatformFeatureForPath("/api/customer/reservations");
+  if (blocked) return blocked;
+
   try {
     const client = await clientPromise;
     const db = client.db();
@@ -49,6 +53,9 @@ export async function GET(request) {
 }
 
 export async function POST(request) {
+  const blocked = await assertPlatformFeatureForPath("/api/customer/reservations");
+  if (blocked) return blocked;
+
   try {
     const client = await clientPromise;
     const db = client.db();

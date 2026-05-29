@@ -6,6 +6,7 @@ import SettingsFormSection from "@/components/settings/SettingsFormSection";
 import SettingsSidebar from "@/components/settings/SettingsSidebar";
 import { invalidateRestaurantBrandingCache } from "@/hooks/useRestaurantBranding";
 import { invalidateRestaurantInfoCache } from "@/hooks/useRestaurantInfo";
+import { invalidateAccessControlCache } from "@/hooks/useAccessControlSettings";
 import TimePicker from "@/components/settings/TimePicker";
 import ToggleSwitch from "@/components/settings/ToggleSwitch";
 import GatewaySettingsSection from "@/components/payment-settings/GatewaySettingsSection";
@@ -165,6 +166,7 @@ export default function SettingsPage() {
         setSavedSnapshot(settings);
         invalidateRestaurantInfoCache();
         invalidateRestaurantBrandingCache();
+        invalidateAccessControlCache();
         showToast("success", "Settings saved successfully.");
       }
       else showToast("error", data.error || "Failed to save settings.");
@@ -261,7 +263,7 @@ export default function SettingsPage() {
                 </div>
               </SettingsFormSection>
 
-              <SettingsFormSection title="Notifications" description="Saved preferences (in-app alerts still show from live orders, reservations, and stock).">
+              <SettingsFormSection title="Notifications" description="Control in-app inbox alerts and optional email/SMS alerts for new orders.">
                 <div className="grid gap-3 md:grid-cols-2">
                   <ToggleSwitch label="Order Notifications" checked={settings.notifications.orderNotifications}
                     onChange={(v) => setSettings((p) => ({ ...p, notifications: { ...p.notifications, orderNotifications: v } }))} />
