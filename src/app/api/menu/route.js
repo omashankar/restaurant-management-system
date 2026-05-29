@@ -33,7 +33,7 @@ export const POST = withTenant(
   async ({ db, tenantFilter, payload }, request) => {
     const body = await request.json();
     const { name, price, categoryId, categoryName, description, status,
-            itemType, prepTime, kitchenType, image } = body;
+            itemType, prepTime, kitchenType, image, badge } = body;
 
     if (!name?.trim() || price == null || !categoryId) {
       return Response.json({ success: false, error: "name, price and categoryId are required." }, { status: 400 });
@@ -51,7 +51,7 @@ export const POST = withTenant(
       prepTime: prepTime ?? null,
       kitchenType: kitchenType ?? "default_kitchen",
       image: image ?? null,
-      badge: null,
+      badge: badge?.trim() || null,
       createdBy: new ObjectId(payload.id),
       createdAt: new Date(),
     };

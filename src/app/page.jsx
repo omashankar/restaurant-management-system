@@ -34,12 +34,12 @@ import clientPromise from "@/lib/mongodb";
 import { CheckCircle2, MonitorSmartphone, Star, TrendingUp } from "lucide-react";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { cache } from "react";
+import { unstable_cache } from "next/cache";
 
 function redirectForRole(role) {
   switch (role) {
     case "super_admin": return "/super-admin/dashboard";
-    case "admin": return "/admin/dashboard";
+    case "admin": return "/dashboard";
     case "manager": return "/manager/dashboard";
     case "waiter": return "/waiter/dashboard";
     case "chef": return "/chef/dashboard";
@@ -61,7 +61,7 @@ function mapPlansToLandingPricing(plans = []) {
         ? normalizedPrice
         : Number((normalizedPrice * 12).toFixed(2)));
     return {
-      id: plan.slug || String(plan._id),
+      id: plan._id ? String(plan._id) : `${plan.slug ?? "plan"}-${index}`,
       order: index + 1,
       name: plan.name,
       slug: plan.slug,
@@ -78,7 +78,7 @@ function mapPlansToLandingPricing(plans = []) {
 }
 
 /* ── Fetch landing page content directly (no internal HTTP hop) ── */
-const getLandingContent = cache(async function getLandingContent() {
+const getLandingContent = unstable_cache(async function getLandingContent() {
   /** Deterministic full defaults when DB is unavailable (e.g. production build phase). */
   if (process.env.NEXT_PHASE === "phase-production-build") {
     return mergeWithDefaults(null);
@@ -120,6 +120,9 @@ const getLandingContent = cache(async function getLandingContent() {
     }
     return defaults;
   }
+}, ["landing-home-content"], {
+  tags: ["landing"],
+  revalidate: 60,
 });
 
 export async function generateMetadata() {

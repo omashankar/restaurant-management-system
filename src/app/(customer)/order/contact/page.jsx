@@ -3,15 +3,35 @@
 import { useCustomer } from "@/context/CustomerContext";
 import { useRestaurantSlug } from "@/hooks/useRestaurantSlug";
 import { useRestaurantInfo } from "@/hooks/useRestaurantInfo";
+import { useRestaurantCms } from "@/hooks/useRestaurantCms";
+import SocialMediaIcons from "@/components/customer/SocialMediaIcons";
+import { DEFAULTS } from "@/lib/restaurantCmsDefaults";
+import { mergeCmsSection } from "@/lib/customerCmsMerge";
+import { resolveSiteSocialLinks } from "@/lib/resolveLayoutTheme";
+import {
+  customerClasses,
+  customerInteractive,
+  customerMotion,
+  customerPage,
+  customerType,
+} from "@/lib/customerTheme";
 import { motion, AnimatePresence } from "framer-motion";
 import { CheckCircle2, Clock, Loader2, Mail, MapPin, Phone, Send } from "lucide-react";
 import Link from "next/link";
+import {
+  isValidContactMessage,
+  isValidEmail,
+  isValidGuestName,
+} from "@/lib/customerFormValidation";
 import { useState } from "react";
 
 export default function ContactPage() {
   const { showToast } = useCustomer();
   const { link } = useRestaurantSlug();
   const { info } = useRestaurantInfo();
+  const { content: cms } = useRestaurantCms();
+  const contactCms = mergeCmsSection(DEFAULTS.contact, cms.contact);
+  const socialLinks = resolveSiteSocialLinks(cms.theme, cms.social);
   const [form, setForm] = useState({ name: "", email: "", subject: "", message: "" });
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
@@ -20,77 +40,135 @@ export default function ContactPage() {
 
   const submit = async (e) => {
     e.preventDefault();
-    if (!form.name.trim() || !form.email.trim() || !form.message.trim()) {
-      showToast("All fields are required.", "error"); return;
+    if (!isValidGuestName(form.name)) {
+      showToast("Please enter a valid name (at least 2 letters).", "error");
+      return;
+    }
+    if (!isValidEmail(form.email)) {
+      showToast("Please enter a valid email address.", "error");
+      return;
+    }
+    if (!isValidContactMessage(form.message)) {
+      showToast("Message must be at least 10 characters.", "error");
+      return;
     }
     setLoading(true);
-    await new Promise((r) => setTimeout(r, 800));
-    setLoading(false);
-    setForm({ name: "", email: "", subject: "", message: "" });
-    setSent(true);
-    showToast("Message sent! We'll get back to you soon.");
+    try {
+      const res = await fetch("/api/customer/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
+      const data = await res.json();
+      if (!res.ok || !data?.success) {
+        showToast(data?.error ?? "Could not send message.", "error");
+        return;
+      }
+      setForm({ name: "", email: "", subject: "", message: "" });
+      setSent(true);
+      showToast(data.message ?? "Message sent! We'll get back to you soon.");
+    } catch {
+      showToast("Network error. Please try again.", "error");
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const inputCls = "w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-800 outline-none transition-all placeholder:text-gray-400 focus:border-[#FF6B35]/40 focus:bg-white focus:ring-2 focus:ring-[#FF6B35]/10";
+  const inputCls = customerClasses.field;
 
+  const missingHint = "Add in Settings → Contact";
   const CONTACT_INFO = [
-    { Icon: MapPin, label: "Address", value: info.address || "123 Restaurant Street, Food City", color: "bg-[#FF6B35]/10 text-[#FF6B35]" },
-    { Icon: Phone,  label: "Phone",   value: info.phone   || "+1 (555) 123-4567",               color: "bg-green-100 text-green-600" },
-    { Icon: Mail,   label: "Email",   value: info.email   || "hello@restaurant.com",             color: "bg-blue-100 text-blue-600" },
+    {
+      Icon: MapPin,
+      label: "Address",
+      value: info.address?.trim() || missingHint,
+      color: "bg-customer-primary/10 text-customer-primary",
+      href: info.googleMapsLink?.trim() || "",
+    },
+    { Icon: Phone,  label: "Phone",   value: info.phone?.trim()   || missingHint, color: "bg-green-100 text-green-600" },
+    { Icon: Mail,   label: "Email",   value: info.email?.trim()   || missingHint, color: "bg-blue-100 text-blue-600" },
   ];
 
   return (
-    <div className="bg-gray-50 min-h-screen">
+    <div className="ct-page-shell">
 
       {/* ══ HERO ══ */}
-      <section className="bg-white">
-        <div className="mx-auto max-w-7xl px-4 py-14 text-center sm:px-6 lg:px-8">
+      <section className="ct-page-header">
+        <div className={`${customerPage.headerInner} py-14`}>
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-            <span className="mb-4 inline-flex items-center gap-1.5 rounded-full bg-[#FF6B35]/10 px-4 py-1.5 text-xs font-bold uppercase tracking-widest text-[#FF6B35]">
-              Get in Touch
+            <span className={customerClasses.badge}>
+              {contactCms.eyebrow?.trim() || "Get in Touch"}
             </span>
-            <h1 className="font-poppins text-4xl font-black text-[#111827] sm:text-5xl">
-              Contact <span className="gradient-text">Us</span>
+            <h1 className={`${customerType.heroTitle} sm:text-5xl`}>
+              {contactCms.title?.trim() || "Contact Us"}
             </h1>
-            <p className="mx-auto mt-3 max-w-lg text-sm leading-relaxed text-gray-500 sm:text-base">
-              Have a question, feedback, or just want to say hello? We&apos;d love to hear from you.
+            <p className="mx-auto mt-3 max-w-lg text-sm leading-relaxed text-customer-muted sm:text-base">
+              {contactCms.subtitle?.trim() ||
+                "Have a question, feedback, or just want to say hello? We'd love to hear from you."}
             </p>
           </motion.div>
         </div>
       </section>
 
       {/* ══ CONTACT INFO CARDS ══ */}
-      <section className="bg-gray-50 py-10">
+      <section className="bg-[var(--customer-cream)] py-10">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="grid gap-5 sm:grid-cols-3">
-            {CONTACT_INFO.map(({ Icon, label, value, color }, i) => (
+            {CONTACT_INFO.map(({ Icon, label, value, color, href }, i) => (
               <motion.div key={label}
                 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }}
-                whileHover={{ y: -4 }}
-                className="flex items-start gap-4 rounded-3xl bg-white p-6 shadow-sm transition-all hover:shadow-md">
+                whileHover={customerMotion.cardHoverSm}
+                className="ct-step-card flex items-start gap-4 p-6"
+              >
                 <div className={`flex size-12 shrink-0 items-center justify-center rounded-2xl ${color}`}>
                   <Icon className="size-6" />
                 </div>
                 <div>
-                  <p className="text-xs font-bold uppercase tracking-wider text-gray-400">{label}</p>
-                  <p className="mt-1 text-sm font-semibold text-[#111827]">{value}</p>
+                  <p className="text-xs font-bold uppercase tracking-wider text-customer-muted">{label}</p>
+                  <p className="mt-1 text-sm font-semibold text-customer-text">{value}</p>
+                  {label === "Address" && href ? (
+                    <a
+                      href={href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="mt-1 inline-block text-xs font-semibold text-customer-primary underline-offset-2 hover:underline"
+                    >
+                      Open in Maps
+                    </a>
+                  ) : null}
                 </div>
               </motion.div>
             ))}
           </div>
+
+          {socialLinks.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.35 }}
+              className="mt-10 flex flex-col items-center text-center"
+            >
+              <p className="text-xs font-bold uppercase tracking-wider text-customer-muted">
+                Follow us on social media
+              </p>
+              <SocialMediaIcons links={socialLinks} variant="inline" className="mt-4 justify-center" />
+            </motion.div>
+          )}
         </div>
       </section>
 
       {/* ══ FORM + HOURS ══ */}
-      <section className="bg-white py-14">
+      <section className="bg-[var(--customer-bg)] py-14">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="grid gap-10 lg:grid-cols-5">
 
             {/* Form — 3 cols */}
             <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.1 }}
               className="lg:col-span-3">
-              <div className="rounded-3xl bg-gray-50 p-8">
-                <h2 className="mb-6 font-poppins text-2xl font-black text-[#111827]">Send a Message</h2>
+              <div className="rounded-3xl bg-[var(--customer-cream)] p-8">
+                <h2 className="mb-6 font-poppins text-2xl font-black text-customer-text">
+                  {contactCms.formTitle?.trim() || "Send a Message"}
+                </h2>
 
                 <AnimatePresence mode="wait">
                   {sent ? (
@@ -102,12 +180,16 @@ export default function ContactPage() {
                         <CheckCircle2 className="size-10 text-green-500" />
                       </motion.div>
                       <div>
-                        <p className="font-poppins text-xl font-black text-[#111827]">Message Sent!</p>
-                        <p className="mt-1 text-sm text-gray-500">We&apos;ll get back to you within 24 hours.</p>
+                        <p className="font-poppins text-xl font-black text-customer-text">
+                          {contactCms.successTitle?.trim() || "Message Sent!"}
+                        </p>
+                        <p className="mt-1 text-sm text-customer-muted">
+                          {contactCms.successMessage?.trim() || "We'll get back to you soon."}
+                        </p>
                       </div>
                       <div className="flex gap-3">
                         <button type="button" onClick={() => setSent(false)}
-                          className="rounded-full border border-gray-200 px-6 py-2.5 text-sm font-semibold text-gray-600 hover:border-[#FF6B35]/30">
+                          className="rounded-full border border-customer-border px-6 py-2.5 text-sm font-semibold text-customer-muted hover:border-customer-primary/30">
                           Send Another
                         </button>
                         <Link href={link("/home")}
@@ -120,27 +202,35 @@ export default function ContactPage() {
                     <motion.form key="form" onSubmit={submit} className="space-y-4">
                       <div className="grid gap-4 sm:grid-cols-2">
                         <div>
-                          <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-gray-500">Name *</label>
+                          <label className={customerPage.label}>Name *</label>
                           <input value={form.name} onChange={(e) => set("name", e.target.value)} placeholder="Your name" className={inputCls} />
                         </div>
                         <div>
-                          <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-gray-500">Email *</label>
+                          <label className={customerPage.label}>Email *</label>
                           <input type="email" value={form.email} onChange={(e) => set("email", e.target.value)} placeholder="you@example.com" className={inputCls} />
                         </div>
                       </div>
                       <div>
-                        <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-gray-500">Subject</label>
+                        <label className={customerPage.label}>Subject</label>
                         <input value={form.subject} onChange={(e) => set("subject", e.target.value)} placeholder="How can we help?" className={inputCls} />
                       </div>
                       <div>
-                        <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-gray-500">Message *</label>
-                        <textarea rows={5} value={form.message} onChange={(e) => set("message", e.target.value)}
-                          placeholder="Your message…" className={inputCls + " resize-none"} />
+                        <label className={customerPage.label}>Message *</label>
+                        <textarea
+                          rows={5}
+                          value={form.message}
+                          onChange={(e) => set("message", e.target.value)}
+                          placeholder="Your message…"
+                          className={inputCls + " resize-none"}
+                        />
+                        {form.message.trim() && !isValidContactMessage(form.message) ? (
+                          <p className="mt-1 text-[11px] text-red-500">Message must be at least 10 characters.</p>
+                        ) : null}
                       </div>
                       <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
                         type="submit" disabled={loading}
-                        className="flex cursor-pointer w-full items-center justify-center gap-2 rounded-full gradient-primary py-3.5 text-sm font-bold text-white shadow-lg shadow-[#FF6B35]/25 disabled:opacity-60">
-                        {loading ? <><Loader2 className="size-4 animate-spin" /> Sending…</> : <><Send className="size-4" /> Send Message</>}
+                        className="flex cursor-pointer w-full items-center justify-center gap-2 rounded-full gradient-primary py-3.5 text-sm font-bold text-white shadow-lg shadow-[var(--customer-primary-shadow)]/25 disabled:opacity-60">
+                        {loading ? <><Loader2 className="size-4 animate-spin" /> Sending…</> : <><Send className="size-4" /> {contactCms.submitLabel?.trim() || "Send Message"}</>}
                       </motion.button>
                     </motion.form>
                   )}
@@ -151,22 +241,22 @@ export default function ContactPage() {
             {/* Hours — 2 cols */}
             <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.2 }}
               className="lg:col-span-2">
-              <div className="rounded-3xl bg-gray-50 p-8 h-full">
+              <div className="rounded-3xl bg-[var(--customer-cream)] p-8 h-full">
                 <div className="mb-5 flex size-12 items-center justify-center rounded-2xl bg-amber-100">
                   <Clock className="size-6 text-amber-600" />
                 </div>
-                <h3 className="font-poppins text-xl font-black text-[#111827]">Opening Hours</h3>
-                <p className="mt-1 text-sm text-gray-400">We&apos;re here to serve you</p>
+                <h3 className="font-poppins text-xl font-black text-customer-text">Opening Hours</h3>
+                <p className="mt-1 text-sm text-customer-muted">We&apos;re here to serve you</p>
 
                 <div className="mt-6 space-y-3">
                   {info.openingHours?.length > 0 ? (
                     info.openingHours.map((h) => (
                       <div key={h.day} className="flex items-center justify-between rounded-xl bg-white px-4 py-2.5 shadow-sm">
-                        <span className="text-sm font-semibold text-gray-700">{h.day}</span>
+                        <span className="text-sm font-semibold text-customer-text">{h.day}</span>
                         {h.closed ? (
                           <span className="text-xs font-bold text-red-400">Closed</span>
                         ) : (
-                          <span className="text-sm font-bold text-[#111827]">{h.openTime} – {h.closeTime}</span>
+                          <span className="text-sm font-bold text-customer-text">{h.openTime} – {h.closeTime}</span>
                         )}
                       </div>
                     ))
@@ -177,8 +267,8 @@ export default function ContactPage() {
                       { day: "Sunday",    time: "10:00 AM – 09:00 PM" },
                     ].map((h) => (
                       <div key={h.day} className="flex items-center justify-between rounded-xl bg-white px-4 py-2.5 shadow-sm">
-                        <span className="text-sm font-semibold text-gray-700">{h.day}</span>
-                        <span className="text-sm font-bold text-[#111827]">{h.time}</span>
+                        <span className="text-sm font-semibold text-customer-text">{h.day}</span>
+                        <span className="text-sm font-bold text-customer-text">{h.time}</span>
                       </div>
                     ))
                   )}

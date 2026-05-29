@@ -1,12 +1,6 @@
-"use client";
+import { redirect } from "next/navigation";
 
-import ProtectedRoute from "@/components/auth/ProtectedRoute";
-import MainDashboard from "@/components/views/MainDashboard";
-
-export default function AdminDashboardPage() {
-  return (
-    <ProtectedRoute roles={["admin"]}>
-      <MainDashboard />
-    </ProtectedRoute>
-  );
+/** Single dashboard URL — live data on /dashboard */
+export default function AdminDashboardRedirect() {
+  redirect("/dashboard");
 }

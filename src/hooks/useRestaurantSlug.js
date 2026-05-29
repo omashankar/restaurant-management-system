@@ -13,6 +13,7 @@
 
 "use client";
 
+import { getCustomerStorageScope } from "@/lib/customerSessionStorage";
 import { usePathname } from "next/navigation";
 import { useMemo } from "react";
 
@@ -20,9 +21,10 @@ export function useRestaurantSlug() {
   const pathname = usePathname();
 
   const slug = useMemo(() => {
-    // /r/pizza-palace/...  →  "pizza-palace"
-    const match = pathname?.match(/^\/r\/([^/]+)(\/|$)/);
-    return match ? match[1] : null;
+    const fromPath = pathname?.match(/^\/r\/([^/]+)(\/|$)/)?.[1];
+    if (fromPath) return fromPath;
+    const scope = getCustomerStorageScope(pathname);
+    return scope === "default" ? null : scope;
   }, [pathname]);
 
   const prefix = slug ? `/r/${slug}` : "";

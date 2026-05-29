@@ -1,11 +1,13 @@
 "use client";
 
 import { CustomerProvider } from "@/context/CustomerContext";
+import { CustomerThemeProvider } from "@/context/CustomerThemeContext";
 import CartDrawer from "@/components/customer/CartDrawer";
 import CustomerFooter from "@/components/customer/CustomerFooter";
 import CustomerNavbar from "@/components/customer/CustomerNavbar";
 import CustomerToasts from "@/components/customer/CustomerToasts";
 import OrderTypeModal from "@/components/customer/OrderTypeModal";
+import PlatformFeatureGate from "@/components/customer/PlatformFeatureGate";
 import { AnimatePresence, motion } from "framer-motion";
 import { usePathname } from "next/navigation";
 
@@ -29,16 +31,20 @@ function PageTransition({ children }) {
 export default function CustomerLayout({ children }) {
   return (
     <CustomerProvider>
-      <div className="customer-theme flex min-h-screen flex-col overflow-x-hidden">
-        <CustomerNavbar />
-        <main className="flex-1">
-          <PageTransition>{children}</PageTransition>
-        </main>
-        <CustomerFooter />
-        <CustomerToasts />
-        <OrderTypeModal />
-        <CartDrawer />
-      </div>
+      <CustomerThemeProvider>
+        <div className="flex min-h-screen flex-col overflow-x-hidden bg-[var(--customer-bg,#fff)] text-[var(--customer-text,#111827)]">
+          <CustomerNavbar />
+          <main className="flex-1">
+            <PageTransition>
+              <PlatformFeatureGate>{children}</PlatformFeatureGate>
+            </PageTransition>
+          </main>
+          <CustomerFooter />
+          <CustomerToasts />
+          <OrderTypeModal />
+          <CartDrawer />
+        </div>
+      </CustomerThemeProvider>
     </CustomerProvider>
   );
 }

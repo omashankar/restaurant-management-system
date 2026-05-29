@@ -2,6 +2,8 @@ import { getTokenFromRequest } from "@/lib/authCookies";
 import { verifyToken } from "@/lib/jwt";
 import clientPromise from "@/lib/mongodb";
 import { safeSearchPattern } from "@/lib/search";
+import { generatePlatformInvoiceId } from "@/lib/platformInvoice";
+import { resolvePaymentCurrency } from "@/lib/platformCurrency";
 import { ObjectId } from "mongodb";
 
 function superAdminOnly(request) {
@@ -32,6 +34,10 @@ export async function GET(request) {
 
     const filter = {};
     if (status !== "all") filter.status = status;
+    const paymentType = searchParams.get("paymentType");
+    if (paymentType === "subscription") {
+      filter.paymentType = { $in: ["subscription", "subscription_renewal"] };
+    }
     if (search) {
       filter.$or = [
         { restaurantName: { $regex: search, $options: "i" } },
@@ -50,9 +56,11 @@ export async function GET(request) {
       db.collection("payments").countDocuments(filter),
     ]);
 
-    /* Revenue summary */
+    /* Revenue summary (respects same filters as list) */
+    const summaryMatch = { status: "paid" };
+    if (filter.paymentType) summaryMatch.paymentType = filter.paymentType;
     const [revenuePipeline] = await db.collection("payments").aggregate([
-      { $match: { status: "paid" } },
+      { $match: summaryMatch },
       { $group: { _id: null, total: { $sum: "$amount" }, count: { $sum: 1 } } },
     ]).toArray().catch(() => [null]);
 
@@ -115,18 +123,21 @@ export async function POST(request) {
     const restaurant = await db.collection("restaurants").findOne({ _id: _rid }, { projection: { name: 1, ownerEmail: 1 } });
     if (!restaurant) return Response.json({ success: false, error: "Restaurant not found." }, { status: 404 });
 
-    const invoiceId = `INV-${Date.now()}`;
+    const invoiceId = await generatePlatformInvoiceId(db);
+    const resolvedCurrency = await resolvePaymentCurrency(db, currency);
     const result = await db.collection("payments").insertOne({
       restaurantId:   _rid,
       restaurantName: restaurant.name,
       adminEmail:     restaurant.ownerEmail ?? "—",
       plan:           plan ?? "—",
       amount:         amountNum,
-      currency,
+      currency:       resolvedCurrency,
       method,
       status:         "paid",
+      paymentType:    "subscription",
       invoiceId,
       notes:          notes?.trim() ?? "",
+      paidAt:         new Date(),
       createdAt:      new Date(),
     });
 

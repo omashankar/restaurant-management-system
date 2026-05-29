@@ -21,8 +21,8 @@ export default function SalesChart({ data = {} }) {
   );
 
   return (
-    <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-5">
-      <div className="flex flex-wrap items-start justify-between gap-3">
+    <div className="rms-dashboard-card rms-dashboard-card--lg flex h-full min-h-0 w-full flex-col rounded-2xl border border-zinc-800 bg-zinc-900/60 p-5">
+      <div className="flex shrink-0 flex-wrap items-start justify-between gap-3">
         <div>
           <h3 className="text-sm font-semibold text-zinc-100">Sales Analytics</h3>
           <p className="text-xs text-zinc-500">Revenue and order volume over time</p>
@@ -51,12 +51,13 @@ export default function SalesChart({ data = {} }) {
         </div>
       </div>
 
+      <div className="rms-dashboard-card__body rms-dashboard-card__body--y mt-4 min-h-0 flex-1 pr-1">
       {chartData.length === 0 ? (
-        <div className="mt-6 flex h-48 items-center justify-center rounded-xl border border-dashed border-zinc-800">
+        <div className="flex min-h-[12rem] items-center justify-center rounded-xl border border-dashed border-zinc-800">
           <p className="text-sm text-zinc-600">No data for this period yet.</p>
         </div>
       ) : (
-        <div className="mt-6 flex h-48 items-end gap-1.5 sm:gap-2">
+        <div className="flex min-h-[12rem] items-end gap-1.5 sm:gap-2">
           {chartData.map((d) => {
             const val = activeTab === "sales" ? d.sales : d.orders;
             const h   = Math.round((val / max) * 100);
@@ -79,6 +80,7 @@ export default function SalesChart({ data = {} }) {
           })}
         </div>
       )}
+      </div>
     </div>
   );
 }

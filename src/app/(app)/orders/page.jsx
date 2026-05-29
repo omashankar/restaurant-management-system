@@ -1,6 +1,7 @@
 "use client";
 
 import { useUser } from "@/context/AuthContext";
+import { formatAdminMoney } from "@/lib/adminCurrency";
 import {
   Bike, CheckCircle2, ChevronDown, ChevronUp,
   Clock, ConciergeBell, Plus, RefreshCw,
@@ -33,7 +34,7 @@ const PAYMENT_STATUS_CFG = {
 
 const PAYMENT_METHOD_LABEL = {
   cod: "COD",
-  cashCounter: "Cash Counter",
+  cashCounter: "Cash",
   upi: "UPI",
   card: "Card",
   netBanking: "Net Banking",
@@ -46,21 +47,30 @@ const NEXT_STATUS = { new: "preparing", preparing: "ready", ready: "completed" }
 const NEXT_LABEL  = { new: "Start Preparing", preparing: "Mark Ready", ready: "Mark Completed" };
 
 /* ── Order card ── */
-function OrderCard({ order, onStatusChange, canEdit }) {
+function OrderCard({ order, currency, onStatusChange, onMarkPaid, canEdit }) {
   const [expanded, setExpanded] = useState(false);
   const [updating, setUpdating] = useState(false);
+  const [payUpdating, setPayUpdating] = useState(false);
   const st = STATUS_CFG[order.status] ?? STATUS_CFG.completed;
   const tp = TYPE_ICON[order.type ?? order.orderType] ?? TYPE_ICON["dine-in"];
   const { Icon: TypeIcon } = tp;
   const paymentStatus = String(order.payment?.status ?? "pending");
   const paymentMethod = String(order.payment?.method ?? "cod");
   const next = NEXT_STATUS[order.status];
+  const orderTotal = Number(order.total ?? order.amount ?? 0);
 
   const handleNext = async () => {
     if (!next || !canEdit) return;
     setUpdating(true);
     await onStatusChange(order.id, next);
     setUpdating(false);
+  };
+
+  const handleMarkPaid = async () => {
+    if (!canEdit || paymentStatus === "paid") return;
+    setPayUpdating(true);
+    await onMarkPaid?.(order.id);
+    setPayUpdating(false);
   };
 
   const timeStr = order.time ?? (order.createdAt
@@ -91,7 +101,7 @@ function OrderCard({ order, onStatusChange, canEdit }) {
 
         <div className="mt-3 flex items-center justify-between">
           <p className="text-sm text-zinc-400">{order.customer}</p>
-          <p className="text-base font-bold text-zinc-100">${Number(order.total ?? order.amount ?? 0).toFixed(2)}</p>
+          <p className="text-base font-bold text-zinc-100">{formatAdminMoney(orderTotal, currency)}</p>
         </div>
 
         <div className="mt-2 flex items-center justify-between gap-2">
@@ -120,15 +130,54 @@ function OrderCard({ order, onStatusChange, canEdit }) {
           {order.items?.length > 0 && (
             <div className="space-y-1">
               {order.items.map((item, i) => (
-                <div key={i} className="flex items-center justify-between text-xs">
-                  <span className="text-zinc-400">{item.qty}× {item.name}</span>
-                  <span className="text-zinc-500">${(item.price * item.qty).toFixed(2)}</span>
+                <div key={i} className="text-xs">
+                  <div className="flex items-center justify-between">
+                    <span className="text-zinc-400">{item.qty}× {item.name}</span>
+                    <span className="text-zinc-500">
+                      {formatAdminMoney((item.price ?? 0) * (item.qty ?? 1), currency)}
+                    </span>
+                  </div>
+                  {item.note?.trim() && (
+                    <p className="mt-0.5 pl-3 text-[10px] text-amber-400/90">↳ {item.note}</p>
+                  )}
                 </div>
               ))}
             </div>
           )}
+          {(order.subtotal != null || order.taxAmount > 0 || order.serviceCharge > 0) && (
+            <div className="space-y-0.5 border-t border-zinc-800 pt-2 text-[11px] text-zinc-500">
+              {order.subtotal != null && (
+                <div className="flex justify-between">
+                  <span>Subtotal</span>
+                  <span>{formatAdminMoney(order.subtotal, currency)}</span>
+                </div>
+              )}
+              {order.taxAmount > 0 && (
+                <div className="flex justify-between">
+                  <span>Tax{order.taxPercent ? ` (${order.taxPercent}%)` : ""}</span>
+                  <span>{formatAdminMoney(order.taxAmount, currency)}</span>
+                </div>
+              )}
+              {order.serviceCharge > 0 && (
+                <div className="flex justify-between">
+                  <span>Service</span>
+                  <span>{formatAdminMoney(order.serviceCharge, currency)}</span>
+                </div>
+              )}
+            </div>
+          )}
           {order.notes && (
             <p className="text-xs text-amber-400/80 border-t border-zinc-800 pt-2">Note: {order.notes}</p>
+          )}
+          {canEdit && paymentStatus !== "paid" && (
+            <button
+              type="button"
+              onClick={handleMarkPaid}
+              disabled={payUpdating}
+              className="cursor-pointer flex w-full items-center justify-center gap-1.5 rounded-xl border border-emerald-500/30 bg-emerald-500/10 py-2 text-xs font-semibold text-emerald-300 hover:bg-emerald-500/20 disabled:opacity-50"
+            >
+              {payUpdating ? "Updating…" : "Mark payment as Paid"}
+            </button>
           )}
           {/* Status action */}
           {canEdit && next && (
@@ -155,7 +204,7 @@ function OrderCard({ order, onStatusChange, canEdit }) {
 }
 
 /* ── Create Order Modal ── */
-function CreateOrderModal({ open, onClose, onCreated }) {
+function CreateOrderModal({ open, onClose, onCreated, currency = "INR" }) {
   const [tables, setTables]   = useState([]);
   const [menuItems, setMenuItems] = useState([]);
   const [cart, setCart]       = useState([]);
@@ -163,16 +212,30 @@ function CreateOrderModal({ open, onClose, onCreated }) {
   const [saving, setSaving]   = useState(false);
   const [error, setError]     = useState("");
   const [search, setSearch]   = useState("");
+  const [taxPercent, setTaxPercent] = useState(0);
+  const [serviceChargePercent, setServiceChargePercent] = useState(0);
+  const [paymentMethod, setPaymentMethod] = useState("cashCounter");
+  const [paymentStatus, setPaymentStatus] = useState("paid");
 
   useEffect(() => {
     if (!open) return;
     setCart([]); setError(""); setSearch("");
     setForm({ orderType: "dine-in", tableNumber: "", customer: "", notes: "" });
-    Promise.all([fetch("/api/tables"), fetch("/api/menu?status=active")])
-      .then(([t, m]) => Promise.all([t.json(), m.json()]))
-      .then(([td, md]) => {
+    setPaymentMethod("cashCounter");
+    setPaymentStatus("paid");
+    Promise.all([
+      fetch("/api/tables"),
+      fetch("/api/menu?status=active"),
+      fetch("/api/settings"),
+    ])
+      .then(([t, m, s]) => Promise.all([t.json(), m.json(), s.json()]))
+      .then(([td, md, sd]) => {
         if (td.success) setTables(td.tables.filter((t) => t.status === "available"));
         if (md.success) setMenuItems(md.items);
+        if (sd.success) {
+          setTaxPercent(parseFloat(sd.settings?.pos?.taxPercentage ?? "0") || 0);
+          setServiceChargePercent(parseFloat(sd.settings?.pos?.serviceCharge ?? "0") || 0);
+        }
       }).catch(() => {});
   }, [open]);
 
@@ -195,7 +258,10 @@ function CreateOrderModal({ open, onClose, onCreated }) {
   };
 
   const removeItem = (id) => setCart((prev) => prev.filter((l) => l.id !== id));
-  const total = cart.reduce((s, l) => s + l.price * l.qty, 0);
+  const subtotal = cart.reduce((s, l) => s + l.price * l.qty, 0);
+  const taxAmount = parseFloat(((subtotal * taxPercent) / 100).toFixed(2));
+  const serviceCharge = parseFloat(((subtotal * serviceChargePercent) / 100).toFixed(2));
+  const total = parseFloat((subtotal + taxAmount + serviceCharge).toFixed(2));
 
   const submit = async () => {
     if (!cart.length) { setError("Add at least one item."); return; }
@@ -205,7 +271,25 @@ function CreateOrderModal({ open, onClose, onCreated }) {
       const res  = await fetch("/api/orders", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ items: cart, orderType: form.orderType, tableNumber: form.tableNumber || null, customer: form.customer, notes: form.notes }),
+        body: JSON.stringify({
+          items: cart.map((l) => ({
+            name: l.name,
+            qty: l.qty,
+            price: l.price,
+            menuItemId: l.id,
+          })),
+          orderType: form.orderType,
+          tableNumber: form.tableNumber || null,
+          customer: form.customer,
+          notes: form.notes,
+          subtotal,
+          taxAmount,
+          taxPercent,
+          serviceCharge,
+          serviceChargePercent,
+          paymentMethod,
+          paymentStatus,
+        }),
       });
       const data = await res.json();
       if (!data.success) { setError(data.error ?? "Failed to create order."); return; }
@@ -249,7 +333,9 @@ function CreateOrderModal({ open, onClose, onCreated }) {
                     <p className="text-sm font-medium text-zinc-100">{item.name}</p>
                     <p className="text-xs text-zinc-500">{item.categoryName}</p>
                   </div>
-                  <span className="text-sm font-bold text-emerald-400">${Number(item.price).toFixed(2)}</span>
+                  <span className="text-sm font-bold text-emerald-400">
+                    {formatAdminMoney(item.price, currency)}
+                  </span>
                 </button>
               ))}
               {filteredMenu.length === 0 && <p className="py-8 text-center text-xs text-zinc-600">No items found.</p>}
@@ -309,7 +395,9 @@ function CreateOrderModal({ open, onClose, onCreated }) {
                       <div key={line.id} className="flex items-center justify-between rounded-lg bg-zinc-950/40 px-2.5 py-2 text-xs">
                         <span className="text-zinc-300">{line.qty}× {line.name}</span>
                         <div className="flex items-center gap-2">
-                          <span className="text-emerald-400">${(line.price * line.qty).toFixed(2)}</span>
+                          <span className="text-emerald-400">
+                            {formatAdminMoney(line.price * line.qty, currency)}
+                          </span>
                           <button type="button" onClick={() => removeItem(line.id)}
                             className="cursor-pointer text-zinc-600 hover:text-red-400 transition-colors">
                             <X className="size-3" />
@@ -325,9 +413,41 @@ function CreateOrderModal({ open, onClose, onCreated }) {
             {/* Footer */}
             <div className="border-t border-zinc-800 p-3 space-y-2">
               {error && <p className="text-xs text-red-400">{error}</p>}
-              <div className="flex justify-between text-sm font-bold">
-                <span className="text-zinc-400">Total</span>
-                <span className="text-emerald-400">${total.toFixed(2)}</span>
+              <div className="space-y-0.5 text-xs text-zinc-500">
+                <div className="flex justify-between">
+                  <span>Subtotal</span>
+                  <span>{formatAdminMoney(subtotal, currency)}</span>
+                </div>
+                {taxAmount > 0 && (
+                  <div className="flex justify-between">
+                    <span>Tax ({taxPercent}%)</span>
+                    <span>{formatAdminMoney(taxAmount, currency)}</span>
+                  </div>
+                )}
+                <div className="flex justify-between text-sm font-bold text-zinc-100">
+                  <span>Total</span>
+                  <span className="text-emerald-400">{formatAdminMoney(total, currency)}</span>
+                </div>
+              </div>
+              <div className="flex gap-1">
+                {["cashCounter", "upi", "card", "cod"].map((m) => (
+                  <button
+                    key={m}
+                    type="button"
+                    onClick={() => {
+                      setPaymentMethod(m);
+                      if (m === "cod") setPaymentStatus("pending");
+                      else setPaymentStatus("paid");
+                    }}
+                    className={`cursor-pointer flex-1 rounded-lg py-1 text-[10px] font-semibold ${
+                      paymentMethod === m
+                        ? "bg-emerald-500/20 text-emerald-300"
+                        : "text-zinc-600 hover:text-zinc-400"
+                    }`}
+                  >
+                    {PAYMENT_METHOD_LABEL[m] ?? m}
+                  </button>
+                ))}
               </div>
               <button type="button" onClick={submit} disabled={saving || !cart.length}
                 className="cursor-pointer flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-500 py-2.5 text-sm font-bold text-zinc-950 hover:bg-emerald-400 disabled:opacity-40 transition-all">
@@ -346,6 +466,8 @@ export default function OrdersPage() {
   const { user } = useUser();
   const [orders, setOrders]     = useState([]);
   const [loading, setLoading]   = useState(true);
+  const [fetchError, setFetchError] = useState("");
+  const [currency, setCurrency] = useState("INR");
   const [filter, setFilter]     = useState("all");
   const [search, setSearch]     = useState("");
   const [sortNew, setSortNew]   = useState(true);
@@ -353,23 +475,66 @@ export default function OrdersPage() {
 
   const canEdit = ["admin", "manager", "waiter"].includes(user?.role);
 
+  useEffect(() => {
+    fetch("/api/settings")
+      .then((r) => r.json())
+      .then((d) => {
+        if (d.success && d.settings?.general?.currency) {
+          setCurrency(d.settings.general.currency);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
   const fetchOrders = useCallback(async () => {
     setLoading(true);
+    setFetchError("");
     try {
       const res  = await fetch("/api/orders");
       const data = await res.json();
-      if (data.success) setOrders(data.orders);
-    } catch { /* keep existing */ }
-    finally { setLoading(false); }
+      if (data.success) {
+        setOrders(data.orders);
+      } else {
+        setFetchError(data.error ?? "Could not load orders.");
+      }
+    } catch {
+      setFetchError("Network error while loading orders.");
+    } finally { setLoading(false); }
   }, []);
 
   useEffect(() => { fetchOrders(); }, [fetchOrders]);
 
   const handleStatusChange = useCallback(async (id, status) => {
-    const res  = await fetch(`/api/orders/${id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ status }) });
+    const res  = await fetch(`/api/orders/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status }),
+    });
     const data = await res.json();
     if (data.success) {
       setOrders((prev) => prev.map((o) => o.id === id ? { ...o, status } : o));
+    } else {
+      setFetchError(data.error ?? "Failed to update order status.");
+    }
+  }, []);
+
+  const handleMarkPaid = useCallback(async (id) => {
+    const res = await fetch(`/api/orders/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ paymentStatus: "paid" }),
+    });
+    const data = await res.json();
+    if (data.success) {
+      setOrders((prev) =>
+        prev.map((o) =>
+          o.id === id
+            ? { ...o, payment: { ...(o.payment ?? {}), method: o.payment?.method ?? "cod", status: "paid" } }
+            : o
+        )
+      );
+    } else {
+      setFetchError(data.error ?? "Failed to update payment.");
     }
   }, []);
 
@@ -413,6 +578,11 @@ export default function OrdersPage() {
   return (
     <>
       <div className="space-y-6">
+        {fetchError && (
+          <div className="rounded-xl border border-red-500/25 bg-red-500/10 px-4 py-3 text-sm text-red-300">
+            {fetchError}
+          </div>
+        )}
         {/* Header */}
         <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div className="flex items-start gap-3">
@@ -484,13 +654,25 @@ export default function OrdersPage() {
         ) : (
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
             {filtered.map((o) => (
-              <OrderCard key={o.id} order={o} onStatusChange={handleStatusChange} canEdit={canEdit} />
+              <OrderCard
+                key={o.id}
+                order={o}
+                currency={currency}
+                onStatusChange={handleStatusChange}
+                onMarkPaid={handleMarkPaid}
+                canEdit={canEdit}
+              />
             ))}
           </div>
         )}
       </div>
 
-      <CreateOrderModal open={createOpen} onClose={() => setCreateOpen(false)} onCreated={handleCreated} />
+      <CreateOrderModal
+        open={createOpen}
+        onClose={() => setCreateOpen(false)}
+        onCreated={handleCreated}
+        currency={currency}
+      />
     </>
   );
 }

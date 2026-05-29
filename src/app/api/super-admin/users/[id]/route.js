@@ -1,6 +1,8 @@
+import { writeAuditLog } from "@/lib/auditLog";
 import { getTokenFromRequest } from "@/lib/authCookies";
 import { verifyToken } from "@/lib/jwt";
 import clientPromise from "@/lib/mongodb";
+import { getClientIp } from "@/lib/rateLimit";
 import { ObjectId } from "mongodb";
 
 const STAFF_ROLES = ["manager", "waiter", "chef"];
@@ -35,7 +37,7 @@ export async function PATCH(request, { params }) {
   const client = await clientPromise;
   const db     = client.db();
 
-  const target = await db.collection("users").findOne({ _id }, { projection: { role: 1 } });
+  const target = await db.collection("users").findOne({ _id }, { projection: { role: 1, name: 1, email: 1 } });
   if (!target) return Response.json({ success: false, error: "User not found." }, { status: 404 });
 
   /* Super admin can only manage restaurant admin users. */
@@ -61,6 +63,17 @@ export async function PATCH(request, { params }) {
   const result = await db.collection("users").updateOne({ _id }, { $set: update });
   if (result.matchedCount === 0) return Response.json({ success: false, error: "User not found." }, { status: 404 });
 
+  const action = body.status === "blocked" ? "user.blocked" : body.status === "active" ? "user.unblocked" : "user.updated";
+  await writeAuditLog({
+    action,
+    category: "user",
+    actorId: sa.id,
+    targetId: id,
+    targetName: target.name ?? target.email ?? id,
+    meta: { status: body.status },
+    ip: getClientIp(request),
+  });
+
   return Response.json({ success: true });
 }
 
@@ -80,7 +93,7 @@ export async function DELETE(request, { params }) {
     const client = await clientPromise;
     const db     = client.db();
 
-    const target = await db.collection("users").findOne({ _id }, { projection: { role: 1 } });
+    const target = await db.collection("users").findOne({ _id }, { projection: { role: 1, name: 1, email: 1 } });
     if (!target) return Response.json({ success: false, error: "User not found." }, { status: 404 });
 
     /* Super admin can only delete restaurant admin users. */
@@ -109,6 +122,16 @@ export async function DELETE(request, { params }) {
     }
 
     await db.collection("users").deleteOne({ _id });
+
+    await writeAuditLog({
+      action: "user.deleted",
+      category: "user",
+      actorId: sa.id,
+      targetId: id,
+      targetName: target.name ?? target.email ?? id,
+      ip: getClientIp(request),
+    });
+
     return Response.json({ success: true });
   } catch (err) {
     console.error("DELETE super-admin/users/[id] error:", err.message);

@@ -1,6 +1,7 @@
 import { getTokenFromRequest } from "@/lib/authCookies";
 import { verifyToken } from "@/lib/jwt";
 import clientPromise from "@/lib/mongodb";
+import { normalizePlanBreakdown } from "@/lib/planBreakdown";
 
 function superAdminOnly(request) {
   const token   = getTokenFromRequest(request);
@@ -25,6 +26,10 @@ export async function GET(request) {
     const sixMonthsAgo = new Date();
     sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
 
+    const subscriptionPaymentMatch = {
+      paymentType: { $in: ["subscription", "subscription_renewal"] },
+    };
+
     const [
       revenueByMonth,
       planBreakdown,
@@ -35,7 +40,7 @@ export async function GET(request) {
       pendingCount,
     ] = await Promise.all([
       db.collection("payments").aggregate([
-        { $match: { status: "paid", createdAt: { $gte: sixMonthsAgo } } },
+        { $match: { status: "paid", createdAt: { $gte: sixMonthsAgo }, ...subscriptionPaymentMatch } },
         { $group: {
           _id: { year: { $year: "$createdAt" }, month: { $month: "$createdAt" } },
           revenue: { $sum: "$amount" },
@@ -88,11 +93,14 @@ export async function GET(request) {
       db.collection("restaurants").countDocuments({ status: "active" }),
 
       db.collection("payments").aggregate([
-        { $match: { status: "paid" } },
+        { $match: { status: "paid", ...subscriptionPaymentMatch } },
         { $group: { _id: null, total: { $sum: "$amount" } } },
       ]).toArray().then((r) => r[0]?.total ?? 0),
 
-      db.collection("payments").countDocuments({ status: "pending" }),
+      db.collection("payments").countDocuments({
+        status: "pending",
+        ...subscriptionPaymentMatch,
+      }),
     ]);
 
     const MONTH_NAMES = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
@@ -110,10 +118,7 @@ export async function GET(request) {
         revenue: r.revenue,
         count:   r.count,
       })),
-      planBreakdown: planBreakdown.map((p) => ({
-        plan:  p._id ?? "unknown",
-        count: p.count,
-      })),
+      planBreakdown: normalizePlanBreakdown(planBreakdown, { defaultPlan: "free" }),
       subscriptions: subscriptions.map((r) => ({
         id:         r.restaurantId?.toString() ?? "",
         name:       r.name,

@@ -8,19 +8,71 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 
+function normalizeCustomer(row) {
+  return {
+    id: row.id,
+    name: row.name ?? "",
+    phone: row.phone ?? "",
+    email: row.email ?? "",
+    notes: row.notes ?? "",
+    visits: Number(row.visits ?? 0),
+    lastVisit: row.lastVisit ?? "-",
+    orderHistory: Array.isArray(row.orderHistory) ? row.orderHistory : [],
+  };
+}
+
 export default function CustomerDetailPage() {
   const params = useParams();
   const raw = params?.id;
   const id = Array.isArray(raw) ? raw[0] : raw ?? "";
-  const { hydrated, customerRows } = useModuleData();
+  const { hydrated, customerRows, setCustomerRows } = useModuleData();
   const [loading, setLoading] = useState(true);
-  const customer = customerRows.find((c) => c.id === id);
+  const [fetchError, setFetchError] = useState(null);
+  const [customer, setCustomer] = useState(() =>
+    customerRows.find((c) => c.id === id) ?? null
+  );
 
   useEffect(() => {
-    if (!hydrated) return;
-    const t = setTimeout(() => setLoading(false), 350);
-    return () => clearTimeout(t);
-  }, [hydrated]);
+    if (!hydrated || !id) return;
+    let alive = true;
+
+    async function loadCustomer() {
+      setLoading(true);
+      setFetchError(null);
+      const cached = customerRows.find((c) => c.id === id);
+      if (cached) setCustomer(cached);
+
+      try {
+        const res = await fetch(`/api/customers/${id}`, { cache: "no-store" });
+        const data = await res.json();
+        if (!alive) return;
+        if (res.ok && data?.success && data.customer) {
+          const row = normalizeCustomer(data.customer);
+          setCustomer(row);
+          setCustomerRows((prev) => {
+            const idx = prev.findIndex((c) => c.id === id);
+            if (idx === -1) return [...prev, row];
+            return prev.map((c) => (c.id === id ? row : c));
+          });
+        } else if (!cached) {
+          setFetchError(data?.error ?? "Customer not found.");
+          setCustomer(null);
+        }
+      } catch {
+        if (alive && !cached) {
+          setFetchError("Network error while loading customer.");
+          setCustomer(null);
+        }
+      } finally {
+        if (alive) setLoading(false);
+      }
+    }
+
+    loadCustomer();
+    return () => {
+      alive = false;
+    };
+  }, [hydrated, id, setCustomerRows]);
 
   if (!hydrated || loading) {
     return (
@@ -34,7 +86,7 @@ export default function CustomerDetailPage() {
   if (!customer) {
     return (
       <div className="rounded-2xl border border-zinc-800 bg-zinc-900/50 p-10 text-center">
-        <p className="text-zinc-400">Customer not found.</p>
+        <p className="text-zinc-400">{fetchError ?? "Customer not found."}</p>
         <Link
           href="/customers"
           className="mt-4 inline-flex items-center gap-2 text-sm font-medium text-emerald-400 hover:text-emerald-300"
@@ -45,6 +97,11 @@ export default function CustomerDetailPage() {
       </div>
     );
   }
+
+  const lastVisitLabel =
+    customer.lastVisit && customer.lastVisit !== "-"
+      ? customer.lastVisit
+      : "Never";
 
   return (
     <div className="mx-auto max-w-4xl space-y-8">
@@ -60,7 +117,9 @@ export default function CustomerDetailPage() {
         <h1 className="text-2xl font-semibold tracking-tight text-zinc-50">
           {customer.name}
         </h1>
-        <p className="mt-1 text-sm text-zinc-500">Guest profile · mock data</p>
+        <p className="mt-1 text-sm text-zinc-500">
+          Guest profile · {customer.visits} visits · last visit {lastVisitLabel}
+        </p>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
@@ -80,7 +139,7 @@ export default function CustomerDetailPage() {
               Email
             </span>
           </div>
-          <p className="mt-2 truncate text-zinc-100">{customer.email}</p>
+          <p className="mt-2 truncate text-zinc-100">{customer.email || "—"}</p>
         </div>
         <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-5 sm:col-span-2">
           <div className="flex items-center gap-2 text-zinc-500">
@@ -98,8 +157,7 @@ export default function CustomerDetailPage() {
       <div>
         <h2 className="text-lg font-semibold text-zinc-100">Order history</h2>
         <p className="mt-1 text-sm text-zinc-500">
-          {customer.visits} lifetime visits · last visit{" "}
-          {customer.lastVisit}
+          Orders linked from POS when this guest was selected at checkout.
         </p>
         <DataTableShell className="mt-4">
           <table className="min-w-full text-left text-sm">
@@ -124,7 +182,7 @@ export default function CustomerDetailPage() {
                     <td className="px-4 py-3 text-zinc-400">{o.date}</td>
                     <td className="px-4 py-3 text-zinc-300">{o.items}</td>
                     <td className="px-4 py-3 text-right font-medium tabular-nums text-zinc-100">
-                      ${o.total.toFixed(2)}
+                      ${Number(o.total ?? 0).toFixed(2)}
                     </td>
                   </tr>
                 ))

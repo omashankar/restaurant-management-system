@@ -9,6 +9,7 @@ const STATUSES = ["open", "in_progress", "resolved", "closed"];
 export default function SuperAdminSupportTicketsPage() {
   const [tickets, setTickets] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [priorityFilter, setPriorityFilter] = useState("all");
   const [toast, setToast] = useState(null);
@@ -25,6 +26,7 @@ export default function SuperAdminSupportTicketsPage() {
 
   async function loadTickets() {
     setLoading(true);
+    setLoadError("");
     try {
       const params = new URLSearchParams();
       if (statusFilter !== "all") params.set("status", statusFilter);
@@ -34,9 +36,15 @@ export default function SuperAdminSupportTicketsPage() {
       });
       const data = await res.json();
       if (data.success) setTickets(data.tickets || []);
-      else showToast("error", data.error || "Failed to load tickets.");
+      else {
+        const message = data.error || "Failed to load tickets.";
+        setLoadError(message);
+        showToast("error", message);
+      }
     } catch {
-      showToast("error", "Network error.");
+      const message = "Network error.";
+      setLoadError(message);
+      showToast("error", message);
     } finally {
       setLoading(false);
     }
@@ -63,6 +71,7 @@ export default function SuperAdminSupportTicketsPage() {
       setTickets((prev) =>
         prev.map((t) => (String(t._id) === ticketId ? { ...t, ...data.ticket } : t))
       );
+      if (selectedTicketId === ticketId) setSelectedTicket(data.ticket);
     } catch {
       showToast("error", "Network error.");
     }
@@ -120,6 +129,12 @@ export default function SuperAdminSupportTicketsPage() {
         <p className="mt-1 text-sm text-zinc-500">Platform-wide tenant support queue.</p>
       </div>
 
+      {loadError && (
+        <div className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">
+          {loadError}
+        </div>
+      )}
+
       <div className="flex flex-wrap items-center gap-2 rounded-xl border border-zinc-800 bg-zinc-900/40 p-3">
         <select
           value={statusFilter}
@@ -156,12 +171,13 @@ export default function SuperAdminSupportTicketsPage() {
       </div>
 
       <div className="overflow-hidden rounded-2xl border border-zinc-800">
-        <div className="grid grid-cols-[150px_1fr_160px_130px_150px] gap-2 border-b border-zinc-800 bg-zinc-950/70 px-4 py-2 text-xs uppercase tracking-wide text-zinc-500">
+        <div className="grid grid-cols-[130px_1fr_140px_110px_120px_80px] gap-2 border-b border-zinc-800 bg-zinc-950/70 px-4 py-2 text-xs uppercase tracking-wide text-zinc-500">
           <span>Ticket</span>
           <span>Subject</span>
           <span>Restaurant</span>
           <span>Priority</span>
           <span>Status</span>
+          <span>Action</span>
         </div>
 
         {loading ? (
@@ -176,7 +192,7 @@ export default function SuperAdminSupportTicketsPage() {
             {tickets.map((ticket) => (
               <div
                 key={String(ticket._id)}
-                className="grid grid-cols-[150px_1fr_160px_130px_150px] gap-2 px-4 py-3 text-sm text-zinc-200"
+                className="grid grid-cols-[130px_1fr_140px_110px_120px_80px] gap-2 px-4 py-3 text-sm text-zinc-200"
               >
                 <div>
                   <p className="font-medium">{ticket.ticketCode}</p>

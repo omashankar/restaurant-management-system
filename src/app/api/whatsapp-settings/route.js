@@ -23,6 +23,7 @@ export const GET = withTenant(["admin"], async ({ db, restaurantId }) => {
     enabled:       Boolean(doc?.enabled ?? false),
     token:         doc?.token ? maskSecret(decryptSecret(doc.token)) : "",
     phoneNumberId: doc?.phoneNumberId ?? "",
+    alertPhone:    doc?.alertPhone ?? "",
     templates:     { ...DEFAULT_TEMPLATES, ...(doc?.templates ?? {}) },
   };
 
@@ -37,6 +38,7 @@ export const PATCH = withTenant(["admin"], async ({ db, restaurantId }, request)
   const update = {
     enabled:       Boolean(body.enabled ?? existing?.enabled ?? false),
     phoneNumberId: String(body.phoneNumberId ?? existing?.phoneNumberId ?? "").trim(),
+    alertPhone:    String(body.alertPhone ?? existing?.alertPhone ?? "").trim(),
     updatedAt:     new Date(),
   };
 

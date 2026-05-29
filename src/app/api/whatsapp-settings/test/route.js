@@ -15,6 +15,9 @@ export const POST = withTenant(["admin"], async ({ db, restaurantId }, request) 
   }
 
   const doc = await db.collection("restaurant_whatsapp_settings").findOne({ restaurantId });
+  if (!doc?.enabled) {
+    return Response.json({ success: false, error: "WhatsApp automation is disabled. Enable and save settings first." }, { status: 400 });
+  }
   if (!doc?.token || !doc?.phoneNumberId) {
     return Response.json({ success: false, error: "WhatsApp not configured. Save API Token and Phone Number ID first." }, { status: 400 });
   }

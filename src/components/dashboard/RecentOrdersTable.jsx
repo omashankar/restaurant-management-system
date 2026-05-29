@@ -1,3 +1,4 @@
+import { formatAdminMoney } from "@/lib/adminCurrency";
 import Link from "next/link";
 import { Bike, ConciergeBell, Store } from "lucide-react";
 
@@ -29,26 +30,28 @@ const paymentMethodLabel = {
   bankTransfer: "Bank Transfer",
 };
 
-export default function RecentOrdersTable({ orders = [] }) {
+export default function RecentOrdersTable({ orders = [], currency = "INR" }) {
   return (
-    <div className="rounded-2xl border border-zinc-800 bg-zinc-900/40 shadow-lg shadow-black/20">
-      <div className="flex items-center justify-between gap-4 border-b border-zinc-800 px-5 py-4">
+    <div className="rms-dashboard-card rms-dashboard-card--lg flex h-full min-h-0 w-full flex-col rounded-2xl border border-zinc-800 bg-zinc-900/40 shadow-lg shadow-black/20">
+      <div className="flex shrink-0 items-center justify-between gap-4 border-b border-zinc-800 px-5 py-4">
         <div>
           <h3 className="text-sm font-semibold text-zinc-100">Recent Orders</h3>
           <p className="text-xs text-zinc-500">Latest transactions across all channels</p>
         </div>
-        <Link href="/orders" className="text-xs font-medium text-emerald-400 hover:text-emerald-300">
+        <Link href="/orders" className="shrink-0 text-xs font-medium text-emerald-400 hover:text-emerald-300">
           View all →
         </Link>
       </div>
 
-      {orders.length === 0 ? (
-        <div className="py-12 text-center text-sm text-zinc-600">No orders yet.</div>
-      ) : (
-        <div className="overflow-x-auto">
+      <div className="rms-dashboard-card__body min-h-0 flex-1">
+        {orders.length === 0 ? (
+          <div className="flex min-h-[12rem] items-center justify-center px-5 py-12 text-center text-sm text-zinc-600">
+            No orders yet.
+          </div>
+        ) : (
           <table className="min-w-full text-left text-sm">
-            <thead>
-              <tr className="border-b border-zinc-800/80 bg-zinc-950/40 text-xs font-semibold uppercase tracking-wider text-zinc-500">
+            <thead className="sticky top-0 z-[1] bg-zinc-950/95 backdrop-blur-sm">
+              <tr className="border-b border-zinc-800/80 text-xs font-semibold uppercase tracking-wider text-zinc-500">
                 <th className="px-5 py-3">Order ID</th>
                 <th className="px-5 py-3">Customer</th>
                 <th className="px-5 py-3">Type / Table</th>
@@ -79,7 +82,7 @@ export default function RecentOrdersTable({ orders = [] }) {
                       </span>
                     </td>
                     <td className="px-5 py-3 text-right font-semibold tabular-nums text-zinc-100">
-                      ${Number(amount).toFixed(2)}
+                      {formatAdminMoney(amount, currency, { decimals: 2 })}
                     </td>
                     <td className="px-5 py-3">
                       <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold capitalize ring-1 ${statusStyles[o.status] ?? statusStyles.completed}`}>
@@ -100,8 +103,8 @@ export default function RecentOrdersTable({ orders = [] }) {
               })}
             </tbody>
           </table>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }

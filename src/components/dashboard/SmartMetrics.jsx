@@ -45,8 +45,8 @@ export default function SmartMetrics({
         </div>
         <p className="mt-3 text-lg font-semibold text-zinc-50">{lowStockCount} items</p>
         {lowStockItems.length > 0 ? (
-          <div className="mt-3 space-y-1.5">
-            {lowStockItems.slice(0, 3).map((item, i) => (
+          <div className="rms-dashboard-card__body rms-dashboard-card__body--y mt-3 max-h-28 space-y-1.5 pr-1">
+            {lowStockItems.map((item, i) => (
               <div key={i} className="flex items-center justify-between gap-2">
                 <span className="truncate text-xs text-zinc-400">{item.name}</span>
                 <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold ring-1 ${
@@ -72,8 +72,9 @@ export default function SmartMetrics({
         </div>
         <p className="mt-3 text-lg font-semibold text-zinc-50">{activeTables} / {totalTables}</p>
         {tableList.length > 0 ? (
-          <div className="mt-3 flex flex-wrap gap-1.5">
-            {tableList.slice(0, 12).map((t) => (
+          <div className="rms-dashboard-card__body rms-dashboard-card__body--y mt-3 max-h-32 pr-1">
+            <div className="flex flex-wrap gap-1.5">
+            {tableList.map((t) => (
               <span key={t.id ?? t.tableNumber}
                 className={`rounded-lg px-2 py-1 text-xs font-semibold ring-1 ${
                   t.status === "occupied" ? "bg-sky-500/15 text-sky-300 ring-sky-500/25" : "bg-zinc-800 text-zinc-500 ring-zinc-700/50"
@@ -81,11 +82,12 @@ export default function SmartMetrics({
                 {t.tableNumber}
               </span>
             ))}
+            </div>
           </div>
         ) : (
           <p className="mt-2 text-xs text-zinc-600">No tables configured.</p>
         )}
-        <p className="mt-2 text-xs text-zinc-500">{totalTables - activeTables} available now</p>
+        <p className="mt-2 shrink-0 text-xs text-zinc-500">{totalTables - activeTables} available now</p>
       </div>
     </div>
   );

@@ -1,8 +1,8 @@
 "use client";
 
 import { useLanguage } from "@/context/LanguageContext";
-import { Loader2, Plus, Printer, Trash2, Wifi, Bluetooth, Usb, CheckCircle2, XCircle } from "lucide-react";
-import { useState } from "react";
+import { CheckCircle2, Loader2, Plus, Printer, Save, Trash2, Wifi, Bluetooth, Usb, XCircle } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
 
 const PRINTER_TYPES = [
   { id: "network", label: "Network (LAN/WiFi)", Icon: Wifi,      color: "text-blue-400",   bg: "bg-blue-500/10 border-blue-500/20" },
@@ -36,31 +36,124 @@ function Toggle({ checked, onChange, label, hint }) {
 
 export default function PrinterSettingsPage() {
   const { t } = useLanguage();
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(null);
+  const [saving, setSaving] = useState(false);
+  const [saveResult, setSaveResult] = useState(null);
   const [printers, setPrinters] = useState([]);
+  const [savedPrinters, setSavedPrinters] = useState([]);
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState(EMPTY_PRINTER);
   const [testing, setTesting] = useState("");
   const [testResult, setTestResult] = useState({});
 
-  function addPrinter() {
-    if (!form.name) return;
-    setPrinters((prev) => [...prev, { ...form, id: Date.now().toString() }]);
-    setForm(EMPTY_PRINTER);
-    setShowForm(false);
+  const hasChanges = JSON.stringify(printers) !== JSON.stringify(savedPrinters);
+
+  const loadPrinters = useCallback(async () => {
+    setLoadError(null);
+    try {
+      const res = await fetch("/api/printer-settings", { cache: "no-store" });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        setLoadError(data.error ?? "Failed to load printer settings.");
+        return;
+      }
+      const list = Array.isArray(data.printers) ? data.printers : [];
+      setPrinters(list);
+      setSavedPrinters(list);
+    } catch {
+      setLoadError("Could not load printer settings. Check your connection.");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadPrinters();
+  }, [loadPrinters]);
+
+  async function savePrinters(nextList = printers) {
+    setSaving(true);
+    setSaveResult(null);
+    try {
+      const res = await fetch("/api/printer-settings", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ printers: nextList }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        setSaveResult({ success: false, message: data.error ?? "Failed to save." });
+        return false;
+      }
+      const list = Array.isArray(data.printers) ? data.printers : nextList;
+      setPrinters(list);
+      setSavedPrinters(list);
+      setSaveResult({ success: true, message: "Printer settings saved." });
+      setTimeout(() => setSaveResult(null), 3000);
+      return true;
+    } catch {
+      setSaveResult({ success: false, message: "Network error." });
+      return false;
+    } finally {
+      setSaving(false);
+    }
   }
 
-  function removePrinter(id) {
-    setPrinters((prev) => prev.filter((p) => p.id !== id));
+  async function addPrinter() {
+    if (!form.name.trim()) return;
+    const entry = { ...form, id: crypto.randomUUID() };
+    const next = [...printers, entry];
+    setPrinters(next);
+    setForm(EMPTY_PRINTER);
+    setShowForm(false);
+    await savePrinters(next);
+  }
+
+  async function removePrinter(id) {
+    const next = printers.filter((p) => p.id !== id);
+    setPrinters(next);
+    setTestResult((prev) => {
+      const copy = { ...prev };
+      delete copy[id];
+      return copy;
+    });
+    await savePrinters(next);
   }
 
   async function testPrint(printer) {
     setTesting(printer.id);
     setTestResult((prev) => ({ ...prev, [printer.id]: null }));
-    await new Promise((r) => setTimeout(r, 1500));
-    // In production: send ESC/POS test command to printer
-    const success = printer.type === "network" ? Boolean(printer.ipAddress) : true;
-    setTestResult((prev) => ({ ...prev, [printer.id]: success }));
-    setTesting("");
+    try {
+      const res = await fetch("/api/printer-settings/test", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ printer }),
+      });
+      const data = await res.json();
+      setTestResult((prev) => ({
+        ...prev,
+        [printer.id]: {
+          success: Boolean(data.success),
+          message: data.message ?? data.error ?? "Unknown result.",
+        },
+      }));
+    } catch {
+      setTestResult((prev) => ({
+        ...prev,
+        [printer.id]: { success: false, message: "Network error." },
+      }));
+    } finally {
+      setTesting("");
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="flex h-64 items-center justify-center">
+        <Loader2 className="size-6 animate-spin text-emerald-400" />
+      </div>
+    );
   }
 
   return (
@@ -68,15 +161,41 @@ export default function PrinterSettingsPage() {
       <div className="flex items-start justify-between gap-4">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight text-zinc-50">{t("printer.title")}</h1>
-          <p className="mt-1 text-sm text-zinc-500">Configure thermal printers for invoices, KOT, and delivery slips.</p>
+          <p className="mt-1 text-sm text-zinc-500">
+            Configure thermal printers. Network printers print via ESC/POS; USB/Bluetooth use POS browser print.
+          </p>
         </div>
-        <button type="button" onClick={() => setShowForm(true)}
-          className="cursor-pointer inline-flex items-center gap-2 rounded-xl bg-emerald-500 px-4 py-2 text-sm font-semibold text-zinc-950 hover:bg-emerald-400 transition-colors">
-          <Plus className="size-4" /> {t("printer.addPrinter")}
-        </button>
+        <div className="flex gap-2">
+          <button type="button" onClick={() => savePrinters()} disabled={saving || !hasChanges}
+            className="cursor-pointer inline-flex items-center gap-2 rounded-xl border border-zinc-700 px-4 py-2 text-sm font-semibold text-zinc-200 hover:border-zinc-500 disabled:opacity-50 transition-colors">
+            {saving ? <Loader2 className="size-4 animate-spin" /> : <Save className="size-4" />}
+            {saving ? "Saving…" : "Save"}
+          </button>
+          <button type="button" onClick={() => setShowForm(true)}
+            className="cursor-pointer inline-flex items-center gap-2 rounded-xl bg-emerald-500 px-4 py-2 text-sm font-semibold text-zinc-950 hover:bg-emerald-400 transition-colors">
+            <Plus className="size-4" /> {t("printer.addPrinter")}
+          </button>
+        </div>
       </div>
 
-      {/* Add printer form */}
+      {loadError && (
+        <div className="flex items-center gap-2 rounded-xl border border-red-500/25 bg-red-500/10 px-4 py-3 text-sm text-red-400">
+          <XCircle className="size-4 shrink-0" />
+          {loadError}
+        </div>
+      )}
+
+      {saveResult && (
+        <div className={`flex items-center gap-2 rounded-xl border px-4 py-3 text-sm ${
+          saveResult.success
+            ? "border-emerald-500/25 bg-emerald-500/10 text-emerald-400"
+            : "border-red-500/25 bg-red-500/10 text-red-400"
+        }`}>
+          {saveResult.success ? <CheckCircle2 className="size-4" /> : <XCircle className="size-4" />}
+          {saveResult.message}
+        </div>
+      )}
+
       {showForm && (
         <section className="rounded-2xl border border-zinc-700 bg-zinc-900/60 p-5">
           <h2 className="mb-4 text-base font-semibold text-zinc-100">Add New Printer</h2>
@@ -137,7 +256,7 @@ export default function PrinterSettingsPage() {
             </div>
 
             <div className="grid gap-3 sm:grid-cols-3">
-              <Toggle label={t("printer.autoPrint")} hint="Print automatically on new order"
+              <Toggle label={t("printer.autoPrint")} hint="Auto-print on POS order"
                 checked={form.autoPrint} onChange={(v) => setForm((f) => ({ ...f, autoPrint: v }))} />
               <Toggle label={t("printer.printKot")} hint="Kitchen Order Ticket"
                 checked={form.printKot} onChange={(v) => setForm((f) => ({ ...f, printKot: v }))} />
@@ -150,7 +269,7 @@ export default function PrinterSettingsPage() {
                 className="cursor-pointer rounded-xl border border-zinc-700 px-4 py-2 text-sm text-zinc-400 hover:text-zinc-200 transition-colors">
                 Cancel
               </button>
-              <button type="button" onClick={addPrinter} disabled={!form.name}
+              <button type="button" onClick={addPrinter} disabled={!form.name.trim() || saving}
                 className="cursor-pointer rounded-xl bg-emerald-500 px-4 py-2 text-sm font-semibold text-zinc-950 hover:bg-emerald-400 disabled:opacity-50 transition-colors">
                 Add Printer
               </button>
@@ -159,17 +278,17 @@ export default function PrinterSettingsPage() {
         </section>
       )}
 
-      {/* Printer list */}
       {printers.length === 0 && !showForm ? (
         <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-zinc-800 py-20 text-center">
           <Printer className="size-10 text-zinc-700" />
           <p className="text-sm text-zinc-500">No printers configured yet.</p>
-          <p className="text-xs text-zinc-600">Add a thermal printer to enable auto-printing of invoices and KOT.</p>
+          <p className="text-xs text-zinc-600">Add a printer — settings are saved to your restaurant account.</p>
         </div>
       ) : (
         <div className="space-y-3">
           {printers.map((printer) => {
             const pt = PRINTER_TYPES.find((p) => p.id === printer.type);
+            const result = testResult[printer.id];
             return (
               <div key={printer.id} className="rounded-2xl border border-zinc-800 bg-zinc-900/50 p-5">
                 <div className="flex items-start justify-between gap-4">
@@ -186,22 +305,38 @@ export default function PrinterSettingsPage() {
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
-                    {testResult[printer.id] !== undefined && testResult[printer.id] !== null && (
-                      testResult[printer.id]
-                        ? <CheckCircle2 className="size-4 text-emerald-400" />
-                        : <XCircle className="size-4 text-red-400" />
+                    {result && (
+                      result.success
+                        ? <CheckCircle2 className="size-4 text-emerald-400" title={result.message} />
+                        : <XCircle className="size-4 text-red-400" title={result.message} />
                     )}
                     <button type="button" onClick={() => testPrint(printer)} disabled={testing === printer.id}
                       className="cursor-pointer inline-flex items-center gap-1.5 rounded-xl border border-zinc-700 px-3 py-1.5 text-xs font-medium text-zinc-300 hover:border-zinc-500 disabled:opacity-50 transition-colors">
                       {testing === printer.id ? <Loader2 className="size-3 animate-spin" /> : <Printer className="size-3" />}
                       {testing === printer.id ? "Testing…" : t("printer.testPrint")}
                     </button>
-                    <button type="button" onClick={() => removePrinter(printer.id)}
+                    <button type="button" onClick={() => removePrinter(printer.id)} disabled={saving}
                       className="cursor-pointer flex size-8 items-center justify-center rounded-xl border border-zinc-800 text-zinc-600 hover:border-red-500/40 hover:text-red-400 transition-colors">
                       <Trash2 className="size-3.5" />
                     </button>
                   </div>
                 </div>
+
+                {result?.message && (
+                  <p className={`mt-2 text-xs ${result.success ? "text-emerald-400" : "text-red-400"}`}>
+                    {result.message}
+                  </p>
+                )}
+
+                <div className="mt-3 grid gap-2 sm:grid-cols-3">
+                  <Toggle label={t("printer.autoPrint")} checked={Boolean(printer.autoPrint)}
+                    onChange={(v) => setPrinters((prev) => prev.map((p) => p.id === printer.id ? { ...p, autoPrint: v } : p))} />
+                  <Toggle label={t("printer.printKot")} checked={Boolean(printer.printKot)}
+                    onChange={(v) => setPrinters((prev) => prev.map((p) => p.id === printer.id ? { ...p, printKot: v } : p))} />
+                  <Toggle label={t("printer.printInvoice")} checked={Boolean(printer.printInvoice)}
+                    onChange={(v) => setPrinters((prev) => prev.map((p) => p.id === printer.id ? { ...p, printInvoice: v } : p))} />
+                </div>
+
                 <div className="mt-3 flex flex-wrap gap-2">
                   {printer.autoPrint && <span className="rounded-full bg-emerald-500/15 px-2.5 py-0.5 text-xs text-emerald-400">Auto Print</span>}
                   {printer.printKot && <span className="rounded-full bg-blue-500/15 px-2.5 py-0.5 text-xs text-blue-400">KOT</span>}
@@ -213,14 +348,13 @@ export default function PrinterSettingsPage() {
         </div>
       )}
 
-      {/* ESC/POS info */}
       <section className="rounded-2xl border border-zinc-800 bg-zinc-900/50 p-5">
-        <h2 className="mb-3 text-base font-semibold text-zinc-100">ESC/POS Support</h2>
+        <h2 className="mb-3 text-base font-semibold text-zinc-100">How printing works</h2>
         <div className="grid gap-3 sm:grid-cols-3 text-sm">
           {[
-            { label: "Customer Invoice", desc: "Full bill with items, tax, total", icon: "🧾" },
-            { label: "Kitchen Order Ticket", desc: "KOT with table, items, notes", icon: "👨‍🍳" },
-            { label: "Delivery Slip", desc: "Customer address and order details", icon: "🛵" },
+            { label: "Network (LAN)", desc: "Server sends ESC/POS to printer IP:9100. App server must be on same WiFi/LAN.", icon: "📡" },
+            { label: "USB / Bluetooth", desc: "Use POS → Print Bill. Browser print dialog sends to your connected printer.", icon: "🖨️" },
+            { label: "Auto Print", desc: "When enabled, POS prints invoice/KOT automatically after each order.", icon: "⚡" },
           ].map((item) => (
             <div key={item.label} className="rounded-xl border border-zinc-800 bg-zinc-950/40 p-3">
               <div className="text-xl mb-1">{item.icon}</div>

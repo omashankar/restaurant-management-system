@@ -2,6 +2,7 @@
 
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import Modal from "@/components/ui/Modal";
+import { formatSaMoney } from "@/lib/formatSaMoney";
 import { useToast } from "@/hooks/useToast";
 import {
   AlertTriangle, Ban, Building2, Calendar,
@@ -9,6 +10,7 @@ import {
   Plus, Receipt, RefreshCw, RotateCcw,
   TrendingUp,
 } from "lucide-react";
+import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 const PLAN_BADGE = {
@@ -46,6 +48,7 @@ export default function BillingPage() {
   const [restaurants, setRestaurants] = useState([]);
   const [billing, setBilling]         = useState(null);
   const [loading, setLoading]         = useState(true);
+  const [loadError, setLoadError]     = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
 
   const [assignOpen, setAssignOpen]   = useState(false);
@@ -64,6 +67,7 @@ export default function BillingPage() {
 
   const fetchAll = useCallback(async () => {
     setLoading(true);
+    setLoadError("");
     try {
       const params = new URLSearchParams();
       if (statusFilter !== "all") params.set("status", statusFilter);
@@ -76,11 +80,17 @@ export default function BillingPage() {
       const [subsData, billingData, plansData, restData] = await Promise.all([
         subsRes.json(), billingRes.json(), plansRes.json(), restRes.json(),
       ]);
+      if (!subsData.success && !billingData.success) {
+        setLoadError(subsData.error ?? billingData.error ?? "Failed to load billing data.");
+      }
       if (subsData.success)    setSubs(subsData.subscriptions);
       if (billingData.success) setBilling(billingData);
       if (plansData.success)   setPlans(plansData.plans);
       if (restData.success)    setRestaurants(restData.restaurants);
-    } catch { showToast("Failed to load.", "error"); }
+    } catch {
+      setLoadError("Could not load billing data.");
+      showToast("Failed to load.", "error");
+    }
     finally { setLoading(false); }
   }, [statusFilter, showToast]);
 
@@ -169,7 +179,12 @@ export default function BillingPage() {
           </span>
           <div>
             <h1 className="text-2xl font-semibold tracking-tight text-zinc-50">Billing</h1>
-            <p className="mt-1 text-sm text-zinc-500">Subscription management, expiry tracking, and revenue overview.</p>
+            <p className="mt-1 text-sm text-zinc-500">
+              Manage which plan each restaurant is on (active, trial, expired).{" "}
+              <Link href="/super-admin/payments" className="text-emerald-400 hover:text-emerald-300 underline-offset-2 hover:underline">
+                View payment history →
+              </Link>
+            </p>
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -207,6 +222,12 @@ export default function BillingPage() {
         </div>
       </div>
 
+      {loadError && (
+        <div className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">
+          {loadError}
+        </div>
+      )}
+
       {loading ? (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {Array.from({ length: 4 }).map((_, i) => (
@@ -219,7 +240,7 @@ export default function BillingPage() {
           <>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {[
-              { label: "Total Revenue",        value: "$" + (billing?.overview?.totalRevenue ?? 0).toLocaleString(), icon: DollarSign,    color: "text-emerald-400", bg: "bg-emerald-500/5",  border: "border-emerald-500/20" },
+              { label: "Total Revenue",        value: formatSaMoney(billing?.overview?.totalRevenue ?? 0), icon: DollarSign,    color: "text-emerald-400", bg: "bg-emerald-500/5",  border: "border-emerald-500/20" },
               { label: "Active Subscriptions", value: stats.active,   icon: CheckCircle2, color: "text-sky-400",     bg: "bg-sky-500/5",      border: "border-sky-500/20"     },
               { label: "On Trial",             value: stats.trial,    icon: Calendar,     color: "text-indigo-400",  bg: "bg-indigo-500/5",   border: "border-indigo-500/20"  },
               { label: "Expired",              value: stats.expired,  icon: AlertTriangle,color: "text-red-400",     bg: "bg-red-500/5",      border: "border-red-500/20"     },
@@ -254,7 +275,7 @@ export default function BillingPage() {
                     <div key={m.label} className="group flex flex-1 flex-col items-center gap-1">
                       <div className="relative flex flex-1 w-full flex-col justify-end">
                         <div className="absolute -top-7 left-1/2 -translate-x-1/2 hidden group-hover:flex whitespace-nowrap rounded-lg border border-zinc-700 bg-zinc-900 px-2 py-1 text-[10px] font-semibold text-zinc-200 shadow-lg z-10">
-                          {"$" + m.revenue.toLocaleString()}
+                          {formatSaMoney(m.revenue)}
                         </div>
                         <div className="w-full rounded-t-md bg-emerald-500/30 hover:bg-emerald-500/50 transition-colors cursor-default"
                           style={{ height: Math.max(4, (m.revenue / maxRevenue) * 100) + "%" }} />
@@ -272,11 +293,11 @@ export default function BillingPage() {
                 <p className="text-sm text-zinc-600">No data.</p>
               ) : (
                 <div className="space-y-3">
-                  {billing.planBreakdown.map((p) => {
+                  {billing.planBreakdown.map((p, planIdx) => {
                     const total = billing.overview?.totalRestaurants || 1;
                     const pct   = Math.round((p.count / total) * 100);
                     return (
-                      <div key={p.plan}>
+                      <div key={`plan-dist-${p.plan}-${planIdx}`}>
                         <div className="flex items-center justify-between mb-1.5">
                           <span className={"inline-flex rounded-full px-2 py-0.5 text-xs font-semibold capitalize ring-1 " + (PLAN_BADGE[p.plan] ?? PLAN_BADGE.free)}>
                             {p.plan}
@@ -358,7 +379,7 @@ export default function BillingPage() {
                               {s.planName}
                             </span>
                             {s.price > 0 && (
-                              <p className="mt-0.5 text-[10px] text-zinc-600">{"$"}{s.price}/{s.billingCycle}</p>
+                              <p className="mt-0.5 text-[10px] text-zinc-600">{formatSaMoney(s.price)}/{s.billingCycle}</p>
                             )}
                           </td>
                           <td className="px-4 py-3">
@@ -449,7 +470,7 @@ export default function BillingPage() {
               <option value="">— Select plan —</option>
               {plans.map((p) => (
                 <option key={p.id} value={p.slug}>
-                  {p.name} — {p.price === 0 ? "Free" : "$" + p.price + "/" + p.billingCycle}
+                  {p.name} — {p.price === 0 ? "Free" : `${formatSaMoney(p.price)}/${p.billingCycle}`}
                 </option>
               ))}
             </select>

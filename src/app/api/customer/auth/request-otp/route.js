@@ -3,7 +3,9 @@ import {
   customerOtpRequestLimiter,
   getClientIp,
 } from "@/lib/rateLimit";
+import { normalizePhoneForOtp } from "@/lib/phoneUtils";
 import bcrypt from "bcryptjs";
+import { sendPlatformSms } from "@/lib/smsService";
 
 const OTP_EXPIRY_MINUTES = 2;
 
@@ -22,11 +24,11 @@ export async function POST(request) {
   }
 
   const body = await request.json().catch(() => null);
-  const phone = String(body?.phone ?? "").trim();
+  const phone = normalizePhoneForOtp(body?.phone);
   const name = String(body?.name ?? "").trim();
   const email = String(body?.email ?? "").trim().toLowerCase();
-  if (!/^\+?[0-9]{8,15}$/.test(phone.replace(/\s|-/g, ""))) {
-    return Response.json({ success: false, error: "Enter a valid phone number." }, { status: 400 });
+  if (!phone) {
+    return Response.json({ success: false, error: "Enter a valid 10-digit mobile number." }, { status: 400 });
   }
 
   try {
@@ -61,14 +63,22 @@ export async function POST(request) {
       );
     }
 
+    const smsResult = await sendPlatformSms(
+      db,
+      phone,
+      `Your RMS login OTP is ${otp}. Valid for ${OTP_EXPIRY_MINUTES} minutes.`,
+    );
+
     const response = {
       success: true,
-      message: "OTP sent successfully.",
+      message: smsResult.sent
+        ? "OTP sent to your mobile."
+        : "OTP generated. Check SMS settings if you did not receive a text.",
       expiresInSec: OTP_EXPIRY_MINUTES * 60,
+      smsSent: smsResult.sent,
     };
 
-    // Dev convenience; remove in production.
-    if (process.env.NODE_ENV !== "production") {
+    if (!smsResult.sent && process.env.NODE_ENV !== "production") {
       response.devOtp = otp;
     }
 

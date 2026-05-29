@@ -9,6 +9,24 @@ function toOid(id) {
   }
 }
 
+export const GET = withTenant(
+  ["admin", "manager", "waiter"],
+  async ({ db, tenantFilter }, request, { params }) => {
+    const _id = toOid(params.id);
+    if (!_id) {
+      return Response.json({ success: false, error: "Invalid ID." }, { status: 400 });
+    }
+    const customer = await db.collection("customers").findOne({ ...tenantFilter, _id });
+    if (!customer) {
+      return Response.json({ success: false, error: "Customer not found." }, { status: 404 });
+    }
+    return Response.json({
+      success: true,
+      customer: { ...customer, id: customer._id.toString(), _id: undefined },
+    });
+  }
+);
+
 export const PATCH = withTenant(
   ["admin", "manager", "waiter"],
   async ({ db, tenantFilter }, request, { params }) => {
@@ -28,9 +46,28 @@ export const PATCH = withTenant(
     if (typeof body.notes === "string") update.notes = body.notes.trim();
     if (typeof body.lastVisit === "string" || body.lastVisit === null) update.lastVisit = body.lastVisit;
     if (typeof body.visits === "number") update.visits = Math.max(0, body.visits);
+    if (Array.isArray(body.orderHistory)) update.orderHistory = body.orderHistory;
 
-    if (!Object.keys(update).length) {
-      return Response.json({ success: false, error: "No fields to update." }, { status: 400 });
+    const current = await db.collection("customers").findOne(
+      { ...tenantFilter, _id },
+      { projection: { phone: 1 } }
+    );
+    if (!current) {
+      return Response.json({ success: false, error: "Customer not found." }, { status: 404 });
+    }
+
+    if (typeof body.phone === "string" && body.phone.trim() !== current.phone) {
+      const duplicate = await db.collection("customers").findOne({
+        ...tenantFilter,
+        phone: body.phone.trim(),
+        _id: { $ne: _id },
+      });
+      if (duplicate) {
+        return Response.json({
+          success: false,
+          error: "Another customer already uses this phone number.",
+        }, { status: 409 });
+      }
     }
 
     const result = await db.collection("customers").updateOne(

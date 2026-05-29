@@ -80,7 +80,19 @@ export async function POST(request) {
       return Response.json({ success: false, error: `Cashfree error: ${res.status}` });
     }
 
-    // For other gateways — just validate keys are present
+    if (gateway === "payu") {
+      const apiKey = String(credentials?.apiKey ?? "").trim();
+      const secretKey = String(credentials?.secretKey ?? "").trim();
+      if (!apiKey || !secretKey) {
+        return Response.json({ success: false, error: "PayU key and salt are required." });
+      }
+      return Response.json({
+        success: true,
+        message: "✅ PayU credentials saved. Use Razorpay/Cashfree/Stripe for live checkout until PayU session API is enabled.",
+      });
+    }
+
+    // For other gateways — validate keys are present
     const hasKeys = Object.values(credentials ?? {}).some((v) => String(v).trim().length > 0);
     if (!hasKeys) {
       return Response.json({ success: false, error: "Please enter API credentials first." });

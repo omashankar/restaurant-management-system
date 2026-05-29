@@ -1,5 +1,11 @@
 import { z } from "zod";
 
+const guestNameSchema = z
+  .string()
+  .trim()
+  .min(2, "Customer name must be at least 2 characters.")
+  .refine((v) => /[a-zA-Z\u0900-\u097F]/.test(v), "Customer name must include letters.");
+
 export const signupSchema = z.object({
   name: z
     .string({ required_error: "Name is required." })
@@ -53,6 +59,7 @@ export const orderItemSchema = z.object({
   qty: z.number().int().positive("Item quantity must be positive."),
   price: z.number().nonnegative("Item price cannot be negative."),
   menuItemId: z.string().optional(),
+  note: z.string().trim().max(200).optional(),
 });
 
 export const orderCreateSchema = z.object({
@@ -61,29 +68,48 @@ export const orderCreateSchema = z.object({
   tableNumber: z.string().trim().nullable().optional(),
   customer: z.string().trim().optional(),
   notes: z.string().trim().max(500).optional(),
+  subtotal: z.number().nonnegative().optional(),
+  taxAmount: z.number().nonnegative().optional(),
+  serviceCharge: z.number().nonnegative().optional(),
+  taxPercent: z.number().nonnegative().optional(),
+  serviceChargePercent: z.number().nonnegative().optional(),
+  paymentMethod: z
+    .enum(["cod", "cashCounter", "upi", "card", "netBanking", "wallet", "payLater", "bankTransfer"])
+    .optional(),
+  paymentStatus: z.enum(["paid", "pending", "initiated", "processing", "failed"]).optional(),
 });
 
 export const orderPatchSchema = z.object({
   status: z.enum(["new", "preparing", "ready", "completed", "cancelled"]).optional(),
   notes: z.string().trim().max(500).optional(),
+  paymentStatus: z.enum(["paid", "pending", "initiated", "processing", "failed"]).optional(),
 });
 
 const customerCheckoutInfoSchema = z
   .object({
-    name: z.string().min(1, "Customer name is required."),
+    name: guestNameSchema,
     phone: z.string().optional().default(""),
     email: z.union([z.string().email("Invalid email address."), z.literal("")]).optional().default(""),
     address: z.string().optional(),
     tableNumber: z.string().optional(),
   })
   .superRefine((data, ctx) => {
-    const phoneOk = String(data.phone ?? "").trim().length > 0;
+    const rawPhone = String(data.phone ?? "").trim();
+    const digits = rawPhone.replace(/^\+91/, "").replace(/\D/g, "").slice(-10);
+    const phoneOk = /^[6-9]\d{9}$/.test(digits);
     const em = String(data.email ?? "").trim();
     const emailOk = em.length > 0 && z.string().email().safeParse(em).success;
     if (!phoneOk && !emailOk) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: "Provide a phone number or a valid email for contact.",
+        message: "Provide a valid mobile number or email for contact.",
+        path: ["phone"],
+      });
+    }
+    if (rawPhone && !phoneOk) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Enter a valid 10-digit Indian mobile number.",
         path: ["phone"],
       });
     }

@@ -1,18 +1,18 @@
+import { formatAdminMoney } from "@/lib/adminCurrency";
 import { TrendingUp } from "lucide-react";
 
-function fmt(n) {
-  if (n >= 1_000_000) return `$${(n / 1_000_000).toFixed(2)}M`;
-  if (n >= 1_000)     return `$${(n / 1_000).toFixed(1)}k`;
-  return `$${n}`;
-}
-
-export default function SalesComparison({ current = 0, previous = 0, monthly = [] }) {
+export default function SalesComparison({
+  currency = "INR",
+  current = 0,
+  previous = 0,
+  monthly = [],
+}) {
   const change = previous > 0 ? (((current - previous) / previous) * 100).toFixed(1) : 0;
   const max    = Math.max(...monthly.map((m) => m.sales ?? 0), 1);
 
   return (
-    <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-5">
-      <div className="flex flex-wrap items-start justify-between gap-3">
+    <div className="rms-dashboard-card rms-dashboard-card--md flex h-full min-h-0 w-full flex-col rounded-2xl border border-zinc-800 bg-zinc-900/60 p-5">
+      <div className="flex shrink-0 flex-wrap items-start justify-between gap-3">
         <div>
           <h3 className="text-sm font-semibold text-zinc-100">Revenue Breakdown</h3>
           <p className="text-xs text-zinc-500">Current vs previous period</p>
@@ -30,14 +30,18 @@ export default function SalesComparison({ current = 0, previous = 0, monthly = [
       <div className="mt-4 grid grid-cols-2 gap-3">
         <div className="rounded-xl border border-zinc-800 bg-zinc-950/50 p-3">
           <p className="text-xs text-zinc-500">This Period</p>
-          <p className="mt-1 text-xl font-semibold tabular-nums text-zinc-50">{fmt(current)}</p>
+          <p className="mt-1 text-xl font-semibold tabular-nums text-zinc-50">
+            {formatAdminMoney(current, currency)}
+          </p>
           <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-zinc-800">
             <div className="h-full w-full rounded-full bg-emerald-500/80" />
           </div>
         </div>
         <div className="rounded-xl border border-zinc-800 bg-zinc-950/50 p-3">
           <p className="text-xs text-zinc-500">Last Period</p>
-          <p className="mt-1 text-xl font-semibold tabular-nums text-zinc-400">{fmt(previous)}</p>
+          <p className="mt-1 text-xl font-semibold tabular-nums text-zinc-400">
+            {formatAdminMoney(previous, currency)}
+          </p>
           <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-zinc-800">
             <div className="h-full rounded-full bg-zinc-600"
               style={{ width: current > 0 ? `${Math.round((previous / current) * 100)}%` : "0%" }} />
@@ -45,8 +49,9 @@ export default function SalesComparison({ current = 0, previous = 0, monthly = [
         </div>
       </div>
 
+      <div className="rms-dashboard-card__body rms-dashboard-card__body--y mt-4 min-h-0 flex-1 pr-1">
       {monthly.length > 0 ? (
-        <div className="mt-5 flex h-28 items-end gap-1.5">
+        <div className="flex min-h-28 items-end gap-1.5">
           {monthly.map((m, i) => {
             const isLast = i === monthly.length - 1;
             const h = Math.round(((m.sales ?? 0) / max) * 100);
@@ -63,8 +68,9 @@ export default function SalesComparison({ current = 0, previous = 0, monthly = [
           })}
         </div>
       ) : (
-        <p className="mt-6 text-center text-sm text-zinc-600">No monthly data yet.</p>
+        <p className="py-6 text-center text-sm text-zinc-600">No monthly data yet.</p>
       )}
+      </div>
     </div>
   );
 }

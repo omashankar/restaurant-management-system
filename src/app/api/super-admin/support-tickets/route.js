@@ -16,6 +16,10 @@ function normalizeText(value, max = 100) {
   return String(value ?? "").trim().slice(0, max);
 }
 
+function escapeRegex(input) {
+  return input.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
 export async function GET(request) {
   if (!superAdminOnly(request)) {
     return Response.json({ success: false, error: "Forbidden." }, { status: 403 });
@@ -32,10 +36,11 @@ export async function GET(request) {
   if (ALLOWED_STATUSES.includes(status)) query.status = status;
   if (ALLOWED_PRIORITIES.includes(priority)) query.priority = priority;
   if (q) {
+    const safe = escapeRegex(q);
     query.$or = [
-      { ticketCode: { $regex: q, $options: "i" } },
-      { subject: { $regex: q, $options: "i" } },
-      { message: { $regex: q, $options: "i" } },
+      { ticketCode: { $regex: safe, $options: "i" } },
+      { subject: { $regex: safe, $options: "i" } },
+      { message: { $regex: safe, $options: "i" } },
     ];
   }
 

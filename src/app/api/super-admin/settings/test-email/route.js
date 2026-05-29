@@ -4,9 +4,12 @@
  * Uses nodemailer (already installed).
  */
 
+import { createSmtpTransport, buildFromAddress } from "@/lib/emailService";
 import { getTokenFromRequest } from "@/lib/authCookies";
 import { verifyToken } from "@/lib/jwt";
-import nodemailer from "nodemailer";
+import clientPromise from "@/lib/mongodb";
+
+const SECRET_MASK = "********";
 
 function superAdminOnly(request) {
   const token   = getTokenFromRequest(request);
@@ -38,19 +41,24 @@ export async function POST(request) {
   }
 
   try {
-    const transporter = nodemailer.createTransport({
-      host:   smtp.smtpHost,
-      port,
-      secure: !!smtp.secure,
-      auth: {
-        user: smtp.smtpUser,
-        pass: smtp.smtpPassword ?? "",
-      },
-    });
+    const client = await clientPromise;
+    const db = client.db();
+    const stored = await db.collection("settings").findOne(
+      { _id: "platform" },
+      { projection: { email: 1 } },
+    );
+
+    let password = String(smtp.smtpPassword ?? "");
+    if (!password || password === SECRET_MASK) {
+      password = String(stored?.email?.smtpPassword ?? "");
+    }
+
+    const effective = { ...smtp, smtpPassword: password };
+    const transporter = createSmtpTransport(effective);
 
     await transporter.sendMail({
-      from:    `"${smtp.fromName ?? "RMS Platform"}" <${smtp.fromEmail || smtp.smtpUser}>`,
-      to:      smtp.smtpUser,
+      from: buildFromAddress(effective),
+      to: smtp.smtpUser,
       subject: "RMS — SMTP Test Email",
       text:    "This is a test email from your RMS Super Admin panel. Your SMTP configuration is working correctly.",
       html:    `

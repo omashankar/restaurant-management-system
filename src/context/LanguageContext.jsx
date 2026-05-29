@@ -30,10 +30,15 @@ export function LanguageProvider({ children }) {
   const [lang, setLangState] = useState("en");
 
   useEffect(() => {
-    try {
-      const stored = localStorage.getItem(LS_KEY);
-      if (stored && TRANSLATIONS[stored]) setLangState(stored);
-    } catch { /* ignore */ }
+    function syncFromStorage() {
+      try {
+        const stored = localStorage.getItem(LS_KEY);
+        if (stored && TRANSLATIONS[stored]) setLangState(stored);
+      } catch { /* ignore */ }
+    }
+    syncFromStorage();
+    window.addEventListener("rms-language-set", syncFromStorage);
+    return () => window.removeEventListener("rms-language-set", syncFromStorage);
   }, []);
 
   const setLang = useCallback((newLang) => {

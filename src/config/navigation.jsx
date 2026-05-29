@@ -26,6 +26,10 @@ import {
   getFeatureForPath,
   normalizeAccessControl,
 } from "./accessControlConfig";
+import {
+  getPlatformFeatureForPath,
+  isPlatformFeatureEnabled,
+} from "@/lib/platformFeatures";
 
 /** @typedef {'admin'|'manager'|'waiter'|'chef'} Role */
 
@@ -198,12 +202,16 @@ export const NAV_ITEMS = [
 export const MANAGER_STAFF_READ_ONLY = true;
 
 /** @param {Role} role */
-export function navForRole(role, accessControl) {
+export function navForRole(role, accessControl, platformFeatures = null) {
   const access = normalizeAccessControl(accessControl);
 
   return NAV_ITEMS.filter((item) => {
     if (!item.roles.includes(role)) return false;
     const probePath = item.type === "link" ? item.href : `/${item.id}`;
+    const platformKey = getPlatformFeatureForPath(probePath);
+    if (platformFeatures && !isPlatformFeatureEnabled(platformFeatures, platformKey)) {
+      return false;
+    }
     const feature = getFeatureForPath(probePath);
     if (!feature) return true;
     return Boolean(access?.[feature]?.[role]);
@@ -214,8 +222,12 @@ export function navForRole(role, accessControl) {
  * @param {Role} role
  * @param {string} pathname
  */
-export function canAccessPath(role, pathname, accessControl) {
+export function canAccessPath(role, pathname, accessControl, platformFeatures = null) {
   const access = normalizeAccessControl(accessControl);
+  const platformKey = getPlatformFeatureForPath(pathname);
+  if (platformFeatures && !isPlatformFeatureEnabled(platformFeatures, platformKey)) {
+    return false;
+  }
   /** @type {{ href: string; roles: Role[] }[]} */
   const rules = [];
 

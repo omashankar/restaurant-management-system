@@ -30,7 +30,7 @@ export default function CustomerToasts() {
                 ? <AlertCircle className="size-4 text-red-500" />
                 : <CheckCircle2 className="size-4 text-[#22C55E]" />}
             </div>
-            <span className="max-w-[220px] text-[#111827]">{t.msg}</span>
+            <span className="max-w-[220px] text-customer-text">{t.msg}</span>
           </motion.div>
         ))}
       </AnimatePresence>

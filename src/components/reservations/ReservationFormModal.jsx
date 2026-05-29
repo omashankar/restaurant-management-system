@@ -226,9 +226,11 @@ export default function ReservationFormModal({ open, onClose, editing, tableOpti
   const { floorTables, reservationRows, tableCategories, setCustomerRows } = useModuleData();
   const [form, setForm] = useState(empty);
   const [linkedCustomerId, setLinkedCustomerId] = useState(null);
+  const [saveError, setSaveError] = useState("");
 
   useEffect(() => {
     if (!open) return;
+    setSaveError("");
     const nextForm = editing
       ? {
           customerName: editing.customerName,
@@ -302,6 +304,16 @@ export default function ReservationFormModal({ open, onClose, editing, tableOpti
       !form.tableNumber
     ) return;
 
+    if (isConflict) {
+      setSaveError(
+        availabilityInfo?.nextAvailableTime
+          ? `This table is booked. Next free slot: ${availabilityInfo.nextAvailableTime}`
+          : "This table is already booked for the selected time."
+      );
+      return;
+    }
+    setSaveError("");
+
     // Update visit count if linked to existing customer
     if (linkedCustomerId) {
       setCustomerRows((prev) =>
@@ -318,8 +330,12 @@ export default function ReservationFormModal({ open, onClose, editing, tableOpti
       }).catch(() => {});
     }
 
-    await onSave(buildPayload(editing, form));
-    onClose();
+    const result = await onSave(buildPayload(editing, form));
+    if (result?.ok) {
+      onClose();
+      return;
+    }
+    if (result?.error) setSaveError(result.error);
   };
 
   return (
@@ -433,6 +449,9 @@ export default function ReservationFormModal({ open, onClose, editing, tableOpti
                 : "Table is available for this slot."}
             </div>
           )}
+          {saveError ? (
+            <p className="mt-2 text-xs text-red-400">{saveError}</p>
+          ) : null}
         </div>
 
         {/* ── Area (auto-filled, editable) ── */}

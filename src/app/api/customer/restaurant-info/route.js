@@ -46,7 +46,11 @@ export async function GET(request) {
                  || "";
 
     const email   = settingsDoc?.contact?.email?.trim() || "";
-    const logoUrl = restaurantDoc?.logoUrl ?? null;
+    const googleMapsLink = settingsDoc?.contact?.googleMapsLink?.trim() || "";
+    const logoUrl =
+      restaurantDoc?.logoUrl?.trim() ||
+      settingsDoc?.general?.logoUrl?.trim() ||
+      null;
     const slug    = restaurantDoc?.slug ?? null;
     const currency = settingsDoc?.general?.currency || "USD";
 
@@ -73,6 +77,7 @@ export async function GET(request) {
         address,
         phone,
         email,
+        googleMapsLink,
         logoUrl,
         slug,
         currency,
@@ -99,6 +104,7 @@ function getDefaults() {
     address: "",
     phone: "",
     email: "",
+    googleMapsLink: "",
     logoUrl: null,
     slug: null,
     currency: "USD",

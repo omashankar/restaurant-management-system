@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import DataTableShell from "@/components/ui/DataTableShell";
@@ -8,6 +8,7 @@ import Modal from "@/components/ui/Modal";
 import PaginationBar from "@/components/ui/PaginationBar";
 import TableSkeleton from "@/components/ui/TableSkeleton";
 import { useUser } from "@/context/AuthContext";
+import { useModuleData } from "@/context/ModuleDataContext";
 import { usePaginatedList } from "@/hooks/usePaginatedList";
 import { useToast } from "@/hooks/useToast";
 import { Pencil, Plus, RefreshCw, Trash2, Users } from "lucide-react";
@@ -20,10 +21,12 @@ const emptyForm = { name: "", role: "waiter", phone: "", email: "", password: ""
 
 export default function StaffModulePage() {
   const { user } = useUser();
+  const { setStaffRows: setContextStaffRows } = useModuleData();
   const isAdmin = user?.role === "admin";
 
   const [staffRows, setStaffRows] = useState([]);
   const [loading, setLoading]     = useState(true);
+  const [fetchError, setFetchError] = useState(null);
   const [roleFilter, setRoleFilter] = useState("all");
   const [modalOpen, setModalOpen]   = useState(false);
   const [editingId, setEditingId]   = useState(null);
@@ -37,16 +40,22 @@ export default function StaffModulePage() {
   /* â”€â”€ Fetch staff from DB â”€â”€ */
   const fetchStaff = useCallback(async () => {
     setLoading(true);
+    setFetchError(null);
     try {
-      const res  = await fetch("/api/users/staff");
+      const res  = await fetch("/api/users/staff", { cache: "no-store" });
       const data = await res.json();
-      if (data.success) setStaffRows(data.staff);
+      if (res.ok && data.success && Array.isArray(data.staff)) {
+        setStaffRows(data.staff);
+        setContextStaffRows(data.staff);
+      } else {
+        setFetchError(data?.error ?? "Could not load staff.");
+      }
     } catch {
-      // fallback â€” keep existing rows
+      setFetchError("Network error while loading staff.");
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [setContextStaffRows]);
 
   useEffect(() => { fetchStaff(); }, [fetchStaff]);
 
@@ -110,7 +119,11 @@ export default function StaffModulePage() {
           setSaving(false);
           return;
         }
-        setStaffRows((prev) => [data.staff, ...prev]);
+        setStaffRows((prev) => {
+          const next = [data.staff, ...prev];
+          setContextStaffRows(next);
+          return next;
+        });
         showToast("Staff member added.");
         setModalOpen(false);
       } catch {
@@ -126,10 +139,13 @@ export default function StaffModulePage() {
         });
         const data = await res.json();
         if (!data.success) { setFormError(data.error ?? "Failed to update."); setSaving(false); return; }
-        setStaffRows((prev) => prev.map((s) => s.id === editingId
-          ? { ...s, name: form.name, role: form.role, phone: form.phone, status: form.status }
-          : s
-        ));
+        setStaffRows((prev) => {
+          const next = prev.map((s) => s.id === editingId
+            ? { ...s, name: form.name, role: form.role, phone: form.phone, status: form.status }
+            : s);
+          setContextStaffRows(next);
+          return next;
+        });
         showToast("Staff member updated.");
         setModalOpen(false);
       } catch { setFormError("Network error."); }
@@ -140,12 +156,20 @@ export default function StaffModulePage() {
 
   const confirmDelete = async () => {
     if (!deleteTarget) return;
+    if (deleteTarget.id === user?.id) {
+      showToast("You cannot remove your own account.", "error");
+      return;
+    }
     setDeleting(true);
     try {
       const res  = await fetch(`/api/staff/${deleteTarget.id}`, { method: "DELETE" });
       const data = await res.json();
       if (!data.success) { showToast(data.error ?? "Failed to delete.", "error"); return; }
-      setStaffRows((prev) => prev.filter((s) => s.id !== deleteTarget.id));
+      setStaffRows((prev) => {
+        const next = prev.filter((s) => s.id !== deleteTarget.id);
+        setContextStaffRows(next);
+        return next;
+      });
       showToast(`${deleteTarget.name} removed.`);
       setDeleteTarget(null);
     } catch { showToast("Network error.", "error"); }
@@ -172,7 +196,7 @@ export default function StaffModulePage() {
           </span>
           <div>
             <h1 className="text-2xl font-semibold tracking-tight text-zinc-50">Staff</h1>
-            <p className="mt-1 text-sm text-zinc-500">Team roster Â· {total} member{total !== 1 ? "s" : ""}</p>
+            <p className="mt-1 text-sm text-zinc-500">Team roster · {total} member{total !== 1 ? "s" : ""}</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -189,11 +213,17 @@ export default function StaffModulePage() {
         </div>
       </div>
 
+      {fetchError ? (
+        <div className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">
+          {fetchError}
+        </div>
+      ) : null}
+
       {/* Toolbar */}
       <ListToolbar
         search={search}
         onSearchChange={setSearch}
-        searchPlaceholder="Search name, email, phoneâ€¦"
+        searchPlaceholder="Search name, email, phone…"
         filterSlot={
           <select value={roleFilter} onChange={(e) => setRoleFilter(e.target.value)}
             className="cursor-pointer rounded-xl border border-zinc-800 bg-zinc-900/60 px-3 py-2 text-sm text-zinc-200">
@@ -249,7 +279,7 @@ export default function StaffModulePage() {
                     </span>
                   </td>
                   <td className="hidden px-4 py-3 text-zinc-400 md:table-cell">{row.email}</td>
-                  <td className="hidden px-4 py-3 tabular-nums text-zinc-500 md:table-cell">{row.phone || "â€”"}</td>
+                  <td className="hidden px-4 py-3 tabular-nums text-zinc-500 md:table-cell">{row.phone || "—"}</td>
                   <td className="px-4 py-3">
                     <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold capitalize ring-1 ${
                       row.status === "active"
@@ -296,7 +326,7 @@ export default function StaffModulePage() {
             </button>
             <button type="button" onClick={saveStaff} disabled={saving}
               className="cursor-pointer rounded-xl bg-emerald-500 px-4 py-2 text-sm font-semibold text-zinc-950 hover:bg-emerald-400 disabled:opacity-50">
-              {saving ? "Savingâ€¦" : "Save"}
+              {saving ? "Saving…" : "Save"}
             </button>
           </div>
         }
@@ -335,7 +365,7 @@ export default function StaffModulePage() {
               <div className="sm:col-span-2">
                 <label className="text-xs font-medium text-zinc-500">Password * <span className="text-zinc-600">(min 6 chars)</span></label>
                 <input type="password" value={form.password} onChange={(e) => setForm((f) => ({ ...f, password: e.target.value }))}
-                  placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢" autoComplete="new-password"
+                  placeholder="••••••••" autoComplete="new-password"
                   className="mt-1 w-full rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus:border-emerald-500/40 placeholder:text-zinc-600" />
               </div>
             )}
@@ -357,7 +387,7 @@ export default function StaffModulePage() {
         open={!!deleteTarget}
         title="Remove staff member?"
         message={deleteTarget ? `${deleteTarget.name} will be removed from the roster.` : ""}
-        confirmLabel={deleting ? "Removingâ€¦" : "Remove"}
+        confirmLabel={deleting ? "Removing…" : "Remove"}
         onCancel={() => setDeleteTarget(null)}
         onConfirm={confirmDelete}
       />

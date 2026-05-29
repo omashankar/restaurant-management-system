@@ -29,6 +29,9 @@ function LoginContent() {
   const [resendLoading, setResendLoading] = useState(false);
   const [resendMsg, setResendMsg] = useState("");
   const [verificationInfo, setVerificationInfo] = useState("");
+  const [challengeToken, setChallengeToken] = useState("");
+  const [otpCode, setOtpCode] = useState("");
+  const [needs2FA, setNeeds2FA] = useState(false);
 
   useEffect(() => {
     if (!hydrated) return;
@@ -50,6 +53,22 @@ function LoginContent() {
     setUnverified(false);
     setLoading(true);
     try {
+      if (needs2FA && challengeToken) {
+        const res = await fetch("/api/auth/2fa/verify-login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ challengeToken, code: otpCode }),
+        });
+        const data = await res.json();
+        if (data.success) {
+          const dest = login(data.user.email, data.user.role, data.user.name);
+          router.push(dest);
+          return;
+        }
+        setError(data.error ?? "Invalid code.");
+        return;
+      }
+
       const res = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -60,6 +79,18 @@ function LoginContent() {
       if (data.success) {
         const dest = login(data.user.email, data.user.role, data.user.name);
         router.push(dest);
+        return;
+      }
+
+      if (data.requires2FA && data.challengeToken) {
+        setNeeds2FA(true);
+        setChallengeToken(data.challengeToken);
+        setError("");
+        return;
+      }
+
+      if (data.code === "SETUP_2FA_REQUIRED") {
+        setError(data.error);
         return;
       }
 
@@ -150,30 +181,54 @@ function LoginContent() {
                 placeholder="you@restaurant.com"
               />
             </div>
-            <div>
-              <label htmlFor="password" className="text-xs font-medium uppercase tracking-wider text-zinc-500">
-                Password
-              </label>
-              <div className="relative mt-1.5">
+            {needs2FA ? (
+              <div>
+                <label htmlFor="otp" className="text-xs font-medium uppercase tracking-wider text-zinc-500">
+                  Authenticator code
+                </label>
                 <input
-                  id="password"
-                  type={showPw ? "text" : "password"}
-                  autoComplete="current-password"
+                  id="otp"
+                  type="text"
+                  inputMode="numeric"
+                  maxLength={6}
+                  autoComplete="one-time-code"
                   required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full rounded-xl border border-zinc-700 bg-zinc-950/80 px-4 py-3 pr-11 text-sm text-zinc-100 outline-none transition-all focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/20"
-                  placeholder="••••••••"
+                  value={otpCode}
+                  onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, ""))}
+                  className="mt-1.5 w-full rounded-xl border border-zinc-700 bg-zinc-950/80 px-4 py-3 text-sm text-zinc-100 outline-none focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/20"
+                  placeholder="000000"
                 />
-                <button
-                  type="button"
-                  onClick={() => setShowPw(v => !v)}
-                  className="cursor-pointer absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-300"
-                >
-                  {showPw ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
-                </button>
+                <p className="mt-2 text-xs text-zinc-500">
+                  Open your authenticator app and enter the 6-digit code.
+                </p>
               </div>
-            </div>
+            ) : null}
+            {!needs2FA ? (
+              <div>
+                <label htmlFor="password" className="text-xs font-medium uppercase tracking-wider text-zinc-500">
+                  Password
+                </label>
+                <div className="relative mt-1.5">
+                  <input
+                    id="password"
+                    type={showPw ? "text" : "password"}
+                    autoComplete="current-password"
+                    required
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="w-full rounded-xl border border-zinc-700 bg-zinc-950/80 px-4 py-3 pr-11 text-sm text-zinc-100 outline-none transition-all focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/20"
+                    placeholder="••••••••"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPw((v) => !v)}
+                    className="cursor-pointer absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-300"
+                  >
+                    {showPw ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+                  </button>
+                </div>
+              </div>
+            ) : null}
             {error && (
               <p className="rounded-xl border border-red-500/20 bg-red-500/10 px-3 py-2 text-xs text-red-400">
                 {error}
@@ -230,7 +285,7 @@ function LoginContent() {
               disabled={loading}
               className="cursor-pointer w-full rounded-xl bg-emerald-500 py-3 text-sm font-semibold text-zinc-950 transition-all duration-200 hover:bg-emerald-400 active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {loading ? "Signing in…" : "Sign In"}
+              {loading ? "Signing in…" : needs2FA ? "Verify & Sign In" : "Sign In"}
             </button>
           </form>
           <p className="mt-5 text-center text-sm text-zinc-500">

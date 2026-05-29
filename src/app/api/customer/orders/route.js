@@ -4,11 +4,17 @@ import { getCustomerTokenFromRequest, verifyCustomerToken } from "@/lib/customer
 import { logError, logInfo } from "@/lib/logger";
 import { createGatewayPaymentSession } from "@/lib/paymentGateway";
 import { customerCheckoutSchema, parseSchema } from "@/lib/validationSchemas";
-import { sendOrderWhatsApp } from "@/lib/whatsappService";
+import { sendNewOrderAlertEmail } from "@/lib/emailService";
+import { getRestaurantNotificationPrefs } from "@/lib/restaurantNotificationPrefs";
+import { sendOrderWhatsApp, sendNewOrderAlertWhatsApp } from "@/lib/whatsappService";
+import { resolvePaymentCurrency } from "@/lib/platformCurrency";
 import { getRestaurantIdFromRequest } from "@/lib/restaurantResolver";
+import { assertPlatformFeatureForPath } from "@/lib/platformFeatureGuard";
 import { ObjectId } from "mongodb";
 
 export async function GET(request) {
+  const blocked = await assertPlatformFeatureForPath("/api/customer/orders");
+  if (blocked) return blocked;
   const token = getCustomerTokenFromRequest(request);
   const payload = verifyCustomerToken(token);
   if (!payload?.id && !payload?.phone && !payload?.email) {
@@ -83,6 +89,9 @@ function normalizeItems(items) {
 }
 
 export async function POST(request) {
+  const blocked = await assertPlatformFeatureForPath("/api/customer/orders");
+  if (blocked) return blocked;
+
   const customerPayload = verifyCustomerToken(getCustomerTokenFromRequest(request));
   if (!customerPayload?.id && !customerPayload?.phone && !customerPayload?.email) {
     return Response.json(
@@ -169,13 +178,17 @@ export async function POST(request) {
     const deliveryCharge = orderType === "delivery" ? Number(safeServiceCharge.toFixed(2)) : 0;
     const total = Number((subtotal + tax + deliveryCharge).toFixed(2));
     const now = new Date();
-    const currency = String(settingsDoc?.general?.currency || "USD").toUpperCase();
+    const currency = await resolvePaymentCurrency(
+      db,
+      settingsDoc?.general?.currency,
+    );
     const orderId = `ORD-C-${Date.now()}`;
     let gatewaySession = null;
-    if (["upi", "card", "netBanking", "wallet", "payLater", "bankTransfer"].includes(paymentMethod)) {
+    if (["upi", "card", "debitCard", "netBanking", "wallet", "payLater", "bankTransfer"].includes(paymentMethod)) {
       try {
         gatewaySession = await createGatewayPaymentSession({
           db,
+          restaurantId,
           amount: total,
           currency,
           orderId,
@@ -214,7 +227,7 @@ export async function POST(request) {
       payment: {
         method: paymentMethod,
         status: paymentMethod === "cod" || paymentMethod === "cashCounter" ? "pending" : "initiated",
-        provider: ["upi", "card", "netBanking", "wallet", "payLater"].includes(paymentMethod)
+        provider: ["upi", "card", "debitCard", "netBanking", "wallet", "payLater"].includes(paymentMethod)
           ? "gateway"
           : "offline",
         currency,
@@ -235,15 +248,35 @@ export async function POST(request) {
     }
     logInfo("customer.order.created", { route: "/api/customer/orders", orderId: doc.orderId });
 
-    // ── WhatsApp: Order Confirmed ──
+    // ── WhatsApp: Order Confirmed + restaurant alert ──
     const restaurantName = settingsDoc?.general?.restaurantName ?? "Restaurant";
+    const notificationPrefs = await getRestaurantNotificationPrefs(db, restaurantId);
+
     sendOrderWhatsApp({
       event: "order_confirmed",
       order: doc,
       db,
       restaurantId,
       restaurantName,
-    }).catch(() => {}); // fire-and-forget, never block the response
+    }).catch(() => {});
+
+    if (notificationPrefs.smsNotifications) {
+      sendNewOrderAlertWhatsApp({
+        order: doc,
+        db,
+        restaurantId,
+        restaurantName,
+      }).catch(() => {});
+    }
+
+    if (notificationPrefs.emailNotifications && notificationPrefs.alertEmail) {
+      sendNewOrderAlertEmail({
+        order: doc,
+        db,
+        restaurantId,
+        toEmail: notificationPrefs.alertEmail,
+      }).catch(() => {});
+    }
 
     return Response.json({
       success: true,

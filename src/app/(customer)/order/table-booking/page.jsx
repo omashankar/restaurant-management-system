@@ -1,20 +1,30 @@
 "use client";
 
+import CustomerMobileInput from "@/components/customer/CustomerMobileInput";
 import TableCard from "@/components/table/TableCard";
-import { CUSTOMER_BOOKING_CAPACITY_FILTERS, CUSTOMER_BOOKING_CONTENT, CUSTOMER_BOOKING_TIME_SLOTS } from "@/config/customerBookingContent";
+import {
+  CUSTOMER_BOOKING_CAPACITY_FILTERS,
+  CUSTOMER_BOOKING_TIME_SLOTS,
+} from "@/config/customerBookingContent";
 import { useCustomer } from "@/context/CustomerContext";
 import { useModuleData } from "@/context/ModuleDataContext";
 import { useRestaurantSlug } from "@/hooks/useRestaurantSlug";
+import { useRestaurantCms } from "@/hooks/useRestaurantCms";
+import { mergeCmsSection } from "@/lib/customerCmsMerge";
+import { DEFAULTS } from "@/lib/restaurantCmsDefaults";
+import { customerClasses, customerMotion, customerPage } from "@/lib/customerTheme";
 import { getCategoryAvailabilityCounts, getTableAvailability, getTablesAvailability } from "@/lib/tableAvailability";
 import { motion, AnimatePresence } from "framer-motion";
 import { AlertCircle, CalendarClock, CheckCircle2, ChevronLeft, ChevronRight, Loader2, Users, ArrowRight } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { isValidGuestName, isValidGuestCount } from "@/lib/customerFormValidation";
+import { isValidIndianMobile, toIndianE164 } from "@/lib/phoneUtils";
 import { useEffect, useMemo, useRef, useState } from "react";
 
-const fadeUp = { hidden: { opacity: 0, y: 20 }, show: { opacity: 1, y: 0, transition: { duration: 0.4 } } };
+const fadeUp = customerMotion.fadeUpSm;
 
-const inputCls = "w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-800 outline-none transition-all placeholder:text-gray-400 focus:border-[#FF6B35]/40 focus:bg-white focus:ring-2 focus:ring-[#FF6B35]/10";
+const inputCls = customerClasses.field;
 
 function StepDot({ n, label, active, done }) {
   return (
@@ -23,21 +33,21 @@ function StepDot({ n, label, active, done }) {
         animate={active ? { scale: [1, 1.1, 1] } : {}}
         transition={{ duration: 0.5 }}
         className={`flex size-10 items-center justify-center rounded-full text-xs font-bold shadow-sm transition-all duration-300 ${
-          done    ? "gradient-primary text-white shadow-[#FF6B35]/20"
-          : active ? "border-2 border-[#FF6B35] bg-white text-[#FF6B35]"
-          : "border border-gray-200 bg-white text-gray-400"
+          done    ? "gradient-primary text-white shadow-[var(--customer-primary-shadow)]/20"
+          : active ? "border-2 border-customer-primary bg-white text-customer-primary"
+          : "border border-customer-border bg-white text-customer-muted"
         }`}
       >
         {done ? <CheckCircle2 className="size-4" /> : n}
       </motion.span>
-      <span className={`hidden text-[10px] font-bold uppercase tracking-wider sm:block ${active ? "text-[#FF6B35]" : "text-gray-400"}`}>{label}</span>
+      <span className={`hidden text-[10px] font-bold uppercase tracking-wider sm:block ${active ? "text-customer-primary" : "text-customer-muted"}`}>{label}</span>
     </div>
   );
 }
 
 function StepLine({ done }) {
   return (
-    <div className="relative mb-4 h-0.5 flex-1 overflow-hidden rounded-full bg-gray-200">
+    <div className="relative mb-4 h-0.5 flex-1 overflow-hidden rounded-full bg-[var(--customer-border)]">
       <motion.div
         initial={{ width: "0%" }}
         animate={{ width: done ? "100%" : "0%" }}
@@ -52,7 +62,8 @@ export default function TableBookingPage() {
   const { showToast } = useCustomer();
   const { floorTables, reservationRows, setReservationRows, tableCategories } = useModuleData();
   const { link } = useRestaurantSlug();
-
+  const { content: cms } = useRestaurantCms();
+  const bookingCms = mergeCmsSection(DEFAULTS.booking, cms.booking);
   const [step, setStep] = useState(1);
   const [form, setForm] = useState({ name: "", phone: "", date: "", time: "19:00", guests: "2", notes: "" });
   const [selectedCatId, setSelectedCatId] = useState(null);
@@ -61,8 +72,10 @@ export default function TableBookingPage() {
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState(false);
   const [conflictError, setConflictError] = useState(null);
+  const [dateReservations, setDateReservations] = useState([]);
   const [customerAreaImages, setCustomerAreaImages] = useState({});
   const dateInputRef = useRef(null);
+  const minBookingDate = useMemo(() => new Date().toISOString().slice(0, 10), []);
 
   const set = (k, v) => setForm((f) => ({ ...f, [k]: v }));
   const normalizeAreaKey = (name) => String(name ?? "").trim().toLowerCase();
@@ -87,6 +100,40 @@ export default function TableBookingPage() {
     return () => { active = false; };
   }, []);
 
+  useEffect(() => {
+    if (!form.date) {
+      setDateReservations([]);
+      return;
+    }
+    let active = true;
+    async function loadDateBookings() {
+      try {
+        const res = await fetch(
+          `/api/customer/reservations?date=${encodeURIComponent(form.date)}`,
+          { cache: "no-store" }
+        );
+        const data = await res.json();
+        if (active && data?.success && Array.isArray(data.reservations)) {
+          setDateReservations(data.reservations);
+        }
+      } catch {
+        /* keep previous */
+      }
+    }
+    loadDateBookings();
+    return () => { active = false; };
+  }, [form.date]);
+
+  const activeReservations = useMemo(() => {
+    if (!form.date) return reservationRows;
+    const byId = new Map();
+    for (const r of dateReservations) byId.set(r.id, r);
+    for (const r of reservationRows) {
+      if (r.date === form.date) byId.set(r.id, r);
+    }
+    return [...byId.values()];
+  }, [form.date, dateReservations, reservationRows]);
+
   const openDatePicker = () => {
     const input = dateInputRef.current;
     if (!input) return;
@@ -105,8 +152,8 @@ export default function TableBookingPage() {
       });
       return map;
     }
-    return getCategoryAvailabilityCounts({ tables: floorTables, date: form.date, time: form.time, reservations: reservationRows });
-  }, [floorTables, reservationRows, form.date, form.time]);
+    return getCategoryAvailabilityCounts({ tables: floorTables, date: form.date, time: form.time, reservations: activeReservations });
+  }, [floorTables, activeReservations, form.date, form.time]);
 
   const tablesInCat = useMemo(() => {
     if (!selectedCatId) return [];
@@ -124,30 +171,68 @@ export default function TableBookingPage() {
     return getTablesAvailability({ tables: tablesInCat, date: form.date, time: form.time, reservations: reservationRows });
   }, [tablesInCat, form.date, form.time, reservationRows]);
 
-  const step1Valid = form.name.trim() && form.phone.trim() && form.date;
+  const step1Valid =
+    isValidGuestName(form.name) &&
+    isValidIndianMobile(form.phone) &&
+    isValidGuestCount(form.guests) &&
+    Boolean(form.date);
   const selectedCat = tableCategories.find((c) => c.id === selectedCatId);
 
   const submit = async () => {
     setConflictError(null);
     if (selectedTable && form.date && form.time) {
-      const check = getTableAvailability({ tableNumber: selectedTable.tableNumber, date: form.date, time: form.time, reservations: reservationRows });
+      const check = getTableAvailability({
+        tableNumber: selectedTable.tableNumber,
+        date: form.date,
+        time: form.time,
+        reservations: activeReservations,
+      });
       if (!check.available) {
-        setConflictError(`Table ${selectedTable.tableNumber} was just booked. ${check.nextAvailableTime ? `Next: ${check.nextAvailableTime}` : "Choose another."}`);
+        setConflictError(
+          `Table ${selectedTable.tableNumber} was just booked. ${check.nextAvailableTime ? `Next: ${check.nextAvailableTime}` : "Choose another."}`
+        );
         return;
       }
     }
     setLoading(true);
-    await new Promise((r) => setTimeout(r, 700));
-    setReservationRows((prev) => [...prev, {
-      id: `res-c-${Date.now()}`, customerName: form.name.trim(), phone: form.phone.trim(),
-      date: form.date, time: form.time, guests: parseInt(form.guests, 10) || 2,
-      tableNumber: selectedTable?.tableNumber ?? "TBD", area: selectedCat?.name ?? "—",
-      status: "pending", notes: form.notes.trim(), createdAt: new Date().toISOString(),
-      confirmedAt: null, completedAt: null, cancelledAt: null,
-    }]);
-    setLoading(false);
-    setDone(true);
-    showToast("Table booking request sent!");
+    try {
+      const res = await fetch("/api/customer/reservations", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          customerName: form.name.trim(),
+          phone: toIndianE164(form.phone),
+          date: form.date,
+          time: form.time,
+          guests: parseInt(form.guests, 10) || 2,
+          tableNumber: selectedTable?.tableNumber ?? "TBD",
+          area: selectedCat?.name ?? "",
+          notes: form.notes.trim(),
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data?.success) {
+        setConflictError(data?.error ?? "Booking failed. Please try again.");
+        return;
+      }
+      if (data.reservation) {
+        const row = {
+          ...data.reservation,
+          createdAt: data.reservation.createdAt ?? new Date().toISOString(),
+          confirmedAt: null,
+          completedAt: null,
+          cancelledAt: null,
+        };
+        setReservationRows((prev) => [...prev, row]);
+        setDateReservations((prev) => [...prev, row]);
+      }
+      setDone(true);
+      showToast("Table booking request sent!");
+    } catch {
+      setConflictError("Network error. Please check your connection and try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const reset = () => {
@@ -159,31 +244,31 @@ export default function TableBookingPage() {
   /* ══ SUCCESS SCREEN ══ */
   if (done) {
     return (
-      <div className="bg-gray-50 min-h-screen">
+      <div className="ct-page-shell">
         <div className="mx-auto max-w-lg px-4 py-16 sm:px-6">
           <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}
-            className="rounded-3xl bg-white p-10 text-center shadow-sm">
+            className="ct-surface-card rounded-3xl p-10 text-center shadow-sm">
             <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: "spring", stiffness: 200 }}
               className="mx-auto mb-6 flex size-24 items-center justify-center rounded-full bg-green-100">
               <CalendarClock className="size-12 text-green-500" />
             </motion.div>
-            <h2 className="font-poppins text-2xl font-black text-[#111827]">{CUSTOMER_BOOKING_CONTENT.successTitle}</h2>
-            <p className="mt-2 text-sm text-gray-500">{CUSTOMER_BOOKING_CONTENT.successSubtitle}</p>
+            <h2 className="font-poppins text-2xl font-black text-customer-text">{bookingCms.successTitle}</h2>
+            <p className="mt-2 text-sm text-customer-muted">{bookingCms.successSubtitle}</p>
 
-            <div className="mt-6 overflow-hidden rounded-2xl border border-gray-100">
+            <div className="mt-6 overflow-hidden rounded-2xl border border-customer-border">
               {[{ label: "Name", value: form.name }, { label: "Date & Time", value: `${form.date} at ${form.time}` },
                 { label: "Area", value: selectedCat?.name ?? "—" }, { label: "Table", value: selectedTable?.tableNumber ?? "TBD" },
                 { label: "Guests", value: `${form.guests} persons` }].map(({ label, value }) => (
-                <div key={label} className="flex items-center justify-between border-b border-gray-100 px-5 py-3 text-sm last:border-0">
-                  <span className="text-gray-400">{label}</span>
-                  <span className="font-bold text-[#111827]">{value}</span>
+                <div key={label} className="flex items-center justify-between border-b border-customer-border px-5 py-3 text-sm last:border-0">
+                  <span className="text-customer-muted">{label}</span>
+                  <span className="font-bold text-customer-text">{value}</span>
                 </div>
               ))}
             </div>
 
             <div className="mt-7 flex gap-3">
               <button type="button" onClick={reset}
-                className="flex-1 cursor-pointer rounded-full border border-gray-200 py-3 text-sm font-semibold text-gray-600 hover:border-[#FF6B35]/30">
+                className="flex-1 cursor-pointer rounded-full border border-customer-border py-3 text-sm font-semibold text-customer-muted hover:border-customer-primary/30">
                 Book Another
               </button>
               <Link href={link("/order/menu")}
@@ -198,19 +283,19 @@ export default function TableBookingPage() {
   }
 
   return (
-    <div className="bg-gray-50 min-h-screen">
+    <div className="ct-page-shell">
 
       {/* ══ HERO ══ */}
       <section className="bg-white">
         <div className="mx-auto max-w-2xl px-4 py-12 text-center sm:px-6">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-            <span className="mb-4 inline-flex items-center gap-1.5 rounded-full bg-[#FF6B35]/10 px-4 py-1.5 text-xs font-bold uppercase tracking-widest text-[#FF6B35]">
+            <span className="mb-4 inline-flex items-center gap-1.5 rounded-full bg-customer-primary/10 px-4 py-1.5 text-xs font-bold uppercase tracking-widest text-customer-primary">
               Reservations
             </span>
-            <h1 className="font-poppins text-3xl font-black text-[#111827] sm:text-4xl">
-              {CUSTOMER_BOOKING_CONTENT.pageTitle}
+            <h1 className="font-poppins text-3xl font-black text-customer-text sm:text-4xl">
+              {bookingCms.pageTitle}
             </h1>
-            <p className="mt-2 text-sm text-gray-500">{CUSTOMER_BOOKING_CONTENT.pageSubtitle}</p>
+            <p className="mt-2 text-sm text-customer-muted">{bookingCms.pageSubtitle}</p>
           </motion.div>
         </div>
       </section>
@@ -219,7 +304,7 @@ export default function TableBookingPage() {
 
         {/* Step indicator */}
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.1 }}
-          className="mb-8 flex items-center gap-2">
+          className="mb-8 flex min-w-0 items-center gap-1 overflow-x-auto pb-1 sm:gap-2">
           <StepDot n={1} label="Details" active={step === 1} done={step > 1} />
           <StepLine done={step > 1} />
           <StepDot n={2} label="Area"    active={step === 2} done={step > 2} />
@@ -234,48 +319,106 @@ export default function TableBookingPage() {
           {/* ── STEP 1 ── */}
           {step === 1 && (
             <motion.div key="step1" variants={fadeUp} initial="hidden" animate="show" exit={{ opacity: 0, y: -10 }}
-              className="rounded-3xl bg-white p-8 shadow-sm">
-              <h2 className="mb-6 font-poppins text-xl font-black text-[#111827]">{CUSTOMER_BOOKING_CONTENT.detailsTitle}</h2>
+              className="ct-surface-card rounded-3xl p-5 shadow-sm sm:p-8">
+              <h2 className="mb-6 font-poppins text-lg font-black text-customer-text sm:text-xl">{bookingCms.detailsTitle}</h2>
               <div className="grid gap-4 sm:grid-cols-2">
                 <div>
-                  <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-gray-400">Full Name *</label>
-                  <input value={form.name} onChange={(e) => set("name", e.target.value)} placeholder="Your name" className={inputCls} />
+                  <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-customer-muted">Full Name *</label>
+                  <input
+                    value={form.name}
+                    onChange={(e) => set("name", e.target.value)}
+                    placeholder="Your name"
+                    className={inputCls}
+                    autoComplete="name"
+                  />
+                  {form.name.trim() && !isValidGuestName(form.name) ? (
+                    <p className="mt-1 text-[11px] text-red-500">Use at least 2 letters (not numbers only).</p>
+                  ) : null}
                 </div>
+                <CustomerMobileInput
+                  id="booking-mobile"
+                  label="Mobile number"
+                  required
+                  value={form.phone}
+                  onChange={(digits) => set("phone", digits)}
+                />
                 <div>
-                  <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-gray-400">Phone *</label>
-                  <input value={form.phone} onChange={(e) => set("phone", e.target.value)} placeholder="+1 555 000 0000" className={inputCls} />
-                </div>
-                <div>
-                  <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-gray-400">Date *</label>
-                  <div className="relative">
-                    <input ref={dateInputRef} type="date" value={form.date} onChange={(e) => set("date", e.target.value)} className={inputCls + " pr-10"} />
-                    <button type="button" onClick={openDatePicker} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#FF6B35]">
-                      <CalendarClock className="size-4" />
+                  <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-customer-muted">Date *</label>
+                  <div className={customerClasses.fieldWrapPadRight}>
+                    <input
+                      ref={dateInputRef}
+                      type="date"
+                      value={form.date}
+                      onChange={(e) => set("date", e.target.value)}
+                      onClick={openDatePicker}
+                      min={minBookingDate}
+                      className={inputCls}
+                      aria-label="Reservation date"
+                    />
+                    <button
+                      type="button"
+                      onClick={openDatePicker}
+                      className="ct-field-icon-btn"
+                      aria-label="Open calendar"
+                    >
+                      <CalendarClock className="size-[1.125rem]" />
                     </button>
                   </div>
                 </div>
                 <div>
-                  <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-gray-400">Time</label>
+                  <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-customer-muted">Time</label>
                   <select value={form.time} onChange={(e) => set("time", e.target.value)} className={inputCls}>
                     {CUSTOMER_BOOKING_TIME_SLOTS.map((t) => <option key={t} value={t}>{t}</option>)}
                   </select>
                 </div>
                 <div className="sm:col-span-2">
-                  <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-gray-400">Guests</label>
-                  <div className="relative">
-                    <Users className="pointer-events-none absolute left-4 top-1/2 size-4 -translate-y-1/2 text-[#FF6B35]" />
-                    <input type="number" min={1} max={20} value={form.guests} onChange={(e) => set("guests", e.target.value)} className={inputCls + " pl-10"} />
+                  <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-customer-muted">Guests</label>
+                  <div className={customerClasses.fieldWrapPadLeft}>
+                    <span className="ct-field-icon ct-field-icon--left" aria-hidden>
+                      <Users className="size-5 shrink-0" strokeWidth={2.25} />
+                    </span>
+                    <input
+                      type="number"
+                      min={1}
+                      max={20}
+                      value={form.guests}
+                      onChange={(e) => {
+                        const v = e.target.value.replace(/\D/g, "").slice(0, 2);
+                        set("guests", v);
+                      }}
+                      className={`${inputCls} ct-field--number`}
+                      aria-label="Number of guests"
+                    />
                   </div>
+                  {form.guests && !isValidGuestCount(form.guests) ? (
+                    <p className="mt-1 text-[11px] text-red-500">Guests must be between 1 and 20.</p>
+                  ) : null}
                 </div>
               </div>
               <div className="mt-4">
-                <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-gray-400">Special Requests (optional)</label>
+                <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-customer-muted">Special Requests (optional)</label>
                 <textarea rows={2} value={form.notes} onChange={(e) => set("notes", e.target.value)}
                   placeholder="Allergies, occasion, seating preference…" className={inputCls + " resize-none"} />
               </div>
               <motion.button whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.98 }}
-                type="button" disabled={!step1Valid} onClick={() => setStep(2)}
-                className="mt-6 cursor-pointer flex w-full items-center justify-center gap-2 rounded-full gradient-primary py-3.5 text-sm font-bold text-white shadow-lg shadow-[#FF6B35]/25 disabled:cursor-not-allowed disabled:opacity-40">
+                type="button"
+                disabled={!step1Valid}
+                onClick={() => {
+                  if (!isValidGuestName(form.name)) {
+                    showToast("Please enter a valid full name (at least 2 letters).", "error");
+                    return;
+                  }
+                  if (!isValidIndianMobile(form.phone)) {
+                    showToast("Please enter a valid 10-digit mobile number.", "error");
+                    return;
+                  }
+                  if (!form.date) {
+                    showToast("Please select a date.", "error");
+                    return;
+                  }
+                  setStep(2);
+                }}
+                className="mt-6 flex w-full cursor-pointer items-center justify-center gap-2 rounded-full gradient-primary py-3.5 text-sm font-bold text-[var(--customer-btn-primary-fg,#ffffff)] shadow-lg shadow-[var(--customer-primary-shadow)]/25 disabled:cursor-not-allowed disabled:brightness-[0.92] disabled:saturate-50">
                 Next: Choose Area <ChevronRight className="size-4" />
               </motion.button>
             </motion.div>
@@ -284,16 +427,16 @@ export default function TableBookingPage() {
           {/* ── STEP 2 ── */}
           {step === 2 && (
             <motion.div key="step2" variants={fadeUp} initial="hidden" animate="show" exit={{ opacity: 0, y: -10 }}
-              className="rounded-3xl bg-white p-8 shadow-sm">
+              className="ct-surface-card rounded-3xl p-8 shadow-sm">
               <div className="mb-6">
-                <h2 className="font-poppins text-xl font-black text-[#111827]">{CUSTOMER_BOOKING_CONTENT.areaTitle}</h2>
-                <p className="mt-1 text-sm text-gray-400">
-                  Availability for <span className="font-semibold text-[#111827]">{form.date}</span> at <span className="font-semibold text-[#111827]">{form.time}</span>
+                <h2 className="font-poppins text-xl font-black text-customer-text">{bookingCms.areaTitle}</h2>
+                <p className="mt-1 text-sm text-customer-muted">
+                  Availability for <span className="font-semibold text-customer-text">{form.date}</span> at <span className="font-semibold text-customer-text">{form.time}</span>
                 </p>
               </div>
               {tableCategories.length === 0 ? (
-                <div className="rounded-2xl border-2 border-dashed border-gray-200 py-12 text-center">
-                  <p className="text-sm text-gray-400">{CUSTOMER_BOOKING_CONTENT.noAreasLabel}</p>
+                <div className="rounded-2xl border-2 border-dashed border-customer-border py-12 text-center">
+                  <p className="text-sm text-customer-muted">{bookingCms.noAreasLabel}</p>
                 </div>
               ) : (
                 <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
@@ -308,24 +451,24 @@ export default function TableBookingPage() {
                         whileHover={{ y: -4 }} whileTap={{ scale: 0.97 }}
                         onClick={() => { setSelectedCatId(cat.id); setSelectedTable(null); }}
                         className={`flex cursor-pointer flex-col overflow-hidden rounded-2xl border-2 text-left transition-all duration-200 ${
-                          isActive ? "border-[#FF6B35] shadow-lg shadow-[#FF6B35]/15" : "border-gray-100 bg-white hover:border-[#FF6B35]/30 hover:shadow-md"
+                          isActive ? "border-customer-primary shadow-lg shadow-[var(--customer-primary-shadow)]/15" : "border-customer-border bg-white hover:border-customer-primary/30 hover:shadow-md"
                         }`}>
                         {imageUrl ? (
                           <div className="aspect-[16/9] w-full overflow-hidden">
                             <Image src={imageUrl} alt={cat.name} width={320} height={180} className="h-full w-full object-cover" />
                           </div>
                         ) : (
-                          <div className="aspect-[16/9] w-full bg-gradient-to-br from-[#FFF8F3] to-[#FFE4D6] flex items-center justify-center">
-                            <CalendarClock className="size-8 text-[#FF6B35]/40" />
+                          <div className="aspect-[16/9] w-full bg-gradient-to-br from-customer-cream to-customer-border flex items-center justify-center">
+                            <CalendarClock className="size-8 text-customer-primary/40" />
                           </div>
                         )}
                         <div className="p-3">
-                          <p className={`font-poppins text-sm font-bold ${isActive ? "text-[#FF6B35]" : "text-[#111827]"}`}>{cat.name}</p>
+                          <p className={`font-poppins text-sm font-bold ${isActive ? "text-customer-primary" : "text-customer-text"}`}>{cat.name}</p>
                           {counts ? (
                             <p className={`mt-0.5 text-xs font-semibold ${noAvail ? "text-red-500" : "text-green-600"}`}>
                               {noAvail ? "No tables free" : `${counts.available}/${counts.total} available`}
                             </p>
-                          ) : <p className="mt-0.5 text-xs text-gray-400">No tables</p>}
+                          ) : <p className="mt-0.5 text-xs text-customer-muted">No tables</p>}
                         </div>
                       </motion.button>
                     );
@@ -334,12 +477,12 @@ export default function TableBookingPage() {
               )}
               <div className="mt-6 flex gap-3">
                 <button type="button" onClick={() => setStep(1)}
-                  className="flex cursor-pointer items-center gap-1.5 rounded-full border border-gray-200 px-5 py-2.5 text-sm font-semibold text-gray-500 hover:border-[#FF6B35]/30">
+                  className="flex cursor-pointer items-center gap-1.5 rounded-full border border-customer-border px-5 py-2.5 text-sm font-semibold text-customer-muted hover:border-customer-primary/30">
                   <ChevronLeft className="size-4" /> Back
                 </button>
                 <motion.button whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.98 }}
                   type="button" disabled={!selectedCatId} onClick={() => setStep(3)}
-                  className="flex cursor-pointer flex-1 items-center justify-center gap-2 rounded-full gradient-primary py-2.5 text-sm font-bold text-white shadow-lg shadow-[#FF6B35]/20 disabled:cursor-not-allowed disabled:opacity-40">
+                  className="flex cursor-pointer flex-1 items-center justify-center gap-2 rounded-full gradient-primary py-2.5 text-sm font-bold text-white shadow-lg shadow-[var(--customer-primary-shadow)]/20 disabled:cursor-not-allowed disabled:opacity-40">
                   Next: Pick Table <ChevronRight className="size-4" />
                 </motion.button>
               </div>
@@ -349,32 +492,32 @@ export default function TableBookingPage() {
           {/* ── STEP 3 ── */}
           {step === 3 && (
             <motion.div key="step3" variants={fadeUp} initial="hidden" animate="show" exit={{ opacity: 0, y: -10 }}
-              className="rounded-3xl bg-white p-8 shadow-sm">
+              className="ct-surface-card rounded-3xl p-8 shadow-sm">
               <div className="mb-6 flex flex-wrap items-start justify-between gap-3">
                 <div>
-                  <h2 className="font-poppins text-xl font-black text-[#111827]">{selectedCat?.name} {CUSTOMER_BOOKING_CONTENT.tableTitleSuffix}</h2>
-                  <p className="mt-1 text-sm text-gray-400">{form.date} · {form.time} · ~90 min slot</p>
+                  <h2 className="font-poppins text-xl font-black text-customer-text">{selectedCat?.name} {bookingCms.tableTitleSuffix}</h2>
+                  <p className="mt-1 text-sm text-customer-muted">{form.date} · {form.time} · ~90 min slot</p>
                 </div>
                 <div className="flex flex-wrap gap-1.5">
                   {CUSTOMER_BOOKING_CAPACITY_FILTERS.map((f) => (
                     <button key={f.id} type="button" onClick={() => { setCapFilter(f.id); setSelectedTable(null); }}
                       className={`rounded-full cursor-pointer px-3 py-1.5 text-xs font-semibold transition-all ${
-                        capFilter === f.id ? "gradient-primary text-white shadow-sm" : "border border-gray-200 bg-white text-gray-500 hover:border-[#FF6B35]/30"
+                        capFilter === f.id ? "gradient-primary text-white shadow-sm" : "border border-customer-border bg-white text-customer-muted hover:border-customer-primary/30"
                       }`}>
                       {f.label}
                     </button>
                   ))}
                 </div>
               </div>
-              <div className="mb-4 flex items-center gap-4 text-xs text-gray-400">
+              <div className="mb-4 flex items-center gap-4 text-xs text-customer-muted">
                 <span className="flex items-center gap-1.5"><span className="size-2 rounded-full bg-green-500" /> Available</span>
                 <span className="flex items-center gap-1.5"><span className="size-2 rounded-full bg-red-400" /> Booked</span>
               </div>
               {tablesInCat.length === 0 ? (
-                <div className="rounded-2xl border-2 border-dashed border-gray-200 py-12 text-center">
-                  <p className="text-sm text-gray-400">{CUSTOMER_BOOKING_CONTENT.noTablesLabel}</p>
-                  <button type="button" onClick={() => setCapFilter("all")} className="mt-3 text-xs font-semibold text-[#FF6B35] hover:underline">
-                    {CUSTOMER_BOOKING_CONTENT.clearFilterLabel}
+                <div className="rounded-2xl border-2 border-dashed border-customer-border py-12 text-center">
+                  <p className="text-sm text-customer-muted">{bookingCms.noTablesLabel}</p>
+                  <button type="button" onClick={() => setCapFilter("all")} className="mt-3 text-xs font-semibold text-customer-primary hover:underline">
+                    {bookingCms.clearFilterLabel}
                   </button>
                 </div>
               ) : (
@@ -392,12 +535,12 @@ export default function TableBookingPage() {
               )}
               <div className="mt-6 flex gap-3">
                 <button type="button" onClick={() => setStep(2)}
-                  className="flex cursor-pointer items-center gap-1.5 rounded-full border border-gray-200 px-5 py-2.5 text-sm font-semibold text-gray-500 hover:border-[#FF6B35]/30">
+                  className="flex cursor-pointer items-center gap-1.5 rounded-full border border-customer-border px-5 py-2.5 text-sm font-semibold text-customer-muted hover:border-customer-primary/30">
                   <ChevronLeft className="size-4" /> Back
                 </button>
                 <motion.button whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.98 }}
                   type="button" disabled={!selectedTable} onClick={() => setStep(4)}
-                  className="flex cursor-pointer flex-1 items-center justify-center gap-2 rounded-full gradient-primary py-2.5 text-sm font-bold text-white shadow-lg shadow-[#FF6B35]/20 disabled:cursor-not-allowed disabled:opacity-40">
+                  className="flex cursor-pointer flex-1 items-center justify-center gap-2 rounded-full gradient-primary py-2.5 text-sm font-bold text-white shadow-lg shadow-[var(--customer-primary-shadow)]/20 disabled:cursor-not-allowed disabled:opacity-40">
                   Review Booking <ChevronRight className="size-4" />
                 </motion.button>
               </div>
@@ -407,18 +550,18 @@ export default function TableBookingPage() {
           {/* ── STEP 4 ── */}
           {step === 4 && (
             <motion.div key="step4" variants={fadeUp} initial="hidden" animate="show" exit={{ opacity: 0, y: -10 }}
-              className="rounded-3xl bg-white p-8 shadow-sm">
-              <h2 className="mb-6 font-poppins text-xl font-black text-[#111827]">{CUSTOMER_BOOKING_CONTENT.confirmTitle}</h2>
-              <div className="overflow-hidden rounded-2xl border border-gray-100">
-                {[{ label: "Name", value: form.name }, { label: "Phone", value: form.phone },
+              className="ct-surface-card rounded-3xl p-8 shadow-sm">
+              <h2 className="mb-6 font-poppins text-xl font-black text-customer-text">{bookingCms.confirmTitle}</h2>
+              <div className="overflow-hidden rounded-2xl border border-customer-border">
+                {[{ label: "Name", value: form.name }, { label: "Mobile", value: toIndianE164(form.phone) || form.phone },
                   { label: "Date", value: form.date }, { label: "Time", value: `${form.time} (~90 min)` },
                   { label: "Guests", value: `${form.guests} persons` }, { label: "Area", value: selectedCat?.name ?? "—" },
                   { label: "Table", value: selectedTable?.tableNumber }, { label: "Capacity", value: `${selectedTable?.capacity} persons` },
                   ...(form.notes ? [{ label: "Notes", value: form.notes }] : []),
                 ].map(({ label, value }) => (
-                  <div key={label} className="flex items-center justify-between border-b border-gray-100 px-5 py-3.5 text-sm last:border-0">
-                    <span className="text-gray-400">{label}</span>
-                    <span className="font-bold text-[#111827]">{value}</span>
+                  <div key={label} className="flex items-center justify-between border-b border-customer-border px-5 py-3.5 text-sm last:border-0">
+                    <span className="text-customer-muted">{label}</span>
+                    <span className="font-bold text-customer-text">{value}</span>
                   </div>
                 ))}
               </div>
@@ -430,12 +573,12 @@ export default function TableBookingPage() {
               )}
               <div className="mt-6 flex gap-3">
                 <button type="button" onClick={() => { setStep(3); setConflictError(null); }}
-                  className="flex cursor-pointer items-center gap-1.5 rounded-full border border-gray-200 px-5 py-3 text-sm font-semibold text-gray-500 hover:border-[#FF6B35]/30">
+                  className="flex cursor-pointer items-center gap-1.5 rounded-full border border-customer-border px-5 py-3 text-sm font-semibold text-customer-muted hover:border-customer-primary/30">
                   <ChevronLeft className="size-4" /> Back
                 </button>
                 <motion.button whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.98 }}
                   type="button" onClick={submit} disabled={loading}
-                  className="flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-full gradient-primary py-3 text-sm font-bold text-white shadow-lg shadow-[#FF6B35]/25 disabled:opacity-50">
+                  className="flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-full gradient-primary py-3 text-sm font-bold text-white shadow-lg shadow-[var(--customer-primary-shadow)]/25 disabled:opacity-50">
                   {loading ? <><Loader2 className="size-4 animate-spin" /> Sending…</> : <><CheckCircle2 className="size-4" /> Confirm Booking</>}
                 </motion.button>
               </div>

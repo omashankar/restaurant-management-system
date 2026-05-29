@@ -5,10 +5,12 @@ import SalesChart from "@/components/dashboard/SalesChart";
 import TopDishes from "@/components/dashboard/TopDishes";
 import RoleCard from "@/components/rms/RoleCard";
 import StatsCard from "@/components/rms/StatsCard";
+import { formatAdminMoney } from "@/lib/adminCurrency";
 import { AlertTriangle, DollarSign, Package, ShoppingBag } from "lucide-react";
 import Link from "next/link";
 
 export default function ManagerDashboard({
+  currency = "INR",
   salesToday = 0,
   salesChange = 0,
   ordersToday = 0,
@@ -46,16 +48,20 @@ export default function ManagerDashboard({
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-        <StatsCard title="Sales Today"     value={`$${salesToday.toLocaleString()}`} subtitle="Gross before fees" trend={salesChange}  icon={DollarSign} />
+        <StatsCard title="Sales Today" value={formatAdminMoney(salesToday, currency)} subtitle="Calendar day" trend={salesChange} icon={DollarSign} />
         <StatsCard title="Orders Today"    value={String(ordersToday)}               subtitle="Covers + takeout"  trend={ordersChange} icon={ShoppingBag} />
         <StatsCard title="Low Stock Items" value={String(lowStockCount)}             subtitle="Need reorder"                           icon={Package} />
       </div>
 
       <SalesChart />
 
-      <div className="grid gap-6 xl:grid-cols-5">
-        <div className="xl:col-span-2"><TopDishes items={topItems} /></div>
-        <div className="xl:col-span-3"><RecentOrdersTable orders={orders} /></div>
+      <div className="grid items-stretch gap-6 xl:grid-cols-5">
+        <div className="flex min-h-0 xl:col-span-2">
+          <TopDishes items={topItems} currency={currency} />
+        </div>
+        <div className="flex min-h-0 xl:col-span-3">
+          <RecentOrdersTable orders={orders} currency={currency} />
+        </div>
       </div>
     </div>
   );

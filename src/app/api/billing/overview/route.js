@@ -31,10 +31,14 @@ export const GET = withTenant(["admin"], async ({ db, restaurantId, payload }) =
       description: plan.description ?? "",
       monthlyPrice: Number.isFinite(Number(plan.monthlyPrice))
         ? Number(plan.monthlyPrice)
-        : Number(plan.price ?? 0),
+        : (plan.billingCycle === "yearly"
+            ? Number((Number(plan.price ?? 0) / 12).toFixed(2))
+            : Number(plan.price ?? 0)),
       yearlyPrice: Number.isFinite(Number(plan.yearlyPrice))
         ? Number(plan.yearlyPrice)
-        : Number((Number(plan.price ?? 0) * 12).toFixed(2)),
+        : (plan.billingCycle === "yearly"
+            ? Number(plan.price ?? 0)
+            : Number((Number(plan.price ?? 0) * 12).toFixed(2))),
       features: Array.isArray(plan.features) ? plan.features : [],
     })),
   });

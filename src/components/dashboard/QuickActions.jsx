@@ -57,10 +57,13 @@ export default function QuickActions() {
   const visible = ALL_ACTIONS.filter((a) => hasPermission(a.permission));
 
   return (
-    <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-5">
-      <h3 className="text-sm font-semibold text-zinc-100">Quick Actions</h3>
-      <p className="mt-0.5 text-xs text-zinc-500">Shortcuts for common tasks</p>
-      <div className="mt-4 grid grid-cols-2 gap-2">
+    <div className="rms-dashboard-card rms-dashboard-card--lg flex h-full min-h-0 w-full flex-col rounded-2xl border border-zinc-800 bg-zinc-900/60 p-5">
+      <div className="shrink-0">
+        <h3 className="text-sm font-semibold text-zinc-100">Quick Actions</h3>
+        <p className="mt-0.5 text-xs text-zinc-500">Shortcuts for common tasks</p>
+      </div>
+      <div className="rms-dashboard-card__body rms-dashboard-card__body--y mt-4 min-h-0 flex-1 pr-1">
+      <div className="grid grid-cols-2 gap-2">
         {visible.map(({ href, label, sub, Icon, accent }) => {
           const a = accentMap[accent];
           return (
@@ -79,6 +82,7 @@ export default function QuickActions() {
             </Link>
           );
         })}
+      </div>
       </div>
     </div>
   );

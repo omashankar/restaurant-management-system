@@ -14,7 +14,7 @@ export const SETTINGS_TABS = [
 export const EMPTY_SETTINGS = {
   general: {
     restaurantName: "",
-    logoName: "",
+    logoUrl: "",
     currency: "USD",
     timezone: "UTC",
     language: "English",

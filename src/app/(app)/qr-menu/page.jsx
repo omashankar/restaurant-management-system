@@ -1,7 +1,9 @@
 "use client";
 
-import { Download, Printer, Table2, RefreshCw } from "lucide-react";
-import { useEffect, useRef, useState, useCallback } from "react";
+import { useToast } from "@/hooks/useToast";
+import { Download, ExternalLink, Printer, Table2, RefreshCw } from "lucide-react";
+import Link from "next/link";
+import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import QRCode from "qrcode";
 
 const QR_TYPES = [
@@ -62,36 +64,100 @@ function RealQrCode({ value, size = 220, restaurantName = "" }) {
 
 export default function QrMenuPage() {
   const [qrType, setQrType]         = useState("restaurant");
-  const [tableNumber, setTableNumber] = useState("1");
+  const [tableNumber, setTableNumber] = useState("");
   const [tableCount, setTableCount]  = useState(10);
   const [baseUrl, setBaseUrl]        = useState("");
   const [restaurantName, setRestaurantName] = useState("My Restaurant");
   const [restaurantSlug, setRestaurantSlug] = useState("");
+  const [floorTables, setFloorTables] = useState([]);
+  const [settingsError, setSettingsError] = useState(null);
+  const { showToast, ToastUI } = useToast();
+
+  const tableNumbers = useMemo(() => {
+    const fromDb = floorTables
+      .map((t) => String(t.tableNumber ?? "").trim())
+      .filter(Boolean);
+    if (fromDb.length > 0) return fromDb;
+    return Array.from({ length: tableCount }, (_, i) => String(i + 1));
+  }, [floorTables, tableCount]);
 
   useEffect(() => {
     setBaseUrl(window.location.origin);
-    // Try to get restaurant name + slug from settings
-    fetch("/api/settings")
-      .then((r) => r.json())
-      .then((d) => {
-        if (d.success && d.settings?.general?.restaurantName) {
-          setRestaurantName(d.settings.general.restaurantName);
+    let alive = true;
+
+    async function loadContext() {
+      setSettingsError(null);
+      try {
+        const [settingsRes, tablesRes] = await Promise.all([
+          fetch("/api/settings", { cache: "no-store" }),
+          fetch("/api/tables", { cache: "no-store" }),
+        ]);
+        const [settingsData, tablesData] = await Promise.all([
+          settingsRes.json(),
+          tablesRes.json(),
+        ]);
+        if (!alive) return;
+
+        if (settingsRes.ok && settingsData?.success) {
+          if (settingsData.settings?.general?.restaurantName) {
+            setRestaurantName(settingsData.settings.general.restaurantName);
+          }
+          if (settingsData.restaurantSlug) {
+            setRestaurantSlug(settingsData.restaurantSlug);
+          }
+        } else {
+          setSettingsError(settingsData?.error ?? "Could not load restaurant settings.");
         }
-        if (d.restaurantSlug) {
-          setRestaurantSlug(d.restaurantSlug);
+
+        if (tablesRes.ok && tablesData?.success && Array.isArray(tablesData.tables)) {
+          setFloorTables(tablesData.tables);
+          const first = tablesData.tables[0]?.tableNumber;
+          if (first) setTableNumber(String(first));
         }
-      })
-      .catch(() => {});
+      } catch {
+        if (alive) setSettingsError("Network error while loading QR settings.");
+      }
+    }
+
+    loadContext();
+    return () => {
+      alive = false;
+    };
   }, []);
 
-  function getQrValue() {
-    // Agar slug hai to /r/[slug]/ URL use karo (multi-restaurant)
-    // Warna legacy /order/menu URL use karo
-    const prefix = restaurantSlug ? `/r/${restaurantSlug}` : "";
-    if (qrType === "table") {
-      return `${baseUrl}${prefix}/order/menu?table=${tableNumber}&type=dine-in`;
+  useEffect(() => {
+    if (!tableNumber && tableNumbers.length > 0) {
+      setTableNumber(tableNumbers[0]);
     }
-    return `${baseUrl}${prefix}/order/menu`;
+  }, [tableNumber, tableNumbers]);
+
+  const buildMenuUrl = useCallback((table) => {
+    const prefix = restaurantSlug ? `/r/${restaurantSlug}` : "";
+    const base = `${baseUrl}${prefix}/order/menu`;
+    if (qrType === "table" && table) {
+      const params = new URLSearchParams({
+        table: String(table),
+        type: "dine-in",
+      });
+      return `${base}?${params.toString()}`;
+    }
+    return base;
+  }, [baseUrl, restaurantSlug, qrType]);
+
+  function getQrValue() {
+    if (qrType === "table") {
+      return buildMenuUrl(tableNumber || tableNumbers[0] || "1");
+    }
+    return buildMenuUrl();
+  }
+
+  function copyUrl() {
+    const url = getQrValue();
+    if (!url) return;
+    navigator.clipboard?.writeText(url).then(
+      () => showToast("QR URL copied."),
+      () => showToast("Could not copy URL.", "error")
+    );
   }
 
   function downloadQr() {
@@ -150,19 +216,20 @@ export default function QrMenuPage() {
 
   // Bulk print all tables
   function printAllTables() {
-    const prefix = restaurantSlug ? `/r/${restaurantSlug}` : "";
-    const urls = Array.from({ length: tableCount }, (_, i) =>
-      `${baseUrl}${prefix}/order/menu?table=${i + 1}&type=dine-in`
-    );
+    const targets = tableNumbers.slice(0, 50);
+    if (targets.length === 0) {
+      showToast("No tables to print.", "error");
+      return;
+    }
 
-    // Generate all QR codes as data URLs
     Promise.all(
-      urls.map((url, i) =>
-        QRCode.toDataURL(url, {
-          width: 200, margin: 2,
+      targets.map((table) =>
+        QRCode.toDataURL(buildMenuUrl(table), {
+          width: 200,
+          margin: 2,
           errorCorrectionLevel: "H",
           color: { dark: "#000000", light: "#ffffff" },
-        }).then((dataUrl) => ({ dataUrl, table: i + 1 }))
+        }).then((dataUrl) => ({ dataUrl, table }))
       )
     ).then((results) => {
       const win = window.open("", "_blank");
@@ -214,6 +281,12 @@ export default function QrMenuPage() {
           Generate real scannable QR codes. Customers scan → menu opens → order placed.
         </p>
       </div>
+
+      {settingsError ? (
+        <div className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">
+          {settingsError}
+        </div>
+      ) : null}
 
       {/* Slug info banner */}
       {restaurantSlug ? (
@@ -281,19 +354,40 @@ export default function QrMenuPage() {
                   <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-zinc-500">
                     Preview Table
                   </label>
-                  <input type="number" value={tableNumber}
-                    onChange={(e) => setTableNumber(e.target.value)} min="1"
-                    className="w-full rounded-xl border border-zinc-800 bg-zinc-950/80 px-3 py-2.5 text-sm text-zinc-100 outline-none focus:border-emerald-500/45" />
+                  {floorTables.length > 0 ? (
+                    <select
+                      value={tableNumber}
+                      onChange={(e) => setTableNumber(e.target.value)}
+                      className="cursor-pointer w-full rounded-xl border border-zinc-800 bg-zinc-950/80 px-3 py-2.5 text-sm text-zinc-100 outline-none focus:border-emerald-500/45"
+                    >
+                      {tableNumbers.map((tn) => (
+                        <option key={tn} value={tn}>{tn}</option>
+                      ))}
+                    </select>
+                  ) : (
+                    <input type="text" value={tableNumber}
+                      onChange={(e) => setTableNumber(e.target.value)}
+                      placeholder="e.g. T01"
+                      className="w-full rounded-xl border border-zinc-800 bg-zinc-950/80 px-3 py-2.5 text-sm text-zinc-100 outline-none focus:border-emerald-500/45" />
+                  )}
                 </div>
+                {floorTables.length === 0 ? (
                 <div>
                   <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-zinc-500">
-                    Total Tables
+                    Total Tables (fallback)
                   </label>
                   <input type="number" value={tableCount}
                     onChange={(e) => setTableCount(Math.max(1, Math.min(50, Number(e.target.value))))}
                     min="1" max="50"
                     className="w-full rounded-xl border border-zinc-800 bg-zinc-950/80 px-3 py-2.5 text-sm text-zinc-100 outline-none focus:border-emerald-500/45" />
                 </div>
+                ) : (
+                <div className="flex items-end">
+                  <p className="text-xs text-zinc-500">
+                    Using {tableNumbers.length} table{tableNumbers.length !== 1 ? "s" : ""} from your floor plan.
+                  </p>
+                </div>
+                )}
               </div>
 
               {/* Table grid */}
@@ -302,16 +396,16 @@ export default function QrMenuPage() {
                   Select Table to Preview
                 </p>
                 <div className="grid grid-cols-5 gap-1.5 sm:grid-cols-8">
-                  {Array.from({ length: Math.min(tableCount, 40) }).map((_, i) => (
-                    <button key={i + 1} type="button"
-                      onClick={() => setTableNumber(String(i + 1))}
+                  {tableNumbers.slice(0, 40).map((tn) => (
+                    <button key={tn} type="button"
+                      onClick={() => setTableNumber(tn)}
                       className={`cursor-pointer flex flex-col items-center rounded-xl border py-2 text-xs transition-all ${
-                        tableNumber === String(i + 1)
+                        tableNumber === tn
                           ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-400"
                           : "border-zinc-800 bg-zinc-950/40 text-zinc-500 hover:border-zinc-700"
                       }`}>
                       <Table2 className="size-3.5 mb-0.5" />
-                      T{i + 1}
+                      {tn}
                     </button>
                   ))}
                 </div>
@@ -320,7 +414,7 @@ export default function QrMenuPage() {
               {/* Bulk print */}
               <div className="mt-4 flex items-center justify-between rounded-xl border border-zinc-800 bg-zinc-950/40 px-4 py-3">
                 <div>
-                  <p className="text-sm font-medium text-zinc-200">Print All {tableCount} Tables</p>
+                  <p className="text-sm font-medium text-zinc-200">Print All {tableNumbers.length} Tables</p>
                   <p className="text-xs text-zinc-500">Print all table QR codes in one go (4 per row)</p>
                 </div>
                 <button type="button" onClick={printAllTables}
@@ -338,11 +432,22 @@ export default function QrMenuPage() {
             <div className="flex items-center gap-2 rounded-xl border border-zinc-800 bg-zinc-950/60 px-3 py-2.5">
               <span className="flex-1 truncate font-mono text-xs text-zinc-400">{getQrValue()}</span>
               <button type="button"
-                onClick={() => { navigator.clipboard?.writeText(getQrValue()); }}
+                onClick={copyUrl}
                 className="cursor-pointer shrink-0 text-xs text-zinc-500 hover:text-zinc-300 transition-colors">
                 Copy
               </button>
             </div>
+            {getQrValue() ? (
+              <Link
+                href={getQrValue().replace(baseUrl, "") || "/order/menu"}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-3 inline-flex items-center gap-1.5 text-xs font-medium text-emerald-400 hover:text-emerald-300"
+              >
+                <ExternalLink className="size-3.5" />
+                Open menu link (test)
+              </Link>
+            ) : null}
           </section>
         </div>
 
@@ -414,6 +519,7 @@ export default function QrMenuPage() {
           </section>
         </div>
       </div>
+      {ToastUI}
     </div>
   );
 }

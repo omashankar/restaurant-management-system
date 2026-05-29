@@ -121,8 +121,8 @@ export function DynamicPricing({ pricing = [], currencyCode = "INR" }) {
           </div>
         </div>
         <div className="mt-10 grid gap-6 lg:grid-cols-3">
-          {pricing.map((plan) => (
-            <article key={plan.id ?? plan.name}
+          {pricing.map((plan, planIndex) => (
+            <article key={plan.id ?? `${plan.slug ?? plan.name}-${planIndex}`}
               className={`relative flex flex-col rounded-2xl border p-7 transition-all duration-200 hover:-translate-y-1 ${
                 plan.highlight
                   ? "border-indigo-500 bg-indigo-600 shadow-2xl shadow-indigo-500/30"

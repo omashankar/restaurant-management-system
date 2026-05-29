@@ -69,7 +69,7 @@ export default function CustomerOrderDetailPage() {
   };
 
   if (authLoading || (!authUser && !authLoading)) {
-    return <div className="flex min-h-[50vh] items-center justify-center"><Loader2 className="size-6 animate-spin text-[#FF6B35]" /></div>;
+    return <div className="flex min-h-[50vh] items-center justify-center"><Loader2 className="size-6 animate-spin text-customer-primary" /></div>;
   }
 
   return (
@@ -77,13 +77,13 @@ export default function CustomerOrderDetailPage() {
       {/* Back */}
       <motion.div initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }}>
         <Link href={link("/account/dashboard")}
-          className="mb-6 inline-flex items-center gap-1.5 text-sm font-medium text-[#6B7280] transition-colors hover:text-[#FF6B35]">
+          className="mb-6 inline-flex items-center gap-1.5 text-sm font-medium text-customer-muted transition-colors hover:text-customer-primary">
           <ArrowLeft className="size-4" /> Back to Dashboard
         </Link>
       </motion.div>
 
       {loading ? (
-        <div className="flex justify-center py-16"><Loader2 className="size-8 animate-spin text-[#FF6B35]" /></div>
+        <div className="flex justify-center py-16"><Loader2 className="size-8 animate-spin text-customer-primary" /></div>
       ) : error ? (
         <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>
       ) : order ? (
@@ -91,16 +91,16 @@ export default function CustomerOrderDetailPage() {
 
           {/* Order header */}
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
-            className="overflow-hidden rounded-2xl border border-[#FFE4D6] bg-white shadow-sm">
+            className="overflow-hidden rounded-2xl border border-customer-border bg-white shadow-sm">
             <div className="h-1.5 gradient-primary" />
             <div className="p-5">
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
-                  <p className="text-xs font-semibold uppercase tracking-wider text-[#6B7280]">Order</p>
-                  <h1 className="font-poppins text-xl font-bold text-[#111827]">{order.orderId}</h1>
-                  <p className="mt-1 text-sm text-[#6B7280]">{formatWhen(order.createdAt)}</p>
+                  <p className="text-xs font-semibold uppercase tracking-wider text-customer-muted">Order</p>
+                  <h1 className="font-poppins text-xl font-bold text-customer-text">{order.orderId}</h1>
+                  <p className="mt-1 text-sm text-customer-muted">{formatWhen(order.createdAt)}</p>
                 </div>
-                <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold ${order.chipClass ?? "bg-[#6B7280]/10 text-[#6B7280]"}`}>
+                <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold ${order.chipClass ?? "bg-[#6B7280]/10 text-customer-muted"}`}>
                   <span>{order.statusEmoji}</span> {order.statusLabel}
                 </span>
               </div>
@@ -114,35 +114,35 @@ export default function CustomerOrderDetailPage() {
 
           {/* Items */}
           <motion.section initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
-            className="rounded-2xl border border-[#FFE4D6] bg-white p-5 shadow-sm">
-            <h2 className="mb-3 font-poppins text-sm font-bold text-[#111827]">Items Ordered</h2>
-            <ul className="divide-y divide-[#FFE4D6]">
+            className="rounded-2xl border border-customer-border bg-white p-5 shadow-sm">
+            <h2 className="mb-3 font-poppins text-sm font-bold text-customer-text">Items Ordered</h2>
+            <ul className="divide-y divide-customer-border">
               {order.items?.length ? order.items.map((line, i) => (
                 <li key={`${line.id}-${i}`} className="flex justify-between gap-3 py-3 first:pt-0 last:pb-0">
                   <div>
-                    <p className="font-medium text-[#111827]">{line.name}</p>
-                    <p className="text-xs text-[#6B7280]">{formatCustomerMoney(line.price)} × {line.qty}</p>
+                    <p className="font-medium text-customer-text">{line.name}</p>
+                    <p className="text-xs text-customer-muted">{formatCustomerMoney(line.price)} × {line.qty}</p>
                   </div>
-                  <p className="shrink-0 font-semibold text-[#111827]">{formatCustomerMoney(line.lineTotal)}</p>
+                  <p className="shrink-0 font-semibold text-customer-text">{formatCustomerMoney(line.lineTotal)}</p>
                 </li>
-              )) : <li className="py-2 text-sm text-[#6B7280]">No items recorded.</li>}
+              )) : <li className="py-2 text-sm text-customer-muted">No items recorded.</li>}
             </ul>
-            <dl className="mt-4 space-y-2 border-t border-[#FFE4D6] pt-4 text-sm">
-              <div className="flex justify-between text-[#6B7280]"><dt>Subtotal</dt><dd className="font-medium text-[#111827]">{formatCustomerMoney(Number(order.subtotal))}</dd></div>
-              <div className="flex justify-between text-[#6B7280]"><dt>Tax</dt><dd className="font-medium text-[#111827]">{formatCustomerMoney(Number(order.tax))}</dd></div>
+            <dl className="mt-4 space-y-2 border-t border-customer-border pt-4 text-sm">
+              <div className="flex justify-between text-customer-muted"><dt>Subtotal</dt><dd className="font-medium text-customer-text">{formatCustomerMoney(Number(order.subtotal))}</dd></div>
+              <div className="flex justify-between text-customer-muted"><dt>Tax</dt><dd className="font-medium text-customer-text">{formatCustomerMoney(Number(order.tax))}</dd></div>
               {Number(order.deliveryCharge ?? 0) > 0 && (
-                <div className="flex justify-between text-[#6B7280]"><dt>Delivery</dt><dd className="font-medium text-[#111827]">{formatCustomerMoney(Number(order.deliveryCharge))}</dd></div>
+                <div className="flex justify-between text-customer-muted"><dt>Delivery</dt><dd className="font-medium text-customer-text">{formatCustomerMoney(Number(order.deliveryCharge))}</dd></div>
               )}
-              <div className="flex justify-between border-t border-[#FFE4D6] pt-2 font-poppins text-base font-bold text-[#111827]">
-                <dt>Total</dt><dd className="text-[#FF6B35]">{formatCustomerMoney(Number(order.total))}</dd>
+              <div className="flex justify-between border-t border-customer-border pt-2 font-poppins text-base font-bold text-customer-text">
+                <dt>Total</dt><dd className="text-customer-primary">{formatCustomerMoney(Number(order.total))}</dd>
               </div>
             </dl>
           </motion.section>
 
           {/* Timeline */}
           <motion.section initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
-            className="rounded-2xl border border-[#FFE4D6] bg-white p-5 shadow-sm">
-            <h2 className="mb-4 font-poppins text-sm font-bold text-[#111827]">Order Status</h2>
+            className="rounded-2xl border border-customer-border bg-white p-5 shadow-sm">
+            <h2 className="mb-4 font-poppins text-sm font-bold text-customer-text">Order Status</h2>
             <ol className="space-y-0">
               {order.timeline?.map((step, idx) => (
                 <li key={step.key} className="relative flex gap-3 pb-6 last:pb-0">
@@ -151,15 +151,15 @@ export default function CustomerOrderDetailPage() {
                   )}
                   <span className={`relative z-[1] flex size-6 shrink-0 items-center justify-center rounded-full text-xs font-bold ${
                     step.state === "done" ? "gradient-primary text-white shadow-sm"
-                    : step.state === "current" ? "border-2 border-[#FF6B35] bg-white text-[#FF6B35]"
+                    : step.state === "current" ? "border-2 border-customer-primary bg-white text-customer-primary"
                     : step.state === "bad" ? "bg-red-100 text-red-600"
-                    : "bg-[#FFF8F3] text-[#6B7280]"
+                    : "bg-customer-cream text-customer-muted"
                   }`}>
                     {step.state === "done" ? "✓" : step.emoji}
                   </span>
                   <div>
-                    <p className="font-poppins text-sm font-semibold text-[#111827]">{step.title}</p>
-                    <p className="text-xs text-[#6B7280]">
+                    <p className="font-poppins text-sm font-semibold text-customer-text">{step.title}</p>
+                    <p className="text-xs text-customer-muted">
                       {step.state === "current" ? "In progress" : step.state === "done" ? "Completed" : step.state === "bad" ? "Stopped" : "Waiting"}
                     </p>
                   </div>
@@ -171,9 +171,9 @@ export default function CustomerOrderDetailPage() {
           {/* Dine-in actions */}
           {order.orderType === "dine-in" && (
             <motion.section initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}
-              className="rounded-2xl border border-[#FFE4D6] bg-white p-5 shadow-sm">
-              <h2 className="font-poppins text-sm font-bold text-[#111827]">Dine-In Actions</h2>
-              <p className="mt-0.5 text-xs text-[#6B7280]">Table {order.tableNumber || "—"} · Request support from your phone</p>
+              className="rounded-2xl border border-customer-border bg-white p-5 shadow-sm">
+              <h2 className="font-poppins text-sm font-bold text-customer-text">Dine-In Actions</h2>
+              <p className="mt-0.5 text-xs text-customer-muted">Table {order.tableNumber || "—"} · Request support from your phone</p>
               {actionSuccess && (
                 <div className="mt-3 rounded-xl border border-[#22C55E]/30 bg-[#22C55E]/8 px-3 py-2 text-xs font-medium text-[#15803D]">
                   ✅ {actionSuccess}
@@ -190,7 +190,7 @@ export default function CustomerOrderDetailPage() {
                 <motion.button whileTap={{ scale: 0.97 }} type="button"
                   onClick={() => submitDineInAction("request_bill")}
                   disabled={requestingAction !== ""}
-                  className="flex items-center gap-2 rounded-xl border border-[#FFE4D6] bg-white px-4 py-2.5 text-sm font-semibold text-[#111827] transition-colors hover:border-[#FF6B35]/30 disabled:opacity-60">
+                  className="flex items-center gap-2 rounded-xl border border-customer-border bg-white px-4 py-2.5 text-sm font-semibold text-customer-text transition-colors hover:border-customer-primary/30 disabled:opacity-60">
                   <Receipt className="size-4" />
                   {requestingAction === "request_bill" ? "Sending..." : "Request Bill"}
                 </motion.button>

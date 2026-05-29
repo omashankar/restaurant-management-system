@@ -1,8 +1,12 @@
-﻿"use client";
+"use client";
 
 import InputField from "@/components/settings/InputField";
+import RestaurantLogoField from "@/components/settings/RestaurantLogoField";
 import SettingsFormSection from "@/components/settings/SettingsFormSection";
 import SettingsSidebar from "@/components/settings/SettingsSidebar";
+import { invalidateRestaurantBrandingCache } from "@/hooks/useRestaurantBranding";
+import { invalidateRestaurantInfoCache } from "@/hooks/useRestaurantInfo";
+import { invalidateAccessControlCache } from "@/hooks/useAccessControlSettings";
 import TimePicker from "@/components/settings/TimePicker";
 import ToggleSwitch from "@/components/settings/ToggleSwitch";
 import GatewaySettingsSection from "@/components/payment-settings/GatewaySettingsSection";
@@ -21,7 +25,7 @@ import {
   normalizeAccessControl,
 } from "@/config/accessControlConfig";
 import { useUser } from "@/context/AuthContext";
-import { CheckCircle2, Loader2, Mail, Upload, XCircle } from "lucide-react";
+import { CheckCircle2, Loader2, Mail, XCircle } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 
 const PAYMENT_TABS = ["payments","billing"];
@@ -32,6 +36,7 @@ export default function SettingsPage() {
   const [settings, setSettings] = useState(EMPTY_SETTINGS);
   const [savedSnapshot, setSavedSnapshot] = useState(EMPTY_SETTINGS);
   const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
   const [testingSmtp, setTestingSmtp] = useState(false);
   const [smtpTestRecipient, setSmtpTestRecipient] = useState("");
@@ -54,23 +59,31 @@ export default function SettingsPage() {
 
   useEffect(() => {
     async function load() {
+      setLoadError(null);
       try {
         const res = await fetch("/api/settings");
         const data = await res.json();
-        if (data.success) {
-          const safe = {
-            ...data.settings,
-            paymentMethods: { ...EMPTY_SETTINGS.paymentMethods, ...(data.settings.paymentMethods ?? {}) },
-            email: { ...EMPTY_SETTINGS.email, ...(data.settings.email ?? {}) },
-            openingHours: Array.isArray(data.settings.openingHours) ? data.settings.openingHours : EMPTY_SETTINGS.openingHours,
-            accessControl: normalizeAccessControl(data.settings.accessControl),
-          };
-          setSettings(safe);
-          setSavedSnapshot(safe);
-          if (data.restaurantSlug) setRestaurantSlug(data.restaurantSlug);
+        if (!res.ok || !data.success) {
+          const msg = data.error ?? "Failed to load settings.";
+          setLoadError(msg);
+          showToast("error", msg);
+          return;
         }
-      } catch { showToast("error", "Failed to load settings."); }
-      finally { setIsLoading(false); }
+        const safe = {
+          ...data.settings,
+          paymentMethods: { ...EMPTY_SETTINGS.paymentMethods, ...(data.settings.paymentMethods ?? {}) },
+          email: { ...EMPTY_SETTINGS.email, ...(data.settings.email ?? {}) },
+          openingHours: Array.isArray(data.settings.openingHours) ? data.settings.openingHours : EMPTY_SETTINGS.openingHours,
+          accessControl: normalizeAccessControl(data.settings.accessControl),
+        };
+        setSettings(safe);
+        setSavedSnapshot(safe);
+        if (data.restaurantSlug) setRestaurantSlug(data.restaurantSlug);
+      } catch {
+        const msg = "Could not load settings.";
+        setLoadError(msg);
+        showToast("error", msg);
+      } finally { setIsLoading(false); }
     }
     load();
   }, []);
@@ -109,8 +122,14 @@ export default function SettingsPage() {
         body: JSON.stringify({ section, data }),
       });
       const json = await res.json();
-      if (json.success) showToast("success", "Saved successfully.");
-      else showToast("error", json.error ?? "Failed to save.");
+      if (json.success) {
+        showToast("success", section === "gateways" ? "Payment gateway saved. Refresh customer checkout to see UPI/Card." : "Saved successfully.");
+        if (section === "gateways") {
+          const reload = await fetch("/api/payment-settings");
+          const data2 = await reload.json();
+          if (data2.success) setPaySettings((p) => ({ ...p, ...data2.settings }));
+        }
+      } else showToast("error", json.error ?? "Failed to save.");
     } catch { showToast("error", "Network error."); }
   }
 
@@ -143,7 +162,13 @@ export default function SettingsPage() {
         body: JSON.stringify(settings),
       });
       const data = await res.json();
-      if (data.success) { setSavedSnapshot(settings); showToast("success", "Settings saved successfully."); }
+      if (data.success) {
+        setSavedSnapshot(settings);
+        invalidateRestaurantInfoCache();
+        invalidateRestaurantBrandingCache();
+        invalidateAccessControlCache();
+        showToast("success", "Settings saved successfully.");
+      }
       else showToast("error", data.error || "Failed to save settings.");
     } catch { showToast("error", "Network error. Please try again."); }
     finally { setIsSaving(false); }
@@ -183,6 +208,12 @@ export default function SettingsPage() {
         <p className="mt-1 text-sm text-zinc-500">Configure restaurant preferences, POS behavior, and notifications.</p>
       </div>
 
+      {loadError && (
+        <div className="rounded-xl border border-red-500/25 bg-red-500/10 px-4 py-3 text-sm text-red-400">
+          {loadError}
+        </div>
+      )}
+
       <div className="grid gap-5 lg:grid-cols-[240px_1fr]">
         <SettingsSidebar tabs={sidebarTabs} activeTab={activeTab} onTabChange={setActiveTab} />
 
@@ -218,15 +249,11 @@ export default function SettingsPage() {
                 <div className="grid gap-4 md:grid-cols-2">
                   <InputField label="Restaurant Name" value={settings.general.restaurantName}
                     onChange={(v) => setSettings((p) => ({ ...p, general: { ...p.general, restaurantName: v } }))} />
-                  <div>
-                    <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-zinc-500">Logo Upload</label>
-                    <label className="flex cursor-pointer items-center gap-2 rounded-xl border border-zinc-800 bg-zinc-950/80 px-3 py-2.5 text-sm text-zinc-300 hover:border-zinc-700">
-                      <Upload className="size-4 text-zinc-400" />
-                      <span>{settings.general.logoName || "Choose logo file"}</span>
-                      <input type="file" className="hidden" accept="image/*"
-                        onChange={(e) => setSettings((p) => ({ ...p, general: { ...p.general, logoName: e.target.files?.[0]?.name || "" } }))} />
-                    </label>
-                  </div>
+                  <RestaurantLogoField
+                    logoUrl={settings.general.logoUrl ?? ""}
+                    onChange={(v) => setSettings((p) => ({ ...p, general: { ...p.general, logoUrl: v } }))}
+                    disabled={isSaving}
+                  />
                   <InputField label="Currency" value={settings.general.currency} options={CURRENCY_OPTIONS}
                     onChange={(v) => setSettings((p) => ({ ...p, general: { ...p.general, currency: v } }))} />
                   <InputField label="Timezone" value={settings.general.timezone} options={TIMEZONE_OPTIONS}
@@ -236,7 +263,7 @@ export default function SettingsPage() {
                 </div>
               </SettingsFormSection>
 
-              <SettingsFormSection title="Notifications" description="Choose which alerts you want to receive.">
+              <SettingsFormSection title="Notifications" description="Control in-app inbox alerts and optional email/SMS alerts for new orders.">
                 <div className="grid gap-3 md:grid-cols-2">
                   <ToggleSwitch label="Order Notifications" checked={settings.notifications.orderNotifications}
                     onChange={(v) => setSettings((p) => ({ ...p, notifications: { ...p.notifications, orderNotifications: v } }))} />

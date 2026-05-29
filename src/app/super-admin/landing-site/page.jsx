@@ -717,6 +717,7 @@ export default function LandingSitePage() {
   const [pricingView, setPricingView] = useState("monthly");
   const [content, setContent]     = useState(null);
   const [fetching, setFetching]   = useState(true);
+  const [loadError, setLoadError] = useState("");
   const [saving, setSaving]       = useState(false);
   const { showToast, ToastUI }    = useToast();
   const panelRef                  = useRef(null);
@@ -769,6 +770,7 @@ export default function LandingSitePage() {
   /* ── Fetch all content on mount ── */
   useEffect(() => {
     (async () => {
+      setLoadError("");
       try {
         const [landingRes, plansRes] = await Promise.all([
           fetch("/api/super-admin/landing"),
@@ -776,7 +778,9 @@ export default function LandingSitePage() {
         ]);
         const [landingData, plansData] = await Promise.all([landingRes.json(), plansRes.json()]);
         if (!landingData.success) {
-          showToast(landingData.error ?? "Failed to load.", "error");
+          const msg = landingData.error ?? "Failed to load landing content.";
+          setLoadError(msg);
+          showToast(msg, "error");
           return;
         }
         const baseContent = normalizePricingForEditor(landingData.content);
@@ -787,7 +791,10 @@ export default function LandingSitePage() {
         if (!plansData.success) {
           showToast("Plans sync failed. Showing saved landing pricing.", "error");
         }
-      } catch { showToast("Network error.", "error"); }
+      } catch {
+        setLoadError("Network error loading landing site.");
+        showToast("Network error.", "error");
+      }
       finally { setFetching(false); }
     })();
   }, [mapPlansToLandingPricing, normalizePricingForEditor, showToast]);
@@ -854,6 +861,12 @@ export default function LandingSitePage() {
           <Globe className="size-3.5" /> Preview Site
         </Link>
       </div>
+
+      {loadError && (
+        <div className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">
+          {loadError}
+        </div>
+      )}
 
       <div className="flex flex-col gap-4 lg:flex-row lg:gap-6">
 

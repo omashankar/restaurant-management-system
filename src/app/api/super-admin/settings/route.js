@@ -1,6 +1,9 @@
+import { writeAuditLog } from "@/lib/auditLog";
+import { invalidatePlatformSettingsCache } from "@/lib/platformSettings";
 import { getTokenFromRequest } from "@/lib/authCookies";
 import { verifyToken } from "@/lib/jwt";
 import clientPromise from "@/lib/mongodb";
+import { getClientIp } from "@/lib/rateLimit";
 
 function superAdminOnly(request) {
   const token   = getTokenFromRequest(request);
@@ -111,6 +114,37 @@ const DEFAULTS = {
   },
 };
 const SECRET_MASK = "********";
+const GATEWAY_SECRET_FIELDS = ["secretKey", "webhookSecret"];
+
+function maskGatewaySecrets(gateways = {}) {
+  const masked = {};
+  for (const [gwId, gw] of Object.entries(gateways)) {
+    if (!gw || typeof gw !== "object") continue;
+    masked[gwId] = { ...gw };
+    for (const field of GATEWAY_SECRET_FIELDS) {
+      if (masked[gwId][field]) masked[gwId][field] = SECRET_MASK;
+    }
+  }
+  return masked;
+}
+
+function mergeGatewaySecrets(incoming = {}, existing = {}) {
+  const merged = { ...existing };
+  for (const [gwId, gwData] of Object.entries(incoming)) {
+    if (!gwData || typeof gwData !== "object") continue;
+    const prev = existing[gwId] ?? {};
+    const next = { ...prev, ...gwData };
+    for (const field of GATEWAY_SECRET_FIELDS) {
+      const val = gwData[field];
+      if (val == null || val === "" || val === SECRET_MASK) {
+        next[field] = prev[field] ?? "";
+      }
+    }
+    merged[gwId] = next;
+  }
+  return merged;
+}
+
 const SECRET_FIELDS = {
   email: ["smtpPassword"],
   payment: ["stripeSecretKey", "webhookSecret"],
@@ -199,6 +233,9 @@ export async function GET(request) {
       for (const key of SECRET_FIELDS[section] ?? []) {
         if (merged[key]) merged[key] = SECRET_MASK;
       }
+      if (section === "payment" && merged.gateways) {
+        merged.gateways = maskGatewaySecrets(merged.gateways);
+      }
       settings[section] = merged;
     }
     return Response.json({ success: true, settings });
@@ -212,7 +249,8 @@ export async function GET(request) {
    Body: { section: string, data: object }
 ── */
 export async function PATCH(request) {
-  if (!superAdminOnly(request)) {
+  const sa = superAdminOnly(request);
+  if (!sa) {
     return Response.json({ success: false, error: "Forbidden." }, { status: 403 });
   }
 
@@ -246,12 +284,30 @@ export async function PATCH(request) {
         mergedForSave[key] = existing?.[section]?.[key] ?? "";
       }
     }
+    if (section === "payment" && data.gateways) {
+      mergedForSave.gateways = mergeGatewaySecrets(
+        data.gateways,
+        existing?.payment?.gateways ?? {},
+      );
+    }
 
     await db.collection("settings").updateOne(
       { _id: "platform" },
       { $set: { [section]: mergedForSave, updatedAt: new Date() } },
       { upsert: true }
     );
+
+    invalidatePlatformSettingsCache();
+
+    await writeAuditLog({
+      action: "settings.updated",
+      category: "settings",
+      actorId: sa.id,
+      targetName: section,
+      meta: { section },
+      ip: getClientIp(request),
+    });
+
     return Response.json({ success: true, section });
   } catch (err) {
     console.error("PATCH settings error:", err.message);

@@ -30,14 +30,18 @@ export default function PaymentTransactionsSection({ showToast }) {
       if (method !== "all") params.set("method", method);
       if (from) params.set("from", from);
       if (to)   params.set("to", to);
-      const res  = await fetch(`/api/payment-transactions?${params}`);
+      const res  = await fetch(`/api/payment-transactions?${params}`, { cache: "no-store" });
       const data = await res.json();
-      if (data.success) {
+      if (res.ok && data.success) {
         setTransactions(data.transactions);
         setSummary(data.summary);
         setPagination(data.pagination);
+      } else {
+        showToast(data?.error ?? "Failed to load transactions.", "error");
       }
-    } catch { showToast("error", "Failed to load transactions."); }
+    } catch {
+      showToast("Failed to load transactions.", "error");
+    }
     finally { setLoading(false); }
   }, [page, status, method, from, to, showToast]);
 
@@ -49,7 +53,7 @@ export default function PaymentTransactionsSection({ showToast }) {
       <div className="mb-5 flex items-center justify-between">
         <div>
           <h2 className="text-lg font-semibold text-zinc-100">Transaction History</h2>
-          <p className="mt-1 text-sm text-zinc-500">All payment transactions for your restaurant.</p>
+          <p className="mt-1 text-sm text-zinc-500">Subscription payments and online order transactions for your restaurant.</p>
         </div>
         <button type="button" onClick={fetchData}
           className="cursor-pointer flex items-center gap-1.5 rounded-xl border border-zinc-700 px-3 py-2 text-sm text-zinc-400 hover:border-zinc-500 hover:text-zinc-200 transition-colors">

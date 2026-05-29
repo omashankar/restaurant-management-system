@@ -35,7 +35,7 @@ const ROLE_PATHS = {
 /* ── Role home (redirect after login or unauthorized access) ── */
 const ROLE_HOME = {
   super_admin: "/super-admin/dashboard",
-  admin: "/admin/dashboard",
+  admin: "/dashboard",
   manager: "/manager/dashboard",
   waiter: "/waiter/dashboard",
   chef: "/chef/dashboard",
@@ -56,9 +56,48 @@ const PUBLIC_PATHS = [
   "/verify-email",
   "/privacy",
   "/terms",
+  "/maintenance",
 ];
 
-const PUBLIC_API_PREFIXES = ["/api/auth", "/api/landing-sections"];
+const PUBLIC_API_PREFIXES = [
+  "/api/auth",
+  "/api/landing-sections",
+  "/api/platform",
+];
+
+const MAINTENANCE_EXEMPT_PREFIXES = [
+  "/super-admin",
+  "/api/super-admin",
+  "/api/platform",
+  "/maintenance",
+  "/login",
+  "/_next",
+];
+
+let _maintCache = { on: false, expires: 0 };
+
+async function isMaintenanceMode(request) {
+  const now = Date.now();
+  if (_maintCache.expires > now) return _maintCache.on;
+  try {
+    const url = new URL("/api/platform/config", request.url);
+    const res = await fetch(url, { cache: "no-store" });
+    const data = await res.json();
+    _maintCache = {
+      on: Boolean(data.maintenanceMode),
+      expires: now + 30_000,
+    };
+    return _maintCache.on;
+  } catch {
+    return false;
+  }
+}
+
+function isMaintenanceExempt(pathname) {
+  return MAINTENANCE_EXEMPT_PREFIXES.some(
+    (p) => pathname === p || pathname.startsWith(`${p}/`),
+  );
+}
 const JWT_SECRET = process.env.JWT_SECRET ?? "dev-only-secret";
 
 function decodeBase64Url(input) {
@@ -134,7 +173,37 @@ export async function proxy(request) {
       httpOnly: false,
     });
 
+    // Maintenance applies to customer slug routes too
+    if (!isMaintenanceExempt(pathname)) {
+      const maintenance = await isMaintenanceMode(request);
+      if (maintenance) {
+        const url = request.nextUrl.clone();
+        url.pathname = "/maintenance";
+        return NextResponse.rewrite(url);
+      }
+    }
+
     return response;
+  }
+
+  // ── Maintenance mode (platform-wide) ──
+  if (
+    !isMaintenanceExempt(pathname) &&
+    !pathname.includes(".") &&
+    !(pathname.startsWith("/api/") && PUBLIC_API_PREFIXES.some((p) => pathname.startsWith(p)))
+  ) {
+    const maintenance = await isMaintenanceMode(request);
+    if (maintenance) {
+      if (pathname.startsWith("/api/")) {
+        return Response.json(
+          { success: false, error: "Platform is under maintenance.", code: "MAINTENANCE" },
+          { status: 503 },
+        );
+      }
+      const url = request.nextUrl.clone();
+      url.pathname = "/maintenance";
+      return NextResponse.redirect(url);
+    }
   }
 
   // API routes are guarded inside each route handler via verifyToken/role checks.

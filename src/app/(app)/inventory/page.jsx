@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import InventoryAlertCard from "@/components/inventory/InventoryAlertCard";
 import InventoryFormModal from "@/components/inventory/InventoryFormModal";
@@ -17,8 +17,6 @@ import { usePaginatedList } from "@/hooks/usePaginatedList";
 import { useToast } from "@/hooks/useToast";
 import { AlertTriangle, Package, Plus } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
-
-const HISTORY_CAP = 80;
 
 function emptyForm() {
   return {
@@ -59,6 +57,7 @@ export default function InventoryPage() {
   } = useModuleData();
 
   const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState(null);
   const [statusFilter, setStatusFilter] = useState("all");
   const [modalOpen, setModalOpen] = useState(false);
   const [editingId, setEditingId] = useState(null);
@@ -66,20 +65,44 @@ export default function InventoryPage() {
   const [deleteTarget, setDeleteTarget] = useState(null);
   const { showToast, ToastUI } = useToast();
 
+  const loadHistory = useCallback(async () => {
+    try {
+      const res = await fetch("/api/inventory/history?limit=80", { cache: "no-store" });
+      const data = await res.json();
+      if (res.ok && data?.success && Array.isArray(data.history)) {
+        setInventoryHistory(data.history);
+      }
+    } catch {
+      /* keep existing */
+    }
+  }, [setInventoryHistory]);
+
   useEffect(() => {
     if (!hydrated) return;
     let alive = true;
     async function loadInventory() {
       setLoading(true);
+      setFetchError(null);
       try {
-        const res = await fetch("/api/inventory", { cache: "no-store" });
-        const data = await res.json();
+        const [itemsRes, historyRes] = await Promise.all([
+          fetch("/api/inventory", { cache: "no-store" }),
+          fetch("/api/inventory/history?limit=80", { cache: "no-store" }),
+        ]);
+        const [itemsData, historyData] = await Promise.all([
+          itemsRes.json(),
+          historyRes.json(),
+        ]);
         if (!alive) return;
-        if (res.ok && data?.success && Array.isArray(data.items)) {
-          setInventoryRows(data.items.map(normalizeInventoryItem));
+        if (itemsRes.ok && itemsData?.success && Array.isArray(itemsData.items)) {
+          setInventoryRows(itemsData.items.map(normalizeInventoryItem));
+        } else {
+          setFetchError(itemsData?.error ?? "Could not load inventory.");
+        }
+        if (historyRes.ok && historyData?.success && Array.isArray(historyData.history)) {
+          setInventoryHistory(historyData.history);
         }
       } catch {
-        // Keep fallback/session rows.
+        if (alive) setFetchError("Network error while loading inventory.");
       } finally {
         if (alive) setLoading(false);
       }
@@ -88,7 +111,7 @@ export default function InventoryPage() {
     return () => {
       alive = false;
     };
-  }, [hydrated, setInventoryRows]);
+  }, [hydrated, setInventoryRows, setInventoryHistory]);
 
   const filterFn = useCallback(
     (row) => {
@@ -161,10 +184,6 @@ export default function InventoryPage() {
     setModalOpen(true);
   };
 
-  const appendLog = (entry) => {
-    setInventoryHistory((prev) => [entry, ...prev].slice(0, HISTORY_CAP));
-  };
-
   const saveItem = async () => {
     if (!form.name.trim() || !form.unit.trim()) return;
     const quantity = Math.max(0, parseInt(form.quantity, 10) || 0);
@@ -178,33 +197,29 @@ export default function InventoryPage() {
       supplier: form.supplier.trim(),
       notes: form.notes.trim(),
     };
-    const ts = Date.now();
-
     try {
       if (editingId) {
         const prevRow = inventoryRows.find((r) => r.id === editingId);
         const res = await fetch(`/api/inventory/${editingId}`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
+          body: JSON.stringify({
+            ...payload,
+            historyMessage:
+              prevRow && prevRow.quantity !== quantity
+                ? `Adjusted from ${prevRow.quantity} → ${quantity} ${payload.unit}`
+                : undefined,
+          }),
         });
+        const data = await res.json();
         if (!res.ok) {
-          showToast("Inventory update failed.", "error");
+          showToast(data?.error ?? "Inventory update failed.", "error");
           return;
         }
         setInventoryRows((rows) =>
           rows.map((r) => (r.id === editingId ? { ...r, ...payload } : r))
         );
-        if (prevRow && prevRow.quantity !== quantity) {
-          appendLog({
-            id: `ih-${ts}`,
-            itemId: editingId,
-            itemName: payload.name,
-            delta: quantity - prevRow.quantity,
-            message: `Adjusted from ${prevRow.quantity} -> ${quantity} ${payload.unit}`,
-            createdAt: new Date().toISOString(),
-          });
-        }
+        await loadHistory();
         showToast("Inventory item updated.");
       } else {
         const res = await fetch("/api/inventory", {
@@ -221,14 +236,7 @@ export default function InventoryPage() {
           ...rows,
           normalizeInventoryItem({ ...payload, id: data.id }),
         ]);
-        appendLog({
-          id: `ih-${ts + 1}`,
-          itemId: data.id,
-          itemName: payload.name,
-          delta: quantity,
-          message: `Initial stock · ${quantity} ${payload.unit}`,
-          createdAt: new Date().toISOString(),
-        });
+        await loadHistory();
         showToast("Inventory item added.");
       }
       setModalOpen(false);
@@ -243,8 +251,9 @@ export default function InventoryPage() {
       const res = await fetch(`/api/inventory/${deleteTarget.id}`, {
         method: "DELETE",
       });
+      const data = await res.json().catch(() => ({}));
       if (!res.ok) {
-        showToast("Delete failed. Permission or server error.", "error");
+        showToast(data?.error ?? "Delete failed. Permission or server error.", "error");
         return;
       }
       setInventoryRows((prev) => prev.filter((r) => r.id !== deleteTarget.id));
@@ -284,6 +293,12 @@ export default function InventoryPage() {
           Add item
         </button>
       </div>
+
+      {fetchError ? (
+        <div className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">
+          {fetchError}
+        </div>
+      ) : null}
 
       {limited ? (
         <RoleCard
@@ -356,7 +371,7 @@ export default function InventoryPage() {
       <ListToolbar
         search={search}
         onSearchChange={setSearch}
-        searchPlaceholder="Search name, category, supplierâ€¦"
+        searchPlaceholder="Search name, category, supplier…"
         filterSlot={
           <select
             value={statusFilter}
@@ -395,24 +410,21 @@ export default function InventoryPage() {
             fetch(`/api/inventory/${row.id}`, {
               method: "PATCH",
               headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ quantity: next }),
+              body: JSON.stringify({
+                quantity: next,
+                historyMessage: delta > 0 ? "+1 quick update" : "-1 quick update",
+              }),
             })
-              .then((res) => {
+              .then(async (res) => {
+                const data = await res.json().catch(() => ({}));
                 if (!res.ok) {
-                  showToast("Quick quantity update failed.", "error");
+                  showToast(data?.error ?? "Quick quantity update failed.", "error");
                   return;
                 }
                 setInventoryRows((prev) =>
                   prev.map((r) => (r.id === row.id ? { ...r, quantity: next } : r))
                 );
-                appendLog({
-                  id: `ih-${Date.now()}`,
-                  itemId: row.id,
-                  itemName: row.name,
-                  delta,
-                  message: delta > 0 ? "+1 quick update" : "-1 quick update",
-                  createdAt: new Date().toISOString(),
-                });
+                loadHistory();
               })
               .catch(() => {
                 showToast("Network error while updating quantity.", "error");
@@ -451,7 +463,7 @@ export default function InventoryPage() {
         title="Remove item?"
         message={
           deleteTarget
-            ? `Delete â€œ${deleteTarget.name}â€ from inventory? This cannot be undone.`
+            ? `Delete “${deleteTarget.name}” from inventory? This cannot be undone.`
             : ""
         }
         onConfirm={confirmDelete}

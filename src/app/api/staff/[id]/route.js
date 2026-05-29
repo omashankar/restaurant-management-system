@@ -55,9 +55,23 @@ export const PATCH = withTenant(
 
 export const DELETE = withTenant(
   ["admin"],
-  async ({ db, tenantFilter }, request, { params }) => {
+  async ({ db, tenantFilter, payload }, request, { params }) => {
     const _id = toOid(params.id);
     if (!_id) return Response.json({ success: false, error: "Invalid ID." }, { status: 400 });
+
+    if (payload.id === params.id) {
+      return Response.json({ success: false, error: "You cannot remove your own account." }, { status: 400 });
+    }
+
+    const existing = await db.collection("users").findOne(
+      { ...tenantFilter, _id },
+      { projection: { role: 1 } }
+    );
+    if (!existing) return Response.json({ success: false, error: "Staff not found." }, { status: 404 });
+    if (!STAFF_ROLES.includes(existing.role)) {
+      return Response.json({ success: false, error: "Only staff roles can be removed here." }, { status: 403 });
+    }
+
     const result = await db.collection("users").deleteOne({ ...tenantFilter, _id });
     if (result.deletedCount === 0) return Response.json({ success: false, error: "Staff not found." }, { status: 404 });
     return Response.json({ success: true });

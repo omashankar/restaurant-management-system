@@ -1,5 +1,6 @@
 import { withTenant } from "@/lib/tenantDb";
 import { encryptSecret, decryptSecret, isSecretMask, maskSecret } from "@/lib/cryptoUtils";
+import { isOnlinePaymentConfigured } from "@/lib/paymentGateway";
 import { EMPTY_PAYMENT_SETTINGS, ALL_GATEWAYS } from "@/config/paymentConfig";
 
 const GATEWAY_KEYS = ["apiKey", "secretKey", "merchantId", "webhookSecret"];
@@ -50,7 +51,9 @@ export const GET = withTenant(
       settings.bank = {};
     }
 
-    return Response.json({ success: true, settings });
+    const onlinePaymentsConfigured = await isOnlinePaymentConfigured(db, restaurantId);
+
+    return Response.json({ success: true, settings, onlinePaymentsConfigured });
   }
 );
 

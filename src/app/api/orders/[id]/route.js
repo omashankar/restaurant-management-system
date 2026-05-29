@@ -1,7 +1,7 @@
 import { withTenant } from "@/lib/tenantDb";
 import { logInfo } from "@/lib/logger";
 import { orderPatchSchema, parseSchema } from "@/lib/validationSchemas";
-import { sendOrderWhatsApp } from "@/lib/whatsappService";
+import { sendOrderWhatsApp, getOrderStatusWhatsAppEvent, sendNewOrderAlertWhatsApp } from "@/lib/whatsappService";
 import { ObjectId } from "mongodb";
 
 function getFilter(tenantFilter, id) {
@@ -43,7 +43,11 @@ export const PATCH = withTenant(
     const existing = await db.collection("orders").findOne(filter);
     if (!existing) return Response.json({ success: false, error: "Order not found." }, { status: 404 });
 
-    const update = { ...parsed, updatedAt: new Date() };
+    const { paymentStatus, ...rest } = parsed;
+    const update = { ...rest, updatedAt: new Date() };
+    if (paymentStatus) {
+      update["payment.status"] = paymentStatus;
+    }
     // Add timestamps for status transitions
     if (parsed.status === "preparing") update.preparingAt = new Date();
     if (parsed.status === "ready")     update.readyAt     = new Date();
@@ -61,26 +65,37 @@ export const PATCH = withTenant(
     }
     logInfo("order.updated", { route: "/api/orders/[id]", orderId: params.id, status: parsed.status ?? null });
 
-    // ── WhatsApp triggers on status change ──
+    // ── WhatsApp triggers on status / payment change ──
+    const mergedOrder = { ...existing, ...update };
+    const settingsDoc = await db.collection("restaurant_settings").findOne(
+      { restaurantId: existing.restaurantId },
+      { projection: { "general.restaurantName": 1 } }
+    ).catch(() => null);
+    const restaurantName = settingsDoc?.general?.restaurantName ?? "Restaurant";
+
     if (parsed.status && existing.customerInfo?.phone) {
-      const eventMap = {
-        preparing: "order_preparing",
-        ready:     "out_for_delivery",
-        completed: "order_delivered",
-      };
-      const event = eventMap[parsed.status];
+      const event = getOrderStatusWhatsAppEvent(parsed.status, existing.orderType);
       if (event) {
-        const settingsDoc = await db.collection("restaurant_settings").findOne(
-          { restaurantId: existing.restaurantId },
-          { projection: { "general.restaurantName": 1 } }
-        ).catch(() => null);
         sendOrderWhatsApp({
           event,
-          order: { ...existing, ...update },
+          order: mergedOrder,
           db,
           restaurantId: existing.restaurantId,
-          restaurantName: settingsDoc?.general?.restaurantName ?? "Restaurant",
-        }).catch(() => {}); // fire-and-forget
+          restaurantName,
+        }).catch(() => {});
+      }
+    }
+
+    if (paymentStatus === "paid" && existing.customerInfo?.phone) {
+      const prevPaid = existing.payment?.status === "paid";
+      if (!prevPaid) {
+        sendOrderWhatsApp({
+          event: "payment_received",
+          order: mergedOrder,
+          db,
+          restaurantId: existing.restaurantId,
+          restaurantName,
+        }).catch(() => {});
       }
     }
 

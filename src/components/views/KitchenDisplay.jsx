@@ -42,6 +42,18 @@ function ElapsedBadge({ createdAt, elapsedMin }) {
   );
 }
 
+function customerLabel(order) {
+  if (typeof order?.customer === "string" && order.customer.trim()) return order.customer.trim();
+  if (order?.customerInfo?.name) return order.customerInfo.name;
+  return null;
+}
+
+function sortKitchenOrders(list) {
+  return [...list].sort(
+    (a, b) => new Date(a.createdAt ?? 0).getTime() - new Date(b.createdAt ?? 0).getTime()
+  );
+}
+
 /* ── Order type pill ── */
 function TypePill({ type }) {
   const cfg = {
@@ -56,9 +68,14 @@ function TypePill({ type }) {
 /* ── Ticket card ── */
 function TicketCard({ ticket, col, onAction, updating }) {
   const isUpdating = updating === ticket.id;
+  const orderType = ticket.orderType ?? ticket.type ?? "dine-in";
   const placedAt = ticket.placedAt ?? (ticket.createdAt
     ? new Date(ticket.createdAt).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })
     : "—");
+  const headline = ticket.tableNumber
+    ? `Table ${ticket.tableNumber}`
+    : customerLabel(ticket) ?? (orderType === "delivery" ? "Delivery order" : "Takeaway");
+  const items = ticket.items ?? [];
 
   return (
     <article className={`rounded-2xl border border-zinc-800 bg-zinc-900/80 shadow-md shadow-black/20 border-l-4 ${col.borderLeft} transition-all duration-200 hover:border-zinc-700`}>
@@ -71,11 +88,9 @@ function TicketCard({ ticket, col, onAction, updating }) {
             </p>
             <ElapsedBadge createdAt={ticket.createdAt} elapsedMin={ticket.elapsedMin} />
           </div>
-          <p className="text-base font-bold text-zinc-100">
-            {ticket.tableNumber ? `Table ${ticket.tableNumber}` : ticket.customer ?? "—"}
-          </p>
+          <p className="text-base font-bold text-zinc-100">{headline}</p>
           <div className="flex items-center gap-2">
-            <TypePill type={ticket.orderType ?? ticket.type} />
+            <TypePill type={orderType} />
             <span className="text-zinc-700">·</span>
             <span className="text-xs text-zinc-600">{placedAt}</span>
           </div>
@@ -87,20 +102,26 @@ function TicketCard({ ticket, col, onAction, updating }) {
 
       {/* Items */}
       <ul className="space-y-1.5 p-4">
-        {(ticket.items ?? []).map((it, idx) => (
-          <li key={idx} className="rounded-lg bg-zinc-950/50 px-3 py-2 text-sm">
-            <div className="flex items-center gap-2">
-              <span className="flex size-5 shrink-0 items-center justify-center rounded-md bg-zinc-800 text-xs font-bold text-zinc-300">
-                {it.qty}
-              </span>
-              <span className="font-medium text-zinc-100">{it.name}</span>
-            </div>
-            {it.note && <p className="mt-1 pl-7 text-xs text-amber-400">{it.note}</p>}
-          </li>
-        ))}
-        {ticket.notes && (
+        {items.length === 0 ? (
+          <li className="rounded-lg bg-zinc-950/50 px-3 py-2 text-xs text-zinc-500">No items listed</li>
+        ) : (
+          items.map((it, idx) => (
+            <li key={idx} className="rounded-lg bg-zinc-950/50 px-3 py-2 text-sm">
+              <div className="flex items-center gap-2">
+                <span className="flex size-5 shrink-0 items-center justify-center rounded-md bg-zinc-800 text-xs font-bold text-zinc-300">
+                  {it.qty}
+                </span>
+                <span className="font-medium text-zinc-100">{it.name}</span>
+              </div>
+              {it.note?.trim() && (
+                <p className="mt-1 pl-7 text-xs font-medium text-amber-400">{it.note.trim()}</p>
+              )}
+            </li>
+          ))
+        )}
+        {ticket.notes?.trim() && (
           <li className="rounded-lg border border-amber-500/20 bg-amber-500/5 px-3 py-2 text-xs text-amber-400">
-            📝 {ticket.notes}
+            <span className="font-semibold text-amber-300/90">Order note:</span> {ticket.notes.trim()}
           </li>
         )}
       </ul>
@@ -142,6 +163,8 @@ function TicketCard({ ticket, col, onAction, updating }) {
 export default function KitchenDisplay() {
   const [orders, setOrders]     = useState([]);
   const [loading, setLoading]   = useState(true);
+  const [fetchError, setFetchError] = useState("");
+  const [actionError, setActionError] = useState("");
   const [updating, setUpdating] = useState(null); // id being updated
   const [lastRefresh, setLastRefresh] = useState(null);
   const intervalRef = useRef(null);
@@ -149,17 +172,23 @@ export default function KitchenDisplay() {
   /* ── Fetch active orders from DB ── */
   const fetchOrders = useCallback(async (silent = false) => {
     if (!silent) setLoading(true);
+    if (!silent) setFetchError("");
     try {
       const res  = await fetch("/api/orders");
       const data = await res.json();
       if (data.success) {
-        // Kitchen shows: new, preparing, ready (not completed/cancelled)
-        const active = data.orders.filter((o) => ["new", "preparing", "ready"].includes(o.status));
+        // Kitchen: new, preparing, ready — oldest first (FIFO)
+        const active = sortKitchenOrders(
+          data.orders.filter((o) => ["new", "preparing", "ready"].includes(o.status))
+        );
         setOrders(active);
         setLastRefresh(new Date());
+      } else {
+        setFetchError(data.error ?? "Could not load kitchen queue.");
       }
-    } catch { /* keep existing */ }
-    finally { if (!silent) setLoading(false); }
+    } catch {
+      setFetchError("Network error while loading orders.");
+    } finally { if (!silent) setLoading(false); }
   }, []);
 
   useEffect(() => { fetchOrders(); }, [fetchOrders]);
@@ -173,6 +202,7 @@ export default function KitchenDisplay() {
   /* ── Update order status via API ── */
   const handleAction = useCallback(async (id, status) => {
     setUpdating(id);
+    setActionError("");
     try {
       const res  = await fetch(`/api/orders/${id}`, {
         method: "PATCH",
@@ -182,14 +212,18 @@ export default function KitchenDisplay() {
       const data = await res.json();
       if (data.success) {
         if (status === "completed") {
-          // Remove from kitchen board
           setOrders((prev) => prev.filter((o) => o.id !== id));
         } else {
-          setOrders((prev) => prev.map((o) => o.id === id ? { ...o, status } : o));
+          setOrders((prev) =>
+            sortKitchenOrders(prev.map((o) => (o.id === id ? { ...o, status } : o)))
+          );
         }
+      } else {
+        setActionError(data.error ?? "Failed to update order.");
       }
-    } catch { /* keep existing */ }
-    finally { setUpdating(null); }
+    } catch {
+      setActionError("Network error. Try again.");
+    } finally { setUpdating(null); }
   }, []);
 
   const active   = orders.filter((o) => o.status !== "completed");
@@ -215,6 +249,11 @@ export default function KitchenDisplay() {
 
   return (
     <div className="space-y-6">
+      {(fetchError || actionError) && (
+        <div className="rounded-xl border border-red-500/25 bg-red-500/10 px-4 py-3 text-sm text-red-300">
+          {fetchError || actionError}
+        </div>
+      )}
 
       {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
@@ -297,7 +336,7 @@ export default function KitchenDisplay() {
                     <p className="text-xs text-zinc-700">No {col.label.toLowerCase()} orders</p>
                   </div>
                 ) : (
-                  <div className="space-y-3">
+                  <div className="max-h-[calc(100vh-14rem)] space-y-3 overflow-y-auto pr-1 [scrollbar-width:thin]">
                     {colTickets.map((ticket) => (
                       <TicketCard
                         key={ticket.id}

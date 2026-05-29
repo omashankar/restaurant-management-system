@@ -15,6 +15,7 @@
  *   createdAt Date
  */
 
+import { writeAuditLog } from "@/lib/auditLog";
 import { getTokenFromRequest } from "@/lib/authCookies";
 import { verifyToken } from "@/lib/jwt";
 import clientPromise from "@/lib/mongodb";
@@ -143,19 +144,14 @@ export async function POST(request) {
   }
 
   try {
-    const client = await clientPromise;
-    const db     = client.db();
-
-    await db.collection("audit_logs").insertOne({
+    await writeAuditLog({
       action,
       category,
-      actorId:    payload?.id   ?? "system",
-      actorName:  payload?.name ?? "System",
-      targetId:   targetId   ?? null,
-      targetName: targetName ?? null,
-      meta:       meta       ?? {},
+      actorId: payload?.id ?? "system",
+      targetId,
+      targetName,
+      meta,
       ip,
-      createdAt:  new Date(),
     });
 
     return Response.json({ success: true }, { status: 201 });

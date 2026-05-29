@@ -1,5 +1,7 @@
 import { getClientIp, resendLimiter } from "@/lib/rateLimit";
 import clientPromise from "@/lib/mongodb";
+import { getPlatformSettings } from "@/lib/platformSettings";
+import { validatePlatformPassword } from "@/lib/platformPassword";
 import bcrypt from "bcryptjs";
 
 export async function POST(request) {
@@ -20,20 +22,18 @@ export async function POST(request) {
   if (!token) {
     return Response.json({ success: false, error: "Reset token is required." }, { status: 400 });
   }
-  if (password.length < 6) {
-    return Response.json(
-      { success: false, error: "Password must be at least 6 characters." },
-      { status: 400 }
-    );
+  const client = await clientPromise;
+  const db = client.db();
+  const platform = await getPlatformSettings(db);
+  const pwdCheck = validatePlatformPassword(password, platform.security);
+  if (!pwdCheck.valid) {
+    return Response.json({ success: false, error: pwdCheck.error }, { status: 400 });
   }
   if (password !== confirmPassword) {
     return Response.json({ success: false, error: "Passwords do not match." }, { status: 400 });
   }
 
   try {
-    const client = await clientPromise;
-    const db = client.db();
-
     const user = await db.collection("users").findOne({
       passwordResetToken: token,
       passwordResetExpires: { $gt: new Date() },

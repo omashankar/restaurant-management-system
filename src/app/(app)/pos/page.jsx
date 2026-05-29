@@ -4,11 +4,13 @@ import CategoryTabs from "@/components/pos/CategoryTabs";
 import MenuCard from "@/components/menu/MenuCard";
 import OrderSummary from "@/components/pos/OrderSummary";
 import PrintInvoice from "@/components/pos/PrintInvoice";
+import { triggerPosAutoPrint } from "@/lib/posPrint";
 import ListToolbar from "@/components/ui/ListToolbar";
 import Modal from "@/components/ui/Modal";
 import { useMenuFilter } from "@/hooks/useMenuFilter";
 import { useModuleData } from "@/context/ModuleDataContext";
-import { useCallback, useEffect, useMemo, useState, Suspense } from "react";
+import { resolveCustomerByPhone } from "@/lib/posCustomer";
+import { useCallback, useEffect, useMemo, useRef, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 
 const KITCHEN_LABELS = {
@@ -18,7 +20,16 @@ const KITCHEN_LABELS = {
 };
 
 function PosPageContent() {
-  const { setCustomerRows, setOrderRows, setKitchenQueue, floorTables, setFloorTables, menuItems, categories } = useModuleData();
+  const {
+    customerRows,
+    setCustomerRows,
+    setOrderRows,
+    setKitchenQueue,
+    floorTables,
+    setFloorTables,
+    menuItems,
+    categories,
+  } = useModuleData();
   const searchParams = useSearchParams();
 
   const activeMenuItems = useMemo(() => menuItems.filter((m) => m.status === "active"), [menuItems]);
@@ -51,6 +62,38 @@ function PosPageContent() {
   }, [searchParams]);
   const [kitchenRouting, setKitchenRouting] = useState({});
 
+  // ── POS settings: tax % and service charge % from restaurant settings ──
+  const [taxPercent, setTaxPercent]                     = useState(0);
+  const [serviceChargePercent, setServiceChargePercent] = useState(0);
+  const [roundOffTotal, setRoundOffTotal]               = useState(false);
+  const [currency, setCurrency]                         = useState("INR");
+  const [restaurantName, setRestaurantName]             = useState("Restaurant");
+  const [printers, setPrinters]                         = useState([]);
+  const settingsFetchedRef = useRef(false);
+
+  useEffect(() => {
+    if (settingsFetchedRef.current) return;
+    settingsFetchedRef.current = true;
+    fetch("/api/settings")
+      .then((r) => r.json())
+      .then((d) => {
+        if (d.success) {
+          setTaxPercent(parseFloat(d.settings?.pos?.taxPercentage ?? "0")    || 0);
+          setServiceChargePercent(parseFloat(d.settings?.pos?.serviceCharge ?? "0") || 0);
+          setRoundOffTotal(Boolean(d.settings?.pos?.roundOffTotal));
+          setCurrency(d.settings?.general?.currency ?? "INR");
+          setRestaurantName(d.settings?.general?.restaurantName?.trim() || "Restaurant");
+        }
+      })
+      .catch(() => {});
+    fetch("/api/printer-settings")
+      .then((r) => r.json())
+      .then((d) => {
+        if (d.success) setPrinters(Array.isArray(d.printers) ? d.printers : []);
+      })
+      .catch(() => {});
+  }, []);
+
   const {
     filtered: filteredItems,
     activeCategory, setActiveCategory,
@@ -59,14 +102,19 @@ function PosPageContent() {
     search, setSearch,
   } = useMenuFilter(activeMenuItems);
 
-  const subtotal = useMemo(() => cart.reduce((s, l) => s + l.price * l.qty, 0), [cart]);
-  const tax = subtotal * 0.08;
-  const total = subtotal + tax;
+  const subtotal      = useMemo(() => cart.reduce((s, l) => s + l.price * l.qty, 0), [cart]);
+  const taxAmount     = parseFloat(((subtotal * taxPercent)           / 100).toFixed(2));
+  const serviceCharge = parseFloat(((subtotal * serviceChargePercent) / 100).toFixed(2));
+  const total         = useMemo(() => {
+    let value = parseFloat((subtotal + taxAmount + serviceCharge).toFixed(2));
+    if (roundOffTotal) value = Math.round(value);
+    return value;
+  }, [subtotal, taxAmount, serviceCharge, roundOffTotal]);
 
   const addItem = (item) => {
     setCart((prev) => {
       const idx = prev.findIndex((l) => l.id === item.id);
-      if (idx === -1) return [...prev, { ...item, qty: 1 }];
+      if (idx === -1) return [...prev, { ...item, qty: 1, note: "" }];
       const next = [...prev];
       next[idx] = { ...next[idx], qty: next[idx].qty + 1 };
       return next;
@@ -83,14 +131,32 @@ function PosPageContent() {
   const deliveryValid = delivery.name.trim() && delivery.phone.trim() && delivery.address.trim();
   const canPlaceOrder =
     cart.length > 0 &&
-    !!selectedCustomer &&
-    (orderType === "takeaway" ||
-      (orderType === "dine-in" && selectedTableId) ||
-      (orderType === "delivery" && deliveryValid));
+    (orderType === "delivery"
+      ? deliveryValid
+      : !!selectedCustomer &&
+        (orderType === "takeaway" || (orderType === "dine-in" && selectedTableId)));
 
   const [isPlacing, setIsPlacing] = useState(false);
   const [placeError, setPlaceError] = useState("");
   const [note, setNote] = useState("");
+  const [paymentMethod, setPaymentMethod] = useState("cashCounter");
+  const [paymentStatus, setPaymentStatus] = useState("paid");
+
+  useEffect(() => {
+    if (paymentMethod === "cod") setPaymentStatus("pending");
+    else if (paymentStatus === "pending" && paymentMethod !== "cod") {
+      setPaymentStatus("paid");
+    }
+  }, [paymentMethod]);
+
+  const handleOrderTypeChange = useCallback((type) => {
+    setOrderType(type);
+    setSelectedTableId("");
+    if (type === "delivery") setSelectedCustomer(null);
+  }, []);
+
+  const setLineNote = (id, noteText) =>
+    setCart((p) => p.map((l) => (l.id === id ? { ...l, note: noteText } : l)));
 
   const placeOrder = useCallback(async () => {
     if (!canPlaceOrder || isPlacing) return;
@@ -99,17 +165,35 @@ function PosPageContent() {
 
     const now = new Date();
 
-    // Kitchen routing map
+    // Kitchen routing map (with per-item notes)
     const map = {};
     for (const l of cart) {
       const k = l.kitchenType ?? "default_kitchen";
-      (map[k] ??= []).push({ name: l.name, qty: l.qty });
+      (map[k] ??= []).push({ name: l.name, qty: l.qty, note: l.note?.trim() || undefined });
     }
     setKitchenRouting(map);
 
     const table = floorTables.find((t) => t.id === selectedTableId);
-    const customerName = selectedCustomer?.name ?? (orderType === "delivery" ? delivery.name : "Walk-in");
-    const tableNumber  = table?.tableNumber ?? (orderType === "dine-in" ? selectedTableId : null);
+    let activeCustomer = selectedCustomer;
+
+    if (orderType === "delivery") {
+      const resolved = await resolveCustomerByPhone({
+        name: delivery.name,
+        phone: delivery.phone,
+        customerRows,
+        setCustomerRows,
+      });
+      if (resolved && !resolved.ephemeral) activeCustomer = resolved;
+    }
+
+    const customerName =
+      activeCustomer?.name ??
+      (orderType === "delivery" ? delivery.name.trim() : "Walk-in");
+    const tableNumber = table?.tableNumber ?? (orderType === "dine-in" ? selectedTableId : null);
+    const orderNotes =
+      [note.trim(), orderType === "delivery" ? `Address: ${delivery.address.trim()}` : ""]
+        .filter(Boolean)
+        .join(" · ");
 
     // Persist to MongoDB
     try {
@@ -117,11 +201,24 @@ function PosPageContent() {
         method:  "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          items:       cart.map((l) => ({ name: l.name, qty: l.qty, price: l.price, menuItemId: l.id })),
+          items: cart.map((l) => ({
+            name: l.name,
+            qty: l.qty,
+            price: l.price,
+            menuItemId: l.id,
+            note: l.note?.trim() || undefined,
+          })),
           orderType,
           tableNumber,
-          customer:    customerName,
-          notes:       note || (orderType === "delivery" ? delivery.address : ""),
+          customer: customerName,
+          notes: orderNotes,
+          subtotal,
+          taxAmount,
+          taxPercent,
+          serviceCharge,
+          serviceChargePercent,
+          paymentMethod,
+          paymentStatus,
         }),
       });
       const data = await res.json();
@@ -136,15 +233,25 @@ function PosPageContent() {
       // Sync into shared in-memory context so Orders/Kitchen pages update live
       const newOrder = {
         id:        orderId,
+        orderId,
         source:    "pos",
         customer:  customerName,
-        phone:     selectedCustomer?.phone ?? delivery.phone ?? "",
+        phone:     activeCustomer?.phone ?? delivery.phone ?? "",
         type:      orderType,
+        orderType,
         table:     tableNumber ?? "—",
+        tableNumber: tableNumber ?? null,
         address:   orderType === "delivery" ? delivery.address : "",
+        total,
         amount:    total,
         status:    "new",
-        items:     cart.map((l) => ({ name: l.name, qty: l.qty, price: l.price })),
+        payment:   { method: paymentMethod, status: paymentStatus },
+        items:     cart.map((l) => ({
+          name: l.name,
+          qty: l.qty,
+          price: l.price,
+          note: l.note?.trim() || undefined,
+        })),
         itemCount: cart.reduce((s, l) => s + l.qty, 0),
         time:      "Just now",
         createdAt: now.toISOString(),
@@ -161,28 +268,44 @@ function PosPageContent() {
         placedAt:   now.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" }),
         elapsedMin: 0,
         status:     "new",
-        items:      cart.map((l) => ({ name: l.name, qty: l.qty })),
+        items:      cart.map((l) => ({
+          name: l.name,
+          qty: l.qty,
+          note: l.note?.trim() || undefined,
+        })),
       };
       setKitchenQueue((prev) => [kitchenTicket, ...prev]);
 
-      // Update customer visits
-      if (selectedCustomer) {
+      // Update customer visits (local + database)
+      if (activeCustomer?.id) {
+        const visitDate = now.toISOString().slice(0, 10);
         const itemsSummary = cart.map((l) => `${l.name} ×${l.qty}`).join(", ");
+        const nextVisits = (activeCustomer.visits ?? 0) + 1;
+        const nextHistory = [
+          { id: orderId, date: visitDate, total, items: itemsSummary },
+          ...(activeCustomer.orderHistory ?? []),
+        ].slice(0, 50);
         setCustomerRows((prev) =>
           prev.map((c) =>
-            c.id === selectedCustomer.id
+            c.id === activeCustomer.id
               ? {
                   ...c,
-                  visits:       (c.visits ?? 0) + 1,
-                  lastVisit:    now.toISOString().slice(0, 10),
-                  orderHistory: [
-                    { id: orderId, date: now.toISOString().slice(0, 10), total, items: itemsSummary },
-                    ...(c.orderHistory ?? []),
-                  ],
+                  visits: nextVisits,
+                  lastVisit: visitDate,
+                  orderHistory: nextHistory,
                 }
               : c
           )
         );
+        fetch(`/api/customers/${activeCustomer.id}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            visits: nextVisits,
+            lastVisit: visitDate,
+            orderHistory: nextHistory,
+          }),
+        }).catch(() => {});
       }
 
       // Mark table occupied
@@ -198,37 +321,66 @@ function PosPageContent() {
         orderType,
         tableNumber,
         customer: customerName,
+        phone: selectedCustomer?.phone ?? delivery.phone ?? "",
         items: cart.map((l) => ({ name: l.name, qty: l.qty, price: l.price })),
         subtotal,
-        tax,
+        taxAmount,
+        taxPercent,
+        serviceCharge,
+        serviceChargePercent,
         total,
+        currency,
       });
+
+      triggerPosAutoPrint({
+        printers,
+        restaurantName,
+        lastOrder: {
+          orderId,
+          orderType,
+          tableNumber,
+          customer: customerName,
+          items: cart.map((l) => ({ name: l.name, qty: l.qty, price: l.price })),
+          subtotal,
+          taxAmount,
+          taxPercent,
+          serviceCharge,
+          serviceChargePercent,
+          total,
+          currency,
+        },
+        kitchenRouting: map,
+      });
+
       setCart([]);
       setNote("");
       setSelectedTableId("");
       setDelivery({ name: "", phone: "", address: "" });
       setSelectedCustomer(null);
+      setPaymentMethod("cashCounter");
+      setPaymentStatus("paid");
     } catch {
       setPlaceError("Network error. Please try again.");
     } finally {
       setIsPlacing(false);
     }
-  }, [canPlaceOrder, isPlacing, cart, orderType, selectedTableId, selectedCustomer, delivery, total, subtotal, tax, note,
-      floorTables, setOrderRows, setKitchenQueue, setCustomerRows, setFloorTables]);
+  }, [canPlaceOrder, isPlacing, cart, orderType, selectedTableId, selectedCustomer, delivery, total, subtotal,
+      taxAmount, taxPercent, serviceCharge, serviceChargePercent, currency, note, paymentMethod, paymentStatus,
+      customerRows, floorTables, setOrderRows, setKitchenQueue, setCustomerRows, setFloorTables, printers, restaurantName]);
 
   useEffect(() => {
     const h = (e) => {
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
-      if (e.key === "1") setOrderType("dine-in");
-      if (e.key === "2") setOrderType("takeaway");
-      if (e.key === "3") setOrderType("delivery");
+      if (e.key === "1") handleOrderTypeChange("dine-in");
+      if (e.key === "2") handleOrderTypeChange("takeaway");
+      if (e.key === "3") handleOrderTypeChange("delivery");
       if (e.key === "/") { e.preventDefault(); document.querySelector("input[type='search']")?.focus(); }
       if (e.key === "Escape") setCart([]);
       if (e.ctrlKey && e.key === "Enter") { e.preventDefault(); placeOrder(); }
     };
     window.addEventListener("keydown", h);
     return () => window.removeEventListener("keydown", h);
-  }, [placeOrder]);
+  }, [placeOrder, handleOrderTypeChange]);
 
   return (
     <div className="space-y-4">
@@ -323,13 +475,21 @@ function PosPageContent() {
           )}
           <OrderSummary
             cart={cart}
-            subtotal={subtotal} tax={tax} total={total}
+            subtotal={subtotal}
+            taxAmount={taxAmount} taxPercent={taxPercent}
+            serviceCharge={serviceCharge} serviceChargePercent={serviceChargePercent}
+            total={total}
+            currency={currency}
             canPlaceOrder={canPlaceOrder && !isPlacing}
             onPlaceOrder={placeOrder}
             onClearCart={() => setCart([])}
             onInc={incrementQty} onDec={decrementQty}
-            onRemove={removeLine} onSetQuantity={setLineQty}
-            orderType={orderType} onOrderTypeChange={setOrderType}
+            onRemove={removeLine} onSetQuantity={setLineQty} onSetLineNote={setLineNote}
+            orderType={orderType} onOrderTypeChange={handleOrderTypeChange}
+            paymentMethod={paymentMethod}
+            onPaymentMethodChange={setPaymentMethod}
+            paymentStatus={paymentStatus}
+            onPaymentStatusChange={setPaymentStatus}
             selectedTableId={selectedTableId} onTableSelect={setSelectedTableId}
             delivery={delivery} onDeliveryChange={(f, v) => setDelivery((p) => ({ ...p, [f]: v }))}
             onCustomerSelect={setSelectedCustomer}
@@ -356,8 +516,14 @@ function PosPageContent() {
                 customer={lastOrder.customer}
                 items={lastOrder.items}
                 subtotal={lastOrder.subtotal}
-                tax={lastOrder.tax}
+                taxAmount={lastOrder.taxAmount}
+                taxPercent={lastOrder.taxPercent}
+                serviceCharge={lastOrder.serviceCharge}
+                serviceChargePercent={lastOrder.serviceChargePercent}
                 total={lastOrder.total}
+                currency={lastOrder.currency}
+                restaurantName={restaurantName}
+                paperSize={printers.find((p) => p.printInvoice)?.paperSize ?? "80mm"}
               />
             )}
             <button type="button" onClick={() => setSuccessOpen(false)} className="cursor-pointer rounded-xl bg-emerald-500 px-4 py-2 text-sm font-semibold text-zinc-950 hover:bg-emerald-400">
@@ -367,10 +533,12 @@ function PosPageContent() {
         }
       >
         <div className="space-y-3">
-          {selectedCustomer && (
+          {lastOrder?.customer && (
             <div className="rounded-xl border border-emerald-500/25 bg-emerald-500/5 px-3 py-2">
               <p className="text-[10px] text-zinc-500">Customer</p>
-              <p className="text-sm font-semibold text-emerald-300">{selectedCustomer.name} · {selectedCustomer.phone}</p>
+              <p className="text-sm font-semibold text-emerald-300">
+                {lastOrder.customer}{lastOrder.phone ? ` · ${lastOrder.phone}` : ""}
+              </p>
             </div>
           )}
           <p className="text-sm text-zinc-400">Kitchen tickets dispatched:</p>
@@ -379,8 +547,14 @@ function PosPageContent() {
               <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wide text-zinc-400">{KITCHEN_LABELS[k] ?? k}</p>
               <ul className="space-y-1">
                 {items.map((it, i) => (
-                  <li key={i} className="flex justify-between text-sm text-zinc-300">
-                    <span>{it.name}</span><span className="text-zinc-500">×{it.qty}</span>
+                  <li key={i} className="text-sm text-zinc-300">
+                    <div className="flex justify-between">
+                      <span>{it.name}</span>
+                      <span className="text-zinc-500">×{it.qty}</span>
+                    </div>
+                    {it.note && (
+                      <p className="mt-0.5 text-[11px] text-amber-400/90">↳ {it.note}</p>
+                    )}
                   </li>
                 ))}
               </ul>

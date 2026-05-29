@@ -19,6 +19,7 @@ const DEFAULT_INFO = {
   address: "123 Restaurant St, Food City",
   phone: "+1 (555) 123-4567",
   email: "hello@rmsrestaurant.com",
+  googleMapsLink: "",
   logoUrl: null,
   slug: null,
   currency: "USD",
@@ -32,6 +33,18 @@ const DEFAULT_INFO = {
 let _cache = null;
 let _cacheTime = 0;
 const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
+/** Keep customer API calls on the same restaurant as /r/[slug] routes. */
+function syncRestaurantSlugCookie(slug) {
+  if (typeof document === "undefined" || !slug) return;
+  const current = document.cookie
+    .split(";")
+    .map((c) => c.trim())
+    .find((c) => c.startsWith("x-restaurant-slug="))
+    ?.split("=")[1];
+  if (current === slug) return;
+  document.cookie = `x-restaurant-slug=${encodeURIComponent(slug)}; path=/; max-age=${60 * 60 * 24}; samesite=lax`;
+}
 
 export function useRestaurantInfo() {
   const [info, setInfo] = useState(_cache ?? DEFAULT_INFO);
@@ -55,6 +68,7 @@ export function useRestaurantInfo() {
         if (data?.success && data.info) {
           _cache = { ...DEFAULT_INFO, ...data.info };
           _cacheTime = Date.now();
+          if (_cache.slug) syncRestaurantSlugCookie(_cache.slug);
           setInfo(_cache);
         }
       })

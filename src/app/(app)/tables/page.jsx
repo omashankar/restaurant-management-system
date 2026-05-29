@@ -7,18 +7,26 @@ import Modal from "@/components/ui/Modal";
 import PaginationBar from "@/components/ui/PaginationBar";
 import TableCapacityIcon from "@/components/table/TableCapacityIcon";
 import { getCategoryBadge } from "@/lib/tableCategoryColors";
+import { useModuleData } from "@/context/ModuleDataContext";
+import { useUser } from "@/context/AuthContext";
 import { usePaginatedList } from "@/hooks/usePaginatedList";
 import { useToast } from "@/hooks/useToast";
-import { LayoutGrid, Pencil, Plus, RefreshCw, Table2, Trash2, Users } from "lucide-react";
+import { LayoutGrid, Pencil, Plus, RefreshCw, ShoppingCart, Table2, Trash2, Users } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 
 const emptyForm = { tableNumber: "", capacity: "4", status: "available", categoryId: "" };
 
 export default function TablesModulePage() {
+  const { user } = useUser();
+  const { refreshMenu } = useModuleData();
+  const isAdmin = user?.role === "admin";
+  const canEdit = isAdmin || user?.role === "manager";
+
   const [tables, setTables]         = useState([]);
   const [areas, setAreas]           = useState([]);
   const [loading, setLoading]       = useState(true);
+  const [fetchError, setFetchError] = useState("");
   const [saving, setSaving]         = useState(false);
   const [statusFilter, setStatusFilter]   = useState("all");
   const [categoryFilter, setCategoryFilter] = useState("all");
@@ -33,6 +41,7 @@ export default function TablesModulePage() {
   /* â”€â”€ Fetch tables + areas â”€â”€ */
   const fetchAll = useCallback(async () => {
     setLoading(true);
+    setFetchError("");
     try {
       const [tablesRes, areasRes] = await Promise.all([
         fetch("/api/tables"),
@@ -40,10 +49,13 @@ export default function TablesModulePage() {
       ]);
       const [tablesData, areasData] = await Promise.all([tablesRes.json(), areasRes.json()]);
       if (tablesData.success) setTables(tablesData.tables);
-      if (areasData.success)  setAreas(areasData.areas);
-    } catch { /* keep existing */ }
-    finally { setLoading(false); }
-  }, []);
+      else setFetchError(tablesData.error ?? "Could not load tables.");
+      if (areasData.success) setAreas(areasData.areas);
+      if (tablesData.success) await refreshMenu();
+    } catch {
+      setFetchError("Network error while loading tables.");
+    } finally { setLoading(false); }
+  }, [refreshMenu]);
 
   useEffect(() => { fetchAll(); }, [fetchAll]);
 
@@ -112,6 +124,7 @@ export default function TablesModulePage() {
         setTables((prev) => [data.table, ...prev]);
         showToast("Table created.");
       }
+      await refreshMenu();
       setModalOpen(false);
     } catch { setFormError("Network error."); }
     finally { setSaving(false); }
@@ -125,6 +138,7 @@ export default function TablesModulePage() {
       const data = await res.json();
       if (!data.success) { showToast(data.error ?? "Failed to delete.", "error"); return; }
       setTables((prev) => prev.filter((t) => t.id !== deleteTarget.id));
+      await refreshMenu();
       showToast(`Table ${deleteTarget.tableNumber} deleted.`);
       setDeleteTarget(null);
     } catch { showToast("Network error.", "error"); }
@@ -146,6 +160,11 @@ export default function TablesModulePage() {
 
   return (
     <div className="space-y-6">
+      {fetchError && (
+        <div className="rounded-xl border border-red-500/25 bg-red-500/10 px-4 py-3 text-sm text-red-300">
+          {fetchError}
+        </div>
+      )}
       {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div className="flex items-start gap-3">
@@ -154,7 +173,7 @@ export default function TablesModulePage() {
           </span>
           <div>
             <h1 className="text-2xl font-semibold tracking-tight text-zinc-50">Tables</h1>
-            <p className="mt-1 text-sm text-zinc-500">Floor layout Â· {total} table{total !== 1 ? "s" : ""}</p>
+            <p className="mt-1 text-sm text-zinc-500">Floor layout · {total} table{total !== 1 ? "s" : ""}</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -166,10 +185,12 @@ export default function TablesModulePage() {
             className="cursor-pointer flex items-center gap-1.5 rounded-xl border border-zinc-700 px-3 py-2.5 text-sm font-medium text-zinc-400 hover:border-zinc-500 hover:text-zinc-200 transition-colors">
             <RefreshCw className="size-4" />
           </button>
-          <button type="button" onClick={openCreate}
-            className="cursor-pointer inline-flex items-center gap-2 rounded-xl bg-emerald-500 px-4 py-2.5 text-sm font-semibold text-zinc-950 hover:bg-emerald-400">
-            <Plus className="size-4" /> Add Table
-          </button>
+          {isAdmin && (
+            <button type="button" onClick={openCreate}
+              className="cursor-pointer inline-flex items-center gap-2 rounded-xl bg-emerald-500 px-4 py-2.5 text-sm font-semibold text-zinc-950 hover:bg-emerald-400">
+              <Plus className="size-4" /> Add Table
+            </button>
+          )}
         </div>
       </div>
 
@@ -177,7 +198,7 @@ export default function TablesModulePage() {
       <ListToolbar
         search={search}
         onSearchChange={setSearch}
-        searchPlaceholder="Search table numberâ€¦"
+        searchPlaceholder="Search table number…"
         filterSlot={
           <div className="flex flex-wrap gap-2">
             <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}
@@ -201,10 +222,12 @@ export default function TablesModulePage() {
           title="No tables"
           description="Add tables to match your floor plan."
           action={
-            <button type="button" onClick={openCreate}
-              className="cursor-pointer rounded-xl bg-emerald-500 px-4 py-2 text-sm font-semibold text-zinc-950 hover:bg-emerald-400">
-              Add Table
-            </button>
+            isAdmin ? (
+              <button type="button" onClick={openCreate}
+                className="cursor-pointer rounded-xl bg-emerald-500 px-4 py-2 text-sm font-semibold text-zinc-950 hover:bg-emerald-400">
+                Add Table
+              </button>
+            ) : null
           }
         />
       ) : (
@@ -246,15 +269,29 @@ export default function TablesModulePage() {
                       </span>
                     </div>
                   )}
-                  <div className="mt-4 flex gap-1 border-t border-zinc-800/80 pt-3">
+                  <div className="mt-4 flex flex-col gap-1 border-t border-zinc-800/80 pt-3">
+                    {st === "available" && (
+                      <Link
+                        href={`/pos?tableId=${encodeURIComponent(t.id)}`}
+                        className="cursor-pointer flex w-full items-center justify-center gap-1 rounded-lg bg-emerald-500/15 py-2 text-xs font-semibold text-emerald-300 ring-1 ring-emerald-500/25 transition-colors hover:bg-emerald-500/25"
+                      >
+                        <ShoppingCart className="size-3.5" /> Open in POS
+                      </Link>
+                    )}
+                    <div className="flex gap-1">
+                    {canEdit && (
                     <button type="button" onClick={() => openEdit(t)}
                       className="cursor-pointer flex flex-1 items-center justify-center gap-1 rounded-lg border border-zinc-800 py-2 text-xs font-medium text-zinc-400 transition-colors hover:border-emerald-500/40 hover:text-emerald-400">
                       <Pencil className="size-3.5" /> Edit
                     </button>
+                    )}
+                    {isAdmin && (
                     <button type="button" onClick={() => setDeleteTarget(t)}
                       className="cursor-pointer flex flex-1 items-center justify-center gap-1 rounded-lg border border-zinc-800 py-2 text-xs font-medium text-zinc-400 transition-colors hover:border-red-500/40 hover:text-red-400">
                       <Trash2 className="size-3.5" /> Delete
                     </button>
+                    )}
+                    </div>
                   </div>
                 </div>
               );
@@ -277,7 +314,7 @@ export default function TablesModulePage() {
             </button>
             <button type="button" onClick={saveTable} disabled={saving}
               className="cursor-pointer rounded-xl bg-emerald-500 px-4 py-2 text-sm font-semibold text-zinc-950 hover:bg-emerald-400 disabled:opacity-40">
-              {saving ? "Savingâ€¦" : "Save"}
+              {saving ? "Saving…" : "Save"}
             </button>
           </div>
         }>
@@ -307,13 +344,13 @@ export default function TablesModulePage() {
               <label className="text-xs text-zinc-500">Area</label>
               {areas.length === 0 ? (
                 <div className="mt-1 rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-500">
-                  No areas â€”{" "}
+                  No areas —{" "}
                   <Link href="/tables/areas" className="cursor-pointer text-emerald-400 hover:text-emerald-300">create one</Link>
                 </div>
               ) : (
                 <select value={form.categoryId} onChange={(e) => setForm((f) => ({ ...f, categoryId: e.target.value }))}
                   className="cursor-pointer mt-1 w-full rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus:border-emerald-500/50">
-                  <option value="">â€” Select area â€”</option>
+                  <option value="">— Select area —</option>
                   {areas.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}
                 </select>
               )}
@@ -326,7 +363,7 @@ export default function TablesModulePage() {
         open={!!deleteTarget}
         title="Remove table?"
         message={deleteTarget ? `Table ${deleteTarget.tableNumber} will be deleted.` : ""}
-        confirmLabel={deleting ? "Deletingâ€¦" : "Delete"}
+        confirmLabel={deleting ? "Deleting…" : "Delete"}
         onCancel={() => setDeleteTarget(null)}
         onConfirm={confirmDelete}
       />

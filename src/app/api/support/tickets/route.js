@@ -112,6 +112,7 @@ export const POST = withTenant(
           ticketId: result.insertedId,
           ticketCode: doc.ticketCode,
           restaurantId,
+          href: "/super-admin/support-tickets",
         },
         createdAt: now,
       });

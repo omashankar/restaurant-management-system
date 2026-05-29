@@ -7,6 +7,7 @@ import {
   ChevronRight, Clock, Plus, RefreshCw,
   Settings, Shield, UserCheck, Users, XCircle,
 } from "lucide-react";
+import { formatSaMoney } from "@/lib/formatSaMoney";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 
@@ -47,18 +48,24 @@ function SuperAdminDashboard() {
   const [recentUsers, setRecentUsers] = useState([]);
   const [loading, setLoading]         = useState(true);
   const [lastRefresh, setLastRefresh] = useState(null);
+  const [loadError, setLoadError]     = useState("");
 
   const fetchStats = useCallback(async () => {
     setLoading(true);
+    setLoadError("");
     try {
       const res  = await fetch("/api/super-admin/stats");
       const data = await res.json();
-      if (data.success) {
+      if (res.ok && data.success) {
         setStats(data.stats);
         setRecentUsers(data.recentUsers);
-        setLastRefresh(new Date());
+        setLastRefresh(data?.stats?.generatedAt ? new Date(data.stats.generatedAt) : new Date());
+      } else {
+        setLoadError(data?.error ?? "Failed to load dashboard stats.");
       }
-    } catch { /* keep */ }
+    } catch {
+      setLoadError("Could not load dashboard stats.");
+    }
     finally { setLoading(false); }
   }, []);
 
@@ -96,6 +103,11 @@ function SuperAdminDashboard() {
       </div>
 
       {/* Stat cards */}
+      {loadError && (
+        <div className="rounded-xl border border-red-500/25 bg-red-500/10 px-4 py-3 text-sm text-red-300">
+          {loadError}
+        </div>
+      )}
       {loading && !stats ? (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {Array.from({ length: 4 }).map((_, i) => (
@@ -106,8 +118,16 @@ function SuperAdminDashboard() {
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <StatCard label="Total Restaurants" value={stats?.totalRestaurants ?? 0} sub="Registered tenants"              icon={Building2} color="text-emerald-400" bg="bg-emerald-500/5" border="border-emerald-500/20" />
           <StatCard label="Restaurant Admins" value={stats?.totalAdmins ?? 0}      sub={`${stats?.activeAdmins ?? 0} active`} icon={Users}     color="text-amber-400"   bg="bg-amber-500/5"   border="border-amber-500/20"   />
-          <StatCard label="Total Revenue"     value={`$${(stats?.totalRevenue ?? 0).toLocaleString()}`} sub="All time paid"  icon={Activity}  color="text-indigo-400"  bg="bg-indigo-500/5"  border="border-indigo-500/20"  />
-          <StatCard label="System Status"     value="Online"                       sub="All services running"             icon={UserCheck} color="text-rose-400"    bg="bg-rose-500/5"    border="border-rose-500/20"    />
+          <StatCard label="Total Revenue"     value={formatSaMoney(stats?.totalRevenue ?? 0)} sub="All time paid"  icon={Activity}  color="text-indigo-400"  bg="bg-indigo-500/5"  border="border-indigo-500/20"  />
+          <StatCard
+            label="System Status"
+            value={stats?.systemStatus === "online" ? "Online" : "Degraded"}
+            sub={stats?.systemStatus === "online" ? "All services running" : "Some checks failed"}
+            icon={UserCheck}
+            color={stats?.systemStatus === "online" ? "text-emerald-400" : "text-amber-400"}
+            bg={stats?.systemStatus === "online" ? "bg-emerald-500/5" : "bg-amber-500/5"}
+            border={stats?.systemStatus === "online" ? "border-emerald-500/20" : "border-amber-500/20"}
+          />
         </div>
       )}
 
@@ -168,7 +188,7 @@ function SuperAdminDashboard() {
             <div className="space-y-2">
               {[
                 { href: "/super-admin/restaurants",  label: "Add Restaurant", desc: "Register new tenant",    icon: Plus,     color: "text-emerald-400", bg: "bg-emerald-500/10" },
-                { href: "/super-admin/payments",     label: "Payments",       desc: "View transactions",      icon: BarChart3,color: "text-indigo-400",  bg: "bg-indigo-500/10"  },
+                { href: "/super-admin/payments",     label: "Subscription Payments", desc: "Plan payments from restaurants", icon: BarChart3,color: "text-indigo-400",  bg: "bg-indigo-500/10"  },
                 { href: "/super-admin/billing",      label: "Billing",        desc: "Subscription overview",  icon: Settings, color: "text-sky-400",     bg: "bg-sky-500/10"     },
                 { href: "/super-admin/settings",     label: "Settings",       desc: "Configure system",       icon: Settings, color: "text-zinc-400",    bg: "bg-zinc-500/10"    },
               ].map(({ href, label, desc, icon: Icon, color, bg }) => (
@@ -201,8 +221,9 @@ function SuperAdminDashboard() {
               ))}
               <div className="flex items-center justify-between gap-2">
                 <span className="text-zinc-500">DB Status</span>
-                <span className="flex items-center gap-1.5 font-medium text-emerald-400">
-                  <span className="size-1.5 rounded-full bg-emerald-500" /> Connected
+                <span className={`flex items-center gap-1.5 font-medium ${stats?.dbConnected ? "text-emerald-400" : "text-amber-400"}`}>
+                  <span className={`size-1.5 rounded-full ${stats?.dbConnected ? "bg-emerald-500" : "bg-amber-500"}`} />
+                  {stats?.dbConnected ? "Connected" : "Unavailable"}
                 </span>
               </div>
             </div>
