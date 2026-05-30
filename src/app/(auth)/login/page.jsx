@@ -1,6 +1,16 @@
 "use client";
 
 import { defaultRedirectForRole, useApp } from "@/context/AppProviders";
+import {
+  authBadgeCls,
+  authBtnPrimaryCls,
+  authInputCls,
+  authInputInlineCls,
+  authInputGroupCls,
+  authLinkCls,
+  authLogoBadgeCls,
+  authSuccessBoxCls,
+} from "@/config/authTheme";
 import PasswordInput from "@/components/ui/PasswordInput";
 import { getLoginFieldErrors } from "@/lib/formValidation";
 import { Copy, UtensilsCrossed } from "lucide-react";
@@ -8,8 +18,6 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 
-const inputCls =
-  "mt-1.5 w-full rounded-xl border border-zinc-700 bg-zinc-950/80 px-4 py-3 text-sm text-zinc-100 outline-none transition-all focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/20";
 const fieldErrorCls = "mt-1 text-xs text-red-400";
 
 const EMPTY_FIELD_ERRORS = { email: "", password: "", otp: "" };
@@ -198,7 +206,7 @@ function LoginContent() {
   return (
     <div className="w-full max-w-4xl">
       <div className="mb-8 text-center">
-        <span className="mx-auto flex size-14 items-center justify-center rounded-2xl bg-emerald-500/15 text-emerald-400 ring-1 ring-emerald-500/25">
+        <span className={authLogoBadgeCls}>
           <UtensilsCrossed className="size-7" aria-hidden />
         </span>
         <h1 className="mt-4 text-2xl font-semibold tracking-tight text-zinc-50">
@@ -223,7 +231,7 @@ function LoginContent() {
                   setEmail(e.target.value);
                   clearFieldError("email");
                 }}
-                className={inputCls}
+                className={authInputCls}
                 placeholder="you@restaurant.com"
                 aria-invalid={fieldErrors.email ? true : undefined}
                 readOnly={needs2FA}
@@ -247,7 +255,7 @@ function LoginContent() {
                     setOtpCode(e.target.value.replace(/\D/g, "").slice(0, 6));
                     clearFieldError("otp");
                   }}
-                  className={inputCls}
+                  className={authInputCls}
                   placeholder="000000"
                   aria-invalid={fieldErrors.otp ? true : undefined}
                 />
@@ -280,7 +288,7 @@ function LoginContent() {
                   clearFieldError("password");
                 }}
                 placeholder="••••••••"
-                inputClassName="w-full rounded-xl border border-zinc-700 bg-zinc-950/80 px-4 py-3 pr-11 text-sm text-zinc-100 outline-none transition-all focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/20"
+                inputClassName={`${authInputInlineCls} px-4 py-3 pr-11`}
                 error={fieldErrors.password || undefined}
               />
             )}
@@ -291,7 +299,7 @@ function LoginContent() {
               </p>
             )}
             {verificationInfo && (
-              <p className="rounded-xl border border-emerald-500/20 bg-emerald-500/10 px-3 py-2 text-xs text-emerald-400">
+              <p className={authSuccessBoxCls}>
                 {verificationInfo}
               </p>
             )}
@@ -303,7 +311,7 @@ function LoginContent() {
                 </p>
                 {resendMsg && (
                   <p
-                    className={`text-xs font-medium ${resendMsg.startsWith("✅") ? "text-emerald-400" : "text-red-400"}`}
+                    className={`text-xs font-medium ${resendMsg.startsWith("✅") ? "auth-link" : "text-red-400"}`}
                   >
                     {resendMsg}
                   </p>
@@ -312,7 +320,7 @@ function LoginContent() {
                   type="button"
                   onClick={resendVerification}
                   disabled={resendLoading}
-                  className="cursor-pointer text-xs font-semibold text-emerald-400 underline underline-offset-2 hover:text-emerald-300 disabled:cursor-not-allowed disabled:opacity-50"
+                  className={`${authLinkCls} text-xs font-semibold underline underline-offset-2 disabled:cursor-not-allowed disabled:opacity-50`}
                 >
                   {resendLoading ? "Sending…" : "Resend verification email →"}
                 </button>
@@ -327,13 +335,13 @@ function LoginContent() {
                     type="checkbox"
                     checked={rememberMe}
                     onChange={(e) => setRememberMe(e.target.checked)}
-                    className="size-4 cursor-pointer rounded border-zinc-600 bg-zinc-800 accent-emerald-500"
+                    className="accent-platform-primary size-4 cursor-pointer rounded border-zinc-600 bg-zinc-800"
                   />
                   Remember me
                 </label>
                 <Link
                   href="/forgot-password"
-                  className="text-xs font-medium text-zinc-400 underline-offset-2 transition-colors hover:text-emerald-300 hover:underline"
+                  className="auth-link text-xs font-medium underline-offset-2 hover:underline"
                 >
                   Forgot your password?
                 </Link>
@@ -343,14 +351,14 @@ function LoginContent() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full cursor-pointer rounded-xl bg-emerald-500 py-3 text-sm font-semibold text-zinc-950 transition-all duration-200 hover:bg-emerald-400 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50"
+              className={authBtnPrimaryCls}
             >
               {loading ? "Signing in…" : needs2FA ? "Verify & Sign In" : "Sign In"}
             </button>
           </form>
           <p className="mt-5 text-center text-sm text-zinc-500">
             No account?{" "}
-            <Link href="/signup" className="cursor-pointer font-medium text-emerald-400 hover:text-emerald-300">
+            <Link href="/signup" className={authLinkCls}>
               Create account
             </Link>
           </p>
@@ -359,7 +367,7 @@ function LoginContent() {
         <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-5 backdrop-blur-sm">
           <div className="mb-4 flex items-center justify-between">
             <h2 className="text-sm font-semibold text-zinc-100">Demo Credentials</h2>
-            <span className="rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-0.5 text-[10px] font-semibold text-emerald-400">
+            <span className={authBadgeCls}>
               Demo Mode
             </span>
           </div>
@@ -391,7 +399,7 @@ function LoginContent() {
                     className="shrink-0 cursor-pointer rounded-lg p-1.5 text-zinc-500 transition-colors hover:bg-zinc-700 hover:text-zinc-200"
                   >
                     {copied === u.role ? (
-                      <span className="text-[10px] font-bold text-emerald-400">✓</span>
+                      <span className="auth-link text-[10px] font-bold">✓</span>
                     ) : (
                       <Copy className="size-3.5" />
                     )}

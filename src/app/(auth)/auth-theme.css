@@ -1,0 +1,74 @@
+/* Auth pages — uses platform theme from Super Admin Settings (--platform-primary / --platform-accent) */
+
+:root {
+  --platform-primary: #f43f5e;
+  --platform-accent: #10b981;
+}
+
+.auth-input:focus {
+  border-color: color-mix(in srgb, var(--platform-primary) 50%, transparent);
+  --tw-ring-color: color-mix(in srgb, var(--platform-primary) 20%, transparent);
+  outline: none;
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--platform-primary) 20%, transparent);
+}
+
+.auth-input-group:focus-within {
+  border-color: color-mix(in srgb, var(--platform-primary) 50%, transparent);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--platform-primary) 20%, transparent);
+}
+
+.auth-btn-primary {
+  background-color: var(--platform-primary);
+  color: rgb(9 9 11);
+}
+.auth-btn-primary:hover:not(:disabled) {
+  filter: brightness(1.08);
+}
+
+.auth-logo-badge {
+  background-color: color-mix(in srgb, var(--platform-primary) 15%, transparent);
+  color: color-mix(in srgb, var(--platform-primary) 72%, white);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--platform-primary) 25%, transparent);
+}
+
+.auth-link {
+  color: color-mix(in srgb, var(--platform-primary) 78%, white);
+}
+.auth-link:hover {
+  color: color-mix(in srgb, var(--platform-primary) 92%, white);
+}
+
+.auth-success-box {
+  border-color: color-mix(in srgb, var(--platform-accent) 20%, transparent);
+  background-color: color-mix(in srgb, var(--platform-accent) 10%, transparent);
+  color: color-mix(in srgb, var(--platform-accent) 78%, white);
+}
+
+.auth-badge {
+  border-color: color-mix(in srgb, var(--platform-primary) 30%, transparent);
+  background-color: color-mix(in srgb, var(--platform-primary) 10%, transparent);
+  color: color-mix(in srgb, var(--platform-primary) 78%, white);
+}
+
+.auth-spinner {
+  color: var(--platform-primary);
+}
+
+/* Preloader on login / signup / reset-password */
+.auth-preloader-box {
+  border: 1px solid color-mix(in srgb, var(--platform-primary) 30%, transparent);
+  background-color: color-mix(in srgb, var(--platform-primary) 10%, transparent);
+  box-shadow: 0 10px 15px -3px color-mix(in srgb, var(--platform-primary) 18%, transparent);
+}
+.auth-preloader-spin {
+  border-color: rgb(63 63 70);
+  border-top-color: var(--platform-primary);
+}
+
+.auth-glow {
+  background-color: color-mix(in srgb, var(--platform-primary) 20%, transparent);
+}
+
+.accent-platform-primary {
+  accent-color: var(--platform-primary);
+}

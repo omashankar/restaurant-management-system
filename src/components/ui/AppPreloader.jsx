@@ -4,10 +4,12 @@ import { useApp } from "@/context/AppProviders";
 import { useUser } from "@/context/AuthContext";
 import { useModuleData } from "@/context/ModuleDataContext";
 import { BrandPreloaderFace } from "@/components/ui/BrandPreloaderFace";
+import { isAuthRoute } from "@/config/authTheme";
 import { useSuperAdminThemeStyles } from "@/hooks/useSuperAdminThemeStyles";
 import { usePlatformConfig } from "@/hooks/usePlatformConfig";
 import "@/app/super-admin/super-admin-theme.css";
 import "@/app/(app)/restaurant-admin-theme.css";
+import "@/app/(auth)/auth-theme.css";
 import { usePathname } from "next/navigation";
 
 export default function AppPreloader() {
@@ -16,6 +18,7 @@ export default function AppPreloader() {
   const { hydrated: moduleHydrated } = useModuleData();
   const pathname = usePathname();
   const isSuperAdmin = pathname?.startsWith("/super-admin");
+  const isAuth = !isSuperAdmin && isAuthRoute(pathname);
   useSuperAdminThemeStyles();
   usePlatformConfig();
 
@@ -23,8 +26,12 @@ export default function AppPreloader() {
     ? appHydrated && moduleHydrated && authHydrated
     : appHydrated && moduleHydrated;
 
-  const variant = isSuperAdmin ? "super-admin" : "restaurant-admin";
-  const panelClass = isSuperAdmin ? "super-admin-panel" : "restaurant-admin-panel";
+  const variant = isSuperAdmin ? "super-admin" : isAuth ? "auth" : "restaurant-admin";
+  const panelClass = isSuperAdmin
+    ? "super-admin-panel"
+    : isAuth
+      ? ""
+      : "restaurant-admin-panel";
 
   return (
     <div

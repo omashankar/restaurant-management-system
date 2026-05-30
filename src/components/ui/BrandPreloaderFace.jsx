@@ -14,24 +14,35 @@ export function BrandPreloaderFace({
   compact = false,
 }) {
   const isSuperAdmin = variant === "super-admin";
+  const isAuth = variant === "auth";
   const isRestaurantAdmin = variant === "restaurant-admin" || variant === "app";
 
-  const preloaderBox = isSuperAdmin ? "sa-preloader-box" : "ra-preloader-box";
-  const preloaderSpin = isSuperAdmin ? "sa-preloader-spin" : "ra-preloader-spin";
-  const spinnerCls = isSuperAdmin ? saSpinnerCls : raSpinnerCls;
-  const brandIconCls = isSuperAdmin ? "text-sa-primary" : "text-ra-primary";
+  const preloaderBox = isSuperAdmin
+    ? "sa-preloader-box"
+    : isAuth
+      ? "auth-preloader-box"
+      : "ra-preloader-box";
+  const preloaderSpin = isSuperAdmin
+    ? "sa-preloader-spin"
+    : isAuth
+      ? "auth-preloader-spin"
+      : "ra-preloader-spin";
+  const spinnerCls = isSuperAdmin ? saSpinnerCls : isAuth ? "auth-spinner size-4 animate-spin" : raSpinnerCls;
+  const brandIconCls = isSuperAdmin ? "text-sa-primary" : isAuth ? "auth-link" : "text-ra-primary";
 
   const defaultTitle = isSuperAdmin
     ? "Super Admin Console"
     : "Restaurant Management System";
   const defaultSubtitle = isSuperAdmin
     ? "Loading Super Admin…"
-    : "Loading your dashboard…";
+    : isAuth
+      ? "Please wait…"
+      : "Loading your dashboard…";
 
   if (compact) {
     return (
       <div className="flex items-center justify-center gap-2 py-12 text-sm text-zinc-500">
-        <Loader2 className={isRestaurantAdmin || isSuperAdmin ? spinnerCls : "size-4 animate-spin text-zinc-400"} />
+        <Loader2 className={isSuperAdmin || isAuth || isRestaurantAdmin ? spinnerCls : "size-4 animate-spin text-zinc-400"} />
         <span>{subtitle ?? defaultSubtitle}</span>
       </div>
     );
