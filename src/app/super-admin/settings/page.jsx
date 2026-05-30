@@ -3,7 +3,7 @@
 import SuperAdminPageSkeleton from "@/components/super-admin/SuperAdminPageSkeleton";
 import PushNotificationEnable from "@/components/PushNotificationEnable";
 import { useToast } from "@/hooks/useToast";
-import { invalidatePlatformConfigCache } from "@/hooks/usePlatformConfig";
+import { invalidatePlatformConfigCache, updateSuperAdminThemeCache } from "@/hooks/usePlatformConfig";
 import { decimalInputProps, intInputProps, phoneInputProps } from "@/lib/formInputTypes";
 import { validatePlatformSettingsSection } from "@/lib/platformSettingsValidation";
 import {
@@ -497,7 +497,7 @@ function PaymentSection({ data, onChange, onSave, saving, fieldErrors = {}, onCl
                   <div className="flex h-8 items-center justify-center mb-1.5">
                     <GatewayLogo gateway={g} />
                   </div>
-                  <p className={`text-xs font-semibold ${isactive ? "text-sa-primary" : "text-zinc-300"}`}>
+                  <p className={`text-xs font-semibold ${isActive ? "text-sa-primary" : "text-zinc-300"}`}>
                     {g.label}
                   </p>
                   {g.popular && (
@@ -1395,7 +1395,11 @@ export default function SuperAdminSettingsPage() {
       });
       const data = await res.json();
       if (!data.success) { showToast(data.error ?? "Failed to save.", "error"); return; }
-      invalidatePlatformConfigCache();
+      if (activeTab === "theme") {
+        updateSuperAdminThemeCache(payload);
+      } else {
+        invalidatePlatformConfigCache();
+      }
       showToast("Settings saved.");
     } catch { showToast("Network error.", "error"); }
     finally { setSaving(false); }

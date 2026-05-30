@@ -2,6 +2,10 @@
 
 import { usePlatformConfig } from "@/hooks/usePlatformConfig";
 import {
+  applySuperAdminDocumentTheme,
+  clearSuperAdminDocumentTheme,
+} from "@/lib/superAdminThemeStorage";
+import {
   resolveSuperAdminTheme,
   superAdminThemeStyle,
 } from "@/lib/superAdminThemeRuntime";
@@ -9,21 +13,6 @@ import { usePathname } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 
 let documentThemeSyncCount = 0;
-
-function applyDocumentTheme(theme) {
-  const style = superAdminThemeStyle(theme);
-  document.documentElement.dataset.superAdminTheme = "true";
-  for (const [key, value] of Object.entries(style)) {
-    document.documentElement.style.setProperty(key, value);
-  }
-}
-
-function clearDocumentTheme() {
-  delete document.documentElement.dataset.superAdminTheme;
-  for (const key of ["--sa-primary", "--sa-accent", "--platform-primary", "--platform-accent"]) {
-    document.documentElement.style.removeProperty(key);
-  }
-}
 
 export function useSuperAdminThemeStyles() {
   const pathname = usePathname();
@@ -49,20 +38,18 @@ export function useSuperAdminThemeStyles() {
     return resolveSuperAdminTheme(config.theme);
   }, [preview, config.theme]);
 
-  const themeStyle = useMemo(() => superAdminThemeStyle(theme), [theme]);
-
   useEffect(() => {
     if (!isSuperAdmin) return;
     documentThemeSyncCount += 1;
-    applyDocumentTheme(theme);
+    applySuperAdminDocumentTheme(theme);
     return () => {
       documentThemeSyncCount -= 1;
       if (documentThemeSyncCount <= 0) {
         documentThemeSyncCount = 0;
-        clearDocumentTheme();
+        clearSuperAdminDocumentTheme();
       }
     };
   }, [isSuperAdmin, theme]);
 
-  return isSuperAdmin ? themeStyle : {};
+  return isSuperAdmin ? superAdminThemeStyle(theme) : {};
 }

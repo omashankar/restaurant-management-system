@@ -1,7 +1,6 @@
-/* Super Admin dynamic theme — --sa-primary / --sa-accent set on .super-admin-panel or :root */
+/* Super Admin dynamic theme — defaults on :root; saved theme via bootstrap script + JS */
 
-.super-admin-panel,
-:root[data-super-admin-theme] {
+:root {
   --sa-primary: #f43f5e;
   --sa-accent: #10b981;
 }

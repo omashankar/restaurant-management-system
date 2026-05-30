@@ -4,6 +4,7 @@ import Providers from "./providers";
 import PlatformScripts from "@/components/PlatformScripts";
 import PlatformThemeStyles from "@/components/PlatformThemeStyles";
 import RestaurantThemeBootstrap from "@/components/RestaurantThemeBootstrap";
+import SuperAdminThemeBootstrap from "@/components/SuperAdminThemeBootstrap";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -54,6 +55,7 @@ export default function RootLayout({ children }) {
     >
       <body className="min-h-full" suppressHydrationWarning>
         <RestaurantThemeBootstrap />
+        <SuperAdminThemeBootstrap />
         <PlatformThemeStyles />
         <PlatformScripts />
         <Providers>{children}</Providers>

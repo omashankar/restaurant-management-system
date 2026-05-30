@@ -1,5 +1,6 @@
 "use client";
 
+import { isRestaurantAdminRoute } from "@/lib/restaurantAdminRoutes";
 import { restaurantAdminThemeStyle } from "@/lib/restaurantAdminThemeRuntime";
 import {
   applyRestaurantDocumentTheme,
@@ -11,55 +12,7 @@ import { useEffect, useMemo, useState } from "react";
 
 let documentThemeSyncCount = 0;
 
-const RESTAURANT_ADMIN_PREFIXES = [
-  "/dashboard",
-  "/admin",
-  "/manager",
-  "/waiter",
-  "/chef",
-  "/orders",
-  "/menu",
-  "/tables",
-  "/pos",
-  "/kitchen",
-  "/inventory",
-  "/settings",
-  "/profile",
-  "/analytics",
-  "/billing",
-  "/customers",
-  "/staff",
-  "/reservations",
-  "/qr-menu",
-  "/whatsapp",
-  "/customer-site",
-  "/printer-settings",
-  "/support-tickets",
-  "/onboarding",
-];
-
-export function isRestaurantAdminRoute(pathname) {
-  if (!pathname) return false;
-  if (pathname.startsWith("/super-admin")) return false;
-  return RESTAURANT_ADMIN_PREFIXES.some(
-    (p) => pathname === p || pathname.startsWith(`${p}/`)
-  );
-}
-
-function applyDocumentTheme(theme) {
-  const style = restaurantAdminThemeStyle(theme);
-  document.documentElement.dataset.restaurantAdminTheme = "true";
-  for (const [key, value] of Object.entries(style)) {
-    document.documentElement.style.setProperty(key, value);
-  }
-}
-
-function clearDocumentTheme() {
-  delete document.documentElement.dataset.restaurantAdminTheme;
-  for (const key of ["--ra-primary", "--ra-accent"]) {
-    document.documentElement.style.removeProperty(key);
-  }
-}
+export { isRestaurantAdminRoute } from "@/lib/restaurantAdminRoutes";
 
 export function useRestaurantAdminThemeStyles() {
   const pathname = usePathname();

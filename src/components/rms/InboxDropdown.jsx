@@ -18,6 +18,7 @@ export default function InboxDropdown({
   if (!open && !embedded) return null;
   if (embedded && !open) return null;
 
+  const isSa = accent === "sa";
   const isRa = accent === "ra" || accent === "emerald";
   const title = type === "messages" ? "Messages" : "Notifications";
   const markAllCls = isSa

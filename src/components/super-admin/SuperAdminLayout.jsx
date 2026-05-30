@@ -24,7 +24,7 @@ import {
 } from "lucide-react";
 
 export default function SuperAdminLayout({ children }) {
-  const themeStyle = useSuperAdminThemeStyles();
+  useSuperAdminThemeStyles();
   const { user, hydrated, loading, clearUser } = useUser();
   const router = useRouter();
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -73,7 +73,7 @@ export default function SuperAdminLayout({ children }) {
 
   if (loading || !hydrated) {
     return (
-      <div className="min-h-screen bg-zinc-950">
+      <div className="super-admin-panel min-h-screen bg-zinc-950">
         <SuperAdminPreloader />
       </div>
     );
@@ -84,7 +84,7 @@ export default function SuperAdminLayout({ children }) {
   const avatarSrc = normalizeLogoSrc(user.avatarUrl);
 
   return (
-    <div className="super-admin-panel flex h-screen overflow-hidden bg-zinc-950" style={themeStyle}>
+    <div className="super-admin-panel flex h-screen overflow-hidden bg-zinc-950">
 
       {/* ── Desktop sidebar ── */}
       <div className="hidden md:flex">

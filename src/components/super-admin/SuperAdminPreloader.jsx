@@ -9,14 +9,14 @@ export default function SuperAdminPreloader({
 }) {
   if (compact) {
     return (
-      <div className={className}>
+      <div className={`super-admin-panel ${className}`}>
         <BrandPreloaderFace variant="super-admin" subtitle={message} compact />
       </div>
     );
   }
 
   return (
-    <div className={`flex min-h-screen items-center justify-center bg-zinc-950 ${className}`}>
+    <div className={`super-admin-panel flex min-h-screen items-center justify-center bg-zinc-950 ${className}`}>
       <BrandPreloaderFace variant="super-admin" subtitle={message} />
     </div>
   );

@@ -1,12 +1,18 @@
 "use client";
 
 import { EMPTY_SETTINGS } from "@/config/settingsConfig";
+import { useUser } from "@/context/AuthContext";
+import {
+  isRestaurantAdminRoute,
+  RESTAURANT_THEME_ROLES,
+} from "@/lib/restaurantAdminRoutes";
 import { resolveRestaurantAdminTheme } from "@/lib/restaurantAdminThemeRuntime";
 import {
   applyRestaurantDocumentTheme,
   readStoredRestaurantTheme,
   writeStoredRestaurantTheme,
 } from "@/lib/restaurantThemeStorage";
+import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 
 let _cache = null;
@@ -56,10 +62,18 @@ export function invalidateRestaurantThemeCache() {
 }
 
 export function useRestaurantTheme() {
+  const pathname = usePathname();
+  const { user, hydrated: authHydrated } = useUser();
   const [theme, setTheme] = useState(
     () => _cache ?? readStoredRestaurantTheme() ?? getDefaultTheme()
   );
   const [loading, setLoading] = useState(!_cache);
+
+  const canFetchSettings =
+    authHydrated &&
+    Boolean(user) &&
+    RESTAURANT_THEME_ROLES.has(user.role) &&
+    isRestaurantAdminRoute(pathname);
 
   useEffect(() => {
     let mounted = true;
@@ -76,6 +90,15 @@ export function useRestaurantTheme() {
         }
       }
 
+      const localTheme = _cache ?? stored ?? getDefaultTheme();
+      if (!canFetchSettings) {
+        if (mounted) {
+          setTheme(localTheme);
+          setLoading(false);
+        }
+        return;
+      }
+
       if (_cache && Date.now() - _cacheTime < TTL) {
         if (mounted) {
           setTheme(_cache);
@@ -89,8 +112,7 @@ export function useRestaurantTheme() {
         const data = await res.json();
         if (!mounted) return;
         if (!res.ok || !data.success) {
-          const fallback = _cache ?? getDefaultTheme();
-          setTheme(fallback);
+          setTheme(localTheme);
           return;
         }
         const next = resolveRestaurantAdminTheme({
@@ -103,7 +125,7 @@ export function useRestaurantTheme() {
         applyRestaurantDocumentTheme(next);
         setTheme(next);
       } catch {
-        if (mounted) setTheme(_cache ?? getDefaultTheme());
+        if (mounted) setTheme(localTheme);
       } finally {
         if (mounted) setLoading(false);
       }
@@ -123,7 +145,7 @@ export function useRestaurantTheme() {
       mounted = false;
       window.removeEventListener("restaurant-theme-updated", onUpdate);
     };
-  }, []);
+  }, [canFetchSettings]);
 
   return { theme, loading };
 }
