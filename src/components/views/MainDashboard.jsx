@@ -38,7 +38,7 @@ export default function MainDashboard() {
               <>
                 {" · "}
                 <span className="inline-flex items-center gap-1.5">
-                  <span className="size-1.5 animate-pulse rounded-full bg-emerald-400" />
+                  <span className="size-1.5 animate-pulse rounded-full bg-ra-accent" />
                   updated {dashboard.lastUpdated.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
                 </span>
               </>
@@ -48,7 +48,7 @@ export default function MainDashboard() {
         <button
           type="button"
           onClick={dashboard.refresh}
-          className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-xl border border-zinc-700 px-4 py-2 text-sm font-medium text-zinc-300 transition-colors hover:border-emerald-500/40 hover:text-zinc-100"
+          className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-xl border border-zinc-700 px-4 py-2 text-sm font-medium text-zinc-300 transition-colors hover-border-ra-primary-40 hover:text-zinc-100"
         >
           <RefreshCw className="size-4" />
           Refresh

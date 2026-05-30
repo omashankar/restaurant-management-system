@@ -31,7 +31,7 @@ export default function ManagerDashboard({
             <p className="mt-1 text-sm text-zinc-500">Some modules are view-only. Destructive actions are disabled.</p>
           </div>
         </div>
-        <Link href="/analytics" className="cursor-pointer shrink-0 rounded-xl border border-zinc-700 px-4 py-2 text-center text-sm font-medium text-zinc-200 hover:border-emerald-500/40">
+        <Link href="/analytics" className="cursor-pointer shrink-0 rounded-xl border border-zinc-700 px-4 py-2 text-center text-sm font-medium text-zinc-200 hover-border-ra-primary-40">
           Open analytics
         </Link>
       </div>

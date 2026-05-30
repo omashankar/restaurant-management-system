@@ -1,0 +1,190 @@
+/* Super Admin dynamic theme — defaults on :root; saved theme via bootstrap script + JS */
+
+:root {
+  --sa-primary: #f43f5e;
+  --sa-accent: #10b981;
+}
+
+.sa-scope {
+  /* alias hook for nested portals if needed */
+}
+
+:is(.super-admin-panel, :root[data-super-admin-theme]) .bg-sa-primary {
+  background-color: var(--sa-primary);
+}
+:is(.super-admin-panel, :root[data-super-admin-theme]) .text-sa-primary {
+  color: var(--sa-primary);
+}
+:is(.super-admin-panel, :root[data-super-admin-theme]) .text-sa-primary-muted {
+  color: color-mix(in srgb, var(--sa-primary) 78%, white);
+}
+:is(.super-admin-panel, :root[data-super-admin-theme]) .border-sa-primary {
+  border-color: var(--sa-primary);
+}
+:is(.super-admin-panel, :root[data-super-admin-theme]) .border-t-sa-primary {
+  border-top-color: var(--sa-primary);
+}
+:is(.super-admin-panel, :root[data-super-admin-theme]) .ring-sa-primary-25 {
+  --tw-ring-color: color-mix(in srgb, var(--sa-primary) 25%, transparent);
+}
+:is(.super-admin-panel, :root[data-super-admin-theme]) .ring-sa-primary-20 {
+  --tw-ring-color: color-mix(in srgb, var(--sa-primary) 20%, transparent);
+}
+:is(.super-admin-panel, :root[data-super-admin-theme]) .ring-sa-primary-40 {
+  --tw-ring-color: color-mix(in srgb, var(--sa-primary) 40%, transparent);
+}
+:is(.super-admin-panel, :root[data-super-admin-theme]) .bg-sa-primary-5 {
+  background-color: color-mix(in srgb, var(--sa-primary) 5%, transparent);
+}
+:is(.super-admin-panel, :root[data-super-admin-theme]) .bg-sa-primary-10 {
+  background-color: color-mix(in srgb, var(--sa-primary) 10%, transparent);
+}
+:is(.super-admin-panel, :root[data-super-admin-theme]) .bg-sa-primary-15 {
+  background-color: color-mix(in srgb, var(--sa-primary) 15%, transparent);
+}
+:is(.super-admin-panel, :root[data-super-admin-theme]) .border-sa-primary-10 {
+  border-color: color-mix(in srgb, var(--sa-primary) 10%, transparent);
+}
+:is(.super-admin-panel, :root[data-super-admin-theme]) .bg-sa-primary-20 {
+  background-color: color-mix(in srgb, var(--sa-primary) 20%, transparent);
+}
+:is(.super-admin-panel, :root[data-super-admin-theme]) .border-sa-primary-20 {
+  border-color: color-mix(in srgb, var(--sa-primary) 20%, transparent);
+}
+:is(.super-admin-panel, :root[data-super-admin-theme]) .border-sa-primary-25 {
+  border-color: color-mix(in srgb, var(--sa-primary) 25%, transparent);
+}
+:is(.super-admin-panel, :root[data-super-admin-theme]) .border-sa-primary-30 {
+  border-color: color-mix(in srgb, var(--sa-primary) 30%, transparent);
+}
+:is(.super-admin-panel, :root[data-super-admin-theme]) .border-sa-primary-40 {
+  border-color: color-mix(in srgb, var(--sa-primary) 40%, transparent);
+}
+:is(.super-admin-panel, :root[data-super-admin-theme]) .border-sa-primary-50 {
+  border-color: color-mix(in srgb, var(--sa-primary) 50%, transparent);
+}
+:is(.super-admin-panel, :root[data-super-admin-theme]) .shadow-sa-primary-glow {
+  box-shadow: 0 10px 15px -3px color-mix(in srgb, var(--sa-primary) 18%, transparent);
+}
+:is(.super-admin-panel, :root[data-super-admin-theme]) .sa-btn-primary {
+  cursor: pointer;
+  background-color: var(--sa-primary);
+  color: #09090b;
+}
+:is(.super-admin-panel, :root[data-super-admin-theme]) .sa-btn-primary:hover:not(:disabled) {
+  filter: brightness(1.08);
+}
+:is(.super-admin-panel, :root[data-super-admin-theme]) .sa-btn-primary:disabled {
+  opacity: 0.5;
+}
+:is(.super-admin-panel, :root[data-super-admin-theme]) .sa-nav-active {
+  background-color: color-mix(in srgb, var(--sa-primary) 15%, transparent);
+  color: color-mix(in srgb, var(--sa-primary) 72%, white);
+  --tw-ring-color: color-mix(in srgb, var(--sa-primary) 25%, transparent);
+  box-shadow: 0 0 0 1px var(--tw-ring-color);
+}
+:is(.super-admin-panel, :root[data-super-admin-theme]) .sa-nav-active-bar {
+  background-color: var(--sa-primary);
+}
+:is(.super-admin-panel, :root[data-super-admin-theme]) .sa-icon-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.75rem;
+  background-color: color-mix(in srgb, var(--sa-primary) 15%, transparent);
+  color: var(--sa-primary);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--sa-primary) 25%, transparent);
+}
+:is(.super-admin-panel, :root[data-super-admin-theme]) .sa-spinner {
+  animation: spin 1s linear infinite;
+  color: var(--sa-primary);
+}
+:is(.super-admin-panel, :root[data-super-admin-theme]) .sa-skeleton {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  border-radius: 0.75rem;
+  border: 1px solid color-mix(in srgb, var(--sa-primary) 10%, transparent);
+  background-color: rgb(39 39 42 / 0.6);
+}
+:is(.super-admin-panel, :root[data-super-admin-theme]) .sa-skeleton-card {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  border-radius: 1rem;
+  border: 1px solid color-mix(in srgb, var(--sa-primary) 10%, transparent);
+  background-color: rgb(24 24 27 / 0.4);
+}
+:is(.super-admin-panel, :root[data-super-admin-theme]) .focus-sa-primary:focus {
+  border-color: color-mix(in srgb, var(--sa-primary) 50%, transparent);
+  outline: none;
+}
+:is(.super-admin-panel, :root[data-super-admin-theme]) .focus-within-sa-primary:focus-within {
+  border-color: color-mix(in srgb, var(--sa-primary) 40%, transparent);
+}
+:is(.super-admin-panel, :root[data-super-admin-theme]) .hover-sa-primary:hover {
+  color: var(--sa-primary);
+}
+:is(.super-admin-panel, :root[data-super-admin-theme]) .hover-text-sa-primary-muted:hover {
+  color: color-mix(in srgb, var(--sa-primary) 78%, white);
+}
+:is(.super-admin-panel, :root[data-super-admin-theme]) .hover-bg-sa-primary-10:hover {
+  background-color: color-mix(in srgb, var(--sa-primary) 10%, transparent);
+}
+:is(.super-admin-panel, :root[data-super-admin-theme]) .hover-bg-sa-primary-15:hover {
+  background-color: color-mix(in srgb, var(--sa-primary) 15%, transparent);
+}
+:is(.super-admin-panel, :root[data-super-admin-theme]) .hover-border-sa-primary-40:hover {
+  border-color: color-mix(in srgb, var(--sa-primary) 40%, transparent);
+}
+
+/* Preloader */
+:is(.super-admin-panel, :root[data-super-admin-theme]) .sa-preloader-box {
+  border: 1px solid color-mix(in srgb, var(--sa-primary) 30%, transparent);
+  background-color: color-mix(in srgb, var(--sa-primary) 10%, transparent);
+  box-shadow: 0 10px 15px -3px color-mix(in srgb, var(--sa-primary) 18%, transparent);
+}
+:is(.super-admin-panel, :root[data-super-admin-theme]) .sa-preloader-spin {
+  border-color: rgb(63 63 70);
+  border-top-color: var(--sa-primary);
+}
+
+/* Accent (success / status) */
+:is(.super-admin-panel, :root[data-super-admin-theme]) .text-sa-accent {
+  color: var(--sa-accent);
+}
+:is(.super-admin-panel, :root[data-super-admin-theme]) .bg-sa-accent {
+  background-color: var(--sa-accent);
+}
+:is(.super-admin-panel, :root[data-super-admin-theme]) .bg-sa-accent-5 {
+  background-color: color-mix(in srgb, var(--sa-accent) 5%, transparent);
+}
+:is(.super-admin-panel, :root[data-super-admin-theme]) .bg-sa-accent-10 {
+  background-color: color-mix(in srgb, var(--sa-accent) 10%, transparent);
+}
+:is(.super-admin-panel, :root[data-super-admin-theme]) .bg-sa-accent-15 {
+  background-color: color-mix(in srgb, var(--sa-accent) 15%, transparent);
+}
+:is(.super-admin-panel, :root[data-super-admin-theme]) .bg-sa-accent-30 {
+  background-color: color-mix(in srgb, var(--sa-accent) 30%, transparent);
+}
+:is(.super-admin-panel, :root[data-super-admin-theme]) .border-sa-accent-20 {
+  border-color: color-mix(in srgb, var(--sa-accent) 20%, transparent);
+}
+:is(.super-admin-panel, :root[data-super-admin-theme]) .border-sa-accent-25 {
+  border-color: color-mix(in srgb, var(--sa-accent) 25%, transparent);
+}
+:is(.super-admin-panel, :root[data-super-admin-theme]) .border-sa-accent-30 {
+  border-color: color-mix(in srgb, var(--sa-accent) 30%, transparent);
+}
+:is(.super-admin-panel, :root[data-super-admin-theme]) .border-sa-accent-40 {
+  border-color: color-mix(in srgb, var(--sa-accent) 40%, transparent);
+}
+:is(.super-admin-panel, :root[data-super-admin-theme]) .ring-sa-accent-25 {
+  --tw-ring-color: color-mix(in srgb, var(--sa-accent) 25%, transparent);
+}
+:is(.super-admin-panel, :root[data-super-admin-theme]) .text-sa-accent-muted {
+  color: color-mix(in srgb, var(--sa-accent) 75%, white);
+}
+:is(.super-admin-panel, :root[data-super-admin-theme]) .sa-status-badge {
+  background-color: color-mix(in srgb, var(--sa-accent) 15%, transparent);
+  color: var(--sa-accent);
+  --tw-ring-color: color-mix(in srgb, var(--sa-accent) 25%, transparent);
+  box-shadow: 0 0 0 1px var(--tw-ring-color);
+}

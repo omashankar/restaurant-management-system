@@ -28,7 +28,7 @@ export default function MenuItemCard({ item, onAdd, isPopping }) {
   return (
     <article
       className={`group overflow-hidden rounded-2xl border border-zinc-800 border-l-4 ${accentBorder} bg-zinc-900/60 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-black/20 ${
-        isPopping ? "ring-2 ring-emerald-500/50" : ""
+        isPopping ? "ring-2 ring-ra-primary-40" : ""
       }`}
     >
       <div className="relative aspect-[4/3] overflow-hidden">
@@ -60,13 +60,13 @@ export default function MenuItemCard({ item, onAdd, isPopping }) {
       <div className="space-y-2 p-3">
         <p className="truncate font-medium text-zinc-100">{item.name}</p>
         <div className="flex items-center justify-between gap-2">
-          <span className="text-sm font-semibold text-emerald-400">
+          <span className="text-sm font-semibold text-ra-primary">
             ${item.price.toFixed(2)}
           </span>
           <button
             type="button"
             onClick={() => onAdd(item)}
-            className="cursor-pointer inline-flex items-center gap-1 rounded-lg bg-emerald-500 px-3 py-1.5 text-xs font-semibold text-zinc-950 transition-all hover:bg-emerald-400 active:scale-95"
+            className="cursor-pointer inline-flex items-center gap-1 rounded-lg bg-ra-primary px-3 py-1.5 text-xs font-semibold text-zinc-950 transition-all hover:brightness-110 active:scale-95"
             aria-label={`Add ${item.name}`}
           >
             <Plus className="size-3.5" />

@@ -26,7 +26,7 @@ export default function SectionCard({ title, description, children, onSave, data
             type="button"
             onClick={handleSave}
             disabled={saving}
-            className="cursor-pointer inline-flex items-center gap-2 rounded-xl bg-emerald-500 px-4 py-2 text-sm font-semibold text-zinc-950 transition-colors hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-50"
+            className="cursor-pointer inline-flex items-center gap-2 rounded-xl bg-ra-primary px-4 py-2 text-sm font-semibold text-zinc-950 transition-colors hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {saving && <Loader2 className="size-4 animate-spin" />}
             {saving ? "Saving…" : "Save Changes"}
@@ -57,7 +57,7 @@ export function Input({ value, onChange, type = "text", placeholder = "", disabl
       onChange={(e) => onChange(e.target.value)}
       placeholder={placeholder}
       disabled={disabled}
-      className={`w-full rounded-xl border border-zinc-800 bg-zinc-950/80 px-3 py-2.5 text-sm text-zinc-100 outline-none transition-colors focus:border-emerald-500/45 disabled:opacity-50 ${className}`}
+      className={`w-full rounded-xl border border-zinc-800 bg-zinc-950/80 px-3 py-2.5 text-sm text-zinc-100 outline-none transition-colors focus-ra-primary disabled:opacity-50 ${className}`}
     />
   );
 }
@@ -75,7 +75,7 @@ export function Toggle({ checked, onChange, label, hint }) {
         aria-checked={checked}
         onClick={() => onChange(!checked)}
         className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors ${
-          checked ? "bg-emerald-500" : "bg-zinc-700"
+          checked ? "bg-ra-primary" : "bg-zinc-700"
         }`}
       >
         <span

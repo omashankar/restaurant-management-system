@@ -32,8 +32,8 @@ export const PLATFORM_DEFAULTS = {
     taxPercent: 0,
   },
   theme: {
-    primaryColor: "#10b981",
-    accentColor: "#f43f5e",
+    primaryColor: "#f43f5e",
+    accentColor: "#10b981",
     darkMode: true,
   },
   notifications: {
@@ -140,8 +140,8 @@ export async function getPublicPlatformConfig(db) {
     dateFormat: s.language?.dateFormat ?? "MM/DD/YYYY",
     timeFormat: s.language?.timeFormat ?? "12h",
     theme: {
-      primaryColor: s.theme?.primaryColor ?? "#10b981",
-      accentColor: s.theme?.accentColor ?? "#f43f5e",
+      primaryColor: s.theme?.primaryColor ?? "#f43f5e",
+      accentColor: s.theme?.accentColor ?? "#10b981",
       darkMode: s.theme?.darkMode !== false,
     },
     integrations: {

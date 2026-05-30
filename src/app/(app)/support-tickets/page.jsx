@@ -12,7 +12,7 @@ const PRIORITIES = ["low", "medium", "high", "urgent"];
 const STATUSES = ["open", "in_progress", "resolved", "closed"];
 
 const inputCls =
-  "w-full rounded-xl border border-zinc-800 bg-zinc-950/80 px-3 py-2.5 text-sm text-zinc-100 outline-none transition-colors focus:border-emerald-500/45";
+  "w-full rounded-xl border border-zinc-800 bg-zinc-950/80 px-3 py-2.5 text-sm text-zinc-100 outline-none transition-colors focus-ra-primary";
 
 export default function SupportTicketsPage() {
   const { user } = useUser();
@@ -204,7 +204,7 @@ export default function SupportTicketsPage() {
 
       <form onSubmit={createTicket} className="space-y-4 rounded-2xl border border-zinc-800 bg-zinc-900/40 p-4">
         <div className="flex items-center gap-2 text-zinc-200">
-          <MessageSquarePlus className="size-4 text-emerald-400" />
+          <MessageSquarePlus className="size-4 text-ra-primary" />
           <h2 className="text-sm font-semibold">Create New Ticket</h2>
         </div>
         <div className="grid gap-4 md:grid-cols-2">
@@ -259,7 +259,7 @@ export default function SupportTicketsPage() {
         <button
           type="submit"
           disabled={saving}
-          className="cursor-pointer inline-flex items-center gap-2 rounded-xl bg-emerald-500 px-4 py-2 text-sm font-semibold text-zinc-950 hover:bg-emerald-400 disabled:opacity-50"
+          className="cursor-pointer inline-flex items-center gap-2 rounded-xl bg-ra-primary px-4 py-2 text-sm font-semibold text-zinc-950 hover:brightness-110 disabled:opacity-50"
         >
           {saving ? <Loader2 className="size-4 animate-spin" /> : null}
           {saving ? "Creating..." : "Create Ticket"}
@@ -418,7 +418,7 @@ export default function SupportTicketsPage() {
                     type="button"
                     onClick={addNote}
                     disabled={savingNote || !note.trim()}
-                    className="cursor-pointer rounded-lg border border-emerald-500/40 bg-emerald-500/15 px-3 py-1.5 text-xs font-medium text-emerald-300 disabled:opacity-40"
+                    className="cursor-pointer rounded-lg border border-ra-primary-40 bg-ra-primary-15 px-3 py-1.5 text-xs font-medium text-ra-primary-muted disabled:opacity-40"
                   >
                     {savingNote ? "Saving..." : "Save note"}
                   </button>
@@ -433,7 +433,7 @@ export default function SupportTicketsPage() {
         <div
           className={`fixed bottom-5 right-5 z-50 rounded-xl border px-4 py-2 text-sm ${
             toast.type === "success"
-              ? "border-emerald-500/30 bg-zinc-900 text-emerald-300"
+              ? "border-ra-primary-30 bg-zinc-900 text-ra-primary-muted"
               : "border-red-500/30 bg-zinc-900 text-red-300"
           }`}
         >

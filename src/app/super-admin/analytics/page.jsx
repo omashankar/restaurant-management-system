@@ -1,5 +1,7 @@
 "use client";
 
+import SuperAdminPageSkeleton from "@/components/super-admin/SuperAdminPageSkeleton";
+import { saSpinnerCls } from "@/config/superAdminTheme";
 import { useToast } from "@/hooks/useToast";
 import {
   Activity, BarChart3, Building2, CreditCard,
@@ -18,7 +20,7 @@ const PLAN_COLOR = {
 };
 
 const STATUS_COLOR = {
-  paid:    "bg-emerald-500",
+  paid:    "bg-sa-accent",
   pending: "bg-amber-500",
   failed:  "bg-red-500",
   refunded:"bg-zinc-500",
@@ -47,7 +49,7 @@ function StatCard({ label, value, sub, icon: Icon, color, bg, border }) {
 /* ─────────────────────────────────────────
    BAR CHART (custom, no lib needed)
 ───────────────────────────────────────── */
-function BarChart({ data, valueKey = "value", labelKey = "label", color = "bg-emerald-500", height = 160, prefix = "" }) {
+function BarChart({ data, valueKey = "value", labelKey = "label", color = "bg-sa-primary", height = 160, prefix = "" }) {
   const max = Math.max(...data.map((d) => d[valueKey] ?? 0), 1);
   return (
     <div className="flex items-end gap-1" style={{ height }}>
@@ -190,7 +192,7 @@ export default function SuperAdminAnalyticsPage() {
           disabled={loading}
           className="cursor-pointer flex items-center gap-1.5 rounded-xl border border-zinc-700 px-3 py-2.5 text-sm font-medium text-zinc-400 hover:border-zinc-500 hover:text-zinc-200 disabled:opacity-50 transition-colors"
         >
-          <RefreshCw className={`size-4 ${loading ? "animate-spin" : ""}`} />
+          <RefreshCw className={`size-4 ${loading ? saSpinnerCls : ""}`} />
           Refresh
         </button>
       </div>
@@ -198,15 +200,10 @@ export default function SuperAdminAnalyticsPage() {
       {/* ── Skeleton ── */}
       {loading && !data && (
         <div className="space-y-4">
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {Array.from({ length: 4 }).map((_, i) => (
-              <div key={i} className="h-28 animate-pulse rounded-2xl border border-zinc-800 bg-zinc-900/40" />
-            ))}
-          </div>
+          <SuperAdminPageSkeleton cards={4} cardClassName="h-28" rows={0} />
           <div className="grid gap-4 lg:grid-cols-2">
-            {[1, 2].map((i) => (
-              <div key={i} className="h-56 animate-pulse rounded-2xl border border-zinc-800 bg-zinc-900/40" />
-            ))}
+            <div className="h-56 animate-pulse rounded-2xl border border-sa-primary-10 bg-zinc-900/40" />
+            <div className="h-56 animate-pulse rounded-2xl border border-sa-primary-10 bg-zinc-900/40" />
           </div>
         </div>
       )}
@@ -223,7 +220,7 @@ export default function SuperAdminAnalyticsPage() {
             <StatCard
               label="Total Restaurants" value={ov.totalRestaurants ?? 0}
               sub={`${ov.activeRestaurants ?? 0} active`}
-              icon={Building2} color="text-emerald-400" bg="bg-emerald-500/5" border="border-emerald-500/20"
+              icon={Building2} color="text-sa-primary" bg="bg-sa-primary-5" border="border-sa-primary-20"
             />
             <StatCard
               label="Total Revenue" value={formatMoney(ov.totalRevenue)}
@@ -248,7 +245,7 @@ export default function SuperAdminAnalyticsPage() {
             {/* Revenue by month */}
             <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-5">
               <div className="mb-5 flex items-center gap-2">
-                <TrendingUp className="size-4 text-emerald-400" />
+                <TrendingUp className="size-4 text-sa-primary" />
                 <h2 className="text-sm font-semibold text-zinc-100">Revenue — Last 12 Months</h2>
               </div>
               {(data.revenueByMonth ?? []).length === 0 ? (
@@ -260,7 +257,7 @@ export default function SuperAdminAnalyticsPage() {
                   data={data.revenueByMonth}
                   valueKey="value"
                   labelKey="label"
-                  color="bg-emerald-500"
+                  color="bg-sa-primary"
                   height={160}
                   prefix="₹"
                 />
@@ -367,7 +364,7 @@ export default function SuperAdminAnalyticsPage() {
                         <p className="truncate text-xs font-medium text-zinc-200">{r.restaurantName}</p>
                         <p className="text-[10px] text-zinc-600">{r.txCount} transaction{r.txCount !== 1 ? "s" : ""}</p>
                       </div>
-                      <span className="shrink-0 text-xs font-semibold tabular-nums text-emerald-400">
+                      <span className="shrink-0 text-xs font-semibold tabular-nums text-sa-accent">
                         {formatMoney(r.revenue)}
                       </span>
                     </li>

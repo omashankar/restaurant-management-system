@@ -5,6 +5,7 @@ import { useApp } from "@/context/AppProviders";
 import { useAccessControlSettings } from "@/hooks/useAccessControlSettings";
 import { usePlatformConfig } from "@/hooks/usePlatformConfig";
 import { useUser } from "@/context/AuthContext";
+import { BrandPreloaderFace } from "@/components/ui/BrandPreloaderFace";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useLayoutEffect, useState } from "react";
 import LayoutWrapper from "./LayoutWrapper";
@@ -45,24 +46,24 @@ export default function Shell({ children }) {
   /* ── Loading states ── */
   if (loading || !hydrated || !appHydrated) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-zinc-950 text-sm text-zinc-500">
-        Loading workspace…
+      <div className="restaurant-admin-panel flex min-h-screen items-center justify-center bg-zinc-950">
+        <BrandPreloaderFace variant="restaurant-admin" subtitle="Loading workspace…" />
       </div>
     );
   }
 
   if (!user) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-zinc-950 text-sm text-zinc-500">
-        Redirecting…
+      <div className="restaurant-admin-panel flex min-h-screen items-center justify-center bg-zinc-950">
+        <BrandPreloaderFace variant="restaurant-admin" subtitle="Redirecting…" compact />
       </div>
     );
   }
 
   if (routing) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-zinc-950 text-sm text-zinc-500">
-        Opening workspace…
+      <div className="restaurant-admin-panel flex min-h-screen items-center justify-center bg-zinc-950">
+        <BrandPreloaderFace variant="restaurant-admin" subtitle="Opening workspace…" compact />
       </div>
     );
   }

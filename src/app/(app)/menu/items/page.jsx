@@ -212,7 +212,7 @@ export default function MenuItemsPage() {
       {/* Header */}
       <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div className="flex items-start gap-3">
-          <span className="mt-1 flex size-10 shrink-0 items-center justify-center rounded-xl bg-emerald-500/15 text-emerald-400 ring-1 ring-emerald-500/25">
+          <span className="mt-1 flex size-10 shrink-0 items-center justify-center rounded-xl bg-ra-primary-15 text-ra-primary ring-1 ring-ra-primary-25">
             <UtensilsCrossed className="size-5" />
           </span>
           <div>
@@ -226,7 +226,7 @@ export default function MenuItemsPage() {
             <RefreshCw className="size-4" />
           </button>
           <button type="button" onClick={openCreate}
-            className="cursor-pointer inline-flex items-center gap-2 rounded-xl bg-emerald-500 px-5 py-2.5 text-sm font-bold text-zinc-950 shadow-lg shadow-emerald-500/20 hover:bg-emerald-400 active:scale-[0.98]">
+            className="cursor-pointer inline-flex items-center gap-2 rounded-xl bg-ra-primary px-5 py-2.5 text-sm font-bold text-zinc-950 shadow-ra-primary-glow hover:brightness-110 active:scale-[0.98]">
             <Plus className="size-4" strokeWidth={2.5} /> Add Item
           </button>
         </div>
@@ -236,7 +236,7 @@ export default function MenuItemsPage() {
       <div className="grid grid-cols-3 gap-3">
         {[
           { label: "Total",    value: stats.total,    color: "text-zinc-100",    bg: "bg-zinc-900/60",   border: "border-zinc-800"       },
-          { label: "Active",   value: stats.active,   color: "text-emerald-400", bg: "bg-emerald-500/5", border: "border-emerald-500/20" },
+          { label: "Active",   value: stats.active,   color: "text-ra-primary", bg: "bg-ra-primary-5", border: "border-ra-primary-20" },
           { label: "Inactive", value: stats.inactive, color: "text-zinc-500",    bg: "bg-zinc-900/40",   border: "border-zinc-800"       },
         ].map(({ label, value, color, bg, border }) => (
           <div key={label} className={`rounded-2xl border px-4 py-3 ${bg} ${border}`}>
@@ -255,7 +255,7 @@ export default function MenuItemsPage() {
               <button key={cat.id} type="button" onClick={() => setActiveCategory(cat.id)}
                 className={`cursor-pointer rounded-full px-4 py-2 text-sm font-semibold transition-all ${
                   activeCategory === cat.id
-                    ? "bg-emerald-500 text-zinc-950 shadow-lg shadow-emerald-500/20"
+                    ? "bg-ra-primary text-zinc-950 shadow-ra-primary-glow"
                     : "bg-zinc-900 text-zinc-300 ring-1 ring-zinc-800 hover:bg-zinc-800"
                 }`}>
                 {cat.name}
@@ -270,16 +270,16 @@ export default function MenuItemsPage() {
             <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-zinc-500" />
             <input value={search} onChange={(e) => setSearch(e.target.value)}
               placeholder="Search…"
-              className="w-48 rounded-xl border border-zinc-800 bg-zinc-900/70 py-2 pl-9 pr-3 text-sm text-zinc-100 placeholder:text-zinc-600 outline-none focus:border-emerald-500/40" />
+              className="w-48 rounded-xl border border-zinc-800 bg-zinc-900/70 py-2 pl-9 pr-3 text-sm text-zinc-100 placeholder:text-zinc-600 outline-none focus-ra-primary" />
           </div>
           {/* View toggle */}
           <div className="flex rounded-xl border border-zinc-800 p-0.5">
             <button type="button" onClick={() => setViewMode("grid")}
-              className={`cursor-pointer flex items-center gap-1 rounded-lg px-3 py-1.5 text-xs font-semibold transition-all ${viewMode === "grid" ? "bg-emerald-500 text-zinc-950" : "text-zinc-500 hover:text-zinc-300"}`}>
+              className={`cursor-pointer flex items-center gap-1 rounded-lg px-3 py-1.5 text-xs font-semibold transition-all ${viewMode === "grid" ? "bg-ra-primary text-zinc-950" : "text-zinc-500 hover:text-zinc-300"}`}>
               <LayoutGrid className="size-3.5" />
             </button>
             <button type="button" onClick={() => setViewMode("list")}
-              className={`cursor-pointer flex items-center gap-1 rounded-lg px-3 py-1.5 text-xs font-semibold transition-all ${viewMode === "list" ? "bg-emerald-500 text-zinc-950" : "text-zinc-500 hover:text-zinc-300"}`}>
+              className={`cursor-pointer flex items-center gap-1 rounded-lg px-3 py-1.5 text-xs font-semibold transition-all ${viewMode === "list" ? "bg-ra-primary text-zinc-950" : "text-zinc-500 hover:text-zinc-300"}`}>
               <List className="size-3.5" />
             </button>
           </div>
@@ -291,7 +291,7 @@ export default function MenuItemsPage() {
         <EmptyState
           title="No items found"
           description={search ? "Try a different search." : "Add your first menu item."}
-          action={<button type="button" onClick={openCreate} className="cursor-pointer rounded-xl bg-emerald-500 px-4 py-2 text-sm font-semibold text-zinc-950 hover:bg-emerald-400">Add Item</button>}
+          action={<button type="button" onClick={openCreate} className="cursor-pointer rounded-xl bg-ra-primary px-4 py-2 text-sm font-semibold text-zinc-950 hover:brightness-110">Add Item</button>}
         />
       ) : viewMode === "grid" ? (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
@@ -322,18 +322,18 @@ export default function MenuItemsPage() {
                     </span>
                   </td>
                   <td className="px-4 py-3 text-zinc-400">{item.categoryName}</td>
-                  <td className="px-4 py-3 font-semibold text-emerald-400">${Number(item.price).toFixed(2)}</td>
+                  <td className="px-4 py-3 font-semibold text-ra-primary">${Number(item.price).toFixed(2)}</td>
                   <td className="px-4 py-3">
                     <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold ring-1 ${
                       item.status === "active"
-                        ? "bg-emerald-500/15 text-emerald-300 ring-emerald-500/25"
+                        ? "bg-ra-primary-15 text-ra-primary-muted ring-ra-primary-25"
                         : "bg-zinc-500/15 text-zinc-400 ring-zinc-500/25"
                     }`}>{item.status}</span>
                   </td>
                   <td className="px-4 py-3 text-right">
                     <div className="flex justify-end gap-1">
                       <button type="button" onClick={() => openEdit(item)}
-                        className="cursor-pointer rounded-lg p-2 text-zinc-400 hover:bg-zinc-800 hover:text-emerald-400">
+                        className="cursor-pointer rounded-lg p-2 text-zinc-400 hover:bg-zinc-800 hover-ra-primary">
                         <svg className="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
                       </button>
                       <button type="button" onClick={() => setDeleteTarget(item)}
@@ -359,7 +359,7 @@ export default function MenuItemsPage() {
               Cancel
             </button>
             <button type="button" onClick={save} disabled={saving}
-              className="cursor-pointer rounded-xl bg-emerald-500 px-4 py-2 text-sm font-semibold text-zinc-950 hover:bg-emerald-400 disabled:opacity-40">
+              className="cursor-pointer rounded-xl bg-ra-primary px-4 py-2 text-sm font-semibold text-zinc-950 hover:brightness-110 disabled:opacity-40">
               {saving ? "Saving…" : "Save"}
             </button>
           </div>
@@ -377,7 +377,7 @@ export default function MenuItemsPage() {
                 }}
                 placeholder="e.g. Grilled Chicken"
                 aria-invalid={fieldErrors.name ? true : undefined}
-                className={`mt-1 w-full rounded-xl border bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus:border-emerald-500/40 placeholder:text-zinc-600 ${
+                className={`mt-1 w-full rounded-xl border bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus-ra-primary placeholder:text-zinc-600 ${
                   fieldErrors.name ? "border-red-500/50" : "border-zinc-700"
                 }`}
               />
@@ -392,7 +392,7 @@ export default function MenuItemsPage() {
                   if (fieldErrors.categoryId) setFieldErrors((p) => ({ ...p, categoryId: "" }));
                 }}
                 aria-invalid={fieldErrors.categoryId ? true : undefined}
-                className={`cursor-pointer mt-1 w-full rounded-xl border bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus:border-emerald-500/40 ${
+                className={`cursor-pointer mt-1 w-full rounded-xl border bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus-ra-primary ${
                   fieldErrors.categoryId ? "border-red-500/50" : "border-zinc-700"
                 }`}
               >
@@ -417,7 +417,7 @@ export default function MenuItemsPage() {
                 }}
                 placeholder="0.00"
                 aria-invalid={fieldErrors.price ? true : undefined}
-                className={`mt-1 w-full rounded-xl border bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus:border-emerald-500/40 ${
+                className={`mt-1 w-full rounded-xl border bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus-ra-primary ${
                   fieldErrors.price ? "border-red-500/50" : "border-zinc-700"
                 }`}
               />
@@ -427,7 +427,7 @@ export default function MenuItemsPage() {
               <label className="text-xs font-medium text-zinc-500">Item Type</label>
               <select value={form.itemType}
                 onChange={(e) => setForm((f) => ({ ...f, itemType: e.target.value, kitchenType: DEFAULT_KITCHEN_FOR_TYPE[e.target.value] ?? "default_kitchen" }))}
-                className="cursor-pointer mt-1 w-full rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus:border-emerald-500/40">
+                className="cursor-pointer mt-1 w-full rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus-ra-primary">
                 {ITEM_TYPES.map((t) => {
                   const label = t.charAt(0).toUpperCase() + t.slice(1);
                   return <option key={t} value={t}>{label}</option>;
@@ -439,19 +439,19 @@ export default function MenuItemsPage() {
               <input type="number" inputMode="numeric" min="0" max="120" value={form.prepTime}
                 onChange={(e) => setForm((f) => ({ ...f, prepTime: e.target.value }))}
                 placeholder="e.g. 10"
-                className="mt-1 w-full rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus:border-emerald-500/40" />
+                className="mt-1 w-full rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus-ra-primary" />
             </div>
             <div>
               <label className="text-xs font-medium text-zinc-500">Kitchen</label>
               <select value={form.kitchenType} onChange={(e) => setForm((f) => ({ ...f, kitchenType: e.target.value }))}
-                className="cursor-pointer mt-1 w-full rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus:border-emerald-500/40">
+                className="cursor-pointer mt-1 w-full rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus-ra-primary">
                 {KITCHEN_TYPES.map((k) => <option key={k} value={k}>{KITCHEN_TYPE_LABELS[k]}</option>)}
               </select>
             </div>
             <div>
               <label className="text-xs font-medium text-zinc-500">Status</label>
               <select value={form.status} onChange={(e) => setForm((f) => ({ ...f, status: e.target.value }))}
-                className="cursor-pointer mt-1 w-full rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus:border-emerald-500/40">
+                className="cursor-pointer mt-1 w-full rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus-ra-primary">
                 <option value="active">Active</option>
                 <option value="inactive">Inactive</option>
               </select>
@@ -460,13 +460,13 @@ export default function MenuItemsPage() {
               <label className="text-xs font-medium text-zinc-500">Featured badge (optional)</label>
               <input value={form.badge} onChange={(e) => setForm((f) => ({ ...f, badge: e.target.value }))}
                 placeholder="e.g. Chef's Pick — shows on customer home"
-                className="mt-1 w-full rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus:border-emerald-500/40 placeholder:text-zinc-600" />
+                className="mt-1 w-full rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus-ra-primary placeholder:text-zinc-600" />
             </div>
             <div className="sm:col-span-2">
               <label className="text-xs font-medium text-zinc-500">Description</label>
               <textarea rows={2} value={form.description} onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
                 placeholder="Short description…"
-                className="mt-1 w-full resize-none rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus:border-emerald-500/40 placeholder:text-zinc-600" />
+                className="mt-1 w-full resize-none rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus-ra-primary placeholder:text-zinc-600" />
             </div>
             <div className="sm:col-span-2">
               <MenuItemImageField

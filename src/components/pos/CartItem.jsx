@@ -46,7 +46,7 @@ export default function CartItem({
             min={1}
             value={line.qty}
             onChange={(e) => onSetQuantity(line.id, e.target.value)}
-            className="w-12 rounded-md border border-zinc-700 bg-zinc-950 px-1 py-1 text-center text-sm text-zinc-100 outline-none focus:border-emerald-500/45"
+            className="w-12 rounded-md border border-zinc-700 bg-zinc-950 px-1 py-1 text-center text-sm text-zinc-100 outline-none focus-ra-primary"
             aria-label={`${line.name} quantity`}
           />
           <button
@@ -68,7 +68,7 @@ export default function CartItem({
         value={line.note ?? ""}
         onChange={(e) => onSetLineNote?.(line.id, e.target.value)}
         placeholder="Item note (e.g. less spicy)"
-        className="mt-2 w-full rounded-lg border border-zinc-800 bg-zinc-950/80 px-2.5 py-1.5 text-[11px] text-zinc-200 outline-none placeholder:text-zinc-600 focus:border-emerald-500/40"
+        className="mt-2 w-full rounded-lg border border-zinc-800 bg-zinc-950/80 px-2.5 py-1.5 text-[11px] text-zinc-200 outline-none placeholder:text-zinc-600 focus-ra-primary"
       />
     </li>
   );

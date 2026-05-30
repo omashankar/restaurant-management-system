@@ -74,7 +74,7 @@ export default function MenuCard({
         isDisabled
           ? "opacity-50 grayscale-[40%] cursor-not-allowed"
           : "hover:-translate-y-0.5 hover:border-zinc-700 hover:shadow-lg hover:shadow-black/40 cursor-pointer",
-        isPopping ? "ring-2 ring-emerald-500/60 ring-offset-1 ring-offset-zinc-950" : "",
+        isPopping ? "ring-2 ring-ra-primary-40 ring-offset-1 ring-offset-zinc-950" : "",
         isMenu && item.status === "inactive" ? "opacity-60 grayscale-[25%]" : "",
       ].filter(Boolean).join(" ")}
       onClick={isPOS && !isDisabled ? () => onAdd(item) : undefined}
@@ -92,7 +92,7 @@ export default function MenuCard({
 
         {/* top-left: category (menu variant) */}
         {isMenu && (
-          <span className="absolute left-2.5 top-2.5 rounded-md bg-zinc-950/75 px-2 py-0.5 text-[9px] font-bold uppercase tracking-widest text-emerald-400 backdrop-blur-sm">
+          <span className="absolute left-2.5 top-2.5 rounded-md bg-zinc-950/75 px-2 py-0.5 text-[9px] font-bold uppercase tracking-widest text-ra-primary backdrop-blur-sm">
             {item.categoryName}
           </span>
         )}
@@ -100,7 +100,7 @@ export default function MenuCard({
         {isMenu && (
           <span className={`absolute right-2.5 top-2.5 rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide ${
             item.status === "active"
-              ? "bg-emerald-500 text-zinc-950"
+              ? "bg-ra-primary text-zinc-950"
               : "bg-zinc-800/90 text-zinc-500"
           }`}>
             {item.status}
@@ -118,7 +118,7 @@ export default function MenuCard({
         )}
 
         {/* bottom: price overlay */}
-        <span className="absolute bottom-2 right-2 rounded-lg bg-zinc-950/80 px-2.5 py-1 text-sm font-bold tabular-nums text-emerald-400 backdrop-blur-sm">
+        <span className="absolute bottom-2 right-2 rounded-lg bg-zinc-950/80 px-2.5 py-1 text-sm font-bold tabular-nums text-ra-primary backdrop-blur-sm">
           ${Number(item.price).toFixed(2)}
         </span>
 
@@ -178,7 +178,7 @@ export default function MenuCard({
             type="button"
             disabled={isDisabled}
             onClick={(e) => { e.stopPropagation(); if (!isDisabled) onAdd(item); }}
-            className="cursor-pointer mt-auto flex w-full items-center justify-center gap-1.5 rounded-xl bg-emerald-500 py-2 text-xs font-bold text-zinc-950 shadow-sm shadow-emerald-500/20 transition-all hover:bg-emerald-400 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40"
+            className="cursor-pointer mt-auto flex w-full items-center justify-center gap-1.5 rounded-xl bg-ra-primary py-2 text-xs font-bold text-zinc-950 shadow-ra-primary-glow transition-all hover:brightness-110 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40"
             aria-label={`Add ${item.name}`}
           >
             <Plus className="size-3.5" />
@@ -190,7 +190,7 @@ export default function MenuCard({
             <button
               type="button"
               onClick={(e) => { e.stopPropagation(); onEdit(item); }}
-              className="cursor-pointer flex flex-1 items-center justify-center gap-1.5 rounded-xl border border-zinc-700/80 bg-zinc-800/40 py-2 text-xs font-semibold text-zinc-300 transition-all hover:border-emerald-500/50 hover:bg-emerald-500/10 hover:text-emerald-300"
+              className="cursor-pointer flex flex-1 items-center justify-center gap-1.5 rounded-xl border border-zinc-700/80 bg-zinc-800/40 py-2 text-xs font-semibold text-zinc-300 transition-all hover-border-ra-primary-50 hover-bg-ra-primary-10 hover:text-ra-primary-muted"
             >
               <Pencil className="size-3.5" aria-hidden />
               Edit

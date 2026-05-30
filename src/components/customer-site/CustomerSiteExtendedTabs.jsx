@@ -5,7 +5,7 @@ import { CMS_EDITOR_SECTION, CMS_EDITOR_SECTION_TIGHT } from "@/config/customerS
 import { DEFAULTS } from "@/lib/restaurantCmsDefaults";
 
 const inputCls =
-  "w-full rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus:border-emerald-500/40 placeholder:text-zinc-600";
+  "w-full rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus-ra-primary placeholder:text-zinc-600";
 const textareaCls = inputCls + " resize-none";
 
 function Field({ label, hint, children, className = "" }) {

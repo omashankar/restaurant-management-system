@@ -8,7 +8,7 @@ import { useCallback, useEffect, useState } from "react";
 const PRINTER_TYPES = [
   { id: "network", label: "Network (LAN/WiFi)", Icon: Wifi,      color: "text-blue-400",   bg: "bg-blue-500/10 border-blue-500/20" },
   { id: "bluetooth", label: "Bluetooth",        Icon: Bluetooth, color: "text-violet-400", bg: "bg-violet-500/10 border-violet-500/20" },
-  { id: "usb",     label: "USB",                Icon: Usb,       color: "text-emerald-400",bg: "bg-emerald-500/10 border-emerald-500/20" },
+  { id: "usb",     label: "USB",                Icon: Usb,       color: "text-ra-primary",bg: "bg-ra-primary-10 border-ra-primary-20" },
 ];
 
 const PAPER_SIZES = ["58mm", "80mm"];
@@ -18,7 +18,7 @@ const EMPTY_PRINTER = {
   paperSize: "80mm", autoPrint: false, printKot: true, printInvoice: true,
 };
 
-const inputCls = "w-full rounded-xl border border-zinc-800 bg-zinc-950/80 px-3 py-2.5 text-sm text-zinc-100 outline-none transition-colors focus:border-emerald-500/45 placeholder:text-zinc-600";
+const inputCls = "w-full rounded-xl border border-zinc-800 bg-zinc-950/80 px-3 py-2.5 text-sm text-zinc-100 outline-none transition-colors focus-ra-primary placeholder:text-zinc-600";
 
 function Toggle({ checked, onChange, label, hint }) {
   return (
@@ -28,7 +28,7 @@ function Toggle({ checked, onChange, label, hint }) {
         {hint && <span className="mt-0.5 block text-xs text-zinc-500">{hint}</span>}
       </span>
       <button type="button" role="switch" aria-checked={checked} onClick={() => onChange(!checked)}
-        className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors ${checked ? "bg-emerald-500" : "bg-zinc-700"}`}>
+        className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors ${checked ? "bg-ra-primary" : "bg-zinc-700"}`}>
         <span className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform ${checked ? "translate-x-5" : "translate-x-0.5"}`} />
       </button>
     </label>
@@ -160,7 +160,7 @@ export default function PrinterSettingsPage() {
   if (loading) {
     return (
       <div className="flex h-64 items-center justify-center">
-        <Loader2 className="size-6 animate-spin text-emerald-400" />
+        <Loader2 className="size-6 animate-spin text-ra-primary" />
       </div>
     );
   }
@@ -181,7 +181,7 @@ export default function PrinterSettingsPage() {
             {saving ? "Saving…" : "Save"}
           </button>
           <button type="button" onClick={() => setShowForm(true)}
-            className="cursor-pointer inline-flex items-center gap-2 rounded-xl bg-emerald-500 px-4 py-2 text-sm font-semibold text-zinc-950 hover:bg-emerald-400 transition-colors">
+            className="cursor-pointer inline-flex items-center gap-2 rounded-xl bg-ra-primary px-4 py-2 text-sm font-semibold text-zinc-950 hover:brightness-110 transition-colors">
             <Plus className="size-4" /> {t("printer.addPrinter")}
           </button>
         </div>
@@ -197,7 +197,7 @@ export default function PrinterSettingsPage() {
       {saveResult && (
         <div className={`flex items-center gap-2 rounded-xl border px-4 py-3 text-sm ${
           saveResult.success
-            ? "border-emerald-500/25 bg-emerald-500/10 text-emerald-400"
+            ? "border-ra-primary-25 bg-ra-primary-10 text-ra-primary"
             : "border-red-500/25 bg-red-500/10 text-red-400"
         }`}>
           {saveResult.success ? <CheckCircle2 className="size-4" /> : <XCircle className="size-4" />}
@@ -287,7 +287,7 @@ export default function PrinterSettingsPage() {
                     <button key={size} type="button" onClick={() => setForm((f) => ({ ...f, paperSize: size }))}
                       className={`cursor-pointer flex-1 rounded-xl border py-2 text-sm font-semibold transition-all ${
                         form.paperSize === size
-                          ? "border-emerald-500/40 bg-emerald-500/15 text-emerald-400"
+                          ? "border-ra-primary-40 bg-ra-primary-15 text-ra-primary"
                           : "border-zinc-800 bg-zinc-950/40 text-zinc-500 hover:border-zinc-700"
                       }`}>
                       {size}
@@ -312,7 +312,7 @@ export default function PrinterSettingsPage() {
                 Cancel
               </button>
               <button type="button" onClick={addPrinter} disabled={saving}
-                className="cursor-pointer rounded-xl bg-emerald-500 px-4 py-2 text-sm font-semibold text-zinc-950 hover:bg-emerald-400 disabled:opacity-50 transition-colors">
+                className="cursor-pointer rounded-xl bg-ra-primary px-4 py-2 text-sm font-semibold text-zinc-950 hover:brightness-110 disabled:opacity-50 transition-colors">
                 Add Printer
               </button>
             </div>
@@ -349,7 +349,7 @@ export default function PrinterSettingsPage() {
                   <div className="flex items-center gap-2">
                     {result && (
                       result.success
-                        ? <CheckCircle2 className="size-4 text-emerald-400" title={result.message} />
+                        ? <CheckCircle2 className="size-4 text-ra-primary" title={result.message} />
                         : <XCircle className="size-4 text-red-400" title={result.message} />
                     )}
                     <button type="button" onClick={() => testPrint(printer)} disabled={testing === printer.id}
@@ -365,7 +365,7 @@ export default function PrinterSettingsPage() {
                 </div>
 
                 {result?.message && (
-                  <p className={`mt-2 text-xs ${result.success ? "text-emerald-400" : "text-red-400"}`}>
+                  <p className={`mt-2 text-xs ${result.success ? "text-ra-primary" : "text-red-400"}`}>
                     {result.message}
                   </p>
                 )}
@@ -380,7 +380,7 @@ export default function PrinterSettingsPage() {
                 </div>
 
                 <div className="mt-3 flex flex-wrap gap-2">
-                  {printer.autoPrint && <span className="rounded-full bg-emerald-500/15 px-2.5 py-0.5 text-xs text-emerald-400">Auto Print</span>}
+                  {printer.autoPrint && <span className="rounded-full bg-ra-primary-15 px-2.5 py-0.5 text-xs text-ra-primary">Auto Print</span>}
                   {printer.printKot && <span className="rounded-full bg-blue-500/15 px-2.5 py-0.5 text-xs text-blue-400">KOT</span>}
                   {printer.printInvoice && <span className="rounded-full bg-violet-500/15 px-2.5 py-0.5 text-xs text-violet-400">Invoice</span>}
                 </div>

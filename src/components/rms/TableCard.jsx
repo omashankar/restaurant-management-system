@@ -4,8 +4,8 @@ import TableCapacityIcon from "@/components/table/TableCapacityIcon";
 const statusMap = {
   available: {
     label: "Available",
-    bar: "bg-emerald-500",
-    ring: "ring-emerald-500/30",
+    bar: "bg-ra-primary",
+    ring: "ring-ra-primary-25",
   },
   occupied: {
     label: "Occupied",
@@ -28,9 +28,9 @@ export default function TableCard({
   const s = statusMap[table.status] ?? statusMap.available;
   const capacity = Number(table.seats ?? table.capacity ?? 0) || 0;
   const tableName = table.name ?? table.id;
-  const iconTone = selected ? "text-emerald-300" : "text-zinc-300";
+  const iconTone = selected ? "text-ra-primary-muted" : "text-zinc-300";
   const iconShell = selected
-    ? "border-emerald-400/40 bg-emerald-500/[0.08] shadow-[0_0_0_1px_rgba(16,185,129,0.25),0_10px_26px_rgba(16,185,129,0.18)]"
+    ? "border-ra-primary-40 bg-ra-primary/[0.08] shadow-[0_0_0_1px_color-mix(in_srgb,var(--ra-primary)_25%,transparent),0_10px_26px_color-mix(in_srgb,var(--ra-primary)_18%,transparent)]"
     : "border-zinc-700/75 bg-zinc-900/80 shadow-[inset_0_1px_0_rgba(255,255,255,0.05),0_8px_20px_rgba(0,0,0,0.35)]";
 
   return (
@@ -39,7 +39,7 @@ export default function TableCard({
       onClick={() => onSelect?.(table)}
       className={`relative w-full rounded-2xl border p-4 text-left transition-all duration-200 ${
         selected
-          ? "border-emerald-500/60 bg-emerald-500/10 shadow-lg shadow-emerald-500/10"
+          ? "border-ra-primary-60 bg-ra-primary-10 shadow-lg shadow-ra-primary-soft"
           : "border-zinc-800 bg-zinc-900/60 hover:border-zinc-600 hover:shadow-md"
       } ${className}`}
     >

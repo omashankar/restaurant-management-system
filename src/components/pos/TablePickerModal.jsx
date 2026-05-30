@@ -89,15 +89,15 @@ export default function TablePickerModal({ open, selectedTableId, onSelect, onCl
                       isBlocked
                         ? "cursor-not-allowed border-zinc-800/50 bg-zinc-900/20 opacity-40"
                         : isSelected
-                        ? "cursor-pointer border-emerald-500/60 bg-emerald-500/10 ring-1 ring-emerald-500/25 hover:-translate-y-0.5"
+                        ? "cursor-pointer border-ra-primary-60 bg-ra-primary-10 ring-1 ring-ra-primary-25 hover:-translate-y-0.5"
                         : "cursor-pointer border-zinc-800 bg-zinc-900/60 hover:-translate-y-0.5 hover:border-zinc-600 hover:shadow-lg"
                     }`}>
                     {isSelected && (
-                      <span className="absolute right-2.5 top-2.5 flex size-5 items-center justify-center rounded-full bg-emerald-500 text-zinc-950">
+                      <span className="absolute right-2.5 top-2.5 flex size-5 items-center justify-center rounded-full bg-ra-primary text-zinc-950">
                         <Check className="size-3.5" strokeWidth={3} />
                       </span>
                     )}
-                    <p className={`text-base font-bold ${isSelected ? "text-emerald-400" : isBlocked ? "text-zinc-600" : "text-zinc-100"}`}>
+                    <p className={`text-base font-bold ${isSelected ? "text-ra-primary" : isBlocked ? "text-zinc-600" : "text-zinc-100"}`}>
                       {table.tableNumber}
                     </p>
                     <div className="mt-1.5 flex items-center gap-1 text-xs text-zinc-500">
@@ -105,8 +105,8 @@ export default function TablePickerModal({ open, selectedTableId, onSelect, onCl
                     </div>
                     <span className={`mt-2 rounded-full px-2 py-0.5 text-[10px] font-semibold ${
                       isBlocked ? "bg-red-500/10 text-red-400"
-                      : isSelected ? "bg-emerald-500/20 text-emerald-400"
-                      : "bg-emerald-500/10 text-emerald-500"
+                      : isSelected ? "bg-ra-primary/20 text-ra-primary"
+                      : "bg-ra-primary-10 text-ra-primary"
                     }`}>
                       {isBlocked ? table.status : isSelected ? "Selected" : "Available"}
                     </span>

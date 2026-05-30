@@ -12,7 +12,7 @@ import StatusBadge from "./StatusBadge";
 function dotForTone(tone) {
   if (tone === "done")
     return (
-      <span className="flex size-8 items-center justify-center rounded-full bg-emerald-500/20 text-emerald-400 ring-2 ring-emerald-500/40">
+      <span className="flex size-8 items-center justify-center rounded-full bg-ra-primary-20 text-ra-primary ring-2 ring-ra-primary-40">
         <Check className="size-4" strokeWidth={2.5} />
       </span>
     );

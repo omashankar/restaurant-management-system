@@ -3,7 +3,7 @@
 import { computeInventoryStatus } from "@/components/inventory/inventoryUtils";
 
 const STYLES = {
-  in: "border-emerald-500/30 bg-emerald-500/10 text-emerald-300",
+  in: "border-ra-primary-30 bg-ra-primary-10 text-ra-primary-muted",
   low: "border-amber-500/35 bg-amber-500/10 text-amber-300",
   out: "border-red-500/35 bg-red-500/10 text-red-300",
 };

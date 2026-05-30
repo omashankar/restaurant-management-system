@@ -25,7 +25,7 @@ export default function CategoryTabs({
           onClick={() => onChange("all")}
           className={`cursor-pointer snap-start shrink-0 rounded-full px-4 py-2 text-sm font-semibold transition-all duration-300 ease-out ${
             activeCategoryId === "all"
-              ? "scale-[1.02] bg-emerald-500 text-zinc-950 shadow-lg shadow-emerald-500/25"
+              ? "scale-[1.02] bg-ra-primary text-zinc-950 shadow-ra-primary-glow"
               : "bg-zinc-900 text-zinc-400 ring-1 ring-zinc-800 hover:bg-zinc-800 hover:text-zinc-200"
           }`}
         >
@@ -42,7 +42,7 @@ export default function CategoryTabs({
               onClick={() => onChange(c.id)}
               className={`cursor-pointer snap-start shrink-0 rounded-full px-4 py-2 text-sm font-semibold transition-all duration-300 ease-out ${
                 active
-                  ? "scale-[1.02] bg-emerald-500 text-zinc-950 shadow-lg shadow-emerald-500/25"
+                  ? "scale-[1.02] bg-ra-primary text-zinc-950 shadow-ra-primary-glow"
                   : "bg-zinc-900 text-zinc-400 ring-1 ring-zinc-800 hover:bg-zinc-800 hover:text-zinc-200"
               }`}
             >

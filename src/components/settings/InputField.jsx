@@ -1,5 +1,7 @@
 "use client";
 
+import { raInputCls } from "@/config/restaurantAdminTheme";
+
 export default function InputField({
   label,
   value,
@@ -14,7 +16,7 @@ export default function InputField({
   error,
 }) {
   const borderCls = error ? "border-red-500/50" : "border-zinc-800";
-  const fieldCls = `w-full rounded-xl border ${borderCls} bg-zinc-950/80 px-3 py-2.5 text-sm text-zinc-100 outline-none transition-colors focus:border-emerald-500/45`;
+  const fieldCls = `${raInputCls} border ${borderCls} bg-zinc-950/80 focus-ra-primary`;
   const inputMode =
     type === "number"
       ? step != null && String(step).includes(".")

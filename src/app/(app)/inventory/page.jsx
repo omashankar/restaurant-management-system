@@ -292,7 +292,7 @@ export default function InventoryPage() {
         <button
           type="button"
           onClick={openCreate}
-          className="cursor-pointer inline-flex items-center gap-2 rounded-xl bg-emerald-500 px-4 py-2.5 text-sm font-semibold text-zinc-950 transition-colors hover:bg-emerald-400"
+          className="cursor-pointer inline-flex items-center gap-2 rounded-xl bg-ra-primary px-4 py-2.5 text-sm font-semibold text-zinc-950 transition-colors hover:brightness-110"
         >
           <Plus className="size-4" />
           Add item
@@ -322,11 +322,11 @@ export default function InventoryPage() {
             {stats.total}
           </p>
         </div>
-        <div className="rounded-2xl border border-zinc-800 bg-zinc-900/50 px-4 py-4 transition-colors hover:border-emerald-500/20">
+        <div className="rounded-2xl border border-zinc-800 bg-zinc-900/50 px-4 py-4 transition-colors hover:border-ra-primary-20">
           <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">
             In stock
           </p>
-          <p className="mt-2 text-3xl font-semibold tabular-nums text-emerald-400">
+          <p className="mt-2 text-3xl font-semibold tabular-nums text-ra-primary">
             {stats.ok}
           </p>
         </div>
@@ -356,8 +356,8 @@ export default function InventoryPage() {
           </h2>
         </div>
         {alertItems.length === 0 ? (
-          <div className="flex items-center gap-3 rounded-2xl border border-emerald-500/25 bg-emerald-500/5 px-4 py-4 text-sm text-zinc-400">
-            <Package className="size-5 shrink-0 text-emerald-400" />
+          <div className="flex items-center gap-3 rounded-2xl border border-ra-primary-25 bg-ra-primary-5 px-4 py-4 text-sm text-zinc-400">
+            <Package className="size-5 shrink-0 text-ra-primary" />
             All items are above reorder levels.
           </div>
         ) : (
@@ -399,7 +399,7 @@ export default function InventoryPage() {
             <button
               type="button"
               onClick={openCreate}
-              className="cursor-pointer rounded-xl bg-emerald-500 px-4 py-2 text-sm font-semibold text-zinc-950"
+              className="cursor-pointer rounded-xl bg-ra-primary px-4 py-2 text-sm font-semibold text-zinc-950"
             >
               Add item
             </button>

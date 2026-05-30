@@ -301,11 +301,11 @@ export default function QrMenuPage() {
 
       {/* Slug info banner */}
       {restaurantSlug ? (
-        <div className="flex items-center gap-3 rounded-xl border border-emerald-500/25 bg-emerald-500/10 px-4 py-3">
+        <div className="flex items-center gap-3 rounded-xl border border-ra-primary-25 bg-ra-primary-10 px-4 py-3">
           <span className="text-lg">🔗</span>
           <div className="min-w-0">
-            <p className="text-sm font-semibold text-emerald-300">Multi-Restaurant URL Active</p>
-            <p className="mt-0.5 truncate text-xs text-emerald-400/80">
+            <p className="text-sm font-semibold text-ra-primary-muted">Multi-Restaurant URL Active</p>
+            <p className="mt-0.5 truncate text-xs text-ra-primary/80">
               Customer site: <span className="font-mono">{baseUrl}/r/{restaurantSlug}/</span>
             </p>
           </div>
@@ -335,11 +335,11 @@ export default function QrMenuPage() {
                   onClick={() => setQrType(type.id)}
                   className={`cursor-pointer rounded-xl border p-4 text-left transition-all ${
                     qrType === type.id
-                      ? "border-emerald-500/40 bg-emerald-500/10 ring-1 ring-emerald-500/25"
+                      ? "border-ra-primary-40 bg-ra-primary-10 ring-1 ring-ra-primary-25"
                       : "border-zinc-800 bg-zinc-950/40 hover:border-zinc-700"
                   }`}>
                   <div className="text-2xl mb-2">{type.icon}</div>
-                  <p className={`text-sm font-semibold ${qrType === type.id ? "text-emerald-400" : "text-zinc-200"}`}>
+                  <p className={`text-sm font-semibold ${qrType === type.id ? "text-ra-primary" : "text-zinc-200"}`}>
                     {type.label}
                   </p>
                   <p className="mt-0.5 text-xs text-zinc-500">{type.desc}</p>
@@ -353,7 +353,7 @@ export default function QrMenuPage() {
             <h2 className="mb-3 text-base font-semibold text-zinc-100">Label on QR</h2>
             <input value={restaurantName} onChange={(e) => setRestaurantName(e.target.value)}
               placeholder="Restaurant name shown below QR"
-              className="w-full rounded-xl border border-zinc-800 bg-zinc-950/80 px-3 py-2.5 text-sm text-zinc-100 outline-none focus:border-emerald-500/45" />
+              className="w-full rounded-xl border border-zinc-800 bg-zinc-950/80 px-3 py-2.5 text-sm text-zinc-100 outline-none focus-ra-primary" />
           </section>
 
           {/* Table config */}
@@ -369,7 +369,7 @@ export default function QrMenuPage() {
                     <select
                       value={tableNumber}
                       onChange={(e) => setTableNumber(e.target.value)}
-                      className="cursor-pointer w-full rounded-xl border border-zinc-800 bg-zinc-950/80 px-3 py-2.5 text-sm text-zinc-100 outline-none focus:border-emerald-500/45"
+                      className="cursor-pointer w-full rounded-xl border border-zinc-800 bg-zinc-950/80 px-3 py-2.5 text-sm text-zinc-100 outline-none focus-ra-primary"
                     >
                       {tableNumbers.map((tn) => (
                         <option key={tn} value={tn}>{tn}</option>
@@ -379,7 +379,7 @@ export default function QrMenuPage() {
                     <input type="text" value={tableNumber}
                       onChange={(e) => setTableNumber(e.target.value)}
                       placeholder="e.g. T01"
-                      className="w-full rounded-xl border border-zinc-800 bg-zinc-950/80 px-3 py-2.5 text-sm text-zinc-100 outline-none focus:border-emerald-500/45" />
+                      className="w-full rounded-xl border border-zinc-800 bg-zinc-950/80 px-3 py-2.5 text-sm text-zinc-100 outline-none focus-ra-primary" />
                   )}
                 </div>
                 {floorTables.length === 0 ? (
@@ -390,7 +390,7 @@ export default function QrMenuPage() {
                   <input type="number" value={tableCount}
                     onChange={(e) => setTableCount(Math.max(1, Math.min(50, Number(e.target.value))))}
                     min="1" max="50"
-                    className="w-full rounded-xl border border-zinc-800 bg-zinc-950/80 px-3 py-2.5 text-sm text-zinc-100 outline-none focus:border-emerald-500/45" />
+                    className="w-full rounded-xl border border-zinc-800 bg-zinc-950/80 px-3 py-2.5 text-sm text-zinc-100 outline-none focus-ra-primary" />
                 </div>
                 ) : (
                 <div className="flex items-end">
@@ -412,7 +412,7 @@ export default function QrMenuPage() {
                       onClick={() => setTableNumber(tn)}
                       className={`cursor-pointer flex flex-col items-center rounded-xl border py-2 text-xs transition-all ${
                         tableNumber === tn
-                          ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-400"
+                          ? "border-ra-primary-40 bg-ra-primary-10 text-ra-primary"
                           : "border-zinc-800 bg-zinc-950/40 text-zinc-500 hover:border-zinc-700"
                       }`}>
                       <Table2 className="size-3.5 mb-0.5" />
@@ -453,7 +453,7 @@ export default function QrMenuPage() {
                 href={getQrValue().replace(baseUrl, "") || "/order/menu"}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="mt-3 inline-flex items-center gap-1.5 text-xs font-medium text-emerald-400 hover:text-emerald-300"
+                className="mt-3 inline-flex items-center gap-1.5 text-xs font-medium text-ra-primary hover:text-ra-primary-muted"
               >
                 <ExternalLink className="size-3.5" />
                 Open menu link (test)
@@ -497,7 +497,7 @@ export default function QrMenuPage() {
             {/* Action buttons */}
             <div className="mt-5 grid gap-2">
               <button type="button" onClick={downloadQr}
-                className="cursor-pointer flex items-center justify-center gap-2 rounded-xl bg-emerald-500 py-2.5 text-sm font-semibold text-zinc-950 hover:bg-emerald-400 transition-colors">
+                className="cursor-pointer flex items-center justify-center gap-2 rounded-xl bg-ra-primary py-2.5 text-sm font-semibold text-zinc-950 hover:brightness-110 transition-colors">
                 <Download className="size-4" />
                 Download QR (PNG)
               </button>
@@ -520,7 +520,7 @@ export default function QrMenuPage() {
                 { step: "4", text: "Order appears in POS & Kitchen Display" },
               ].map(({ step, text }) => (
                 <div key={step} className="flex items-start gap-2.5 text-xs text-zinc-500">
-                  <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-emerald-500/15 text-[10px] font-bold text-emerald-400">
+                  <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-ra-primary-15 text-[10px] font-bold text-ra-primary">
                     {step}
                   </span>
                   {text}

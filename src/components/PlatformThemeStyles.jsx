@@ -2,8 +2,8 @@ import { getPublicPlatformConfig } from "@/lib/platformSettings";
 
 export default async function PlatformThemeStyles() {
   const config = await getPublicPlatformConfig();
-  const primary = config.theme?.primaryColor ?? "#10b981";
-  const accent = config.theme?.accentColor ?? "#f43f5e";
+  const primary = config.theme?.primaryColor ?? "#f43f5e";
+  const accent = config.theme?.accentColor ?? "#10b981";
 
   return (
     <style

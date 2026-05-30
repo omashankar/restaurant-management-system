@@ -1,5 +1,7 @@
 "use client";
 
+import SuperAdminPageSkeleton from "@/components/super-admin/SuperAdminPageSkeleton";
+import { saSpinnerCls } from "@/config/superAdminTheme";
 import { useToast } from "@/hooks/useToast";
 import {
   Activity, AlertTriangle, Building2,
@@ -14,22 +16,22 @@ import { useCallback, useEffect, useState } from "react";
 ───────────────────────────────────────── */
 const CATEGORIES = [
   { id: "all",        label: "All",          Icon: ClipboardList, color: "text-zinc-400"   },
-  { id: "restaurant", label: "Restaurants",  Icon: Building2,     color: "text-emerald-400"},
+  { id: "restaurant", label: "Restaurants",  Icon: Building2,     color: "text-sa-accent"},
   { id: "user",       label: "Users",        Icon: User,          color: "text-amber-400"  },
   { id: "payment",    label: "Payments",     Icon: CreditCard,    color: "text-indigo-400" },
   { id: "billing",    label: "Billing",      Icon: Activity,      color: "text-sky-400"    },
   { id: "settings",   label: "Settings",     Icon: Settings,      color: "text-violet-400" },
-  { id: "auth",       label: "Auth",         Icon: Shield,        color: "text-rose-400"   },
+  { id: "auth",       label: "Auth",         Icon: Shield,        color: "text-sa-primary"   },
   { id: "system",     label: "System",       Icon: AlertTriangle, color: "text-zinc-400"   },
 ];
 
 const CATEGORY_STYLES = {
-  restaurant: { bg: "bg-emerald-500/10", text: "text-emerald-400", ring: "ring-emerald-500/25", dot: "bg-emerald-500" },
+  restaurant: { bg: "bg-sa-accent-10", text: "text-sa-accent", ring: "ring-sa-accent-25", dot: "bg-sa-accent" },
   user:       { bg: "bg-amber-500/10",   text: "text-amber-400",   ring: "ring-amber-500/25",   dot: "bg-amber-500"   },
   payment:    { bg: "bg-indigo-500/10",  text: "text-indigo-400",  ring: "ring-indigo-500/25",  dot: "bg-indigo-500"  },
   billing:    { bg: "bg-sky-500/10",     text: "text-sky-400",     ring: "ring-sky-500/25",     dot: "bg-sky-500"     },
   settings:   { bg: "bg-violet-500/10",  text: "text-violet-400",  ring: "ring-violet-500/25",  dot: "bg-violet-500"  },
-  auth:       { bg: "bg-rose-500/10",    text: "text-rose-400",    ring: "ring-rose-500/25",    dot: "bg-rose-500"    },
+  auth:       { bg: "bg-sa-primary-10",    text: "text-sa-primary",    ring: "ring-sa-primary-25",    dot: "bg-sa-primary"    },
   system:     { bg: "bg-zinc-500/10",    text: "text-zinc-400",    ring: "ring-zinc-500/25",    dot: "bg-zinc-500"    },
 };
 
@@ -159,7 +161,7 @@ export default function LogsPage() {
           disabled={loading}
           className="cursor-pointer flex items-center gap-1.5 rounded-xl border border-zinc-700 px-3 py-2.5 text-sm font-medium text-zinc-400 hover:border-zinc-500 hover:text-zinc-200 disabled:opacity-50 transition-colors"
         >
-          <RefreshCw className={`size-4 ${loading ? "animate-spin" : ""}`} />
+          <RefreshCw className={`size-4 ${loading ? saSpinnerCls : ""}`} />
           Refresh
         </button>
       </div>
@@ -207,7 +209,7 @@ export default function LogsPage() {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Search action, actor, target…"
-          className="w-full rounded-xl border border-zinc-800 bg-zinc-900/70 py-2.5 pl-10 pr-9 text-sm text-zinc-100 placeholder:text-zinc-600 outline-none focus:border-emerald-500/40"
+          className="w-full rounded-xl border border-zinc-800 bg-zinc-900/70 py-2.5 pl-10 pr-9 text-sm text-zinc-100 placeholder:text-zinc-600 outline-none focus-sa-primary"
         />
         {search && (
           <button
@@ -222,11 +224,7 @@ export default function LogsPage() {
 
       {/* ── Log list ── */}
       {loading ? (
-        <div className="space-y-2">
-          {Array.from({ length: 10 }).map((_, i) => (
-            <div key={i} className="h-14 animate-pulse rounded-xl border border-zinc-800 bg-zinc-900/40" />
-          ))}
-        </div>
+        <SuperAdminPageSkeleton rows={10} rowClassName="h-14" />
       ) : logs.length === 0 ? (
         <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-zinc-800 py-20 text-center">
           <ClipboardList className="size-10 text-zinc-700" />
@@ -331,7 +329,7 @@ export default function LogsPage() {
                       onClick={() => setPage(n)}
                       className={`cursor-pointer flex size-8 items-center justify-center rounded-lg border text-xs font-medium transition-colors ${
                         n === page
-                          ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-400"
+                          ? "border-sa-primary-40 bg-sa-primary-10 text-sa-primary"
                           : "border-zinc-800 text-zinc-500 hover:border-zinc-600 hover:text-zinc-300"
                       }`}
                     >

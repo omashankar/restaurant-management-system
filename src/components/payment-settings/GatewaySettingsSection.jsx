@@ -85,7 +85,7 @@ export default function GatewaySettingsSection({ data, onChange, onSave, showToa
         <p className="mt-1 text-sm text-zinc-500">
           Select a gateway and enter your API keys. Keys are encrypted before saving.
           {enabledGateways.length > 0 && (
-            <span className="ml-2 inline-flex items-center gap-1 text-emerald-400">
+            <span className="ml-2 inline-flex items-center gap-1 text-ra-primary">
               <CheckCircle2 className="size-3" />
               {enabledGateways.map((g) => g.label).join(", ")} active
             </span>
@@ -103,12 +103,12 @@ export default function GatewaySettingsSection({ data, onChange, onSave, showToa
               onClick={() => { setActiveGw(g.id); setTestResult(null); }}
               className={`cursor-pointer relative rounded-xl border p-3 text-center transition-all ${
                 isActive
-                  ? "border-emerald-500/50 bg-emerald-500/10 ring-1 ring-emerald-500/30"
+                  ? "border-ra-primary-50 bg-ra-primary-10 ring-1 ring-ra-primary-25"
                   : "border-zinc-800 bg-zinc-950/40 hover:border-zinc-700"
               }`}>
               {/* Enabled dot */}
               {isEnabled && (
-                <span className="absolute right-2 top-2 size-2 rounded-full bg-emerald-400" />
+                <span className="absolute right-2 top-2 size-2 rounded-full bg-ra-primary" />
               )}
               {/* Logo or fallback icon */}
               <div className="flex h-8 items-center justify-center mb-1.5">
@@ -125,7 +125,7 @@ export default function GatewaySettingsSection({ data, onChange, onSave, showToa
                   <Settings2 className="size-6 text-zinc-500" />
                 )}
               </div>
-              <p className={`text-xs font-semibold ${isActive ? "text-emerald-400" : "text-zinc-300"}`}>
+              <p className={`text-xs font-semibold ${isActive ? "text-ra-primary" : "text-zinc-300"}`}>
                 {g.label}
               </p>
               {g.popular && (
@@ -154,7 +154,7 @@ export default function GatewaySettingsSection({ data, onChange, onSave, showToa
               <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${
                 gw.testMode
                   ? "bg-amber-500/15 text-amber-400"
-                  : "bg-emerald-500/15 text-emerald-400"
+                  : "bg-ra-primary-15 text-ra-primary"
               }`}>
                 {gw.testMode ? "Test Mode" : "Live Mode"}
               </span>
@@ -165,7 +165,7 @@ export default function GatewaySettingsSection({ data, onChange, onSave, showToa
               <button type="button" role="switch" aria-checked={Boolean(gw.enabled)}
                 onClick={() => updateGw({ enabled: !gw.enabled })}
                 className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                  gw.enabled ? "bg-emerald-500" : "bg-zinc-700"
+                  gw.enabled ? "bg-ra-primary" : "bg-zinc-700"
                 }`}>
                 <span className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform ${
                   gw.enabled ? "translate-x-5" : "translate-x-0.5"
@@ -193,7 +193,7 @@ export default function GatewaySettingsSection({ data, onChange, onSave, showToa
                 <button type="button" role="switch" aria-checked={Boolean(gw.testMode)}
                   onClick={() => updateGw({ testMode: !gw.testMode })}
                   className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                    gw.testMode ? "bg-amber-500" : "bg-emerald-500"
+                    gw.testMode ? "bg-amber-500" : "bg-ra-primary"
                   }`}>
                   <span className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform ${
                     gw.testMode ? "translate-x-5" : "translate-x-0.5"
@@ -250,7 +250,7 @@ export default function GatewaySettingsSection({ data, onChange, onSave, showToa
             {testResult && (
               <div className={`flex items-center gap-2 rounded-xl border px-4 py-3 text-sm ${
                 testResult.success
-                  ? "border-emerald-500/25 bg-emerald-500/10 text-emerald-400"
+                  ? "border-ra-primary-25 bg-ra-primary-10 text-ra-primary"
                   : "border-red-500/25 bg-red-500/10 text-red-400"
               }`}>
                 {testResult.success
@@ -272,7 +272,7 @@ export default function GatewaySettingsSection({ data, onChange, onSave, showToa
           {testing ? "Testing…" : "Test Connection"}
         </button>
         <button type="button" onClick={handleSave} disabled={saving}
-          className="cursor-pointer inline-flex items-center gap-2 rounded-xl bg-emerald-500 px-5 py-2 text-sm font-semibold text-zinc-950 hover:bg-emerald-400 disabled:opacity-50 transition-colors">
+          className="cursor-pointer inline-flex items-center gap-2 rounded-xl bg-ra-primary px-5 py-2 text-sm font-semibold text-zinc-950 hover:brightness-110 disabled:opacity-50 transition-colors">
           {saving && <Loader2 className="size-4 animate-spin" />}
           {saving ? "Saving…" : "Save Changes"}
         </button>

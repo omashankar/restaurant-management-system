@@ -12,7 +12,7 @@ export default function InventoryAlertCard({ item, onOpen }) {
     <button
       type="button"
       onClick={() => onOpen?.(item)}
-      className={`cursor-pointer w-full rounded-2xl border p-4 text-left transition-all duration-200 hover:shadow-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/40 ${
+      className={`cursor-pointer w-full rounded-2xl border p-4 text-left transition-all duration-200 hover:shadow-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-ra-primary-40 ${
         stressed
           ? "border-amber-500/40 bg-amber-500/5 hover:border-amber-500/55"
           : "border-zinc-800 bg-zinc-900/60 hover:border-zinc-700"
@@ -23,7 +23,7 @@ export default function InventoryAlertCard({ item, onOpen }) {
           className={`flex size-10 shrink-0 items-center justify-center rounded-xl ${
             stressed
               ? "bg-amber-500/15 text-amber-400"
-              : "bg-emerald-500/10 text-emerald-400"
+              : "bg-ra-primary-10 text-ra-primary"
           }`}
         >
           {stressed ? (

@@ -17,8 +17,8 @@ export default function SidebarBrand({
       <span
         className={`flex size-10 shrink-0 items-center justify-center rounded-xl ring-1 ${
           src
-            ? "bg-zinc-900 ring-emerald-500/25"
-            : "bg-emerald-500/15 text-emerald-400 ring-emerald-500/25"
+            ? "bg-zinc-900 ring-ra-primary-25"
+            : "bg-ra-primary-15 text-ra-primary ring-ra-primary-25"
         }`}
       >
         {src ? (

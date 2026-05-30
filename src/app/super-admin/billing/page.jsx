@@ -1,5 +1,7 @@
 "use client";
 
+import SuperAdminPageSkeleton from "@/components/super-admin/SuperAdminPageSkeleton";
+import { saIconBadgeCls, saSpinnerCls } from "@/config/superAdminTheme";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import Modal from "@/components/ui/Modal";
 import { formatSaMoney } from "@/lib/formatSaMoney";
@@ -27,7 +29,7 @@ const PLAN_BADGE = {
 };
 
 const STATUS_BADGE = {
-  active:    "bg-emerald-500/15 text-emerald-400 ring-emerald-500/25",
+  active:    "sa-status-badge",
   trial:     "bg-sky-500/15 text-sky-400 ring-sky-500/25",
   expired:   "bg-red-500/15 text-red-400 ring-red-500/25",
   cancelled: "bg-zinc-500/15 text-zinc-400 ring-zinc-500/25",
@@ -45,7 +47,7 @@ const PLAN_BAR = {
   pro: "bg-indigo-500", enterprise: "bg-amber-500",
 };
 
-const inputCls = "w-full rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus:border-emerald-500/40 placeholder:text-zinc-600 transition-colors";
+const inputCls = "w-full rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus-sa-primary placeholder:text-zinc-600 transition-colors";
 
 function FieldError({ message }) {
   if (!message) return null;
@@ -208,14 +210,14 @@ export default function BillingPage() {
 
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div className="flex items-start gap-3">
-          <span className="mt-1 flex size-10 shrink-0 items-center justify-center rounded-xl bg-emerald-500/15 text-emerald-400 ring-1 ring-emerald-500/25">
+          <span className={`mt-1 ${saIconBadgeCls}`}>
             <Receipt className="size-5" />
           </span>
           <div>
             <h1 className="text-2xl font-semibold tracking-tight text-zinc-50">Billing</h1>
             <p className="mt-1 text-sm text-zinc-500">
               Manage which plan each restaurant is on (active, trial, expired).{" "}
-              <Link href="/super-admin/payments" className="text-emerald-400 hover:text-emerald-300 underline-offset-2 hover:underline">
+              <Link href="/super-admin/payments" className="text-sa-primary hover:text-sa-primary-muted underline-offset-2 hover:underline">
                 View payment history →
               </Link>
             </p>
@@ -246,11 +248,11 @@ export default function BillingPage() {
           </button>
           <button type="button" onClick={fetchAll}
             className="cursor-pointer flex items-center gap-1.5 rounded-xl border border-zinc-700 px-3 py-2.5 text-sm font-medium text-zinc-400 hover:border-zinc-500 hover:text-zinc-200 transition-colors">
-            <RefreshCw className={"size-4 " + (loading ? "animate-spin" : "")} />
+            <RefreshCw className={"size-4 " + (loading ? saSpinnerCls : "")} />
           </button>
           <button type="button"
             onClick={() => openAssignModal()}
-            className="cursor-pointer inline-flex items-center gap-2 rounded-xl bg-emerald-500 px-4 py-2.5 text-sm font-semibold text-zinc-950 hover:bg-emerald-400 transition-colors">
+            className="cursor-pointer inline-flex items-center gap-2 rounded-xl bg-sa-primary px-4 py-2.5 text-sm font-semibold text-zinc-950 hover:brightness-110 transition-colors">
             <Plus className="size-4" /> Assign Plan
           </button>
         </div>
@@ -263,18 +265,14 @@ export default function BillingPage() {
       )}
 
       {loading ? (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="h-24 animate-pulse rounded-2xl border border-zinc-800 bg-zinc-900/40" />
-          ))}
-        </div>
+        <SuperAdminPageSkeleton cards={4} cardClassName="h-24" rows={0} />
       ) : (
         <>
           {activeTab === "overview" && (
           <>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {[
-              { label: "Total Revenue",        value: formatSaMoney(billing?.overview?.totalRevenue ?? 0), icon: DollarSign,    color: "text-emerald-400", bg: "bg-emerald-500/5",  border: "border-emerald-500/20" },
+              { label: "Total Revenue",        value: formatSaMoney(billing?.overview?.totalRevenue ?? 0), icon: DollarSign,    color: "text-sa-accent", bg: "bg-sa-accent-5",  border: "border-sa-accent-20" },
               { label: "Active Subscriptions", value: stats.active,   icon: CheckCircle2, color: "text-sky-400",     bg: "bg-sky-500/5",      border: "border-sky-500/20"     },
               { label: "On Trial",             value: stats.trial,    icon: Calendar,     color: "text-indigo-400",  bg: "bg-indigo-500/5",   border: "border-indigo-500/20"  },
               { label: "Expired",              value: stats.expired,  icon: AlertTriangle,color: "text-red-400",     bg: "bg-red-500/5",      border: "border-red-500/20"     },
@@ -296,7 +294,7 @@ export default function BillingPage() {
           <div className="grid gap-6 lg:grid-cols-3">
             <div className="lg:col-span-2 rounded-2xl border border-zinc-800 bg-zinc-900/60 p-5">
               <div className="flex items-center gap-2 mb-5">
-                <TrendingUp className="size-4 text-emerald-400" />
+                <TrendingUp className="size-4 text-sa-accent" />
                 <h2 className="text-sm font-semibold text-zinc-100">Revenue — Last 6 Months</h2>
               </div>
               {!billing?.revenueByMonth?.length ? (
@@ -311,7 +309,7 @@ export default function BillingPage() {
                         <div className="absolute -top-7 left-1/2 -translate-x-1/2 hidden group-hover:flex whitespace-nowrap rounded-lg border border-zinc-700 bg-zinc-900 px-2 py-1 text-[10px] font-semibold text-zinc-200 shadow-lg z-10">
                           {formatSaMoney(m.revenue)}
                         </div>
-                        <div className="w-full rounded-t-md bg-emerald-500/30 hover:bg-emerald-500/50 transition-colors cursor-default"
+                        <div className="w-full rounded-t-md bg-sa-accent-30 hover:bg-sa-accent-50 transition-colors cursor-default"
                           style={{ height: Math.max(4, (m.revenue / maxRevenue) * 100) + "%" }} />
                       </div>
                       <p className="text-[10px] text-zinc-600 text-center leading-tight shrink-0">{m.label}</p>
@@ -360,7 +358,7 @@ export default function BillingPage() {
                 <p className="mt-0.5 text-xs text-zinc-500">Track plan assignments, expiry, and status per restaurant.</p>
               </div>
               <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}
-                className="cursor-pointer rounded-xl border border-zinc-800 bg-zinc-900/70 px-3 py-2 text-xs text-zinc-200 outline-none focus:border-emerald-500/40">
+                className="cursor-pointer rounded-xl border border-zinc-800 bg-zinc-900/70 px-3 py-2 text-xs text-zinc-200 outline-none focus-sa-primary">
                 <option value="all">All statuses</option>
                 {["active","trial","expired","cancelled"].map((s) => (
                   <option key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1)}</option>
@@ -373,7 +371,7 @@ export default function BillingPage() {
                 <CreditCard className="size-10 text-zinc-700" />
                 <p className="text-sm text-zinc-500">No subscriptions found.</p>
                 <button type="button" onClick={() => openAssignModal()}
-                  className="cursor-pointer rounded-xl bg-emerald-500 px-4 py-2 text-sm font-semibold text-zinc-950 hover:bg-emerald-400">
+                  className="cursor-pointer rounded-xl bg-sa-primary px-4 py-2 text-sm font-semibold text-zinc-950 hover:brightness-110">
                   Assign First Plan
                 </button>
               </div>
@@ -443,7 +441,7 @@ export default function BillingPage() {
                             <div className="flex items-center justify-end gap-1">
                               <button type="button" onClick={() => { setRenewTarget(s); setRenewDays("30"); }}
                                 title="Renew / extend"
-                                className="cursor-pointer rounded-lg p-2 text-zinc-400 hover:bg-emerald-500/15 hover:text-emerald-400 transition-colors">
+                                className="cursor-pointer rounded-lg p-2 text-zinc-400 hover-bg-sa-primary-15 hover-sa-primary transition-colors">
                                 <RotateCcw className="size-4" />
                               </button>
                               {s.status !== "cancelled" && (
@@ -478,7 +476,7 @@ export default function BillingPage() {
               Cancel
             </button>
             <button type="button" onClick={handleAssign} disabled={assigning}
-              className="cursor-pointer rounded-xl bg-emerald-500 px-4 py-2 text-sm font-semibold text-zinc-950 hover:bg-emerald-400 disabled:opacity-40 transition-colors">
+              className="cursor-pointer rounded-xl bg-sa-primary px-4 py-2 text-sm font-semibold text-zinc-950 hover:brightness-110 disabled:opacity-40 transition-colors">
               {assigning ? "Assigning…" : "Assign Plan"}
             </button>
           </div>
@@ -593,7 +591,7 @@ export default function BillingPage() {
               Cancel
             </button>
             <button type="button" onClick={handleRenew} disabled={renewing}
-              className="cursor-pointer rounded-xl bg-emerald-500 px-4 py-2 text-sm font-semibold text-zinc-950 hover:bg-emerald-400 disabled:opacity-40 transition-colors">
+              className="cursor-pointer rounded-xl bg-sa-primary px-4 py-2 text-sm font-semibold text-zinc-950 hover:brightness-110 disabled:opacity-40 transition-colors">
               {renewing ? "Renewing…" : "Renew"}
             </button>
           </div>

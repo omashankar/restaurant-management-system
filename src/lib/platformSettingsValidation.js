@@ -149,8 +149,8 @@ export function validatePlatformThemeSettings(data) {
   const hex = /^#([0-9A-Fa-f]{6}|[0-9A-Fa-f]{3})$/;
   const primary = trim(data?.primaryColor);
   const accent = trim(data?.accentColor);
-  if (primary && !hex.test(primary)) errors.primaryColor = "Enter a valid hex color (e.g. #10b981).";
-  if (accent && !hex.test(accent)) errors.accentColor = "Enter a valid hex color (e.g. #f43f5e).";
+  if (primary && !hex.test(primary)) errors.primaryColor = "Enter a valid hex color (e.g. #f43f5e).";
+  if (accent && !hex.test(accent)) errors.accentColor = "Enter a valid hex color (e.g. #10b981).";
   return errorsToResult(errors);
 }
 

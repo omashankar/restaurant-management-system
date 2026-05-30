@@ -11,7 +11,7 @@ export default function TimePicker({ label, value, onChange, disabled = false })
         value={value}
         onChange={(e) => onChange(e.target.value)}
         disabled={disabled}
-        className="w-full rounded-xl border border-zinc-800 bg-zinc-950/80 px-3 py-2.5 text-sm text-zinc-100 outline-none transition-colors focus:border-emerald-500/45 disabled:cursor-not-allowed disabled:opacity-50"
+        className="w-full rounded-xl border border-zinc-800 bg-zinc-950/80 px-3 py-2.5 text-sm text-zinc-100 outline-none transition-colors focus-ra-primary disabled:cursor-not-allowed disabled:opacity-50"
       />
     </div>
   );

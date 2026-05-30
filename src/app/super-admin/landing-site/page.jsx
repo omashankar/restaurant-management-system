@@ -1,5 +1,7 @@
 ﻿"use client";
 
+import SuperAdminPageSkeleton from "@/components/super-admin/SuperAdminPageSkeleton";
+import { saTabActiveIconCls } from "@/config/superAdminTheme";
 import { formatLandingCurrency } from "@/lib/formatLandingCurrency";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import IconPicker from "@/components/ui/IconPicker";
@@ -17,7 +19,7 @@ import { validateLandingSection } from "@/lib/landingValidation";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 /* ── shared input class ── */
-const ic = "w-full rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus:border-emerald-500/50 placeholder:text-zinc-600 transition-colors";
+const ic = "w-full rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus-sa-primary placeholder:text-zinc-600 transition-colors";
 
 /* ── Field wrapper ── */
 function Field({ label, required, error, hint, children }) {
@@ -42,7 +44,7 @@ function Toggle({ checked, onChange, label, description }) {
         {description && <p className="mt-0.5 text-xs text-zinc-500">{description}</p>}
       </div>
       <button type="button" role="switch" aria-checked={checked} onClick={() => onChange(!checked)}
-        className={`cursor-pointer relative inline-flex h-5 w-9 shrink-0 items-center rounded-full transition-colors ${checked ? "bg-emerald-500" : "bg-zinc-700"}`}>
+        className={`cursor-pointer relative inline-flex h-5 w-9 shrink-0 items-center rounded-full transition-colors ${checked ? "bg-sa-primary" : "bg-zinc-700"}`}>
         <span className={`inline-block size-3.5 rounded-full bg-white shadow transition-transform ${checked ? "translate-x-4" : "translate-x-0.5"}`} />
       </button>
     </label>
@@ -69,7 +71,7 @@ function SaveBtn({ saving, onClick }) {
   return (
     <div className="flex justify-end pt-2">
       <button type="button" onClick={onClick} disabled={saving}
-        className="cursor-pointer inline-flex items-center gap-2 rounded-xl bg-emerald-500 px-5 py-2.5 text-sm font-semibold text-zinc-950 hover:bg-emerald-400 disabled:opacity-50 transition-colors">
+        className="cursor-pointer inline-flex items-center gap-2 rounded-xl bg-sa-primary px-5 py-2.5 text-sm font-semibold text-zinc-950 hover:brightness-110 disabled:opacity-50 transition-colors">
         {saving
           ? <span className="size-3.5 animate-spin rounded-full border-2 border-zinc-950/30 border-t-zinc-950" />
           : <Save className="size-4" />}
@@ -207,7 +209,7 @@ function NavbarPanel({ data, onChange, onSave, saving, fieldErrors = {}, onClear
               </div>
             </div>
           ))}
-          <button type="button" onClick={addLink} className="cursor-pointer flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-zinc-700 py-2.5 text-sm text-zinc-500 hover:border-emerald-500/40 hover:text-emerald-400 transition-colors">
+          <button type="button" onClick={addLink} className="cursor-pointer flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-zinc-700 py-2.5 text-sm text-zinc-500 hover-border-sa-primary-40 hover-sa-primary transition-colors">
             <Plus className="size-4" /> Add Nav Link
           </button>
         </div>
@@ -394,7 +396,7 @@ function ArrayPanel({ items, fields, onSave, saving, icon: Icon, title, descript
       </div>
 
       <button type="button" onClick={openAdd}
-        className="cursor-pointer flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-zinc-700 py-3 text-sm text-zinc-500 hover:border-emerald-500/40 hover:text-emerald-400 transition-colors">
+        className="cursor-pointer flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-zinc-700 py-3 text-sm text-zinc-500 hover-border-sa-primary-40 hover-sa-primary transition-colors">
         <Plus className="size-4" /> Add {title.replace(/s$/, "")}
       </button>
 
@@ -408,7 +410,7 @@ function ArrayPanel({ items, fields, onSave, saving, icon: Icon, title, descript
               Cancel
             </button>
             <button type="button" disabled={itemSaving} onClick={handleSave}
-              className="cursor-pointer rounded-xl bg-emerald-500 px-4 py-2 text-sm font-semibold text-zinc-950 hover:bg-emerald-400 disabled:opacity-40 transition-colors">
+              className="cursor-pointer rounded-xl bg-sa-primary px-4 py-2 text-sm font-semibold text-zinc-950 hover:brightness-110 disabled:opacity-40 transition-colors">
               {itemSaving ? "Saving…" : "Save"}
             </button>
           </div>
@@ -549,7 +551,7 @@ function FooterPanel({ data, onChange, onSave, saving, fieldErrors = {}, onClear
             </div>
           ))}
           <button type="button" onClick={addLink}
-            className="cursor-pointer flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-zinc-700 py-2.5 text-sm text-zinc-500 hover:border-emerald-500/40 hover:text-emerald-400 transition-colors">
+            className="cursor-pointer flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-zinc-700 py-2.5 text-sm text-zinc-500 hover-border-sa-primary-40 hover-sa-primary transition-colors">
             <Plus className="size-4" /> Add Link
           </button>
         </div>
@@ -1213,7 +1215,7 @@ export default function LandingSitePage() {
                     ? "bg-zinc-800 text-zinc-100 ring-1 ring-zinc-700"
                     : "text-zinc-500 hover:bg-zinc-900 hover:text-zinc-300"
                 }`}>
-                <Icon className={`size-4 shrink-0 ${active ? "text-emerald-400" : ""}`} />
+                <Icon className={`size-4 shrink-0 ${active ? saTabActiveIconCls : ""}`} />
                 {label}
               </button>
             );
@@ -1223,11 +1225,7 @@ export default function LandingSitePage() {
         {/* ── Content panel ── */}
         <div ref={panelRef} className="min-w-0 flex-1 rounded-2xl border border-zinc-800 bg-zinc-900/60 p-5 sm:p-6">
           {fetching ? (
-            <div className="space-y-4">
-              {Array.from({ length: 4 }).map((_, i) => (
-                <div key={i} className="h-10 animate-pulse rounded-xl bg-zinc-800/60" />
-              ))}
-            </div>
+            <SuperAdminPageSkeleton rows={4} />
           ) : !content ? (
             <div className="py-20 text-center text-sm text-zinc-600">Failed to load content.</div>
           ) : (
@@ -1299,7 +1297,7 @@ export default function LandingSitePage() {
                         type="button"
                         onClick={() => setPricingView("monthly")}
                         className={`cursor-pointer rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors ${
-                          pricingView === "monthly" ? "bg-emerald-500 text-zinc-950" : "text-zinc-400 hover:bg-zinc-800"
+                          pricingView === "monthly" ? "bg-sa-primary text-zinc-950" : "text-zinc-400 hover:bg-zinc-800"
                         }`}
                       >
                         Monthly
@@ -1308,7 +1306,7 @@ export default function LandingSitePage() {
                         type="button"
                         onClick={() => setPricingView("yearly")}
                         className={`cursor-pointer rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors ${
-                          pricingView === "yearly" ? "bg-emerald-500 text-zinc-950" : "text-zinc-400 hover:bg-zinc-800"
+                          pricingView === "yearly" ? "bg-sa-primary text-zinc-950" : "text-zinc-400 hover:bg-zinc-800"
                         }`}
                       >
                         Yearly

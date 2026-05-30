@@ -18,16 +18,20 @@ export default function InboxDropdown({
   if (!open && !embedded) return null;
   if (embedded && !open) return null;
 
+  const isSa = accent === "sa";
+  const isRa = accent === "ra" || accent === "emerald";
   const title = type === "messages" ? "Messages" : "Notifications";
-  const markAllCls =
-    accent === "rose"
-      ? "text-rose-400 hover:text-rose-300"
-      : "text-emerald-400 hover:text-emerald-300";
-  const resolveCls =
-    accent === "rose"
-      ? "border-rose-500/40 text-rose-300 hover:bg-rose-500/10"
-      : "border-emerald-500/40 text-emerald-300 hover:bg-emerald-500/10";
-  const unreadDot = accent === "rose" ? "bg-rose-400" : "bg-emerald-400";
+  const markAllCls = isSa
+    ? "text-sa-primary hover-text-sa-primary-muted"
+    : isRa
+      ? "text-ra-primary hover-text-ra-primary-muted"
+      : "text-ra-primary hover:text-ra-primary-muted";
+  const resolveCls = isSa
+    ? "border-sa-primary-40 text-sa-primary-muted hover-bg-sa-primary-10"
+    : isRa
+      ? "border-ra-primary-40 text-ra-primary-muted hover-bg-ra-primary-10"
+      : "border-ra-primary-40 text-ra-primary-muted hover-bg-ra-primary-10";
+  const unreadDot = isSa ? "bg-sa-primary" : isRa ? "bg-ra-primary" : "bg-emerald-400";
 
   const panel = (
     <div
@@ -114,7 +118,11 @@ function InboxCountBadge({ count, tone = "emerald" }) {
   const cls =
     tone === "amber"
       ? "bg-amber-500/20 text-amber-300"
-      : "bg-emerald-500/20 text-emerald-300";
+      : tone === "sa" || tone === "rose"
+        ? "bg-sa-primary-20 text-sa-primary-muted"
+        : tone === "ra" || tone === "emerald"
+          ? "bg-ra-primary-20 text-ra-primary-muted"
+          : "bg-ra-primary/20 text-ra-primary-muted";
   return (
     <span className={`rounded-full px-1.5 py-0.5 text-[10px] font-semibold ${cls}`}>
       {count}

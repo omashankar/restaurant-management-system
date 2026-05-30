@@ -1,5 +1,7 @@
 ﻿"use client";
 
+import SuperAdminPageSkeleton from "@/components/super-admin/SuperAdminPageSkeleton";
+import { saSpinnerCls } from "@/config/superAdminTheme";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import Modal from "@/components/ui/Modal";
 import { useToast } from "@/hooks/useToast";
@@ -178,8 +180,8 @@ function PricingCard({ plan, onAssign, pricingView }) {
         {plan.features.map((f) => (
           <li key={f.label} className="flex items-center gap-2.5">
             {f.included ? (
-              <span className="flex size-4.5 shrink-0 items-center justify-center rounded-full bg-emerald-500/15">
-                <Check className="size-3 text-emerald-400" strokeWidth={3} />
+              <span className="flex size-4.5 shrink-0 items-center justify-center rounded-full bg-sa-primary-15">
+                <Check className="size-3 text-sa-primary" strokeWidth={3} />
               </span>
             ) : (
               <span className="flex size-4.5 shrink-0 items-center justify-center rounded-full bg-zinc-800">
@@ -214,7 +216,7 @@ const PLAN_COLORS = {
   pro:        { bg: "bg-indigo-500/5", border: "border-indigo-500/20", badge: "bg-indigo-500/15 text-indigo-400 ring-indigo-500/25", icon: "text-indigo-400" },
   enterprise: { bg: "bg-amber-500/5",  border: "border-amber-500/20",  badge: "bg-amber-500/15 text-amber-400 ring-amber-500/25",    icon: "text-amber-400"  },
 };
-const DEFAULT_COLOR = { bg: "bg-emerald-500/5", border: "border-emerald-500/20", badge: "bg-emerald-500/15 text-emerald-400 ring-emerald-500/25", icon: "text-emerald-400" };
+const DEFAULT_COLOR = { bg: "bg-sa-primary-5", border: "border-sa-primary-20", badge: "bg-sa-primary-15 text-sa-primary ring-sa-primary-25", icon: "text-sa-primary" };
 const BILLING_CYCLES = ["monthly", "yearly"];
 const emptyForm = { name: "", monthlyPrice: "", yearlyPrice: "", billingCycle: "monthly", description: "", features: "", limits: { staff: "", tables: "", menuItems: "", orders: "" } };
 const emptyAssignForm = { restaurantId: "", planSlug: "", startDate: "", endDate: "", trialDays: "0" };
@@ -444,10 +446,10 @@ export default function PlansPage() {
           </button>
           <button type="button" onClick={fetchPlans}
             className="cursor-pointer flex items-center gap-1.5 rounded-xl border border-zinc-700 px-3 py-2.5 text-sm font-medium text-zinc-400 hover:border-zinc-500 hover:text-zinc-200 transition-colors">
-            <RefreshCw className={`size-4 ${loading ? "animate-spin" : ""}`} />
+            <RefreshCw className={`size-4 ${loading ? saSpinnerCls : ""}`} />
           </button>
           <button type="button" onClick={openCreate}
-            className="cursor-pointer inline-flex items-center gap-2 rounded-xl bg-emerald-500 px-4 py-2.5 text-sm font-semibold text-zinc-950 hover:bg-emerald-400 transition-colors">
+            className="cursor-pointer inline-flex items-center gap-2 rounded-xl bg-sa-primary px-4 py-2.5 text-sm font-semibold text-zinc-950 hover:brightness-110 transition-colors">
             <Plus className="size-4" /> New Plan
           </button>
         </div>
@@ -474,7 +476,7 @@ export default function PlansPage() {
                 type="button"
                 onClick={() => setPricingView("monthly")}
                 className={`cursor-pointer rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors ${
-                  pricingView === "monthly" ? "bg-emerald-500 text-zinc-950" : "text-zinc-400 hover:bg-zinc-800"
+                  pricingView === "monthly" ? "bg-sa-primary text-zinc-950" : "text-zinc-400 hover:bg-zinc-800"
                 }`}
               >
                 Monthly
@@ -483,7 +485,7 @@ export default function PlansPage() {
                 type="button"
                 onClick={() => setPricingView("yearly")}
                 className={`cursor-pointer rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors ${
-                  pricingView === "yearly" ? "bg-emerald-500 text-zinc-950" : "text-zinc-400 hover:bg-zinc-800"
+                  pricingView === "yearly" ? "bg-sa-primary text-zinc-950" : "text-zinc-400 hover:bg-zinc-800"
                 }`}
               >
                 Yearly
@@ -518,17 +520,13 @@ export default function PlansPage() {
         </div>
 
         {loading ? (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {Array.from({ length: 4 }).map((_, i) => (
-              <div key={i} className="h-48 animate-pulse rounded-2xl border border-zinc-800 bg-zinc-900/40" />
-            ))}
-          </div>
+          <SuperAdminPageSkeleton cards={4} cardClassName="h-48" rows={0} />
         ) : plans.length === 0 ? (
           <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-zinc-800 py-16 text-center">
             <CreditCard className="size-10 text-zinc-700" />
             <p className="text-sm text-zinc-500">No plans in database yet.</p>
             <button type="button" onClick={openCreate}
-              className="cursor-pointer rounded-xl bg-emerald-500 px-4 py-2 text-sm font-semibold text-zinc-950 hover:bg-emerald-400">
+              className="cursor-pointer rounded-xl bg-sa-primary px-4 py-2 text-sm font-semibold text-zinc-950 hover:brightness-110">
               Create First Plan
             </button>
           </div>
@@ -565,7 +563,7 @@ export default function PlansPage() {
                   <ul className="mt-3 flex-1 space-y-1">
                     {(p.features ?? []).slice(0, 4).map((f) => (
                       <li key={f} className="flex items-center gap-1.5 text-xs text-zinc-400">
-                        <Check className="size-3 shrink-0 text-emerald-500" /> {f}
+                        <Check className="size-3 shrink-0 text-sa-accent" /> {f}
                       </li>
                     ))}
                     {(p.features ?? []).length > 4 && (
@@ -578,7 +576,7 @@ export default function PlansPage() {
                   </div>
                   <div className="mt-3 flex gap-1.5 border-t border-zinc-800/60 pt-3">
                     <button type="button" onClick={() => openAssign(p.slug)}
-                      className="cursor-pointer flex flex-1 items-center justify-center gap-1 rounded-lg border border-zinc-700 py-1.5 text-xs font-medium text-zinc-300 hover:border-emerald-500/40 hover:text-emerald-400 transition-colors">
+                      className="cursor-pointer flex flex-1 items-center justify-center gap-1 rounded-lg border border-zinc-700 py-1.5 text-xs font-medium text-zinc-300 hover-border-sa-primary-40 hover-sa-primary transition-colors">
                       Assign
                     </button>
                     <button type="button" onClick={() => openEdit(p)}
@@ -608,7 +606,7 @@ export default function PlansPage() {
               Cancel
             </button>
             <button type="button" onClick={save} disabled={saving}
-              className="cursor-pointer rounded-xl bg-emerald-500 px-4 py-2 text-sm font-semibold text-zinc-950 hover:bg-emerald-400 disabled:opacity-40">
+              className="cursor-pointer rounded-xl bg-sa-primary px-4 py-2 text-sm font-semibold text-zinc-950 hover:brightness-110 disabled:opacity-40">
               {saving ? "Saving…" : "Save Plan"}
             </button>
           </div>
@@ -633,7 +631,7 @@ export default function PlansPage() {
                 }}
                 placeholder="e.g. Pro"
                 aria-invalid={fieldErrors.name ? true : undefined}
-                className="mt-1 w-full rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus:border-emerald-500/40 placeholder:text-zinc-600"
+                className="mt-1 w-full rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus-sa-primary placeholder:text-zinc-600"
               />
               <FieldError message={fieldErrors.name} />
             </div>
@@ -648,7 +646,7 @@ export default function PlansPage() {
                 }}
                 placeholder="29"
                 aria-invalid={fieldErrors.monthlyPrice ? true : undefined}
-                className="mt-1 w-full rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus:border-emerald-500/40"
+                className="mt-1 w-full rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus-sa-primary"
               />
               <FieldError message={fieldErrors.monthlyPrice} />
             </div>
@@ -663,7 +661,7 @@ export default function PlansPage() {
                 }}
                 placeholder="299"
                 aria-invalid={fieldErrors.yearlyPrice ? true : undefined}
-                className="mt-1 w-full rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus:border-emerald-500/40"
+                className="mt-1 w-full rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus-sa-primary"
               />
               <FieldError message={fieldErrors.yearlyPrice} />
             </div>
@@ -675,7 +673,7 @@ export default function PlansPage() {
                   setForm((f) => ({ ...f, billingCycle: e.target.value }));
                   clearFieldError("billingCycle");
                 }}
-                className="cursor-pointer mt-1 w-full rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus:border-emerald-500/40"
+                className="cursor-pointer mt-1 w-full rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus-sa-primary"
               >
                 {BILLING_CYCLES.map((b) => <option key={b} value={b} className="capitalize">{b}</option>)}
               </select>
@@ -688,7 +686,7 @@ export default function PlansPage() {
                 onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
                 placeholder="Short description"
                 maxLength={500}
-                className="mt-1 w-full rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus:border-emerald-500/40 placeholder:text-zinc-600"
+                className="mt-1 w-full rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus-sa-primary placeholder:text-zinc-600"
               />
             </div>
           </div>
@@ -699,7 +697,7 @@ export default function PlansPage() {
               value={form.features}
               onChange={(e) => setForm((f) => ({ ...f, features: e.target.value }))}
               placeholder="Full POS, Inventory, Analytics, Priority support"
-              className="mt-1 w-full resize-none rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus:border-emerald-500/40 placeholder:text-zinc-600"
+              className="mt-1 w-full resize-none rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus-sa-primary placeholder:text-zinc-600"
             />
           </div>
           <div>
@@ -723,7 +721,7 @@ export default function PlansPage() {
                     }}
                     placeholder="-1"
                     aria-invalid={fieldErrors[errKey] ? true : undefined}
-                    className="mt-0.5 w-full rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2 text-sm text-zinc-100 outline-none focus:border-emerald-500/40"
+                    className="mt-0.5 w-full rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2 text-sm text-zinc-100 outline-none focus-sa-primary"
                   />
                   <FieldError message={fieldErrors[errKey]} />
                 </div>
@@ -742,7 +740,7 @@ export default function PlansPage() {
               Cancel
             </button>
             <button type="button" onClick={assignPlan} disabled={assigning}
-              className="cursor-pointer rounded-xl bg-emerald-500 px-4 py-2 text-sm font-semibold text-zinc-950 hover:bg-emerald-400 disabled:opacity-40">
+              className="cursor-pointer rounded-xl bg-sa-primary px-4 py-2 text-sm font-semibold text-zinc-950 hover:brightness-110 disabled:opacity-40">
               {assigning ? "Assigning…" : "Assign Plan"}
             </button>
           </div>
@@ -767,7 +765,7 @@ export default function PlansPage() {
                 clearAssignFieldError("restaurantId");
               }}
               aria-invalid={assignFieldErrors.restaurantId ? true : undefined}
-              className="cursor-pointer mt-1 w-full rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus:border-emerald-500/40"
+              className="cursor-pointer mt-1 w-full rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus-sa-primary"
             >
               <option value="">— Select restaurant —</option>
               {assignRestaurants.map((r) => (
@@ -785,7 +783,7 @@ export default function PlansPage() {
                 clearAssignFieldError("planSlug");
               }}
               aria-invalid={assignFieldErrors.planSlug ? true : undefined}
-              className="cursor-pointer mt-1 w-full rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus:border-emerald-500/40"
+              className="cursor-pointer mt-1 w-full rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus-sa-primary"
             >
               <option value="">— Select plan —</option>
               {plans.map((p) => (
@@ -808,7 +806,7 @@ export default function PlansPage() {
                   clearAssignFieldError("endDate");
                 }}
                 aria-invalid={assignFieldErrors.startDate ? true : undefined}
-                className="mt-1 w-full rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus:border-emerald-500/40"
+                className="mt-1 w-full rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus-sa-primary"
               />
               <FieldError message={assignFieldErrors.startDate} />
             </div>
@@ -824,7 +822,7 @@ export default function PlansPage() {
                   clearAssignFieldError("startDate");
                 }}
                 aria-invalid={assignFieldErrors.endDate ? true : undefined}
-                className="mt-1 w-full rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus:border-emerald-500/40"
+                className="mt-1 w-full rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus-sa-primary"
               />
               <FieldError message={assignFieldErrors.endDate} />
             </div>
@@ -840,7 +838,7 @@ export default function PlansPage() {
                 }}
                 placeholder="0"
                 aria-invalid={assignFieldErrors.trialDays ? true : undefined}
-                className="mt-1 w-full rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus:border-emerald-500/40"
+                className="mt-1 w-full rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus-sa-primary"
               />
               <FieldError message={assignFieldErrors.trialDays} />
             </div>

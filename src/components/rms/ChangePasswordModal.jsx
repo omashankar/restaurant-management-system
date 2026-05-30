@@ -7,17 +7,29 @@ import { CheckCircle2, Loader2, XCircle } from "lucide-react";
 
 const ACCENT = {
   emerald: {
-    btn: "bg-emerald-500 hover:bg-emerald-400",
+    btn: "ra-btn-primary",
     hint: "text-zinc-500",
+    focus: "focus-ra-primary",
+  },
+  ra: {
+    btn: "ra-btn-primary",
+    hint: "text-zinc-500",
+    focus: "focus-ra-primary",
   },
   rose: {
-    btn: "bg-rose-500 hover:bg-rose-400",
+    btn: "sa-btn-primary",
     hint: "text-zinc-500",
+    focus: "focus-sa-primary",
+  },
+  sa: {
+    btn: "sa-btn-primary",
+    hint: "text-zinc-500",
+    focus: "focus-sa-primary",
   },
 };
 
 /**
- * @param {{ open: boolean; onClose: () => void; variant?: "emerald" | "rose" }} props
+ * @param {{ open: boolean; onClose: () => void; variant?: "emerald" | "rose" | "sa" }} props
  */
 export default function ChangePasswordModal({ open, onClose, variant = "emerald" }) {
   const { pwForm, setPwField, resetPw, pwDirty, pwErrors, saving, toast, savePassword } = useProfile();
@@ -38,10 +50,7 @@ export default function ChangePasswordModal({ open, onClose, variant = "emerald"
     }
   };
 
-  const inputFocusCls =
-    variant === "rose"
-      ? "focus:border-rose-500/50 focus:ring-rose-500/15"
-      : "focus:border-emerald-500/50 focus:ring-emerald-500/20";
+  const inputFocusCls = accent.focus;
 
   return (
     <Modal
@@ -61,7 +70,9 @@ export default function ChangePasswordModal({ open, onClose, variant = "emerald"
             type="button"
             onClick={handleSave}
             disabled={saving || !pwDirty}
-            className={`cursor-pointer inline-flex items-center gap-2 rounded-xl px-5 py-2 text-sm font-semibold text-zinc-950 transition-all disabled:cursor-not-allowed disabled:opacity-40 ${accent.btn}`}
+            className={`cursor-pointer inline-flex items-center gap-2 rounded-xl px-5 py-2 text-sm font-semibold transition-all disabled:cursor-not-allowed disabled:opacity-40 ${
+              variant === "emerald" || variant === "ra" ? "" : "text-zinc-950"
+            } ${accent.btn}`}
           >
             {saving ? <Loader2 className="size-4 animate-spin" /> : null}
             {saving ? "Updating…" : "Update Password"}
@@ -114,7 +125,7 @@ export default function ChangePasswordModal({ open, onClose, variant = "emerald"
           <div
             className={`flex items-center gap-2.5 rounded-xl border px-3 py-2 text-sm font-medium ${
               toast.type === "success"
-                ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-300"
+                ? "border-ra-primary-30 bg-ra-primary-10 text-ra-primary-muted"
                 : "border-red-500/30 bg-red-500/10 text-red-300"
             }`}
           >

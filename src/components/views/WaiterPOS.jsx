@@ -54,7 +54,7 @@ export default function WaiterPOS() {
         {[{ n: 1, label: "Table" }, { n: 2, label: "Menu" }, { n: 3, label: "Review" }, { n: 4, label: "Done" }].map((s) => (
           <button key={s.n} type="button" onClick={() => setStep(Math.min(s.n, step))}
             className={`cursor-pointer rounded-full px-4 py-1.5 text-xs font-semibold uppercase tracking-wide transition-all ${
-              step === s.n ? "bg-emerald-500 text-zinc-950" : step > s.n ? "bg-zinc-800 text-zinc-300" : "bg-zinc-900 text-zinc-600 ring-1 ring-zinc-800"
+              step === s.n ? "bg-ra-primary text-zinc-950" : step > s.n ? "bg-zinc-800 text-zinc-300" : "bg-zinc-900 text-zinc-600 ring-1 ring-zinc-800"
             }`}>
             {s.n}. {s.label}
           </button>
@@ -82,7 +82,7 @@ export default function WaiterPOS() {
           <div className="space-y-4 xl:col-span-2">
             <div className="flex items-center justify-between">
               <h2 className="text-sm font-semibold text-zinc-300">Menu — {selectedTable?.name ?? "Table"}</h2>
-              <button type="button" onClick={() => setStep(1)} className="cursor-pointer text-xs font-medium text-emerald-400 hover:text-emerald-300">Change table</button>
+              <button type="button" onClick={() => setStep(1)} className="cursor-pointer text-xs font-medium text-ra-primary hover:text-ra-primary-muted">Change table</button>
             </div>
             {activeItems.length === 0 ? (
               <p className="text-sm text-zinc-600">No menu items. Add items in the Menu module.</p>
@@ -102,7 +102,7 @@ export default function WaiterPOS() {
                 <li key={line.id} className="flex items-center justify-between gap-2 rounded-lg bg-zinc-950/60 px-2 py-2">
                   <span className="text-zinc-300">{line.qty}× {line.name}</span>
                   <span className="flex items-center gap-2">
-                    <span className="font-medium text-emerald-400">${(line.price * line.qty).toFixed(2)}</span>
+                    <span className="font-medium text-ra-primary">${(line.price * line.qty).toFixed(2)}</span>
                     <button type="button" onClick={() => removeLine(line.id)}
                       className="cursor-pointer rounded-lg p-1 text-zinc-500 hover:bg-red-500/15 hover:text-red-400">
                       <Trash2 className="size-4" />
@@ -117,7 +117,7 @@ export default function WaiterPOS() {
                 <span className="font-semibold text-zinc-100">${total.toFixed(2)}</span>
               </div>
               <button type="button" disabled={!selectedTable || cart.length === 0} onClick={() => setStep(3)}
-                className="cursor-pointer mt-4 w-full rounded-xl bg-emerald-500 py-3 text-sm font-semibold text-zinc-950 hover:bg-emerald-400 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-40">
+                className="cursor-pointer mt-4 w-full rounded-xl bg-ra-primary py-3 text-sm font-semibold text-zinc-950 hover:brightness-110 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-40">
                 Continue to review
               </button>
             </div>
@@ -142,17 +142,17 @@ export default function WaiterPOS() {
           </p>
           <div className="mt-6 flex gap-3">
             <button type="button" onClick={() => setStep(2)} className="cursor-pointer flex-1 rounded-xl border border-zinc-700 py-3 text-sm font-medium text-zinc-200 hover:border-zinc-500">Back</button>
-            <button type="button" onClick={placeOrder} className="cursor-pointer flex-1 rounded-xl bg-emerald-500 py-3 text-sm font-semibold text-zinc-950 hover:bg-emerald-400 active:scale-[0.98]">Place order</button>
+            <button type="button" onClick={placeOrder} className="cursor-pointer flex-1 rounded-xl bg-ra-primary py-3 text-sm font-semibold text-zinc-950 hover:brightness-110 active:scale-[0.98]">Place order</button>
           </div>
         </div>
       )}
 
       {step === 4 && (
-        <div className="flex flex-col items-center justify-center rounded-2xl border border-emerald-500/30 bg-emerald-500/10 py-20">
-          <span className="flex size-16 items-center justify-center rounded-2xl bg-emerald-500 text-zinc-950 shadow-lg shadow-emerald-500/30">
+        <div className="flex flex-col items-center justify-center rounded-2xl border border-ra-primary-30 bg-ra-primary-10 py-20">
+          <span className="flex size-16 items-center justify-center rounded-2xl bg-ra-primary text-zinc-950 shadow-ra-primary-glow">
             <Check className="size-8" />
           </span>
-          <p className="mt-6 text-lg font-semibold text-emerald-200">Sent to kitchen</p>
+          <p className="mt-6 text-lg font-semibold text-ra-primary-muted">Sent to kitchen</p>
           <p className="mt-2 text-sm text-zinc-500">Resetting for next guest…</p>
         </div>
       )}

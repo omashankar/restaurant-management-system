@@ -6,7 +6,7 @@ const iconMap = {
 };
 
 const typeStyles = {
-  positive: { card: "border-emerald-500/20 bg-emerald-500/5",  icon: "bg-emerald-500/15 text-emerald-400 ring-emerald-500/20", text: "text-emerald-300" },
+  positive: { card: "border-ra-primary-20 bg-ra-primary-5",  icon: "bg-ra-primary-15 text-ra-primary ring-ra-primary-20", text: "text-ra-primary-muted" },
   info:     { card: "border-indigo-500/20 bg-indigo-500/5",    icon: "bg-indigo-500/15 text-indigo-400 ring-indigo-500/20",    text: "text-indigo-300"  },
   warning:  { card: "border-amber-500/25 bg-amber-500/5",      icon: "bg-amber-500/15 text-amber-400 ring-amber-500/25",       text: "text-amber-300"   },
 };

@@ -111,9 +111,9 @@ export default function WebsiteLayoutTab({
         <button
           type="button"
           onClick={() => setView("header")}
-          className="flex cursor-pointer items-center gap-3 rounded-xl border border-zinc-800 bg-zinc-950/40 px-4 py-4 text-left transition-colors hover:border-emerald-500/40 hover:bg-zinc-900/60"
+          className="flex cursor-pointer items-center gap-3 rounded-xl border border-zinc-800 bg-zinc-950/40 px-4 py-4 text-left transition-colors hover:border-ra-primary-40 hover:bg-zinc-900/60"
         >
-          <span className="flex size-10 items-center justify-center rounded-lg bg-emerald-500/15 text-emerald-400">
+          <span className="flex size-10 items-center justify-center rounded-lg bg-ra-primary-15 text-ra-primary">
             <Pencil className="size-4" />
           </span>
           <div className="min-w-0 flex-1">
@@ -125,9 +125,9 @@ export default function WebsiteLayoutTab({
         <button
           type="button"
           onClick={() => setView("footer")}
-          className="flex cursor-pointer items-center gap-3 rounded-xl border border-zinc-800 bg-zinc-950/40 px-4 py-4 text-left transition-colors hover:border-emerald-500/40 hover:bg-zinc-900/60"
+          className="flex cursor-pointer items-center gap-3 rounded-xl border border-zinc-800 bg-zinc-950/40 px-4 py-4 text-left transition-colors hover:border-ra-primary-40 hover:bg-zinc-900/60"
         >
-          <span className="flex size-10 items-center justify-center rounded-lg bg-emerald-500/15 text-emerald-400">
+          <span className="flex size-10 items-center justify-center rounded-lg bg-ra-primary-15 text-ra-primary">
             <Pencil className="size-4" />
           </span>
           <div className="min-w-0 flex-1">

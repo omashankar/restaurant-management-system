@@ -25,7 +25,7 @@ const TenantAnalyticsCharts = dynamic(
 /* ── KPI card ── */
 function KpiCard({ title, value, subtitle, icon: Icon, color = "emerald" }) {
   const colors = {
-    emerald: { bg: "bg-emerald-500/10", ring: "ring-emerald-500/20", icon: "text-emerald-400", val: "text-emerald-400" },
+    emerald: { bg: "bg-ra-primary-10", ring: "ring-ra-primary-20", icon: "text-ra-primary", val: "text-ra-primary" },
     indigo:  { bg: "bg-indigo-500/10",  ring: "ring-indigo-500/20",  icon: "text-indigo-400",  val: "text-indigo-400"  },
     amber:   { bg: "bg-amber-500/10",   ring: "ring-amber-500/20",   icon: "text-amber-400",   val: "text-amber-400"   },
     sky:     { bg: "bg-sky-500/10",     ring: "ring-sky-500/20",     icon: "text-sky-400",     val: "text-sky-400"     },
@@ -117,7 +117,7 @@ export default function AnalyticsPage() {
 
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div className="flex items-start gap-3">
-          <span className="mt-1 flex size-10 shrink-0 items-center justify-center rounded-xl bg-emerald-500/15 text-emerald-400 ring-1 ring-emerald-500/25">
+          <span className="mt-1 flex size-10 shrink-0 items-center justify-center rounded-xl bg-ra-primary-15 text-ra-primary ring-1 ring-ra-primary-25">
             <BarChart3 className="size-5" />
           </span>
           <div>
@@ -130,7 +130,7 @@ export default function AnalyticsPage() {
             {RANGES.map((r) => (
               <button key={r.value} type="button" onClick={() => setRange(r.value)}
                 className={`cursor-pointer rounded-lg px-3 py-1.5 text-xs font-semibold transition-all ${
-                  range === r.value ? "bg-emerald-500 text-zinc-950" : "text-zinc-500 hover:text-zinc-300"
+                  range === r.value ? "bg-ra-primary text-zinc-950" : "text-zinc-500 hover:text-zinc-300"
                 }`}>
                 {r.label}
               </button>
@@ -179,7 +179,7 @@ export default function AnalyticsPage() {
                   <td className="px-5 py-3 text-zinc-600 font-mono text-xs">{i + 1}</td>
                   <td className="px-5 py-3 font-medium text-zinc-100">{item.name}</td>
                   <td className="px-5 py-3 text-right tabular-nums text-zinc-300">{item.qty}</td>
-                  <td className="px-5 py-3 text-right tabular-nums font-semibold text-emerald-400">
+                  <td className="px-5 py-3 text-right tabular-nums font-semibold text-ra-primary">
                     {fmt(item.revenue)}
                   </td>
                 </tr>

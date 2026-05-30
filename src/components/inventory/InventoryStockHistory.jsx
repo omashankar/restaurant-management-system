@@ -46,7 +46,7 @@ export default function InventoryStockHistory({ historyEntries, items }) {
                   <span
                     className={`mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-lg ${
                       up
-                        ? "bg-emerald-500/15 text-emerald-400"
+                        ? "bg-ra-primary-15 text-ra-primary"
                         : "bg-zinc-800 text-zinc-400"
                     }`}
                   >
@@ -92,7 +92,7 @@ export default function InventoryStockHistory({ historyEntries, items }) {
                   ? "from-red-500/80 to-red-600/60"
                   : status === "low"
                     ? "from-amber-500/80 to-amber-600/50"
-                    : "from-emerald-500/70 to-emerald-600/50";
+                    : "from-ra-primary to-ra-accent";
               return (
                 <div key={item.id}>
                   <div className="mb-1 flex justify-between gap-2 text-xs">

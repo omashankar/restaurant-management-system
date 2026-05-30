@@ -91,7 +91,7 @@ export default function OrderSummary({
               }}
               className={`cursor-pointer flex flex-1 items-center justify-center gap-1.5 rounded-xl py-2 text-xs font-semibold transition-all ${
                 orderType === id
-                  ? "bg-emerald-500 text-zinc-950"
+                  ? "bg-ra-primary text-zinc-950"
                   : "text-zinc-400 hover:bg-zinc-800 hover:text-zinc-200"
               }`}
               aria-pressed={orderType === id}>
@@ -148,15 +148,15 @@ export default function OrderSummary({
                           isBlocked
                             ? "cursor-not-allowed border-zinc-800/40 bg-zinc-900/20 opacity-40"
                             : isSelected
-                            ? "cursor-pointer border-emerald-500/50 bg-emerald-500/10 ring-1 ring-emerald-500/20"
+                            ? "cursor-pointer border-ra-primary-50 bg-ra-primary-10 ring-1 ring-ra-primary-20"
                             : "cursor-pointer border-zinc-800 bg-zinc-900/50 hover:border-zinc-600"
                         }`}>
                         {isSelected && (
-                          <span className="absolute right-1 top-1 flex size-3.5 items-center justify-center rounded-full bg-emerald-500 text-zinc-950">
+                          <span className="absolute right-1 top-1 flex size-3.5 items-center justify-center rounded-full bg-ra-primary text-zinc-950">
                             <Check className="size-2" strokeWidth={3} />
                           </span>
                         )}
-                        <p className={`text-[11px] font-bold ${isSelected ? "text-emerald-300" : isBlocked ? "text-zinc-600" : "text-zinc-100"}`}>
+                        <p className={`text-[11px] font-bold ${isSelected ? "text-ra-primary-muted" : isBlocked ? "text-zinc-600" : "text-zinc-100"}`}>
                           {table.tableNumber}
                         </p>
                         <span className="flex items-center gap-0.5 text-[9px] text-zinc-600">
@@ -164,8 +164,8 @@ export default function OrderSummary({
                         </span>
                         <span className={`mt-0.5 rounded px-1 py-0.5 text-[8px] font-semibold leading-none ${
                           isBlocked ? "bg-red-500/10 text-red-500"
-                          : isSelected ? "bg-emerald-500/20 text-emerald-400"
-                          : "bg-emerald-500/10 text-emerald-600"
+                          : isSelected ? "bg-ra-primary/20 text-ra-primary"
+                          : "bg-ra-primary-10 text-ra-accent"
                         }`}>
                           {isBlocked ? table.status : isSelected ? "✓" : "Free"}
                         </span>
@@ -179,7 +179,7 @@ export default function OrderSummary({
               <div className="flex items-center justify-between">
                 {selectedTable ? (
                   <div className="flex items-center gap-1.5 text-[10px]">
-                    <span className="font-bold text-emerald-400">{selectedTable.tableNumber}</span>
+                    <span className="font-bold text-ra-primary">{selectedTable.tableNumber}</span>
                     <span className="flex items-center gap-0.5 text-zinc-500">
                       <Users className="size-2.5" />{selectedTable.capacity}
                     </span>
@@ -215,7 +215,7 @@ export default function OrderSummary({
                 }}
                 placeholder="Name *"
                 aria-invalid={fieldErrors.deliveryName ? true : undefined}
-                className="w-full rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2 text-xs text-zinc-100 outline-none focus:border-emerald-500/40"
+                className="w-full rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2 text-xs text-zinc-100 outline-none focus-ra-primary"
               />
               {fieldErrors.deliveryName && (
                 <p className="mt-1 text-[10px] text-red-400">{fieldErrors.deliveryName}</p>
@@ -243,7 +243,7 @@ export default function OrderSummary({
                 placeholder="Full delivery address *"
                 maxLength={300}
                 aria-invalid={fieldErrors.deliveryAddress ? true : undefined}
-                className="w-full rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2 text-xs text-zinc-100 outline-none focus:border-emerald-500/40"
+                className="w-full rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2 text-xs text-zinc-100 outline-none focus-ra-primary"
               />
               {fieldErrors.deliveryAddress && (
                 <p className="mt-1 text-[10px] text-red-400">{fieldErrors.deliveryAddress}</p>
@@ -316,7 +316,7 @@ export default function OrderSummary({
                 value={note}
                 onChange={(e) => onNoteChange?.(e.target.value)}
                 placeholder="Allergies, special requests…"
-                className="w-full resize-none rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2 text-xs text-zinc-100 outline-none focus:border-emerald-500/40 placeholder:text-zinc-600 transition-colors"
+                className="w-full resize-none rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2 text-xs text-zinc-100 outline-none focus-ra-primary placeholder:text-zinc-600 transition-colors"
               />
             </div>
           )}
@@ -375,7 +375,7 @@ export default function OrderSummary({
                     onClick={() => onPaymentMethodChange?.(id)}
                     className={`cursor-pointer rounded-lg px-2.5 py-1.5 text-[11px] font-semibold transition-all ${
                       paymentMethod === id
-                        ? "bg-emerald-500/20 text-emerald-300 ring-1 ring-emerald-500/30"
+                        ? "bg-ra-primary/20 text-ra-primary-muted ring-1 ring-ra-primary-25"
                         : "text-zinc-500 hover:bg-zinc-800 hover:text-zinc-300"
                     }`}
                   >
@@ -395,7 +395,7 @@ export default function OrderSummary({
                     className={`cursor-pointer flex-1 rounded-lg py-1.5 text-[11px] font-semibold transition-all ${
                       paymentStatus === id
                         ? id === "paid"
-                          ? "bg-emerald-500 text-zinc-950"
+                          ? "bg-ra-primary text-zinc-950"
                           : "bg-amber-500/20 text-amber-300 ring-1 ring-amber-500/30"
                         : "bg-zinc-900 text-zinc-500 hover:text-zinc-300"
                     }`}
@@ -408,7 +408,7 @@ export default function OrderSummary({
           )}
 
           <button type="button" onClick={onPlaceOrder} disabled={!canPlaceOrder || isPlacing}
-            className="cursor-pointer flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-500 py-2.5 text-sm font-semibold text-zinc-950 transition-all hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-40">
+            className="cursor-pointer flex w-full items-center justify-center gap-2 rounded-xl bg-ra-primary py-2.5 text-sm font-semibold text-zinc-950 transition-all hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-40">
             {isPlacing
               ? <><span className="size-4 animate-spin rounded-full border-2 border-zinc-950/30 border-t-zinc-950" /> Placing…</>
               : <><CreditCard className="size-4" /> Place Order</>}

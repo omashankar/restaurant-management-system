@@ -1,7 +1,7 @@
 const statusStyles = {
   new: "bg-amber-500/15 text-amber-300 ring-amber-500/25",
   preparing: "bg-sky-500/15 text-sky-300 ring-sky-500/25",
-  ready: "bg-emerald-500/15 text-emerald-300 ring-emerald-500/25",
+  ready: "bg-ra-primary-15 text-ra-primary-muted ring-ra-primary-25",
   completed: "bg-zinc-500/15 text-zinc-300 ring-zinc-500/25",
 };
 
@@ -13,7 +13,7 @@ export default function OrderCard({ order, onAction, className = "" }) {
     >
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div>
-          <p className="font-mono text-sm text-emerald-400/90">{order.id}</p>
+          <p className="font-mono text-sm text-ra-primary/90">{order.id}</p>
           <p className="text-sm text-zinc-400">
             Table {order.table} · {order.items} items
           </p>
@@ -35,7 +35,7 @@ export default function OrderCard({ order, onAction, className = "" }) {
         <button
           type="button"
           onClick={() => onAction(order)}
-          className="mt-3 w-full rounded-xl border border-zinc-700 py-2 text-sm font-medium text-zinc-200 transition-colors hover:border-emerald-500/50 hover:bg-emerald-500/10 hover:text-emerald-200"
+          className="mt-3 w-full rounded-xl border border-zinc-700 py-2 text-sm font-medium text-zinc-200 transition-colors hover:border-ra-primary-50 hover-bg-ra-primary-10 hover:text-ra-primary-muted"
         >
           View details
         </button>

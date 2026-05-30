@@ -62,7 +62,7 @@ export default function BankAccountSection({ data, onChange, onSave }) {
 
       {/* Verification badge */}
       {data.verified && (
-        <div className="mt-4 flex items-center gap-2 rounded-xl border border-emerald-500/25 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-400">
+        <div className="mt-4 flex items-center gap-2 rounded-xl border border-ra-primary-25 bg-ra-primary-10 px-4 py-3 text-sm text-ra-primary">
           <ShieldCheck className="size-4 shrink-0" />
           Bank account verified
         </div>

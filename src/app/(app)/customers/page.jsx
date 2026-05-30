@@ -239,7 +239,7 @@ export default function CustomersModulePage() {
         <button
           type="button"
           onClick={openCreate}
-          className="cursor-pointer inline-flex items-center gap-2 rounded-xl bg-emerald-500 px-4 py-2.5 text-sm font-semibold text-zinc-950 hover:bg-emerald-400"
+          className="cursor-pointer inline-flex items-center gap-2 rounded-xl bg-ra-primary px-4 py-2.5 text-sm font-semibold text-zinc-950 hover:brightness-110"
         >
           <Plus className="size-4" />
           Add customer
@@ -278,7 +278,7 @@ export default function CustomersModulePage() {
             <button
               type="button"
               onClick={openCreate}
-              className="cursor-pointer rounded-xl bg-emerald-500 px-4 py-2 text-sm font-semibold text-zinc-950"
+              className="cursor-pointer rounded-xl bg-ra-primary px-4 py-2 text-sm font-semibold text-zinc-950"
             >
               Add customer
             </button>
@@ -324,7 +324,7 @@ export default function CustomersModulePage() {
                       <button
                         type="button"
                         onClick={() => openEdit(row)}
-                        className="cursor-pointer rounded-lg p-2 text-zinc-400 hover:bg-zinc-800 hover:text-emerald-400"
+                        className="cursor-pointer rounded-lg p-2 text-zinc-400 hover:bg-zinc-800 hover-ra-primary"
                         aria-label="Edit"
                       >
                         <Pencil className="size-4" />
@@ -372,7 +372,7 @@ export default function CustomersModulePage() {
             <button
               type="button"
               onClick={saveCustomer}
-              className="cursor-pointer rounded-xl bg-emerald-500 px-4 py-2 text-sm font-semibold text-zinc-950 hover:bg-emerald-400"
+              className="cursor-pointer rounded-xl bg-ra-primary px-4 py-2 text-sm font-semibold text-zinc-950 hover:brightness-110"
             >
               Save
             </button>

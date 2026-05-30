@@ -27,7 +27,7 @@ export default function RevenueChart({ data, className = "" }) {
             >
               <div className="flex h-36 w-full items-end justify-center">
                 <div
-                  className="w-full max-w-10 rounded-t-lg bg-gradient-to-t from-emerald-600/80 to-emerald-400/90 transition-all duration-300 hover:from-emerald-500 hover:to-emerald-300"
+                  className="w-full max-w-10 rounded-t-lg bg-gradient-to-t from-ra-primary to-ra-accent transition-all duration-300 hover:opacity-90"
                   style={{ height: `${Math.max(h, 8)}%` }}
                   title={`${d.day}: $${d.amount}`}
                 />

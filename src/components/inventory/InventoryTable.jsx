@@ -50,14 +50,14 @@ function QtyEditor({ row, onUpdateQty }) {
         value={val}
         onChange={handleChange}
         onKeyDown={handleKeyDown}
-        className="w-16 rounded-lg border border-zinc-700 bg-zinc-950/60 px-1.5 py-1 text-center text-sm tabular-nums text-zinc-100 outline-none focus:border-emerald-500/40"
+        className="w-16 rounded-lg border border-zinc-700 bg-zinc-950/60 px-1.5 py-1 text-center text-sm tabular-nums text-zinc-100 outline-none focus-ra-primary"
         aria-label="Quantity"
       />
 
       <button
         type="button"
         onClick={() => { const n = (parseInt(val,10)||0) + 1; setVal(String(n)); setDirty(true); onUpdateQty?.(row, +1); }}
-        className="cursor-pointer flex size-7 items-center justify-center rounded-lg border border-zinc-700 text-zinc-400 transition-colors hover:border-emerald-500/40 hover:bg-emerald-500/10 hover:text-emerald-400"
+        className="cursor-pointer flex size-7 items-center justify-center rounded-lg border border-zinc-700 text-zinc-400 transition-colors hover-border-ra-primary-40 hover-bg-ra-primary-10 hover-ra-primary"
         aria-label="Increase"
       >
         <Plus className="size-3.5" />
@@ -68,7 +68,7 @@ function QtyEditor({ row, onUpdateQty }) {
         onClick={handleRefresh}
         className={`cursor-pointer flex size-7 items-center justify-center rounded-lg border transition-colors ${
           dirty
-            ? "border-emerald-500/50 bg-emerald-500/15 text-emerald-400 hover:bg-emerald-500/25"
+            ? "border-ra-primary-50 bg-ra-primary-15 text-ra-primary hover-bg-ra-primary-15"
             : "border-zinc-700 text-zinc-600 hover:border-zinc-600 hover:text-zinc-400"
         }`}
         aria-label="Apply quantity"

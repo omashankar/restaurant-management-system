@@ -65,7 +65,7 @@ export default function SmartMetrics({
       {/* Active Tables */}
       <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-4">
         <div className="flex items-center gap-2">
-          <span className="flex size-8 items-center justify-center rounded-lg bg-emerald-500/15 text-emerald-400 ring-1 ring-emerald-500/20">
+          <span className="flex size-8 items-center justify-center rounded-lg bg-ra-primary-15 text-ra-primary ring-1 ring-ra-primary-20">
             <Table2 className="size-4" />
           </span>
           <p className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Active Tables</p>

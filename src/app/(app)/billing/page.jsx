@@ -2,6 +2,7 @@
 
 import StripePaymentModal from "@/components/payments/StripePaymentModal";
 import PaymentTransactionsSection from "@/components/payment-settings/PaymentTransactionsSection";
+import { useRestaurantTheme } from "@/hooks/useRestaurantTheme";
 import { useToast } from "@/hooks/useToast";
 import { CheckCircle2, CreditCard, Loader2, RefreshCw } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -9,7 +10,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 const PLAN_COLORS = [
   "border-sky-500/30 bg-sky-500/5",
   "border-indigo-500/30 bg-indigo-500/5",
-  "border-emerald-500/30 bg-emerald-500/5",
+  "border-ra-primary-30 bg-ra-primary-5",
   "border-amber-500/30 bg-amber-500/5",
 ];
 
@@ -41,6 +42,7 @@ export default function BillingPage() {
   const [subscription, setSubscription] = useState(null);
   const [plans, setPlans] = useState([]);
   const [stripeSession, setStripeSession] = useState(null);
+  const { theme } = useRestaurantTheme();
   const { showToast, ToastUI } = useToast();
 
   const fetchOverview = useCallback(async () => {
@@ -141,7 +143,7 @@ export default function BillingPage() {
               showToast("Payment cancelled.", "error");
             },
           },
-          theme: { color: "#10b981" },
+          theme: { color: theme.primaryColor },
         });
 
         rz.on("payment.failed", () => {
@@ -202,7 +204,7 @@ export default function BillingPage() {
               <button key={tab.id} type="button" onClick={() => setActiveTab(tab.id)}
                 className={`cursor-pointer rounded-lg px-4 py-1.5 text-sm font-medium transition-colors ${
                   activeTab === tab.id
-                    ? "bg-emerald-500 text-zinc-950"
+                    ? "bg-ra-primary text-zinc-950"
                     : "text-zinc-400 hover:text-zinc-200"
                 }`}>
                 {tab.label}
@@ -237,7 +239,7 @@ export default function BillingPage() {
           <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500">Current Plan</p>
           <div className="mt-2 flex items-center gap-3">
             <h2 className="text-xl font-semibold text-zinc-100">{currentPlan?.name ?? "Free"}</h2>
-            <span className="rounded-full bg-emerald-500/15 px-2.5 py-0.5 text-xs font-semibold capitalize text-emerald-400 ring-1 ring-emerald-500/25">
+            <span className="rounded-full bg-ra-primary-15 px-2.5 py-0.5 text-xs font-semibold capitalize text-ra-primary ring-1 ring-ra-primary-25">
               {subscription?.status ?? profile?.subscriptionStatus ?? "active"}
             </span>
           </div>
@@ -262,7 +264,7 @@ export default function BillingPage() {
                 onClick={() => setBillingCycle(cycle)}
                 className={`cursor-pointer rounded-xl border px-3 py-2 text-sm font-medium capitalize transition-colors ${
                   billingCycle === cycle
-                    ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-300"
+                    ? "border-ra-primary-40 bg-ra-primary-10 text-ra-primary-muted"
                     : "border-zinc-700 text-zinc-400 hover:border-zinc-500 hover:text-zinc-200"
                 }`}
               >
@@ -288,12 +290,12 @@ export default function BillingPage() {
             return (
               <div
                 key={planKey}
-                className={`rounded-2xl border p-5 ${PLAN_COLORS[idx % PLAN_COLORS.length]} ${isCurrent ? "ring-1 ring-emerald-500/30" : ""}`}
+                className={`rounded-2xl border p-5 ${PLAN_COLORS[idx % PLAN_COLORS.length]} ${isCurrent ? "ring-1 ring-ra-primary-25" : ""}`}
               >
                 <div className="flex items-start justify-between gap-2">
                   <h3 className="text-lg font-semibold text-zinc-100">{plan.name}</h3>
                   {isCurrent && (
-                    <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/15 px-2 py-0.5 text-xs font-semibold text-emerald-300 ring-1 ring-emerald-500/25">
+                    <span className="inline-flex items-center gap-1 rounded-full bg-ra-primary-15 px-2 py-0.5 text-xs font-semibold text-ra-primary-muted ring-1 ring-ra-primary-25">
                       <CheckCircle2 className="size-3" />
                       Current
                     </span>
@@ -318,7 +320,7 @@ export default function BillingPage() {
                     Number(amount ?? 0) <= 0
                   }
                   onClick={() => startSubscription(plan)}
-                  className="mt-5 inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-emerald-500 px-4 py-2.5 text-sm font-semibold text-zinc-950 hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="mt-5 inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-ra-primary px-4 py-2.5 text-sm font-semibold text-zinc-950 hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   {submittingPlan === plan.slug ? (
                     <>

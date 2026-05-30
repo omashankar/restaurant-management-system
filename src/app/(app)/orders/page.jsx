@@ -18,19 +18,19 @@ import { useLiveRefresh } from "@/hooks/useLiveRefresh";
 const STATUS_CFG = {
   new:       { label: "New",       badge: "bg-amber-500/15 text-amber-300 ring-1 ring-amber-500/25",   border: "border-amber-500/30"   },
   preparing: { label: "Preparing", badge: "bg-sky-500/15 text-sky-300 ring-1 ring-sky-500/25",         border: "border-sky-500/20"     },
-  ready:     { label: "Ready",     badge: "bg-emerald-500/15 text-emerald-300 ring-1 ring-emerald-500/25", border: "border-emerald-500/30" },
+  ready:     { label: "Ready",     badge: "bg-ra-primary-15 text-ra-primary-muted ring-1 ring-ra-primary-25", border: "border-ra-primary-30" },
   completed: { label: "Completed", badge: "bg-zinc-500/15 text-zinc-400 ring-1 ring-zinc-500/25",      border: "border-zinc-800"       },
   cancelled: { label: "Cancelled", badge: "bg-red-500/15 text-red-400 ring-1 ring-red-500/25",         border: "border-zinc-800"       },
 };
 
 const TYPE_ICON = {
-  "dine-in":  { Icon: Store,         color: "text-emerald-400", bg: "bg-emerald-500/10" },
+  "dine-in":  { Icon: Store,         color: "text-ra-primary", bg: "bg-ra-primary-10" },
   "takeaway": { Icon: ConciergeBell, color: "text-indigo-400",  bg: "bg-indigo-500/10"  },
   "delivery": { Icon: Bike,          color: "text-sky-400",     bg: "bg-sky-500/10"     },
 };
 
 const PAYMENT_STATUS_CFG = {
-  paid: "bg-emerald-500/15 text-emerald-300 ring-1 ring-emerald-500/25",
+  paid: "bg-ra-primary-15 text-ra-primary-muted ring-1 ring-ra-primary-25",
   pending: "bg-amber-500/15 text-amber-300 ring-1 ring-amber-500/25",
   initiated: "bg-sky-500/15 text-sky-300 ring-1 ring-sky-500/25",
   processing: "bg-indigo-500/15 text-indigo-300 ring-1 ring-indigo-500/25",
@@ -116,7 +116,7 @@ function OrderCard({ order, currency, onStatusChange, onMarkPaid, canEdit }) {
               <TypeIcon className={`size-4 ${tp.color}`} />
             </span>
             <div>
-              <p className="font-mono text-sm font-semibold text-emerald-400">
+              <p className="font-mono text-sm font-semibold text-ra-primary">
                 {order.orderId ?? order.id?.slice(-8).toUpperCase()}
               </p>
               <p className="text-xs text-zinc-500">
@@ -212,7 +212,7 @@ function OrderCard({ order, currency, onStatusChange, onMarkPaid, canEdit }) {
               type="button"
               onClick={handleMarkPaid}
               disabled={payUpdating}
-              className="cursor-pointer flex w-full items-center justify-center gap-1.5 rounded-xl border border-emerald-500/30 bg-emerald-500/10 py-2 text-xs font-semibold text-emerald-300 hover:bg-emerald-500/20 disabled:opacity-50"
+              className="cursor-pointer flex w-full items-center justify-center gap-1.5 rounded-xl border border-ra-primary-30 bg-ra-primary-10 py-2 text-xs font-semibold text-ra-primary-muted hover:bg-ra-primary/20 disabled:opacity-50"
             >
               {payUpdating ? "Updating…" : "Mark payment as Paid"}
             </button>
@@ -222,7 +222,7 @@ function OrderCard({ order, currency, onStatusChange, onMarkPaid, canEdit }) {
             <button type="button" onClick={handleNext} disabled={updating}
               className={`cursor-pointer mt-2 flex w-full items-center justify-center gap-2 rounded-xl py-2 text-xs font-bold transition-all disabled:opacity-50 ${
                 next === "preparing" ? "bg-sky-500/15 text-sky-300 ring-1 ring-sky-500/25 hover:bg-sky-500/25"
-                : next === "ready"   ? "bg-emerald-500 text-zinc-950 hover:bg-emerald-400"
+                : next === "ready"   ? "bg-ra-primary text-zinc-950 hover:brightness-110"
                 :                      "bg-zinc-800 text-zinc-300 hover:bg-zinc-700"
               }`}>
               <CheckCircle2 className="size-3.5" />
@@ -372,18 +372,18 @@ function CreateOrderModal({ open, onClose, onCreated, currency = "INR" }) {
                 <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-zinc-500" />
                 <input value={search} onChange={(e) => setSearch(e.target.value)}
                   placeholder="Search menu…"
-                  className="w-full rounded-xl border border-zinc-700 bg-zinc-950/60 py-2 pl-9 pr-3 text-sm text-zinc-100 outline-none focus:border-emerald-500/40 placeholder:text-zinc-600" />
+                  className="w-full rounded-xl border border-zinc-700 bg-zinc-950/60 py-2 pl-9 pr-3 text-sm text-zinc-100 outline-none focus-ra-primary placeholder:text-zinc-600" />
               </div>
             </div>
             <div className="flex-1 overflow-y-auto p-3 space-y-1.5">
               {filteredMenu.map((item) => (
                 <button key={item.id} type="button" onClick={() => addItem(item)}
-                  className="cursor-pointer flex w-full items-center justify-between rounded-xl border border-zinc-800 bg-zinc-950/40 px-3 py-2.5 text-left hover:border-emerald-500/30 hover:bg-emerald-500/5 transition-all">
+                  className="cursor-pointer flex w-full items-center justify-between rounded-xl border border-zinc-800 bg-zinc-950/40 px-3 py-2.5 text-left hover:border-ra-primary-30 hover:bg-ra-primary-5 transition-all">
                   <div>
                     <p className="text-sm font-medium text-zinc-100">{item.name}</p>
                     <p className="text-xs text-zinc-500">{item.categoryName}</p>
                   </div>
-                  <span className="text-sm font-bold text-emerald-400">
+                  <span className="text-sm font-bold text-ra-primary">
                     {formatAdminMoney(item.price, currency)}
                   </span>
                 </button>
@@ -405,7 +405,7 @@ function CreateOrderModal({ open, onClose, onCreated, currency = "INR" }) {
                     setFieldErrors(EMPTY_CREATE_ORDER_ERRORS);
                     setError("");
                   }}
-                  className="cursor-pointer mt-1 w-full rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2 text-sm text-zinc-100 outline-none focus:border-emerald-500/40"
+                  className="cursor-pointer mt-1 w-full rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2 text-sm text-zinc-100 outline-none focus-ra-primary"
                 >
                   <option value="dine-in">Dine-In</option>
                   <option value="takeaway">Takeaway</option>
@@ -427,7 +427,7 @@ function CreateOrderModal({ open, onClose, onCreated, currency = "INR" }) {
                       setError("");
                     }}
                     aria-invalid={fieldErrors.tableNumber ? true : undefined}
-                    className={`cursor-pointer mt-1 w-full rounded-xl border bg-zinc-950/60 px-3 py-2 text-sm text-zinc-100 outline-none focus:border-emerald-500/40 ${
+                    className={`cursor-pointer mt-1 w-full rounded-xl border bg-zinc-950/60 px-3 py-2 text-sm text-zinc-100 outline-none focus-ra-primary ${
                       fieldErrors.tableNumber ? "border-red-500/50" : "border-zinc-700"
                     }`}
                   >
@@ -455,7 +455,7 @@ function CreateOrderModal({ open, onClose, onCreated, currency = "INR" }) {
                   }}
                   placeholder={form.orderType === "delivery" ? "e.g. Rahul Sharma" : "e.g. Rahul Sharma (not Walk-in)"}
                   aria-invalid={fieldErrors.customer ? true : undefined}
-                  className={`mt-1 w-full rounded-xl border bg-zinc-950/60 px-3 py-2 text-sm text-zinc-100 outline-none focus:border-emerald-500/40 placeholder:text-zinc-600 ${
+                  className={`mt-1 w-full rounded-xl border bg-zinc-950/60 px-3 py-2 text-sm text-zinc-100 outline-none focus-ra-primary placeholder:text-zinc-600 ${
                     fieldErrors.customer ? "border-red-500/50" : "border-zinc-700"
                   }`}
                 />
@@ -484,7 +484,7 @@ function CreateOrderModal({ open, onClose, onCreated, currency = "INR" }) {
                       : "Special requests…"
                   }
                   aria-invalid={fieldErrors.notes ? true : undefined}
-                  className={`mt-1 w-full resize-none rounded-xl border bg-zinc-950/60 px-3 py-2 text-sm text-zinc-100 outline-none focus:border-emerald-500/40 placeholder:text-zinc-600 ${
+                  className={`mt-1 w-full resize-none rounded-xl border bg-zinc-950/60 px-3 py-2 text-sm text-zinc-100 outline-none focus-ra-primary placeholder:text-zinc-600 ${
                     fieldErrors.notes ? "border-red-500/50" : "border-zinc-700"
                   }`}
                 />
@@ -504,7 +504,7 @@ function CreateOrderModal({ open, onClose, onCreated, currency = "INR" }) {
                       <div key={line.id} className="flex items-center justify-between rounded-lg bg-zinc-950/40 px-2.5 py-2 text-xs">
                         <span className="text-zinc-300">{line.qty}× {line.name}</span>
                         <div className="flex items-center gap-2">
-                          <span className="text-emerald-400">
+                          <span className="text-ra-primary">
                             {formatAdminMoney(line.price * line.qty, currency)}
                           </span>
                           <button type="button" onClick={() => removeItem(line.id)}
@@ -535,7 +535,7 @@ function CreateOrderModal({ open, onClose, onCreated, currency = "INR" }) {
                 )}
                 <div className="flex justify-between text-sm font-bold text-zinc-100">
                   <span>Total</span>
-                  <span className="text-emerald-400">{formatAdminMoney(total, currency)}</span>
+                  <span className="text-ra-primary">{formatAdminMoney(total, currency)}</span>
                 </div>
               </div>
               <div className="flex gap-1">
@@ -550,7 +550,7 @@ function CreateOrderModal({ open, onClose, onCreated, currency = "INR" }) {
                     }}
                     className={`cursor-pointer flex-1 rounded-lg py-1 text-[10px] font-semibold ${
                       paymentMethod === m
-                        ? "bg-emerald-500/20 text-emerald-300"
+                        ? "bg-ra-primary/20 text-ra-primary-muted"
                         : "text-zinc-600 hover:text-zinc-400"
                     }`}
                   >
@@ -562,7 +562,7 @@ function CreateOrderModal({ open, onClose, onCreated, currency = "INR" }) {
                 type="button"
                 onClick={submit}
                 disabled={saving || !canPlaceOrder}
-                className="cursor-pointer flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-500 py-2.5 text-sm font-bold text-zinc-950 transition-all hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-40"
+                className="cursor-pointer flex w-full items-center justify-center gap-2 rounded-xl bg-ra-primary py-2.5 text-sm font-bold text-zinc-950 transition-all hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-40"
               >
                 {saving ? "Placing…" : "Place Order"}
               </button>
@@ -709,7 +709,7 @@ export default function OrdersPage() {
         {/* Header */}
         <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div className="flex items-start gap-3">
-            <span className="mt-1 flex size-10 shrink-0 items-center justify-center rounded-xl bg-emerald-500/15 text-emerald-400 ring-1 ring-emerald-500/25">
+            <span className="mt-1 flex size-10 shrink-0 items-center justify-center rounded-xl bg-ra-primary-15 text-ra-primary ring-1 ring-ra-primary-25">
               <UtensilsCrossed className="size-5" />
             </span>
             <div>
@@ -717,7 +717,7 @@ export default function OrdersPage() {
               <p className="mt-1 text-sm text-zinc-500">
                 {orders.length} total ·{" "}
                 <span className="inline-flex items-center gap-1.5">
-                  <span className="size-1.5 animate-pulse rounded-full bg-emerald-400" />
+                  <span className="size-1.5 animate-pulse rounded-full bg-ra-accent" />
                   Live
                   {lastUpdated
                     ? ` · updated ${lastUpdated.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", second: "2-digit" })}`
@@ -738,7 +738,7 @@ export default function OrdersPage() {
             </button>
             {canEdit && (
               <button type="button" onClick={() => setCreateOpen(true)}
-                className="cursor-pointer inline-flex items-center gap-2 rounded-xl bg-emerald-500 px-4 py-2 text-sm font-bold text-zinc-950 shadow-lg shadow-emerald-500/20 hover:bg-emerald-400 active:scale-[0.98]">
+                className="cursor-pointer inline-flex items-center gap-2 rounded-xl bg-ra-primary px-4 py-2 text-sm font-bold text-zinc-950 shadow-ra-primary-glow hover:brightness-110 active:scale-[0.98]">
                 <Plus className="size-4" /> New Order
               </button>
             )}
@@ -750,7 +750,7 @@ export default function OrdersPage() {
           {[
             { key: "new",       label: "New",       color: "text-amber-400",   bg: "bg-amber-500/10",   border: "border-amber-500/20"   },
             { key: "preparing", label: "Preparing", color: "text-sky-400",     bg: "bg-sky-500/10",     border: "border-sky-500/20"     },
-            { key: "ready",     label: "Ready",     color: "text-emerald-400", bg: "bg-emerald-500/10", border: "border-emerald-500/20" },
+            { key: "ready",     label: "Ready",     color: "text-ra-primary", bg: "bg-ra-primary-10", border: "border-ra-primary-20" },
             { key: "completed", label: "Completed", color: "text-zinc-400",    bg: "bg-zinc-500/10",    border: "border-zinc-700"       },
             { key: "cancelled", label: "Cancelled", color: "text-red-400",     bg: "bg-red-500/10",     border: "border-red-500/20"     },
           ].map(({ key, label, color, bg, border }) => (
@@ -768,7 +768,7 @@ export default function OrdersPage() {
           <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-zinc-500" />
           <input value={search} onChange={(e) => setSearch(e.target.value)}
             placeholder="Search order, customer, table…"
-            className="w-full rounded-xl border border-zinc-800 bg-zinc-900/70 py-2.5 pl-10 pr-4 text-sm text-zinc-100 placeholder:text-zinc-600 outline-none focus:border-emerald-500/40" />
+            className="w-full rounded-xl border border-zinc-800 bg-zinc-900/70 py-2.5 pl-10 pr-4 text-sm text-zinc-100 placeholder:text-zinc-600 outline-none focus-ra-primary" />
         </div>
 
         {/* Grid */}
@@ -778,7 +778,7 @@ export default function OrdersPage() {
             <p className="text-sm text-zinc-500">No orders found.</p>
             {canEdit && (
               <button type="button" onClick={() => setCreateOpen(true)}
-                className="cursor-pointer rounded-xl bg-emerald-500 px-4 py-2 text-sm font-bold text-zinc-950 hover:bg-emerald-400">
+                className="cursor-pointer rounded-xl bg-ra-primary px-4 py-2 text-sm font-bold text-zinc-950 hover:brightness-110">
                 Create First Order
               </button>
             )}

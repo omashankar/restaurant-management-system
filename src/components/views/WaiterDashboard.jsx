@@ -27,7 +27,7 @@ export default function WaiterDashboard({ tables = [], orders = [] }) {
       <section>
         <div className="mb-3 flex items-center justify-between gap-4">
           <h2 className="text-sm font-semibold text-zinc-100">Active Tables</h2>
-          <Link href="/tables" className="cursor-pointer text-xs font-medium text-emerald-400 hover:text-emerald-300">View tables →</Link>
+          <Link href="/tables" className="cursor-pointer text-xs font-medium text-ra-primary hover:text-ra-primary-muted">View tables →</Link>
         </div>
         {tables.length === 0 ? (
           <p className="text-sm text-zinc-600">No tables configured yet.</p>
@@ -39,7 +39,7 @@ export default function WaiterDashboard({ tables = [], orders = [] }) {
                 <div className="flex items-center justify-between gap-2">
                   <p className="text-lg font-semibold text-zinc-50">{t.tableNumber}</p>
                   <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ring-1 capitalize ${
-                    t.status === "occupied" ? "bg-sky-500/15 text-sky-300 ring-sky-500/25" : "bg-emerald-500/15 text-emerald-300 ring-emerald-500/25"
+                    t.status === "occupied" ? "bg-sky-500/15 text-sky-300 ring-sky-500/25" : "bg-ra-primary-15 text-ra-primary-muted ring-ra-primary-25"
                   }`}>{t.status}</span>
                 </div>
                 <p className="mt-1 text-xs text-zinc-500">{t.zone ?? ""} · {t.capacity} seats</p>
@@ -50,10 +50,10 @@ export default function WaiterDashboard({ tables = [], orders = [] }) {
       </section>
 
       <div className="flex flex-wrap gap-3">
-        <Link href="/pos" className="cursor-pointer inline-flex items-center gap-2 rounded-xl bg-emerald-500 px-5 py-2.5 text-sm font-semibold text-zinc-950 hover:bg-emerald-400">
+        <Link href="/pos" className="cursor-pointer inline-flex items-center gap-2 rounded-xl bg-ra-primary px-5 py-2.5 text-sm font-semibold text-zinc-950 hover:brightness-110">
           <ShoppingCart className="size-4" /> New Order
         </Link>
-        <Link href="/orders" className="cursor-pointer inline-flex items-center gap-2 rounded-xl border border-zinc-700 px-5 py-2.5 text-sm font-semibold text-zinc-200 hover:border-emerald-500/40">
+        <Link href="/orders" className="cursor-pointer inline-flex items-center gap-2 rounded-xl border border-zinc-700 px-5 py-2.5 text-sm font-semibold text-zinc-200 hover-border-ra-primary-40">
           View All Orders
         </Link>
       </div>

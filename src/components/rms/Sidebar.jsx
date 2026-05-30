@@ -191,19 +191,19 @@ export default function Sidebar({
                     : "w-full items-center gap-3 px-3 py-2.5"
                 } ${
                   active
-                    ? "bg-emerald-500/15 text-emerald-300 ring-1 ring-emerald-500/25"
+                    ? "bg-ra-primary-15 text-ra-primary-muted ring-1 ring-ra-primary-25"
                     : "text-zinc-400 hover:bg-zinc-900 hover:text-zinc-100"
                 }`}
               >
                 {active ? (
                   <span
-                    className="absolute inset-y-1 left-0 w-0.5 rounded-r bg-emerald-400"
+                    className="absolute inset-y-1 left-0 w-0.5 rounded-r ra-nav-active-bar"
                     aria-hidden
                   />
                 ) : null}
                 <Icon
                   className={`size-[18px] shrink-0 transition-transform duration-200 group-hover:scale-110 ${
-                    active ? "text-emerald-400" : ""
+                    active ? "text-ra-primary" : ""
                   }`}
                   aria-hidden
                 />
@@ -255,19 +255,19 @@ export default function Sidebar({
                 aria-label={label}
                 className={`relative group flex size-11 items-center justify-center rounded-xl p-0 transition-all duration-200 ${
                   groupActive
-                    ? "bg-emerald-500/15 text-emerald-300 ring-1 ring-emerald-500/25"
+                    ? "bg-ra-primary-15 text-ra-primary-muted ring-1 ring-ra-primary-25"
                     : "text-zinc-400 hover:bg-zinc-900 hover:text-zinc-100"
                 }`}
               >
                 {groupActive ? (
                   <span
-                    className="absolute inset-y-1 left-0 w-0.5 rounded-r bg-emerald-400"
+                    className="absolute inset-y-1 left-0 w-0.5 rounded-r ra-nav-active-bar"
                     aria-hidden
                   />
                 ) : null}
                 <Icon
                   className={`size-[18px] shrink-0 transition-transform duration-200 group-hover:scale-110 ${
-                    groupActive ? "text-emerald-400" : ""
+                    groupActive ? "text-ra-primary" : ""
                   }`}
                   aria-hidden
                 />
@@ -291,13 +291,13 @@ export default function Sidebar({
               >
                 {groupActive ? (
                   <span
-                    className="absolute inset-y-1 left-0 w-0.5 rounded-r bg-emerald-400"
+                    className="absolute inset-y-1 left-0 w-0.5 rounded-r ra-nav-active-bar"
                     aria-hidden
                   />
                 ) : null}
                 <Icon
                   className={`size-[18px] shrink-0 transition-transform duration-200 group-hover:scale-110 ${
-                    groupActive ? "text-emerald-400" : ""
+                    groupActive ? "text-ra-primary" : ""
                   }`}
                   aria-hidden
                 />
@@ -329,13 +329,13 @@ export default function Sidebar({
                         onClick={onNavigate}
                         className={`group relative flex items-center gap-2 rounded-lg py-2 pl-2 pr-2 text-sm transition-all duration-200 ${
                           active
-                            ? "bg-emerald-500/15 font-medium text-emerald-300"
+                            ? "bg-ra-primary-15 font-medium text-ra-primary-muted"
                             : "text-zinc-500 hover:bg-zinc-900 hover:text-zinc-200"
                         }`}
                       >
                         {active ? (
                           <span
-                            className="absolute inset-y-1 left-0 w-0.5 rounded-r bg-emerald-400"
+                            className="absolute inset-y-1 left-0 w-0.5 rounded-r ra-nav-active-bar"
                             aria-hidden
                           />
                         ) : null}

@@ -79,7 +79,7 @@ function Toggle({ checked, onChange, label, hint }) {
         {hint && <span className="mt-0.5 block text-xs text-zinc-500">{hint}</span>}
       </span>
       <button type="button" role="switch" aria-checked={checked} onClick={() => onChange(!checked)}
-        className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors ${checked ? "bg-emerald-500" : "bg-zinc-700"}`}>
+        className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors ${checked ? "bg-ra-primary" : "bg-zinc-700"}`}>
         <span className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform ${checked ? "translate-x-5" : "translate-x-0.5"}`} />
       </button>
     </label>
@@ -192,7 +192,7 @@ export default function WhatsAppPage() {
   if (loading) {
     return (
       <div className="flex h-64 items-center justify-center">
-        <Loader2 className="size-6 animate-spin text-emerald-400" />
+        <Loader2 className="size-6 animate-spin text-ra-primary" />
       </div>
     );
   }
@@ -208,7 +208,7 @@ export default function WhatsAppPage() {
           </p>
         </div>
         <button type="button" onClick={saveSettings} disabled={saving}
-          className="cursor-pointer inline-flex items-center gap-2 rounded-xl bg-emerald-500 px-4 py-2 text-sm font-semibold text-zinc-950 hover:bg-emerald-400 disabled:opacity-50 transition-colors">
+          className="cursor-pointer inline-flex items-center gap-2 rounded-xl bg-ra-primary px-4 py-2 text-sm font-semibold text-zinc-950 hover:brightness-110 disabled:opacity-50 transition-colors">
           {saving ? <Loader2 className="size-4 animate-spin" /> : <Save className="size-4" />}
           {saving ? "Saving…" : "Save Settings"}
         </button>
@@ -226,7 +226,7 @@ export default function WhatsAppPage() {
       {saveResult && (
         <div className={`flex items-center gap-2 rounded-xl border px-4 py-3 text-sm ${
           saveResult.success
-            ? "border-emerald-500/25 bg-emerald-500/10 text-emerald-400"
+            ? "border-ra-primary-25 bg-ra-primary-10 text-ra-primary"
             : "border-red-500/25 bg-red-500/10 text-red-400"
         }`}>
           {saveResult.success ? <CheckCircle2 className="size-4" /> : <XCircle className="size-4" />}
@@ -235,14 +235,14 @@ export default function WhatsAppPage() {
       )}
 
       {/* Step-by-step setup guide */}
-      <section className="rounded-2xl border border-emerald-500/20 bg-emerald-500/5 p-5">
+      <section className="rounded-2xl border border-ra-primary-20 bg-ra-primary-5 p-5">
         <button
           type="button"
           onClick={() => setGuideOpen((v) => !v)}
           className="cursor-pointer flex w-full items-start justify-between gap-3 text-left"
         >
           <div>
-            <h2 className="text-base font-semibold text-emerald-300">
+            <h2 className="text-base font-semibold text-ra-primary-muted">
               WhatsApp Setup Guide — Step by Step
             </h2>
             <p className="mt-1 text-xs text-zinc-500">
@@ -250,15 +250,15 @@ export default function WhatsAppPage() {
             </p>
           </div>
           {guideOpen
-            ? <ChevronUp className="size-5 shrink-0 text-emerald-400 mt-0.5" />
-            : <ChevronDown className="size-5 shrink-0 text-emerald-400 mt-0.5" />}
+            ? <ChevronUp className="size-5 shrink-0 text-ra-primary mt-0.5" />
+            : <ChevronDown className="size-5 shrink-0 text-ra-primary mt-0.5" />}
         </button>
 
         {guideOpen && (
           <ol className="mt-4 space-y-3">
             {SETUP_STEPS.map(({ step, title, detail }) => (
               <li key={step} className="flex gap-3 rounded-xl border border-zinc-800/80 bg-zinc-950/40 px-4 py-3">
-                <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-emerald-500/15 text-xs font-bold text-emerald-400 ring-1 ring-emerald-500/25">
+                <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-ra-primary-15 text-xs font-bold text-ra-primary ring-1 ring-ra-primary-25">
                   {step}
                 </span>
                 <div>
@@ -276,7 +276,7 @@ export default function WhatsAppPage() {
             href="https://developers.facebook.com/docs/whatsapp/cloud-api/get-started"
             target="_blank"
             rel="noopener noreferrer"
-            className="text-emerald-400 hover:underline"
+            className="text-ra-primary hover:underline"
           >
             Meta WhatsApp Cloud API →
           </a>
@@ -362,7 +362,7 @@ export default function WhatsAppPage() {
                     <button key={tp.id} type="button" onClick={() => setActiveTemplate(tp.id)}
                       className={`cursor-pointer w-full rounded-xl px-3 py-2.5 text-left transition-all ${
                         activeTemplate === tp.id
-                          ? "bg-emerald-500/15 text-emerald-400 ring-1 ring-emerald-500/25"
+                          ? "bg-ra-primary-15 text-ra-primary ring-1 ring-ra-primary-25"
                           : "text-zinc-400 hover:bg-zinc-800/60 hover:text-zinc-200"
                       }`}>
                       <div className="flex items-center justify-between gap-2">
@@ -375,7 +375,7 @@ export default function WhatsAppPage() {
                         }`}>{tp.audience}</span>
                       </div>
                       <div className="mt-1 flex items-center gap-1">
-                        <div className={`size-1.5 rounded-full ${cfg.enabled ? "bg-emerald-400" : "bg-zinc-600"}`} />
+                        <div className={`size-1.5 rounded-full ${cfg.enabled ? "bg-ra-accent" : "bg-zinc-600"}`} />
                         <span className="text-xs text-zinc-600">{cfg.enabled ? "Active" : "Disabled"}</span>
                       </div>
                     </button>
@@ -409,7 +409,7 @@ export default function WhatsAppPage() {
                     rows={5}
                     value={activeConfig.message ?? ""}
                     onChange={(e) => updateTemplate(active.id, { message: e.target.value })}
-                    className="w-full resize-none rounded-xl border border-zinc-800 bg-zinc-950/80 px-3 py-2.5 text-sm text-zinc-100 outline-none focus:border-emerald-500/45"
+                    className="w-full resize-none rounded-xl border border-zinc-800 bg-zinc-950/80 px-3 py-2.5 text-sm text-zinc-100 outline-none focus-ra-primary"
                   />
                 </div>
 
@@ -463,7 +463,7 @@ export default function WhatsAppPage() {
               />
               <button type="button" onClick={sendTest}
                 disabled={sending || testPhone.length < 10}
-                className="cursor-pointer inline-flex items-center gap-2 rounded-xl bg-emerald-500 px-4 py-2 text-sm font-semibold text-zinc-950 hover:bg-emerald-400 disabled:opacity-50 transition-colors shrink-0">
+                className="cursor-pointer inline-flex items-center gap-2 rounded-xl bg-ra-primary px-4 py-2 text-sm font-semibold text-zinc-950 hover:brightness-110 disabled:opacity-50 transition-colors shrink-0">
                 {sending ? <Loader2 className="size-4 animate-spin" /> : <Send className="size-4" />}
                 {sending ? "Sending…" : "Send Test"}
               </button>
@@ -473,7 +473,7 @@ export default function WhatsAppPage() {
             {testResult && (
               <div className={`mt-3 flex items-center gap-2 rounded-xl border px-4 py-3 text-sm ${
                 testResult.success
-                  ? "border-emerald-500/25 bg-emerald-500/10 text-emerald-400"
+                  ? "border-ra-primary-25 bg-ra-primary-10 text-ra-primary"
                   : "border-red-500/25 bg-red-500/10 text-red-400"
               }`}>
                 {testResult.success ? <CheckCircle2 className="size-4 shrink-0" /> : <XCircle className="size-4 shrink-0" />}
@@ -488,7 +488,7 @@ export default function WhatsAppPage() {
       {!enabled && (
         <section className="rounded-2xl border border-zinc-800 bg-zinc-900/50 p-5">
           <div className="flex items-start gap-4">
-            <MessageCircle className="size-8 text-emerald-400 shrink-0 mt-1" />
+            <MessageCircle className="size-8 text-ra-primary shrink-0 mt-1" />
             <div>
               <h2 className="text-base font-semibold text-zinc-100">WhatsApp Business API</h2>
               <p className="mt-1 text-sm text-zinc-500">
@@ -506,7 +506,7 @@ export default function WhatsAppPage() {
                 Requires Meta Business WhatsApp API.{" "}
                 <a href="https://developers.facebook.com/docs/whatsapp/cloud-api/get-started"
                   target="_blank" rel="noopener noreferrer"
-                  className="text-emerald-400 hover:underline">
+                  className="text-ra-primary hover:underline">
                   Setup guide →
                 </a>
               </p>

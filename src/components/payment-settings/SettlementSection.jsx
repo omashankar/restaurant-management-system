@@ -25,11 +25,11 @@ export default function SettlementSection({ data, onChange, onSave }) {
             onClick={() => onChange({ ...data, frequency: f.value })}
             className={`cursor-pointer rounded-xl border p-4 text-left transition-all ${
               data.frequency === f.value
-                ? "border-emerald-500/40 bg-emerald-500/10 ring-1 ring-emerald-500/25"
+                ? "border-ra-primary-40 bg-ra-primary-10 ring-1 ring-ra-primary-25"
                 : "border-zinc-800 bg-zinc-950/40 hover:border-zinc-700"
             }`}
           >
-            <p className={`text-sm font-semibold ${data.frequency === f.value ? "text-emerald-400" : "text-zinc-200"}`}>
+            <p className={`text-sm font-semibold ${data.frequency === f.value ? "text-ra-primary" : "text-zinc-200"}`}>
               {f.label}
             </p>
             <p className="mt-0.5 text-xs text-zinc-500">{f.desc}</p>

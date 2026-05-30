@@ -10,7 +10,7 @@ export default function PaymentSettingsSidebar({ tabs, activeTab, onTabChange })
           onClick={() => onTabChange(tab.id)}
           className={`cursor-pointer rounded-xl px-3 py-2.5 text-left text-sm font-medium transition-colors ${
             activeTab === tab.id
-              ? "bg-emerald-500/15 text-emerald-400 ring-1 ring-emerald-500/25"
+              ? "bg-ra-primary-15 text-ra-primary ring-1 ring-ra-primary-25"
               : "text-zinc-400 hover:bg-zinc-800/60 hover:text-zinc-200"
           }`}
         >

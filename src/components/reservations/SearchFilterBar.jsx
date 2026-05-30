@@ -25,7 +25,7 @@ export default function SearchFilterBar({
           value={search}
           onChange={(e) => onSearchChange(e.target.value)}
           placeholder="Search name or phone…"
-          className="w-full rounded-xl border border-zinc-800 bg-zinc-900/70 py-2.5 pl-10 pr-4 text-sm text-zinc-100 placeholder:text-zinc-600 outline-none transition-all duration-200 focus:border-emerald-500/40 focus:ring-2 focus:ring-emerald-500/15"
+          className="w-full rounded-xl border border-zinc-800 bg-zinc-900/70 py-2.5 pl-10 pr-4 text-sm text-zinc-100 placeholder:text-zinc-600 outline-none transition-all duration-200 focus-ra-primary focus:ring-2 focus:ring-ra-primary-25"
         />
       </div>
 
@@ -48,7 +48,7 @@ export default function SearchFilterBar({
 
         {/* Status */}
         <select value={statusFilter} onChange={(e) => onStatusChange(e.target.value)}
-          className="cursor-pointer rounded-xl border border-zinc-800 bg-zinc-900/70 px-3 py-2.5 text-sm text-zinc-200 outline-none focus:border-emerald-500/40"
+          className="cursor-pointer rounded-xl border border-zinc-800 bg-zinc-900/70 px-3 py-2.5 text-sm text-zinc-200 outline-none focus-ra-primary"
           aria-label="Filter by status">
           <option value="all">All statuses</option>
           <option value="pending">Pending</option>
@@ -60,7 +60,7 @@ export default function SearchFilterBar({
         {/* Area filter — only shown when areas exist */}
         {areaOptions.length > 0 && onAreaChange && (
           <select value={areaFilter} onChange={(e) => onAreaChange(e.target.value)}
-            className="cursor-pointer rounded-xl border border-zinc-800 bg-zinc-900/70 px-3 py-2.5 text-sm text-zinc-200 outline-none focus:border-emerald-500/40"
+            className="cursor-pointer rounded-xl border border-zinc-800 bg-zinc-900/70 px-3 py-2.5 text-sm text-zinc-200 outline-none focus-ra-primary"
             aria-label="Filter by area">
             <option value="all">All areas</option>
             {areaOptions.map((a) => (
@@ -73,13 +73,13 @@ export default function SearchFilterBar({
         <div className="flex rounded-xl border border-zinc-800 p-0.5">
           <button type="button" onClick={() => onViewModeChange("table")}
             className={`cursor-pointer flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-semibold transition-all duration-200 ${
-              viewMode === "table" ? "bg-emerald-500 text-zinc-950 shadow-md" : "text-zinc-500 hover:text-zinc-300"
+              viewMode === "table" ? "bg-ra-primary text-zinc-950 shadow-md" : "text-zinc-500 hover:text-zinc-300"
             }`} aria-pressed={viewMode === "table"}>
             <List className="size-3.5" aria-hidden /> List
           </button>
           <button type="button" onClick={() => onViewModeChange("calendar")}
             className={`cursor-pointer flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-semibold transition-all duration-200 ${
-              viewMode === "calendar" ? "bg-emerald-500 text-zinc-950 shadow-md" : "text-zinc-500 hover:text-zinc-300"
+              viewMode === "calendar" ? "bg-ra-primary text-zinc-950 shadow-md" : "text-zinc-500 hover:text-zinc-300"
             }`} aria-pressed={viewMode === "calendar"}>
             <LayoutGrid className="size-3.5" aria-hidden /> By date
           </button>

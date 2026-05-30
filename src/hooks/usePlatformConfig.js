@@ -1,5 +1,11 @@
 "use client";
 
+import {
+  applySuperAdminDocumentTheme,
+  readStoredSuperAdminTheme,
+  writeStoredSuperAdminTheme,
+} from "@/lib/superAdminThemeStorage";
+import { resolveSuperAdminTheme } from "@/lib/superAdminThemeRuntime";
 import { useEffect, useState } from "react";
 
 const DEFAULT_CONFIG = {
@@ -13,13 +19,70 @@ const DEFAULT_CONFIG = {
   },
   currency: "INR",
   language: "en",
-  theme: { primaryColor: "#10b981", accentColor: "#f43f5e", darkMode: true },
+  theme: { primaryColor: "#f43f5e", accentColor: "#10b981", darkMode: true },
   integrations: { googleAnalyticsId: "", metaPixelId: "" },
 };
 
 let _cache = null;
 let _cacheTime = 0;
 const TTL = 60_000;
+
+function mergeConfig(base) {
+  return {
+    ...DEFAULT_CONFIG,
+    ...base,
+    features: { ...DEFAULT_CONFIG.features, ...(base?.features ?? {}) },
+    theme: { ...DEFAULT_CONFIG.theme, ...(base?.theme ?? {}) },
+  };
+}
+
+function getInitialConfig() {
+  if (_cache) return _cache;
+  const storedTheme = readStoredSuperAdminTheme();
+  if (storedTheme) {
+    return mergeConfig({
+      theme: {
+        primaryColor: storedTheme.primaryColor,
+        accentColor: storedTheme.accentColor,
+        darkMode: storedTheme.darkMode,
+      },
+    });
+  }
+  return DEFAULT_CONFIG;
+}
+
+function warmThemeFromStorage() {
+  const stored = readStoredSuperAdminTheme();
+  if (stored) {
+    applySuperAdminDocumentTheme(stored);
+  }
+}
+
+if (typeof window !== "undefined") {
+  warmThemeFromStorage();
+}
+
+/** Push saved Super Admin theme into cache + localStorage immediately. */
+export function updateSuperAdminThemeCache(theme) {
+  const resolved = resolveSuperAdminTheme(theme);
+  writeStoredSuperAdminTheme(resolved);
+  applySuperAdminDocumentTheme(resolved);
+  _cache = mergeConfig({
+    ...(_cache ?? {}),
+    theme: {
+      primaryColor: resolved.primaryColor,
+      accentColor: resolved.accentColor,
+      darkMode: resolved.darkMode,
+    },
+  });
+  _cacheTime = Date.now();
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(
+      new CustomEvent("super-admin-theme-updated", { detail: resolved })
+    );
+  }
+  return resolved;
+}
 
 export function invalidatePlatformConfigCache() {
   _cache = null;
@@ -30,43 +93,80 @@ export function invalidatePlatformConfigCache() {
 }
 
 export function usePlatformConfig() {
-  const [config, setConfig] = useState(_cache ?? DEFAULT_CONFIG);
+  const [config, setConfig] = useState(getInitialConfig);
   const [loading, setLoading] = useState(!_cache);
 
   useEffect(() => {
     let mounted = true;
 
     async function load() {
+      const stored = readStoredSuperAdminTheme();
+      if (stored && !_cache) {
+        const seeded = mergeConfig({
+          theme: {
+            primaryColor: stored.primaryColor,
+            accentColor: stored.accentColor,
+            darkMode: stored.darkMode,
+          },
+        });
+        _cache = seeded;
+        _cacheTime = Date.now();
+        applySuperAdminDocumentTheme(stored);
+        if (mounted) {
+          setConfig(seeded);
+          setLoading(false);
+        }
+      }
+
       if (_cache && Date.now() - _cacheTime < TTL) {
-        setConfig(_cache);
-        setLoading(false);
+        if (mounted) {
+          setConfig(_cache);
+          setLoading(false);
+        }
         return;
       }
+
       try {
         const res = await fetch("/api/platform/config");
         const data = await res.json();
         if (!mounted) return;
-        const next = {
-          ...DEFAULT_CONFIG,
-          ...data,
-          features: { ...DEFAULT_CONFIG.features, ...(data.features ?? {}) },
-        };
+        const next = mergeConfig(data);
         _cache = next;
         _cacheTime = Date.now();
+        writeStoredSuperAdminTheme(next.theme);
+        applySuperAdminDocumentTheme(next.theme);
         setConfig(next);
       } catch {
-        if (mounted) setConfig(DEFAULT_CONFIG);
+        if (mounted) setConfig(_cache ?? DEFAULT_CONFIG);
       } finally {
         if (mounted) setLoading(false);
       }
     }
 
-    load();
     const onUpdate = () => load();
+    const onThemeUpdate = (event) => {
+      if (!event?.detail?.primaryColor) return;
+      if (!mounted) return;
+      setConfig((prev) =>
+        mergeConfig({
+          ...prev,
+          theme: {
+            ...prev.theme,
+            primaryColor: event.detail.primaryColor,
+            accentColor: event.detail.accentColor,
+            darkMode: event.detail.darkMode,
+          },
+        })
+      );
+    };
+
+    load();
     window.addEventListener("platform-config-updated", onUpdate);
+    window.addEventListener("super-admin-theme-updated", onThemeUpdate);
     return () => {
       mounted = false;
       window.removeEventListener("platform-config-updated", onUpdate);
+      window.removeEventListener("super-admin-theme-updated", onThemeUpdate);
     };
   }, []);
 

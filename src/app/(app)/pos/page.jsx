@@ -441,7 +441,7 @@ function PosPageContent() {
                   onClick={() => setActiveItemType(t)}
                   className={`cursor-pointer inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold transition-all duration-150 ${
                     active
-                      ? "bg-emerald-500/20 text-emerald-300 ring-1 ring-emerald-500/30"
+                      ? "bg-ra-primary/20 text-ra-primary-muted ring-1 ring-ra-primary-25"
                       : "bg-zinc-900 text-zinc-400 ring-1 ring-zinc-800 hover:text-zinc-200"
                   }`}
                   aria-pressed={active}
@@ -550,7 +550,7 @@ function PosPageContent() {
                 paperSize={printers.find((p) => p.printInvoice)?.paperSize ?? "80mm"}
               />
             )}
-            <button type="button" onClick={() => setSuccessOpen(false)} className="cursor-pointer rounded-xl bg-emerald-500 px-4 py-2 text-sm font-semibold text-zinc-950 hover:bg-emerald-400">
+            <button type="button" onClick={() => setSuccessOpen(false)} className="cursor-pointer rounded-xl bg-ra-primary px-4 py-2 text-sm font-semibold text-zinc-950 hover:brightness-110">
               New Order
             </button>
           </div>
@@ -558,9 +558,9 @@ function PosPageContent() {
       >
         <div className="space-y-3">
           {lastOrder?.customer && (
-            <div className="rounded-xl border border-emerald-500/25 bg-emerald-500/5 px-3 py-2">
+            <div className="rounded-xl border border-ra-primary-25 bg-ra-primary-5 px-3 py-2">
               <p className="text-[10px] text-zinc-500">Customer</p>
-              <p className="text-sm font-semibold text-emerald-300">
+              <p className="text-sm font-semibold text-ra-primary-muted">
                 {lastOrder.customer}{lastOrder.phone ? ` · ${lastOrder.phone}` : ""}
               </p>
             </div>

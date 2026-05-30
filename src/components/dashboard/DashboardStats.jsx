@@ -46,7 +46,7 @@ export default function DashboardStats({
       )}
 
       {hasPermission("view_reservations") && (
-        <Link href="/reservations" className="block rounded-2xl focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50">
+        <Link href="/reservations" className="block rounded-2xl focus:outline-none focus-visible:ring-2 focus-visible:ring-ra-primary-40">
           <StatsCard
             title="Reservations"
             value={String(reservationsToday)}

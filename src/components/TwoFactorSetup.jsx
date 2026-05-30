@@ -1,5 +1,10 @@
 "use client";
 
+import {
+  saBtnPrimarySmCls,
+  saInputCls,
+  saSuccessTextCls,
+} from "@/config/superAdminTheme";
 import { Loader2, Shield } from "lucide-react";
 import { useState } from "react";
 
@@ -57,7 +62,7 @@ export default function TwoFactorSetup() {
   return (
     <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-6">
       <div className="mb-4 flex items-center gap-3">
-        <span className="flex size-9 items-center justify-center rounded-xl bg-rose-500/15 text-rose-400">
+        <span className="sa-icon-badge flex size-9 items-center justify-center rounded-xl">
           <Shield className="size-4" />
         </span>
         <div>
@@ -73,7 +78,7 @@ export default function TwoFactorSetup() {
           type="button"
           onClick={startSetup}
           disabled={loading}
-          className="rounded-xl bg-rose-600 px-4 py-2 text-sm font-semibold text-white hover:bg-rose-500 disabled:opacity-50"
+          className={`cursor-pointer ${saBtnPrimarySmCls} disabled:opacity-50`}
         >
           {loading ? <Loader2 className="inline size-4 animate-spin" /> : "Set up authenticator"}
         </button>
@@ -97,13 +102,13 @@ export default function TwoFactorSetup() {
             value={code}
             onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))}
             placeholder="6-digit code"
-            className="w-full rounded-xl border border-zinc-700 bg-zinc-950 px-4 py-2.5 text-sm text-zinc-100"
+            className={saInputCls}
           />
           <button
             type="button"
             onClick={confirm}
             disabled={loading || code.length !== 6}
-            className="w-full rounded-xl bg-emerald-600 py-2.5 text-sm font-semibold text-white hover:bg-emerald-500 disabled:opacity-50"
+            className={`cursor-pointer w-full sa-btn-primary py-2.5 text-sm font-semibold disabled:opacity-50`}
           >
             {loading ? "Verifying…" : "Confirm & enable"}
           </button>
@@ -111,11 +116,17 @@ export default function TwoFactorSetup() {
       )}
 
       {step === "done" && (
-        <p className="text-sm text-emerald-400">2FA is active on your account.</p>
+        <p className={`text-sm ${saSuccessTextCls}`}>2FA is active on your account.</p>
       )}
 
       {message ? (
-        <p className={`mt-3 text-xs ${message.includes("enabled") || message.includes("active") ? "text-emerald-400" : "text-red-400"}`}>
+        <p
+          className={`mt-3 text-xs ${
+            message.includes("enabled") || message.includes("active")
+              ? saSuccessTextCls
+              : "text-red-400"
+          }`}
+        >
           {message}
         </p>
       ) : null}

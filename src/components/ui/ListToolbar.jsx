@@ -21,7 +21,7 @@ export default function ListToolbar({
           value={search}
           onChange={(e) => onSearchChange(e.target.value)}
           placeholder={searchPlaceholder}
-          className="w-full rounded-xl border border-zinc-800 bg-zinc-900/60 py-2.5 pl-10 pr-4 text-sm text-zinc-100 placeholder:text-zinc-600 outline-none transition-all focus:border-emerald-500/40 focus:ring-2 focus:ring-emerald-500/15"
+          className="w-full rounded-xl border border-zinc-800 bg-zinc-900/60 py-2.5 pl-10 pr-4 text-sm text-zinc-100 placeholder:text-zinc-600 outline-none transition-all focus-ra-primary focus:ring-2 focus:ring-ra-primary-25"
         />
       </div>
       <div className="flex flex-wrap items-center gap-2">

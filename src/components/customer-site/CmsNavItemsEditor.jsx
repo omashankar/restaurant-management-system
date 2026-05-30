@@ -70,7 +70,7 @@ export default function CmsNavItemsEditor({
               <button
                 type="button"
                 onClick={() => update(index, { enabled: item.enabled === false })}
-                className="rounded-lg border border-zinc-700 p-1.5 text-zinc-400 hover:text-emerald-400"
+                className="rounded-lg border border-zinc-700 p-1.5 text-zinc-400 hover-ra-primary"
                 title={item.enabled === false ? "Show" : "Hide"}
               >
                 {item.enabled === false ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
@@ -105,7 +105,7 @@ export default function CmsNavItemsEditor({
       <button
         type="button"
         onClick={add}
-        className="flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-zinc-700 py-3 text-sm font-medium text-zinc-400 hover:border-emerald-500/40 hover:text-emerald-400"
+        className="flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-zinc-700 py-3 text-sm font-medium text-zinc-400 hover:border-ra-primary-40 hover-ra-primary"
       >
         <Plus className="size-4" /> {addLabel}
       </button>

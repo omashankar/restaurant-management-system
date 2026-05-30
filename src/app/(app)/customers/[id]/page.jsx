@@ -89,7 +89,7 @@ export default function CustomerDetailPage() {
         <p className="text-zinc-400">{fetchError ?? "Customer not found."}</p>
         <Link
           href="/customers"
-          className="mt-4 inline-flex items-center gap-2 text-sm font-medium text-emerald-400 hover:text-emerald-300"
+          className="mt-4 inline-flex items-center gap-2 text-sm font-medium text-ra-primary hover:text-ra-primary-muted"
         >
           <ArrowLeft className="size-4" />
           Back to customers
@@ -107,7 +107,7 @@ export default function CustomerDetailPage() {
     <div className="mx-auto max-w-4xl space-y-8">
       <Link
         href="/customers"
-        className="inline-flex items-center gap-2 text-sm font-medium text-zinc-500 transition-colors hover:text-emerald-400"
+        className="inline-flex items-center gap-2 text-sm font-medium text-zinc-500 transition-colors hover-ra-primary"
       >
         <ArrowLeft className="size-4" />
         Customers
@@ -125,7 +125,7 @@ export default function CustomerDetailPage() {
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-5 transition-colors hover:border-zinc-700">
           <div className="flex items-center gap-2 text-zinc-500">
-            <Phone className="size-4 text-emerald-500/80" />
+            <Phone className="size-4 text-ra-primary/80" />
             <span className="text-xs font-semibold uppercase tracking-wide">
               Phone
             </span>
@@ -134,7 +134,7 @@ export default function CustomerDetailPage() {
         </div>
         <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-5 transition-colors hover:border-zinc-700">
           <div className="flex items-center gap-2 text-zinc-500">
-            <Mail className="size-4 text-emerald-500/80" />
+            <Mail className="size-4 text-ra-primary/80" />
             <span className="text-xs font-semibold uppercase tracking-wide">
               Email
             </span>
@@ -143,7 +143,7 @@ export default function CustomerDetailPage() {
         </div>
         <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-5 sm:col-span-2">
           <div className="flex items-center gap-2 text-zinc-500">
-            <StickyNote className="size-4 text-emerald-500/80" />
+            <StickyNote className="size-4 text-ra-primary/80" />
             <span className="text-xs font-semibold uppercase tracking-wide">
               Notes
             </span>
@@ -176,7 +176,7 @@ export default function CustomerDetailPage() {
                     key={o.id}
                     className="transition-colors hover:bg-zinc-800/30"
                   >
-                    <td className="px-4 py-3 font-mono text-xs text-emerald-400/90">
+                    <td className="px-4 py-3 font-mono text-xs text-ra-primary/90">
                       {o.id}
                     </td>
                     <td className="px-4 py-3 text-zinc-400">{o.date}</td>

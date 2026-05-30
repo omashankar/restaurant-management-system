@@ -1,6 +1,7 @@
 "use client";
 
 import PhoneInput from "@/components/ui/PhoneInput";
+import { saSpinnerCls } from "@/config/superAdminTheme";
 import { roleLabel } from "@/context/AppProviders";
 import { useProfile } from "@/hooks/useProfile";
 import { normalizeLogoSrc } from "@/lib/logoUrl";
@@ -43,7 +44,7 @@ function Field({ label, icon: Icon, type = "text", value, onChange, readOnly, pl
           } ${
             readOnly
               ? "cursor-not-allowed text-zinc-500"
-              : "focus:border-rose-500/50 focus:ring-2 focus:ring-rose-500/15"
+              : "focus-sa-primary focus:ring-2 focus:ring-sa-primary-25"
           } ${borderCls}`}
         />
       </div>
@@ -56,7 +57,7 @@ function Section({ title, description, icon: Icon, children }) {
   return (
     <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-6">
       <div className="mb-5 flex items-center gap-3">
-        <span className="flex size-9 items-center justify-center rounded-xl bg-rose-500/15 text-rose-400 ring-1 ring-rose-500/20">
+        <span className="flex size-9 items-center justify-center rounded-xl bg-sa-primary-15 text-sa-primary ring-1 ring-sa-primary-20">
           <Icon className="size-4" aria-hidden />
         </span>
         <div>
@@ -98,7 +99,7 @@ export default function SuperAdminProfilePage() {
       <div className="flex items-center gap-5 rounded-2xl border border-zinc-800 bg-zinc-900/60 p-5">
         <div className="relative shrink-0">
           {avatarSrc ? (
-            <Image src={avatarSrc} alt="" width={80} height={80} className="size-20 rounded-full object-cover ring-2 ring-rose-500/40" unoptimized />
+            <Image src={avatarSrc} alt="" width={80} height={80} className="size-20 rounded-full object-cover ring-2 ring-sa-primary-40" unoptimized />
           ) : (
             <span className="flex size-20 items-center justify-center rounded-full bg-zinc-800 text-2xl font-bold text-zinc-200 ring-2 ring-zinc-700">
               {avatarFallback}
@@ -108,10 +109,10 @@ export default function SuperAdminProfilePage() {
             type="button"
             disabled={avatarUploading}
             onClick={() => fileRef.current?.click()}
-            className="cursor-pointer absolute -bottom-1 -right-1 flex size-7 items-center justify-center rounded-full border-2 border-zinc-900 bg-rose-500 text-zinc-950 transition-colors hover:bg-rose-400 disabled:opacity-60"
+            className="cursor-pointer absolute -bottom-1 -right-1 flex size-7 items-center justify-center rounded-full border-2 border-zinc-900 bg-sa-primary text-zinc-950 transition-colors hover:brightness-110 disabled:opacity-60"
             aria-label="Change profile photo"
           >
-            {avatarUploading ? <Loader2 className="size-3.5 animate-spin" /> : <Camera className="size-3.5" />}
+            {avatarUploading ? <Loader2 className="size-3.5 animate-spin text-sa-primary" /> : <Camera className="size-3.5" />}
           </button>
           <input
             ref={fileRef}
@@ -124,7 +125,7 @@ export default function SuperAdminProfilePage() {
         <div className="min-w-0">
           <p className="truncate text-lg font-semibold text-zinc-100">{user?.name}</p>
           <p className="text-sm text-zinc-500">{user?.email}</p>
-          <span className="mt-1.5 inline-flex items-center gap-1.5 rounded-full bg-rose-500/15 px-2.5 py-0.5 text-xs font-semibold text-rose-300 ring-1 ring-rose-500/25">
+          <span className="mt-1.5 inline-flex items-center gap-1.5 rounded-full bg-sa-primary-15 px-2.5 py-0.5 text-xs font-semibold text-sa-primary-muted ring-1 ring-sa-primary-25">
             <Shield className="size-3" aria-hidden />
             {roleLabel(user?.role)}
           </span>
@@ -162,9 +163,9 @@ export default function SuperAdminProfilePage() {
             type="button"
             onClick={saveProfile}
             disabled={saving || !formDirty}
-            className="cursor-pointer inline-flex items-center gap-2 rounded-xl bg-rose-500 px-5 py-2 text-sm font-semibold text-zinc-950 transition-all hover:bg-rose-400 disabled:cursor-not-allowed disabled:opacity-40"
+            className="cursor-pointer inline-flex items-center gap-2 rounded-xl bg-sa-primary px-5 py-2 text-sm font-semibold text-zinc-950 transition-all hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-40"
           >
-            {saving ? <Loader2 className="size-4 animate-spin" /> : null}
+            {saving ? <Loader2 className={saSpinnerCls} /> : null}
             {saving ? "Saving…" : "Save Changes"}
           </button>
         </div>
@@ -176,7 +177,7 @@ export default function SuperAdminProfilePage() {
         <div
           className={`fixed bottom-5 right-5 z-50 flex items-center gap-2.5 rounded-xl border px-4 py-3 text-sm font-medium shadow-2xl shadow-black/40 transition-all ${
             toast.type === "success"
-              ? "border-emerald-500/30 bg-zinc-900 text-emerald-300"
+              ? "border-sa-accent-30 bg-zinc-900 text-sa-accent-muted"
               : "border-red-500/30 bg-zinc-900 text-red-300"
           }`}
         >

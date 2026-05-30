@@ -35,7 +35,7 @@ export default function InventoryInsights({ lowStock = [], mostUsed = [] }) {
       {/* Most used */}
       <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-5">
         <div className="flex items-center gap-2">
-          <Package className="size-4 text-emerald-400" />
+          <Package className="size-4 text-ra-primary" />
           <h3 className="text-sm font-semibold text-zinc-100">Most Used Ingredients</h3>
         </div>
         {mostUsed.length === 0 ? (
@@ -51,7 +51,7 @@ export default function InventoryInsights({ lowStock = [], mostUsed = [] }) {
                     <span className="text-xs tabular-nums text-zinc-500">{item.usage} {item.unit}</span>
                   </div>
                   <div className="h-1.5 w-full overflow-hidden rounded-full bg-zinc-800">
-                    <div className="h-full rounded-full bg-emerald-500/60 transition-all duration-500" style={{ width: `${pct}%` }} />
+                    <div className="h-full rounded-full bg-ra-primary/60 transition-all duration-500" style={{ width: `${pct}%` }} />
                   </div>
                 </div>
               );

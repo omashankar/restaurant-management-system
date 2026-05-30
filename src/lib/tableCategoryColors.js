@@ -3,7 +3,7 @@
  * Tailwind v4 requires static strings — no dynamic class construction.
  */
 export const CATEGORY_COLORS = [
-  { id: "emerald", label: "Green",  badge: "bg-emerald-500/15 text-emerald-400 ring-emerald-500/25", dot: "bg-emerald-500", active: "border-emerald-500/60 bg-emerald-500/10 ring-emerald-500/25 text-emerald-400", hover: "hover:border-emerald-500/30 hover:bg-emerald-500/5" },
+  { id: "emerald", label: "Green",  badge: "bg-ra-primary-15 text-ra-primary ring-ra-primary-25", dot: "bg-ra-primary", active: "border-ra-primary-60 bg-ra-primary-10 ring-ra-primary-25 text-ra-primary", hover: "hover-border-ra-primary-30 hover:bg-ra-primary-5" },
   { id: "sky",     label: "Blue",   badge: "bg-sky-500/15 text-sky-400 ring-sky-500/25",             dot: "bg-sky-500",     active: "border-sky-500/60 bg-sky-500/10 ring-sky-500/25 text-sky-400",             hover: "hover:border-sky-500/30 hover:bg-sky-500/5"     },
   { id: "indigo",  label: "Indigo", badge: "bg-indigo-500/15 text-indigo-400 ring-indigo-500/25",   dot: "bg-indigo-500",  active: "border-indigo-500/60 bg-indigo-500/10 ring-indigo-500/25 text-indigo-400", hover: "hover:border-indigo-500/30 hover:bg-indigo-500/5"},
   { id: "amber",   label: "Amber",  badge: "bg-amber-500/15 text-amber-400 ring-amber-500/25",      dot: "bg-amber-500",   active: "border-amber-500/60 bg-amber-500/10 ring-amber-500/25 text-amber-400",     hover: "hover:border-amber-500/30 hover:bg-amber-500/5" },
