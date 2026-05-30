@@ -32,7 +32,7 @@ export default function MenuProductCard({ item, onEdit, onDelete }) {
 
   return (
     <article
-      className={`group relative flex flex-col overflow-hidden rounded-2xl border border-zinc-800 border-l-4 ${accentBorder} bg-zinc-900/70 shadow-lg shadow-black/25 transition-all duration-300 ease-out hover:z-10 hover:-translate-y-1 hover:border-emerald-500/35 hover:shadow-xl hover:shadow-emerald-500/10 active:scale-[0.99] ${
+      className={`group relative flex flex-col overflow-hidden rounded-2xl border border-zinc-800 border-l-4 ${accentBorder} bg-zinc-900/70 shadow-lg shadow-black/25 transition-all duration-300 ease-out hover:z-10 hover:-translate-y-1 hover-border-ra-primary-40 hover:shadow-xl hover:shadow-ra-primary-soft active:scale-[0.99] ${
         item.status === "inactive" ? "opacity-70" : ""
       }`}
     >
@@ -48,7 +48,7 @@ export default function MenuProductCard({ item, onEdit, onDelete }) {
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-zinc-950/80 via-transparent to-transparent" />
 
         {/* Category chip — top left */}
-        <span className="absolute left-3 top-3 rounded-md bg-zinc-950/80 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-emerald-400 ring-1 ring-emerald-500/30 backdrop-blur-sm">
+        <span className="absolute left-3 top-3 rounded-md bg-zinc-950/80 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-ra-primary ring-1 ring-ra-primary-25 backdrop-blur-sm">
           {item.categoryName}
         </span>
 
@@ -56,7 +56,7 @@ export default function MenuProductCard({ item, onEdit, onDelete }) {
         <span
           className={`absolute right-3 top-3 rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide ring-1 ${
             item.status === "active"
-              ? "bg-emerald-500/90 text-zinc-950 ring-emerald-400/50"
+              ? "bg-ra-primary-90 text-zinc-950 ring-ra-primary-40"
               : "bg-zinc-800/95 text-zinc-400 ring-zinc-600"
           }`}
         >
@@ -69,10 +69,10 @@ export default function MenuProductCard({ item, onEdit, onDelete }) {
 
         {/* Name + price */}
         <div className="flex items-start justify-between gap-2">
-          <h3 className="line-clamp-2 text-sm font-semibold leading-snug text-zinc-50 transition-colors group-hover:text-emerald-100">
+          <h3 className="line-clamp-2 text-sm font-semibold leading-snug text-zinc-50 transition-colors group-hover:text-ra-primary-muted">
             {item.name}
           </h3>
-          <span className="shrink-0 text-base font-bold tabular-nums text-emerald-400">
+          <span className="shrink-0 text-base font-bold tabular-nums text-ra-primary">
             ${Number(item.price).toFixed(2)}
           </span>
         </div>
@@ -115,7 +115,7 @@ export default function MenuProductCard({ item, onEdit, onDelete }) {
           <button
             type="button"
             onClick={() => onEdit(item)}
-            className="cursor-pointer flex flex-1 items-center justify-center gap-1.5 rounded-xl border border-zinc-700 py-2 text-xs font-semibold text-zinc-300 transition-all duration-200 hover:border-emerald-500/50 hover:bg-emerald-500/10 hover:text-emerald-300"
+            className="cursor-pointer flex flex-1 items-center justify-center gap-1.5 rounded-xl border border-zinc-700 py-2 text-xs font-semibold text-zinc-300 transition-all duration-200 hover-border-ra-primary-50 hover-bg-ra-primary-10 hover:text-ra-primary-muted"
           >
             <Pencil className="size-3.5" aria-hidden />
             Edit

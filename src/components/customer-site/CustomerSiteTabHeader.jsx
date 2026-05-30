@@ -6,7 +6,7 @@ export default function CustomerSiteTabHeader({ tab, badge }) {
   return (
     <div className="mb-6 border-b border-zinc-800 pb-5">
       <div className="flex flex-wrap items-start gap-3">
-        <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-emerald-500/15 text-emerald-400 ring-1 ring-emerald-500/25">
+        <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-ra-primary-15 text-ra-primary ring-1 ring-ra-primary-25">
           <Icon className="size-5" />
         </span>
         <div className="min-w-0 flex-1">

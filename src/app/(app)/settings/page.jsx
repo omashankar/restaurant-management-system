@@ -5,6 +5,7 @@ import RestaurantLogoField from "@/components/settings/RestaurantLogoField";
 import SettingsFormSection from "@/components/settings/SettingsFormSection";
 import SettingsSidebar from "@/components/settings/SettingsSidebar";
 import { invalidateRestaurantBrandingCache } from "@/hooks/useRestaurantBranding";
+import { updateRestaurantThemeCache } from "@/hooks/useRestaurantTheme";
 import { invalidateRestaurantInfoCache } from "@/hooks/useRestaurantInfo";
 import { invalidateAccessControlCache } from "@/hooks/useAccessControlSettings";
 import TimePicker from "@/components/settings/TimePicker";
@@ -31,10 +32,147 @@ import {
   validatePaymentGatewaySave,
   validatePaymentTax,
   validateRestaurantSettingsPatch,
+  validateRestaurantTheme,
 } from "@/lib/restaurantSettingsValidation";
 import { useEffect, useMemo, useState } from "react";
+import { Palette } from "lucide-react";
+import {
+  raBtnPrimarySmCls,
+  raSpinnerCls,
+  RESTAURANT_ADMIN_ACCENT,
+  RESTAURANT_ADMIN_PRIMARY,
+} from "@/config/restaurantAdminTheme";
+import {
+  clearRestaurantThemePreview,
+  dispatchRestaurantThemePreview,
+} from "@/lib/restaurantAdminThemeRuntime";
 
 const PAYMENT_TABS = ["payments","billing"];
+
+function RestaurantThemeSection({ data, onChange, onSave, saving, canSave, fieldErrors = {}, onClearError }) {
+  const primary = data.primaryColor ?? RESTAURANT_ADMIN_PRIMARY;
+  const accent = data.accentColor ?? RESTAURANT_ADMIN_ACCENT;
+
+  useEffect(() => {
+    dispatchRestaurantThemePreview({
+      primaryColor: primary,
+      accentColor: accent,
+      darkMode: data.darkMode,
+    });
+  }, [primary, accent, data.darkMode]);
+
+  useEffect(() => () => clearRestaurantThemePreview(), []);
+
+  return (
+    <SettingsFormSection
+      title="Theme"
+      description="Primary Color drives your admin panel — sidebar, buttons, loaders. Accent is for success states (paid, active, online)."
+    >
+      <div className="mb-4 flex items-center gap-2 text-sm font-medium text-zinc-300">
+        <Palette className="size-4 text-ra-primary" />
+        Brand colors
+      </div>
+      <div className="grid gap-4 sm:grid-cols-2">
+        <div>
+          <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-zinc-500">
+            Primary Color
+          </label>
+          <div className="flex items-center gap-3">
+            <input
+              type="color"
+              value={primary}
+              onChange={(e) => onChange("primaryColor", e.target.value)}
+              className="cursor-pointer size-10 shrink-0 rounded-lg border border-zinc-700 bg-transparent p-0.5"
+            />
+            <input
+              value={primary}
+              onChange={(e) => {
+                onChange("primaryColor", e.target.value);
+                onClearError?.("primaryColor");
+              }}
+              placeholder={RESTAURANT_ADMIN_PRIMARY}
+              className="w-full rounded-xl border border-zinc-800 bg-zinc-950/80 px-3 py-2.5 font-mono text-sm text-zinc-100 outline-none focus-ra-primary"
+            />
+          </div>
+          {fieldErrors.primaryColor ? (
+            <p className="mt-1 text-xs text-red-400">{fieldErrors.primaryColor}</p>
+          ) : (
+            <p className="mt-1 text-xs text-zinc-600">Default: {RESTAURANT_ADMIN_PRIMARY}</p>
+          )}
+        </div>
+        <div>
+          <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-zinc-500">
+            Accent Color
+          </label>
+          <div className="flex items-center gap-3">
+            <input
+              type="color"
+              value={accent}
+              onChange={(e) => onChange("accentColor", e.target.value)}
+              className="cursor-pointer size-10 shrink-0 rounded-lg border border-zinc-700 bg-transparent p-0.5"
+            />
+            <input
+              value={accent}
+              onChange={(e) => {
+                onChange("accentColor", e.target.value);
+                onClearError?.("accentColor");
+              }}
+              placeholder={RESTAURANT_ADMIN_ACCENT}
+              className="w-full rounded-xl border border-zinc-800 bg-zinc-950/80 px-3 py-2.5 font-mono text-sm text-zinc-100 outline-none focus-ra-primary"
+            />
+          </div>
+          {fieldErrors.accentColor ? (
+            <p className="mt-1 text-xs text-red-400">{fieldErrors.accentColor}</p>
+          ) : (
+            <p className="mt-1 text-xs text-zinc-600">Default: {RESTAURANT_ADMIN_ACCENT}</p>
+          )}
+        </div>
+      </div>
+
+      <div className="mt-5 rounded-2xl border border-zinc-800 bg-zinc-950/50 p-4">
+        <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-zinc-500">Live preview</p>
+        <div className="flex flex-wrap items-center gap-3">
+          <button type="button" className={`${raBtnPrimarySmCls} px-4 py-2`}>
+            Primary button
+          </button>
+          <span className="ra-status-badge rounded-full px-2.5 py-0.5 text-xs font-semibold">
+            Active / Paid
+          </span>
+          <span className="inline-flex items-center gap-1.5 rounded-xl border border-ra-primary-40 bg-ra-primary-10 px-3 py-1.5 text-xs text-ra-primary ring-1 ring-ra-primary-25">
+            Nav active
+          </span>
+        </div>
+      </div>
+
+      <div className="mt-4">
+        <ToggleSwitch
+          label="Dark Mode"
+          hint="Use dark theme across the restaurant admin panel."
+          checked={!!data.darkMode}
+          onChange={(v) => onChange("darkMode", v)}
+        />
+      </div>
+
+      <div className="mt-6 flex justify-end border-t border-zinc-800 pt-4">
+        <button
+          type="button"
+          onClick={onSave}
+          disabled={saving || !canSave}
+          className={`${raBtnPrimarySmCls} px-5 py-2.5 disabled:cursor-not-allowed disabled:opacity-50`}
+        >
+          {saving ? (
+            <>
+              <Loader2 className={`${raSpinnerCls} size-4`} />
+              Saving theme…
+            </>
+          ) : (
+            "Save Theme"
+          )}
+        </button>
+      </div>
+    </SettingsFormSection>
+  );
+}
 
 export default function SettingsPage() {
   const { user, hydrated } = useUser();
@@ -44,6 +182,7 @@ export default function SettingsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [isSavingTheme, setIsSavingTheme] = useState(false);
   const [testingSmtp, setTestingSmtp] = useState(false);
   const [smtpTestRecipient, setSmtpTestRecipient] = useState("");
   const [toast, setToast] = useState(null);
@@ -55,13 +194,18 @@ export default function SettingsPage() {
   const [payLoading, setPayLoading] = useState(false);
 
   const sidebarTabs = useMemo(
-    () => SETTINGS_TABS.filter((t) => t.id !== "email" || user?.role === "admin"),
+    () => SETTINGS_TABS.filter((t) => {
+      if (t.id === "email" || t.id === "theme") return user?.role === "admin";
+      return true;
+    }),
     [user?.role]
   );
 
   useEffect(() => {
     if (!hydrated) return;
-    if (activeTab === "email" && user?.role !== "admin") setActiveTab("general");
+    if ((activeTab === "email" || activeTab === "theme") && user?.role !== "admin") {
+      setActiveTab("general");
+    }
   }, [hydrated, activeTab, user?.role]);
 
   useEffect(() => {
@@ -82,7 +226,9 @@ export default function SettingsPage() {
           email: { ...EMPTY_SETTINGS.email, ...(data.settings.email ?? {}) },
           openingHours: Array.isArray(data.settings.openingHours) ? data.settings.openingHours : EMPTY_SETTINGS.openingHours,
           accessControl: normalizeAccessControl(data.settings.accessControl),
+          theme: { ...EMPTY_SETTINGS.theme, ...(data.settings.theme ?? {}) },
         };
+        updateRestaurantThemeCache(safe.theme);
         setSettings(safe);
         setSavedSnapshot(safe);
         if (data.restaurantSlug) setRestaurantSlug(data.restaurantSlug);
@@ -116,9 +262,54 @@ export default function SettingsPage() {
     [settings, savedSnapshot]
   );
 
+  const themeHasChanges = useMemo(
+    () => JSON.stringify(settings.theme) !== JSON.stringify(savedSnapshot.theme),
+    [settings.theme, savedSnapshot.theme]
+  );
+
   function showToast(type, message) {
     setToast({ type, message });
     setTimeout(() => setToast(null), 2500);
+  }
+
+  async function saveThemeSettings() {
+    if (!themeHasChanges) return;
+
+    const validation = validateRestaurantTheme(settings.theme);
+    if (!validation.valid) {
+      setFieldErrors((prev) => ({ ...prev, ...validation.errors }));
+      showToast("error", validation.message ?? "Fix theme colors.");
+      return;
+    }
+
+    setIsSavingTheme(true);
+    try {
+      const res = await fetch("/api/settings", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ section: "theme", data: settings.theme }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        const normalized = updateRestaurantThemeCache(settings.theme);
+        setSettings((prev) => ({ ...prev, theme: normalized }));
+        setSavedSnapshot((prev) => ({ ...prev, theme: normalized }));
+        setFieldErrors((prev) => {
+          const next = { ...prev };
+          delete next.primaryColor;
+          delete next.accentColor;
+          return next;
+        });
+        clearRestaurantThemePreview();
+        showToast("success", "Theme saved — panel updated.");
+      } else {
+        showToast("error", data.error || "Failed to save theme.");
+      }
+    } catch {
+      showToast("error", "Network error. Please try again.");
+    } finally {
+      setIsSavingTheme(false);
+    }
   }
 
   async function savePaySection(section, data) {
@@ -169,22 +360,47 @@ export default function SettingsPage() {
 
   async function saveChanges() {
     if (!hasChanges) return;
+
+    const changedSections = Object.keys(EMPTY_SETTINGS).filter(
+      (key) => JSON.stringify(settings[key]) !== JSON.stringify(savedSnapshot[key])
+    );
+    if (changedSections.length === 0) return;
+
+    const validation = validateRestaurantSettingsPatch(settings, changedSections);
+    if (!validation.valid) {
+      const nextErrors = {};
+      for (const result of Object.values(validation.tabs ?? {})) {
+        Object.assign(nextErrors, result.errors ?? {});
+      }
+      setFieldErrors(nextErrors);
+      showToast("error", validation.message ?? "Fix the highlighted fields.");
+      return;
+    }
+
+    const patchBody = Object.fromEntries(
+      changedSections.map((key) => [key, settings[key]])
+    );
+
     setIsSaving(true);
     try {
       const res = await fetch("/api/settings", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(settings),
+        body: JSON.stringify(patchBody),
       });
       const data = await res.json();
       if (data.success) {
         setSavedSnapshot(settings);
+        setFieldErrors({});
         invalidateRestaurantInfoCache();
         invalidateRestaurantBrandingCache();
         invalidateAccessControlCache();
+        if (changedSections.includes("theme")) {
+          updateRestaurantThemeCache(settings.theme);
+          clearRestaurantThemePreview();
+        }
         showToast("success", "Settings saved successfully.");
-      }
-      else showToast("error", data.error || "Failed to save settings.");
+      } else showToast("error", data.error || "Failed to save settings.");
     } catch { showToast("error", "Network error. Please try again."); }
     finally { setIsSaving(false); }
   }
@@ -209,7 +425,7 @@ export default function SettingsPage() {
   if (isLoading) {
     return (
       <div className="flex h-64 items-center justify-center">
-        <Loader2 className="size-6 animate-spin text-emerald-400" />
+        <Loader2 className={`size-6 animate-spin ${raSpinnerCls}`} />
       </div>
     );
   }
@@ -241,16 +457,16 @@ export default function SettingsPage() {
               {/* Customer Site URL card */}
               <div className={`flex items-start gap-3 rounded-xl border px-4 py-3.5 ${
                 restaurantSlug
-                  ? "border-emerald-500/25 bg-emerald-500/8"
+                  ? "border-ra-primary-25 bg-ra-primary-10"
                   : "border-amber-500/25 bg-amber-500/8"
               }`}>
                 <span className="mt-0.5 text-xl">{restaurantSlug ? "🔗" : "⚠️"}</span>
                 <div className="min-w-0 flex-1">
-                  <p className={`text-sm font-semibold ${restaurantSlug ? "text-emerald-300" : "text-amber-300"}`}>
+                  <p className={`text-sm font-semibold ${restaurantSlug ? "text-ra-primary-muted" : "text-amber-300"}`}>
                     {restaurantSlug ? "Customer Site URL" : "Customer URL Set Nahi Hai"}
                   </p>
                   {restaurantSlug ? (
-                    <p className="mt-0.5 truncate font-mono text-xs text-emerald-400/80">
+                    <p className="mt-0.5 truncate font-mono text-xs text-ra-primary/80">
                       {typeof window !== "undefined" ? window.location.origin : ""}/r/{restaurantSlug}/home
                     </p>
                   ) : (
@@ -346,15 +562,15 @@ export default function SettingsPage() {
           {/* ── PAYMENTS (Gateway only — Methods auto-detected) ── */}
           {activeTab === "payments" && (
             payLoading ? (
-              <div className="flex h-32 items-center justify-center"><Loader2 className="size-5 animate-spin text-emerald-400" /></div>
+              <div className="flex h-32 items-center justify-center"><Loader2 className="size-5 animate-spin text-ra-primary" /></div>
             ) : (
               <div className="space-y-5">
                 {/* ── Info card — auto-detection notice ── */}
-                <div className="flex items-start gap-3 rounded-xl border border-emerald-500/25 bg-emerald-500/8 px-4 py-3.5">
+                <div className="flex items-start gap-3 rounded-xl border border-ra-primary-25 bg-ra-primary-10 px-4 py-3.5">
                   <span className="mt-0.5 text-lg">⚡</span>
                   <div>
-                    <p className="text-sm font-semibold text-emerald-300">Payment Methods — Auto Detected</p>
-                    <p className="mt-0.5 text-xs text-emerald-400/80">
+                    <p className="text-sm font-semibold text-ra-primary-muted">Payment Methods — Auto Detected</p>
+                    <p className="mt-0.5 text-xs text-ra-primary/80">
                       Payment methods are automatically enabled based on your gateway configuration.
                       Configure your gateway below — UPI, Card, Net Banking will be available automatically.
                       Cash on Delivery is always available.
@@ -376,7 +592,7 @@ export default function SettingsPage() {
           {/* ── BILLING INFO (Bank + Tax merged) ── */}
           {activeTab === "billing" && (
             payLoading ? (
-              <div className="flex h-32 items-center justify-center"><Loader2 className="size-5 animate-spin text-emerald-400" /></div>
+              <div className="flex h-32 items-center justify-center"><Loader2 className="size-5 animate-spin text-ra-primary" /></div>
             ) : (
               <div className="space-y-5">
                 {/* Bank Account */}
@@ -436,7 +652,7 @@ export default function SettingsPage() {
                   placeholder={`Default: ${settings.email.smtpUser || "SMTP username"}`}
                   value={smtpTestRecipient} onChange={setSmtpTestRecipient} />
                 <button type="button" onClick={sendTenantSmtpTest} disabled={testingSmtp}
-                  className="inline-flex cursor-pointer items-center gap-2 rounded-xl border border-emerald-500/40 bg-emerald-500/15 px-4 py-2.5 text-sm font-medium text-emerald-300 transition-colors hover:bg-emerald-500/25 disabled:cursor-not-allowed disabled:opacity-50">
+                  className="inline-flex cursor-pointer items-center gap-2 rounded-xl border border-ra-primary-40 bg-ra-primary-15 px-4 py-2.5 text-sm font-medium text-ra-primary-muted transition-colors hover-bg-ra-primary-15 disabled:cursor-not-allowed disabled:opacity-50">
                   {testingSmtp ? <Loader2 className="size-4 animate-spin" /> : <Mail className="size-4" />}
                   {testingSmtp ? "Sending…" : "Send test email"}
                 </button>
@@ -469,7 +685,7 @@ export default function SettingsPage() {
                             <td key={role} className="px-4 py-3 text-center">
                               <input type="checkbox" checked={Boolean(row[role])} disabled={role === "admin"}
                                 onChange={(e) => updateAccess(feature.key, role, e.target.checked)}
-                                className="size-4 accent-emerald-500 disabled:cursor-not-allowed disabled:opacity-60"
+                                className="size-4 accent-ra-primary disabled:cursor-not-allowed disabled:opacity-60"
                                 aria-label={`${feature.label} access for ${role}`} />
                             </td>
                           ))}
@@ -498,6 +714,24 @@ export default function SettingsPage() {
                 ))}
               </div>
             </SettingsFormSection>
+          )}
+
+          {/* ── THEME ── */}
+          {activeTab === "theme" && (
+            <RestaurantThemeSection
+              data={settings.theme ?? EMPTY_SETTINGS.theme}
+              saving={isSavingTheme}
+              canSave={themeHasChanges}
+              onSave={saveThemeSettings}
+              fieldErrors={fieldErrors}
+              onClearError={(key) => setFieldErrors((e) => ({ ...e, [key]: "" }))}
+              onChange={(key, value) =>
+                setSettings((p) => ({
+                  ...p,
+                  theme: { ...p.theme, [key]: value },
+                }))
+              }
+            />
           )}
 
           {/* ── CONTACT ── */}
@@ -536,11 +770,11 @@ export default function SettingsPage() {
             </SettingsFormSection>
           )}
 
-          {/* Save button — only for non-payment tabs */}
-          {!isPayTab && (
+          {/* Save button — hide on theme tab (has its own Save Theme) and payment tabs */}
+          {!isPayTab && activeTab !== "theme" && (
             <div className="flex items-center justify-end gap-2 rounded-2xl border border-zinc-800 bg-zinc-900/40 px-4 py-3">
               <button type="button" onClick={saveChanges} disabled={!hasChanges || isSaving}
-                className="cursor-pointer inline-flex items-center gap-2 rounded-xl bg-emerald-500 px-4 py-2 text-sm font-semibold text-zinc-950 transition-colors hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-45">
+                className="cursor-pointer inline-flex items-center gap-2 rounded-xl bg-ra-primary px-4 py-2 text-sm font-semibold text-zinc-950 transition-colors hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-45">
                 {isSaving ? <Loader2 className="size-4 animate-spin" /> : null}
                 {isSaving ? "Saving..." : "Save Changes"}
               </button>
@@ -551,7 +785,7 @@ export default function SettingsPage() {
 
       {toast && (
         <div className={`fixed bottom-5 right-5 z-50 flex items-center gap-2 rounded-xl border px-4 py-2 text-sm shadow-2xl shadow-black/40 ${
-          toast.type === "success" ? "border-emerald-500/30 bg-zinc-900 text-emerald-300" : "border-red-500/30 bg-zinc-900 text-red-300"
+          toast.type === "success" ? "border-ra-primary-30 bg-zinc-900 text-ra-primary-muted" : "border-red-500/30 bg-zinc-900 text-red-300"
         }`}>
           {toast.type === "success" ? <CheckCircle2 className="size-4" /> : <XCircle className="size-4" />}
           {toast.message}

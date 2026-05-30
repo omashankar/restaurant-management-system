@@ -11,7 +11,7 @@ export default function StatsCard({
   const positive = trend != null && trend >= 0;
   return (
     <div
-      className={`group relative overflow-hidden rounded-2xl border border-zinc-800 bg-zinc-900/80 p-5 shadow-lg shadow-black/20 transition-all duration-200 hover:border-emerald-500/40 hover:shadow-emerald-500/5 ${className}`}
+      className={`group relative overflow-hidden rounded-2xl border border-zinc-800 bg-zinc-900/80 p-5 shadow-lg shadow-black/20 transition-all duration-200 hover-border-ra-primary-40 hover:shadow-ra-primary-soft ${className}`}
     >
       <div className="flex items-start justify-between gap-3">
         <div>
@@ -27,7 +27,7 @@ export default function StatsCard({
           {trend != null ? (
             <p
               className={`mt-2 inline-flex items-center gap-1 text-xs font-medium ${
-                positive ? "text-emerald-400" : "text-amber-400"
+                positive ? "text-ra-primary" : "text-amber-400"
               }`}
             >
               {positive ? (
@@ -41,7 +41,7 @@ export default function StatsCard({
           ) : null}
         </div>
         {Icon ? (
-          <span className="flex size-11 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-400 ring-1 ring-emerald-500/20 transition-transform duration-200 group-hover:scale-105">
+          <span className="flex size-11 items-center justify-center rounded-xl bg-ra-primary-10 text-ra-primary ring-1 ring-ra-primary-20 transition-transform duration-200 group-hover:scale-105">
             <Icon className="size-5" aria-hidden />
           </span>
         ) : null}

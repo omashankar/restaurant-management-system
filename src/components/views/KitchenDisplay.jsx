@@ -11,7 +11,7 @@ import { useLiveRefresh } from "@/hooks/useLiveRefresh";
 const COLUMNS = [
   { key: "new",       label: "New",       accent: "text-amber-400",   headerBg: "bg-amber-500/10 border-amber-500/20",     borderLeft: "border-l-amber-400",   badge: "bg-amber-500/15 text-amber-300 ring-1 ring-amber-500/25",   dot: "bg-amber-400"   },
   { key: "preparing", label: "Preparing", accent: "text-sky-400",     headerBg: "bg-sky-500/10 border-sky-500/20",         borderLeft: "border-l-sky-400",     badge: "bg-sky-500/15 text-sky-300 ring-1 ring-sky-500/25",         dot: "bg-sky-400"     },
-  { key: "ready",     label: "Ready",     accent: "text-emerald-400", headerBg: "bg-emerald-500/10 border-emerald-500/20", borderLeft: "border-l-emerald-400", badge: "bg-emerald-500/15 text-emerald-300 ring-1 ring-emerald-500/25", dot: "bg-emerald-400" },
+  { key: "ready",     label: "Ready",     accent: "text-ra-primary", headerBg: "bg-ra-primary-10 border-ra-primary-20", borderLeft: "border-l-ra-accent", badge: "bg-ra-primary-15 text-ra-primary-muted ring-1 ring-ra-primary-25", dot: "bg-ra-accent" },
 ];
 
 /* ── Elapsed timer badge ── */
@@ -58,7 +58,7 @@ function sortKitchenOrders(list) {
 /* ── Order type pill ── */
 function TypePill({ type }) {
   const cfg = {
-    "dine-in":  { label: "Dine-In",  color: "text-emerald-400" },
+    "dine-in":  { label: "Dine-In",  color: "text-ra-primary" },
     "takeaway": { label: "Takeaway", color: "text-indigo-400"  },
     "delivery": { label: "Delivery", color: "text-sky-400"     },
   };
@@ -84,7 +84,7 @@ function TicketCard({ ticket, col, onAction, updating }) {
       <div className="flex items-start justify-between gap-2 border-b border-zinc-800/80 p-4">
         <div className="space-y-1">
           <div className="flex items-center gap-2">
-            <p className="font-mono text-sm font-semibold text-emerald-400">
+            <p className="font-mono text-sm font-semibold text-ra-primary">
               {ticket.orderId ?? ticket.id?.slice(-8).toUpperCase()}
             </p>
             <ElapsedBadge createdAt={ticket.createdAt} elapsedMin={ticket.elapsedMin} />
@@ -140,7 +140,7 @@ function TicketCard({ ticket, col, onAction, updating }) {
         {ticket.status === "preparing" && (
           <button type="button" disabled={isUpdating}
             onClick={() => onAction(ticket.id, "ready")}
-            className="cursor-pointer flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-500 py-2.5 text-sm font-bold text-zinc-950 shadow-lg shadow-emerald-500/20 transition-all hover:bg-emerald-400 active:scale-[0.98] disabled:opacity-50">
+            className="cursor-pointer flex w-full items-center justify-center gap-2 rounded-xl bg-ra-primary py-2.5 text-sm font-bold text-zinc-950 shadow-ra-primary-glow transition-all hover:brightness-110 active:scale-[0.98] disabled:opacity-50">
             <CheckCircle2 className="size-4" />
             {isUpdating ? "Updating…" : "Mark Ready"}
           </button>
@@ -253,14 +253,14 @@ export default function KitchenDisplay() {
       {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div className="flex items-start gap-3">
-          <span className="mt-1 flex size-10 shrink-0 items-center justify-center rounded-xl bg-emerald-500/15 text-emerald-400 ring-1 ring-emerald-500/25">
+          <span className="mt-1 flex size-10 shrink-0 items-center justify-center rounded-xl bg-ra-primary-15 text-ra-primary ring-1 ring-ra-primary-25">
             <ChefHat className="size-5" />
           </span>
           <div>
             <h1 className="text-2xl font-semibold tracking-tight text-zinc-50">Kitchen Display</h1>
             <p className="mt-1 text-sm text-zinc-500">
               <span className="inline-flex items-center gap-1.5">
-                <span className="size-1.5 animate-pulse rounded-full bg-emerald-400" />
+                <span className="size-1.5 animate-pulse rounded-full bg-ra-accent" />
                 Live
               </span>
               {lastRefresh

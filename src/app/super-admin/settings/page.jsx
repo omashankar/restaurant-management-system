@@ -1,5 +1,6 @@
 "use client";
 
+import SuperAdminPageSkeleton from "@/components/super-admin/SuperAdminPageSkeleton";
 import PushNotificationEnable from "@/components/PushNotificationEnable";
 import { useToast } from "@/hooks/useToast";
 import { invalidatePlatformConfigCache } from "@/hooks/usePlatformConfig";
@@ -12,8 +13,14 @@ import {
 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 
+import { saBtnPrimaryCls, saInputCls, saSpinnerCls, SUPER_ADMIN_ACCENT, SUPER_ADMIN_PRIMARY } from "@/config/superAdminTheme";
+import {
+  clearSuperAdminThemePreview,
+  dispatchSuperAdminThemePreview,
+} from "@/lib/superAdminThemeRuntime";
+
 /* ── Shared styles ── */
-const inputCls = "w-full rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus:border-emerald-500/50 placeholder:text-zinc-600 transition-colors";
+const inputCls = saInputCls;
 const labelCls = "block text-xs font-medium text-zinc-400 mb-1";
 
 function Field({ label, hint, error, required, children }) {
@@ -38,7 +45,7 @@ function Toggle({ checked, onChange, label, description }) {
         {description && <p className="mt-0.5 text-xs text-zinc-500">{description}</p>}
       </div>
       <button type="button" role="switch" aria-checked={checked} onClick={() => onChange(!checked)}
-        className={`cursor-pointer relative mt-0.5 inline-flex h-5 w-9 shrink-0 items-center rounded-full transition-colors ${checked ? "bg-emerald-500" : "bg-zinc-700"}`}>
+        className={`cursor-pointer relative mt-0.5 inline-flex h-5 w-9 shrink-0 items-center rounded-full transition-colors ${checked ? "bg-sa-primary" : "bg-zinc-700"}`}>
         <span className={`inline-block size-3.5 rounded-full bg-white shadow transition-transform ${checked ? "translate-x-4" : "translate-x-0.5"}`} />
       </button>
     </label>
@@ -63,7 +70,7 @@ function SaveButton({ saving, onClick }) {
   return (
     <div className="flex justify-end pt-2">
       <button type="button" onClick={onClick} disabled={saving}
-        className="cursor-pointer inline-flex items-center gap-2 rounded-xl bg-emerald-500 px-5 py-2.5 text-sm font-semibold text-zinc-950 hover:bg-emerald-400 disabled:opacity-50 transition-colors">
+        className="cursor-pointer inline-flex items-center gap-2 rounded-xl bg-sa-primary px-5 py-2.5 text-sm font-semibold text-zinc-950 hover:brightness-110 disabled:opacity-50 transition-colors">
         {saving ? <span className="size-3.5 animate-spin rounded-full border-2 border-zinc-950/30 border-t-zinc-950" /> : <Save className="size-4" />}
         {saving ? "Saving…" : "Save Changes"}
       </button>
@@ -463,10 +470,10 @@ function PaymentSection({ data, onChange, onSave, saving, fieldErrors = {}, onCl
       <div className="space-y-4">
           {/* Status bar */}
           <div className="flex items-center gap-2 rounded-xl border border-zinc-800 bg-zinc-900/40 px-4 py-2.5">
-            <CheckCircle2 className="size-4 text-emerald-400" />
+            <CheckCircle2 className="size-4 text-sa-accent" />
             <span className="text-xs text-zinc-400">
               {enabledCount > 0
-                ? <><span className="font-semibold text-emerald-400">{enabledCount} gateway{enabledCount > 1 ? "s" : ""} active</span> — {PLATFORM_GATEWAYS.filter((g) => gateways[g.id]?.enabled).map((g) => g.label).join(", ")}</>
+                ? <><span className="font-semibold text-sa-accent">{enabledCount} gateway{enabledCount > 1 ? "s" : ""} active</span> — {PLATFORM_GATEWAYS.filter((g) => gateways[g.id]?.enabled).map((g) => g.label).join(", ")}</>
                 : <span className="text-zinc-500">No gateways configured yet</span>}
             </span>
           </div>
@@ -481,16 +488,16 @@ function PaymentSection({ data, onChange, onSave, saving, fieldErrors = {}, onCl
                   onClick={() => { setActiveGw(g.id); setTestResult(null); }}
                   className={`cursor-pointer relative rounded-xl border p-3 text-center transition-all ${
                     isActive
-                      ? "border-emerald-500/50 bg-emerald-500/10 ring-1 ring-emerald-500/30"
+                      ? "border-sa-primary-50 bg-sa-primary-10 ring-1 ring-sa-primary-25"
                       : "border-zinc-800 bg-zinc-950/40 hover:border-zinc-700"
                   }`}>
                   {isEnabled && (
-                    <span className="absolute right-2 top-2 size-2 rounded-full bg-emerald-400" />
+                    <span className="absolute right-2 top-2 size-2 rounded-full bg-sa-primary" />
                   )}
                   <div className="flex h-8 items-center justify-center mb-1.5">
                     <GatewayLogo gateway={g} />
                   </div>
-                  <p className={`text-xs font-semibold ${isActive ? "text-emerald-400" : "text-zinc-300"}`}>
+                  <p className={`text-xs font-semibold ${isactive ? "text-sa-primary" : "text-zinc-300"}`}>
                     {g.label}
                   </p>
                   {g.popular && (
@@ -514,7 +521,7 @@ function PaymentSection({ data, onChange, onSave, saving, fieldErrors = {}, onCl
               <div className="flex items-center gap-3">
                 {!isOffline && gw.enabled && (
                   <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${
-                    gw.testMode ? "bg-amber-500/15 text-amber-400" : "bg-emerald-500/15 text-emerald-400"
+                    gw.testMode ? "bg-amber-500/15 text-amber-400" : "bg-sa-accent-15 text-sa-accent"
                   }`}>
                     {gw.testMode ? "Test Mode" : "Live Mode"}
                   </span>
@@ -523,7 +530,7 @@ function PaymentSection({ data, onChange, onSave, saving, fieldErrors = {}, onCl
                   <span className="text-sm text-zinc-400">Enable</span>
                   <button type="button" role="switch" aria-checked={Boolean(gw.enabled)}
                     onClick={() => updateGw({ enabled: !gw.enabled })}
-                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${gw.enabled ? "bg-emerald-500" : "bg-zinc-700"}`}>
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${gw.enabled ? "bg-sa-primary" : "bg-zinc-700"}`}>
                     <span className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform ${gw.enabled ? "translate-x-5" : "translate-x-0.5"}`} />
                   </button>
                 </label>
@@ -548,10 +555,10 @@ function PaymentSection({ data, onChange, onSave, saving, fieldErrors = {}, onCl
                       <span className={`text-xs font-semibold ${gw.testMode ? "text-amber-400" : "text-zinc-500"}`}>TEST</span>
                       <button type="button" role="switch" aria-checked={!gw.testMode}
                         onClick={() => updateGw({ testMode: !gw.testMode })}
-                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${!gw.testMode ? "bg-emerald-500" : "bg-amber-500"}`}>
+                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${!gw.testMode ? "bg-sa-primary" : "bg-amber-500"}`}>
                         <span className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform ${!gw.testMode ? "translate-x-5" : "translate-x-0.5"}`} />
                       </button>
-                      <span className={`text-xs font-semibold ${!gw.testMode ? "text-emerald-400" : "text-zinc-500"}`}>LIVE</span>
+                      <span className={`text-xs font-semibold ${!gw.testMode ? "text-sa-accent" : "text-zinc-500"}`}>LIVE</span>
                     </div>
                   </div>
                 )}
@@ -585,7 +592,7 @@ function PaymentSection({ data, onChange, onSave, saving, fieldErrors = {}, onCl
                         value={typeof window !== "undefined" ? `${window.location.origin}/api/webhooks/${activeGw}` : `/api/webhooks/${activeGw}`}
                         className={`${inputCls} font-mono text-xs text-zinc-500`} />
                       <button type="button" onClick={() => copyWebhookUrl(activeGw)}
-                        className="flex shrink-0 items-center gap-1.5 rounded-xl border border-zinc-700 px-3 py-2 text-xs font-semibold text-zinc-300 hover:border-emerald-500/40 hover:text-emerald-400 transition-colors">
+                        className="flex shrink-0 items-center gap-1.5 rounded-xl border border-zinc-700 px-3 py-2 text-xs font-semibold text-zinc-300 hover-border-sa-primary-40 hover-sa-primary transition-colors">
                         <Copy className="size-3.5" /> Copy
                       </button>
                     </div>
@@ -596,7 +603,7 @@ function PaymentSection({ data, onChange, onSave, saving, fieldErrors = {}, onCl
                 {testResult && (
                   <div className={`flex items-center gap-2 rounded-xl border px-4 py-3 text-sm ${
                     testResult.success
-                      ? "border-emerald-500/25 bg-emerald-500/10 text-emerald-400"
+                      ? "border-sa-primary-25 bg-sa-primary-10 text-sa-primary"
                       : "border-red-500/25 bg-red-500/10 text-red-400"
                   }`}>
                     {testResult.success ? <CheckCircle2 className="size-4 shrink-0" /> : <XCircle className="size-4 shrink-0" />}
@@ -612,7 +619,7 @@ function PaymentSection({ data, onChange, onSave, saving, fieldErrors = {}, onCl
             <button type="button" onClick={testConnection}
               disabled={testing || !gw.enabled || isOffline}
               className="inline-flex items-center gap-2 rounded-xl border border-zinc-700 px-4 py-2 text-sm font-medium text-zinc-300 hover:border-zinc-500 hover:text-zinc-100 disabled:cursor-not-allowed disabled:opacity-40 transition-colors">
-              {testing ? <Loader2 className="size-4 animate-spin" /> : <Zap className="size-4" />}
+              {testing ? <Loader2 className={saSpinnerCls} /> : <Zap className="size-4" />}
               {testing ? "Testing…" : "Test Connection"}
             </button>
             <SaveButton saving={saving} onClick={onSave} />
@@ -675,41 +682,76 @@ function PaymentSection({ data, onChange, onSave, saving, fieldErrors = {}, onCl
 }
 
 function ThemeSection({ data, onChange, onSave, saving, fieldErrors = {}, onClearError }) {
+  const primary = data.primaryColor ?? SUPER_ADMIN_PRIMARY;
+  const accent = data.accentColor ?? SUPER_ADMIN_ACCENT;
+
+  useEffect(() => {
+    dispatchSuperAdminThemePreview({
+      primaryColor: primary,
+      accentColor: accent,
+      darkMode: data.darkMode,
+    });
+  }, [primary, accent, data.darkMode]);
+
+  useEffect(() => () => clearSuperAdminThemePreview(), []);
+
   return (
     <div className="space-y-5">
-      <SectionHeader icon={Palette} title="Theme" description="Brand colors and UI preferences." />
+      <SectionHeader
+        icon={Palette}
+        title="Theme"
+        description="Primary Color drives the Super Admin panel — sidebar, buttons, loaders. Accent is for success states (paid, active, online)."
+      />
       <div className="grid gap-4 sm:grid-cols-2">
-        <Field label="Primary Color" error={fieldErrors.primaryColor}>
+        <Field label="Primary Color (Super Admin brand)" error={fieldErrors.primaryColor}>
           <div className="flex items-center gap-3">
-            <input type="color" value={data.primaryColor ?? "#10b981"} onChange={(e) => onChange("primaryColor", e.target.value)}
+            <input type="color" value={primary} onChange={(e) => onChange("primaryColor", e.target.value)}
               className="cursor-pointer size-10 shrink-0 rounded-lg border border-zinc-700 bg-transparent p-0.5" />
             <input
-              value={data.primaryColor ?? "#10b981"}
+              value={primary}
               onChange={(e) => {
                 onChange("primaryColor", e.target.value);
                 onClearError?.("primaryColor");
               }}
-              placeholder="#10b981"
+              placeholder={SUPER_ADMIN_PRIMARY}
               className={`${inputCls} font-mono`}
             />
           </div>
+          <p className="mt-1 text-xs text-zinc-600">Default: {SUPER_ADMIN_PRIMARY} — sidebar, buttons, focus rings</p>
         </Field>
-        <Field label="Accent Color" error={fieldErrors.accentColor}>
+        <Field label="Accent Color (success / status)" error={fieldErrors.accentColor}>
           <div className="flex items-center gap-3">
-            <input type="color" value={data.accentColor ?? "#f43f5e"} onChange={(e) => onChange("accentColor", e.target.value)}
+            <input type="color" value={accent} onChange={(e) => onChange("accentColor", e.target.value)}
               className="cursor-pointer size-10 shrink-0 rounded-lg border border-zinc-700 bg-transparent p-0.5" />
             <input
-              value={data.accentColor ?? "#f43f5e"}
+              value={accent}
               onChange={(e) => {
                 onChange("accentColor", e.target.value);
                 onClearError?.("accentColor");
               }}
-              placeholder="#f43f5e"
+              placeholder={SUPER_ADMIN_ACCENT}
               className={`${inputCls} font-mono`}
             />
           </div>
+          <p className="mt-1 text-xs text-zinc-600">Default: {SUPER_ADMIN_ACCENT} — paid, active tenant, online</p>
         </Field>
       </div>
+
+      <div className="rounded-2xl border border-zinc-800 bg-zinc-950/50 p-4">
+        <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-zinc-500">Live preview</p>
+        <div className="flex flex-wrap items-center gap-3">
+          <button type="button" className="sa-btn-primary rounded-xl px-4 py-2 text-sm font-semibold">
+            Primary button
+          </button>
+          <span className="sa-status-badge rounded-full px-2.5 py-0.5 text-xs font-semibold">
+            Active / Paid
+          </span>
+          <span className="inline-flex items-center gap-1.5 rounded-xl border border-sa-primary-40 bg-sa-primary-10 px-3 py-1.5 text-xs text-sa-primary ring-1 ring-sa-primary-25">
+            Nav active
+          </span>
+        </div>
+      </div>
+
       <Toggle checked={!!data.darkMode} onChange={(v) => onChange("darkMode", v)}
         label="Dark Mode" description="Use dark theme across the platform." />
       <SaveButton saving={saving} onClick={onSave} />
@@ -784,7 +826,7 @@ function CurrenciesSection({ data, onChange, onSave, saving }) {
               <button key={c} type="button" onClick={() => toggle(c)}
                 className={`cursor-pointer rounded-xl border px-3 py-1.5 text-xs font-semibold transition-all ${
                   active
-                    ? "border-emerald-500/40 bg-emerald-500/15 text-emerald-300"
+                    ? "border-sa-primary-40 bg-sa-primary-15 text-sa-primary-muted"
                     : "border-zinc-700 bg-zinc-900/40 text-zinc-500 hover:border-zinc-500 hover:text-zinc-300"
                 }`}>
                 {c}
@@ -1059,11 +1101,7 @@ function BackupSection({ data, onChange, onSave, saving, showToast }) {
       <div className="border-t border-zinc-800 pt-4">
         <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-zinc-500">Recent Backups</p>
         {loadingBackups ? (
-          <div className="space-y-2">
-            {[1, 2, 3].map((i) => (
-              <div key={i} className="h-10 animate-pulse rounded-xl bg-zinc-800/60" />
-            ))}
-          </div>
+          <SuperAdminPageSkeleton rows={3} rowClassName="h-10" />
         ) : backups.length === 0 ? (
           <p className="rounded-xl border border-dashed border-zinc-800 py-6 text-center text-xs text-zinc-600">
             No backups yet.
@@ -1406,7 +1444,7 @@ export default function SuperAdminSettingsPage() {
                     ? "bg-zinc-800 text-zinc-100 ring-1 ring-zinc-700"
                     : "text-zinc-500 hover:bg-zinc-900 hover:text-zinc-300"
                 }`}>
-                <Icon className={`size-4 shrink-0 ${active ? "text-emerald-400" : ""}`} />
+                <Icon className={`size-4 shrink-0 ${active ? "text-sa-primary" : ""}`} />
                 {label}
               </button>
             );
@@ -1416,11 +1454,7 @@ export default function SuperAdminSettingsPage() {
         {/* Panel */}
         <div ref={panelRef} className="min-w-0 flex-1 rounded-2xl border border-zinc-800 bg-zinc-900/60 p-5 sm:p-6">
           {fetching ? (
-            <div className="space-y-4">
-              {Array.from({ length: 4 }).map((_, i) => (
-                <div key={i} className="h-10 animate-pulse rounded-xl bg-zinc-800/60" />
-              ))}
-            </div>
+            <SuperAdminPageSkeleton rows={4} />
           ) : !settings ? null : (
             <>
               {activeTab === "app"           && <AppSection           data={sectionData} onChange={handleChange} onSave={handleSave} saving={saving} {...panelValidationProps} />}

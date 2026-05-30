@@ -39,7 +39,7 @@ export default function CustomerSiteSidebar({
 
           active
 
-            ? "bg-emerald-500 text-zinc-950 shadow-lg shadow-emerald-500/20"
+            ? "bg-ra-primary text-zinc-950 shadow-ra-primary-glow"
 
             : "text-zinc-300 hover:bg-zinc-800"
 
@@ -113,7 +113,7 @@ export default function CustomerSiteSidebar({
 
                 active
 
-                  ? "bg-emerald-500 text-zinc-950 shadow-md shadow-emerald-500/20"
+                  ? "bg-ra-primary text-zinc-950 shadow-ra-primary-glow"
 
                   : "border border-zinc-800 bg-zinc-900/60 text-zinc-400 hover:text-zinc-200"
 

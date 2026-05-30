@@ -55,7 +55,7 @@ export default function InventoryFormModal({
           <button
             type="button"
             onClick={onSubmit}
-            className="cursor-pointer rounded-xl bg-emerald-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-emerald-500"
+            className="cursor-pointer rounded-xl bg-ra-primary px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-ra-primary"
           >
             Save
           </button>
@@ -70,7 +70,7 @@ export default function InventoryFormModal({
           <input
             value={form.name}
             onChange={(e) => onChange({ ...form, name: e.target.value })}
-            className="w-full rounded-xl border border-zinc-800 bg-zinc-950/80 px-3 py-2 text-sm text-zinc-100 outline-none focus:border-emerald-500/40"
+            className="w-full rounded-xl border border-zinc-800 bg-zinc-950/80 px-3 py-2 text-sm text-zinc-100 outline-none focus-ra-primary"
             placeholder="Item name"
           />
         </div>
@@ -82,7 +82,7 @@ export default function InventoryFormModal({
             list="inventory-category-suggestions"
             value={form.category}
             onChange={(e) => onChange({ ...form, category: e.target.value })}
-            className="w-full rounded-xl border border-zinc-800 bg-zinc-950/80 px-3 py-2 text-sm text-zinc-100 outline-none focus:border-emerald-500/40"
+            className="w-full rounded-xl border border-zinc-800 bg-zinc-950/80 px-3 py-2 text-sm text-zinc-100 outline-none focus-ra-primary"
             placeholder="e.g. Produce"
           />
           <datalist id="inventory-category-suggestions">
@@ -104,7 +104,7 @@ export default function InventoryFormModal({
               onChange={(e) =>
                 onChange({ ...form, quantity: e.target.value })
               }
-              className="w-full rounded-xl border border-zinc-800 bg-zinc-950/80 px-3 py-2 text-sm text-zinc-100 outline-none focus:border-emerald-500/40"
+              className="w-full rounded-xl border border-zinc-800 bg-zinc-950/80 px-3 py-2 text-sm text-zinc-100 outline-none focus-ra-primary"
             />
           </div>
           <div>
@@ -114,7 +114,7 @@ export default function InventoryFormModal({
             <select
               value={form.unit}
               onChange={(e) => onChange({ ...form, unit: e.target.value })}
-              className="cursor-pointer w-full rounded-xl border border-zinc-800 bg-zinc-950/80 px-3 py-2 text-sm text-zinc-100 outline-none focus:border-emerald-500/40"
+              className="cursor-pointer w-full rounded-xl border border-zinc-800 bg-zinc-950/80 px-3 py-2 text-sm text-zinc-100 outline-none focus-ra-primary"
             >
               <option value="" disabled>Select unit…</option>
               {UNITS.map((u) => (
@@ -135,7 +135,7 @@ export default function InventoryFormModal({
             onChange={(e) =>
               onChange({ ...form, reorderLevel: e.target.value })
             }
-            className="w-full rounded-xl border border-zinc-800 bg-zinc-950/80 px-3 py-2 text-sm text-zinc-100 outline-none focus:border-emerald-500/40"
+            className="w-full rounded-xl border border-zinc-800 bg-zinc-950/80 px-3 py-2 text-sm text-zinc-100 outline-none focus-ra-primary"
           />
         </div>
         <div>
@@ -145,7 +145,7 @@ export default function InventoryFormModal({
           <input
             value={form.supplier}
             onChange={(e) => onChange({ ...form, supplier: e.target.value })}
-            className="w-full rounded-xl border border-zinc-800 bg-zinc-950/80 px-3 py-2 text-sm text-zinc-100 outline-none focus:border-emerald-500/40"
+            className="w-full rounded-xl border border-zinc-800 bg-zinc-950/80 px-3 py-2 text-sm text-zinc-100 outline-none focus-ra-primary"
           />
         </div>
         <div>
@@ -156,7 +156,7 @@ export default function InventoryFormModal({
             rows={2}
             value={form.notes}
             onChange={(e) => onChange({ ...form, notes: e.target.value })}
-            className="w-full resize-none rounded-xl border border-zinc-800 bg-zinc-950/80 px-3 py-2 text-sm text-zinc-100 outline-none focus:border-emerald-500/40"
+            className="w-full resize-none rounded-xl border border-zinc-800 bg-zinc-950/80 px-3 py-2 text-sm text-zinc-100 outline-none focus-ra-primary"
           />
         </div>
       </div>

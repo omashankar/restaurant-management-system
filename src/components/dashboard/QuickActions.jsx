@@ -45,7 +45,7 @@ const ALL_ACTIONS = [
 ];
 
 const accentMap = {
-  emerald: { icon: "bg-emerald-500/15 text-emerald-400 ring-emerald-500/20", hover: "hover:border-emerald-500/40 hover:bg-emerald-500/5" },
+  emerald: { icon: "bg-ra-primary-15 text-ra-primary ring-ra-primary-20", hover: "hover-border-ra-primary-40 hover:bg-ra-primary-5" },
   indigo:  { icon: "bg-indigo-500/15 text-indigo-400 ring-indigo-500/20",   hover: "hover:border-indigo-500/40 hover:bg-indigo-500/5" },
   sky:     { icon: "bg-sky-500/15 text-sky-400 ring-sky-500/20",             hover: "hover:border-sky-500/40 hover:bg-sky-500/5" },
   amber:   { icon: "bg-amber-500/15 text-amber-400 ring-amber-500/20",       hover: "hover:border-amber-500/40 hover:bg-amber-500/5" },

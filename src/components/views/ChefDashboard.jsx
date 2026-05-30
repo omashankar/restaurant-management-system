@@ -9,7 +9,7 @@ import { useState } from "react";
 const statusStyles = {
   new:       { border: "border-l-amber-400",   badge: "bg-amber-500/20 text-amber-200 ring-amber-500/30",   label: "New"       },
   preparing: { border: "border-l-sky-400",     badge: "bg-sky-500/20 text-sky-200 ring-sky-500/30",         label: "Preparing" },
-  ready:     { border: "border-l-emerald-400", badge: "bg-emerald-500/20 text-emerald-200 ring-emerald-500/30", label: "Ready" },
+  ready:     { border: "border-l-ra-accent", badge: "bg-ra-primary/20 text-ra-primary-muted ring-ra-primary-25", label: "Ready" },
 };
 
 export default function ChefDashboard({ tickets: initialTickets = [], topItems = [] }) {
@@ -30,7 +30,7 @@ export default function ChefDashboard({ tickets: initialTickets = [], topItems =
           <p className="mt-1 text-sm text-zinc-500">Incoming tickets and order queue.</p>
         </div>
         <Link href="/kitchen"
-          className="cursor-pointer inline-flex items-center gap-2 rounded-xl border border-zinc-700 px-4 py-2 text-sm font-semibold text-zinc-200 hover:border-emerald-500/40">
+          className="cursor-pointer inline-flex items-center gap-2 rounded-xl border border-zinc-700 px-4 py-2 text-sm font-semibold text-zinc-200 hover-border-ra-primary-40">
           <MonitorPlay className="size-4" /> Full KDS
         </Link>
       </div>
@@ -57,7 +57,7 @@ export default function ChefDashboard({ tickets: initialTickets = [], topItems =
                   className={`rounded-2xl border border-zinc-800 bg-zinc-900/70 border-l-4 ${tone.border}`}>
                   <div className="flex items-start justify-between gap-2 border-b border-zinc-800/80 p-4">
                     <div>
-                      <p className="font-mono text-sm text-emerald-400/90">{ticket.orderId ?? ticket.id}</p>
+                      <p className="font-mono text-sm text-ra-primary/90">{ticket.orderId ?? ticket.id}</p>
                       <p className="mt-1 text-lg font-semibold text-zinc-100">
                         {ticket.tableNumber ? `Table ${ticket.tableNumber}` : ticket.customer ?? "—"}
                       </p>
@@ -88,12 +88,12 @@ export default function ChefDashboard({ tickets: initialTickets = [], topItems =
                     )}
                     {ticket.status === "preparing" && (
                       <button type="button" onClick={() => updateStatus(ticket.id, "ready")}
-                        className="cursor-pointer flex flex-1 items-center justify-center gap-2 rounded-xl bg-emerald-500 px-3 py-2.5 text-sm font-semibold text-zinc-950 hover:bg-emerald-400">
+                        className="cursor-pointer flex flex-1 items-center justify-center gap-2 rounded-xl bg-ra-primary px-3 py-2.5 text-sm font-semibold text-zinc-950 hover:brightness-110">
                         Mark Ready
                       </button>
                     )}
                     {ticket.status === "ready" && (
-                      <div className="flex-1 rounded-xl border border-emerald-500/20 bg-emerald-500/5 py-2.5 text-center text-sm font-medium text-emerald-400">
+                      <div className="flex-1 rounded-xl border border-ra-primary-20 bg-ra-primary-5 py-2.5 text-center text-sm font-medium text-ra-primary">
                         ✓ Ready for pickup
                       </div>
                     )}

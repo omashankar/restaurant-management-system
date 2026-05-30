@@ -1,5 +1,7 @@
 "use client";
 
+import SuperAdminPreloader from "@/components/super-admin/SuperAdminPreloader";
+import { saSpinnerCls } from "@/config/superAdminTheme";
 import { Loader2, RefreshCcw, X } from "lucide-react";
 import { useEffect, useState } from "react";
 
@@ -181,10 +183,7 @@ export default function SuperAdminSupportTicketsPage() {
         </div>
 
         {loading ? (
-          <div className="flex items-center gap-2 px-4 py-4 text-sm text-zinc-500">
-            <Loader2 className="size-4 animate-spin" />
-            Loading tickets...
-          </div>
+          <SuperAdminPreloader compact message="Loading tickets…" />
         ) : tickets.length === 0 ? (
           <div className="px-4 py-4 text-sm text-zinc-500">No tickets found.</div>
         ) : (
@@ -259,7 +258,7 @@ export default function SuperAdminSupportTicketsPage() {
             </div>
             {loadingDetail ? (
               <div className="flex items-center gap-2 text-sm text-zinc-500">
-                <Loader2 className="size-4 animate-spin" />
+                <Loader2 className={saSpinnerCls} />
                 Loading ticket...
               </div>
             ) : !selectedTicket ? (
@@ -294,14 +293,14 @@ export default function SuperAdminSupportTicketsPage() {
                     rows={3}
                     value={note}
                     onChange={(e) => setNote(e.target.value)}
-                    className="w-full rounded-xl border border-zinc-800 bg-zinc-950/80 px-3 py-2.5 text-sm text-zinc-100 outline-none transition-colors focus:border-emerald-500/45"
+                    className="w-full rounded-xl border border-zinc-800 bg-zinc-950/80 px-3 py-2.5 text-sm text-zinc-100 outline-none transition-colors focus-sa-primary"
                     placeholder="Add investigation notes or resolution detail..."
                   />
                   <button
                     type="button"
                     onClick={addNote}
                     disabled={savingNote || !note.trim()}
-                    className="cursor-pointer rounded-lg border border-emerald-500/40 bg-emerald-500/15 px-3 py-1.5 text-xs font-medium text-emerald-300 disabled:opacity-40"
+                    className="cursor-pointer rounded-lg border border-sa-primary-40 bg-sa-primary-15 px-3 py-1.5 text-xs font-medium text-sa-primary-muted disabled:opacity-40"
                   >
                     {savingNote ? "Saving..." : "Save note"}
                   </button>
@@ -316,7 +315,7 @@ export default function SuperAdminSupportTicketsPage() {
         <div
           className={`fixed bottom-5 right-5 z-50 rounded-xl border px-4 py-2 text-sm ${
             toast.type === "success"
-              ? "border-emerald-500/30 bg-zinc-900 text-emerald-300"
+              ? "border-sa-accent-30 bg-zinc-900 text-sa-accent-muted"
               : "border-red-500/30 bg-zinc-900 text-red-300"
           }`}
         >

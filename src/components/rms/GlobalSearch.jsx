@@ -8,7 +8,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 const CATEGORIES = {
   order:    { label: "Order",    color: "text-indigo-400",  bg: "bg-indigo-500/10"  },
   customer: { label: "Customer", color: "text-amber-400",   bg: "bg-amber-500/10"   },
-  menu:     { label: "Menu",     color: "text-emerald-400", bg: "bg-emerald-500/10" },
+  menu:     { label: "Menu",     color: "text-ra-primary", bg: "bg-ra-primary-10" },
   staff:    { label: "Staff",    color: "text-sky-400",     bg: "bg-sky-500/10"     },
 };
 
@@ -151,7 +151,7 @@ export default function GlobalSearch() {
           onChange={(e) => { setQuery(e.target.value); setOpen(true); }}
           onFocus={() => setOpen(true)}
           placeholder="Search… (Ctrl+K)"
-          className="h-9 w-48 rounded-xl border border-zinc-800 bg-zinc-900/70 pl-9 pr-8 text-sm text-zinc-100 placeholder:text-zinc-600 outline-none focus:border-emerald-500/40 focus:w-64 transition-all duration-200"
+          className="h-9 w-48 rounded-xl border border-zinc-800 bg-zinc-900/70 pl-9 pr-8 text-sm text-zinc-100 placeholder:text-zinc-600 outline-none focus-ra-primary focus:w-64 transition-all duration-200"
         />
         {query && (
           <button

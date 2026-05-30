@@ -4,7 +4,7 @@ import { Eye, EyeOff } from "lucide-react";
 import { useState } from "react";
 
 const defaultInputCls =
-  "w-full rounded-xl border border-zinc-700 bg-zinc-950/80 px-4 py-3 pr-11 text-sm text-zinc-100 outline-none transition-all focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/20";
+  "w-full rounded-xl border border-zinc-700 bg-zinc-950/80 px-4 py-3 pr-11 text-sm text-zinc-100 outline-none transition-all focus-ra-primary focus:ring-2 focus:ring-ra-primary-25";
 
 /**
  * Password field with show / hide toggle (auth & admin forms).

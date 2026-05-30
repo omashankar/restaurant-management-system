@@ -1,10 +1,13 @@
 "use client";
 
+import "@/app/super-admin/super-admin-theme.css";
+import SuperAdminPreloader from "./SuperAdminPreloader";
 import SuperAdminSidebar from "./SuperAdminSidebar";
 import ChangePasswordModal from "@/components/rms/ChangePasswordModal";
 import InboxDropdown, { InboxCountBadge } from "@/components/rms/InboxDropdown";
 import { useUser } from "@/context/AuthContext";
 import { useInbox } from "@/hooks/useInbox";
+import { useSuperAdminThemeStyles } from "@/hooks/useSuperAdminThemeStyles";
 import { normalizeLogoSrc } from "@/lib/logoUrl";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -21,6 +24,7 @@ import {
 } from "lucide-react";
 
 export default function SuperAdminLayout({ children }) {
+  const themeStyle = useSuperAdminThemeStyles();
   const { user, hydrated, loading, clearUser } = useUser();
   const router = useRouter();
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -69,11 +73,8 @@ export default function SuperAdminLayout({ children }) {
 
   if (loading || !hydrated) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-zinc-950">
-        <div className="flex items-center gap-3 text-sm text-zinc-500">
-          <Shield className="size-5 animate-pulse text-rose-400" />
-          Loading Super Admin…
-        </div>
+      <div className="min-h-screen bg-zinc-950">
+        <SuperAdminPreloader />
       </div>
     );
   }
@@ -83,7 +84,7 @@ export default function SuperAdminLayout({ children }) {
   const avatarSrc = normalizeLogoSrc(user.avatarUrl);
 
   return (
-    <div className="flex h-screen overflow-hidden bg-zinc-950">
+    <div className="super-admin-panel flex h-screen overflow-hidden bg-zinc-950" style={themeStyle}>
 
       {/* ── Desktop sidebar ── */}
       <div className="hidden md:flex">
@@ -121,7 +122,7 @@ export default function SuperAdminLayout({ children }) {
               <input
                 type="text"
                 placeholder="Search..."
-                className="w-56 rounded-xl border border-zinc-800 bg-zinc-900/60 py-2 pl-9 pr-3 text-sm text-zinc-200 outline-none transition-colors placeholder:text-zinc-500 focus:border-rose-500/40"
+                className="w-56 rounded-xl border border-zinc-800 bg-zinc-900/60 py-2 pl-9 pr-3 text-sm text-zinc-200 outline-none transition-colors placeholder:text-zinc-500 focus-sa-primary"
               />
             </div>
             <div ref={inboxRef} className="relative flex items-center gap-2">
@@ -136,7 +137,7 @@ export default function SuperAdminLayout({ children }) {
             >
               <MessageSquare className="size-4" />
               {unread.messages > 0 ? (
-                <span className="absolute -right-1 -top-1 rounded-full bg-emerald-500 px-1.5 py-0.5 text-[10px] font-semibold text-zinc-950">
+                <span className="absolute -right-1 -top-1 rounded-full bg-sa-primary px-1.5 py-0.5 text-[10px] font-semibold text-zinc-950">
                   {unread.messages}
                 </span>
               ) : null}
@@ -166,7 +167,7 @@ export default function SuperAdminLayout({ children }) {
                 onMarkAllRead={markAllRead}
                 onResolveMessage={resolveMessage}
                 onClose={() => setActiveInbox(null)}
-                accent="rose"
+                accent="sa"
               />
               <InboxDropdown
                 open={activeInbox === "notifications" && !isProfileOpen}
@@ -177,7 +178,7 @@ export default function SuperAdminLayout({ children }) {
                 onMarkAllRead={markAllRead}
                 onResolveMessage={resolveMessage}
                 onClose={() => setActiveInbox(null)}
-                accent="rose"
+                accent="sa"
               />
             </div>
 
@@ -260,7 +261,7 @@ export default function SuperAdminLayout({ children }) {
                     <MessageSquare className="size-4 text-zinc-400" />
                     Messages
                   </span>
-                  <InboxCountBadge count={unread.messages} tone="emerald" />
+                  <InboxCountBadge count={unread.messages} tone="sa" />
                 </button>
                 <button
                   type="button"
@@ -288,7 +289,7 @@ export default function SuperAdminLayout({ children }) {
                       onMarkAllRead={markAllRead}
                       onResolveMessage={resolveMessage}
                       onClose={() => setActiveInbox(null)}
-                      accent="rose"
+                      accent="sa"
                     />
                   </div>
                 ) : null}
@@ -319,7 +320,7 @@ export default function SuperAdminLayout({ children }) {
             <Menu className="size-5" />
           </button>
           <div className="flex items-center gap-2">
-            <Shield className="size-4 text-rose-400" />
+            <Shield className="size-4 text-sa-primary" />
             <span className="text-sm font-semibold text-zinc-100">Super Admin</span>
           </div>
           <div className="size-9" /> {/* spacer */}
@@ -332,7 +333,7 @@ export default function SuperAdminLayout({ children }) {
       <ChangePasswordModal
         open={isChangePasswordOpen}
         onClose={() => setIsChangePasswordOpen(false)}
-        variant="rose"
+        variant="sa"
       />
     </div>
   );

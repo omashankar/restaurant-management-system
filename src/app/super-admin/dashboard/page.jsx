@@ -1,6 +1,8 @@
 "use client";
 
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
+import SuperAdminPageSkeleton from "@/components/super-admin/SuperAdminPageSkeleton";
+import { saSpinnerCls } from "@/config/superAdminTheme";
 import { useUser } from "@/context/AuthContext";
 import {
   Activity, BarChart3, Building2, CheckCircle2,
@@ -79,7 +81,7 @@ function SuperAdminDashboard() {
       {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-start gap-3">
-          <span className="mt-1 flex size-11 shrink-0 items-center justify-center rounded-2xl bg-rose-500/15 text-rose-400 ring-1 ring-rose-500/25">
+          <span className="mt-1 flex size-11 shrink-0 items-center justify-center rounded-2xl bg-sa-primary-15 text-sa-primary ring-1 ring-sa-primary-25">
             <Shield className="size-6" />
           </span>
           <div>
@@ -98,7 +100,7 @@ function SuperAdminDashboard() {
         </div>
         <button type="button" onClick={fetchStats} disabled={loading}
           className="cursor-pointer flex items-center gap-2 rounded-xl border border-zinc-700 px-4 py-2 text-sm font-medium text-zinc-400 hover:border-zinc-500 hover:text-zinc-200 transition-colors disabled:opacity-50">
-          <RefreshCw className={`size-4 ${loading ? "animate-spin" : ""}`} /> Refresh
+          <RefreshCw className={`size-4 ${loading ? saSpinnerCls : ""}`} /> Refresh
         </button>
       </div>
 
@@ -109,14 +111,10 @@ function SuperAdminDashboard() {
         </div>
       )}
       {loading && !stats ? (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="h-28 animate-pulse rounded-2xl border border-zinc-800 bg-zinc-900/40" />
-          ))}
-        </div>
+        <SuperAdminPageSkeleton cards={4} cardClassName="h-28" rows={0} />
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <StatCard label="Total Restaurants" value={stats?.totalRestaurants ?? 0} sub="Registered tenants"              icon={Building2} color="text-emerald-400" bg="bg-emerald-500/5" border="border-emerald-500/20" />
+          <StatCard label="Total Restaurants" value={stats?.totalRestaurants ?? 0} sub="Registered tenants"              icon={Building2} color="text-sa-primary" bg="bg-sa-primary-5" border="border-sa-primary-20" />
           <StatCard label="Restaurant Admins" value={stats?.totalAdmins ?? 0}      sub={`${stats?.activeAdmins ?? 0} active`} icon={Users}     color="text-amber-400"   bg="bg-amber-500/5"   border="border-amber-500/20"   />
           <StatCard label="Total Revenue"     value={formatSaMoney(stats?.totalRevenue ?? 0)} sub="All time paid"  icon={Activity}  color="text-indigo-400"  bg="bg-indigo-500/5"  border="border-indigo-500/20"  />
           <StatCard
@@ -124,9 +122,9 @@ function SuperAdminDashboard() {
             value={stats?.systemStatus === "online" ? "Online" : "Degraded"}
             sub={stats?.systemStatus === "online" ? "All services running" : "Some checks failed"}
             icon={UserCheck}
-            color={stats?.systemStatus === "online" ? "text-emerald-400" : "text-amber-400"}
-            bg={stats?.systemStatus === "online" ? "bg-emerald-500/5" : "bg-amber-500/5"}
-            border={stats?.systemStatus === "online" ? "border-emerald-500/20" : "border-amber-500/20"}
+            color={stats?.systemStatus === "online" ? "text-sa-accent" : "text-amber-400"}
+            bg={stats?.systemStatus === "online" ? "bg-sa-accent-5" : "bg-amber-500/5"}
+            border={stats?.systemStatus === "online" ? "border-sa-accent-20" : "border-amber-500/20"}
           />
         </div>
       )}
@@ -141,15 +139,13 @@ function SuperAdminDashboard() {
               <p className="mt-0.5 text-xs text-zinc-500">Latest registered admin accounts</p>
             </div>
             <Link href="/super-admin/restaurants"
-              className="cursor-pointer flex items-center gap-1 text-xs font-medium text-emerald-400 hover:text-emerald-300">
+              className="cursor-pointer flex items-center gap-1 text-xs font-medium text-sa-primary hover:text-sa-primary-muted">
               View all <ChevronRight className="size-3.5" />
             </Link>
           </div>
           {loading && recentUsers.length === 0 ? (
-            <div className="space-y-3 p-5">
-              {Array.from({ length: 5 }).map((_, i) => (
-                <div key={i} className="h-10 animate-pulse rounded-xl bg-zinc-800/60" />
-              ))}
+            <div className="p-5">
+              <SuperAdminPageSkeleton rows={5} rowClassName="h-10" />
             </div>
           ) : recentUsers.length === 0 ? (
             <div className="flex flex-col items-center justify-center gap-2 py-16 text-center">
@@ -172,7 +168,7 @@ function SuperAdminDashboard() {
                   <div className="flex shrink-0 items-center gap-2">
                     <RoleBadge role={u.role} />
                     {u.status === "active"
-                      ? <CheckCircle2 className="size-4 text-emerald-500" />
+                      ? <CheckCircle2 className="size-4 text-sa-accent" />
                       : <XCircle className="size-4 text-red-500" />}
                   </div>
                 </div>
@@ -187,7 +183,7 @@ function SuperAdminDashboard() {
             <h2 className="mb-4 text-sm font-semibold text-zinc-100">Quick Actions</h2>
             <div className="space-y-2">
               {[
-                { href: "/super-admin/restaurants",  label: "Add Restaurant", desc: "Register new tenant",    icon: Plus,     color: "text-emerald-400", bg: "bg-emerald-500/10" },
+                { href: "/super-admin/restaurants",  label: "Add Restaurant", desc: "Register new tenant",    icon: Plus,     color: "text-sa-primary", bg: "bg-sa-primary-10" },
                 { href: "/super-admin/payments",     label: "Subscription Payments", desc: "Plan payments from restaurants", icon: BarChart3,color: "text-indigo-400",  bg: "bg-indigo-500/10"  },
                 { href: "/super-admin/billing",      label: "Billing",        desc: "Subscription overview",  icon: Settings, color: "text-sky-400",     bg: "bg-sky-500/10"     },
                 { href: "/super-admin/settings",     label: "Settings",       desc: "Configure system",       icon: Settings, color: "text-zinc-400",    bg: "bg-zinc-500/10"    },
@@ -221,8 +217,8 @@ function SuperAdminDashboard() {
               ))}
               <div className="flex items-center justify-between gap-2">
                 <span className="text-zinc-500">DB Status</span>
-                <span className={`flex items-center gap-1.5 font-medium ${stats?.dbConnected ? "text-emerald-400" : "text-amber-400"}`}>
-                  <span className={`size-1.5 rounded-full ${stats?.dbConnected ? "bg-emerald-500" : "bg-amber-500"}`} />
+                <span className={`flex items-center gap-1.5 font-medium ${stats?.dbConnected ? "text-sa-accent" : "text-amber-400"}`}>
+                  <span className={`size-1.5 rounded-full ${stats?.dbConnected ? "bg-sa-accent" : "bg-amber-500"}`} />
                   {stats?.dbConnected ? "Connected" : "Unavailable"}
                 </span>
               </div>

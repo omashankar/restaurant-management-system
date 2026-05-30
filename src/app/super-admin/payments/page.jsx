@@ -1,5 +1,7 @@
 "use client";
 
+import SuperAdminPageSkeleton from "@/components/super-admin/SuperAdminPageSkeleton";
+import { saSpinnerCls } from "@/config/superAdminTheme";
 import { formatSaMoney } from "@/lib/formatSaMoney";
 import { useToast } from "@/hooks/useToast";
 import {
@@ -10,14 +12,14 @@ import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 
 const STATUS_BADGE = {
-  paid:    "bg-emerald-500/15 text-emerald-400 ring-emerald-500/25",
+  paid:    "sa-status-badge",
   pending: "bg-amber-500/15 text-amber-400 ring-amber-500/25",
   failed:  "bg-red-500/15 text-red-400 ring-red-500/25",
   refunded:"bg-zinc-500/15 text-zinc-400 ring-zinc-500/25",
 };
 
 const STATUS_ICON = {
-  paid:    <CheckCircle2 className="size-3.5 text-emerald-400" />,
+  paid:    <CheckCircle2 className="size-3.5 text-sa-accent" />,
   pending: <Clock className="size-3.5 text-amber-400" />,
   failed:  <XCircle className="size-3.5 text-red-400" />,
   refunded:<XCircle className="size-3.5 text-zinc-400" />,
@@ -159,7 +161,7 @@ export default function PaymentsPage() {
           </button>
           <button type="button" onClick={fetchPayments}
             className="cursor-pointer flex items-center gap-1.5 rounded-xl border border-zinc-700 px-3 py-2.5 text-sm font-medium text-zinc-400 hover:border-zinc-500 hover:text-zinc-200 transition-colors">
-            <RefreshCw className={`size-4 ${loading ? "animate-spin" : ""}`} /> Refresh
+            <RefreshCw className={`size-4 ${loading ? saSpinnerCls : ""}`} /> Refresh
           </button>
         </div>
       </div>
@@ -173,9 +175,9 @@ export default function PaymentsPage() {
       {/* Summary cards */}
       {activeTab === "overview" && (
       <div className="grid gap-3 sm:grid-cols-3">
-        <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/5 px-5 py-4">
+        <div className="rounded-2xl border border-sa-accent-20 bg-sa-accent-5 px-5 py-4">
           <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500">Total Revenue</p>
-          <p className="mt-2 text-3xl font-bold tabular-nums text-emerald-400">
+          <p className="mt-2 text-3xl font-bold tabular-nums text-sa-accent">
             {formatSaMoney(summary.totalRevenue)}
           </p>
           <p className="mt-1 text-xs text-zinc-600">{summary.paidCount} paid transactions</p>
@@ -201,10 +203,10 @@ export default function PaymentsPage() {
           <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-zinc-500" />
           <input value={search} onChange={(e) => setSearch(e.target.value)}
             placeholder="Search restaurant, email, invoice…"
-            className="w-full rounded-xl border border-zinc-800 bg-zinc-900/70 py-2.5 pl-10 pr-4 text-sm text-zinc-100 placeholder:text-zinc-600 outline-none focus:border-emerald-500/40" />
+            className="w-full rounded-xl border border-zinc-800 bg-zinc-900/70 py-2.5 pl-10 pr-4 text-sm text-zinc-100 placeholder:text-zinc-600 outline-none focus-sa-primary" />
         </div>
         <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}
-          className="cursor-pointer rounded-xl border border-zinc-800 bg-zinc-900/70 px-3 py-2.5 text-sm text-zinc-200 outline-none focus:border-emerald-500/40">
+          className="cursor-pointer rounded-xl border border-zinc-800 bg-zinc-900/70 px-3 py-2.5 text-sm text-zinc-200 outline-none focus-sa-primary">
           <option value="all">All statuses</option>
           {STATUSES.map((s) => <option key={s} value={s} className="capitalize">{s}</option>)}
         </select>
@@ -212,11 +214,7 @@ export default function PaymentsPage() {
 
       {/* Table */}
       {loading ? (
-        <div className="space-y-2">
-          {Array.from({ length: 8 }).map((_, i) => (
-            <div key={i} className="h-14 animate-pulse rounded-xl border border-zinc-800 bg-zinc-900/40" />
-          ))}
-        </div>
+        <SuperAdminPageSkeleton rows={8} rowClassName="h-14" />
       ) : payments.length === 0 ? (
         <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-zinc-800 py-20 text-center">
           <DollarSign className="size-10 text-zinc-700" />
@@ -304,11 +302,7 @@ export default function PaymentsPage() {
       {activeTab === "invoices" && (
       <>
       {loading ? (
-        <div className="space-y-2">
-          {Array.from({ length: 6 }).map((_, i) => (
-            <div key={i} className="h-14 animate-pulse rounded-xl border border-zinc-800 bg-zinc-900/40" />
-          ))}
-        </div>
+        <SuperAdminPageSkeleton rows={6} rowClassName="h-14" />
       ) : invoiceRows.length === 0 ? (
         <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-zinc-800 py-20 text-center">
           <FileText className="size-10 text-zinc-700" />

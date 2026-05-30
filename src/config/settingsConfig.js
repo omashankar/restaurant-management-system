@@ -9,6 +9,7 @@ export const SETTINGS_TABS = [
   { id: "email",         label: "Email / SMTP" },
   { id: "hours",         label: "Opening Hours" },
   { id: "contact",       label: "Contact" },
+  { id: "theme",         label: "Theme" },
 ];
 
 export const EMPTY_SETTINGS = {
@@ -68,6 +69,11 @@ export const EMPTY_SETTINGS = {
     email: "",
     address: "",
     googleMapsLink: "",
+  },
+  theme: {
+    primaryColor: "#10b981",
+    accentColor: "#34d399",
+    darkMode: true,
   },
   accessControl: DEFAULT_ACCESS_CONTROL,
 };

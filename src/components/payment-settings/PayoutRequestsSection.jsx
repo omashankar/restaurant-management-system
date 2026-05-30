@@ -5,7 +5,7 @@ import { ChevronLeft, ChevronRight, Loader2, RefreshCw } from "lucide-react";
 
 const STATUS_BADGE = {
   pending:  "bg-amber-500/15 text-amber-400 ring-1 ring-amber-500/25",
-  approved: "bg-emerald-500/15 text-emerald-400 ring-1 ring-emerald-500/25",
+  approved: "bg-ra-primary-15 text-ra-primary ring-1 ring-ra-primary-25",
   rejected: "bg-red-500/15 text-red-400 ring-1 ring-red-500/25",
 };
 
@@ -66,7 +66,7 @@ export default function PayoutRequestsSection({ settlement, showToast }) {
         </div>
         <div className="flex gap-2">
           <button type="button" onClick={() => setShowForm((v) => !v)}
-            className="cursor-pointer rounded-xl bg-emerald-500 px-3 py-2 text-sm font-semibold text-zinc-950 hover:bg-emerald-400 transition-colors">
+            className="cursor-pointer rounded-xl bg-ra-primary px-3 py-2 text-sm font-semibold text-zinc-950 hover:brightness-110 transition-colors">
             + Request Payout
           </button>
           <button type="button" onClick={fetchData}
@@ -85,13 +85,13 @@ export default function PayoutRequestsSection({ settlement, showToast }) {
               <label className="mb-1 block text-xs text-zinc-500">Amount (₹)</label>
               <input type="number" value={amount} onChange={(e) => setAmount(e.target.value)}
                 placeholder={`Min ₹${settlement?.minWithdrawalAmount ?? 100}`}
-                className="w-full rounded-xl border border-zinc-800 bg-zinc-950/80 px-3 py-2.5 text-sm text-zinc-100 outline-none focus:border-emerald-500/45" />
+                className="w-full rounded-xl border border-zinc-800 bg-zinc-950/80 px-3 py-2.5 text-sm text-zinc-100 outline-none focus-ra-primary" />
             </div>
             <div>
               <label className="mb-1 block text-xs text-zinc-500">Note (optional)</label>
               <input value={note} onChange={(e) => setNote(e.target.value)}
                 placeholder="Any note for admin"
-                className="w-full rounded-xl border border-zinc-800 bg-zinc-950/80 px-3 py-2.5 text-sm text-zinc-100 outline-none focus:border-emerald-500/45" />
+                className="w-full rounded-xl border border-zinc-800 bg-zinc-950/80 px-3 py-2.5 text-sm text-zinc-100 outline-none focus-ra-primary" />
             </div>
           </div>
           <div className="flex gap-2 justify-end">
@@ -100,7 +100,7 @@ export default function PayoutRequestsSection({ settlement, showToast }) {
               Cancel
             </button>
             <button type="button" onClick={submitRequest} disabled={submitting}
-              className="cursor-pointer inline-flex items-center gap-2 rounded-xl bg-emerald-500 px-4 py-2 text-sm font-semibold text-zinc-950 hover:bg-emerald-400 disabled:opacity-50 transition-colors">
+              className="cursor-pointer inline-flex items-center gap-2 rounded-xl bg-ra-primary px-4 py-2 text-sm font-semibold text-zinc-950 hover:brightness-110 disabled:opacity-50 transition-colors">
               {submitting && <Loader2 className="size-4 animate-spin" />}
               Submit Request
             </button>

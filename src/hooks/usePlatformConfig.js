@@ -13,7 +13,7 @@ const DEFAULT_CONFIG = {
   },
   currency: "INR",
   language: "en",
-  theme: { primaryColor: "#10b981", accentColor: "#f43f5e", darkMode: true },
+  theme: { primaryColor: "#f43f5e", accentColor: "#10b981", darkMode: true },
   integrations: { googleAnalyticsId: "", metaPixelId: "" },
 };
 
@@ -50,6 +50,7 @@ export function usePlatformConfig() {
           ...DEFAULT_CONFIG,
           ...data,
           features: { ...DEFAULT_CONFIG.features, ...(data.features ?? {}) },
+          theme: { ...DEFAULT_CONFIG.theme, ...(data.theme ?? {}) },
         };
         _cache = next;
         _cacheTime = Date.now();

@@ -121,12 +121,12 @@ export default function CategoriesPage() {
       )}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div className="flex items-start gap-3">
-          <span className="mt-1 flex size-10 shrink-0 items-center justify-center rounded-xl bg-emerald-500/15 text-emerald-400 ring-1 ring-emerald-500/25"><FolderTree className="size-5" /></span>
+          <span className="mt-1 flex size-10 shrink-0 items-center justify-center rounded-xl bg-ra-primary-15 text-ra-primary ring-1 ring-ra-primary-25"><FolderTree className="size-5" /></span>
           <div><h1 className="text-2xl font-semibold tracking-tight text-zinc-50">Categories</h1><p className="mt-1 text-sm text-zinc-500">Group menu items for POS and printing.</p></div>
         </div>
         <div className="flex items-center gap-2">
           <button type="button" onClick={fetchCategories} className="cursor-pointer flex items-center gap-1.5 rounded-xl border border-zinc-700 px-3 py-2.5 text-sm font-medium text-zinc-400 hover:border-zinc-500 hover:text-zinc-200 transition-colors"><RefreshCw className="size-4" /></button>
-          <button type="button" onClick={openCreate} className="cursor-pointer inline-flex items-center gap-2 rounded-xl bg-emerald-500 px-4 py-2.5 text-sm font-semibold text-zinc-950 hover:bg-emerald-400"><Plus className="size-4" /> Add Category</button>
+          <button type="button" onClick={openCreate} className="cursor-pointer inline-flex items-center gap-2 rounded-xl bg-ra-primary px-4 py-2.5 text-sm font-semibold text-zinc-950 hover:brightness-110"><Plus className="size-4" /> Add Category</button>
         </div>
       </div>
 
@@ -134,7 +134,7 @@ export default function CategoriesPage() {
 
       {total === 0 ? (
         <EmptyState title="No categories" description="Create categories like Starters, Main Course, Drinks."
-          action={<button type="button" onClick={openCreate} className="cursor-pointer rounded-xl bg-emerald-500 px-4 py-2 text-sm font-semibold text-zinc-950 hover:bg-emerald-400">Add Category</button>} />
+          action={<button type="button" onClick={openCreate} className="cursor-pointer rounded-xl bg-ra-primary px-4 py-2 text-sm font-semibold text-zinc-950 hover:brightness-110">Add Category</button>} />
       ) : (
         <DataTableShell>
           <table className="min-w-full text-left text-sm">
@@ -149,7 +149,7 @@ export default function CategoriesPage() {
                   <td className="px-4 py-3"><span className="inline-flex rounded-full bg-zinc-800 px-2.5 py-0.5 text-xs font-semibold text-zinc-300">{row.itemCount ?? 0}</span></td>
                   <td className="px-4 py-3 text-right">
                     <div className="flex justify-end gap-1">
-                      <button type="button" onClick={() => openEdit(row)} className="cursor-pointer rounded-lg p-2 text-zinc-400 hover:bg-zinc-800 hover:text-emerald-400"><Pencil className="size-4" /></button>
+                      <button type="button" onClick={() => openEdit(row)} className="cursor-pointer rounded-lg p-2 text-zinc-400 hover:bg-zinc-800 hover-ra-primary"><Pencil className="size-4" /></button>
                       <button type="button" onClick={() => setDeleteTarget(row)} className="cursor-pointer rounded-lg p-2 text-zinc-400 hover:bg-red-500/15 hover:text-red-400"><Trash2 className="size-4" /></button>
                     </div>
                   </td>
@@ -164,7 +164,7 @@ export default function CategoriesPage() {
       <Modal open={modalOpen} onClose={() => setModalOpen(false)} title={editingId ? "Edit Category" : "Add Category"}
         footer={<div className="flex justify-end gap-2">
           <button type="button" onClick={() => setModalOpen(false)} className="cursor-pointer rounded-xl border border-zinc-700 px-4 py-2 text-sm text-zinc-300 hover:border-zinc-500">Cancel</button>
-          <button type="button" onClick={save} disabled={saving} className="cursor-pointer rounded-xl bg-emerald-500 px-4 py-2 text-sm font-semibold text-zinc-950 hover:bg-emerald-400 disabled:opacity-40">{saving ? "Saving…" : "Save"}</button>
+          <button type="button" onClick={save} disabled={saving} className="cursor-pointer rounded-xl bg-ra-primary px-4 py-2 text-sm font-semibold text-zinc-950 hover:brightness-110 disabled:opacity-40">{saving ? "Saving…" : "Save"}</button>
         </div>}>
         <div className="space-y-4">
           {formError && <p className="rounded-xl border border-red-500/20 bg-red-500/10 px-3 py-2 text-xs text-red-400">{formError}</p>}
@@ -178,13 +178,13 @@ export default function CategoriesPage() {
               }}
               placeholder="e.g. Starters, Main Course, Drinks"
               aria-invalid={fieldErrors.name ? true : undefined}
-              className={`mt-1 w-full rounded-xl border bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus:border-emerald-500/40 placeholder:text-zinc-600 ${
+              className={`mt-1 w-full rounded-xl border bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus-ra-primary placeholder:text-zinc-600 ${
                 fieldErrors.name ? "border-red-500/50" : "border-zinc-700"
               }`}
             />
             {fieldErrors.name && <p className="mt-1 text-xs text-red-400">{fieldErrors.name}</p>}
           </div>
-          <div><label className="text-xs font-medium text-zinc-500">Description (optional)</label><textarea rows={2} value={form.description} onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))} placeholder="Short description" className="mt-1 w-full resize-none rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus:border-emerald-500/40 placeholder:text-zinc-600" /></div>
+          <div><label className="text-xs font-medium text-zinc-500">Description (optional)</label><textarea rows={2} value={form.description} onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))} placeholder="Short description" className="mt-1 w-full resize-none rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus-ra-primary placeholder:text-zinc-600" /></div>
         </div>
       </Modal>
 

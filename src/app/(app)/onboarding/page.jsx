@@ -38,19 +38,19 @@ function ProgressBar({ current, total }) {
     <div className="mb-8">
       <div className="flex items-center justify-between mb-2">
         <span className="text-xs text-zinc-500">Step {current} of {total}</span>
-        <span className="text-xs text-emerald-400 font-medium">{pct}% complete</span>
+        <span className="text-xs text-ra-primary font-medium">{pct}% complete</span>
       </div>
       <div className="h-2 rounded-full bg-zinc-800">
         <div
-          className="h-2 rounded-full bg-emerald-500 transition-all duration-500"
+          className="h-2 rounded-full bg-ra-primary transition-all duration-500"
           style={{ width: `${pct}%` }}
         />
       </div>
       <div className="mt-3 flex justify-between">
         {Array.from({ length: total }).map((_, i) => (
           <div key={i} className={`flex size-7 items-center justify-center rounded-full text-xs font-bold transition-all ${
-            i + 1 < current ? "bg-emerald-500 text-zinc-950" :
-            i + 1 === current ? "bg-emerald-500/20 text-emerald-400 ring-2 ring-emerald-500" :
+            i + 1 < current ? "bg-ra-primary text-zinc-950" :
+            i + 1 === current ? "bg-ra-primary-20 text-ra-primary ring-2 ring-ra-primary-25" :
             "bg-zinc-800 text-zinc-600"
           }`}>
             {i + 1 < current ? <CheckCircle2 className="size-4" /> : i + 1}
@@ -83,7 +83,7 @@ function Field({ label, hint, children }) {
   );
 }
 
-const inputCls = "w-full rounded-xl border border-zinc-800 bg-zinc-950/80 px-3 py-2.5 text-sm text-zinc-100 outline-none transition-colors focus:border-emerald-500/45 placeholder:text-zinc-600";
+const inputCls = "w-full rounded-xl border border-zinc-800 bg-zinc-950/80 px-3 py-2.5 text-sm text-zinc-100 outline-none transition-colors focus-ra-primary placeholder:text-zinc-600";
 
 export default function OnboardingPage() {
   const { t } = useLanguage();
@@ -269,7 +269,7 @@ export default function OnboardingPage() {
           <h1 className="text-3xl font-bold text-zinc-50">{t("onboarding.title")}</h1>
           <p className="mt-2 text-zinc-500">{t("onboarding.subtitle")}</p>
           {autoSaveMsg && (
-            <p className="mt-2 text-xs text-emerald-400">✓ {autoSaveMsg}</p>
+            <p className="mt-2 text-xs text-ra-primary">✓ {autoSaveMsg}</p>
           )}
         </div>
 
@@ -306,7 +306,7 @@ export default function OnboardingPage() {
 
               {!otpSent ? (
                 <button type="button" onClick={sendOtp} disabled={otpLoading || draft.mobile.length < 10}
-                  className="cursor-pointer w-full rounded-xl bg-emerald-500 py-2.5 text-sm font-semibold text-zinc-950 hover:bg-emerald-400 disabled:opacity-50 transition-colors">
+                  className="cursor-pointer w-full rounded-xl bg-ra-primary py-2.5 text-sm font-semibold text-zinc-950 hover:brightness-110 disabled:opacity-50 transition-colors">
                   {otpLoading ? <Loader2 className="mx-auto size-4 animate-spin" /> : "Send OTP"}
                 </button>
               ) : !draft.mobileVerified ? (
@@ -322,7 +322,7 @@ export default function OnboardingPage() {
                     />
                   </Field>
                   <button type="button" onClick={verifyOtp} disabled={otpLoading || otp.length < 6}
-                    className="cursor-pointer w-full rounded-xl bg-emerald-500 py-2.5 text-sm font-semibold text-zinc-950 hover:bg-emerald-400 disabled:opacity-50 transition-colors">
+                    className="cursor-pointer w-full rounded-xl bg-ra-primary py-2.5 text-sm font-semibold text-zinc-950 hover:brightness-110 disabled:opacity-50 transition-colors">
                     {otpLoading ? <Loader2 className="mx-auto size-4 animate-spin" /> : "Verify OTP"}
                   </button>
                   <button type="button" onClick={sendOtp} disabled={otpLoading}
@@ -331,7 +331,7 @@ export default function OnboardingPage() {
                   </button>
                 </div>
               ) : (
-                <div className="flex items-center gap-2 rounded-xl border border-emerald-500/25 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-400">
+                <div className="flex items-center gap-2 rounded-xl border border-ra-primary-25 bg-ra-primary-10 px-4 py-3 text-sm text-ra-primary">
                   <CheckCircle2 className="size-4" /> Mobile verified successfully!
                 </div>
               )}
@@ -367,7 +367,7 @@ export default function OnboardingPage() {
                     <button key={type} type="button" onClick={() => update({ restaurantType: type })}
                       className={`cursor-pointer rounded-xl border px-3 py-2 text-sm font-medium transition-all ${
                         draft.restaurantType === type
-                          ? "border-emerald-500/40 bg-emerald-500/15 text-emerald-400"
+                          ? "border-ra-primary-40 bg-ra-primary-15 text-ra-primary"
                           : "border-zinc-800 bg-zinc-950/40 text-zinc-400 hover:border-zinc-700 hover:text-zinc-200"
                       }`}>
                       {type}
@@ -429,8 +429,8 @@ export default function OnboardingPage() {
                 <div className="flex items-center gap-3">
                   <input type="range" min="1" max="30" value={draft.deliveryRadius}
                     onChange={(e) => update({ deliveryRadius: e.target.value })}
-                    className="flex-1 accent-emerald-500" />
-                  <span className="w-16 rounded-xl border border-zinc-800 bg-zinc-950/80 px-3 py-2 text-center text-sm font-semibold text-emerald-400">
+                    className="flex-1 accent-ra-primary" />
+                  <span className="w-16 rounded-xl border border-zinc-800 bg-zinc-950/80 px-3 py-2 text-center text-sm font-semibold text-ra-primary">
                     {draft.deliveryRadius} km
                   </span>
                 </div>
@@ -489,7 +489,7 @@ export default function OnboardingPage() {
                       <button key={cat} type="button"
                         onClick={() => update({ categories: active ? draft.categories.filter((c) => c !== cat) : [...draft.categories, cat] })}
                         className={`cursor-pointer rounded-xl border px-3 py-1.5 text-xs font-semibold transition-all ${
-                          active ? "border-emerald-500/40 bg-emerald-500/15 text-emerald-400" : "border-zinc-800 bg-zinc-950/40 text-zinc-500 hover:border-zinc-700 hover:text-zinc-300"
+                          active ? "border-ra-primary-40 bg-ra-primary-15 text-ra-primary" : "border-zinc-800 bg-zinc-950/40 text-zinc-500 hover:border-zinc-700 hover:text-zinc-300"
                         }`}>
                         {active ? "✓ " : ""}{cat}
                       </button>
@@ -556,7 +556,7 @@ export default function OnboardingPage() {
         {step === 7 && (
           <StepCard title={t("onboarding.congratulations")} description={t("onboarding.restaurantReady")}>
             <div className="space-y-4 text-center">
-              <div className="mx-auto flex size-20 items-center justify-center rounded-full bg-emerald-500/15 text-5xl">
+              <div className="mx-auto flex size-20 items-center justify-center rounded-full bg-ra-primary-15 text-5xl">
                 🚀
               </div>
               <div className="space-y-2">
@@ -598,12 +598,12 @@ export default function OnboardingPage() {
 
           {step < TOTAL_STEPS ? (
             <button type="button" onClick={nextStep}
-              className="cursor-pointer inline-flex items-center gap-2 rounded-xl bg-emerald-500 px-5 py-2.5 text-sm font-semibold text-zinc-950 hover:bg-emerald-400 transition-colors">
+              className="cursor-pointer inline-flex items-center gap-2 rounded-xl bg-ra-primary px-5 py-2.5 text-sm font-semibold text-zinc-950 hover:brightness-110 transition-colors">
               {t("next")} <ChevronRight className="size-4" />
             </button>
           ) : (
             <button type="button" onClick={finishOnboarding} disabled={saving}
-              className="cursor-pointer inline-flex items-center gap-2 rounded-xl bg-emerald-500 px-6 py-2.5 text-sm font-semibold text-zinc-950 hover:bg-emerald-400 disabled:opacity-50 transition-colors">
+              className="cursor-pointer inline-flex items-center gap-2 rounded-xl bg-ra-primary px-6 py-2.5 text-sm font-semibold text-zinc-950 hover:brightness-110 disabled:opacity-50 transition-colors">
               {saving ? <Loader2 className="size-4 animate-spin" /> : null}
               {saving ? "Launching..." : t("onboarding.launchRestaurant")}
             </button>

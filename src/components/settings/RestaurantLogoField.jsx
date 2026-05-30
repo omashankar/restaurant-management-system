@@ -4,7 +4,7 @@ import { ImageIcon, Loader2, Trash2, Upload } from "lucide-react";
 import { useRef, useState } from "react";
 
 const inputCls =
-  "w-full rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus:border-emerald-500/40 placeholder:text-zinc-600";
+  "w-full rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus-ra-primary placeholder:text-zinc-600";
 
 export default function RestaurantLogoField({ logoUrl, onChange, disabled, hint }) {
   const fileRef = useRef(null);
@@ -65,12 +65,12 @@ export default function RestaurantLogoField({ logoUrl, onChange, disabled, hint 
               type="button"
               disabled={disabled || uploading}
               onClick={() => fileRef.current?.click()}
-              className="inline-flex cursor-pointer items-center gap-2 rounded-xl border border-zinc-700 bg-zinc-900 px-4 py-2 text-sm font-medium text-zinc-200 hover:border-emerald-500/40 disabled:opacity-50"
+              className="inline-flex cursor-pointer items-center gap-2 rounded-xl border border-zinc-700 bg-zinc-900 px-4 py-2 text-sm font-medium text-zinc-200 hover-border-ra-primary-40 disabled:opacity-50"
             >
               {uploading ? (
-                <Loader2 className="size-4 animate-spin text-emerald-400" />
+                <Loader2 className="size-4 animate-spin text-ra-primary" />
               ) : (
-                <Upload className="size-4 text-emerald-400" />
+                <Upload className="size-4 text-ra-primary" />
               )}
               {uploading ? "Uploading…" : "Upload logo"}
             </button>

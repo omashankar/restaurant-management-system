@@ -76,9 +76,9 @@ export default function CustomerSearch({ onCustomerSelect }) {
 
   if (selected) {
     return (
-      <div className="flex items-center justify-between gap-3 rounded-xl border border-emerald-500/30 bg-emerald-500/5 px-3 py-2.5">
+      <div className="flex items-center justify-between gap-3 rounded-xl border border-ra-primary-30 bg-ra-primary-5 px-3 py-2.5">
         <div>
-          <p className="text-sm font-semibold text-emerald-300">{selected.name}</p>
+          <p className="text-sm font-semibold text-ra-primary-muted">{selected.name}</p>
           <p className="text-xs text-zinc-500">
             {selected.phone}
             {selected.email ? ` · ${selected.email}` : ""}
@@ -120,7 +120,7 @@ export default function CustomerSearch({ onCustomerSelect }) {
               openAddForm();
             }
           }}
-          className="cursor-pointer m-1 flex size-10 shrink-0 items-center justify-center rounded-lg bg-zinc-800 text-zinc-300 transition-colors hover:bg-zinc-700 hover:text-emerald-400"
+          className="cursor-pointer m-1 flex size-10 shrink-0 items-center justify-center rounded-lg bg-zinc-800 text-zinc-300 transition-colors hover:bg-zinc-700 hover-ra-primary"
           aria-label="Add new customer"
           title="Add new customer"
         >
@@ -164,7 +164,7 @@ export default function CustomerSearch({ onCustomerSelect }) {
               });
               setQuery("");
             }}
-            className="cursor-pointer flex w-full items-center gap-2 border-t border-zinc-800/60 px-4 py-3 text-sm font-semibold text-emerald-400 transition-colors hover:bg-zinc-800/60"
+            className="cursor-pointer flex w-full items-center gap-2 border-t border-zinc-800/60 px-4 py-3 text-sm font-semibold text-ra-primary transition-colors hover:bg-zinc-800/60"
           >
             <UserPlus className="size-4" />
             Add new customer
@@ -192,7 +192,7 @@ export default function CustomerSearch({ onCustomerSelect }) {
               placeholder="e.g. Rahul Sharma"
               maxLength={80}
               aria-invalid={fieldErrors.name ? true : undefined}
-              className="w-full rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2 text-sm text-zinc-100 outline-none focus:border-emerald-500/40"
+              className="w-full rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2 text-sm text-zinc-100 outline-none focus-ra-primary"
             />
             {fieldErrors.name && <p className="mt-1 text-xs text-red-400">{fieldErrors.name}</p>}
           </div>
@@ -220,7 +220,7 @@ export default function CustomerSearch({ onCustomerSelect }) {
               }}
               placeholder="name@example.com"
               aria-invalid={fieldErrors.email ? true : undefined}
-              className="w-full rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2 text-sm text-zinc-100 outline-none focus:border-emerald-500/40"
+              className="w-full rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2 text-sm text-zinc-100 outline-none focus-ra-primary"
             />
             {fieldErrors.email && <p className="mt-1 text-xs text-red-400">{fieldErrors.email}</p>}
           </div>
@@ -233,7 +233,7 @@ export default function CustomerSearch({ onCustomerSelect }) {
             <button
               type="submit"
               disabled={saving}
-              className="cursor-pointer flex flex-1 items-center justify-center gap-2 rounded-xl bg-emerald-500 py-2 text-sm font-semibold text-zinc-950 hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-50"
+              className="cursor-pointer flex flex-1 items-center justify-center gap-2 rounded-xl bg-ra-primary py-2 text-sm font-semibold text-zinc-950 hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
             >
               {saving ? (
                 <>

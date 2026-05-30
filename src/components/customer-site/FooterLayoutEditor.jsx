@@ -46,7 +46,7 @@ export default function FooterLayoutEditor({
         <button
           type="button"
           onClick={onBack}
-          className="inline-flex items-center gap-2 rounded-xl border border-zinc-700 px-3 py-2 text-sm text-zinc-300 hover:border-emerald-500/40"
+          className="inline-flex items-center gap-2 rounded-xl border border-zinc-700 px-3 py-2 text-sm text-zinc-300 hover:border-ra-primary-40"
         >
           <ArrowLeft className="size-4" /> Back
         </button>
@@ -91,7 +91,7 @@ export default function FooterLayoutEditor({
       >
         <p className="text-xs text-zinc-500">
           Hours are loaded from{" "}
-          <Link href="/settings" className="text-emerald-400 hover:underline">
+          <Link href="/settings" className="text-ra-primary hover:underline">
             Settings → Hours
           </Link>
           .
@@ -109,7 +109,7 @@ export default function FooterLayoutEditor({
             type="checkbox"
             checked={footer.showAppleStore !== false}
             onChange={() => setFooter({ showAppleStore: footer.showAppleStore === false })}
-            className="accent-emerald-500"
+            className="accent-ra-primary"
           />
           Apple App Store
         </label>
@@ -126,7 +126,7 @@ export default function FooterLayoutEditor({
             type="checkbox"
             checked={footer.showPlayStore !== false}
             onChange={() => setFooter({ showPlayStore: footer.showPlayStore === false })}
-            className="accent-emerald-500"
+            className="accent-ra-primary"
           />
           Google Play Store
         </label>

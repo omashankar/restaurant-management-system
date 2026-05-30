@@ -5,7 +5,7 @@ import { ChevronLeft, ChevronRight, RefreshCw, Search } from "lucide-react";
 import { PAYMENT_METHOD_LABELS } from "@/config/paymentConfig";
 
 const STATUS_BADGE = {
-  paid:    "bg-emerald-500/15 text-emerald-400 ring-1 ring-emerald-500/25",
+  paid:    "bg-ra-primary-15 text-ra-primary ring-1 ring-ra-primary-25",
   pending: "bg-amber-500/15 text-amber-400 ring-1 ring-amber-500/25",
   failed:  "bg-red-500/15 text-red-400 ring-1 ring-red-500/25",
   refunded:"bg-zinc-500/15 text-zinc-400 ring-1 ring-zinc-500/25",
@@ -62,9 +62,9 @@ export default function PaymentTransactionsSection({ showToast }) {
       </div>
 
       <div className="mb-5 grid gap-3 sm:grid-cols-2">
-        <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/5 px-4 py-3">
+        <div className="rounded-xl border border-ra-primary-20 bg-ra-primary-5 px-4 py-3">
           <p className="text-xs text-zinc-500">Total Revenue</p>
-          <p className="mt-1 text-xl font-bold tabular-nums text-emerald-400">₹{summary.totalAmount.toLocaleString()}</p>
+          <p className="mt-1 text-xl font-bold tabular-nums text-ra-primary">₹{summary.totalAmount.toLocaleString()}</p>
         </div>
         <div className="rounded-xl border border-zinc-700 bg-zinc-950/40 px-4 py-3">
           <p className="text-xs text-zinc-500">Paid Transactions</p>
@@ -74,7 +74,7 @@ export default function PaymentTransactionsSection({ showToast }) {
 
       <div className="mb-4 flex flex-wrap gap-3">
         <select value={status} onChange={(e) => setStatus(e.target.value)}
-          className="cursor-pointer rounded-xl border border-zinc-800 bg-zinc-950/80 px-3 py-2 text-sm text-zinc-200 outline-none focus:border-emerald-500/40">
+          className="cursor-pointer rounded-xl border border-zinc-800 bg-zinc-950/80 px-3 py-2 text-sm text-zinc-200 outline-none focus-ra-primary">
           <option value="all">All Statuses</option>
           <option value="paid">Paid</option>
           <option value="pending">Pending</option>
@@ -82,16 +82,16 @@ export default function PaymentTransactionsSection({ showToast }) {
           <option value="refunded">Refunded</option>
         </select>
         <select value={method} onChange={(e) => setMethod(e.target.value)}
-          className="cursor-pointer rounded-xl border border-zinc-800 bg-zinc-950/80 px-3 py-2 text-sm text-zinc-200 outline-none focus:border-emerald-500/40">
+          className="cursor-pointer rounded-xl border border-zinc-800 bg-zinc-950/80 px-3 py-2 text-sm text-zinc-200 outline-none focus-ra-primary">
           <option value="all">All Methods</option>
           {Object.entries(PAYMENT_METHOD_LABELS).map(([k, v]) => (
             <option key={k} value={k}>{v}</option>
           ))}
         </select>
         <input type="date" value={from} onChange={(e) => setFrom(e.target.value)}
-          className="rounded-xl border border-zinc-800 bg-zinc-950/80 px-3 py-2 text-sm text-zinc-200 outline-none focus:border-emerald-500/40" />
+          className="rounded-xl border border-zinc-800 bg-zinc-950/80 px-3 py-2 text-sm text-zinc-200 outline-none focus-ra-primary" />
         <input type="date" value={to} onChange={(e) => setTo(e.target.value)}
-          className="rounded-xl border border-zinc-800 bg-zinc-950/80 px-3 py-2 text-sm text-zinc-200 outline-none focus:border-emerald-500/40" />
+          className="rounded-xl border border-zinc-800 bg-zinc-950/80 px-3 py-2 text-sm text-zinc-200 outline-none focus-ra-primary" />
       </div>
 
       {loading ? (

@@ -1,5 +1,7 @@
 "use client";
 
+import "@/app/(app)/restaurant-admin-theme.css";
+import { useRestaurantAdminThemeStyles } from "@/hooks/useRestaurantAdminThemeStyles";
 import { useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import MobileDrawer from "./MobileDrawer";
@@ -10,6 +12,7 @@ import Sidebar from "./Sidebar";
 const SIDEBAR_STATE_KEY = "sidebarCollapsed";
 
 export default function LayoutWrapper({ children }) {
+  useRestaurantAdminThemeStyles();
   const pathname = usePathname();
   const [mounted, setMounted] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -108,7 +111,7 @@ export default function LayoutWrapper({ children }) {
 
   return (
     <div
-      className="h-screen overflow-hidden bg-zinc-950"
+      className="restaurant-admin-panel h-screen overflow-hidden bg-zinc-950"
       onTouchStart={onTouchStart}
       onTouchEnd={onTouchEnd}
     >

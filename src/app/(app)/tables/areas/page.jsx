@@ -210,7 +210,7 @@ export default function TableAreasPage() {
       {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div className="flex items-start gap-3">
-          <span className="mt-1 flex size-10 shrink-0 items-center justify-center rounded-xl bg-emerald-500/15 text-emerald-400 ring-1 ring-emerald-500/25">
+          <span className="mt-1 flex size-10 shrink-0 items-center justify-center rounded-xl bg-ra-primary-15 text-ra-primary ring-1 ring-ra-primary-25">
             <LayoutGrid className="size-5" />
           </span>
           <div>
@@ -228,7 +228,7 @@ export default function TableAreasPage() {
             <RefreshCw className="size-4" />
           </button>
           <button type="button" onClick={openCreate}
-            className="cursor-pointer inline-flex items-center gap-2 rounded-xl bg-emerald-500 px-4 py-2.5 text-sm font-semibold text-zinc-950 hover:bg-emerald-400">
+            className="cursor-pointer inline-flex items-center gap-2 rounded-xl bg-ra-primary px-4 py-2.5 text-sm font-semibold text-zinc-950 hover:brightness-110">
             <Plus className="size-4" /> Add Area
           </button>
         </div>
@@ -241,7 +241,7 @@ export default function TableAreasPage() {
           description="Create seating areas like Indoor, Outdoor, VIP to organize your tables."
           action={
             <button type="button" onClick={openCreate}
-              className="cursor-pointer rounded-xl bg-emerald-500 px-4 py-2 text-sm font-semibold text-zinc-950 hover:bg-emerald-400">
+              className="cursor-pointer rounded-xl bg-ra-primary px-4 py-2 text-sm font-semibold text-zinc-950 hover:brightness-110">
               Add Area
             </button>
           }
@@ -280,7 +280,7 @@ export default function TableAreasPage() {
                 </div>
                 <div className="mt-4 flex gap-1.5 border-t border-zinc-800/80 pt-3">
                   <button type="button" onClick={() => openEdit(area)}
-                    className="cursor-pointer flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-zinc-800 py-2 text-xs font-medium text-zinc-400 transition-colors hover:border-emerald-500/40 hover:text-emerald-400">
+                    className="cursor-pointer flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-zinc-800 py-2 text-xs font-medium text-zinc-400 transition-colors hover-border-ra-primary-40 hover-ra-primary">
                     <Pencil className="size-3.5" /> Edit
                   </button>
                   <button type="button" onClick={() => setDeleteTarget(area)}
@@ -304,7 +304,7 @@ export default function TableAreasPage() {
               Cancel
             </button>
             <button type="button" onClick={save} disabled={saving || uploadingImage}
-              className="cursor-pointer rounded-xl bg-emerald-500 px-4 py-2 text-sm font-semibold text-zinc-950 hover:bg-emerald-400 disabled:opacity-40">
+              className="cursor-pointer rounded-xl bg-ra-primary px-4 py-2 text-sm font-semibold text-zinc-950 hover:brightness-110 disabled:opacity-40">
               {uploadingImage ? "Uploading image…" : saving ? "Saving…" : "Save"}
             </button>
           </div>
@@ -321,7 +321,7 @@ export default function TableAreasPage() {
               }}
               placeholder="e.g. Indoor, Rooftop, VIP"
               aria-invalid={fieldErrors.name ? true : undefined}
-              className={`mt-1 w-full rounded-xl border bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus:border-emerald-500/50 placeholder:text-zinc-600 ${
+              className={`mt-1 w-full rounded-xl border bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus-ra-primary placeholder:text-zinc-600 ${
                 fieldErrors.name ? "border-red-500/50" : "border-zinc-700"
               }`}
             />
@@ -331,7 +331,7 @@ export default function TableAreasPage() {
             <label className="text-xs font-medium text-zinc-500">Description (optional)</label>
             <input value={form.description} onChange={(e) => set("description", e.target.value)}
               placeholder="Short description"
-              className="mt-1 w-full rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus:border-emerald-500/50 placeholder:text-zinc-600" />
+              className="mt-1 w-full rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus-ra-primary placeholder:text-zinc-600" />
           </div>
           <div>
             <label className="text-xs font-medium text-zinc-500">Area Image (JPG, PNG)</label>

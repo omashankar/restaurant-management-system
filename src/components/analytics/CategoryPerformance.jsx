@@ -21,7 +21,7 @@ export default function CategoryPerformance({ data = [] }) {
         {data.map((c, i) => {
           const pct   = Math.round(((c.revenue ?? 0) / max) * 100);
           const share = total > 0 ? (((c.revenue ?? 0) / total) * 100).toFixed(0) : 0;
-          const color = c.color ?? "#10b981";
+          const color = c.color ?? "var(--ra-primary)";
           return (
             <div key={c.name ?? i} className="space-y-1.5">
               <div className="flex items-center justify-between gap-2">

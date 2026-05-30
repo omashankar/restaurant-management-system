@@ -198,7 +198,7 @@ export default function StaffModulePage() {
       {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div className="flex items-start gap-3">
-          <span className="mt-1 flex size-10 shrink-0 items-center justify-center rounded-xl bg-emerald-500/15 text-emerald-400 ring-1 ring-emerald-500/25">
+          <span className="mt-1 flex size-10 shrink-0 items-center justify-center rounded-xl bg-ra-primary-15 text-ra-primary ring-1 ring-ra-primary-25">
             <Users className="size-5" />
           </span>
           <div>
@@ -213,7 +213,7 @@ export default function StaffModulePage() {
           </button>
           {isAdmin && (
             <button type="button" onClick={openCreate}
-              className="cursor-pointer inline-flex items-center gap-2 rounded-xl bg-emerald-500 px-4 py-2.5 text-sm font-semibold text-zinc-950 hover:bg-emerald-400">
+              className="cursor-pointer inline-flex items-center gap-2 rounded-xl bg-ra-primary px-4 py-2.5 text-sm font-semibold text-zinc-950 hover:brightness-110">
               <Plus className="size-4" /> Add Staff
             </button>
           )}
@@ -247,7 +247,7 @@ export default function StaffModulePage() {
           description="Add your team to manage shifts and access."
           action={isAdmin && (
             <button type="button" onClick={openCreate}
-              className="cursor-pointer rounded-xl bg-emerald-500 px-4 py-2 text-sm font-semibold text-zinc-950 hover:bg-emerald-400">
+              className="cursor-pointer rounded-xl bg-ra-primary px-4 py-2 text-sm font-semibold text-zinc-950 hover:brightness-110">
               Add Staff
             </button>
           )}
@@ -290,7 +290,7 @@ export default function StaffModulePage() {
                   <td className="px-4 py-3">
                     <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold capitalize ring-1 ${
                       row.status === "active"
-                        ? "bg-emerald-500/15 text-emerald-300 ring-emerald-500/25"
+                        ? "bg-ra-primary-15 text-ra-primary-muted ring-ra-primary-25"
                         : "bg-amber-500/15 text-amber-200 ring-amber-500/25"
                     }`}>
                       {row.status?.replace("-", " ")}
@@ -300,7 +300,7 @@ export default function StaffModulePage() {
                     <td className="px-4 py-3 text-right">
                       <div className="flex justify-end gap-1">
                         <button type="button" onClick={() => openEdit(row)}
-                          className="cursor-pointer rounded-lg p-2 text-zinc-400 hover:bg-zinc-800 hover:text-emerald-400" aria-label="Edit">
+                          className="cursor-pointer rounded-lg p-2 text-zinc-400 hover:bg-zinc-800 hover-ra-primary" aria-label="Edit">
                           <Pencil className="size-4" />
                         </button>
                         <button type="button" onClick={() => setDeleteTarget(row)}
@@ -332,7 +332,7 @@ export default function StaffModulePage() {
               Cancel
             </button>
             <button type="button" onClick={saveStaff} disabled={saving}
-              className="cursor-pointer rounded-xl bg-emerald-500 px-4 py-2 text-sm font-semibold text-zinc-950 hover:bg-emerald-400 disabled:opacity-50">
+              className="cursor-pointer rounded-xl bg-ra-primary px-4 py-2 text-sm font-semibold text-zinc-950 hover:brightness-110 disabled:opacity-50">
               {saving ? "Saving…" : "Save"}
             </button>
           </div>
@@ -353,7 +353,7 @@ export default function StaffModulePage() {
                 }}
                 placeholder="Alex Rivera"
                 aria-invalid={fieldErrors.name ? true : undefined}
-                className={`mt-1 w-full rounded-xl border bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus:border-emerald-500/40 placeholder:text-zinc-600 ${
+                className={`mt-1 w-full rounded-xl border bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus-ra-primary placeholder:text-zinc-600 ${
                   fieldErrors.name ? "border-red-500/50" : "border-zinc-700"
                 }`}
               />
@@ -370,7 +370,7 @@ export default function StaffModulePage() {
                 }}
                 placeholder="alex@restaurant.com"
                 aria-invalid={fieldErrors.email ? true : undefined}
-                className={`mt-1 w-full rounded-xl border bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus:border-emerald-500/40 placeholder:text-zinc-600 ${
+                className={`mt-1 w-full rounded-xl border bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus-ra-primary placeholder:text-zinc-600 ${
                   fieldErrors.email ? "border-red-500/50" : "border-zinc-700"
                 }`}
               />
@@ -379,7 +379,7 @@ export default function StaffModulePage() {
             <div>
               <label className="text-xs font-medium text-zinc-500">Role *</label>
               <select value={form.role} onChange={(e) => setForm((f) => ({ ...f, role: e.target.value }))}
-                className="cursor-pointer mt-1 w-full rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus:border-emerald-500/40">
+                className="cursor-pointer mt-1 w-full rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus-ra-primary">
                 {STAFF_ROLES.map((r) => <option key={r} value={r}>{ROLE_LABEL[r]}</option>)}
               </select>
             </div>
@@ -407,7 +407,7 @@ export default function StaffModulePage() {
                   }}
                   placeholder="••••••••"
                   labelClassName="text-xs font-medium text-zinc-500"
-                  inputClassName={`w-full rounded-xl border bg-zinc-950/60 px-3 py-2.5 pr-11 text-sm text-zinc-100 outline-none focus:border-emerald-500/40 placeholder:text-zinc-600 ${
+                  inputClassName={`w-full rounded-xl border bg-zinc-950/60 px-3 py-2.5 pr-11 text-sm text-zinc-100 outline-none focus-ra-primary placeholder:text-zinc-600 ${
                     fieldErrors.password ? "border-red-500/50" : "border-zinc-700"
                   }`}
                 />
@@ -420,7 +420,7 @@ export default function StaffModulePage() {
               <div>
                 <label className="text-xs font-medium text-zinc-500">Status</label>
                 <select value={form.status} onChange={(e) => setForm((f) => ({ ...f, status: e.target.value }))}
-                  className="cursor-pointer mt-1 w-full rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus:border-emerald-500/40">
+                  className="cursor-pointer mt-1 w-full rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus-ra-primary">
                   <option value="active">Active</option>
                   <option value="on-leave">On Leave</option>
                 </select>

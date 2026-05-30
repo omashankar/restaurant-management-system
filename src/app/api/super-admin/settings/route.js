@@ -53,8 +53,8 @@ const DEFAULTS = {
     gateways: {},
   },
   theme: {
-    primaryColor: "#10b981",
-    accentColor:  "#f43f5e",
+    primaryColor: "#f43f5e",
+    accentColor:  "#10b981",
     darkMode:     true,
   },
   notifications: {

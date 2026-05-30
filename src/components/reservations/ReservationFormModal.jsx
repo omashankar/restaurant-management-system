@@ -122,9 +122,9 @@ function CustomerSearchField({ onSelect, initialName = "", initialPhone = "" }) 
   /* ── Selected state ── */
   if (selected) {
     return (
-      <div className="flex items-center justify-between gap-3 rounded-xl border border-emerald-500/30 bg-emerald-500/5 px-3 py-2.5">
+      <div className="flex items-center justify-between gap-3 rounded-xl border border-ra-primary-30 bg-ra-primary-5 px-3 py-2.5">
         <div>
-          <p className="text-sm font-semibold text-emerald-300">{selected.name}</p>
+          <p className="text-sm font-semibold text-ra-primary-muted">{selected.name}</p>
           <p className="text-xs text-zinc-500">{selected.phone}{selected.email ? ` · ${selected.email}` : ""}</p>
         </div>
         <button type="button" onClick={handleClear}
@@ -138,7 +138,7 @@ function CustomerSearchField({ onSelect, initialName = "", initialPhone = "" }) 
   return (
     <div ref={wrapRef} className="space-y-2">
       {/* Search input */}
-      <div className="flex overflow-hidden rounded-xl border border-zinc-700 bg-zinc-950/60 focus-within:border-emerald-500/50">
+      <div className="flex overflow-hidden rounded-xl border border-zinc-700 bg-zinc-950/60 focus-within-ra-primary">
         <span className="flex items-center pl-3 text-zinc-500">
           <Search className="size-4" />
         </span>
@@ -152,7 +152,7 @@ function CustomerSearchField({ onSelect, initialName = "", initialPhone = "" }) 
         />
         <button type="button" onClick={() => { setShowAdd((v) => !v); setShowDrop(false); }}
           title="Add new customer"
-          className="cursor-pointer flex items-center justify-center px-3 text-zinc-500 hover:text-emerald-400 transition-colors">
+          className="cursor-pointer flex items-center justify-center px-3 text-zinc-500 hover-ra-primary transition-colors">
           <UserPlus className="size-4" />
         </button>
       </div>
@@ -191,7 +191,7 @@ function CustomerSearchField({ onSelect, initialName = "", initialPhone = "" }) 
               setShowAdd(true);
               setShowDrop(false);
             }}
-            className="cursor-pointer flex w-full items-center gap-2 border-t border-zinc-800 px-4 py-2.5 text-sm font-semibold text-emerald-400 hover:bg-zinc-800/60 transition-colors">
+            className="cursor-pointer flex w-full items-center gap-2 border-t border-zinc-800 px-4 py-2.5 text-sm font-semibold text-ra-primary hover:bg-zinc-800/60 transition-colors">
             <UserPlus className="size-4" /> Add &ldquo;{query}&rdquo; as new customer
           </button>
         </div>
@@ -203,7 +203,7 @@ function CustomerSearchField({ onSelect, initialName = "", initialPhone = "" }) 
           <p className="text-xs font-semibold uppercase tracking-wide text-zinc-500">New Customer</p>
           <input value={newForm.name} onChange={(e) => setNewForm((f) => ({ ...f, name: e.target.value }))}
             placeholder="Full name *"
-            className="w-full rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2 text-sm text-zinc-100 outline-none focus:border-emerald-500/40 placeholder:text-zinc-600" />
+            className="w-full rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2 text-sm text-zinc-100 outline-none focus-ra-primary placeholder:text-zinc-600" />
           <PhoneInput
             id="reservation-new-customer-phone"
             value={newForm.phone}
@@ -211,11 +211,11 @@ function CustomerSearchField({ onSelect, initialName = "", initialPhone = "" }) 
           />
           <input type="email" value={newForm.email} onChange={(e) => setNewForm((f) => ({ ...f, email: e.target.value }))}
             placeholder="Email (optional)"
-            className="w-full rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2 text-sm text-zinc-100 outline-none focus:border-emerald-500/40 placeholder:text-zinc-600" />
+            className="w-full rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2 text-sm text-zinc-100 outline-none focus-ra-primary placeholder:text-zinc-600" />
           <div className="flex gap-2 pt-1">
             <button type="button" onClick={handleAdd}
               disabled={!newForm.name.trim() || !newForm.phone.trim()}
-              className="cursor-pointer flex-1 rounded-xl bg-emerald-500 py-2 text-sm font-semibold text-zinc-950 hover:bg-emerald-400 disabled:opacity-40">
+              className="cursor-pointer flex-1 rounded-xl bg-ra-primary py-2 text-sm font-semibold text-zinc-950 hover:brightness-110 disabled:opacity-40">
               Save & Select
             </button>
             <button type="button" onClick={() => setShowAdd(false)}
@@ -364,7 +364,7 @@ export default function ReservationFormModal({ open, onClose, editing, tableOpti
             Cancel
           </button>
           <button type="button" onClick={submit}
-            className="cursor-pointer rounded-xl bg-emerald-500 px-4 py-2 text-sm font-semibold text-zinc-950 hover:bg-emerald-400">
+            className="cursor-pointer rounded-xl bg-ra-primary px-4 py-2 text-sm font-semibold text-zinc-950 hover:brightness-110">
             Save
           </button>
         </div>
@@ -398,7 +398,7 @@ export default function ReservationFormModal({ open, onClose, editing, tableOpti
               }}
               placeholder="Full name"
               aria-invalid={fieldErrors.customerName ? true : undefined}
-              className={`mt-1 w-full rounded-xl border bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus:border-emerald-500/40 placeholder:text-zinc-600 ${
+              className={`mt-1 w-full rounded-xl border bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus-ra-primary placeholder:text-zinc-600 ${
                 fieldErrors.customerName ? "border-red-500/50" : "border-zinc-700"
               }`}
             />
@@ -436,7 +436,7 @@ export default function ReservationFormModal({ open, onClose, editing, tableOpti
                 setSaveError("");
               }}
               aria-invalid={fieldErrors.guests ? true : undefined}
-              className={`mt-1 w-full rounded-xl border bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus:border-emerald-500/40 ${
+              className={`mt-1 w-full rounded-xl border bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus-ra-primary ${
                 fieldErrors.guests ? "border-red-500/50" : "border-zinc-700"
               }`}
             />
@@ -455,7 +455,7 @@ export default function ReservationFormModal({ open, onClose, editing, tableOpti
                 setSaveError("");
               }}
               aria-invalid={fieldErrors.date ? true : undefined}
-              className={`mt-1 w-full rounded-xl border bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus:border-emerald-500/40 [color-scheme:dark] ${
+              className={`mt-1 w-full rounded-xl border bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus-ra-primary [color-scheme:dark] ${
                 fieldErrors.date ? "border-red-500/50" : "border-zinc-700"
               }`}
             />
@@ -471,7 +471,7 @@ export default function ReservationFormModal({ open, onClose, editing, tableOpti
                 setSaveError("");
               }}
               aria-invalid={fieldErrors.time ? true : undefined}
-              className={`cursor-pointer mt-1 w-full rounded-xl border bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus:border-emerald-500/40 ${
+              className={`cursor-pointer mt-1 w-full rounded-xl border bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus-ra-primary ${
                 fieldErrors.time ? "border-red-500/50" : "border-zinc-700"
               }`}
             >
@@ -484,7 +484,7 @@ export default function ReservationFormModal({ open, onClose, editing, tableOpti
             <label className="text-xs font-medium text-zinc-500">Status</label>
             <select value={form.status}
               onChange={(e) => setForm((f) => ({ ...f, status: e.target.value }))}
-              className="cursor-pointer mt-1 w-full rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus:border-emerald-500/40">
+              className="cursor-pointer mt-1 w-full rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus-ra-primary">
               <option value="pending">Pending</option>
               <option value="confirmed">Confirmed</option>
               <option value="completed">Completed</option>
@@ -509,7 +509,7 @@ export default function ReservationFormModal({ open, onClose, editing, tableOpti
             className={`cursor-pointer mt-1 w-full rounded-xl border px-3 py-2.5 text-sm text-zinc-100 outline-none bg-zinc-950/60 ${
               isConflict || fieldErrors.tableNumber
                 ? "border-red-500/50 focus:border-red-500/50"
-                : "border-zinc-700 focus:border-emerald-500/40"
+                : "border-zinc-700 focus-ra-primary"
             }`}
           >
             <option value="">— Select table —</option>
@@ -522,7 +522,7 @@ export default function ReservationFormModal({ open, onClose, editing, tableOpti
             <div className={`mt-2 flex items-start gap-2 rounded-lg border px-3 py-2 text-xs ${
               isConflict
                 ? "border-red-500/20 bg-red-500/10 text-red-400"
-                : "border-emerald-500/20 bg-emerald-500/10 text-emerald-400"
+                : "border-ra-accent-20 bg-ra-accent-10 text-ra-accent"
             }`}>
               <AlertCircle className="mt-0.5 size-3.5 shrink-0" />
               {isConflict
@@ -546,7 +546,7 @@ export default function ReservationFormModal({ open, onClose, editing, tableOpti
           </label>
           <select value={form.area}
             onChange={(e) => setForm((f) => ({ ...f, area: e.target.value }))}
-            className="cursor-pointer mt-1 w-full rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus:border-emerald-500/40">
+            className="cursor-pointer mt-1 w-full rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus-ra-primary">
             <option value="">— Select area —</option>
             {tableCategories.map((c) => (
               <option key={c.id} value={c.name}>{c.name}</option>
@@ -559,7 +559,7 @@ export default function ReservationFormModal({ open, onClose, editing, tableOpti
           <label className="text-xs font-medium text-zinc-500">Special notes</label>
           <textarea rows={2} value={form.notes}
             onChange={(e) => setForm((f) => ({ ...f, notes: e.target.value }))}
-            className="mt-1 w-full resize-none rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus:border-emerald-500/40" />
+            className="mt-1 w-full resize-none rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus-ra-primary" />
         </div>
       </div>
     </Modal>

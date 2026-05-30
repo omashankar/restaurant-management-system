@@ -57,7 +57,7 @@ function emptyBanner(id) {
 }
 
 const inputCls =
-  "w-full rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus:border-emerald-500/40 placeholder:text-zinc-600 transition-colors";
+  "w-full rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus-ra-primary placeholder:text-zinc-600 transition-colors";
 const textareaCls = inputCls + " resize-none";
 
 function Field({ label, hint, children, className = "" }) {
@@ -95,7 +95,7 @@ function ToggleRow({ label, hint, enabled, onToggle }) {
         <p className="text-sm font-medium text-zinc-200">{label}</p>
         {hint && <p className="text-xs text-zinc-500">{hint}</p>}
       </div>
-      <button type="button" onClick={onToggle} className="text-emerald-400">
+      <button type="button" onClick={onToggle} className="text-ra-primary">
         {enabled ? <ToggleRight className="size-8" /> : <ToggleLeft className="size-8 text-zinc-600" />}
       </button>
     </div>
@@ -396,7 +396,7 @@ export default function CustomerSitePage() {
   if (loading) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center">
-        <Loader2 className="size-8 animate-spin text-emerald-500" />
+        <Loader2 className="size-8 animate-spin text-ra-primary" />
       </div>
     );
   }
@@ -405,7 +405,7 @@ export default function CustomerSitePage() {
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div className="flex items-start gap-3">
-          <span className="mt-1 flex size-10 shrink-0 items-center justify-center rounded-xl bg-emerald-500/15 text-emerald-400 ring-1 ring-emerald-500/25">
+          <span className="mt-1 flex size-10 shrink-0 items-center justify-center rounded-xl bg-ra-primary-15 text-ra-primary ring-1 ring-ra-primary-25">
             <Globe className="size-5" />
           </span>
           <div>
@@ -446,7 +446,7 @@ export default function CustomerSitePage() {
               href={siteUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 rounded-xl border border-zinc-700 px-4 py-2.5 text-sm font-medium text-zinc-300 hover:border-emerald-500/40 hover:text-emerald-400 transition-colors"
+              className="inline-flex items-center gap-2 rounded-xl border border-zinc-700 px-4 py-2.5 text-sm font-medium text-zinc-300 hover-border-ra-primary-40 hover-ra-primary transition-colors"
             >
               <ExternalLink className="size-4" /> Visit website
             </a>
@@ -455,11 +455,11 @@ export default function CustomerSitePage() {
       </div>
 
       {siteUrl && (
-        <div className="flex items-center gap-3 rounded-xl border border-emerald-500/25 bg-emerald-500/8 px-4 py-3">
-          <Globe className="size-4 shrink-0 text-emerald-400" />
+        <div className="flex items-center gap-3 rounded-xl border border-ra-primary-25 bg-ra-primary-10 px-4 py-3">
+          <Globe className="size-4 shrink-0 text-ra-primary" />
           <div className="min-w-0">
-            <p className="text-xs font-semibold text-emerald-300">Customer site URL</p>
-            <p className="truncate font-mono text-xs text-emerald-400/80">{siteUrl}</p>
+            <p className="text-xs font-semibold text-ra-primary-muted">Customer site URL</p>
+            <p className="truncate font-mono text-xs text-ra-primary/80">{siteUrl}</p>
           </div>
         </div>
       )}
@@ -532,8 +532,8 @@ export default function CustomerSitePage() {
               </div>
 
               <div className="grid gap-3 lg:grid-cols-2">
-                <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/5 px-4 py-3">
-                  <p className="text-xs font-semibold text-emerald-400 mb-2">Settings → customer site</p>
+                <div className="rounded-xl border border-ra-primary-20 bg-ra-primary-5 px-4 py-3">
+                  <p className="text-xs font-semibold text-ra-primary mb-2">Settings → customer site</p>
                   <ul className="space-y-2 text-xs text-zinc-400">
                     {SETTINGS_FOR_CUSTOMER_SITE.map(({ tab, items }) => (
                       <li key={tab}>
@@ -544,7 +544,7 @@ export default function CustomerSitePage() {
                   </ul>
                   <Link
                     href="/settings"
-                    className="mt-3 inline-flex items-center gap-2 rounded-lg border border-emerald-500/30 px-3 py-2 text-xs font-semibold text-emerald-400 hover:bg-emerald-500/10"
+                    className="mt-3 inline-flex items-center gap-2 rounded-lg border border-ra-primary-30 px-3 py-2 text-xs font-semibold text-ra-primary hover-bg-ra-primary-10"
                   >
                     <Settings className="size-3.5" /> Open Settings
                   </Link>
@@ -573,9 +573,9 @@ export default function CustomerSitePage() {
                     href={href}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center gap-3 rounded-xl border border-zinc-800 bg-zinc-950/40 px-4 py-3 transition-colors hover:border-emerald-500/30"
+                    className="flex items-center gap-3 rounded-xl border border-zinc-800 bg-zinc-950/40 px-4 py-3 transition-colors hover:border-ra-primary-30"
                   >
-                    <Icon className="size-5 text-emerald-400" />
+                    <Icon className="size-5 text-ra-primary" />
                     <span className="flex-1 text-sm font-medium text-zinc-200">{label}</span>
                     <ExternalLink className="size-3.5 text-zinc-600" />
                   </a>
@@ -591,7 +591,7 @@ export default function CustomerSitePage() {
                       <button
                         type="button"
                         onClick={() => switchTab(tab)}
-                        className="flex h-full w-full cursor-pointer items-center gap-3 rounded-xl border border-zinc-800 bg-zinc-950/40 px-4 py-3.5 text-left transition-colors hover:border-emerald-500/30 hover:bg-zinc-800/50"
+                        className="flex h-full w-full cursor-pointer items-center gap-3 rounded-xl border border-zinc-800 bg-zinc-950/40 px-4 py-3.5 text-left transition-colors hover:border-ra-primary-30 hover:bg-zinc-800/50"
                       >
                         <Icon className="size-4 shrink-0 text-zinc-500" />
                         <div className="min-w-0 flex-1">
@@ -970,7 +970,7 @@ export default function CustomerSitePage() {
                               return next;
                             })
                           }
-                          className="text-emerald-400"
+                          className="text-ra-primary"
                         >
                           {ban.enabled !== false ? (
                             <ToggleRight className="size-7" />
@@ -1123,7 +1123,7 @@ export default function CustomerSitePage() {
                   type="button"
                   disabled={banners.length >= 8}
                   onClick={() => setBanners((p) => [...p, emptyBanner(Date.now())])}
-                  className="inline-flex items-center gap-2 rounded-xl border border-zinc-700 px-4 py-2 text-sm text-zinc-300 hover:border-emerald-500/40 disabled:opacity-40"
+                  className="inline-flex items-center gap-2 rounded-xl border border-zinc-700 px-4 py-2 text-sm text-zinc-300 hover-border-ra-primary-40 disabled:opacity-40"
                 >
                   <Plus className="size-4" /> Add slide
                 </button>

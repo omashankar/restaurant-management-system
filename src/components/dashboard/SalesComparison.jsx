@@ -18,9 +18,9 @@ export default function SalesComparison({
           <p className="text-xs text-zinc-500">Current vs previous period</p>
         </div>
         {Number(change) !== 0 && (
-          <div className="flex items-center gap-1.5 rounded-xl border border-emerald-500/25 bg-emerald-500/10 px-3 py-1.5">
-            <TrendingUp className="size-3.5 text-emerald-400" />
-            <span className="text-xs font-semibold text-emerald-400">
+          <div className="flex items-center gap-1.5 rounded-xl border border-ra-primary-25 bg-ra-primary-10 px-3 py-1.5">
+            <TrendingUp className="size-3.5 text-ra-primary" />
+            <span className="text-xs font-semibold text-ra-primary">
               {change > 0 ? "+" : ""}{change}% vs last period
             </span>
           </div>
@@ -34,7 +34,7 @@ export default function SalesComparison({
             {formatAdminMoney(current, currency)}
           </p>
           <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-zinc-800">
-            <div className="h-full w-full rounded-full bg-emerald-500/80" />
+            <div className="h-full w-full rounded-full bg-ra-primary-100" />
           </div>
         </div>
         <div className="rounded-xl border border-zinc-800 bg-zinc-950/50 p-3">
@@ -59,7 +59,7 @@ export default function SalesComparison({
               <div key={m.month ?? i} className="flex flex-1 flex-col items-center gap-1">
                 <div className="flex h-20 w-full items-end justify-center">
                   <div className={`w-full max-w-10 rounded-t-md transition-all duration-500 ${
-                    isLast ? "bg-gradient-to-t from-emerald-600 to-emerald-400" : "bg-zinc-700 hover:bg-zinc-600"
+                    isLast ? "bg-gradient-to-t from-ra-accent to-ra-primary" : "bg-zinc-700 hover:bg-zinc-600"
                   }`} style={{ height: `${Math.max(h, 6)}%` }} />
                 </div>
                 <span className="text-[10px] font-medium text-zinc-500">{m.month}</span>

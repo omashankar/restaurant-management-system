@@ -1,6 +1,8 @@
 ﻿"use client";
 
 
+import SuperAdminPageSkeleton from "@/components/super-admin/SuperAdminPageSkeleton";
+import { saIconBadgeCls, saSpinnerCls } from "@/config/superAdminTheme";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import Modal from "@/components/ui/Modal";
 import PasswordInput from "@/components/ui/PasswordInput";
@@ -45,7 +47,7 @@ const emptyForm = {
   phone: "", address: "", plan: "free", status: "active",
 };
 
-const inputCls = "w-full rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus:border-emerald-500/40 placeholder:text-zinc-600 transition-colors";
+const inputCls = "w-full rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus-sa-primary placeholder:text-zinc-600 transition-colors";
 const fieldErrorCls = "mt-1 text-xs text-red-400";
 
 const EMPTY_CREATE_FIELD_ERRORS = {
@@ -74,7 +76,7 @@ function ToggleSwitch({ checked, onChange, disabled }) {
       disabled={disabled}
       onClick={() => onChange(!checked)}
       className={`cursor-pointer relative inline-flex h-5 w-9 shrink-0 items-center rounded-full transition-colors duration-200 disabled:opacity-40 ${
-        checked ? "bg-emerald-500" : "bg-zinc-700"
+        checked ? "bg-sa-primary" : "bg-zinc-700"
       }`}
     >
       <span className={`inline-block size-3.5 rounded-full bg-white shadow-sm transition-transform duration-200 ${
@@ -116,7 +118,7 @@ function PreviewModal({ restaurant, onClose }) {
       <div className="space-y-5">
         {/* Avatar + name */}
         <div className="flex items-center gap-4">
-          <span className="flex size-14 shrink-0 items-center justify-center rounded-2xl bg-emerald-500/10 text-2xl font-bold text-emerald-400 ring-1 ring-emerald-500/20">
+          <span className="flex size-14 shrink-0 items-center justify-center rounded-2xl bg-sa-accent-10 text-2xl font-bold text-sa-accent ring-1 ring-sa-accent-25">
             {restaurant.name?.[0]?.toUpperCase()}
           </span>
           <div>
@@ -128,7 +130,7 @@ function PreviewModal({ restaurant, onClose }) {
               </span>
               <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold capitalize ring-1 ${
                 restaurant.status === "active"
-                  ? "bg-emerald-500/15 text-emerald-400 ring-emerald-500/25"
+                  ? "sa-status-badge"
                   : "bg-zinc-500/15 text-zinc-400 ring-zinc-500/25"
               }`}>
                 {restaurant.status}
@@ -141,7 +143,7 @@ function PreviewModal({ restaurant, onClose }) {
 
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
           {[
-            { label: "Admin", value: restaurant.roleCounts?.admin ?? 0, tone: "text-emerald-400" },
+            { label: "Admin", value: restaurant.roleCounts?.admin ?? 0, tone: "text-sa-accent" },
             { label: "Manager", value: restaurant.roleCounts?.manager ?? 0, tone: "text-indigo-400" },
             { label: "Waiter", value: restaurant.roleCounts?.waiter ?? 0, tone: "text-sky-400" },
             { label: "Chef", value: restaurant.roleCounts?.chef ?? 0, tone: "text-amber-400" },
@@ -474,7 +476,7 @@ export default function RestaurantsPage() {
       {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div className="flex items-start gap-3">
-          <span className="mt-1 flex size-10 shrink-0 items-center justify-center rounded-xl bg-emerald-500/15 text-emerald-400 ring-1 ring-emerald-500/25">
+          <span className={`mt-1 ${saIconBadgeCls}`}>
             <Building2 className="size-5" />
           </span>
           <div>
@@ -485,10 +487,10 @@ export default function RestaurantsPage() {
         <div className="flex items-center gap-2">
           <button type="button" onClick={fetchRestaurants}
             className="cursor-pointer flex items-center gap-1.5 rounded-xl border border-zinc-700 px-3 py-2.5 text-sm font-medium text-zinc-400 hover:border-zinc-500 hover:text-zinc-200 transition-colors">
-            <RefreshCw className={"size-4 " + (loading ? "animate-spin" : "")} />
+            <RefreshCw className={"size-4 " + (loading ? saSpinnerCls : "")} />
           </button>
           <button type="button" onClick={openCreateModal}
-            className="cursor-pointer inline-flex items-center gap-2 rounded-xl bg-emerald-500 px-4 py-2.5 text-sm font-semibold text-zinc-950 hover:bg-emerald-400 transition-colors">
+            className="cursor-pointer inline-flex items-center gap-2 rounded-xl bg-sa-primary px-4 py-2.5 text-sm font-semibold text-zinc-950 hover:brightness-110 transition-colors">
             <Plus className="size-4" /> Add Restaurant
           </button>
         </div>
@@ -503,7 +505,7 @@ export default function RestaurantsPage() {
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         {[
           { label: "Total",     value: stats.total,     color: "text-zinc-100"    },
-          { label: "Active",    value: stats.active,    color: "text-emerald-400" },
+          { label: "Active",    value: stats.active,    color: "text-sa-accent" },
           { label: "Inactive",  value: stats.inactive,  color: "text-zinc-500"    },
           { label: "Suspended", value: stats.suspended, color: "text-red-400"     },
         ].map(({ label, value, color }) => (
@@ -520,7 +522,7 @@ export default function RestaurantsPage() {
           <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-zinc-500" />
           <input value={search} onChange={(e) => setSearch(e.target.value)}
             placeholder="Search name, email, phone…"
-            className="w-full rounded-xl border border-zinc-800 bg-zinc-900/70 py-2.5 pl-10 pr-4 text-sm text-zinc-100 placeholder:text-zinc-600 outline-none focus:border-emerald-500/40" />
+            className="w-full rounded-xl border border-zinc-800 bg-zinc-900/70 py-2.5 pl-10 pr-4 text-sm text-zinc-100 placeholder:text-zinc-600 outline-none focus-sa-primary" />
           {search && (
             <button type="button" onClick={() => setSearch("")}
               className="cursor-pointer absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-300">
@@ -529,17 +531,17 @@ export default function RestaurantsPage() {
           )}
         </div>
         <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}
-          className="cursor-pointer rounded-xl border border-zinc-800 bg-zinc-900/70 px-3 py-2.5 text-sm text-zinc-200 outline-none focus:border-emerald-500/40">
+          className="cursor-pointer rounded-xl border border-zinc-800 bg-zinc-900/70 px-3 py-2.5 text-sm text-zinc-200 outline-none focus-sa-primary">
           <option value="all">All statuses</option>
           {STATUSES.map((s) => <option key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1)}</option>)}
         </select>
         <select value={planFilter} onChange={(e) => setPlanFilter(e.target.value)}
-          className="cursor-pointer rounded-xl border border-zinc-800 bg-zinc-900/70 px-3 py-2.5 text-sm text-zinc-200 outline-none focus:border-emerald-500/40">
+          className="cursor-pointer rounded-xl border border-zinc-800 bg-zinc-900/70 px-3 py-2.5 text-sm text-zinc-200 outline-none focus-sa-primary">
           <option value="all">All plans</option>
           {PLANS.map((p) => <option key={p} value={p}>{p.charAt(0).toUpperCase() + p.slice(1)}</option>)}
         </select>
         <select value={ownerStatusFilter} onChange={(e) => { setOwnerStatusFilter(e.target.value); setPage(1); }}
-          className="cursor-pointer rounded-xl border border-zinc-800 bg-zinc-900/70 px-3 py-2.5 text-sm text-zinc-200 outline-none focus:border-emerald-500/40">
+          className="cursor-pointer rounded-xl border border-zinc-800 bg-zinc-900/70 px-3 py-2.5 text-sm text-zinc-200 outline-none focus-sa-primary">
           <option value="all">All owner statuses</option>
           {OWNER_STATUSES.map((s) => <option key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1)}</option>)}
         </select>
@@ -547,17 +549,13 @@ export default function RestaurantsPage() {
 
       {/* Table */}
       {loading ? (
-        <div className="space-y-2">
-          {Array.from({ length: 6 }).map((_, i) => (
-            <div key={i} className="h-16 animate-pulse rounded-xl border border-zinc-800 bg-zinc-900/40" />
-          ))}
-        </div>
+        <SuperAdminPageSkeleton rows={6} rowClassName="h-16" />
       ) : totalCount === 0 ? (
         <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-zinc-800 py-20 text-center">
           <Building2 className="size-10 text-zinc-700" />
           <p className="text-sm text-zinc-500">No restaurants found for selected filters.</p>
           <button type="button" onClick={openCreateModal}
-            className="cursor-pointer rounded-xl bg-emerald-500 px-4 py-2 text-sm font-semibold text-zinc-950 hover:bg-emerald-400">
+            className="cursor-pointer rounded-xl bg-sa-primary px-4 py-2 text-sm font-semibold text-zinc-950 hover:brightness-110">
             Add First Restaurant
           </button>
         </div>
@@ -583,7 +581,7 @@ export default function RestaurantsPage() {
                     {/* Restaurant name */}
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-3">
-                        <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-emerald-500/10 text-sm font-bold text-emerald-400 ring-1 ring-emerald-500/20">
+                        <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-sa-accent-10 text-sm font-bold text-sa-accent ring-1 ring-sa-accent-25">
                           {r.name?.[0]?.toUpperCase()}
                         </span>
                         <div className="min-w-0">
@@ -593,7 +591,7 @@ export default function RestaurantsPage() {
                               href={`/r/${r.slug}/home`}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="truncate text-xs text-emerald-500 hover:text-emerald-400 hover:underline"
+                              className="truncate text-xs text-sa-primary hover-sa-primary hover:underline"
                             >
                               /r/{r.slug}
                             </a>
@@ -614,7 +612,7 @@ export default function RestaurantsPage() {
                           <p className="mt-0.5">
                             <span className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-semibold ring-1 ${
                               r.ownerStatus === "active"
-                                ? "bg-emerald-500/15 text-emerald-400 ring-emerald-500/25"
+                                ? "sa-status-badge"
                                 : r.ownerStatus === "blocked"
                                   ? "bg-red-500/15 text-red-400 ring-red-500/25"
                                   : "bg-zinc-500/15 text-zinc-400 ring-zinc-500/25"
@@ -650,7 +648,7 @@ export default function RestaurantsPage() {
                           onChange={() => toggleStatus(r)}
                           disabled={togglingId === r.id}
                         />
-                        <span className={"text-xs font-medium " + (r.status === "active" ? "text-emerald-400" : "text-zinc-500")}>
+                        <span className={"text-xs font-medium " + (r.status === "active" ? "text-sa-accent" : "text-zinc-500")}>
                           {r.status === "active" ? "Active" : r.status.charAt(0).toUpperCase() + r.status.slice(1)}
                         </span>
                       </div>
@@ -690,7 +688,7 @@ export default function RestaurantsPage() {
                           title={r.ownerStatus === "blocked" ? "Unblock owner admin" : "Block owner admin"}
                           className={`cursor-pointer rounded-lg p-2 transition-colors disabled:opacity-40 ${
                             r.ownerStatus === "blocked"
-                              ? "text-zinc-400 hover:bg-emerald-500/15 hover:text-emerald-400"
+                              ? "text-zinc-400 hover-bg-sa-primary-15 hover-sa-primary"
                               : "text-zinc-400 hover:bg-amber-500/15 hover:text-amber-400"
                           }`}
                         >
@@ -718,7 +716,7 @@ export default function RestaurantsPage() {
                 </button>
                 {Array.from({ length: totalPages }, (_, i) => i + 1).map((n) => (
                   <button key={n} type="button" onClick={() => setPage(n)}
-                    className={"cursor-pointer flex size-8 items-center justify-center rounded-lg border text-xs font-medium transition-colors " + (n === page ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-400" : "border-zinc-800 text-zinc-500 hover:border-zinc-600 hover:text-zinc-300")}>
+                    className={"cursor-pointer flex size-8 items-center justify-center rounded-lg border text-xs font-medium transition-colors " + (n === page ? "border-sa-primary-40 bg-sa-primary-10 text-sa-primary" : "border-zinc-800 text-zinc-500 hover:border-zinc-600 hover:text-zinc-300")}>
                     {n}
                   </button>
                 ))}
@@ -741,7 +739,7 @@ export default function RestaurantsPage() {
               Cancel
             </button>
             <button type="button" onClick={handleCreate} disabled={creating}
-              className="cursor-pointer rounded-xl bg-emerald-500 px-4 py-2 text-sm font-semibold text-zinc-950 hover:bg-emerald-400 disabled:opacity-40 transition-colors">
+              className="cursor-pointer rounded-xl bg-sa-primary px-4 py-2 text-sm font-semibold text-zinc-950 hover:brightness-110 disabled:opacity-40 transition-colors">
               {creating ? "Creating…" : "Create Restaurant"}
             </button>
           </div>
@@ -777,7 +775,7 @@ export default function RestaurantsPage() {
             </div>
             <div className="sm:col-span-2">
               <Field label="URL Slug (Customer Site Address)" required>
-                <div className="flex items-center gap-0 overflow-hidden rounded-xl border border-zinc-700 bg-zinc-950/60 focus-within:border-emerald-500/40">
+                <div className="flex items-center gap-0 overflow-hidden rounded-xl border border-zinc-700 bg-zinc-950/60 focus-within-sa-primary">
                   <span className="shrink-0 border-r border-zinc-700 bg-zinc-800 px-3 py-2.5 text-xs text-zinc-500 whitespace-nowrap">
                     yoursite.com/r/
                   </span>
@@ -883,7 +881,7 @@ export default function RestaurantsPage() {
                   checked={createForm.status === "active"}
                   onChange={(v) => setCreateForm((f) => ({ ...f, status: v ? "active" : "inactive" }))}
                 />
-                <span className={"text-xs font-medium " + (createForm.status === "active" ? "text-emerald-400" : "text-zinc-500")}>
+                <span className={"text-xs font-medium " + (createForm.status === "active" ? "text-sa-accent" : "text-zinc-500")}>
                   {createForm.status === "active" ? "Active" : "Inactive"}
                 </span>
               </div>
@@ -905,7 +903,7 @@ export default function RestaurantsPage() {
               Cancel
             </button>
             <button type="button" onClick={handleEdit} disabled={saving}
-              className="cursor-pointer rounded-xl bg-emerald-500 px-4 py-2 text-sm font-semibold text-zinc-950 hover:bg-emerald-400 disabled:opacity-40 transition-colors">
+              className="cursor-pointer rounded-xl bg-sa-primary px-4 py-2 text-sm font-semibold text-zinc-950 hover:brightness-110 disabled:opacity-40 transition-colors">
               {saving ? "Saving…" : "Save Changes"}
             </button>
           </div>
@@ -933,7 +931,7 @@ export default function RestaurantsPage() {
             </div>
             <div className="sm:col-span-2">
               <Field label="URL Slug (Customer Site Address)" required>
-                <div className="flex items-center gap-0 overflow-hidden rounded-xl border border-zinc-700 bg-zinc-950/60 focus-within:border-emerald-500/40">
+                <div className="flex items-center gap-0 overflow-hidden rounded-xl border border-zinc-700 bg-zinc-950/60 focus-within-sa-primary">
                   <span className="shrink-0 border-r border-zinc-700 bg-zinc-800 px-3 py-2.5 text-xs text-zinc-500 whitespace-nowrap">
                     yoursite.com/r/
                   </span>

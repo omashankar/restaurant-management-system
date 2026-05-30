@@ -199,7 +199,7 @@ export default function RecipesPage() {
             type="button"
             onClick={openCreate}
             disabled={activeMenuItems.length === 0}
-            className="cursor-pointer inline-flex items-center gap-2 rounded-xl bg-emerald-500 px-4 py-2.5 text-sm font-semibold text-zinc-950 hover:bg-emerald-400 disabled:opacity-40"
+            className="cursor-pointer inline-flex items-center gap-2 rounded-xl bg-ra-primary px-4 py-2.5 text-sm font-semibold text-zinc-950 hover:brightness-110 disabled:opacity-40"
           >
             <Plus className="size-4" />
             Add recipe
@@ -222,7 +222,7 @@ export default function RecipesPage() {
               type="button"
               onClick={openCreate}
               disabled={activeMenuItems.length === 0}
-              className="cursor-pointer rounded-xl bg-emerald-500 px-4 py-2 text-sm font-semibold text-zinc-950 disabled:opacity-40"
+              className="cursor-pointer rounded-xl bg-ra-primary px-4 py-2 text-sm font-semibold text-zinc-950 disabled:opacity-40"
             >
               Add recipe
             </button>
@@ -267,7 +267,7 @@ export default function RecipesPage() {
                       <button
                         type="button"
                         onClick={() => openEdit(row)}
-                        className="cursor-pointer rounded-lg p-2 text-zinc-400 hover:bg-zinc-800 hover:text-emerald-400"
+                        className="cursor-pointer rounded-lg p-2 text-zinc-400 hover:bg-zinc-800 hover-ra-primary"
                         aria-label="Edit"
                       >
                         <Pencil className="size-4" />
@@ -307,7 +307,7 @@ export default function RecipesPage() {
               type="button"
               onClick={saveRecipe}
               disabled={saving}
-              className="cursor-pointer rounded-xl bg-emerald-500 px-4 py-2 text-sm font-semibold text-zinc-950 hover:bg-emerald-400 disabled:opacity-50"
+              className="cursor-pointer rounded-xl bg-ra-primary px-4 py-2 text-sm font-semibold text-zinc-950 hover:brightness-110 disabled:opacity-50"
             >
               {saving ? "Saving…" : "Save"}
             </button>
@@ -347,7 +347,7 @@ export default function RecipesPage() {
               <button
                 type="button"
                 onClick={addIngredientRow}
-                className="cursor-pointer text-xs font-medium text-emerald-400 hover:text-emerald-300"
+                className="cursor-pointer text-xs font-medium text-ra-primary hover:text-ra-primary-muted"
               >
                 + Add line
               </button>
@@ -394,7 +394,7 @@ export default function RecipesPage() {
         title={
           detailRecipe ? (
             <span className="flex items-center gap-2">
-              <BookOpen className="size-5 text-emerald-400" />
+              <BookOpen className="size-5 text-ra-primary" />
               {detailRecipe.name}
             </span>
           ) : null

@@ -38,7 +38,7 @@ export default function TopDishes({ items = [], currency = "INR" }) {
                     <div className="flex shrink-0 items-center gap-3 text-xs tabular-nums">
                       <span className="text-zinc-400">{count} orders</span>
                       {dish.revenue != null && (
-                        <span className="font-semibold text-emerald-400">
+                        <span className="font-semibold text-ra-primary">
                           {formatAdminMoney(dish.revenue, currency)}
                         </span>
                       )}
@@ -46,7 +46,7 @@ export default function TopDishes({ items = [], currency = "INR" }) {
                   </div>
                   <div className="h-1.5 w-full overflow-hidden rounded-full bg-zinc-800">
                     <div
-                      className="h-full rounded-full bg-gradient-to-r from-emerald-600 to-emerald-400 transition-all duration-500"
+                      className="h-full rounded-full bg-gradient-to-r from-ra-accent to-ra-primary transition-all duration-500"
                       style={{ width: `${barW}%` }}
                     />
                   </div>

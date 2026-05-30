@@ -1,4 +1,5 @@
 import { EMPTY_SETTINGS } from "@/config/settingsConfig";
+import { resolveRestaurantAdminTheme } from "@/lib/restaurantAdminThemeRuntime";
 import { validateRestaurantSettingsPatch } from "@/lib/restaurantSettingsValidation";
 import { withTenant } from "@/lib/tenantDb";
 
@@ -50,6 +51,10 @@ function sanitizePaymentMethods(incoming = {}) {
     : fallbackDefault;
   if (!out[out.defaultMethod]) out.defaultMethod = fallbackDefault;
   return out;
+}
+
+function sanitizeThemeSection(incoming = {}) {
+  return resolveRestaurantAdminTheme({ ...EMPTY_SETTINGS.theme, ...incoming });
 }
 
 /* ── GET /api/settings ── */
@@ -119,6 +124,8 @@ export const PATCH = withTenant(["admin"], async ({ db, restaurantId }, request)
       updateFields.email = mergeEmailForSave(body.data, existing?.email);
     } else if (body.section === "paymentMethods") {
       updateFields.paymentMethods = sanitizePaymentMethods(body.data);
+    } else if (body.section === "theme") {
+      updateFields.theme = sanitizeThemeSection(body.data);
     } else if (body.section === "general") {
       updateFields.general = {
         ...EMPTY_SETTINGS.general,
@@ -135,6 +142,8 @@ export const PATCH = withTenant(["admin"], async ({ db, restaurantId }, request)
         updateFields.email = mergeEmailForSave(body.email, existing?.email);
       } else if (section === "paymentMethods") {
         updateFields.paymentMethods = sanitizePaymentMethods(body.paymentMethods);
+      } else if (section === "theme") {
+        updateFields.theme = sanitizeThemeSection(body[section]);
       } else if (section === "general") {
         updateFields.general = {
           ...EMPTY_SETTINGS.general,
@@ -159,7 +168,10 @@ export const PATCH = withTenant(["admin"], async ({ db, restaurantId }, request)
       mergedForValidation[key] = existing[key];
     }
   }
-  const validation = validateRestaurantSettingsPatch(mergedForValidation);
+  const sectionsToValidate = Object.keys(updateFields).filter(
+    (key) => key !== "updatedAt" && Object.prototype.hasOwnProperty.call(EMPTY_SETTINGS, key)
+  );
+  const validation = validateRestaurantSettingsPatch(mergedForValidation, sectionsToValidate);
   if (!validation.valid) {
     return Response.json(
       { success: false, error: validation.message ?? "Validation failed." },

@@ -48,7 +48,7 @@ export default function ReservationTable({ rows, onView, onEdit, onDelete, canDe
               <td className="hidden px-4 py-3 tabular-nums text-zinc-300 md:table-cell">
                 {r.guests}
               </td>
-              <td className="px-4 py-3 font-mono text-xs text-emerald-400/90">
+              <td className="px-4 py-3 font-mono text-xs text-ra-primary-muted">
                 {r.tableNumber}
               </td>
               <td className="hidden px-4 py-3 text-xs text-zinc-400 capitalize lg:table-cell">
@@ -70,7 +70,7 @@ export default function ReservationTable({ rows, onView, onEdit, onDelete, canDe
                   <button
                     type="button"
                     onClick={() => onEdit(r)}
-                    className="cursor-pointer rounded-lg p-2 text-zinc-500 transition-colors hover:bg-zinc-800 hover:text-emerald-400"
+                    className="cursor-pointer rounded-lg p-2 text-zinc-500 transition-colors hover:bg-zinc-800 hover-ra-primary"
                     aria-label="Edit"
                   >
                     <Pencil className="size-4" />

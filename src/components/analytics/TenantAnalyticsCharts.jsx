@@ -1,6 +1,7 @@
 "use client";
 
 import { formatAdminMoney } from "@/lib/adminCurrency";
+import { useRestaurantTheme } from "@/hooks/useRestaurantTheme";
 import {
   Bar, BarChart, CartesianGrid, Cell,
   Line, LineChart, Pie, PieChart,
@@ -36,6 +37,8 @@ function CustomTooltip({ active, payload, label, currency = "INR" }) {
  * Lazy-loaded chart bundle (recharts) for tenant analytics page.
  */
 export default function TenantAnalyticsCharts({ chartData, topItems, orderTypes, currency = "INR" }) {
+  const { theme } = useRestaurantTheme();
+  const primary = theme.primaryColor;
   const fmtAxis = (v) => formatAdminMoney(v, currency, { decimals: 0 });
   return (
     <>
@@ -50,7 +53,7 @@ export default function TenantAnalyticsCharts({ chartData, topItems, orderTypes,
                 <XAxis dataKey="label" tick={{ fill: "#71717a", fontSize: 11 }} tickLine={false} axisLine={false} />
                 <YAxis tick={{ fill: "#71717a", fontSize: 11 }} tickLine={false} axisLine={false} tickFormatter={fmtAxis} />
                 <Tooltip content={<CustomTooltip currency={currency} />} />
-                <Line type="monotone" dataKey="revenue" name="Revenue" stroke="#10b981" strokeWidth={2} dot={false} activeDot={{ r: 4, fill: "#10b981" }} />
+                <Line type="monotone" dataKey="revenue" name="Revenue" stroke={primary} strokeWidth={2} dot={false} activeDot={{ r: 4, fill: primary }} />
               </LineChart>
             </ResponsiveContainer>
           )}
@@ -84,7 +87,7 @@ export default function TenantAnalyticsCharts({ chartData, topItems, orderTypes,
                 <XAxis type="number" tick={{ fill: "#71717a", fontSize: 11 }} tickLine={false} axisLine={false} allowDecimals={false} />
                 <YAxis type="category" dataKey="name" tick={{ fill: "#a1a1aa", fontSize: 11 }} tickLine={false} axisLine={false} width={120} />
                 <Tooltip content={<CustomTooltip />} />
-                <Bar dataKey="qty" name="Qty sold" fill="#10b981" radius={[0, 4, 4, 0]} />
+                <Bar dataKey="qty" name="Qty sold" fill={primary} radius={[0, 4, 4, 0]} />
               </BarChart>
             </ResponsiveContainer>
           )}

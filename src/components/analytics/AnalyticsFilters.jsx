@@ -26,7 +26,7 @@ export default function AnalyticsFilters({ dateRange, setDateRange, orderType, s
             onClick={() => setDateRange(r)}
             className={`cursor-pointer rounded-lg px-3 py-1.5 text-xs font-semibold transition-all ${
               dateRange === r
-                ? "bg-emerald-500 text-zinc-950"
+                ? "bg-ra-primary text-zinc-950"
                 : "bg-zinc-800 text-zinc-400 hover:text-zinc-200"
             }`}
           >
@@ -41,7 +41,7 @@ export default function AnalyticsFilters({ dateRange, setDateRange, orderType, s
       <select
         value={orderType}
         onChange={(e) => setOrderType(e.target.value)}
-        className="rounded-xl border border-zinc-700 bg-zinc-900 px-3 py-1.5 text-xs text-zinc-200 outline-none focus:border-emerald-500/40"
+        className="rounded-xl border border-zinc-700 bg-zinc-900 px-3 py-1.5 text-xs text-zinc-200 outline-none focus-ra-primary"
       >
         {ORDER_TYPES.map((t) => (
           <option key={t} value={t}>{t}</option>
@@ -55,7 +55,7 @@ export default function AnalyticsFilters({ dateRange, setDateRange, orderType, s
           onClick={handleExportCSV}
           disabled={!canExport}
           title={!canExport ? "Export requires admin access" : undefined}
-          className="cursor-pointer inline-flex items-center gap-1.5 rounded-xl border border-zinc-700 px-3 py-1.5 text-xs font-semibold text-zinc-300 transition-colors hover:border-emerald-500/40 hover:text-emerald-400 disabled:cursor-not-allowed disabled:opacity-40"
+          className="cursor-pointer inline-flex items-center gap-1.5 rounded-xl border border-zinc-700 px-3 py-1.5 text-xs font-semibold text-zinc-300 transition-colors hover-border-ra-primary-40 hover-ra-primary disabled:cursor-not-allowed disabled:opacity-40"
         >
           <Download className="size-3.5" />
           CSV

@@ -31,14 +31,14 @@ export default function ReservationCalendarView({ rows, onView, onEdit, onDelete
     <div className="space-y-8">
       {groups.map(({ date, items }) => (
         <section key={date}>
-          <h3 className="sticky top-0 z-10 mb-4 inline-flex rounded-lg bg-zinc-950/90 px-3 py-1.5 text-sm font-semibold text-emerald-400 ring-1 ring-emerald-500/25 backdrop-blur-sm">
+          <h3 className="sticky top-0 z-10 mb-4 inline-flex rounded-lg bg-zinc-950/90 px-3 py-1.5 text-sm font-semibold text-ra-primary ring-1 ring-ra-primary-25 backdrop-blur-sm">
             {formatReservationDate(date)}
           </h3>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {items.map((r) => (
               <div
                 key={r.id}
-                className="group rounded-2xl border border-zinc-800 bg-gradient-to-b from-zinc-900/80 to-zinc-950/80 p-4 shadow-lg shadow-black/20 transition-all duration-300 hover:-translate-y-0.5 hover:border-emerald-500/35 hover:shadow-emerald-500/10"
+                className="group rounded-2xl border border-zinc-800 bg-gradient-to-b from-zinc-900/80 to-zinc-950/80 p-4 shadow-lg shadow-black/20 transition-all duration-300 hover:-translate-y-0.5 hover-border-ra-primary-40 hover:shadow-ra-primary-soft"
               >
                 <div className="flex items-start justify-between gap-2">
                   <div>
@@ -53,7 +53,7 @@ export default function ReservationCalendarView({ rows, onView, onEdit, onDelete
                   </span>
                   <span>
                     {r.guests} guests ·{" "}
-                    <span className="font-mono text-emerald-400/90">
+                    <span className="font-mono text-ra-primary-muted">
                       {r.tableNumber}
                     </span>
                   </span>
@@ -80,7 +80,7 @@ export default function ReservationCalendarView({ rows, onView, onEdit, onDelete
                   <button
                     type="button"
                     onClick={() => onEdit(r)}
-                    className="cursor-pointer flex flex-1 items-center justify-center gap-1 rounded-lg py-2 text-xs font-medium text-zinc-400 transition-colors hover:bg-zinc-800 hover:text-emerald-400"
+                    className="cursor-pointer flex flex-1 items-center justify-center gap-1 rounded-lg py-2 text-xs font-medium text-zinc-400 transition-colors hover:bg-zinc-800 hover-ra-primary"
                   >
                     <Pencil className="size-3.5" />
                     Edit

@@ -6,7 +6,7 @@ import { Loader2 } from "lucide-react";
 
 const STATUS_BADGE = {
   pending:  "bg-amber-500/15 text-amber-400 ring-1 ring-amber-500/25",
-  approved: "bg-emerald-500/15 text-emerald-400 ring-1 ring-emerald-500/25",
+  approved: "bg-ra-primary-15 text-ra-primary ring-1 ring-ra-primary-25",
   rejected: "bg-red-500/15 text-red-400 ring-1 ring-red-500/25",
 };
 
@@ -87,7 +87,7 @@ export default function RefundManagementSection({ showToast }) {
         </div>
         <div className="flex gap-2">
           <button type="button" onClick={() => setShowForm((v) => !v)}
-            className="cursor-pointer rounded-xl bg-emerald-500 px-3 py-2 text-sm font-semibold text-zinc-950 hover:bg-emerald-400 transition-colors">
+            className="cursor-pointer rounded-xl bg-ra-primary px-3 py-2 text-sm font-semibold text-zinc-950 hover:brightness-110 transition-colors">
             + New Refund
           </button>
           <button type="button" onClick={fetchData}
@@ -106,18 +106,18 @@ export default function RefundManagementSection({ showToast }) {
               <label className="mb-1 block text-xs text-zinc-500">Order ID</label>
               <input value={form.orderId} onChange={(e) => setForm((f) => ({ ...f, orderId: e.target.value }))}
                 placeholder="ORD-C-…"
-                className="w-full rounded-xl border border-zinc-800 bg-zinc-950/80 px-3 py-2.5 text-sm text-zinc-100 outline-none focus:border-emerald-500/45" />
+                className="w-full rounded-xl border border-zinc-800 bg-zinc-950/80 px-3 py-2.5 text-sm text-zinc-100 outline-none focus-ra-primary" />
             </div>
             <div>
               <label className="mb-1 block text-xs text-zinc-500">Refund Amount</label>
               <input type="number" value={form.refundAmount} onChange={(e) => setForm((f) => ({ ...f, refundAmount: e.target.value }))}
                 placeholder="0.00"
-                className="w-full rounded-xl border border-zinc-800 bg-zinc-950/80 px-3 py-2.5 text-sm text-zinc-100 outline-none focus:border-emerald-500/45" />
+                className="w-full rounded-xl border border-zinc-800 bg-zinc-950/80 px-3 py-2.5 text-sm text-zinc-100 outline-none focus-ra-primary" />
             </div>
             <div>
               <label className="mb-1 block text-xs text-zinc-500">Type</label>
               <select value={form.type} onChange={(e) => setForm((f) => ({ ...f, type: e.target.value }))}
-                className="w-full cursor-pointer rounded-xl border border-zinc-800 bg-zinc-950/80 px-3 py-2.5 text-sm text-zinc-100 outline-none focus:border-emerald-500/45">
+                className="w-full cursor-pointer rounded-xl border border-zinc-800 bg-zinc-950/80 px-3 py-2.5 text-sm text-zinc-100 outline-none focus-ra-primary">
                 <option value="full">Full Refund</option>
                 <option value="partial">Partial Refund</option>
               </select>
@@ -126,7 +126,7 @@ export default function RefundManagementSection({ showToast }) {
               <label className="mb-1 block text-xs text-zinc-500">Reason</label>
               <input value={form.reason} onChange={(e) => setForm((f) => ({ ...f, reason: e.target.value }))}
                 placeholder="Reason for refund"
-                className="w-full rounded-xl border border-zinc-800 bg-zinc-950/80 px-3 py-2.5 text-sm text-zinc-100 outline-none focus:border-emerald-500/45" />
+                className="w-full rounded-xl border border-zinc-800 bg-zinc-950/80 px-3 py-2.5 text-sm text-zinc-100 outline-none focus-ra-primary" />
             </div>
           </div>
           <div className="flex gap-2 justify-end">
@@ -135,7 +135,7 @@ export default function RefundManagementSection({ showToast }) {
               Cancel
             </button>
             <button type="button" onClick={submitRefund} disabled={submitting}
-              className="cursor-pointer inline-flex items-center gap-2 rounded-xl bg-emerald-500 px-4 py-2 text-sm font-semibold text-zinc-950 hover:bg-emerald-400 disabled:opacity-50 transition-colors">
+              className="cursor-pointer inline-flex items-center gap-2 rounded-xl bg-ra-primary px-4 py-2 text-sm font-semibold text-zinc-950 hover:brightness-110 disabled:opacity-50 transition-colors">
               {submitting && <Loader2 className="size-4 animate-spin" />}
               Submit
             </button>
@@ -146,7 +146,7 @@ export default function RefundManagementSection({ showToast }) {
       {/* Filter */}
       <div className="mb-4">
         <select value={statusFilter} onChange={(e) => setStatus(e.target.value)}
-          className="cursor-pointer rounded-xl border border-zinc-800 bg-zinc-950/80 px-3 py-2 text-sm text-zinc-200 outline-none focus:border-emerald-500/40">
+          className="cursor-pointer rounded-xl border border-zinc-800 bg-zinc-950/80 px-3 py-2 text-sm text-zinc-200 outline-none focus-ra-primary">
           <option value="all">All Statuses</option>
           <option value="pending">Pending</option>
           <option value="approved">Approved</option>
@@ -198,7 +198,7 @@ export default function RefundManagementSection({ showToast }) {
                           <button type="button"
                             onClick={() => processRefund(r.id, "approve")}
                             disabled={Boolean(processing)}
-                            className="cursor-pointer rounded-lg bg-emerald-500/15 px-2.5 py-1 text-xs font-semibold text-emerald-400 hover:bg-emerald-500/25 disabled:opacity-50 transition-colors">
+                            className="cursor-pointer rounded-lg bg-ra-primary-15 px-2.5 py-1 text-xs font-semibold text-ra-primary hover-bg-ra-primary-15 disabled:opacity-50 transition-colors">
                             {processing === r.id + "approve" ? "…" : "Approve"}
                           </button>
                           <button type="button"

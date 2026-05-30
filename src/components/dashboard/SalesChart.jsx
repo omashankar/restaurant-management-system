@@ -32,7 +32,7 @@ export default function SalesChart({ data = {} }) {
             {["sales", "orders"].map((t) => (
               <button key={t} type="button" onClick={() => setActiveTab(t)}
                 className={`cursor-pointer rounded-lg px-3 py-1.5 text-xs font-semibold capitalize transition-all ${
-                  activeTab === t ? "bg-emerald-500 text-zinc-950" : "text-zinc-400 hover:text-zinc-200"
+                  activeTab === t ? "bg-ra-primary text-zinc-950" : "text-zinc-400 hover:text-zinc-200"
                 }`}>
                 {t}
               </button>
@@ -69,7 +69,7 @@ export default function SalesChart({ data = {} }) {
                 <div className="flex h-40 w-full items-end justify-center">
                   <div className={`w-full max-w-10 rounded-t-lg transition-all duration-500 ${
                     activeTab === "sales"
-                      ? "bg-gradient-to-t from-emerald-600/80 to-emerald-400/90 hover:from-emerald-500 hover:to-emerald-300"
+                      ? "bg-gradient-to-t from-ra-primary to-ra-accent hover:opacity-90"
                       : "bg-gradient-to-t from-indigo-600/80 to-indigo-400/90 hover:from-indigo-500 hover:to-indigo-300"
                   }`} style={{ height: `${Math.max(h, 6)}%` }}
                     title={`${d.label}: ${activeTab === "sales" ? fmt(val) : val + " orders"}`} />

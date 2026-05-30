@@ -37,7 +37,7 @@ export default function ComparisonChart({ daily = [], monthly = [] }) {
         <div className="flex items-center gap-2">
           {Number(change) !== 0 && (
             <span className={`inline-flex items-center gap-1 rounded-xl border px-3 py-1 text-xs font-semibold ${
-              positive ? "border-emerald-500/25 bg-emerald-500/10 text-emerald-400" : "border-red-500/25 bg-red-500/10 text-red-400"
+              positive ? "border-ra-primary-25 bg-ra-primary-10 text-ra-primary" : "border-red-500/25 bg-red-500/10 text-red-400"
             }`}>
               <TrendingUp className="size-3" />
               {positive ? "+" : ""}{change}%
@@ -58,7 +58,7 @@ export default function ComparisonChart({ daily = [], monthly = [] }) {
       </div>
 
       <div className="mt-3 flex items-center gap-4">
-        <span className="flex items-center gap-1.5 text-xs text-zinc-400"><span className="size-2.5 rounded-full bg-emerald-400" /> Current</span>
+        <span className="flex items-center gap-1.5 text-xs text-zinc-400"><span className="size-2.5 rounded-full bg-ra-primary" /> Current</span>
         <span className="flex items-center gap-1.5 text-xs text-zinc-500"><span className="size-2.5 rounded-full bg-zinc-600" /> Previous</span>
       </div>
 
@@ -71,7 +71,7 @@ export default function ComparisonChart({ daily = [], monthly = [] }) {
               <div className="flex h-36 w-full items-end justify-center gap-0.5">
                 <div className="w-full max-w-[18px] rounded-t-md bg-zinc-600 hover:bg-zinc-500 transition-all duration-500"
                   style={{ height: `${Math.max(hP, 4)}%` }} title={`Prev: ${fmt(d.previous ?? 0)}`} />
-                <div className="w-full max-w-[18px] rounded-t-md bg-gradient-to-t from-emerald-600 to-emerald-400 hover:from-emerald-500 hover:to-emerald-300 transition-all duration-500"
+                <div className="w-full max-w-[18px] rounded-t-md bg-gradient-to-t from-ra-accent to-ra-primary hover:opacity-90 transition-all duration-500"
                   style={{ height: `${Math.max(hC, 4)}%` }} title={`Current: ${fmt(d.current ?? 0)}`} />
               </div>
               <span className="text-[10px] font-medium text-zinc-500">{d.label}</span>

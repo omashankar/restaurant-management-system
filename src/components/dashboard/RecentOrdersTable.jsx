@@ -5,7 +5,7 @@ import { Bike, ConciergeBell, Store } from "lucide-react";
 const statusStyles = {
   new:       "bg-amber-500/15 text-amber-300 ring-amber-500/25",
   preparing: "bg-sky-500/15 text-sky-300 ring-sky-500/25",
-  ready:     "bg-emerald-500/15 text-emerald-300 ring-emerald-500/25",
+  ready:     "bg-ra-primary-15 text-ra-primary-muted ring-ra-primary-25",
   completed: "bg-zinc-500/15 text-zinc-400 ring-zinc-500/25",
   cancelled: "bg-red-500/20 text-red-400 ring-red-500/40",
 };
@@ -13,7 +13,7 @@ const statusStyles = {
 const typeIcon  = { "dine-in": Store, takeaway: ConciergeBell, delivery: Bike };
 const typeLabel = { "dine-in": "Dine-In", takeaway: "Takeaway", delivery: "Delivery" };
 const paymentStatusStyles = {
-  paid: "bg-emerald-500/15 text-emerald-300 ring-emerald-500/25",
+  paid: "bg-ra-primary-15 text-ra-primary-muted ring-ra-primary-25",
   pending: "bg-amber-500/15 text-amber-300 ring-amber-500/25",
   initiated: "bg-sky-500/15 text-sky-300 ring-sky-500/25",
   processing: "bg-indigo-500/15 text-indigo-300 ring-indigo-500/25",
@@ -38,7 +38,7 @@ export default function RecentOrdersTable({ orders = [], currency = "INR" }) {
           <h3 className="text-sm font-semibold text-zinc-100">Recent Orders</h3>
           <p className="text-xs text-zinc-500">Latest transactions across all channels</p>
         </div>
-        <Link href="/orders" className="shrink-0 text-xs font-medium text-emerald-400 hover:text-emerald-300">
+        <Link href="/orders" className="shrink-0 text-xs font-medium text-ra-primary hover:text-ra-primary-muted">
           View all →
         </Link>
       </div>
@@ -70,7 +70,7 @@ export default function RecentOrdersTable({ orders = [], currency = "INR" }) {
                 const paymentStatus = String(o.payment?.status ?? "pending");
                 return (
                   <tr key={o.id} className="transition-colors hover:bg-zinc-800/30">
-                    <td className="px-5 py-3 font-mono text-xs text-emerald-400/90">{o.orderId ?? o.id}</td>
+                    <td className="px-5 py-3 font-mono text-xs text-ra-primary/90">{o.orderId ?? o.id}</td>
                     <td className="px-5 py-3 font-medium text-zinc-200">{o.customer}</td>
                     <td className="px-5 py-3">
                       <span className="inline-flex items-center gap-1.5 text-zinc-400">

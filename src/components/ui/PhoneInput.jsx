@@ -22,7 +22,7 @@ const SIZE_STYLES = {
 };
 
 const standaloneFieldCls =
-  "w-full rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2 text-sm text-zinc-100 outline-none transition-colors placeholder:text-zinc-500 focus:border-emerald-500/40";
+  "w-full rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2 text-sm text-zinc-100 outline-none transition-colors placeholder:text-zinc-500 focus-ra-primary";
 
 /**
  * Indian mobile (+91 prefix, 10 digits). Letters are stripped — only digits 0–9.
@@ -51,7 +51,7 @@ export default function PhoneInput({
     "flex items-center overflow-hidden rounded-xl border bg-zinc-950/60 transition-colors",
     error
       ? "border-red-500/50 focus-within:border-red-500/50"
-      : "border-zinc-700 focus-within:border-emerald-500/40",
+      : "border-zinc-700 focus-within-ra-primary",
     disabled ? "pointer-events-none opacity-50" : "",
     label && !labelHasMargin ? "mt-1.5" : "",
     wrapperClassName,

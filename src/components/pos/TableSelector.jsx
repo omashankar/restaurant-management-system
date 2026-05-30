@@ -1,7 +1,7 @@
 "use client";
 
 const STATUS_STYLE = {
-  available: "border-emerald-500/30 bg-emerald-500/10 text-emerald-300",
+  available: "border-ra-primary-30 bg-ra-primary-10 text-ra-primary-muted",
   occupied: "border-sky-500/30 bg-sky-500/10 text-sky-300",
   reserved: "border-amber-500/30 bg-amber-500/10 text-amber-300",
 };
@@ -18,7 +18,7 @@ export default function TableSelector({ tables, selectedTableId, onSelect, compa
             onClick={() => onSelect(table.id)}
             className={`cursor-pointer rounded-xl border px-2 py-1.5 text-left transition-all ${
               selected
-                ? "border-emerald-500/60 bg-emerald-500/10"
+                ? "border-ra-primary-60 bg-ra-primary-10"
                 : "border-zinc-800 bg-zinc-900/50 hover:border-zinc-700"
             }`}
             aria-pressed={selected}

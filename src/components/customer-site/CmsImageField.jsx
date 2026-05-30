@@ -5,7 +5,7 @@ import { ImageIcon, Loader2, Trash2, Upload } from "lucide-react";
 import { useRef, useState } from "react";
 
 const inputCls =
-  "w-full rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus:border-emerald-500/40 placeholder:text-zinc-600";
+  "w-full rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus-ra-primary placeholder:text-zinc-600";
 
 /**
  * CMS image: upload file or paste URL (hero, about, gallery, banners).
@@ -70,12 +70,12 @@ export default function CmsImageField({
             type="button"
             disabled={disabled || uploading}
             onClick={() => fileRef.current?.click()}
-            className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-xs font-medium text-zinc-200 hover:border-emerald-500/40 disabled:opacity-50"
+            className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-xs font-medium text-zinc-200 hover:border-ra-primary-40 disabled:opacity-50"
           >
             {uploading ? (
-              <Loader2 className="size-3.5 animate-spin text-emerald-400" />
+              <Loader2 className="size-3.5 animate-spin text-ra-primary" />
             ) : (
-              <Upload className="size-3.5 text-emerald-400" />
+              <Upload className="size-3.5 text-ra-primary" />
             )}
             {uploading ? "Uploading…" : "Upload image"}
           </button>

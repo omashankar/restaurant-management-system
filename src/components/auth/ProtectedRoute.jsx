@@ -44,7 +44,7 @@ export default function ProtectedRoute({ roles, fallback, children }) {
   if (loading || !hydrated) {
     return fallback ?? (
       <div className="flex min-h-screen items-center justify-center bg-zinc-950">
-        <Loader2 className="size-8 animate-spin text-emerald-400" />
+        <Loader2 className="size-8 animate-spin text-ra-primary" />
       </div>
     );
   }

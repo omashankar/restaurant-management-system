@@ -120,7 +120,7 @@ export default function TopNavbar({ onOpenSidebar, onToggleSidebar }) {
         >
           <MessageSquare className="size-4" />
           {unread.messages > 0 ? (
-            <span className="absolute -right-1 -top-1 rounded-full bg-emerald-500 px-1.5 py-0.5 text-[10px] font-semibold text-zinc-950">
+            <span className="absolute -right-1 -top-1 rounded-full bg-ra-primary px-1.5 py-0.5 text-[10px] font-semibold text-zinc-950">
               {unread.messages}
             </span>
           ) : null}
@@ -174,7 +174,7 @@ export default function TopNavbar({ onOpenSidebar, onToggleSidebar }) {
         >
           <button
             type="button"
-            className="cursor-pointer inline-flex items-center gap-2 rounded-xl border border-zinc-800 bg-zinc-900/80 px-3 py-2 text-xs font-medium text-zinc-200 transition-colors hover:border-emerald-500/40"
+            className="cursor-pointer inline-flex items-center gap-2 rounded-xl border border-zinc-800 bg-zinc-900/80 px-3 py-2 text-xs font-medium text-zinc-200 transition-colors hover-border-ra-primary-40"
             aria-expanded={open}
             aria-haspopup="listbox"
           >
@@ -201,7 +201,7 @@ export default function TopNavbar({ onOpenSidebar, onToggleSidebar }) {
                       else router.push("/dashboard");
                     }}
                     className={`cursor-pointer flex w-full items-center gap-2 px-3 py-2 text-left text-sm transition-colors hover:bg-zinc-800 ${
-                      user.role === r ? "text-emerald-400" : "text-zinc-300"
+                      user.role === r ? "text-ra-primary" : "text-zinc-300"
                     }`}
                   >
                     {roleLabel(r)}
@@ -218,7 +218,7 @@ export default function TopNavbar({ onOpenSidebar, onToggleSidebar }) {
           <button
             type="button"
             onClick={() => setIsProfileOpen((v) => !v)}
-            className="cursor-pointer inline-flex items-center justify-center rounded-full border border-zinc-800 bg-zinc-900/60 p-0.5 text-zinc-200 outline-none ring-emerald-500/0 transition-colors hover:border-zinc-700 hover:ring-2 hover:ring-emerald-500/20 focus-visible:ring-2 focus-visible:ring-emerald-500/40"
+            className="cursor-pointer inline-flex items-center justify-center rounded-full border border-zinc-800 bg-zinc-900/60 p-0.5 text-zinc-200 outline-none ring-ra-primary-20 transition-colors hover:border-zinc-700 hover:ring-2 hover:ring-ra-primary-20 focus-visible:ring-2 focus-visible:ring-ra-primary-40"
             aria-expanded={isProfileOpen}
             aria-haspopup="menu"
             aria-label={`Open profile menu (${user.name})`}
@@ -273,7 +273,7 @@ export default function TopNavbar({ onOpenSidebar, onToggleSidebar }) {
                         else router.push("/dashboard");
                       }}
                       className={`cursor-pointer flex w-full items-center px-2.5 py-2 text-left text-sm transition-colors hover:bg-zinc-800 ${
-                        user.role === r ? "font-medium text-emerald-400" : "text-zinc-300"
+                        user.role === r ? "font-medium text-ra-primary" : "text-zinc-300"
                       }`}
                       role="menuitem"
                     >
@@ -321,7 +321,7 @@ export default function TopNavbar({ onOpenSidebar, onToggleSidebar }) {
                 <MessageSquare className="size-4 text-zinc-400" />
                 Messages
               </span>
-              <InboxCountBadge count={unread.messages} tone="emerald" />
+              <InboxCountBadge count={unread.messages} tone="ra" />
             </button>
             <button
               type="button"

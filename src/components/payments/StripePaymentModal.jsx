@@ -3,6 +3,7 @@
 import { loadStripe } from "@stripe/stripe-js";
 import { Elements, PaymentElement, useElements, useStripe } from "@stripe/react-stripe-js";
 import { Loader2, X } from "lucide-react";
+import { useRestaurantTheme } from "@/hooks/useRestaurantTheme";
 import { useMemo, useState } from "react";
 
 function PaymentForm({
@@ -53,7 +54,7 @@ function PaymentForm({
       <button
         type="submit"
         disabled={!stripe || busy}
-        className="w-full rounded-xl bg-emerald-600 px-4 py-3 text-sm font-semibold text-white hover:bg-emerald-500 disabled:opacity-50"
+        className="w-full rounded-xl ra-btn-primary px-4 py-3 text-sm font-semibold disabled:opacity-50"
       >
         {busy ? (
           <span className="inline-flex items-center justify-center gap-2">
@@ -90,11 +91,13 @@ export default function StripePaymentModal({
   title = "Pay securely",
   submitLabel = "Pay now",
 }) {
+  const { theme } = useRestaurantTheme();
   const stripePromise = useMemo(() => {
     if (!publishableKey) return null;
     return loadStripe(publishableKey);
   }, [publishableKey]);
   const [formError, setFormError] = useState("");
+  const colorPrimary = theme.primaryColor;
 
   if (!open || !clientSecret || !publishableKey || !stripePromise) {
     return null;
@@ -132,7 +135,7 @@ export default function StripePaymentModal({
             stripe={stripePromise}
             options={{
               clientSecret,
-              appearance: { theme: "stripe", variables: { colorPrimary: "#059669" } },
+              appearance: { theme: "stripe", variables: { colorPrimary } },
             }}
           >
             <PaymentForm

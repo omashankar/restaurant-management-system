@@ -182,7 +182,7 @@ export default function TablesModulePage() {
       {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div className="flex items-start gap-3">
-          <span className="mt-1 flex size-10 shrink-0 items-center justify-center rounded-xl bg-emerald-500/15 text-emerald-400 ring-1 ring-emerald-500/25">
+          <span className="mt-1 flex size-10 shrink-0 items-center justify-center rounded-xl bg-ra-primary-15 text-ra-primary ring-1 ring-ra-primary-25">
             <Table2 className="size-5" />
           </span>
           <div>
@@ -201,7 +201,7 @@ export default function TablesModulePage() {
           </button>
           {isAdmin && (
             <button type="button" onClick={openCreate}
-              className="cursor-pointer inline-flex items-center gap-2 rounded-xl bg-emerald-500 px-4 py-2.5 text-sm font-semibold text-zinc-950 hover:bg-emerald-400">
+              className="cursor-pointer inline-flex items-center gap-2 rounded-xl bg-ra-primary px-4 py-2.5 text-sm font-semibold text-zinc-950 hover:brightness-110">
               <Plus className="size-4" /> Add Table
             </button>
           )}
@@ -238,7 +238,7 @@ export default function TablesModulePage() {
           action={
             isAdmin ? (
               <button type="button" onClick={openCreate}
-                className="cursor-pointer rounded-xl bg-emerald-500 px-4 py-2 text-sm font-semibold text-zinc-950 hover:bg-emerald-400">
+                className="cursor-pointer rounded-xl bg-ra-primary px-4 py-2 text-sm font-semibold text-zinc-950 hover:brightness-110">
                 Add Table
               </button>
             ) : null
@@ -253,7 +253,7 @@ export default function TablesModulePage() {
               const badgeClass = cat ? getCategoryBadge(cat.color) : "bg-zinc-500/15 text-zinc-400 ring-zinc-500/25";
               return (
                 <div key={t.id}
-                  className="group relative rounded-2xl border border-zinc-800 bg-zinc-900/60 p-4 shadow-sm transition-all duration-200 hover:border-emerald-500/30 hover:shadow-lg hover:shadow-emerald-500/5">
+                  className="group relative rounded-2xl border border-zinc-800 bg-zinc-900/60 p-4 shadow-sm transition-all duration-200 hover:border-ra-primary-30 hover:shadow-lg hover:shadow-ra-primary-soft">
                   <div className="flex items-start justify-between gap-2">
                     <div>
                       <p className="text-lg font-semibold text-zinc-50">{t.tableNumber}</p>
@@ -261,7 +261,7 @@ export default function TablesModulePage() {
                     </div>
                     <span className={`shrink-0 rounded-full px-2.5 py-0.5 text-xs font-semibold capitalize ring-1 ${
                       st === "available"
-                        ? "bg-emerald-500/15 text-emerald-300 ring-emerald-500/25"
+                        ? "bg-ra-primary-15 text-ra-primary-muted ring-ra-primary-25"
                         : "bg-red-500/15 text-red-300 ring-red-500/25"
                     }`}>
                       {st}
@@ -287,7 +287,7 @@ export default function TablesModulePage() {
                     {st === "available" && (
                       <Link
                         href={`/pos?tableId=${encodeURIComponent(t.id)}`}
-                        className="cursor-pointer flex w-full items-center justify-center gap-1 rounded-lg bg-emerald-500/15 py-2 text-xs font-semibold text-emerald-300 ring-1 ring-emerald-500/25 transition-colors hover:bg-emerald-500/25"
+                        className="cursor-pointer flex w-full items-center justify-center gap-1 rounded-lg bg-ra-primary-15 py-2 text-xs font-semibold text-ra-primary-muted ring-1 ring-ra-primary-25 transition-colors hover-bg-ra-primary-15"
                       >
                         <ShoppingCart className="size-3.5" /> Open in POS
                       </Link>
@@ -295,7 +295,7 @@ export default function TablesModulePage() {
                     <div className="flex gap-1">
                     {canEdit && (
                     <button type="button" onClick={() => openEdit(t)}
-                      className="cursor-pointer flex flex-1 items-center justify-center gap-1 rounded-lg border border-zinc-800 py-2 text-xs font-medium text-zinc-400 transition-colors hover:border-emerald-500/40 hover:text-emerald-400">
+                      className="cursor-pointer flex flex-1 items-center justify-center gap-1 rounded-lg border border-zinc-800 py-2 text-xs font-medium text-zinc-400 transition-colors hover-border-ra-primary-40 hover-ra-primary">
                       <Pencil className="size-3.5" /> Edit
                     </button>
                     )}
@@ -327,7 +327,7 @@ export default function TablesModulePage() {
               Cancel
             </button>
             <button type="button" onClick={saveTable} disabled={saving}
-              className="cursor-pointer rounded-xl bg-emerald-500 px-4 py-2 text-sm font-semibold text-zinc-950 hover:bg-emerald-400 disabled:opacity-40">
+              className="cursor-pointer rounded-xl bg-ra-primary px-4 py-2 text-sm font-semibold text-zinc-950 hover:brightness-110 disabled:opacity-40">
               {saving ? "Saving…" : "Save"}
             </button>
           </div>
@@ -345,7 +345,7 @@ export default function TablesModulePage() {
                 }}
                 placeholder="T12"
                 aria-invalid={fieldErrors.tableNumber ? true : undefined}
-                className={`mt-1 w-full rounded-xl border bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus:border-emerald-500/50 ${
+                className={`mt-1 w-full rounded-xl border bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus-ra-primary ${
                   fieldErrors.tableNumber ? "border-red-500/50" : "border-zinc-700"
                 }`}
               />
@@ -364,7 +364,7 @@ export default function TablesModulePage() {
                   if (fieldErrors.capacity) setFieldErrors((p) => ({ ...p, capacity: "" }));
                 }}
                 aria-invalid={fieldErrors.capacity ? true : undefined}
-                className={`mt-1 w-full rounded-xl border bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus:border-emerald-500/50 ${
+                className={`mt-1 w-full rounded-xl border bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus-ra-primary ${
                   fieldErrors.capacity ? "border-red-500/50" : "border-zinc-700"
                 }`}
               />
@@ -375,7 +375,7 @@ export default function TablesModulePage() {
             <div>
               <label className="text-xs text-zinc-500">Status</label>
               <select value={form.status} onChange={(e) => setForm((f) => ({ ...f, status: e.target.value }))}
-                className="cursor-pointer mt-1 w-full rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus:border-emerald-500/50">
+                className="cursor-pointer mt-1 w-full rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus-ra-primary">
                 <option value="available">Available</option>
                 <option value="occupied">Occupied</option>
               </select>
@@ -385,7 +385,7 @@ export default function TablesModulePage() {
               {areas.length === 0 ? (
                 <div className="mt-1 rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-500">
                   No areas —{" "}
-                  <Link href="/tables/areas" className="cursor-pointer text-emerald-400 hover:text-emerald-300">create one</Link>
+                  <Link href="/tables/areas" className="cursor-pointer text-ra-primary hover:text-ra-primary-muted">create one</Link>
                 </div>
               ) : (
                 <select
@@ -395,7 +395,7 @@ export default function TablesModulePage() {
                     if (fieldErrors.categoryId) setFieldErrors((p) => ({ ...p, categoryId: "" }));
                   }}
                   aria-invalid={fieldErrors.categoryId ? true : undefined}
-                  className={`cursor-pointer mt-1 w-full rounded-xl border bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus:border-emerald-500/50 ${
+                  className={`cursor-pointer mt-1 w-full rounded-xl border bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus-ra-primary ${
                     fieldErrors.categoryId ? "border-red-500/50" : "border-zinc-700"
                   }`}
                 >

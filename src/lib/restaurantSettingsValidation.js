@@ -14,6 +14,7 @@ import {
 } from "@/lib/formValidation";
 import { optionalLinkError } from "@/lib/landingValidation";
 import { extractIndianMobileDigits, isValidIndianMobile } from "@/lib/phoneUtils";
+import { normalizeHexColor } from "@/lib/superAdminThemeRuntime";
 
 function trim(value) {
   return String(value ?? "").trim();
@@ -167,19 +168,46 @@ export function validatePaymentTax(data) {
   return errorsToResult(errors);
 }
 
-export function validateRestaurantSettingsPatch(settings) {
-  const general = validateRestaurantGeneral(settings?.general);
-  const pos = validateRestaurantPos(settings?.pos);
-  const contact = validateRestaurantContact(settings?.contact);
-  const email = validateRestaurantEmail(settings?.email);
-  const valid = general.valid && pos.valid && contact.valid && email.valid;
-  const message =
-    general.message || pos.message || contact.message || email.message || null;
-  return {
-    valid,
-    message,
-    tabs: { general, pos, contact, email },
+export function validateRestaurantTheme(data) {
+  const errors = {};
+  const primary = trim(data?.primaryColor);
+  const accent = trim(data?.accentColor);
+  if (primary && !normalizeHexColor(primary)) {
+    errors.primaryColor = "Enter a valid hex color (e.g. #10b981).";
+  }
+  if (accent && !normalizeHexColor(accent)) {
+    errors.accentColor = "Enter a valid hex color (e.g. #34d399).";
+  }
+  return errorsToResult(errors);
+}
+
+export function validateRestaurantSettingsPatch(settings, sections = null) {
+  const validators = {
+    general: () => validateRestaurantGeneral(settings?.general),
+    pos: () => validateRestaurantPos(settings?.pos),
+    contact: () => validateRestaurantContact(settings?.contact),
+    email: () => validateRestaurantEmail(settings?.email),
+    theme: () => validateRestaurantTheme(settings?.theme),
   };
+
+  const keys = sections?.length
+    ? sections.filter((key) => validators[key])
+    : Object.keys(validators);
+
+  const tabs = {};
+  let valid = true;
+  let message = null;
+
+  for (const key of keys) {
+    const result = validators[key]();
+    tabs[key] = result;
+    if (!result.valid) {
+      valid = false;
+      message = message || result.message;
+    }
+  }
+
+  return { valid, message, tabs };
 }
 
 export function validateWhatsappSettings({ enabled, token, phoneNumberId, alertPhone, templates }) {

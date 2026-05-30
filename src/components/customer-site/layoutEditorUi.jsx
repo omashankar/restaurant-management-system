@@ -1,7 +1,7 @@
 "use client";
 
 export const layoutInputCls =
-  "w-full rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus:border-emerald-500/40 placeholder:text-zinc-600";
+  "w-full rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus-ra-primary placeholder:text-zinc-600";
 
 export function LayoutField({ label, hint, children }) {
   return (
@@ -47,7 +47,7 @@ export function LayoutToggle({ label, hint, enabled, onToggle }) {
         type="checkbox"
         checked={enabled}
         onChange={onToggle}
-        className="size-4 rounded border-zinc-600 accent-emerald-500"
+        className="size-4 rounded border-zinc-600 accent-ra-primary"
       />
     </label>
   );
@@ -66,7 +66,7 @@ export function LayoutSection({ title, subtitle, enabled, onToggle, children }) 
             type="checkbox"
             checked={enabled}
             onChange={onToggle}
-            className="size-4 rounded border-zinc-600 accent-emerald-500"
+            className="size-4 rounded border-zinc-600 accent-ra-primary"
           />
         )}
       </div>

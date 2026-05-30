@@ -33,7 +33,7 @@ export default function TopItemsTable({ items = [] }) {
           {["Revenue", "Quantity"].map((t) => (
             <button key={t} type="button" onClick={() => setTab(t)}
               className={`cursor-pointer rounded-lg px-3 py-1.5 text-xs font-semibold transition-all ${
-                tab === t ? "bg-emerald-500 text-zinc-950" : "text-zinc-500 hover:text-zinc-300"
+                tab === t ? "bg-ra-primary text-zinc-950" : "text-zinc-500 hover:text-zinc-300"
               }`}>
               {t}
             </button>
@@ -51,12 +51,12 @@ export default function TopItemsTable({ items = [] }) {
                   <span className="w-4 shrink-0 text-xs font-bold tabular-nums text-zinc-500">{i + 1}</span>
                   <span className="truncate text-sm font-medium text-zinc-200">{item.name}</span>
                 </div>
-                <span className="shrink-0 text-xs font-semibold tabular-nums text-emerald-400">
+                <span className="shrink-0 text-xs font-semibold tabular-nums text-ra-primary">
                   {tab === "Revenue" ? `$${Number(item.revenue ?? 0).toFixed(0)}` : `${val} sold`}
                 </span>
               </div>
               <div className="h-1.5 w-full overflow-hidden rounded-full bg-zinc-800">
-                <div className="h-full rounded-full bg-gradient-to-r from-emerald-600 to-emerald-400 transition-all duration-500"
+                <div className="h-full rounded-full bg-gradient-to-r from-ra-accent to-ra-primary transition-all duration-500"
                   style={{ width: `${pct}%` }} />
               </div>
             </div>

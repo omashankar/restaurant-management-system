@@ -28,7 +28,7 @@ export default function CmsSaveActions({
         type="button"
         disabled={!!saving}
         onClick={onPublish}
-        className="inline-flex items-center gap-2 rounded-xl bg-emerald-500 px-4 py-2.5 text-sm font-semibold text-zinc-950 hover:bg-emerald-400 disabled:opacity-50 transition-colors"
+        className="inline-flex items-center gap-2 rounded-xl bg-ra-primary px-4 py-2.5 text-sm font-semibold text-zinc-950 hover:brightness-110 disabled:opacity-50 transition-colors"
       >
         {pubBusy ? <Loader2 className="size-4 animate-spin" /> : <Rocket className="size-4" />}
         {publishLabel}

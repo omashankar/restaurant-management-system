@@ -36,13 +36,13 @@ export default function TableCard({
         !isAvailable
           ? "cursor-not-allowed border-zinc-200 bg-zinc-100/70 opacity-70"
           : selected
-          ? "cursor-pointer border-emerald-500/60 bg-emerald-500/10 ring-1 ring-emerald-500/25 hover:-translate-y-0.5"
-          : "cursor-pointer border-zinc-200 bg-white hover:-translate-y-0.5 hover:border-emerald-500/30 hover:bg-emerald-50/40 hover:shadow-md"
+          ? "cursor-pointer border-ra-primary-60 bg-ra-primary-10 ring-1 ring-ra-primary-25 hover:-translate-y-0.5"
+          : "cursor-pointer border-zinc-200 bg-white hover:-translate-y-0.5 hover-border-ra-primary-30 hover:bg-ra-primary-5 hover:shadow-md"
       }`}
     >
       {/* Selected check */}
       {selected && (
-        <span className="absolute right-3 top-3 flex size-5 items-center justify-center rounded-full bg-emerald-500 text-zinc-950">
+        <span className="absolute right-3 top-3 flex size-5 items-center justify-center rounded-full bg-ra-primary text-zinc-950">
           <Check className="size-3.5" strokeWidth={3} />
         </span>
       )}
@@ -61,7 +61,7 @@ export default function TableCard({
 
       <div className="flex items-start justify-between gap-3">
         <div>
-          <p className={`text-lg font-bold ${selected ? "text-emerald-700" : !isAvailable ? "text-zinc-500" : "text-zinc-900"}`}>
+          <p className={`text-lg font-bold ${selected ? "text-ra-primary" : !isAvailable ? "text-zinc-500" : "text-zinc-900"}`}>
             {tableName}
           </p>
           <div className="mt-2 flex items-center gap-1.5 text-xs text-zinc-600">
@@ -80,7 +80,7 @@ export default function TableCard({
         <span
           className={`size-2 rounded-full ${
             effectiveStatus === "available"
-              ? "bg-emerald-500"
+              ? "bg-ra-primary"
               : effectiveStatus === "occupied"
                 ? "bg-red-500"
                 : "bg-amber-500"
@@ -89,7 +89,7 @@ export default function TableCard({
         <span
           className={`text-xs font-medium ${
             effectiveStatus === "available"
-              ? "text-emerald-700"
+              ? "text-ra-primary"
               : effectiveStatus === "occupied"
                 ? "text-red-700"
                 : "text-amber-700"

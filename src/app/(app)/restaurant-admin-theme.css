@@ -1,0 +1,213 @@
+/* Restaurant Admin dynamic theme — defaults on :root; saved theme applied via bootstrap script + JS */
+
+:root {
+  --ra-primary: #10b981;
+  --ra-accent: #34d399;
+}
+
+.ra-scope {
+  /* alias hook for nested portals if needed */
+}
+
+:is(.restaurant-admin-panel, :root[data-restaurant-admin-theme]) .bg-ra-primary {
+  background-color: var(--ra-primary);
+}
+:is(.restaurant-admin-panel, :root[data-restaurant-admin-theme]) .text-ra-primary {
+  color: var(--ra-primary);
+}
+:is(.restaurant-admin-panel, :root[data-restaurant-admin-theme]) .text-ra-primary-muted {
+  color: color-mix(in srgb, var(--ra-primary) 78%, white);
+}
+:is(.restaurant-admin-panel, :root[data-restaurant-admin-theme]) .border-ra-primary {
+  border-color: var(--ra-primary);
+}
+:is(.restaurant-admin-panel, :root[data-restaurant-admin-theme]) .border-t-sa-primary {
+  border-top-color: var(--ra-primary);
+}
+:is(.restaurant-admin-panel, :root[data-restaurant-admin-theme]) .ring-ra-primary-25 {
+  --tw-ring-color: color-mix(in srgb, var(--ra-primary) 25%, transparent);
+}
+:is(.restaurant-admin-panel, :root[data-restaurant-admin-theme]) .ring-ra-primary-20 {
+  --tw-ring-color: color-mix(in srgb, var(--ra-primary) 20%, transparent);
+}
+:is(.restaurant-admin-panel, :root[data-restaurant-admin-theme]) .ring-ra-primary-40 {
+  --tw-ring-color: color-mix(in srgb, var(--ra-primary) 40%, transparent);
+}
+:is(.restaurant-admin-panel, :root[data-restaurant-admin-theme]) .bg-ra-primary-5 {
+  background-color: color-mix(in srgb, var(--ra-primary) 5%, transparent);
+}
+:is(.restaurant-admin-panel, :root[data-restaurant-admin-theme]) .bg-ra-primary-10 {
+  background-color: color-mix(in srgb, var(--ra-primary) 10%, transparent);
+}
+:is(.restaurant-admin-panel, :root[data-restaurant-admin-theme]) .bg-ra-primary-15 {
+  background-color: color-mix(in srgb, var(--ra-primary) 15%, transparent);
+}
+:is(.restaurant-admin-panel, :root[data-restaurant-admin-theme]) .border-ra-primary-10 {
+  border-color: color-mix(in srgb, var(--ra-primary) 10%, transparent);
+}
+:is(.restaurant-admin-panel, :root[data-restaurant-admin-theme]) .bg-ra-primary-20 {
+  background-color: color-mix(in srgb, var(--ra-primary) 20%, transparent);
+}
+:is(.restaurant-admin-panel, :root[data-restaurant-admin-theme]) .border-ra-primary-20 {
+  border-color: color-mix(in srgb, var(--ra-primary) 20%, transparent);
+}
+:is(.restaurant-admin-panel, :root[data-restaurant-admin-theme]) .border-ra-primary-25 {
+  border-color: color-mix(in srgb, var(--ra-primary) 25%, transparent);
+}
+:is(.restaurant-admin-panel, :root[data-restaurant-admin-theme]) .border-ra-primary-30 {
+  border-color: color-mix(in srgb, var(--ra-primary) 30%, transparent);
+}
+:is(.restaurant-admin-panel, :root[data-restaurant-admin-theme]) .border-ra-primary-40 {
+  border-color: color-mix(in srgb, var(--ra-primary) 40%, transparent);
+}
+:is(.restaurant-admin-panel, :root[data-restaurant-admin-theme]) .border-ra-primary-50 {
+  border-color: color-mix(in srgb, var(--ra-primary) 50%, transparent);
+}
+:is(.restaurant-admin-panel, :root[data-restaurant-admin-theme]) .shadow-ra-primary-glow {
+  box-shadow: 0 10px 15px -3px color-mix(in srgb, var(--ra-primary) 18%, transparent);
+}
+:is(.restaurant-admin-panel, :root[data-restaurant-admin-theme]) .ra-btn-primary {
+  cursor: pointer;
+  background-color: var(--ra-primary);
+  color: #09090b;
+}
+:is(.restaurant-admin-panel, :root[data-restaurant-admin-theme]) .ra-btn-primary:hover:not(:disabled) {
+  filter: brightness(1.08);
+}
+:is(.restaurant-admin-panel, :root[data-restaurant-admin-theme]) .ra-btn-primary:disabled {
+  opacity: 0.5;
+}
+:is(.restaurant-admin-panel, :root[data-restaurant-admin-theme]) .ra-nav-active {
+  background-color: color-mix(in srgb, var(--ra-primary) 15%, transparent);
+  color: color-mix(in srgb, var(--ra-primary) 72%, white);
+  --tw-ring-color: color-mix(in srgb, var(--ra-primary) 25%, transparent);
+  box-shadow: 0 0 0 1px var(--tw-ring-color);
+}
+:is(.restaurant-admin-panel, :root[data-restaurant-admin-theme]) .ra-nav-active-bar {
+  background-color: var(--ra-primary);
+}
+:is(.restaurant-admin-panel, :root[data-restaurant-admin-theme]) .ra-icon-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.75rem;
+  background-color: color-mix(in srgb, var(--ra-primary) 15%, transparent);
+  color: var(--ra-primary);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--ra-primary) 25%, transparent);
+}
+:is(.restaurant-admin-panel, :root[data-restaurant-admin-theme]) .ra-spinner {
+  animation: spin 1s linear infinite;
+  color: var(--ra-primary);
+}
+:is(.restaurant-admin-panel, :root[data-restaurant-admin-theme]) .ra-skeleton {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  border-radius: 0.75rem;
+  border: 1px solid color-mix(in srgb, var(--ra-primary) 10%, transparent);
+  background-color: rgb(39 39 42 / 0.6);
+}
+:is(.restaurant-admin-panel, :root[data-restaurant-admin-theme]) .ra-skeleton-card {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  border-radius: 1rem;
+  border: 1px solid color-mix(in srgb, var(--ra-primary) 10%, transparent);
+  background-color: rgb(24 24 27 / 0.4);
+}
+:is(.restaurant-admin-panel, :root[data-restaurant-admin-theme]) .focus-ra-primary:focus {
+  border-color: color-mix(in srgb, var(--ra-primary) 50%, transparent);
+  outline: none;
+}
+:is(.restaurant-admin-panel, :root[data-restaurant-admin-theme]) .focus-within-ra-primary:focus-within {
+  border-color: color-mix(in srgb, var(--ra-primary) 40%, transparent);
+}
+:is(.restaurant-admin-panel, :root[data-restaurant-admin-theme]) .focus\:ring-ra-primary-25:focus {
+  --tw-ring-color: color-mix(in srgb, var(--ra-primary) 25%, transparent);
+}
+:is(.restaurant-admin-panel, :root[data-restaurant-admin-theme]) .border-ra-primary-60 {
+  border-color: color-mix(in srgb, var(--ra-primary) 60%, transparent);
+}
+:is(.restaurant-admin-panel, :root[data-restaurant-admin-theme]) .bg-ra-primary-90 {
+  background-color: color-mix(in srgb, var(--ra-primary) 90%, transparent);
+}
+:is(.restaurant-admin-panel, :root[data-restaurant-admin-theme]) .hover\:shadow-ra-primary-soft:hover {
+  box-shadow: 0 10px 15px -3px color-mix(in srgb, var(--ra-primary) 8%, transparent);
+}
+:is(.restaurant-admin-panel, :root[data-restaurant-admin-theme]) .ra-btn-add {
+  cursor: pointer;
+  background-color: var(--ra-primary);
+  color: #09090b;
+}
+:is(.restaurant-admin-panel, :root[data-restaurant-admin-theme]) .ra-btn-add:hover:not(:disabled) {
+  filter: brightness(1.08);
+}
+:is(.restaurant-admin-panel, :root[data-restaurant-admin-theme]) .accent-ra-primary {
+  accent-color: var(--ra-primary);
+}
+:is(.restaurant-admin-panel, :root[data-restaurant-admin-theme]) .hover-ra-primary:hover {
+  color: var(--ra-primary);
+}
+:is(.restaurant-admin-panel, :root[data-restaurant-admin-theme]) .hover-text-ra-primary-muted:hover {
+  color: color-mix(in srgb, var(--ra-primary) 78%, white);
+}
+:is(.restaurant-admin-panel, :root[data-restaurant-admin-theme]) .hover-bg-ra-primary-10:hover {
+  background-color: color-mix(in srgb, var(--ra-primary) 10%, transparent);
+}
+:is(.restaurant-admin-panel, :root[data-restaurant-admin-theme]) .hover-bg-ra-primary-15:hover {
+  background-color: color-mix(in srgb, var(--ra-primary) 15%, transparent);
+}
+:is(.restaurant-admin-panel, :root[data-restaurant-admin-theme]) .hover-border-ra-primary-40:hover {
+  border-color: color-mix(in srgb, var(--ra-primary) 40%, transparent);
+}
+
+/* Preloader */
+:is(.restaurant-admin-panel, :root[data-restaurant-admin-theme]) .ra-preloader-box {
+  border: 1px solid color-mix(in srgb, var(--ra-primary) 30%, transparent);
+  background-color: color-mix(in srgb, var(--ra-primary) 10%, transparent);
+  box-shadow: 0 10px 15px -3px color-mix(in srgb, var(--ra-primary) 18%, transparent);
+}
+:is(.restaurant-admin-panel, :root[data-restaurant-admin-theme]) .ra-preloader-spin {
+  border-color: rgb(63 63 70);
+  border-top-color: var(--ra-primary);
+}
+
+/* Accent (success / status) */
+:is(.restaurant-admin-panel, :root[data-restaurant-admin-theme]) .text-ra-accent {
+  color: var(--ra-accent);
+}
+:is(.restaurant-admin-panel, :root[data-restaurant-admin-theme]) .bg-ra-accent {
+  background-color: var(--ra-accent);
+}
+:is(.restaurant-admin-panel, :root[data-restaurant-admin-theme]) .bg-ra-accent-5 {
+  background-color: color-mix(in srgb, var(--ra-accent) 5%, transparent);
+}
+:is(.restaurant-admin-panel, :root[data-restaurant-admin-theme]) .bg-ra-accent-10 {
+  background-color: color-mix(in srgb, var(--ra-accent) 10%, transparent);
+}
+:is(.restaurant-admin-panel, :root[data-restaurant-admin-theme]) .bg-ra-accent-15 {
+  background-color: color-mix(in srgb, var(--ra-accent) 15%, transparent);
+}
+:is(.restaurant-admin-panel, :root[data-restaurant-admin-theme]) .bg-ra-accent-30 {
+  background-color: color-mix(in srgb, var(--ra-accent) 30%, transparent);
+}
+:is(.restaurant-admin-panel, :root[data-restaurant-admin-theme]) .border-ra-accent-20 {
+  border-color: color-mix(in srgb, var(--ra-accent) 20%, transparent);
+}
+:is(.restaurant-admin-panel, :root[data-restaurant-admin-theme]) .border-ra-accent-25 {
+  border-color: color-mix(in srgb, var(--ra-accent) 25%, transparent);
+}
+:is(.restaurant-admin-panel, :root[data-restaurant-admin-theme]) .border-ra-accent-30 {
+  border-color: color-mix(in srgb, var(--ra-accent) 30%, transparent);
+}
+:is(.restaurant-admin-panel, :root[data-restaurant-admin-theme]) .border-ra-accent-40 {
+  border-color: color-mix(in srgb, var(--ra-accent) 40%, transparent);
+}
+:is(.restaurant-admin-panel, :root[data-restaurant-admin-theme]) .ring-ra-accent-25 {
+  --tw-ring-color: color-mix(in srgb, var(--ra-accent) 25%, transparent);
+}
+:is(.restaurant-admin-panel, :root[data-restaurant-admin-theme]) .text-ra-accent-muted {
+  color: color-mix(in srgb, var(--ra-accent) 75%, white);
+}
+:is(.restaurant-admin-panel, :root[data-restaurant-admin-theme]) .ra-status-badge {
+  background-color: color-mix(in srgb, var(--ra-accent) 15%, transparent);
+  color: var(--ra-accent);
+  --tw-ring-color: color-mix(in srgb, var(--ra-accent) 25%, transparent);
+  box-shadow: 0 0 0 1px var(--tw-ring-color);
+}

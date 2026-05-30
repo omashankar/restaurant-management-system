@@ -103,7 +103,7 @@ export default function TwoFactorSetup() {
             type="button"
             onClick={confirm}
             disabled={loading || code.length !== 6}
-            className="w-full rounded-xl bg-emerald-600 py-2.5 text-sm font-semibold text-white hover:bg-emerald-500 disabled:opacity-50"
+            className="w-full rounded-xl ra-btn-primary py-2.5 text-sm font-semibold disabled:opacity-50"
           >
             {loading ? "Verifying…" : "Confirm & enable"}
           </button>
@@ -111,11 +111,11 @@ export default function TwoFactorSetup() {
       )}
 
       {step === "done" && (
-        <p className="text-sm text-emerald-400">2FA is active on your account.</p>
+        <p className="text-sm text-ra-accent">2FA is active on your account.</p>
       )}
 
       {message ? (
-        <p className={`mt-3 text-xs ${message.includes("enabled") || message.includes("active") ? "text-emerald-400" : "text-red-400"}`}>
+        <p className={`mt-3 text-xs ${message.includes("enabled") || message.includes("active") ? "text-ra-accent" : "text-red-400"}`}>
           {message}
         </p>
       ) : null}

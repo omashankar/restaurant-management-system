@@ -1,7 +1,10 @@
 "use client";
 
+import { RESTAURANT_ADMIN_PRIMARY } from "@/config/restaurantAdminTheme";
+import { useRestaurantTheme } from "@/hooks/useRestaurantTheme";
+
 const DEFAULT_CHANNELS = [
-  { label: "Dine-In", value: 0, color: "#10b981" },
+  { label: "Dine-In", value: 0, color: RESTAURANT_ADMIN_PRIMARY },
   { label: "Takeaway", value: 0, color: "#6366f1" },
   { label: "Delivery", value: 0, color: "#f59e0b" },
 ];
@@ -15,8 +18,17 @@ function normalizeChannels(channels) {
   }));
 }
 
+function resolveChannelColor(color, primary) {
+  if (!color || color === "#10b981" || color === RESTAURANT_ADMIN_PRIMARY) return primary;
+  return color;
+}
+
 export default function DonutChart({ channels = DEFAULT_CHANNELS }) {
-  const items = normalizeChannels(channels.length ? channels : DEFAULT_CHANNELS);
+  const { theme } = useRestaurantTheme();
+  const items = normalizeChannels(channels.length ? channels : DEFAULT_CHANNELS).map((c) => ({
+    ...c,
+    color: resolveChannelColor(c.color, theme.primaryColor),
+  }));
   const total = items.reduce((s, c) => s + c.value, 0);
 
   const r = 54, cx = 70, cy = 70;

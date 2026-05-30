@@ -1,37 +1,40 @@
 "use client";
 
 import { useApp } from "@/context/AppProviders";
+import { useUser } from "@/context/AuthContext";
 import { useModuleData } from "@/context/ModuleDataContext";
+import { BrandPreloaderFace } from "@/components/ui/BrandPreloaderFace";
+import { useSuperAdminThemeStyles } from "@/hooks/useSuperAdminThemeStyles";
+import { useRestaurantTheme } from "@/hooks/useRestaurantTheme";
+import "@/app/super-admin/super-admin-theme.css";
+import "@/app/(app)/restaurant-admin-theme.css";
+import { usePathname } from "next/navigation";
 
 export default function AppPreloader() {
   const { hydrated: appHydrated } = useApp();
+  const { hydrated: authHydrated } = useUser();
   const { hydrated: moduleHydrated } = useModuleData();
-  const ready = appHydrated && moduleHydrated;
+  const pathname = usePathname();
+  const isSuperAdmin = pathname?.startsWith("/super-admin");
+  const superAdminThemeStyle = useSuperAdminThemeStyles();
+  useRestaurantTheme();
+
+  const ready = isSuperAdmin
+    ? appHydrated && moduleHydrated && authHydrated
+    : appHydrated && moduleHydrated;
+
+  const variant = isSuperAdmin ? "super-admin" : "restaurant-admin";
+  const panelClass = isSuperAdmin ? "super-admin-panel" : "restaurant-admin-panel";
 
   return (
     <div
       aria-hidden={ready}
-      className={`pointer-events-none fixed inset-0 z-[120] flex items-center justify-center bg-zinc-950/95 text-zinc-100 transition-opacity duration-500 ${
+      style={isSuperAdmin ? superAdminThemeStyle : undefined}
+      className={`${panelClass} pointer-events-none fixed inset-0 z-[120] flex items-center justify-center bg-zinc-950/95 text-zinc-100 transition-opacity duration-500 ${
         ready ? "opacity-0" : "opacity-100"
       }`}
     >
-      <div className="flex flex-col items-center gap-4 px-6 text-center">
-        <div className="relative">
-          <div className="size-14 rounded-2xl border border-emerald-500/30 bg-emerald-500/10 shadow-lg shadow-emerald-900/30" />
-          <div className="absolute inset-0 flex items-center justify-center">
-            <div className="size-7 animate-spin rounded-full border-2 border-zinc-700 border-t-emerald-400" />
-          </div>
-        </div>
-
-        <div>
-          <p className="text-sm font-semibold tracking-wide text-zinc-100">
-            Restaurant Management System
-          </p>
-          <p className="mt-1 text-xs text-zinc-400">
-            Loading your dashboard...
-          </p>
-        </div>
-      </div>
+      <BrandPreloaderFace variant={variant} />
     </div>
   );
 }

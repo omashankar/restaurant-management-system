@@ -40,7 +40,7 @@ export default function HeaderLayoutEditor({
         <button
           type="button"
           onClick={onBack}
-          className="inline-flex items-center gap-2 rounded-xl border border-zinc-700 px-3 py-2 text-sm text-zinc-300 hover:border-emerald-500/40"
+          className="inline-flex items-center gap-2 rounded-xl border border-zinc-700 px-3 py-2 text-sm text-zinc-300 hover:border-ra-primary-40"
         >
           <ArrowLeft className="size-4" /> Back
         </button>

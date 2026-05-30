@@ -60,7 +60,7 @@ export default function SuperAdminSidebar() {
       {/* ── Logo ── */}
       <div className="flex h-16 items-center justify-between gap-2 border-b border-zinc-800 px-3">
         <div className="flex min-w-0 items-center gap-2.5">
-          <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-rose-500/15 text-rose-400 ring-1 ring-rose-500/25">
+          <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-sa-primary-15 text-sa-primary ring-1 ring-sa-primary-25">
             <Shield className="size-5" />
           </span>
           {!collapsed && (
@@ -90,13 +90,13 @@ export default function SuperAdminSidebar() {
                   : "w-full items-center gap-3 px-3 py-2.5"
               } ${
                 active
-                  ? "bg-rose-500/15 text-rose-300 ring-1 ring-rose-500/25"
+                  ? "bg-sa-primary-15 text-sa-primary-muted ring-1 ring-sa-primary-25"
                   : "text-zinc-400 hover:bg-zinc-900 hover:text-zinc-100"
               }`}>
               {active && (
-                <span className="absolute inset-y-1 left-0 w-0.5 rounded-r bg-rose-400" aria-hidden />
+                <span className="absolute inset-y-1 left-0 w-0.5 rounded-r sa-nav-active-bar" aria-hidden />
               )}
-              <Icon className={`size-[18px] shrink-0 transition-transform duration-200 group-hover:scale-110 ${active ? "text-rose-400" : ""}`} aria-hidden />
+              <Icon className={`size-[18px] shrink-0 transition-transform duration-200 group-hover:scale-110 ${active ? "text-sa-primary" : ""}`} aria-hidden />
               {!collapsed && <span className="truncate">{label}</span>}
               {collapsed && <span className="sr-only">{label}</span>}
             </Link>
