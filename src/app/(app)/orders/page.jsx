@@ -12,6 +12,7 @@ import {
   getCreateOrderFieldErrors,
 } from "@/lib/formValidation";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useLiveRefresh } from "@/hooks/useLiveRefresh";
 
 /* ── Config ── */
 const STATUS_CFG = {
@@ -50,6 +51,32 @@ const PAYMENT_METHOD_LABEL = {
 const NEXT_STATUS = { new: "preparing", preparing: "ready", ready: "completed" };
 const NEXT_LABEL  = { new: "Start Preparing", preparing: "Mark Ready", ready: "Mark Completed" };
 
+function formatOrderPlacedAt(iso) {
+  if (!iso) return { label: "—", full: "—" };
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return { label: "—", full: "—" };
+
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const orderDay = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  const diffDays = Math.round((today - orderDay) / 86400000);
+  const timeStr = d.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" });
+  const dateStr = d.toLocaleDateString("en-IN", {
+    weekday: "short",
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
+  const full = `${dateStr}, ${timeStr}`;
+
+  if (diffDays === 0) return { label: `Today · ${timeStr}`, full };
+  if (diffDays === 1) return { label: `Yesterday · ${timeStr}`, full };
+  return {
+    label: `${d.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })} · ${timeStr}`,
+    full,
+  };
+}
+
 /* ── Order card ── */
 function OrderCard({ order, currency, onStatusChange, onMarkPaid, canEdit }) {
   const [expanded, setExpanded] = useState(false);
@@ -77,9 +104,8 @@ function OrderCard({ order, currency, onStatusChange, onMarkPaid, canEdit }) {
     setPayUpdating(false);
   };
 
-  const timeStr = order.time ?? (order.createdAt
-    ? new Date(order.createdAt).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })
-    : "—");
+  const placedAt = formatOrderPlacedAt(order.createdAt);
+  const timeStr = order.time ?? placedAt.label;
 
   return (
     <div className={`rounded-2xl border bg-zinc-900/70 shadow-sm transition-all duration-200 hover:shadow-md ${st.border}`}>
@@ -118,7 +144,10 @@ function OrderCard({ order, currency, onStatusChange, onMarkPaid, canEdit }) {
         </div>
 
         <div className="mt-2 flex items-center justify-between">
-          <span className="inline-flex items-center gap-1 text-xs text-zinc-600">
+          <span
+            className="inline-flex items-center gap-1 text-xs text-zinc-600"
+            title={order.createdAt ? placedAt.full : undefined}
+          >
             <Clock className="size-3" /> {timeStr}
           </span>
           <button type="button" onClick={() => setExpanded((v) => !v)}
@@ -130,6 +159,11 @@ function OrderCard({ order, currency, onStatusChange, onMarkPaid, canEdit }) {
 
       {expanded && (
         <div className="border-t border-zinc-800 px-4 py-3 space-y-2">
+          {order.createdAt && placedAt.full !== "—" && (
+            <p className="text-[11px] text-zinc-500">
+              Placed: <span className="text-zinc-400">{placedAt.full}</span>
+            </p>
+          )}
           {/* Items list */}
           {order.items?.length > 0 && (
             <div className="space-y-1">
@@ -554,6 +588,7 @@ export default function OrdersPage() {
   const [search, setSearch]     = useState("");
   const [sortNew, setSortNew]   = useState(true);
   const [createOpen, setCreateOpen] = useState(false);
+  const [lastUpdated, setLastUpdated] = useState(null);
 
   const canEdit = ["admin", "manager", "waiter"].includes(user?.role);
 
@@ -568,23 +603,29 @@ export default function OrdersPage() {
       .catch(() => {});
   }, []);
 
-  const fetchOrders = useCallback(async () => {
-    setLoading(true);
-    setFetchError("");
+  const fetchOrders = useCallback(async (silent = false) => {
+    if (!silent) {
+      setLoading(true);
+      setFetchError("");
+    }
     try {
-      const res  = await fetch("/api/orders");
+      const res  = await fetch("/api/orders", { cache: "no-store" });
       const data = await res.json();
       if (data.success) {
         setOrders(data.orders);
-      } else {
+        setLastUpdated(new Date());
+      } else if (!silent) {
         setFetchError(data.error ?? "Could not load orders.");
       }
     } catch {
-      setFetchError("Network error while loading orders.");
-    } finally { setLoading(false); }
+      if (!silent) setFetchError("Network error while loading orders.");
+    } finally {
+      if (!silent) setLoading(false);
+    }
   }, []);
 
   useEffect(() => { fetchOrders(); }, [fetchOrders]);
+  useLiveRefresh(fetchOrders);
 
   const handleStatusChange = useCallback(async (id, status) => {
     const res  = await fetch(`/api/orders/${id}`, {
@@ -673,11 +714,20 @@ export default function OrdersPage() {
             </span>
             <div>
               <h1 className="text-2xl font-semibold tracking-tight text-zinc-50">Orders</h1>
-              <p className="mt-1 text-sm text-zinc-500">{orders.length} total · live status</p>
+              <p className="mt-1 text-sm text-zinc-500">
+                {orders.length} total ·{" "}
+                <span className="inline-flex items-center gap-1.5">
+                  <span className="size-1.5 animate-pulse rounded-full bg-emerald-400" />
+                  Live
+                  {lastUpdated
+                    ? ` · updated ${lastUpdated.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", second: "2-digit" })}`
+                    : ""}
+                </span>
+              </p>
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <button type="button" onClick={fetchOrders}
+            <button type="button" onClick={() => fetchOrders()}
               className="cursor-pointer flex items-center gap-1.5 rounded-xl border border-zinc-700 px-3 py-2 text-xs font-medium text-zinc-400 hover:border-zinc-500 hover:text-zinc-200 transition-colors">
               <RefreshCw className="size-3.5" />
             </button>

@@ -1,5 +1,6 @@
 "use client";
 
+import { LIVE_REFRESH_EVENT } from "@/lib/liveRefresh";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 export function useInbox() {
@@ -15,20 +16,26 @@ export function useInbox() {
     if (!Ctx) return;
     try {
       const ctx = new Ctx();
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.type = "sine";
-      osc.frequency.setValueAtTime(880, ctx.currentTime);
-      gain.gain.setValueAtTime(0.0001, ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.06, ctx.currentTime + 0.01);
-      gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.2);
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-      osc.start();
-      osc.stop(ctx.currentTime + 0.2);
-      osc.onended = () => {
-        ctx.close().catch(() => {});
-      };
+      const tones = [
+        { freq: 880, start: 0, dur: 0.18 },
+        { freq: 1175, start: 0.14, dur: 0.22 },
+        { freq: 880, start: 0.4, dur: 0.18 },
+        { freq: 1175, start: 0.54, dur: 0.28 },
+      ];
+      tones.forEach(({ freq, start, dur }) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = "sine";
+        osc.frequency.setValueAtTime(freq, ctx.currentTime + start);
+        gain.gain.setValueAtTime(0.0001, ctx.currentTime + start);
+        gain.gain.exponentialRampToValueAtTime(0.22, ctx.currentTime + start + 0.012);
+        gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + start + dur);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(ctx.currentTime + start);
+        osc.stop(ctx.currentTime + start + dur + 0.02);
+      });
+      window.setTimeout(() => ctx.close().catch(() => {}), 900);
     } catch {
       // silent fail if browser blocks autoplay audio
     }
@@ -49,6 +56,9 @@ export function useInbox() {
         prevUnread.messages + prevUnread.notifications
       ) {
         playNotificationTone();
+        if (typeof window !== "undefined") {
+          window.dispatchEvent(new CustomEvent(LIVE_REFRESH_EVENT));
+        }
       }
       previousUnreadRef.current = nextUnread;
       setMessages(Array.isArray(data.messages) ? data.messages : []);

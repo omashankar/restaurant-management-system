@@ -18,6 +18,7 @@ import {
   getTableFieldErrors,
 } from "@/lib/formValidation";
 import { useCallback, useEffect, useState } from "react";
+import { useLiveRefresh } from "@/hooks/useLiveRefresh";
 
 const emptyForm = { tableNumber: "", capacity: "4", status: "available", categoryId: "" };
 
@@ -44,25 +45,30 @@ export default function TablesModulePage() {
   const { showToast, ToastUI } = useToast();
 
   /* â”€â”€ Fetch tables + areas â”€â”€ */
-  const fetchAll = useCallback(async () => {
-    setLoading(true);
-    setFetchError("");
+  const fetchAll = useCallback(async (silent = false) => {
+    if (!silent) {
+      setLoading(true);
+      setFetchError("");
+    }
     try {
       const [tablesRes, areasRes] = await Promise.all([
-        fetch("/api/tables"),
-        fetch("/api/tables/areas"),
+        fetch("/api/tables", { cache: "no-store" }),
+        fetch("/api/tables/areas", { cache: "no-store" }),
       ]);
       const [tablesData, areasData] = await Promise.all([tablesRes.json(), areasRes.json()]);
       if (tablesData.success) setTables(tablesData.tables);
-      else setFetchError(tablesData.error ?? "Could not load tables.");
+      else if (!silent) setFetchError(tablesData.error ?? "Could not load tables.");
       if (areasData.success) setAreas(areasData.areas);
       if (tablesData.success) await refreshMenu();
     } catch {
-      setFetchError("Network error while loading tables.");
-    } finally { setLoading(false); }
+      if (!silent) setFetchError("Network error while loading tables.");
+    } finally {
+      if (!silent) setLoading(false);
+    }
   }, [refreshMenu]);
 
   useEffect(() => { fetchAll(); }, [fetchAll]);
+  useLiveRefresh(fetchAll, { intervalMs: 15_000 });
 
   const filterFn = useCallback((row) => {
     const st = row.status === "reserved" ? "occupied" : row.status;

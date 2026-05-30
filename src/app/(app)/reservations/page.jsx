@@ -13,7 +13,8 @@ import { useApp } from "@/context/AppProviders";
 import { useModuleData } from "@/context/ModuleDataContext";
 import { useToast } from "@/hooks/useToast";
 import { CalendarClock, Plus } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { useLiveRefresh } from "@/hooks/useLiveRefresh";
 
 function normalizeReservation(row) {
   return {
@@ -61,32 +62,32 @@ export default function ReservationsPage() {
   const canDelete = user?.role === "admin" || user?.role === "manager";
   const { showToast, ToastUI } = useToast();
 
-  useEffect(() => {
+  const loadReservations = useCallback(async (silent = false) => {
     if (!hydrated) return;
-    let alive = true;
-    async function loadReservations() {
+    if (!silent) {
       setLoading(true);
       setFetchError(null);
-      try {
-        const res = await fetch("/api/reservations", { cache: "no-store" });
-        const data = await res.json();
-        if (!alive) return;
-        if (res.ok && data?.success && Array.isArray(data.reservations)) {
-          setReservationRows(data.reservations.map(normalizeReservation));
-        } else {
-          setFetchError(data?.error ?? "Could not load reservations.");
-        }
-      } catch {
-        if (alive) setFetchError("Network error while loading reservations.");
-      } finally {
-        if (alive) setLoading(false);
-      }
     }
-    loadReservations();
-    return () => {
-      alive = false;
-    };
+    try {
+      const res = await fetch("/api/reservations", { cache: "no-store" });
+      const data = await res.json();
+      if (res.ok && data?.success && Array.isArray(data.reservations)) {
+        setReservationRows(data.reservations.map(normalizeReservation));
+      } else if (!silent) {
+        setFetchError(data?.error ?? "Could not load reservations.");
+      }
+    } catch {
+      if (!silent) setFetchError("Network error while loading reservations.");
+    } finally {
+      if (!silent) setLoading(false);
+    }
   }, [hydrated, setReservationRows]);
+
+  useEffect(() => {
+    loadReservations();
+  }, [loadReservations]);
+
+  useLiveRefresh(loadReservations, { intervalMs: 15_000 });
 
   const tableOptions = useMemo(
     () =>

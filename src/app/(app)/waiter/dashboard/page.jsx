@@ -2,34 +2,39 @@
 
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import WaiterDashboard from "@/components/views/WaiterDashboard";
-import { useEffect, useState } from "react";
+import { useLiveRefresh } from "@/hooks/useLiveRefresh";
+import { useCallback, useEffect, useState } from "react";
 
 function WaiterDashboardData() {
   const [tables, setTables]   = useState([]);
   const [orders, setOrders]   = useState([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    async function load() {
-      try {
-        const [tablesRes, ordersRes] = await Promise.all([
-          fetch("/api/tables"),
-          fetch("/api/orders"),
-        ]);
-        const [tablesData, ordersData] = await Promise.all([
-          tablesRes.json(),
-          ordersRes.json(),
-        ]);
-        if (tablesData.success) setTables(tablesData.tables ?? []);
-        if (ordersData.success) setOrders(ordersData.orders ?? []);
-      } catch {
-        /* keep empty defaults */
-      } finally {
-        setLoading(false);
-      }
+  const load = useCallback(async (silent = false) => {
+    if (!silent) setLoading(true);
+    try {
+      const [tablesRes, ordersRes] = await Promise.all([
+        fetch("/api/tables", { cache: "no-store" }),
+        fetch("/api/orders", { cache: "no-store" }),
+      ]);
+      const [tablesData, ordersData] = await Promise.all([
+        tablesRes.json(),
+        ordersRes.json(),
+      ]);
+      if (tablesData.success) setTables(tablesData.tables ?? []);
+      if (ordersData.success) setOrders(ordersData.orders ?? []);
+    } catch {
+      /* keep previous data on silent refresh failure */
+    } finally {
+      if (!silent) setLoading(false);
     }
-    load();
   }, []);
+
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  useLiveRefresh(load);
 
   if (loading) {
     return (

@@ -8,6 +8,7 @@ import {
   mapOrderForDashboard,
   splitPeriodRevenue,
 } from "@/lib/dashboardAnalytics";
+import { useLiveRefresh } from "@/hooks/useLiveRefresh";
 import { useCallback, useEffect, useState } from "react";
 
 const EMPTY = {
@@ -43,10 +44,13 @@ export function useDashboardData() {
   const [data, setData] = useState(EMPTY);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [lastUpdated, setLastUpdated] = useState(null);
 
-  const load = useCallback(async () => {
-    setLoading(true);
-    setError(null);
+  const load = useCallback(async (silent = false) => {
+    if (!silent) {
+      setLoading(true);
+      setError(null);
+    }
 
     try {
       const res = await fetch("/api/dashboard/summary", {
@@ -56,8 +60,10 @@ export function useDashboardData() {
       const summary = await res.json();
 
       if (!res.ok || !summary?.success) {
-        setError(summary?.error ?? "Could not load dashboard data.");
-        setData(EMPTY);
+        if (!silent) {
+          setError(summary?.error ?? "Could not load dashboard data.");
+          setData(EMPTY);
+        }
         return;
       }
 
@@ -134,12 +140,15 @@ export function useDashboardData() {
           currency,
         }),
       });
+      setLastUpdated(new Date());
     } catch (err) {
       console.error("useDashboardData:", err);
-      setError("Could not load dashboard data.");
-      setData(EMPTY);
+      if (!silent) {
+        setError("Could not load dashboard data.");
+        setData(EMPTY);
+      }
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   }, []);
 
@@ -147,5 +156,7 @@ export function useDashboardData() {
     load();
   }, [load]);
 
-  return { ...data, loading, error, refresh: load };
+  useLiveRefresh(load, { intervalMs: 15_000 });
+
+  return { ...data, loading, error, lastUpdated, refresh: () => load() };
 }
