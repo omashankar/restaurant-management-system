@@ -12,6 +12,7 @@ import {
   getCreateOrderFieldErrors,
 } from "@/lib/formValidation";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useLiveRefresh } from "@/hooks/useLiveRefresh";
 
 /* ── Config ── */
 const STATUS_CFG = {
@@ -587,6 +588,7 @@ export default function OrdersPage() {
   const [search, setSearch]     = useState("");
   const [sortNew, setSortNew]   = useState(true);
   const [createOpen, setCreateOpen] = useState(false);
+  const [lastUpdated, setLastUpdated] = useState(null);
 
   const canEdit = ["admin", "manager", "waiter"].includes(user?.role);
 
@@ -601,23 +603,29 @@ export default function OrdersPage() {
       .catch(() => {});
   }, []);
 
-  const fetchOrders = useCallback(async () => {
-    setLoading(true);
-    setFetchError("");
+  const fetchOrders = useCallback(async (silent = false) => {
+    if (!silent) {
+      setLoading(true);
+      setFetchError("");
+    }
     try {
-      const res  = await fetch("/api/orders");
+      const res  = await fetch("/api/orders", { cache: "no-store" });
       const data = await res.json();
       if (data.success) {
         setOrders(data.orders);
-      } else {
+        setLastUpdated(new Date());
+      } else if (!silent) {
         setFetchError(data.error ?? "Could not load orders.");
       }
     } catch {
-      setFetchError("Network error while loading orders.");
-    } finally { setLoading(false); }
+      if (!silent) setFetchError("Network error while loading orders.");
+    } finally {
+      if (!silent) setLoading(false);
+    }
   }, []);
 
   useEffect(() => { fetchOrders(); }, [fetchOrders]);
+  useLiveRefresh(fetchOrders);
 
   const handleStatusChange = useCallback(async (id, status) => {
     const res  = await fetch(`/api/orders/${id}`, {
@@ -706,11 +714,20 @@ export default function OrdersPage() {
             </span>
             <div>
               <h1 className="text-2xl font-semibold tracking-tight text-zinc-50">Orders</h1>
-              <p className="mt-1 text-sm text-zinc-500">{orders.length} total · live status</p>
+              <p className="mt-1 text-sm text-zinc-500">
+                {orders.length} total ·{" "}
+                <span className="inline-flex items-center gap-1.5">
+                  <span className="size-1.5 animate-pulse rounded-full bg-emerald-400" />
+                  Live
+                  {lastUpdated
+                    ? ` · updated ${lastUpdated.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", second: "2-digit" })}`
+                    : ""}
+                </span>
+              </p>
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <button type="button" onClick={fetchOrders}
+            <button type="button" onClick={() => fetchOrders()}
               className="cursor-pointer flex items-center gap-1.5 rounded-xl border border-zinc-700 px-3 py-2 text-xs font-medium text-zinc-400 hover:border-zinc-500 hover:text-zinc-200 transition-colors">
               <RefreshCw className="size-3.5" />
             </button>

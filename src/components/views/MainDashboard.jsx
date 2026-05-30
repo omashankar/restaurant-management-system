@@ -34,6 +34,15 @@ export default function MainDashboard() {
             {role === "admin"
               ? "Live snapshot of sales, orders, and floor activity."
               : "Live metrics for your shift."}
+            {dashboard.lastUpdated && (
+              <>
+                {" · "}
+                <span className="inline-flex items-center gap-1.5">
+                  <span className="size-1.5 animate-pulse rounded-full bg-emerald-400" />
+                  updated {dashboard.lastUpdated.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
+                </span>
+              </>
+            )}
           </p>
         </div>
         <button

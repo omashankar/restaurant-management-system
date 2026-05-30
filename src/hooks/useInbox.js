@@ -1,5 +1,6 @@
 "use client";
 
+import { LIVE_REFRESH_EVENT } from "@/lib/liveRefresh";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 export function useInbox() {
@@ -55,6 +56,9 @@ export function useInbox() {
         prevUnread.messages + prevUnread.notifications
       ) {
         playNotificationTone();
+        if (typeof window !== "undefined") {
+          window.dispatchEvent(new CustomEvent(LIVE_REFRESH_EVENT));
+        }
       }
       previousUnreadRef.current = nextUnread;
       setMessages(Array.isArray(data.messages) ? data.messages : []);

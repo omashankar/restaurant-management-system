@@ -4,7 +4,8 @@ import {
   CheckCircle2, ChefHat, Clock,
   Flame, RefreshCw, UtensilsCrossed,
 } from "lucide-react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import { useLiveRefresh } from "@/hooks/useLiveRefresh";
 
 /* ── Column config ── */
 const COLUMNS = [
@@ -167,14 +168,13 @@ export default function KitchenDisplay() {
   const [actionError, setActionError] = useState("");
   const [updating, setUpdating] = useState(null); // id being updated
   const [lastRefresh, setLastRefresh] = useState(null);
-  const intervalRef = useRef(null);
 
   /* ── Fetch active orders from DB ── */
   const fetchOrders = useCallback(async (silent = false) => {
     if (!silent) setLoading(true);
     if (!silent) setFetchError("");
     try {
-      const res  = await fetch("/api/orders");
+      const res  = await fetch("/api/orders", { cache: "no-store" });
       const data = await res.json();
       if (data.success) {
         // Kitchen: new, preparing, ready — oldest first (FIFO)
@@ -192,12 +192,7 @@ export default function KitchenDisplay() {
   }, []);
 
   useEffect(() => { fetchOrders(); }, [fetchOrders]);
-
-  /* ── Auto-refresh every 30 seconds ── */
-  useEffect(() => {
-    intervalRef.current = setInterval(() => fetchOrders(true), 30_000);
-    return () => clearInterval(intervalRef.current);
-  }, [fetchOrders]);
+  useLiveRefresh(fetchOrders);
 
   /* ── Update order status via API ── */
   const handleAction = useCallback(async (id, status) => {
@@ -264,8 +259,13 @@ export default function KitchenDisplay() {
           <div>
             <h1 className="text-2xl font-semibold tracking-tight text-zinc-50">Kitchen Display</h1>
             <p className="mt-1 text-sm text-zinc-500">
-              {lastRefresh ? `Last updated ${lastRefresh.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })}` : "Loading…"}
-              {" · "}Auto-refresh every 30s
+              <span className="inline-flex items-center gap-1.5">
+                <span className="size-1.5 animate-pulse rounded-full bg-emerald-400" />
+                Live
+              </span>
+              {lastRefresh
+                ? ` · updated ${lastRefresh.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", second: "2-digit" })}`
+                : " · Loading…"}
             </p>
           </div>
         </div>
