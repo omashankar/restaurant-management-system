@@ -3,6 +3,7 @@
 import { Eye, EyeOff, Loader2, Lock, UtensilsCrossed } from "lucide-react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
+import { passwordBasicError, passwordMatchError } from "@/lib/formValidation";
 import { Suspense, useState } from "react";
 
 function ResetPasswordForm() {
@@ -23,6 +24,12 @@ function ResetPasswordForm() {
 
     if (!token) {
       setError("Reset link is invalid or expired.");
+      return;
+    }
+
+    const pwdErr = passwordBasicError(password) || passwordMatchError(password, confirmPassword);
+    if (pwdErr) {
+      setError(pwdErr);
       return;
     }
 

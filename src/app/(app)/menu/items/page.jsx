@@ -1,6 +1,7 @@
 "use client";
 
 import MenuCard from "@/components/menu/MenuCard";
+import MenuItemImageField from "@/components/menu/MenuItemImageField";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import EmptyState from "@/components/ui/EmptyState";
 import Modal from "@/components/ui/Modal";
@@ -9,6 +10,10 @@ import AdminFoodTypeIndicator from "@/components/menu/AdminFoodTypeIndicator";
 import { useModuleData } from "@/context/ModuleDataContext";
 import { useToast } from "@/hooks/useToast";
 import { LayoutGrid, List, Plus, RefreshCw, Search, UtensilsCrossed } from "lucide-react";
+import {
+  EMPTY_MENU_ITEM_ERRORS,
+  getMenuItemFieldErrors,
+} from "@/lib/formValidation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 const ITEM_TYPES    = ["veg", "non-veg", "egg", "drink", "halal", "other"];
@@ -44,6 +49,7 @@ export default function MenuItemsPage() {
   const [editingId, setEditingId]   = useState(null);
   const [form, setForm]             = useState(emptyForm);
   const [formError, setFormError]   = useState("");
+  const [fieldErrors, setFieldErrors] = useState(EMPTY_MENU_ITEM_ERRORS);
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [deleting, setDeleting]         = useState(false);
   const [fetchError, setFetchError]       = useState("");
@@ -107,6 +113,7 @@ export default function MenuItemsPage() {
     setEditingId(null);
     setForm({ ...emptyForm, categoryId: categories[0]?.id ?? "" });
     setFormError("");
+    setFieldErrors(EMPTY_MENU_ITEM_ERRORS);
     setModalOpen(true);
   };
 
@@ -121,15 +128,18 @@ export default function MenuItemsPage() {
       badge: row.badge ?? "",
     });
     setFormError("");
+    setFieldErrors(EMPTY_MENU_ITEM_ERRORS);
     setModalOpen(true);
   };
 
   const save = async () => {
-    const price = parseFloat(form.price);
-    if (!form.name.trim() || !form.categoryId || Number.isNaN(price)) {
-      setFormError("Name, category and price are required.");
+    const validation = getMenuItemFieldErrors(form);
+    setFieldErrors(validation.errors);
+    if (!validation.valid) {
+      setFormError(validation.message ?? "Fix the highlighted fields.");
       return;
     }
+    const price = parseFloat(form.price);
     setSaving(true); setFormError("");
 
     const cat = categories.find((c) => c.id === form.categoryId);
@@ -359,24 +369,59 @@ export default function MenuItemsPage() {
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="sm:col-span-2">
               <label className="text-xs font-medium text-zinc-500">Item Name *</label>
-              <input value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+              <input
+                value={form.name}
+                onChange={(e) => {
+                  setForm((f) => ({ ...f, name: e.target.value }));
+                  if (fieldErrors.name) setFieldErrors((p) => ({ ...p, name: "" }));
+                }}
                 placeholder="e.g. Grilled Chicken"
-                className="mt-1 w-full rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus:border-emerald-500/40 placeholder:text-zinc-600" />
+                aria-invalid={fieldErrors.name ? true : undefined}
+                className={`mt-1 w-full rounded-xl border bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus:border-emerald-500/40 placeholder:text-zinc-600 ${
+                  fieldErrors.name ? "border-red-500/50" : "border-zinc-700"
+                }`}
+              />
+              {fieldErrors.name && <p className="mt-1 text-xs text-red-400">{fieldErrors.name}</p>}
             </div>
             <div>
               <label className="text-xs font-medium text-zinc-500">Category *</label>
-              <select value={form.categoryId} onChange={(e) => setForm((f) => ({ ...f, categoryId: e.target.value }))}
-                className="cursor-pointer mt-1 w-full rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus:border-emerald-500/40">
+              <select
+                value={form.categoryId}
+                onChange={(e) => {
+                  setForm((f) => ({ ...f, categoryId: e.target.value }));
+                  if (fieldErrors.categoryId) setFieldErrors((p) => ({ ...p, categoryId: "" }));
+                }}
+                aria-invalid={fieldErrors.categoryId ? true : undefined}
+                className={`cursor-pointer mt-1 w-full rounded-xl border bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus:border-emerald-500/40 ${
+                  fieldErrors.categoryId ? "border-red-500/50" : "border-zinc-700"
+                }`}
+              >
                 <option value="">— Select —</option>
                 {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
               </select>
+              {fieldErrors.categoryId && (
+                <p className="mt-1 text-xs text-red-400">{fieldErrors.categoryId}</p>
+              )}
             </div>
             <div>
               <label className="text-xs font-medium text-zinc-500">Price *</label>
-              <input type="number" min="0" step="0.01" value={form.price}
-                onChange={(e) => setForm((f) => ({ ...f, price: e.target.value }))}
+              <input
+                type="number"
+                inputMode="decimal"
+                min="0"
+                step="0.01"
+                value={form.price}
+                onChange={(e) => {
+                  setForm((f) => ({ ...f, price: e.target.value }));
+                  if (fieldErrors.price) setFieldErrors((p) => ({ ...p, price: "" }));
+                }}
                 placeholder="0.00"
-                className="mt-1 w-full rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus:border-emerald-500/40" />
+                aria-invalid={fieldErrors.price ? true : undefined}
+                className={`mt-1 w-full rounded-xl border bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus:border-emerald-500/40 ${
+                  fieldErrors.price ? "border-red-500/50" : "border-zinc-700"
+                }`}
+              />
+              {fieldErrors.price && <p className="mt-1 text-xs text-red-400">{fieldErrors.price}</p>}
             </div>
             <div>
               <label className="text-xs font-medium text-zinc-500">Item Type</label>
@@ -391,7 +436,7 @@ export default function MenuItemsPage() {
             </div>
             <div>
               <label className="text-xs font-medium text-zinc-500">Prep Time (min)</label>
-              <input type="number" min="0" max="120" value={form.prepTime}
+              <input type="number" inputMode="numeric" min="0" max="120" value={form.prepTime}
                 onChange={(e) => setForm((f) => ({ ...f, prepTime: e.target.value }))}
                 placeholder="e.g. 10"
                 className="mt-1 w-full rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus:border-emerald-500/40" />
@@ -424,10 +469,12 @@ export default function MenuItemsPage() {
                 className="mt-1 w-full resize-none rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus:border-emerald-500/40 placeholder:text-zinc-600" />
             </div>
             <div className="sm:col-span-2">
-              <label className="text-xs font-medium text-zinc-500">Image URL (optional)</label>
-              <input type="url" value={form.imageUrl} onChange={(e) => setForm((f) => ({ ...f, imageUrl: e.target.value }))}
-                placeholder="https://…"
-                className="mt-1 w-full rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus:border-emerald-500/40 placeholder:text-zinc-600" />
+              <MenuItemImageField
+                value={form.imageUrl}
+                onChange={(imageUrl) => setForm((f) => ({ ...f, imageUrl }))}
+                disabled={saving}
+                error={fieldErrors.imageUrl}
+              />
             </div>
           </div>
         </div>

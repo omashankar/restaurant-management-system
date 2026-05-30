@@ -1,12 +1,34 @@
 "use client";
 
 import { defaultRedirectForRole, useApp } from "@/context/AppProviders";
+import PasswordInput from "@/components/ui/PasswordInput";
+import PhoneInput from "@/components/ui/PhoneInput";
+import {
+  DEFAULT_SIGNUP_PASSWORD_SECURITY,
+  getSignupFieldErrors,
+} from "@/lib/formValidation";
 import { UtensilsCrossed } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
-const inputCls = "mt-1.5 w-full rounded-xl border border-zinc-700 bg-zinc-950/80 px-4 py-3 text-sm text-zinc-100 outline-none transition-all focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/20";
+const inputCls =
+  "mt-1.5 w-full rounded-xl border border-zinc-700 bg-zinc-950/80 px-4 py-3 text-sm text-zinc-100 outline-none transition-all focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/20";
+const fieldErrorCls = "mt-1 text-xs text-red-400";
+
+const EMPTY_FIELD_ERRORS = {
+  restaurantName: "",
+  slug: "",
+  name: "",
+  email: "",
+  phone: "",
+  password: "",
+};
+
+function FieldError({ message }) {
+  if (!message) return null;
+  return <p className={fieldErrorCls} role="alert">{message}</p>;
+}
 
 export default function SignupPage() {
   const { user, hydrated } = useApp();
@@ -21,15 +43,22 @@ export default function SignupPage() {
   const [slugManuallyEdited, setSlugManuallyEdited] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [fieldErrors, setFieldErrors] = useState(EMPTY_FIELD_ERRORS);
   const [successMsg, setSuccessMsg] = useState("");
 
-  // Restaurant name se auto slug generate karo
+  const passwordHint = `At least ${DEFAULT_SIGNUP_PASSWORD_SECURITY.minPasswordLength} characters, with a number and special character.`;
+
   const handleRestaurantNameChange = (val) => {
     setRestaurantName(val);
-    // Sirf tab auto-generate karo jab user ne manually slug nahi badla
     if (!slugManuallyEdited) {
-      const autoSlug = val.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+      const autoSlug = val
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-|-$/g, "");
       setSlug(autoSlug);
+    }
+    if (fieldErrors.restaurantName) {
+      setFieldErrors((prev) => ({ ...prev, restaurantName: "" }));
     }
   };
 
@@ -38,17 +67,47 @@ export default function SignupPage() {
     if (user) router.replace(defaultRedirectForRole(user.role));
   }, [hydrated, user, router]);
 
+  const clearFieldError = (key) => {
+    if (fieldErrors[key]) {
+      setFieldErrors((prev) => ({ ...prev, [key]: "" }));
+    }
+  };
+
   const onSubmit = async (e) => {
     e.preventDefault();
     setError("");
     setSuccessMsg("");
+
+    const errors = getSignupFieldErrors({
+      name,
+      email,
+      phone,
+      password,
+      restaurantName,
+      slug,
+    });
+    setFieldErrors(errors);
+
+    const firstError = Object.values(errors).find(Boolean);
+    if (firstError) {
+      setError(firstError);
+      return;
+    }
+
     setLoading(true);
 
     try {
       const res = await fetch("/api/auth/signup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, phone, password, restaurantName, slug }),
+        body: JSON.stringify({
+          name: name.trim(),
+          email: email.trim(),
+          phone,
+          password,
+          restaurantName: restaurantName.trim(),
+          slug,
+        }),
       });
       const data = await res.json();
       if (!data.success) {
@@ -58,7 +117,7 @@ export default function SignupPage() {
 
       if (data.requiresVerification) {
         setSuccessMsg(data.message ?? "Account created. Please verify your email.");
-        router.push(`/login?email=${encodeURIComponent(email)}&verify=1`);
+        router.push(`/login?email=${encodeURIComponent(email.trim())}&verify=1`);
         return;
       }
 
@@ -70,7 +129,6 @@ export default function SignupPage() {
     }
   };
 
-  /* ── Signup form ── */
   return (
     <div className="w-full max-w-md">
       <div className="mb-8 text-center">
@@ -82,22 +140,22 @@ export default function SignupPage() {
       </div>
 
       <div className="rounded-2xl border border-zinc-800 bg-zinc-900/80 p-6 shadow-2xl shadow-black/40 backdrop-blur-sm">
-        <form onSubmit={onSubmit} className="space-y-4">
+        <form onSubmit={onSubmit} className="space-y-4" noValidate>
           <div>
             <label htmlFor="restaurantName" className="text-xs font-medium uppercase tracking-wider text-zinc-500">
               Restaurant Name <span className="text-red-400">*</span>
             </label>
             <input
               id="restaurantName"
-              required
               value={restaurantName}
               onChange={(e) => handleRestaurantNameChange(e.target.value)}
               placeholder="e.g. The Grand Kitchen"
               className={inputCls}
+              aria-invalid={fieldErrors.restaurantName ? true : undefined}
             />
+            <FieldError message={fieldErrors.restaurantName} />
           </div>
 
-          {/* Slug field */}
           <div>
             <label htmlFor="slug" className="text-xs font-medium uppercase tracking-wider text-zinc-500">
               Customer Site URL <span className="text-red-400">*</span>
@@ -108,50 +166,112 @@ export default function SignupPage() {
               </span>
               <input
                 id="slug"
-                required
                 value={slug}
                 onChange={(e) => {
                   setSlugManuallyEdited(true);
                   setSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ""));
+                  clearFieldError("slug");
                 }}
                 placeholder="the-grand-kitchen"
                 className="w-full bg-transparent px-3 py-3 text-sm text-zinc-100 outline-none placeholder:text-zinc-600"
+                aria-invalid={fieldErrors.slug ? true : undefined}
               />
             </div>
             <p className="mt-1 text-[11px] text-zinc-600">
               Yahi URL customers use karenge. Sirf lowercase letters, numbers aur hyphens.
             </p>
+            <FieldError message={fieldErrors.slug} />
           </div>
+
           <div>
-            <label htmlFor="name" className="text-xs font-medium uppercase tracking-wider text-zinc-500">Your Name</label>
-            <input id="name" required value={name} onChange={(e) => setName(e.target.value)} placeholder="Alex Rivera" className={inputCls} />
+            <label htmlFor="name" className="text-xs font-medium uppercase tracking-wider text-zinc-500">
+              Your Name <span className="text-red-400">*</span>
+            </label>
+            <input
+              id="name"
+              value={name}
+              onChange={(e) => {
+                setName(e.target.value);
+                clearFieldError("name");
+              }}
+              placeholder="Alex Rivera"
+              className={inputCls}
+              aria-invalid={fieldErrors.name ? true : undefined}
+            />
+            <FieldError message={fieldErrors.name} />
           </div>
+
           <div>
-            <label htmlFor="email" className="text-xs font-medium uppercase tracking-wider text-zinc-500">Enter Email</label>
-            <input id="email" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@restaurant.com" className={inputCls} />
+            <label htmlFor="email" className="text-xs font-medium uppercase tracking-wider text-zinc-500">
+              Enter Email <span className="text-red-400">*</span>
+            </label>
+            <input
+              id="email"
+              type="email"
+              autoComplete="email"
+              value={email}
+              onChange={(e) => {
+                setEmail(e.target.value);
+                clearFieldError("email");
+              }}
+              placeholder="you@restaurant.com"
+              className={inputCls}
+              aria-invalid={fieldErrors.email ? true : undefined}
+            />
+            <FieldError message={fieldErrors.email} />
           </div>
-          <div>
-            <label htmlFor="phone" className="text-xs font-medium uppercase tracking-wider text-zinc-500">Phone</label>
-            <input id="phone" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+91 98765 43210" className={inputCls} />
-          </div>
-          <div>
-            <label htmlFor="password" className="text-xs font-medium uppercase tracking-wider text-zinc-500">Password</label>
-            <input id="password" type="password" required value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Min 6 characters" className={inputCls} />
-          </div>
+
+          <PhoneInput
+            id="phone"
+            label="Phone (optional)"
+            labelClassName="text-xs font-medium uppercase tracking-wider text-zinc-500"
+            value={phone}
+            onChange={(digits) => {
+              setPhone(digits);
+              clearFieldError("phone");
+            }}
+            error={fieldErrors.phone || undefined}
+          />
+
+          <PasswordInput
+            id="password"
+            label="Password"
+            required
+            autoComplete="new-password"
+            value={password}
+            onChange={(v) => {
+              setPassword(v);
+              clearFieldError("password");
+            }}
+            placeholder="Min 8 characters"
+            inputClassName="w-full rounded-xl border border-zinc-700 bg-zinc-950/80 px-4 py-3 pr-11 text-sm text-zinc-100 outline-none transition-all focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/20"
+            hint={passwordHint}
+            error={fieldErrors.password || undefined}
+          />
+
           {error && (
-            <p className="rounded-xl border border-red-500/20 bg-red-500/10 px-3 py-2 text-xs text-red-400">{error}</p>
+            <p className="rounded-xl border border-red-500/20 bg-red-500/10 px-3 py-2 text-xs text-red-400" role="alert">
+              {error}
+            </p>
           )}
           {successMsg && (
-            <p className="rounded-xl border border-emerald-500/20 bg-emerald-500/10 px-3 py-2 text-xs text-emerald-400">{successMsg}</p>
+            <p className="rounded-xl border border-emerald-500/20 bg-emerald-500/10 px-3 py-2 text-xs text-emerald-400">
+              {successMsg}
+            </p>
           )}
-          <button type="submit" disabled={loading}
-            className="cursor-pointer w-full rounded-xl bg-emerald-500 py-3 text-sm font-semibold text-zinc-950 transition-all hover:bg-emerald-400 active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed">
+          <button
+            type="submit"
+            disabled={loading}
+            className="cursor-pointer w-full rounded-xl bg-emerald-500 py-3 text-sm font-semibold text-zinc-950 transition-all hover:bg-emerald-400 active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed"
+          >
             {loading ? "Creating account…" : "Create account"}
           </button>
         </form>
         <p className="mt-5 text-center text-sm text-zinc-500">
           Already have an account?{" "}
-          <Link href="/login" className="cursor-pointer font-medium text-emerald-400 hover:text-emerald-300">Sign In</Link>
+          <Link href="/login" className="cursor-pointer font-medium text-emerald-400 hover:text-emerald-300">
+            Sign In
+          </Link>
         </p>
       </div>
     </div>

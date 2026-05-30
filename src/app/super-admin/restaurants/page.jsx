@@ -3,10 +3,18 @@
 
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import Modal from "@/components/ui/Modal";
+import PasswordInput from "@/components/ui/PasswordInput";
+import PhoneInput from "@/components/ui/PhoneInput";
 import { useToast } from "@/hooks/useToast";
 import {
+  DEFAULT_SIGNUP_PASSWORD_SECURITY,
+  EMPTY_RESTAURANT_EDIT_ERRORS,
+  getRestaurantCreateFieldErrors,
+  getRestaurantEditFieldErrors,
+} from "@/lib/formValidation";
+import {
   Building2, Calendar, ChevronLeft, ChevronRight,
-  Crown, Eye, EyeOff, Mail, MapPin,
+  Crown, Eye, Mail, MapPin,
   Pencil, Phone, Plus, RefreshCw, ShieldCheck, ShieldOff,
   Search, Trash2, X,
 } from "lucide-react";
@@ -38,6 +46,21 @@ const emptyForm = {
 };
 
 const inputCls = "w-full rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus:border-emerald-500/40 placeholder:text-zinc-600 transition-colors";
+const fieldErrorCls = "mt-1 text-xs text-red-400";
+
+const EMPTY_CREATE_FIELD_ERRORS = {
+  name: "",
+  slug: "",
+  ownerName: "",
+  ownerEmail: "",
+  ownerPassword: "",
+  phone: "",
+};
+
+function FieldError({ message }) {
+  if (!message) return null;
+  return <p className={fieldErrorCls} role="alert">{message}</p>;
+}
 
 /* ─────────────────────────────────────────
    TOGGLE SWITCH
@@ -185,13 +208,14 @@ export default function RestaurantsPage() {
   const [createForm, setCreateForm]   = useState(emptyForm);
   const [slugManuallyEdited, setSlugManuallyEdited] = useState(false);
   const [createError, setCreateError] = useState("");
+  const [createFieldErrors, setCreateFieldErrors] = useState(EMPTY_CREATE_FIELD_ERRORS);
   const [creating, setCreating]       = useState(false);
-  const [showPw, setShowPw]           = useState(false);
 
   // Edit modal
   const [editTarget, setEditTarget]   = useState(null);
   const [editForm, setEditForm]       = useState({});
   const [editError, setEditError]     = useState("");
+  const [editFieldErrors, setEditFieldErrors] = useState(EMPTY_RESTAURANT_EDIT_ERRORS);
   const [saving, setSaving]           = useState(false);
 
   // Preview modal
@@ -303,51 +327,123 @@ export default function RestaurantsPage() {
   };
 
   /* Create */
+  const clearCreateFieldError = (key) => {
+    if (createFieldErrors[key]) {
+      setCreateFieldErrors((prev) => ({ ...prev, [key]: "" }));
+    }
+  };
+
+  const openCreateModal = () => {
+    setCreateForm(emptyForm);
+    setSlugManuallyEdited(false);
+    setCreateError("");
+    setCreateFieldErrors(EMPTY_CREATE_FIELD_ERRORS);
+    setCreateOpen(true);
+  };
+
   const handleCreate = async () => {
-    if (!createForm.name.trim())       { setCreateError("Restaurant name is required."); return; }
-    if (!createForm.slug.trim())       { setCreateError("Customer site URL (slug) is required."); return; }
-    if (!createForm.ownerEmail.trim()) { setCreateError("Owner email is required."); return; }
-    if (!createForm.ownerPassword)     { setCreateError("Password is required."); return; }
-    if (createForm.ownerPassword.length < 6) { setCreateError("Password must be at least 6 characters."); return; }
-    setCreating(true); setCreateError("");
+    const errors = getRestaurantCreateFieldErrors(createForm);
+    setCreateFieldErrors(errors);
+    const firstError = Object.values(errors).find(Boolean);
+    if (firstError) {
+      setCreateError(firstError);
+      return;
+    }
+
+    setCreating(true);
+    setCreateError("");
     try {
-      const res  = await fetch("/api/super-admin/restaurants", {
+      const res = await fetch("/api/super-admin/restaurants", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(createForm),
+        body: JSON.stringify({
+          ...createForm,
+          ownerEmail: createForm.ownerEmail.trim(),
+          name: createForm.name.trim(),
+        }),
       });
       const data = await res.json();
-      if (!data.success) { setCreateError(data.error ?? "Failed to create."); return; }
+      if (!data.success) {
+        setCreateError(data.error ?? "Failed to create.");
+        return;
+      }
       showToast(createForm.name + " created successfully.");
-      setCreateOpen(false); setCreateForm(emptyForm); setSlugManuallyEdited(false);
+      setCreateOpen(false);
+      setCreateForm(emptyForm);
+      setSlugManuallyEdited(false);
+      setCreateFieldErrors(EMPTY_CREATE_FIELD_ERRORS);
       setPage(1);
       await fetchRestaurants(1);
-    } catch { setCreateError("Network error."); }
-    finally { setCreating(false); }
+    } catch {
+      setCreateError("Network error.");
+    } finally {
+      setCreating(false);
+    }
+  };
+
+  const clearEditFieldError = (key) => {
+    if (editFieldErrors[key]) {
+      setEditFieldErrors((prev) => ({ ...prev, [key]: "" }));
+    }
   };
 
   /* Open edit */
   const openEdit = (r) => {
     setEditTarget(r);
-    setEditForm({ name: r.name, slug: r.slug ?? "", plan: r.plan, phone: r.phone !== "—" ? r.phone : "", address: r.address ?? "" });
+    setEditForm({
+      name: r.name,
+      slug: r.slug ?? "",
+      plan: r.plan,
+      phone: r.phone && r.phone !== "—" ? r.phone : "",
+      address: r.address ?? "",
+    });
     setEditError("");
+    setEditFieldErrors(EMPTY_RESTAURANT_EDIT_ERRORS);
   };
 
   /* Save edit */
   const handleEdit = async () => {
-    if (!editForm.name?.trim()) { setEditError("Restaurant name is required."); return; }
-    setSaving(true); setEditError("");
+    const errors = getRestaurantEditFieldErrors(editForm);
+    setEditFieldErrors(errors);
+    const firstError = Object.values(errors).find(Boolean);
+    if (firstError) {
+      setEditError(firstError);
+      return;
+    }
+
+    setSaving(true);
+    setEditError("");
     try {
-      const res  = await fetch("/api/super-admin/restaurants/" + editTarget.id, {
+      const res = await fetch("/api/super-admin/restaurants/" + editTarget.id, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(editForm),
+        body: JSON.stringify({
+          name: editForm.name.trim(),
+          slug: editForm.slug,
+          plan: editForm.plan,
+          phone: editForm.phone,
+          address: editForm.address?.trim() ?? "",
+        }),
       });
       const data = await res.json();
-      if (!data.success) { setEditError(data.error ?? "Failed to save."); return; }
-      setRestaurants((prev) => prev.map((r) =>
-        r.id === editTarget.id ? { ...r, ...editForm } : r
-      ));
+      if (!data.success) {
+        setEditError(data.error ?? "Failed to save.");
+        return;
+      }
+      setRestaurants((prev) =>
+        prev.map((r) =>
+          r.id === editTarget.id
+            ? {
+                ...r,
+                name: editForm.name.trim(),
+                slug: editForm.slug,
+                plan: editForm.plan,
+                phone: editForm.phone || "—",
+                address: editForm.address ?? "",
+              }
+            : r,
+        ),
+      );
       showToast(editForm.name + " updated.");
       setEditTarget(null);
       fetchRestaurants();
@@ -391,7 +487,7 @@ export default function RestaurantsPage() {
             className="cursor-pointer flex items-center gap-1.5 rounded-xl border border-zinc-700 px-3 py-2.5 text-sm font-medium text-zinc-400 hover:border-zinc-500 hover:text-zinc-200 transition-colors">
             <RefreshCw className={"size-4 " + (loading ? "animate-spin" : "")} />
           </button>
-          <button type="button" onClick={() => { setCreateForm(emptyForm); setCreateError(""); setShowPw(false); setSlugManuallyEdited(false); setCreateOpen(true); }}
+          <button type="button" onClick={openCreateModal}
             className="cursor-pointer inline-flex items-center gap-2 rounded-xl bg-emerald-500 px-4 py-2.5 text-sm font-semibold text-zinc-950 hover:bg-emerald-400 transition-colors">
             <Plus className="size-4" /> Add Restaurant
           </button>
@@ -460,7 +556,7 @@ export default function RestaurantsPage() {
         <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-zinc-800 py-20 text-center">
           <Building2 className="size-10 text-zinc-700" />
           <p className="text-sm text-zinc-500">No restaurants found for selected filters.</p>
-          <button type="button" onClick={() => { setCreateForm(emptyForm); setCreateOpen(true); }}
+          <button type="button" onClick={openCreateModal}
             className="cursor-pointer rounded-xl bg-emerald-500 px-4 py-2 text-sm font-semibold text-zinc-950 hover:bg-emerald-400">
             Add First Restaurant
           </button>
@@ -652,69 +748,119 @@ export default function RestaurantsPage() {
         }>
         <div className="space-y-4">
           {createError && (
-            <p className="rounded-xl border border-red-500/20 bg-red-500/10 px-3 py-2 text-xs text-red-400">{createError}</p>
+            <p className="rounded-xl border border-red-500/20 bg-red-500/10 px-3 py-2 text-xs text-red-400" role="alert">
+              {createError}
+            </p>
           )}
           <div className="grid gap-3 sm:grid-cols-2">
             <div className="sm:col-span-2">
               <Field label="Restaurant Name" required>
-                <input value={createForm.name} onChange={(e) => {
-                  const name = e.target.value;
-                  // Agar user ne slug manually edit nahi kiya to auto-generate karo
-                  const autoSlug = name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
-                  setCreateForm((f) => ({
-                    ...f,
-                    name,
-                    slug: slugManuallyEdited ? f.slug : autoSlug,
-                  }));
-                }}
-                  placeholder="e.g. The Grand Kitchen" className={inputCls} />
+                <input
+                  value={createForm.name}
+                  onChange={(e) => {
+                    const name = e.target.value;
+                    const autoSlug = name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+                    setCreateForm((f) => ({
+                      ...f,
+                      name,
+                      slug: slugManuallyEdited ? f.slug : autoSlug,
+                    }));
+                    clearCreateFieldError("name");
+                    if (!slugManuallyEdited) clearCreateFieldError("slug");
+                  }}
+                  placeholder="e.g. The Grand Kitchen"
+                  className={inputCls}
+                  aria-invalid={createFieldErrors.name ? true : undefined}
+                />
+                <FieldError message={createFieldErrors.name} />
               </Field>
             </div>
             <div className="sm:col-span-2">
               <Field label="URL Slug (Customer Site Address)" required>
-                <div className="flex items-center gap-0">
-                  <span className="rounded-l-xl border border-r-0 border-zinc-700 bg-zinc-800 px-3 py-2.5 text-xs text-zinc-500 whitespace-nowrap">
+                <div className="flex items-center gap-0 overflow-hidden rounded-xl border border-zinc-700 bg-zinc-950/60 focus-within:border-emerald-500/40">
+                  <span className="shrink-0 border-r border-zinc-700 bg-zinc-800 px-3 py-2.5 text-xs text-zinc-500 whitespace-nowrap">
                     yoursite.com/r/
                   </span>
                   <input
                     value={createForm.slug}
                     onChange={(e) => {
                       setSlugManuallyEdited(true);
-                      setCreateForm((f) => ({ ...f, slug: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, "") }));
+                      setCreateForm((f) => ({
+                        ...f,
+                        slug: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ""),
+                      }));
+                      clearCreateFieldError("slug");
                     }}
                     placeholder="pizza-palace"
-                    className={inputCls + " rounded-l-none"}
+                    className="w-full bg-transparent px-3 py-2.5 text-sm text-zinc-100 outline-none placeholder:text-zinc-600"
+                    aria-invalid={createFieldErrors.slug ? true : undefined}
                   />
                 </div>
                 <p className="mt-1 text-[11px] text-zinc-600">
-                  Sirf lowercase letters, numbers aur hyphens. e.g. <span className="text-zinc-400">pizza-palace</span>
+                  Sirf lowercase letters, numbers aur hyphens. e.g.{" "}
+                  <span className="text-zinc-400">pizza-palace</span>
                 </p>
+                <FieldError message={createFieldErrors.slug} />
               </Field>
             </div>
             <Field label="Owner Name">
-              <input value={createForm.ownerName} onChange={(e) => setCreateForm((f) => ({ ...f, ownerName: e.target.value }))}
-                placeholder="Full name" className={inputCls} />
+              <input
+                value={createForm.ownerName}
+                onChange={(e) => {
+                  setCreateForm((f) => ({ ...f, ownerName: e.target.value }));
+                  clearCreateFieldError("ownerName");
+                }}
+                placeholder="Full name"
+                className={inputCls}
+                aria-invalid={createFieldErrors.ownerName ? true : undefined}
+              />
+              <FieldError message={createFieldErrors.ownerName} />
             </Field>
             <Field label="Owner Email" required>
-              <input type="email" value={createForm.ownerEmail} onChange={(e) => setCreateForm((f) => ({ ...f, ownerEmail: e.target.value }))}
-                placeholder="owner@restaurant.com" className={inputCls} />
+              <input
+                type="email"
+                autoComplete="email"
+                value={createForm.ownerEmail}
+                onChange={(e) => {
+                  setCreateForm((f) => ({ ...f, ownerEmail: e.target.value }));
+                  clearCreateFieldError("ownerEmail");
+                }}
+                placeholder="owner@restaurant.com"
+                className={inputCls}
+                aria-invalid={createFieldErrors.ownerEmail ? true : undefined}
+              />
+              <FieldError message={createFieldErrors.ownerEmail} />
             </Field>
-            <Field label="Password" required>
-              <div className="relative">
-                <input type={showPw ? "text" : "password"} value={createForm.ownerPassword}
-                  onChange={(e) => setCreateForm((f) => ({ ...f, ownerPassword: e.target.value }))}
-                  placeholder="Min 6 characters" autoComplete="new-password"
-                  className={inputCls + " pr-10"} />
-                <button type="button" onClick={() => setShowPw((v) => !v)}
-                  className="cursor-pointer absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-300">
-                  {showPw ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
-                </button>
-              </div>
-            </Field>
-            <Field label="Phone">
-              <input value={createForm.phone} onChange={(e) => setCreateForm((f) => ({ ...f, phone: e.target.value }))}
-                placeholder="+1 555 000 0000" className={inputCls} />
-            </Field>
+            <div className="sm:col-span-2">
+              <PasswordInput
+                id="create-owner-password"
+                label="Password"
+                required
+                autoComplete="new-password"
+                value={createForm.ownerPassword}
+                onChange={(v) => {
+                  setCreateForm((f) => ({ ...f, ownerPassword: v }));
+                  clearCreateFieldError("ownerPassword");
+                }}
+                placeholder="Min 8 characters"
+                labelClassName="block text-xs font-medium text-zinc-400 mb-1"
+                inputClassName={`${inputCls} pr-11`}
+                hint={`At least ${DEFAULT_SIGNUP_PASSWORD_SECURITY.minPasswordLength} characters, with a number and special character.`}
+                error={createFieldErrors.ownerPassword || undefined}
+              />
+            </div>
+            <PhoneInput
+              id="create-restaurant-phone"
+              label="Phone"
+              labelClassName="block text-xs font-medium text-zinc-400 mb-1"
+              value={createForm.phone}
+              onChange={(digits) => {
+                setCreateForm((f) => ({ ...f, phone: digits }));
+                clearCreateFieldError("phone");
+              }}
+              error={createFieldErrors.phone || undefined}
+              className="sm:col-span-1"
+            />
             <Field label="Plan">
               <select value={createForm.plan} onChange={(e) => setCreateForm((f) => ({ ...f, plan: e.target.value }))}
                 className={"cursor-pointer " + inputCls}>
@@ -766,47 +912,83 @@ export default function RestaurantsPage() {
         }>
         <div className="space-y-4">
           {editError && (
-            <p className="rounded-xl border border-red-500/20 bg-red-500/10 px-3 py-2 text-xs text-red-400">{editError}</p>
+            <p className="rounded-xl border border-red-500/20 bg-red-500/10 px-3 py-2 text-xs text-red-400" role="alert">
+              {editError}
+            </p>
           )}
           <div className="grid gap-3 sm:grid-cols-2">
             <div className="sm:col-span-2">
               <Field label="Restaurant Name" required>
-                <input value={editForm.name ?? ""} onChange={(e) => setEditForm((f) => ({ ...f, name: e.target.value }))}
-                  className={inputCls} />
+                <input
+                  value={editForm.name ?? ""}
+                  onChange={(e) => {
+                    setEditForm((f) => ({ ...f, name: e.target.value }));
+                    clearEditFieldError("name");
+                  }}
+                  className={inputCls}
+                  aria-invalid={editFieldErrors.name ? true : undefined}
+                />
+                <FieldError message={editFieldErrors.name} />
               </Field>
             </div>
             <div className="sm:col-span-2">
-              <Field label="URL Slug (Customer Site Address)">
-                <div className="flex items-center gap-0">
-                  <span className="rounded-l-xl border border-r-0 border-zinc-700 bg-zinc-800 px-3 py-2.5 text-xs text-zinc-500 whitespace-nowrap">
+              <Field label="URL Slug (Customer Site Address)" required>
+                <div className="flex items-center gap-0 overflow-hidden rounded-xl border border-zinc-700 bg-zinc-950/60 focus-within:border-emerald-500/40">
+                  <span className="shrink-0 border-r border-zinc-700 bg-zinc-800 px-3 py-2.5 text-xs text-zinc-500 whitespace-nowrap">
                     yoursite.com/r/
                   </span>
                   <input
                     value={editForm.slug ?? ""}
-                    onChange={(e) => setEditForm((f) => ({ ...f, slug: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, "") }))}
+                    onChange={(e) => {
+                      setEditForm((f) => ({
+                        ...f,
+                        slug: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ""),
+                      }));
+                      clearEditFieldError("slug");
+                    }}
                     placeholder="pizza-palace"
-                    className={inputCls + " rounded-l-none"}
+                    className="w-full bg-transparent px-3 py-2.5 text-sm text-zinc-100 outline-none placeholder:text-zinc-600"
+                    aria-invalid={editFieldErrors.slug ? true : undefined}
                   />
                 </div>
                 <p className="mt-1 text-[11px] text-zinc-600">
                   Slug change karne se purane QR codes kaam karna band kar denge.
                 </p>
+                <FieldError message={editFieldErrors.slug} />
               </Field>
             </div>
-            <Field label="Phone">
-              <input value={editForm.phone ?? ""} onChange={(e) => setEditForm((f) => ({ ...f, phone: e.target.value }))}
-                placeholder="+1 555 000 0000" className={inputCls} />
-            </Field>
+            <PhoneInput
+              id="edit-restaurant-phone"
+              label="Phone"
+              labelClassName="block text-xs font-medium text-zinc-400 mb-1"
+              value={editForm.phone ?? ""}
+              onChange={(digits) => {
+                setEditForm((f) => ({ ...f, phone: digits }));
+                clearEditFieldError("phone");
+              }}
+              error={editFieldErrors.phone || undefined}
+            />
             <Field label="Plan">
-              <select value={editForm.plan ?? "free"} onChange={(e) => setEditForm((f) => ({ ...f, plan: e.target.value }))}
-                className={"cursor-pointer " + inputCls}>
-                {PLANS.map((p) => <option key={p} value={p}>{p.charAt(0).toUpperCase() + p.slice(1)}</option>)}
+              <select
+                value={editForm.plan ?? "free"}
+                onChange={(e) => setEditForm((f) => ({ ...f, plan: e.target.value }))}
+                className={"cursor-pointer " + inputCls}
+              >
+                {PLANS.map((p) => (
+                  <option key={p} value={p}>
+                    {p.charAt(0).toUpperCase() + p.slice(1)}
+                  </option>
+                ))}
               </select>
             </Field>
             <div className="sm:col-span-2">
               <Field label="Address">
-                <input value={editForm.address ?? ""} onChange={(e) => setEditForm((f) => ({ ...f, address: e.target.value }))}
-                  placeholder="123 Main St, City, Country" className={inputCls} />
+                <input
+                  value={editForm.address ?? ""}
+                  onChange={(e) => setEditForm((f) => ({ ...f, address: e.target.value }))}
+                  placeholder="123 Main St, City, Country (optional)"
+                  className={inputCls}
+                />
               </Field>
             </div>
           </div>

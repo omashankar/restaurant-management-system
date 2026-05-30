@@ -2,6 +2,7 @@ import { sendPasswordResetEmail } from "@/lib/emailService";
 import { getClientIp, resendLimiter } from "@/lib/rateLimit";
 import clientPromise from "@/lib/mongodb";
 import crypto from "crypto";
+import { parseSchema, resendSchema } from "@/lib/validationSchemas";
 
 export async function POST(request) {
   const ip = getClientIp(request);
@@ -14,9 +15,15 @@ export async function POST(request) {
   }
 
   const body = await request.json().catch(() => null);
-  const email = String(body?.email ?? "").trim().toLowerCase();
-  if (!email) {
-    return Response.json({ success: false, error: "Email is required." }, { status: 400 });
+  if (!body) {
+    return Response.json({ success: false, error: "Invalid JSON body." }, { status: 400 });
+  }
+
+  let email;
+  try {
+    ({ email } = parseSchema(resendSchema, body));
+  } catch (err) {
+    return Response.json({ success: false, error: err.message }, { status: 400 });
   }
 
   try {

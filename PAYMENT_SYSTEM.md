@@ -2,7 +2,7 @@
 
 ## Complete Multi-Restaurant SaaS Payment Architecture
 
-This system provides **independent payment management** for each restaurant in a multi-tenant SaaS platform, similar to Swiggy, Zomato, and Shopify multi-vendor architecture.
+This system provides **independent payment management** for each restaurant in a multi-tenant SaaS platform (each tenant has its own payment credentials and settings).
 
 ---
 
@@ -640,4 +640,4 @@ This is a **production-ready, enterprise-grade payment management system** for m
 ✅ **Security-first architecture**
 ✅ **Modern, responsive UI**
 
-Built with **Next.js 16**, **MongoDB**, **AES-256-GCM encryption**, and follows **SaaS best practices** similar to Swiggy, Zomato, and Shopify.
+Built with **Next.js 16**, **MongoDB**, **AES-256-GCM encryption**, and follows standard **multi-tenant SaaS** best practices.

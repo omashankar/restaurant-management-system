@@ -9,7 +9,12 @@ import ListToolbar from "@/components/ui/ListToolbar";
 import Modal from "@/components/ui/Modal";
 import { useMenuFilter } from "@/hooks/useMenuFilter";
 import { useModuleData } from "@/context/ModuleDataContext";
+import {
+  EMPTY_POS_ORDER_ERRORS,
+  getPosOrderFieldErrors,
+} from "@/lib/formValidation";
 import { resolveCustomerByPhone } from "@/lib/posCustomer";
+import ItemTypeChipIcon, { FastFilterChipIcon } from "@/components/menu/ItemTypeChipIcon";
 import { useCallback, useEffect, useMemo, useRef, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 
@@ -128,13 +133,20 @@ function PosPageContent() {
   const removeLine   = (id) => setCart((p) => p.filter((l) => l.id !== id));
   const setLineQty   = (id, v) => setCart((p) => p.map((l) => l.id === id ? { ...l, qty: Math.max(1, parseInt(v, 10) || 1) } : l));
 
-  const deliveryValid = delivery.name.trim() && delivery.phone.trim() && delivery.address.trim();
-  const canPlaceOrder =
-    cart.length > 0 &&
-    (orderType === "delivery"
-      ? deliveryValid
-      : !!selectedCustomer &&
-        (orderType === "takeaway" || (orderType === "dine-in" && selectedTableId)));
+  const [fieldErrors, setFieldErrors] = useState(EMPTY_POS_ORDER_ERRORS);
+
+  const posOrderValidation = useMemo(
+    () =>
+      getPosOrderFieldErrors({
+        orderType,
+        selectedTableId,
+        selectedCustomer,
+        delivery,
+      }),
+    [orderType, selectedTableId, selectedCustomer, delivery]
+  );
+
+  const canPlaceOrder = cart.length > 0 && posOrderValidation.valid;
 
   const [isPlacing, setIsPlacing] = useState(false);
   const [placeError, setPlaceError] = useState("");
@@ -149,9 +161,15 @@ function PosPageContent() {
     }
   }, [paymentMethod]);
 
+  const clearFieldError = useCallback((key) => {
+    setFieldErrors((prev) => (prev[key] ? { ...prev, [key]: "" } : prev));
+  }, []);
+
   const handleOrderTypeChange = useCallback((type) => {
     setOrderType(type);
     setSelectedTableId("");
+    setFieldErrors(EMPTY_POS_ORDER_ERRORS);
+    setPlaceError("");
     if (type === "delivery") setSelectedCustomer(null);
   }, []);
 
@@ -159,7 +177,22 @@ function PosPageContent() {
     setCart((p) => p.map((l) => (l.id === id ? { ...l, note: noteText } : l)));
 
   const placeOrder = useCallback(async () => {
-    if (!canPlaceOrder || isPlacing) return;
+    if (cart.length === 0) {
+      setPlaceError("Add at least one item to the cart.");
+      return;
+    }
+    const validation = getPosOrderFieldErrors({
+      orderType,
+      selectedTableId,
+      selectedCustomer,
+      delivery,
+    });
+    setFieldErrors(validation.errors);
+    if (!validation.valid) {
+      setPlaceError(validation.message ?? "Please fix the highlighted fields.");
+      return;
+    }
+    if (isPlacing) return;
     setIsPlacing(true);
     setPlaceError("");
 
@@ -357,6 +390,7 @@ function PosPageContent() {
       setSelectedTableId("");
       setDelivery({ name: "", phone: "", address: "" });
       setSelectedCustomer(null);
+      setFieldErrors(EMPTY_POS_ORDER_ERRORS);
       setPaymentMethod("cashCounter");
       setPaymentStatus("paid");
     } catch {
@@ -412,19 +446,7 @@ function PosPageContent() {
                   }`}
                   aria-pressed={active}
                 >
-                  {t === "veg" && (
-                    <span className="inline-flex shrink-0 items-center justify-center" style={{ width: 11, height: 11, border: "2px solid #16a34a", borderRadius: 2, backgroundColor: "transparent" }}>
-                      <span style={{ width: 4, height: 4, borderRadius: "50%", backgroundColor: "#16a34a", display: "block" }} />
-                    </span>
-                  )}
-                  {t === "non-veg" && (
-                    <span className="inline-flex shrink-0 items-center justify-center" style={{ width: 11, height: 11, border: "2px solid #92400e", borderRadius: 2, backgroundColor: "transparent" }}>
-                      <span style={{ width: 4, height: 4, borderRadius: "50%", backgroundColor: "#92400e", display: "block" }} />
-                    </span>
-                  )}
-                  {t === "egg"   && <span className="size-2 shrink-0 rounded-full bg-yellow-400" />}
-                  {t === "drink" && <span className="text-sm leading-none">🥤</span>}
-                  {t === "halal" && <span className="text-sm leading-none">🍖</span>}
+                  {t !== "all" && <ItemTypeChipIcon type={t} />}
                   {LABELS[t]}
                 </button>
               );
@@ -440,7 +462,7 @@ function PosPageContent() {
               }`}
               aria-pressed={fastOnly}
             >
-              <svg className="size-3" viewBox="0 0 24 24" fill="currentColor"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+              <FastFilterChipIcon />
               Fast (&lt;10 min)
             </button>
           </div>
@@ -497,6 +519,8 @@ function PosPageContent() {
             isPlacing={isPlacing}
             note={note}
             onNoteChange={setNote}
+            fieldErrors={fieldErrors}
+            onClearFieldError={clearFieldError}
           />
         </section>
       </div>

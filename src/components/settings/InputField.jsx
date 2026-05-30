@@ -8,7 +8,21 @@ export default function InputField({
   placeholder = "",
   options,
   multiline = false,
+  min,
+  max,
+  step,
+  error,
 }) {
+  const borderCls = error ? "border-red-500/50" : "border-zinc-800";
+  const fieldCls = `w-full rounded-xl border ${borderCls} bg-zinc-950/80 px-3 py-2.5 text-sm text-zinc-100 outline-none transition-colors focus:border-emerald-500/45`;
+  const inputMode =
+    type === "number"
+      ? step != null && String(step).includes(".")
+        ? "decimal"
+        : "numeric"
+      : type === "tel"
+        ? "numeric"
+        : undefined;
   return (
     <div>
       <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-zinc-500">
@@ -18,7 +32,8 @@ export default function InputField({
         <select
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          className="w-full rounded-xl border border-zinc-800 bg-zinc-950/80 px-3 py-2.5 text-sm text-zinc-100 outline-none transition-colors focus:border-emerald-500/45"
+          className={fieldCls}
+          aria-invalid={error ? true : undefined}
         >
           {options.map((opt) => (
             <option key={opt} value={opt}>
@@ -32,17 +47,24 @@ export default function InputField({
           value={value}
           onChange={(e) => onChange(e.target.value)}
           placeholder={placeholder}
-          className="w-full resize-none rounded-xl border border-zinc-800 bg-zinc-950/80 px-3 py-2.5 text-sm text-zinc-100 outline-none transition-colors focus:border-emerald-500/45"
+          className={`${fieldCls} resize-none`}
+          aria-invalid={error ? true : undefined}
         />
       ) : (
         <input
           type={type}
+          inputMode={inputMode}
+          min={min}
+          max={max}
+          step={step}
           value={value}
           onChange={(e) => onChange(e.target.value)}
           placeholder={placeholder}
-          className="w-full rounded-xl border border-zinc-800 bg-zinc-950/80 px-3 py-2.5 text-sm text-zinc-100 outline-none transition-colors focus:border-emerald-500/45"
+          className={fieldCls}
+          aria-invalid={error ? true : undefined}
         />
       )}
+      {error ? <p className="mt-1 text-xs text-red-400">{error}</p> : null}
     </div>
   );
 }

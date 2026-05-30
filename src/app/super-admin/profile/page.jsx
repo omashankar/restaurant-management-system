@@ -1,14 +1,15 @@
 "use client";
 
+import PhoneInput from "@/components/ui/PhoneInput";
 import { roleLabel } from "@/context/AppProviders";
 import { useProfile } from "@/hooks/useProfile";
+import { normalizeLogoSrc } from "@/lib/logoUrl";
 import Image from "next/image";
 import {
   Camera,
   CheckCircle2,
   Loader2,
   Mail,
-  Phone,
   Shield,
   User,
   XCircle,
@@ -16,7 +17,10 @@ import {
 import TwoFactorSetup from "@/components/TwoFactorSetup";
 import { useRef, useState } from "react";
 
-function Field({ label, icon: Icon, type = "text", value, onChange, readOnly, placeholder }) {
+function Field({ label, icon: Icon, type = "text", value, onChange, readOnly, placeholder, error }) {
+  const inputMode =
+    type === "tel" ? "numeric" : type === "number" ? "numeric" : undefined;
+  const borderCls = error ? "border-red-500/50" : readOnly ? "border-zinc-800" : "border-zinc-700";
   return (
     <div>
       <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-zinc-500">
@@ -28,19 +32,22 @@ function Field({ label, icon: Icon, type = "text", value, onChange, readOnly, pl
         ) : null}
         <input
           type={type}
+          inputMode={inputMode}
           value={value}
           onChange={onChange ? (e) => onChange(e.target.value) : undefined}
           readOnly={readOnly}
           placeholder={placeholder}
+          aria-invalid={error ? true : undefined}
           className={`w-full rounded-xl border bg-zinc-950/60 py-2.5 text-sm text-zinc-100 outline-none transition-all ${
             Icon ? "pl-10 pr-4" : "px-4"
           } ${
             readOnly
-              ? "cursor-not-allowed border-zinc-800 text-zinc-500"
-              : "border-zinc-700 focus:border-rose-500/50 focus:ring-2 focus:ring-rose-500/15"
-          }`}
+              ? "cursor-not-allowed text-zinc-500"
+              : "focus:border-rose-500/50 focus:ring-2 focus:ring-rose-500/15"
+          } ${borderCls}`}
         />
       </div>
+      {error ? <p className="mt-1 text-xs text-red-400">{error}</p> : null}
     </div>
   );
 }
@@ -65,22 +72,21 @@ function Section({ title, description, icon: Icon, children }) {
 export default function SuperAdminProfilePage() {
   const {
     user,
-    form, setField, resetForm, formDirty,
-    saving, toast,
-    saveProfile,
+    form, setField, resetForm, formDirty, fieldErrors,
+    saving, avatarUploading, toast,
+    saveProfile, uploadAvatar,
   } = useProfile();
 
-  const [avatar, setAvatar] = useState(null);
   const fileRef = useRef(null);
+  const avatarSrc = normalizeLogoSrc(user?.avatarUrl);
+  const avatarFallback = user?.name?.trim()?.[0]?.toUpperCase() ?? "S";
 
   const handleAvatarChange = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    const url = URL.createObjectURL(file);
-    setAvatar(url);
+    uploadAvatar(file);
+    if (fileRef.current) fileRef.current.value = "";
   };
-
-  const avatarFallback = user?.name?.trim()?.[0]?.toUpperCase() ?? "S";
 
   return (
     <div className="mx-auto max-w-2xl space-y-6">
@@ -91,8 +97,8 @@ export default function SuperAdminProfilePage() {
 
       <div className="flex items-center gap-5 rounded-2xl border border-zinc-800 bg-zinc-900/60 p-5">
         <div className="relative shrink-0">
-          {avatar ? (
-            <Image src={avatar} alt="Avatar" width={80} height={80} className="size-20 rounded-full object-cover ring-2 ring-rose-500/40" unoptimized />
+          {avatarSrc ? (
+            <Image src={avatarSrc} alt="" width={80} height={80} className="size-20 rounded-full object-cover ring-2 ring-rose-500/40" unoptimized />
           ) : (
             <span className="flex size-20 items-center justify-center rounded-full bg-zinc-800 text-2xl font-bold text-zinc-200 ring-2 ring-zinc-700">
               {avatarFallback}
@@ -100,13 +106,20 @@ export default function SuperAdminProfilePage() {
           )}
           <button
             type="button"
+            disabled={avatarUploading}
             onClick={() => fileRef.current?.click()}
-            className="cursor-pointer absolute -bottom-1 -right-1 flex size-7 items-center justify-center rounded-full border-2 border-zinc-900 bg-rose-500 text-zinc-950 transition-colors hover:bg-rose-400"
-            aria-label="Change avatar"
+            className="cursor-pointer absolute -bottom-1 -right-1 flex size-7 items-center justify-center rounded-full border-2 border-zinc-900 bg-rose-500 text-zinc-950 transition-colors hover:bg-rose-400 disabled:opacity-60"
+            aria-label="Change profile photo"
           >
-            <Camera className="size-3.5" />
+            {avatarUploading ? <Loader2 className="size-3.5 animate-spin" /> : <Camera className="size-3.5" />}
           </button>
-          <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} />
+          <input
+            ref={fileRef}
+            type="file"
+            accept="image/jpeg,image/png,image/webp"
+            className="hidden"
+            onChange={handleAvatarChange}
+          />
         </div>
         <div className="min-w-0">
           <p className="truncate text-lg font-semibold text-zinc-100">{user?.name}</p>
@@ -120,9 +133,18 @@ export default function SuperAdminProfilePage() {
 
       <Section title="Personal Information" description="Update your name, email, and phone." icon={User}>
         <div className="space-y-4">
-          <Field label="Full Name" icon={User} value={form.name} onChange={(v) => setField("name", v)} placeholder="Your full name" />
-          <Field label="Email" icon={Mail} type="email" value={form.email} onChange={(v) => setField("email", v)} placeholder="you@example.com" />
-          <Field label="Phone" icon={Phone} value={form.phone} onChange={(v) => setField("phone", v)} placeholder="+1 555 000 0000" />
+          <Field label="Full Name" icon={User} value={form.name} onChange={(v) => setField("name", v)} placeholder="Your full name" error={fieldErrors.name} />
+          <Field label="Email" icon={Mail} type="email" value={form.email} onChange={(v) => setField("email", v)} placeholder="your.email@company.com" error={fieldErrors.email} />
+          <PhoneInput
+            id="super-admin-profile-phone"
+            label="Phone"
+            labelClassName="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-zinc-500"
+            value={form.phone}
+            onChange={(v) => setField("phone", v)}
+            placeholder="9876543210"
+            error={fieldErrors.phone}
+            wrapperClassName="border-zinc-700 bg-zinc-950/60"
+          />
           <Field label="Role" icon={Shield} value={roleLabel(user?.role)} readOnly />
         </div>
 

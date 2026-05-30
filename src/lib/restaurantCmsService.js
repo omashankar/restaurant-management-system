@@ -6,6 +6,7 @@
 import clientPromise from "./mongodb";
 import { mergeCmsSection } from "./customerCmsMerge";
 import { DEFAULTS, VALID_SECTIONS } from "./restaurantCmsDefaults";
+import { validateRestaurantCmsSectionServer } from "./restaurantSettingsValidation";
 
 export { DEFAULTS, VALID_SECTIONS } from "./restaurantCmsDefaults";
 
@@ -75,6 +76,7 @@ export async function saveSection(restaurantId, section, data, { asDraft = false
   if (!VALID_SECTIONS.includes(section)) {
     throw Object.assign(new Error(`Invalid section: ${section}`), { status: 400 });
   }
+  validateRestaurantCmsSectionServer(section, data);
   const db = await getDb();
   const now = new Date();
   if (asDraft) {
@@ -106,6 +108,7 @@ export async function publishSection(restaurantId, section) {
   if (data == null) {
     throw Object.assign(new Error(`No draft for section: ${section}`), { status: 400 });
   }
+  validateRestaurantCmsSectionServer(section, data);
   const db = await getDb();
   const now = new Date();
   await db.collection(COLLECTION).updateOne(

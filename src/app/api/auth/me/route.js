@@ -61,9 +61,12 @@ export async function GET(request) {
       id: user._id.toString(),
       name: user.name,
       email: user.email,
+      phone: user.phone ?? "",
+      avatarUrl: user.avatarUrl ?? "",
       role: user.role,
       restaurantId: user.restaurantId?.toString() ?? null,
       isVerified: user.isVerified ?? true,
+      status: user.status ?? "active",
     };
 
     let response = Response.json({

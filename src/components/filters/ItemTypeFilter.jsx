@@ -1,7 +1,7 @@
 "use client";
 
+import ItemTypeChipIcon, { FastFilterChipIcon } from "@/components/menu/ItemTypeChipIcon";
 import { ITEM_TYPE_META } from "@/types/menu";
-import { Zap } from "lucide-react";
 
 const ALL_TYPES = ["all", "veg", "non-veg", "drink", "egg", "halal", "other"];
 
@@ -36,9 +36,7 @@ export default function ItemTypeFilter({
             }`}
             aria-pressed={active}
           >
-            {t !== "all" && (
-              <span className={`size-2 rounded-full ${meta.dot}`} aria-hidden />
-            )}
+            {t !== "all" && <ItemTypeChipIcon type={t} />}
             {t === "all" ? "All Types" : meta.label}
           </button>
         );
@@ -55,7 +53,7 @@ export default function ItemTypeFilter({
         }`}
         aria-pressed={fastOnly}
       >
-        <Zap className="size-3" aria-hidden />
+        <FastFilterChipIcon />
         Fast (&lt;10 min)
       </button>
     </div>

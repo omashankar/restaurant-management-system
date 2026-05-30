@@ -13,7 +13,13 @@ const AppContext = createContext(null);
 export const ROLES = ["admin", "manager", "waiter", "chef"];
 
 export function roleLabel(role) {
-  const map = { admin: "Admin", manager: "Manager", waiter: "Waiter", chef: "Chef" };
+  const map = {
+    super_admin: "Super Admin",
+    admin: "Admin",
+    manager: "Manager",
+    waiter: "Waiter",
+    chef: "Chef",
+  };
   return map[role] ?? role;
 }
 
@@ -31,9 +37,26 @@ export function defaultRedirectForRole(role) {
 export function AppProvider({ children }) {
   const { user, loading, hydrated, setUser, clearUser } = useUser();
 
-  /* ── Login — call after API login success ── */
+  /* ── Login — pass full API user object, or (email, role, name) for demos ── */
   const login = useCallback(
-    (email, role = "admin", name) => {
+    (emailOrUser, role = "admin", name) => {
+      if (emailOrUser && typeof emailOrUser === "object" && emailOrUser.email) {
+        const u = emailOrUser;
+        setUser({
+          id: u.id ?? null,
+          name: u.name ?? "User",
+          email: u.email,
+          role: u.role,
+          phone: u.phone ?? "",
+          avatarUrl: u.avatarUrl ?? "",
+          restaurantId: u.restaurantId ?? null,
+          status: u.status ?? "active",
+          isVerified: u.isVerified ?? true,
+        });
+        return defaultRedirectForRole(u.role);
+      }
+
+      const email = String(emailOrUser ?? "");
       const displayName = name
         ?? email?.split("@")[0]?.replace(/[._]/g, " ") ?? "User";
       const u = {

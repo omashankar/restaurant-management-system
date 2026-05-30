@@ -7,6 +7,8 @@ import clientPromise from "@/lib/mongodb";
 import { getPlatformSettings } from "@/lib/platformSettings";
 import { validatePlatformPassword } from "@/lib/platformPassword";
 import { notifyPlatformEvent } from "@/lib/platformNotify";
+import { extractIndianMobileDigits } from "@/lib/phoneUtils";
+import { parseSchema, signupSchema } from "@/lib/validationSchemas";
 
 export async function POST(request) {
   /* ── Rate limit ── */
@@ -26,30 +28,35 @@ export async function POST(request) {
     return Response.json({ success: false, error: "Invalid JSON body." }, { status: 400 });
   }
 
-  const { name, email, phone, password, restaurantName, slug } = body ?? {};
   const role = "admin";
+  const cleanSlug = String(body?.slug ?? "").toLowerCase().replace(/[^a-z0-9-]/g, "").trim();
 
-  /* ── Manual validation ── */
-  if (!name?.trim())     return Response.json({ success: false, error: "Name is required." },     { status: 400 });
-  if (!email?.trim())    return Response.json({ success: false, error: "Email is required." },    { status: 400 });
-  if (!password)         return Response.json({ success: false, error: "Password is required." }, { status: 400 });
-  const cleanEmail          = email.toLowerCase().trim();
-  const cleanPhone          = String(phone ?? "").trim();
-  const cleanRestaurantName = restaurantName?.trim() || null;
-
-  if (!cleanRestaurantName) {
-    return Response.json({ success: false, error: "Restaurant name is required." }, { status: 400 });
+  let validated;
+  try {
+    validated = parseSchema(signupSchema, { ...body, slug: cleanSlug });
+  } catch (err) {
+    return Response.json({ success: false, error: err.message }, { status: 400 });
   }
 
-  // Slug clean aur validate karo
-  const cleanSlug = String(slug ?? "").toLowerCase().replace(/[^a-z0-9-]/g, "").trim();
-  if (!cleanSlug) {
-    return Response.json({ success: false, error: "Customer site URL (slug) is required." }, { status: 400 });
-  }
+  const {
+    name,
+    email: cleanEmail,
+    phone,
+    password,
+    restaurantName: cleanRestaurantName,
+    slug: validatedSlug,
+  } = validated;
+  const cleanPhone = phone ? extractIndianMobileDigits(phone) : "";
 
   try {
     const client = await clientPromise;
     const db     = client.db();
+
+    const platform = await getPlatformSettings(db);
+    const pwdCheck = validatePlatformPassword(password, platform.security ?? {});
+    if (!pwdCheck.valid) {
+      return Response.json({ success: false, error: pwdCheck.error }, { status: 400 });
+    }
 
     /* ── Duplicate email check ── */
     const existing = await db.collection("users").findOne({ email: cleanEmail });
@@ -58,7 +65,7 @@ export async function POST(request) {
     }
 
     /* ── Duplicate slug check ── */
-    const existingSlug = await db.collection("restaurants").findOne({ slug: cleanSlug });
+    const existingSlug = await db.collection("restaurants").findOne({ slug: validatedSlug });
     if (existingSlug) {
       return Response.json({ success: false, error: "Yeh customer URL (slug) pehle se use ho raha hai. Koi aur slug choose karein." }, { status: 409 });
     }
@@ -66,7 +73,7 @@ export async function POST(request) {
     /* ── Create restaurant for admin ── */
     const resResult = await db.collection("restaurants").insertOne({
       name: cleanRestaurantName,
-      slug: cleanSlug,
+      slug: validatedSlug,
       ownerId: null,
       status: "active",
       createdAt: new Date(),
@@ -113,13 +120,13 @@ export async function POST(request) {
 
     notifyPlatformEvent(db, {
       event: "restaurant.signup",
-      webhookData: { restaurantName: cleanRestaurantName, slug: cleanSlug, email: cleanEmail },
+      webhookData: { restaurantName: cleanRestaurantName, slug: validatedSlug, email: cleanEmail },
       pushTitle: "New restaurant signup",
       pushBody: cleanRestaurantName,
       emailType: "newRestaurant",
       emailContent: {
         subject: `[RMS] New restaurant signup: ${cleanRestaurantName}`,
-        text: `A new restaurant registered.\n\n${cleanRestaurantName}\nSlug: ${cleanSlug}\nOwner: ${cleanEmail}`,
+        text: `A new restaurant registered.\n\n${cleanRestaurantName}\nSlug: ${validatedSlug}\nOwner: ${cleanEmail}`,
       },
     }).catch(() => {});
 

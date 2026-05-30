@@ -208,7 +208,7 @@ export const CUSTOMER_SITE_TABS = [
 
 
 
-/** FoodLay-style grouped sidebar */
+/** Grouped sidebar navigation for Customer Site CMS */
 
 export const CUSTOMER_SITE_NAV_GROUPS = [
 

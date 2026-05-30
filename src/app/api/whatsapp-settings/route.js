@@ -2,6 +2,7 @@
  * GET  /api/whatsapp-settings  — load WhatsApp settings for restaurant
  * PATCH /api/whatsapp-settings — save WhatsApp settings
  */
+import { validateWhatsappSettings } from "@/lib/restaurantSettingsValidation";
 import { withTenant } from "@/lib/tenantDb";
 import { encryptSecret, decryptSecret, isSecretMask, maskSecret } from "@/lib/cryptoUtils";
 
@@ -66,6 +67,20 @@ export const PATCH = withTenant(["admin"], async ({ db, restaurantId }, request)
     update.templates = merged;
   } else {
     update.templates = existing?.templates ?? DEFAULT_TEMPLATES;
+  }
+
+  const validation = validateWhatsappSettings({
+    enabled: update.enabled,
+    token: isSecretMask(body.token) ? "present" : String(body.token ?? "").trim(),
+    phoneNumberId: update.phoneNumberId,
+    alertPhone: update.alertPhone,
+    templates: update.templates,
+  });
+  if (!validation.valid) {
+    return Response.json(
+      { success: false, error: validation.message ?? "Validation failed." },
+      { status: 422 }
+    );
   }
 
   await db.collection("restaurant_whatsapp_settings").updateOne(

@@ -4,6 +4,7 @@ import { verifyToken } from "@/lib/jwt";
 import { assignPlan } from "@/lib/subscription";
 import clientPromise from "@/lib/mongodb";
 import { getClientIp } from "@/lib/rateLimit";
+import { parseSchema, superAdminAssignPlanSchema } from "@/lib/validationSchemas";
 import { ObjectId } from "mongodb";
 
 function superAdminOnly(request) {
@@ -23,11 +24,29 @@ export async function PATCH(request, { params }) {
   try { body = await request.json(); }
   catch { return Response.json({ success: false, error: "Invalid JSON." }, { status: 400 }); }
 
-  const { plan, startDate, endDate, trialDays } = body;
-  if (!plan?.trim()) return Response.json({ success: false, error: "Plan slug is required." }, { status: 400 });
+  let validated;
+  try {
+    validated = parseSchema(superAdminAssignPlanSchema, {
+      restaurantId: id,
+      planSlug: body.plan ?? body.planSlug,
+      startDate: body.startDate || undefined,
+      endDate: body.endDate || undefined,
+      trialDays: body.trialDays ?? 0,
+    });
+  } catch (err) {
+    return Response.json({ success: false, error: err.message }, { status: 400 });
+  }
+
+  if (!ObjectId.isValid(id)) {
+    return Response.json({ success: false, error: "Invalid restaurant." }, { status: 400 });
+  }
 
   try {
-    await assignPlan(id, plan.trim(), { startDate, endDate, trialDays });
+    await assignPlan(id, validated.planSlug, {
+      startDate: validated.startDate,
+      endDate: validated.endDate,
+      trialDays: validated.trialDays,
+    });
 
     let targetName = id;
     try {
@@ -47,11 +66,11 @@ export async function PATCH(request, { params }) {
       actorId: sa.id,
       targetId: id,
       targetName,
-      meta: { plan: plan.trim() },
+      meta: { plan: validated.planSlug },
       ip: getClientIp(request),
     });
 
-    return Response.json({ success: true, plan: plan.trim() });
+    return Response.json({ success: true, plan: validated.planSlug });
   } catch (err) {
     const status = err.message.includes("not found") ? 404 : 500;
     return Response.json({ success: false, error: err.message }, { status });

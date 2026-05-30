@@ -58,7 +58,7 @@ export default function WebsiteLayoutTab({
     <div className={CMS_EDITOR_SECTION}>
       <p className="text-sm text-zinc-400">
         Global theme plus full <strong className="text-zinc-200">header</strong> and{" "}
-        <strong className="text-zinc-200">footer</strong> editors — similar to FoodLay website layout.
+        <strong className="text-zinc-200">footer</strong> editors for your customer website.
         Upload full logo images in <strong className="text-zinc-300">Header</strong> (no text beside logo on site).
         Fallback logo: <strong className="text-zinc-300">Settings → General</strong>.
       </p>

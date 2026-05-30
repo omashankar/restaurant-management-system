@@ -3,6 +3,12 @@
 import Modal from "@/components/ui/Modal";
 import { useModuleData } from "@/context/ModuleDataContext";
 import { useCustomerSearch } from "@/hooks/useCustomerSearch";
+import {
+  getCustomerFormFieldErrors,
+  getReservationFormFieldErrors,
+  EMPTY_RESERVATION_FORM_ERRORS,
+} from "@/lib/formValidation";
+import PhoneInput from "@/components/ui/PhoneInput";
 import { TIME_SLOTS, formatTimeSlot } from "@/lib/reservationUtils";
 import { getTableAvailability } from "@/lib/tableAvailability";
 import { AlertCircle, Search, UserPlus, X } from "lucide-react";
@@ -89,13 +95,18 @@ function CustomerSearchField({ onSelect, initialName = "", initialPhone = "" }) 
   };
 
   const handleAdd = async () => {
-    if (!newForm.name.trim() || !newForm.phone.trim()) return;
-    setAddError("");
-    const c = await addCustomer(newForm);
-    if (!c) {
-      setAddError("Customer save failed. Try again.");
+    const validationError = validateCustomerForm(newForm);
+    if (validationError) {
+      setAddError(validationError);
       return;
     }
+    setAddError("");
+    const result = await addCustomer(newForm);
+    if (!result.ok) {
+      setAddError(result.error ?? "Customer save failed. Try again.");
+      return;
+    }
+    const c = result.customer;
     setShowAdd(false);
     setShowDrop(false);
     setQuery("");
@@ -193,10 +204,12 @@ function CustomerSearchField({ onSelect, initialName = "", initialPhone = "" }) 
           <input value={newForm.name} onChange={(e) => setNewForm((f) => ({ ...f, name: e.target.value }))}
             placeholder="Full name *"
             className="w-full rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2 text-sm text-zinc-100 outline-none focus:border-emerald-500/40 placeholder:text-zinc-600" />
-          <input value={newForm.phone} onChange={(e) => setNewForm((f) => ({ ...f, phone: e.target.value }))}
-            placeholder="Phone *"
-            className="w-full rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2 text-sm text-zinc-100 outline-none focus:border-emerald-500/40 placeholder:text-zinc-600" />
-          <input value={newForm.email} onChange={(e) => setNewForm((f) => ({ ...f, email: e.target.value }))}
+          <PhoneInput
+            id="reservation-new-customer-phone"
+            value={newForm.phone}
+            onChange={(digits) => setNewForm((f) => ({ ...f, phone: digits }))}
+          />
+          <input type="email" value={newForm.email} onChange={(e) => setNewForm((f) => ({ ...f, email: e.target.value }))}
             placeholder="Email (optional)"
             className="w-full rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2 text-sm text-zinc-100 outline-none focus:border-emerald-500/40 placeholder:text-zinc-600" />
           <div className="flex gap-2 pt-1">
@@ -227,10 +240,12 @@ export default function ReservationFormModal({ open, onClose, editing, tableOpti
   const [form, setForm] = useState(empty);
   const [linkedCustomerId, setLinkedCustomerId] = useState(null);
   const [saveError, setSaveError] = useState("");
+  const [fieldErrors, setFieldErrors] = useState(EMPTY_RESERVATION_FORM_ERRORS);
 
   useEffect(() => {
     if (!open) return;
     setSaveError("");
+    setFieldErrors(EMPTY_RESERVATION_FORM_ERRORS);
     const nextForm = editing
       ? {
           customerName: editing.customerName,
@@ -296,13 +311,12 @@ export default function ReservationFormModal({ open, onClose, editing, tableOpti
   const isConflict = availabilityInfo && !availabilityInfo.available;
 
   const submit = async () => {
-    const guests = parseInt(form.guests, 10);
-    if (
-      !form.customerName.trim() || !form.phone.trim() ||
-      !form.date || !form.time ||
-      Number.isNaN(guests) || guests < 1 ||
-      !form.tableNumber
-    ) return;
+    const validation = getReservationFormFieldErrors(form);
+    setFieldErrors(validation.errors);
+    if (!validation.valid) {
+      setSaveError(validation.message ?? "Fix the highlighted fields.");
+      return;
+    }
 
     if (isConflict) {
       setSaveError(
@@ -373,38 +387,94 @@ export default function ReservationFormModal({ open, onClose, editing, tableOpti
         <div className="grid gap-4 sm:grid-cols-2">
           <div>
             <label className="text-xs font-medium text-zinc-500">Name *</label>
-            <input value={form.customerName}
-              onChange={(e) => setForm((f) => ({ ...f, customerName: e.target.value }))}
+            <input
+              value={form.customerName}
+              onChange={(e) => {
+                setForm((f) => ({ ...f, customerName: e.target.value }));
+                if (fieldErrors.customerName) {
+                  setFieldErrors((p) => ({ ...p, customerName: "" }));
+                }
+                setSaveError("");
+              }}
               placeholder="Full name"
-              className="mt-1 w-full rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus:border-emerald-500/40 placeholder:text-zinc-600" />
+              aria-invalid={fieldErrors.customerName ? true : undefined}
+              className={`mt-1 w-full rounded-xl border bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus:border-emerald-500/40 placeholder:text-zinc-600 ${
+                fieldErrors.customerName ? "border-red-500/50" : "border-zinc-700"
+              }`}
+            />
+            {fieldErrors.customerName && (
+              <p className="mt-1 text-xs text-red-400">{fieldErrors.customerName}</p>
+            )}
           </div>
-          <div>
-            <label className="text-xs font-medium text-zinc-500">Phone *</label>
-            <input value={form.phone}
-              onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))}
-              placeholder="+1 555 000 0000"
-              className="mt-1 w-full rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus:border-emerald-500/40 placeholder:text-zinc-600" />
-          </div>
+          <PhoneInput
+            id="reservation-phone"
+            label="Phone *"
+            labelClassName="text-xs font-medium text-zinc-500"
+            required
+            value={form.phone}
+            onChange={(digits) => {
+              setForm((f) => ({ ...f, phone: digits }));
+              if (fieldErrors.phone) setFieldErrors((p) => ({ ...p, phone: "" }));
+              setSaveError("");
+            }}
+            error={fieldErrors.phone || undefined}
+          />
         </div>
 
         <div className="grid gap-4 sm:grid-cols-2">
           <div>
             <label className="text-xs font-medium text-zinc-500">Guests</label>
-            <input type="number" min={1} value={form.guests}
-              onChange={(e) => setForm((f) => ({ ...f, guests: e.target.value }))}
-              className="mt-1 w-full rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus:border-emerald-500/40" />
+            <input
+              type="number"
+              inputMode="numeric"
+              min={1}
+              max={50}
+              value={form.guests}
+              onChange={(e) => {
+                setForm((f) => ({ ...f, guests: e.target.value }));
+                if (fieldErrors.guests) setFieldErrors((p) => ({ ...p, guests: "" }));
+                setSaveError("");
+              }}
+              aria-invalid={fieldErrors.guests ? true : undefined}
+              className={`mt-1 w-full rounded-xl border bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus:border-emerald-500/40 ${
+                fieldErrors.guests ? "border-red-500/50" : "border-zinc-700"
+              }`}
+            />
+            {fieldErrors.guests && (
+              <p className="mt-1 text-xs text-red-400">{fieldErrors.guests}</p>
+            )}
           </div>
           <div>
             <label className="text-xs font-medium text-zinc-500">Date</label>
-            <input type="date" value={form.date}
-              onChange={(e) => setForm((f) => ({ ...f, date: e.target.value }))}
-              className="mt-1 w-full rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus:border-emerald-500/40 [color-scheme:dark]" />
+            <input
+              type="date"
+              value={form.date}
+              onChange={(e) => {
+                setForm((f) => ({ ...f, date: e.target.value }));
+                if (fieldErrors.date) setFieldErrors((p) => ({ ...p, date: "" }));
+                setSaveError("");
+              }}
+              aria-invalid={fieldErrors.date ? true : undefined}
+              className={`mt-1 w-full rounded-xl border bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus:border-emerald-500/40 [color-scheme:dark] ${
+                fieldErrors.date ? "border-red-500/50" : "border-zinc-700"
+              }`}
+            />
+            {fieldErrors.date && <p className="mt-1 text-xs text-red-400">{fieldErrors.date}</p>}
           </div>
           <div>
             <label className="text-xs font-medium text-zinc-500">Time slot</label>
-            <select value={form.time}
-              onChange={(e) => setForm((f) => ({ ...f, time: e.target.value }))}
-              className="cursor-pointer mt-1 w-full rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus:border-emerald-500/40">
+            <select
+              value={form.time}
+              onChange={(e) => {
+                setForm((f) => ({ ...f, time: e.target.value }));
+                if (fieldErrors.time) setFieldErrors((p) => ({ ...p, time: "" }));
+                setSaveError("");
+              }}
+              aria-invalid={fieldErrors.time ? true : undefined}
+              className={`cursor-pointer mt-1 w-full rounded-xl border bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus:border-emerald-500/40 ${
+                fieldErrors.time ? "border-red-500/50" : "border-zinc-700"
+              }`}
+            >
               {TIME_SLOTS.map((t) => (
                 <option key={t} value={t}>{formatTimeSlot(t)}</option>
               ))}
@@ -425,12 +495,23 @@ export default function ReservationFormModal({ open, onClose, editing, tableOpti
 
         {/* ── Table with availability ── */}
         <div>
-          <label className="text-xs font-medium text-zinc-500">Table</label>
-          <select value={form.tableNumber}
-            onChange={(e) => handleTableChange(e.target.value)}
+          <label className="text-xs font-medium text-zinc-500">Table *</label>
+          <select
+            value={form.tableNumber}
+            onChange={(e) => {
+              handleTableChange(e.target.value);
+              if (fieldErrors.tableNumber) {
+                setFieldErrors((p) => ({ ...p, tableNumber: "" }));
+              }
+              setSaveError("");
+            }}
+            aria-invalid={fieldErrors.tableNumber ? true : undefined}
             className={`cursor-pointer mt-1 w-full rounded-xl border px-3 py-2.5 text-sm text-zinc-100 outline-none bg-zinc-950/60 ${
-              isConflict ? "border-red-500/50 focus:border-red-500/50" : "border-zinc-700 focus:border-emerald-500/40"
-            }`}>
+              isConflict || fieldErrors.tableNumber
+                ? "border-red-500/50 focus:border-red-500/50"
+                : "border-zinc-700 focus:border-emerald-500/40"
+            }`}
+          >
             <option value="">— Select table —</option>
             {enrichedTables.map(({ tableNumber, label }) => (
               <option key={tableNumber} value={tableNumber}>{label}</option>
@@ -449,7 +530,10 @@ export default function ReservationFormModal({ open, onClose, editing, tableOpti
                 : "Table is available for this slot."}
             </div>
           )}
-          {saveError ? (
+          {fieldErrors.tableNumber && (
+            <p className="mt-1 text-xs text-red-400">{fieldErrors.tableNumber}</p>
+          )}
+          {saveError && !fieldErrors.tableNumber ? (
             <p className="mt-2 text-xs text-red-400">{saveError}</p>
           ) : null}
         </div>

@@ -3,6 +3,8 @@
 import PushNotificationEnable from "@/components/PushNotificationEnable";
 import { useToast } from "@/hooks/useToast";
 import { invalidatePlatformConfigCache } from "@/hooks/usePlatformConfig";
+import { decimalInputProps, intInputProps, phoneInputProps } from "@/lib/formInputTypes";
+import { validatePlatformSettingsSection } from "@/lib/platformSettingsValidation";
 import {
   Bell, CheckCircle2, Copy, CreditCard, Database, DollarSign, Globe,
   Key, Loader2, Lock, Palette, Save, Settings, Settings2, Shield, Smartphone,
@@ -14,12 +16,16 @@ import { useCallback, useEffect, useRef, useState } from "react";
 const inputCls = "w-full rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus:border-emerald-500/50 placeholder:text-zinc-600 transition-colors";
 const labelCls = "block text-xs font-medium text-zinc-400 mb-1";
 
-function Field({ label, hint, children }) {
+function Field({ label, hint, error, required, children }) {
   return (
     <div>
-      <label className={labelCls}>{label}</label>
+      <label className={labelCls}>
+        {label}
+        {required && <span className="ml-0.5 text-red-400">*</span>}
+      </label>
       {children}
-      {hint && <p className="mt-1 text-[11px] text-zinc-600">{hint}</p>}
+      {error && <p className="mt-1 text-xs text-red-400">{error}</p>}
+      {!error && hint && <p className="mt-1 text-[11px] text-zinc-600">{hint}</p>}
     </div>
   );
 }
@@ -66,46 +72,105 @@ function SaveButton({ saving, onClick }) {
 }
 
 /* ── Section panels ── */
-function AppSection({ data, onChange, onSave, saving }) {
+function AppSection({ data, onChange, onSave, saving, fieldErrors = {}, onClearError }) {
   return (
     <div className="space-y-5">
       <SectionHeader icon={Settings} title="App Settings" description="Platform identity and contact information." />
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="sm:col-span-2">
-          <Field label="Platform Name">
-            <input value={data.name ?? ""} onChange={(e) => onChange("name", e.target.value)}
-              placeholder="RMS Platform" className={inputCls} />
+          <Field label="Platform Name" required error={fieldErrors.name}>
+            <input
+              value={data.name ?? ""}
+              onChange={(e) => {
+                onChange("name", e.target.value);
+                onClearError?.("name");
+              }}
+              placeholder="RMS Platform"
+              maxLength={80}
+              aria-invalid={fieldErrors.name ? true : undefined}
+              className={inputCls}
+            />
           </Field>
         </div>
         <div className="sm:col-span-2">
           <Field
             label="Legal / Registered Business Name"
             hint="Printed on receipts and invoices (optional)."
+            error={fieldErrors.legalName}
           >
-            <input value={data.legalName ?? ""} onChange={(e) => onChange("legalName", e.target.value)}
-              placeholder="ABC Restaurant Tech Pvt Ltd" className={inputCls} />
+            <input
+              value={data.legalName ?? ""}
+              onChange={(e) => {
+                onChange("legalName", e.target.value);
+                onClearError?.("legalName");
+              }}
+              placeholder="ABC Restaurant Tech Pvt Ltd"
+              maxLength={120}
+              className={inputCls}
+            />
           </Field>
         </div>
-        <Field label="Logo URL">
-          <input value={data.logoUrl ?? ""} onChange={(e) => onChange("logoUrl", e.target.value)}
-            placeholder="https://cdn.example.com/logo.png" className={inputCls} />
+        <Field label="Logo URL" error={fieldErrors.logoUrl}>
+          <input
+            value={data.logoUrl ?? ""}
+            onChange={(e) => {
+              onChange("logoUrl", e.target.value);
+              onClearError?.("logoUrl");
+            }}
+            placeholder="https://cdn.example.com/logo.png"
+            className={inputCls}
+          />
         </Field>
-        <Field label="Favicon URL">
-          <input value={data.faviconUrl ?? ""} onChange={(e) => onChange("faviconUrl", e.target.value)}
-            placeholder="https://cdn.example.com/favicon.ico" className={inputCls} />
+        <Field label="Favicon URL" error={fieldErrors.faviconUrl}>
+          <input
+            value={data.faviconUrl ?? ""}
+            onChange={(e) => {
+              onChange("faviconUrl", e.target.value);
+              onClearError?.("faviconUrl");
+            }}
+            placeholder="https://cdn.example.com/favicon.ico"
+            className={inputCls}
+          />
         </Field>
-        <Field label="Support Email">
-          <input type="email" value={data.supportEmail ?? ""} onChange={(e) => onChange("supportEmail", e.target.value)}
-            placeholder="support@rms.com" className={inputCls} />
+        <Field label="Support Email" required error={fieldErrors.supportEmail}>
+          <input
+            type="email"
+            value={data.supportEmail ?? ""}
+            onChange={(e) => {
+              onChange("supportEmail", e.target.value);
+              onClearError?.("supportEmail");
+            }}
+            placeholder="support@rms.com"
+            aria-invalid={fieldErrors.supportEmail ? true : undefined}
+            className={inputCls}
+          />
         </Field>
-        <Field label="Contact Phone">
-          <input value={data.contactPhone ?? ""} onChange={(e) => onChange("contactPhone", e.target.value)}
-            placeholder="+1 555 000 0000" className={inputCls} />
+        <Field label="Contact Phone" error={fieldErrors.contactPhone} hint="10-digit Indian mobile (optional).">
+          <input
+            {...phoneInputProps()}
+            value={data.contactPhone ?? ""}
+            onChange={(e) => {
+              onChange("contactPhone", e.target.value.replace(/\D/g, "").slice(0, 10));
+              onClearError?.("contactPhone");
+            }}
+            placeholder="9876543210"
+            maxLength={10}
+            aria-invalid={fieldErrors.contactPhone ? true : undefined}
+            className={inputCls}
+          />
         </Field>
         <div className="sm:col-span-2">
-          <Field label="Business Address">
-            <input value={data.address ?? ""} onChange={(e) => onChange("address", e.target.value)}
-              placeholder="123 Main St, City, Country" className={inputCls} />
+          <Field label="Business Address" error={fieldErrors.address}>
+            <input
+              value={data.address ?? ""}
+              onChange={(e) => {
+                onChange("address", e.target.value);
+                onClearError?.("address");
+              }}
+              placeholder="123 Main St, City, Country"
+              maxLength={200}
+              className={inputCls}
+            />
           </Field>
         </div>
       </div>
@@ -114,7 +179,7 @@ function AppSection({ data, onChange, onSave, saving }) {
   );
 }
 
-function EmailSection({ data, onChange, onSave, saving }) {
+function EmailSection({ data, onChange, onSave, saving, fieldErrors = {}, onClearError }) {
   const [testing, setTesting] = useState(false);
   const { showToast } = useToast();
 
@@ -144,29 +209,66 @@ function EmailSection({ data, onChange, onSave, saving }) {
     <div className="space-y-5">
       <SectionHeader icon={Key} title="Email / SMTP" description="Outbound email configuration." />
       <div className="grid gap-4 sm:grid-cols-2">
-        <Field label="SMTP Host">
-          <input value={data.smtpHost ?? ""} onChange={(e) => onChange("smtpHost", e.target.value)}
-            placeholder="smtp.gmail.com" className={inputCls} />
+        <Field label="SMTP Host" error={fieldErrors.smtpHost}>
+          <input
+            value={data.smtpHost ?? ""}
+            onChange={(e) => {
+              onChange("smtpHost", e.target.value);
+              onClearError?.("smtpHost");
+            }}
+            placeholder="smtp.gmail.com"
+            className={inputCls}
+          />
         </Field>
-        <Field label="SMTP Port">
-          <input type="number" value={data.smtpPort ?? 587} onChange={(e) => onChange("smtpPort", Number(e.target.value))}
-            className={inputCls} />
+        <Field label="SMTP Port" error={fieldErrors.smtpPort}>
+          <input
+            {...intInputProps({ min: 1, max: 65535, step: 1 })}
+            value={data.smtpPort ?? 587}
+            onChange={(e) => {
+              onChange("smtpPort", e.target.value === "" ? "" : Number(e.target.value));
+              onClearError?.("smtpPort");
+            }}
+            className={inputCls}
+          />
         </Field>
-        <Field label="SMTP Username">
-          <input value={data.smtpUser ?? ""} onChange={(e) => onChange("smtpUser", e.target.value)}
-            placeholder="user@gmail.com" className={inputCls} />
+        <Field label="SMTP Username" error={fieldErrors.smtpUser}>
+          <input
+            value={data.smtpUser ?? ""}
+            onChange={(e) => {
+              onChange("smtpUser", e.target.value);
+              onClearError?.("smtpUser");
+            }}
+            placeholder="user@gmail.com"
+            className={inputCls}
+          />
         </Field>
         <Field label="SMTP Password">
           <input type="password" value={data.smtpPassword ?? ""} onChange={(e) => onChange("smtpPassword", e.target.value)}
             placeholder="••••••••" autoComplete="new-password" className={inputCls} />
         </Field>
-        <Field label="From Name">
-          <input value={data.fromName ?? ""} onChange={(e) => onChange("fromName", e.target.value)}
-            placeholder="RMS Platform" className={inputCls} />
+        <Field label="From Name" error={fieldErrors.fromName}>
+          <input
+            value={data.fromName ?? ""}
+            onChange={(e) => {
+              onChange("fromName", e.target.value);
+              onClearError?.("fromName");
+            }}
+            placeholder="RMS Platform"
+            maxLength={80}
+            className={inputCls}
+          />
         </Field>
-        <Field label="From Email">
-          <input type="email" value={data.fromEmail ?? ""} onChange={(e) => onChange("fromEmail", e.target.value)}
-            placeholder="noreply@rms.com" className={inputCls} />
+        <Field label="From Email" error={fieldErrors.fromEmail}>
+          <input
+            type="email"
+            value={data.fromEmail ?? ""}
+            onChange={(e) => {
+              onChange("fromEmail", e.target.value);
+              onClearError?.("fromEmail");
+            }}
+            placeholder="noreply@rms.com"
+            className={inputCls}
+          />
         </Field>
       </div>
       <Toggle checked={!!data.secure} onChange={(v) => onChange("secure", v)}
@@ -302,7 +404,7 @@ function GatewayLogo({ gateway }) {
   );
 }
 
-function PaymentSection({ data, onChange, onSave, saving }) {
+function PaymentSection({ data, onChange, onSave, saving, fieldErrors = {}, onClearError }) {
   const [activeGw, setActiveGw] = useState("razorpay");
   const [testing, setTesting] = useState(false);
   const [testResult, setTestResult] = useState(null);
@@ -526,9 +628,16 @@ function PaymentSection({ data, onChange, onSave, saving }) {
                   {["INR","USD","EUR","GBP","AUD","CAD","SGD","JPY"].map((c) => <option key={c} value={c}>{c}</option>)}
                 </select>
               </Field>
-              <Field label="Tax Rate (%)" hint="Applied to invoices and receipts.">
-                <input type="number" min={0} max={100} step={0.01} value={data.taxPercent ?? 0}
-                  onChange={(e) => onChange("taxPercent", Number(e.target.value))} className={inputCls} />
+              <Field label="Tax Rate (%)" hint="Applied to invoices and receipts." error={fieldErrors.taxPercent}>
+                <input
+                  {...decimalInputProps({ min: 0, max: 100, step: "0.01" })}
+                  value={data.taxPercent ?? 0}
+                  onChange={(e) => {
+                    onChange("taxPercent", e.target.value === "" ? "" : Number(e.target.value));
+                    onClearError?.("taxPercent");
+                  }}
+                  className={inputCls}
+                />
               </Field>
               <Field label="GSTIN / Tax ID" hint="Printed on subscription PDF receipts.">
                 <input value={data.gstNumber ?? ""} onChange={(e) => onChange("gstNumber", e.target.value)}
@@ -546,9 +655,17 @@ function PaymentSection({ data, onChange, onSave, saving }) {
                   <option value="inter_state">Inter-state (IGST)</option>
                 </select>
               </Field>
-              <Field label="Trial Period (days)" hint="0 = no trial.">
-                <input type="number" min={0} max={90} value={data.trialDays ?? 14}
-                  onChange={(e) => onChange("trialDays", Number(e.target.value))} className={inputCls} />
+              <Field label="Trial Period (days)" hint="0 = no trial." error={fieldErrors.trialDays}>
+                <input
+                  {...intInputProps({ min: 0, max: 90, step: 1 })}
+                  value={data.trialDays ?? 14}
+                  onChange={(e) => {
+                    const v = e.target.value.replace(/[^\d]/g, "");
+                    onChange("trialDays", v === "" ? "" : Number(v));
+                    onClearError?.("trialDays");
+                  }}
+                  className={inputCls}
+                />
               </Field>
             </div>
           </div>
@@ -557,25 +674,39 @@ function PaymentSection({ data, onChange, onSave, saving }) {
   );
 }
 
-function ThemeSection({ data, onChange, onSave, saving }) {
+function ThemeSection({ data, onChange, onSave, saving, fieldErrors = {}, onClearError }) {
   return (
     <div className="space-y-5">
       <SectionHeader icon={Palette} title="Theme" description="Brand colors and UI preferences." />
       <div className="grid gap-4 sm:grid-cols-2">
-        <Field label="Primary Color">
+        <Field label="Primary Color" error={fieldErrors.primaryColor}>
           <div className="flex items-center gap-3">
             <input type="color" value={data.primaryColor ?? "#10b981"} onChange={(e) => onChange("primaryColor", e.target.value)}
               className="cursor-pointer size-10 shrink-0 rounded-lg border border-zinc-700 bg-transparent p-0.5" />
-            <input value={data.primaryColor ?? "#10b981"} onChange={(e) => onChange("primaryColor", e.target.value)}
-              placeholder="#10b981" className={`${inputCls} font-mono`} />
+            <input
+              value={data.primaryColor ?? "#10b981"}
+              onChange={(e) => {
+                onChange("primaryColor", e.target.value);
+                onClearError?.("primaryColor");
+              }}
+              placeholder="#10b981"
+              className={`${inputCls} font-mono`}
+            />
           </div>
         </Field>
-        <Field label="Accent Color">
+        <Field label="Accent Color" error={fieldErrors.accentColor}>
           <div className="flex items-center gap-3">
             <input type="color" value={data.accentColor ?? "#f43f5e"} onChange={(e) => onChange("accentColor", e.target.value)}
               className="cursor-pointer size-10 shrink-0 rounded-lg border border-zinc-700 bg-transparent p-0.5" />
-            <input value={data.accentColor ?? "#f43f5e"} onChange={(e) => onChange("accentColor", e.target.value)}
-              placeholder="#f43f5e" className={`${inputCls} font-mono`} />
+            <input
+              value={data.accentColor ?? "#f43f5e"}
+              onChange={(e) => {
+                onChange("accentColor", e.target.value);
+                onClearError?.("accentColor");
+              }}
+              placeholder="#f43f5e"
+              className={`${inputCls} font-mono`}
+            />
           </div>
         </Field>
       </div>
@@ -670,7 +801,7 @@ function CurrenciesSection({ data, onChange, onSave, saving }) {
 /* ════════════════════════════════════════
    SMS SETTINGS
 ════════════════════════════════════════ */
-function SmsSection({ data, onChange, onSave, saving }) {
+function SmsSection({ data, onChange, onSave, saving, fieldErrors = {}, onClearError }) {
   return (
     <div className="space-y-5">
       <SectionHeader icon={Smartphone} title="SMS Settings" description="Configure SMS provider for OTPs and alerts." />
@@ -695,10 +826,13 @@ function SmsSection({ data, onChange, onSave, saving }) {
             </select>
           </Field>
         </div>
-        <Field label="API Key / Account SID" hint="Twilio: Account SID. Fast2SMS: API key.">
+        <Field label="API Key / Account SID" hint="Twilio: Account SID. Fast2SMS: API key." error={fieldErrors.apiKey}>
           <input
             value={data.apiKey ?? ""}
-            onChange={(e) => onChange("apiKey", e.target.value)}
+            onChange={(e) => {
+              onChange("apiKey", e.target.value);
+              onClearError?.("apiKey");
+            }}
             placeholder="ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
             className={`${inputCls} font-mono text-xs`}
           />
@@ -714,10 +848,13 @@ function SmsSection({ data, onChange, onSave, saving }) {
           />
         </Field>
         <div className="sm:col-span-2">
-          <Field label="Sender ID / From Number" hint="Twilio: +1XXXXXXXXXX. Fast2SMS: registered sender ID.">
+          <Field label="Sender ID / From Number" hint="Twilio: +1XXXXXXXXXX. Fast2SMS: registered sender ID." error={fieldErrors.senderId}>
             <input
               value={data.senderId ?? ""}
-              onChange={(e) => onChange("senderId", e.target.value)}
+              onChange={(e) => {
+                onChange("senderId", e.target.value);
+                onClearError?.("senderId");
+              }}
               placeholder="+15550001234"
               className={inputCls}
             />
@@ -732,41 +869,53 @@ function SmsSection({ data, onChange, onSave, saving }) {
 /* ════════════════════════════════════════
    SECURITY SETTINGS
 ════════════════════════════════════════ */
-function SecuritySection({ data, onChange, onSave, saving }) {
+function SecuritySection({ data, onChange, onSave, saving, fieldErrors = {}, onClearError }) {
   return (
     <div className="space-y-5">
       <SectionHeader icon={Shield} title="Security" description="Password policy, login limits, and 2FA." />
 
       <div className="grid gap-4 sm:grid-cols-2">
-        <Field label="Minimum Password Length">
+        <Field label="Minimum Password Length" error={fieldErrors.minPasswordLength}>
           <input
-            type="number" min={6} max={32}
+            {...intInputProps({ min: 6, max: 32, step: 1 })}
             value={data.minPasswordLength ?? 8}
-            onChange={(e) => onChange("minPasswordLength", Number(e.target.value))}
+            onChange={(e) => {
+              onChange("minPasswordLength", e.target.value === "" ? "" : Number(e.target.value));
+              onClearError?.("minPasswordLength");
+            }}
             className={inputCls}
           />
         </Field>
-        <Field label="Login Attempt Limit" hint="Consecutive failures before block.">
+        <Field label="Login Attempt Limit" hint="Consecutive failures before block." error={fieldErrors.loginAttemptLimit}>
           <input
-            type="number" min={1} max={20}
+            {...intInputProps({ min: 1, max: 20, step: 1 })}
             value={data.loginAttemptLimit ?? 5}
-            onChange={(e) => onChange("loginAttemptLimit", Number(e.target.value))}
+            onChange={(e) => {
+              onChange("loginAttemptLimit", e.target.value === "" ? "" : Number(e.target.value));
+              onClearError?.("loginAttemptLimit");
+            }}
             className={inputCls}
           />
         </Field>
-        <Field label="Block Duration (minutes)" hint="How long to block after limit reached.">
+        <Field label="Block Duration (minutes)" hint="How long to block after limit reached." error={fieldErrors.blockDurationMinutes}>
           <input
-            type="number" min={1} max={1440}
+            {...intInputProps({ min: 1, max: 1440, step: 1 })}
             value={data.blockDurationMinutes ?? 30}
-            onChange={(e) => onChange("blockDurationMinutes", Number(e.target.value))}
+            onChange={(e) => {
+              onChange("blockDurationMinutes", e.target.value === "" ? "" : Number(e.target.value));
+              onClearError?.("blockDurationMinutes");
+            }}
             className={inputCls}
           />
         </Field>
-        <Field label="Session Timeout (minutes)" hint="Idle session expiry. 0 = never.">
+        <Field label="Session Timeout (minutes)" hint="Idle session expiry. 0 = never." error={fieldErrors.sessionTimeoutMinutes}>
           <input
-            type="number" min={0} max={10080}
+            {...intInputProps({ min: 0, max: 10080, step: 1 })}
             value={data.sessionTimeoutMinutes ?? 60}
-            onChange={(e) => onChange("sessionTimeoutMinutes", Number(e.target.value))}
+            onChange={(e) => {
+              onChange("sessionTimeoutMinutes", e.target.value === "" ? "" : Number(e.target.value));
+              onClearError?.("sessionTimeoutMinutes");
+            }}
             className={inputCls}
           />
         </Field>
@@ -954,7 +1103,7 @@ function BackupSection({ data, onChange, onSave, saving, showToast }) {
 /* ════════════════════════════════════════
    INTEGRATIONS
 ════════════════════════════════════════ */
-function IntegrationsSection({ data, onChange, onSave, saving }) {
+function IntegrationsSection({ data, onChange, onSave, saving, fieldErrors = {}, onClearError }) {
   return (
     <div className="space-y-5">
       <SectionHeader icon={Webhook} title="Integrations" description="Analytics, pixels, webhooks, and payment gateways." />
@@ -983,10 +1132,13 @@ function IntegrationsSection({ data, onChange, onSave, saving }) {
 
       <div className="space-y-4 border-t border-zinc-800 pt-4">
         <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500">Webhook</p>
-        <Field label="Webhook URL" hint="POST events will be sent here.">
+        <Field label="Webhook URL" hint="POST events will be sent here." error={fieldErrors.webhookUrl}>
           <input
             value={data.webhookUrl ?? ""}
-            onChange={(e) => onChange("webhookUrl", e.target.value)}
+            onChange={(e) => {
+              onChange("webhookUrl", e.target.value);
+              onClearError?.("webhookUrl");
+            }}
             placeholder="https://your-server.com/webhook"
             className={inputCls}
           />
@@ -1145,6 +1297,7 @@ export default function SuperAdminSettingsPage() {
   const [fetching, setFetching]   = useState(true);
   const [loadError, setLoadError] = useState("");
   const [saving, setSaving]       = useState(false);
+  const [sectionErrors, setSectionErrors] = useState({});
   const { showToast, ToastUI }    = useToast();
   const panelRef                  = useRef(null);
 
@@ -1181,14 +1334,26 @@ export default function SuperAdminSettingsPage() {
     }));
   }, [activeTab]);
 
+  const clearSectionError = useCallback((key) => {
+    setSectionErrors((prev) => (prev[key] ? { ...prev, [key]: "" } : prev));
+  }, []);
+
   const handleSave = useCallback(async () => {
     if (!settings) return;
+    const payload = settings[activeTab];
+    const validation = validatePlatformSettingsSection(activeTab, payload);
+    if (!validation.valid) {
+      setSectionErrors(validation.errors);
+      showToast(validation.message ?? "Please fix the highlighted fields.", "error");
+      return;
+    }
+    setSectionErrors({});
     setSaving(true);
     try {
       const res  = await fetch("/api/super-admin/settings", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ section: activeTab, data: settings[activeTab] }),
+        body: JSON.stringify({ section: activeTab, data: payload }),
       });
       const data = await res.json();
       if (!data.success) { showToast(data.error ?? "Failed to save.", "error"); return; }
@@ -1200,10 +1365,15 @@ export default function SuperAdminSettingsPage() {
 
   const switchTab = (id) => {
     setActiveTab(id);
+    setSectionErrors({});
     panelRef.current?.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const sectionData = settings?.[activeTab] ?? {};
+  const panelValidationProps = {
+    fieldErrors: sectionErrors,
+    onClearError: clearSectionError,
+  };
 
   return (
     <div className="space-y-6">
@@ -1253,17 +1423,17 @@ export default function SuperAdminSettingsPage() {
             </div>
           ) : !settings ? null : (
             <>
-              {activeTab === "app"           && <AppSection           data={sectionData} onChange={handleChange} onSave={handleSave} saving={saving} />}
-              {activeTab === "email"         && <EmailSection         data={sectionData} onChange={handleChange} onSave={handleSave} saving={saving} />}
+              {activeTab === "app"           && <AppSection           data={sectionData} onChange={handleChange} onSave={handleSave} saving={saving} {...panelValidationProps} />}
+              {activeTab === "email"         && <EmailSection         data={sectionData} onChange={handleChange} onSave={handleSave} saving={saving} {...panelValidationProps} />}
               {activeTab === "language"      && <LanguageSection      data={sectionData} onChange={handleChange} onSave={handleSave} saving={saving} />}
-              {activeTab === "payment"       && <PaymentSection       data={sectionData} onChange={handleChange} onSave={handleSave} saving={saving} />}
-              {activeTab === "theme"         && <ThemeSection         data={sectionData} onChange={handleChange} onSave={handleSave} saving={saving} />}
+              {activeTab === "payment"       && <PaymentSection       data={sectionData} onChange={handleChange} onSave={handleSave} saving={saving} {...panelValidationProps} />}
+              {activeTab === "theme"         && <ThemeSection         data={sectionData} onChange={handleChange} onSave={handleSave} saving={saving} {...panelValidationProps} />}
               {activeTab === "notifications" && <NotificationsSection data={sectionData} onChange={handleChange} onSave={handleSave} saving={saving} />}
               {activeTab === "currencies"    && <CurrenciesSection    data={sectionData} onChange={handleChange} onSave={handleSave} saving={saving} />}
-              {activeTab === "sms"           && <SmsSection           data={sectionData} onChange={handleChange} onSave={handleSave} saving={saving} />}
-              {activeTab === "security"      && <SecuritySection      data={sectionData} onChange={handleChange} onSave={handleSave} saving={saving} />}
+              {activeTab === "sms"           && <SmsSection           data={sectionData} onChange={handleChange} onSave={handleSave} saving={saving} {...panelValidationProps} />}
+              {activeTab === "security"      && <SecuritySection      data={sectionData} onChange={handleChange} onSave={handleSave} saving={saving} {...panelValidationProps} />}
               {activeTab === "backup"        && <BackupSection        data={sectionData} onChange={handleChange} onSave={handleSave} saving={saving} showToast={showToast} />}
-              {activeTab === "integrations"  && <IntegrationsSection  data={sectionData} onChange={handleChange} onSave={handleSave} saving={saving} />}
+              {activeTab === "integrations"  && <IntegrationsSection  data={sectionData} onChange={handleChange} onSave={handleSave} saving={saving} {...panelValidationProps} />}
               {activeTab === "advanced"      && <AdvancedSection      data={sectionData} onChange={handleChange} onSave={handleSave} saving={saving} showToast={showToast} />}
             </>
           )}

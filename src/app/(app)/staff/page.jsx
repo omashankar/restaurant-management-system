@@ -11,6 +11,12 @@ import { useUser } from "@/context/AuthContext";
 import { useModuleData } from "@/context/ModuleDataContext";
 import { usePaginatedList } from "@/hooks/usePaginatedList";
 import { useToast } from "@/hooks/useToast";
+import {
+  EMPTY_STAFF_FORM_ERRORS,
+  getStaffFormFieldErrors,
+} from "@/lib/formValidation";
+import PasswordInput from "@/components/ui/PasswordInput";
+import PhoneInput from "@/components/ui/PhoneInput";
 import { Pencil, Plus, RefreshCw, Trash2, Users } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 
@@ -32,6 +38,7 @@ export default function StaffModulePage() {
   const [editingId, setEditingId]   = useState(null);
   const [form, setForm]             = useState(emptyForm);
   const [formError, setFormError]   = useState("");
+  const [fieldErrors, setFieldErrors] = useState(EMPTY_STAFF_FORM_ERRORS);
   const [saving, setSaving]         = useState(false);
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [deleting, setDeleting] = useState(false);
@@ -76,6 +83,7 @@ export default function StaffModulePage() {
     setEditingId(null);
     setForm(emptyForm);
     setFormError("");
+    setFieldErrors(EMPTY_STAFF_FORM_ERRORS);
     setModalOpen(true);
   };
 
@@ -83,17 +91,16 @@ export default function StaffModulePage() {
     setEditingId(row.id);
     setForm({ name: row.name, role: row.role, phone: row.phone, email: row.email, password: "", status: row.status });
     setFormError("");
+    setFieldErrors(EMPTY_STAFF_FORM_ERRORS);
     setModalOpen(true);
   };
 
   const saveStaff = async () => {
     setFormError("");
-    if (!form.name.trim() || !form.email.trim()) {
-      setFormError("Name and email are required.");
-      return;
-    }
-    if (!editingId && !form.password) {
-      setFormError("Password is required for new staff.");
+    const validation = getStaffFormFieldErrors(form, { editing: Boolean(editingId) });
+    setFieldErrors(validation.errors);
+    if (!validation.valid) {
+      setFormError(validation.message ?? "Fix the highlighted fields.");
       return;
     }
 
@@ -338,15 +345,36 @@ export default function StaffModulePage() {
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
               <label className="text-xs font-medium text-zinc-500">Full Name *</label>
-              <input value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+              <input
+                value={form.name}
+                onChange={(e) => {
+                  setForm((f) => ({ ...f, name: e.target.value }));
+                  if (fieldErrors.name) setFieldErrors((p) => ({ ...p, name: "" }));
+                }}
                 placeholder="Alex Rivera"
-                className="mt-1 w-full rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus:border-emerald-500/40 placeholder:text-zinc-600" />
+                aria-invalid={fieldErrors.name ? true : undefined}
+                className={`mt-1 w-full rounded-xl border bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus:border-emerald-500/40 placeholder:text-zinc-600 ${
+                  fieldErrors.name ? "border-red-500/50" : "border-zinc-700"
+                }`}
+              />
+              {fieldErrors.name && <p className="mt-1 text-xs text-red-400">{fieldErrors.name}</p>}
             </div>
             <div>
               <label className="text-xs font-medium text-zinc-500">Email *</label>
-              <input type="email" value={form.email} onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
+              <input
+                type="email"
+                value={form.email}
+                onChange={(e) => {
+                  setForm((f) => ({ ...f, email: e.target.value }));
+                  if (fieldErrors.email) setFieldErrors((p) => ({ ...p, email: "" }));
+                }}
                 placeholder="alex@restaurant.com"
-                className="mt-1 w-full rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus:border-emerald-500/40 placeholder:text-zinc-600" />
+                aria-invalid={fieldErrors.email ? true : undefined}
+                className={`mt-1 w-full rounded-xl border bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus:border-emerald-500/40 placeholder:text-zinc-600 ${
+                  fieldErrors.email ? "border-red-500/50" : "border-zinc-700"
+                }`}
+              />
+              {fieldErrors.email && <p className="mt-1 text-xs text-red-400">{fieldErrors.email}</p>}
             </div>
             <div>
               <label className="text-xs font-medium text-zinc-500">Role *</label>
@@ -355,18 +383,37 @@ export default function StaffModulePage() {
                 {STAFF_ROLES.map((r) => <option key={r} value={r}>{ROLE_LABEL[r]}</option>)}
               </select>
             </div>
-            <div>
-              <label className="text-xs font-medium text-zinc-500">Phone</label>
-              <input value={form.phone} onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))}
-                placeholder="+1 555 000 0000"
-                className="mt-1 w-full rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus:border-emerald-500/40 placeholder:text-zinc-600" />
-            </div>
+            <PhoneInput
+              id="staff-phone"
+              label="Phone"
+              value={form.phone}
+              onChange={(digits) => {
+                setForm((f) => ({ ...f, phone: digits }));
+                if (fieldErrors.phone) setFieldErrors((p) => ({ ...p, phone: "" }));
+              }}
+              error={fieldErrors.phone || undefined}
+            />
             {!editingId && (
               <div className="sm:col-span-2">
-                <label className="text-xs font-medium text-zinc-500">Password * <span className="text-zinc-600">(min 6 chars)</span></label>
-                <input type="password" value={form.password} onChange={(e) => setForm((f) => ({ ...f, password: e.target.value }))}
-                  placeholder="••••••••" autoComplete="new-password"
-                  className="mt-1 w-full rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus:border-emerald-500/40 placeholder:text-zinc-600" />
+                <PasswordInput
+                  id="staff-password"
+                  label="Password (min 6 chars)"
+                  required
+                  autoComplete="new-password"
+                  value={form.password}
+                  onChange={(v) => {
+                    setForm((f) => ({ ...f, password: v }));
+                    if (fieldErrors.password) setFieldErrors((p) => ({ ...p, password: "" }));
+                  }}
+                  placeholder="••••••••"
+                  labelClassName="text-xs font-medium text-zinc-500"
+                  inputClassName={`w-full rounded-xl border bg-zinc-950/60 px-3 py-2.5 pr-11 text-sm text-zinc-100 outline-none focus:border-emerald-500/40 placeholder:text-zinc-600 ${
+                    fieldErrors.password ? "border-red-500/50" : "border-zinc-700"
+                  }`}
+                />
+                {fieldErrors.password && (
+                  <p className="mt-1 text-xs text-red-400">{fieldErrors.password}</p>
+                )}
               </div>
             )}
             {editingId && (

@@ -1,6 +1,7 @@
 import { withTenant } from "@/lib/tenantDb";
 import { sendLowStockAlertWhatsApp } from "@/lib/whatsappService";
 import { getRestaurantNotificationPrefs } from "@/lib/restaurantNotificationPrefs";
+import { parseSchema, inventoryItemSchema } from "@/lib/validationSchemas";
 import { ObjectId } from "mongodb";
 
 const PATCH_FIELDS = [
@@ -35,17 +36,41 @@ export const PATCH = withTenant(
     const existing = await db.collection("inventory").findOne({ ...tenantFilter, _id });
     if (!existing) return Response.json({ success: false, error: "Item not found." }, { status: 404 });
 
-    const update = { updatedAt: new Date() };
-    for (const key of PATCH_FIELDS) {
-      if (body[key] !== undefined) update[key] = body[key];
+    const touchesItem = PATCH_FIELDS.some((k) => body[k] !== undefined);
+    let validated = null;
+    if (touchesItem) {
+      try {
+        validated = parseSchema(inventoryItemSchema, {
+          name: body.name ?? existing.name,
+          category: body.category ?? existing.category,
+          quantity:
+            body.quantity != null
+              ? Math.max(0, Number(body.quantity) || 0)
+              : existing.quantity,
+          unit: body.unit ?? existing.unit,
+          reorderLevel:
+            body.reorderLevel != null
+              ? Math.max(0, Number(body.reorderLevel) || 0)
+              : existing.reorderLevel,
+          supplier: body.supplier ?? existing.supplier,
+          notes: body.notes ?? existing.notes,
+        });
+      } catch (err) {
+        return Response.json({ success: false, error: err.message }, { status: 400 });
+      }
     }
-    if (update.name) update.name = String(update.name).trim();
-    if (update.category) update.category = String(update.category).trim();
-    if (update.unit) update.unit = String(update.unit).trim();
-    if (update.quantity != null) update.quantity = Math.max(0, Number(update.quantity));
-    if (update.reorderLevel != null) update.reorderLevel = Math.max(0, Number(update.reorderLevel));
-    if (update.supplier !== undefined) update.supplier = String(update.supplier ?? "").trim();
-    if (update.notes !== undefined) update.notes = String(update.notes ?? "").trim();
+
+    const update = { updatedAt: new Date() };
+    if (validated) {
+      update.name = validated.name;
+      update.category = validated.category?.trim() ?? existing.category;
+      update.unit = validated.unit;
+      update.quantity = validated.quantity ?? existing.quantity;
+      update.reorderLevel = validated.reorderLevel ?? existing.reorderLevel;
+      update.supplier = validated.supplier ?? "";
+      update.notes = validated.notes ?? "";
+    }
+    if (body.maxLevel !== undefined) update.maxLevel = body.maxLevel != null && body.maxLevel !== "" ? String(body.maxLevel) : "";
 
     if (Object.keys(update).length === 1) {
       return Response.json({ success: false, error: "No valid fields to update." }, { status: 400 });

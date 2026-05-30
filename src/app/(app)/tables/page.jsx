@@ -13,6 +13,10 @@ import { usePaginatedList } from "@/hooks/usePaginatedList";
 import { useToast } from "@/hooks/useToast";
 import { LayoutGrid, Pencil, Plus, RefreshCw, ShoppingCart, Table2, Trash2, Users } from "lucide-react";
 import Link from "next/link";
+import {
+  EMPTY_TABLE_ERRORS,
+  getTableFieldErrors,
+} from "@/lib/formValidation";
 import { useCallback, useEffect, useState } from "react";
 
 const emptyForm = { tableNumber: "", capacity: "4", status: "available", categoryId: "" };
@@ -34,6 +38,7 @@ export default function TablesModulePage() {
   const [editingId, setEditingId]   = useState(null);
   const [form, setForm]             = useState(emptyForm);
   const [formError, setFormError]   = useState("");
+  const [fieldErrors, setFieldErrors] = useState(EMPTY_TABLE_ERRORS);
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [deleting, setDeleting] = useState(false);
   const { showToast, ToastUI } = useToast();
@@ -90,15 +95,18 @@ export default function TablesModulePage() {
       categoryId: row.categoryId ?? "",
     });
     setFormError("");
+    setFieldErrors(EMPTY_TABLE_ERRORS);
     setModalOpen(true);
   };
 
   const saveTable = async () => {
-    const cap = parseInt(form.capacity, 10);
-    if (!form.tableNumber.trim() || Number.isNaN(cap) || cap < 1) {
-      setFormError("Table number and valid capacity are required.");
+    const validation = getTableFieldErrors(form);
+    setFieldErrors(validation.errors);
+    if (!validation.valid) {
+      setFormError(validation.message ?? "Fix the highlighted fields.");
       return;
     }
+    const cap = parseInt(form.capacity, 10);
     setSaving(true); setFormError("");
 
     const cat = areas.find((a) => a.id === form.categoryId);
@@ -323,14 +331,40 @@ export default function TablesModulePage() {
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
               <label className="text-xs text-zinc-500">Table Number *</label>
-              <input value={form.tableNumber} onChange={(e) => setForm((f) => ({ ...f, tableNumber: e.target.value }))}
+              <input
+                value={form.tableNumber}
+                onChange={(e) => {
+                  setForm((f) => ({ ...f, tableNumber: e.target.value }));
+                  if (fieldErrors.tableNumber) setFieldErrors((p) => ({ ...p, tableNumber: "" }));
+                }}
                 placeholder="T12"
-                className="mt-1 w-full rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus:border-emerald-500/50" />
+                aria-invalid={fieldErrors.tableNumber ? true : undefined}
+                className={`mt-1 w-full rounded-xl border bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus:border-emerald-500/50 ${
+                  fieldErrors.tableNumber ? "border-red-500/50" : "border-zinc-700"
+                }`}
+              />
+              {fieldErrors.tableNumber && (
+                <p className="mt-1 text-xs text-red-400">{fieldErrors.tableNumber}</p>
+              )}
             </div>
             <div>
-              <label className="text-xs text-zinc-500">Capacity</label>
-              <input type="number" min={1} value={form.capacity} onChange={(e) => setForm((f) => ({ ...f, capacity: e.target.value }))}
-                className="mt-1 w-full rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus:border-emerald-500/50" />
+              <label className="text-xs text-zinc-500">Capacity *</label>
+              <input
+                type="number"
+                min={1}
+                value={form.capacity}
+                onChange={(e) => {
+                  setForm((f) => ({ ...f, capacity: e.target.value }));
+                  if (fieldErrors.capacity) setFieldErrors((p) => ({ ...p, capacity: "" }));
+                }}
+                aria-invalid={fieldErrors.capacity ? true : undefined}
+                className={`mt-1 w-full rounded-xl border bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus:border-emerald-500/50 ${
+                  fieldErrors.capacity ? "border-red-500/50" : "border-zinc-700"
+                }`}
+              />
+              {fieldErrors.capacity && (
+                <p className="mt-1 text-xs text-red-400">{fieldErrors.capacity}</p>
+              )}
             </div>
             <div>
               <label className="text-xs text-zinc-500">Status</label>
@@ -348,11 +382,23 @@ export default function TablesModulePage() {
                   <Link href="/tables/areas" className="cursor-pointer text-emerald-400 hover:text-emerald-300">create one</Link>
                 </div>
               ) : (
-                <select value={form.categoryId} onChange={(e) => setForm((f) => ({ ...f, categoryId: e.target.value }))}
-                  className="cursor-pointer mt-1 w-full rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus:border-emerald-500/50">
+                <select
+                  value={form.categoryId}
+                  onChange={(e) => {
+                    setForm((f) => ({ ...f, categoryId: e.target.value }));
+                    if (fieldErrors.categoryId) setFieldErrors((p) => ({ ...p, categoryId: "" }));
+                  }}
+                  aria-invalid={fieldErrors.categoryId ? true : undefined}
+                  className={`cursor-pointer mt-1 w-full rounded-xl border bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus:border-emerald-500/50 ${
+                    fieldErrors.categoryId ? "border-red-500/50" : "border-zinc-700"
+                  }`}
+                >
                   <option value="">— Select area —</option>
                   {areas.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}
                 </select>
+              )}
+              {fieldErrors.categoryId && (
+                <p className="mt-1 text-xs text-red-400">{fieldErrors.categoryId}</p>
               )}
             </div>
           </div>

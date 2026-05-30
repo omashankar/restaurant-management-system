@@ -2,6 +2,10 @@
 
 import { useUser } from "@/context/AuthContext";
 import { Loader2, MessageSquarePlus, RefreshCcw, X } from "lucide-react";
+import {
+  EMPTY_SUPPORT_TICKET_ERRORS,
+  getSupportTicketFieldErrors,
+} from "@/lib/formValidation";
 import { useEffect, useMemo, useState } from "react";
 
 const PRIORITIES = ["low", "medium", "high", "urgent"];
@@ -28,6 +32,7 @@ export default function SupportTicketsPage() {
     message: "",
     priority: "medium",
   });
+  const [fieldErrors, setFieldErrors] = useState(EMPTY_SUPPORT_TICKET_ERRORS);
 
   const canModerate = user?.role === "admin" || user?.role === "manager";
 
@@ -66,8 +71,10 @@ export default function SupportTicketsPage() {
 
   async function createTicket(e) {
     e.preventDefault();
-    if (!form.subject.trim() || !form.message.trim()) {
-      showToast("error", "Subject and message are required.");
+    const validation = getSupportTicketFieldErrors(form);
+    setFieldErrors(validation.errors);
+    if (!validation.valid) {
+      showToast("error", validation.message ?? "Subject and message are required.");
       return;
     }
     setSaving(true);
@@ -205,10 +212,17 @@ export default function SupportTicketsPage() {
             <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-zinc-500">Subject</label>
             <input
               value={form.subject}
-              onChange={(e) => setForm((p) => ({ ...p, subject: e.target.value }))}
-              className={inputCls}
+              onChange={(e) => {
+                setForm((p) => ({ ...p, subject: e.target.value }));
+                if (fieldErrors.subject) setFieldErrors((p) => ({ ...p, subject: "" }));
+              }}
+              aria-invalid={fieldErrors.subject ? true : undefined}
+              className={`${inputCls} ${fieldErrors.subject ? "border-red-500/50" : ""}`}
               placeholder="Payment is not reflecting"
             />
+            {fieldErrors.subject && (
+              <p className="mt-1 text-xs text-red-400">{fieldErrors.subject}</p>
+            )}
           </div>
           <div>
             <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-zinc-500">Priority</label>
@@ -230,10 +244,17 @@ export default function SupportTicketsPage() {
           <textarea
             rows={4}
             value={form.message}
-            onChange={(e) => setForm((p) => ({ ...p, message: e.target.value }))}
-            className={inputCls}
+            onChange={(e) => {
+              setForm((p) => ({ ...p, message: e.target.value }));
+              if (fieldErrors.message) setFieldErrors((p) => ({ ...p, message: "" }));
+            }}
+            aria-invalid={fieldErrors.message ? true : undefined}
+            className={`${inputCls} ${fieldErrors.message ? "border-red-500/50" : ""}`}
             placeholder="Please describe issue with reproducible steps."
           />
+          {fieldErrors.message && (
+            <p className="mt-1 text-xs text-red-400">{fieldErrors.message}</p>
+          )}
         </div>
         <button
           type="submit"

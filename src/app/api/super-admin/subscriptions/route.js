@@ -2,6 +2,7 @@ import { getTokenFromRequest } from "@/lib/authCookies";
 import { verifyToken } from "@/lib/jwt";
 import clientPromise from "@/lib/mongodb";
 import { assignPlan } from "@/lib/subscription";
+import { parseSchema, superAdminAssignPlanSchema } from "@/lib/validationSchemas";
 import { ObjectId } from "mongodb";
 
 function superAdminOnly(request) {
@@ -83,12 +84,29 @@ export async function POST(request) {
   try { body = await request.json(); }
   catch { return Response.json({ success: false, error: "Invalid JSON." }, { status: 400 }); }
 
-  const { restaurantId, planSlug, startDate, endDate, trialDays } = body;
-  if (!restaurantId) return Response.json({ success: false, error: "restaurantId is required." }, { status: 400 });
-  if (!planSlug)     return Response.json({ success: false, error: "planSlug is required." },     { status: 400 });
+  let validated;
+  try {
+    validated = parseSchema(superAdminAssignPlanSchema, {
+      restaurantId: body.restaurantId,
+      planSlug: body.planSlug,
+      startDate: body.startDate || undefined,
+      endDate: body.endDate || undefined,
+      trialDays: body.trialDays ?? 0,
+    });
+  } catch (err) {
+    return Response.json({ success: false, error: err.message }, { status: 400 });
+  }
+
+  if (!ObjectId.isValid(validated.restaurantId)) {
+    return Response.json({ success: false, error: "Invalid restaurant." }, { status: 400 });
+  }
 
   try {
-    const sub = await assignPlan(restaurantId, planSlug, { startDate, endDate, trialDays });
+    const sub = await assignPlan(validated.restaurantId, validated.planSlug, {
+      startDate: validated.startDate,
+      endDate: validated.endDate,
+      trialDays: validated.trialDays,
+    });
     return Response.json({ success: true, subscription: sub }, { status: 201 });
   } catch (err) {
     const status = err.message.includes("not found") ? 404 : 500;

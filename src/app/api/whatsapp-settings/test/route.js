@@ -2,17 +2,22 @@
  * POST /api/whatsapp-settings/test
  * Send a real test WhatsApp message using stored credentials.
  */
+import { validateWhatsappTestPhone } from "@/lib/restaurantSettingsValidation";
 import { withTenant } from "@/lib/tenantDb";
+import { extractIndianMobileDigits } from "@/lib/phoneUtils";
 import { decryptSecret } from "@/lib/cryptoUtils";
 import { sendWhatsAppMessage } from "@/lib/whatsappService";
 
 export const POST = withTenant(["admin"], async ({ db, restaurantId }, request) => {
   const body = await request.json();
-  const phone = String(body?.phone ?? "").replace(/\D/g, "");
-
-  if (!phone || phone.length < 7) {
-    return Response.json({ success: false, error: "Valid phone number required." }, { status: 400 });
+  const validation = validateWhatsappTestPhone(body?.phone);
+  if (!validation.valid) {
+    return Response.json(
+      { success: false, error: validation.message ?? "Valid phone number required." },
+      { status: 422 }
+    );
   }
+  const phone = extractIndianMobileDigits(body?.phone);
 
   const doc = await db.collection("restaurant_whatsapp_settings").findOne({ restaurantId });
   if (!doc?.enabled) {

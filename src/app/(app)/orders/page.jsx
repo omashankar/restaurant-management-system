@@ -7,6 +7,10 @@ import {
   Clock, ConciergeBell, Plus, RefreshCw,
   Search, Store, UtensilsCrossed, X,
 } from "lucide-react";
+import {
+  EMPTY_CREATE_ORDER_ERRORS,
+  getCreateOrderFieldErrors,
+} from "@/lib/formValidation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 /* ── Config ── */
@@ -216,10 +220,18 @@ function CreateOrderModal({ open, onClose, onCreated, currency = "INR" }) {
   const [serviceChargePercent, setServiceChargePercent] = useState(0);
   const [paymentMethod, setPaymentMethod] = useState("cashCounter");
   const [paymentStatus, setPaymentStatus] = useState("paid");
+  const [fieldErrors, setFieldErrors] = useState(EMPTY_CREATE_ORDER_ERRORS);
+
+  const orderValidation = useMemo(
+    () => getCreateOrderFieldErrors({ form, cart }),
+    [form, cart]
+  );
+  const canPlaceOrder = orderValidation.valid;
 
   useEffect(() => {
     if (!open) return;
     setCart([]); setError(""); setSearch("");
+    setFieldErrors(EMPTY_CREATE_ORDER_ERRORS);
     setForm({ orderType: "dine-in", tableNumber: "", customer: "", notes: "" });
     setPaymentMethod("cashCounter");
     setPaymentStatus("paid");
@@ -264,8 +276,12 @@ function CreateOrderModal({ open, onClose, onCreated, currency = "INR" }) {
   const total = parseFloat((subtotal + taxAmount + serviceCharge).toFixed(2));
 
   const submit = async () => {
-    if (!cart.length) { setError("Add at least one item."); return; }
-    if (form.orderType === "dine-in" && !form.tableNumber) { setError("Select a table for dine-in."); return; }
+    const validation = getCreateOrderFieldErrors({ form, cart });
+    setFieldErrors(validation.errors);
+    if (!validation.valid) {
+      setError(validation.message ?? "Fix the highlighted fields.");
+      return;
+    }
     setSaving(true); setError("");
     try {
       const res  = await fetch("/api/orders", {
@@ -348,8 +364,15 @@ function CreateOrderModal({ open, onClose, onCreated, currency = "INR" }) {
               {/* Order type */}
               <div>
                 <label className="text-xs font-medium text-zinc-500">Order Type</label>
-                <select value={form.orderType} onChange={(e) => setForm((f) => ({ ...f, orderType: e.target.value, tableNumber: "" }))}
-                  className="cursor-pointer mt-1 w-full rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2 text-sm text-zinc-100 outline-none focus:border-emerald-500/40">
+                <select
+                  value={form.orderType}
+                  onChange={(e) => {
+                    setForm((f) => ({ ...f, orderType: e.target.value, tableNumber: "" }));
+                    setFieldErrors(EMPTY_CREATE_ORDER_ERRORS);
+                    setError("");
+                  }}
+                  className="cursor-pointer mt-1 w-full rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2 text-sm text-zinc-100 outline-none focus:border-emerald-500/40"
+                >
                   <option value="dine-in">Dine-In</option>
                   <option value="takeaway">Takeaway</option>
                   <option value="delivery">Delivery</option>
@@ -360,28 +383,80 @@ function CreateOrderModal({ open, onClose, onCreated, currency = "INR" }) {
               {form.orderType === "dine-in" && (
                 <div>
                   <label className="text-xs font-medium text-zinc-500">Table *</label>
-                  <select value={form.tableNumber} onChange={(e) => setForm((f) => ({ ...f, tableNumber: e.target.value }))}
-                    className="cursor-pointer mt-1 w-full rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2 text-sm text-zinc-100 outline-none focus:border-emerald-500/40">
+                  <select
+                    value={form.tableNumber}
+                    onChange={(e) => {
+                      setForm((f) => ({ ...f, tableNumber: e.target.value }));
+                      if (fieldErrors.tableNumber) {
+                        setFieldErrors((p) => ({ ...p, tableNumber: "" }));
+                      }
+                      setError("");
+                    }}
+                    aria-invalid={fieldErrors.tableNumber ? true : undefined}
+                    className={`cursor-pointer mt-1 w-full rounded-xl border bg-zinc-950/60 px-3 py-2 text-sm text-zinc-100 outline-none focus:border-emerald-500/40 ${
+                      fieldErrors.tableNumber ? "border-red-500/50" : "border-zinc-700"
+                    }`}
+                  >
                     <option value="">— Select —</option>
                     {tables.map((t) => <option key={t.id} value={t.tableNumber}>{t.tableNumber} ({t.capacity}p)</option>)}
                   </select>
+                  {fieldErrors.tableNumber && (
+                    <p className="mt-1 text-xs text-red-400">{fieldErrors.tableNumber}</p>
+                  )}
                 </div>
               )}
 
               {/* Customer */}
               <div>
-                <label className="text-xs font-medium text-zinc-500">Customer</label>
-                <input value={form.customer} onChange={(e) => setForm((f) => ({ ...f, customer: e.target.value }))}
-                  placeholder="Walk-in"
-                  className="mt-1 w-full rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2 text-sm text-zinc-100 outline-none focus:border-emerald-500/40 placeholder:text-zinc-600" />
+                <label className="text-xs font-medium text-zinc-500">
+                  {form.orderType === "delivery" ? "Customer name" : "Customer"}
+                  <span className="text-red-400"> *</span>
+                </label>
+                <input
+                  value={form.customer}
+                  onChange={(e) => {
+                    setForm((f) => ({ ...f, customer: e.target.value }));
+                    if (fieldErrors.customer) setFieldErrors((p) => ({ ...p, customer: "" }));
+                    setError("");
+                  }}
+                  placeholder={form.orderType === "delivery" ? "e.g. Rahul Sharma" : "e.g. Rahul Sharma (not Walk-in)"}
+                  aria-invalid={fieldErrors.customer ? true : undefined}
+                  className={`mt-1 w-full rounded-xl border bg-zinc-950/60 px-3 py-2 text-sm text-zinc-100 outline-none focus:border-emerald-500/40 placeholder:text-zinc-600 ${
+                    fieldErrors.customer ? "border-red-500/50" : "border-zinc-700"
+                  }`}
+                />
+                {fieldErrors.customer && (
+                  <p className="mt-1 text-xs text-red-400">{fieldErrors.customer}</p>
+                )}
               </div>
 
-              {/* Notes */}
+              {/* Notes / delivery address */}
               <div>
-                <label className="text-xs font-medium text-zinc-500">Notes</label>
-                <textarea rows={2} value={form.notes} onChange={(e) => setForm((f) => ({ ...f, notes: e.target.value }))}
-                  placeholder="Special requests…"
-                  className="mt-1 w-full resize-none rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2 text-sm text-zinc-100 outline-none focus:border-emerald-500/40 placeholder:text-zinc-600" />
+                <label className="text-xs font-medium text-zinc-500">
+                  {form.orderType === "delivery" ? "Delivery address" : "Notes"}
+                  {form.orderType === "delivery" ? <span className="text-red-400"> *</span> : null}
+                </label>
+                <textarea
+                  rows={2}
+                  value={form.notes}
+                  onChange={(e) => {
+                    setForm((f) => ({ ...f, notes: e.target.value }));
+                    if (fieldErrors.notes) setFieldErrors((p) => ({ ...p, notes: "" }));
+                    setError("");
+                  }}
+                  placeholder={
+                    form.orderType === "delivery"
+                      ? "House no., street, area, city…"
+                      : "Special requests…"
+                  }
+                  aria-invalid={fieldErrors.notes ? true : undefined}
+                  className={`mt-1 w-full resize-none rounded-xl border bg-zinc-950/60 px-3 py-2 text-sm text-zinc-100 outline-none focus:border-emerald-500/40 placeholder:text-zinc-600 ${
+                    fieldErrors.notes ? "border-red-500/50" : "border-zinc-700"
+                  }`}
+                />
+                {fieldErrors.notes && (
+                  <p className="mt-1 text-xs text-red-400">{fieldErrors.notes}</p>
+                )}
               </div>
 
               {/* Cart */}
@@ -449,10 +524,17 @@ function CreateOrderModal({ open, onClose, onCreated, currency = "INR" }) {
                   </button>
                 ))}
               </div>
-              <button type="button" onClick={submit} disabled={saving || !cart.length}
-                className="cursor-pointer flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-500 py-2.5 text-sm font-bold text-zinc-950 hover:bg-emerald-400 disabled:opacity-40 transition-all">
+              <button
+                type="button"
+                onClick={submit}
+                disabled={saving || !canPlaceOrder}
+                className="cursor-pointer flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-500 py-2.5 text-sm font-bold text-zinc-950 transition-all hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-40"
+              >
                 {saving ? "Placing…" : "Place Order"}
               </button>
+              {!canPlaceOrder && cart.length > 0 && orderValidation.message && !error && (
+                <p className="text-center text-[10px] text-zinc-500">{orderValidation.message}</p>
+              )}
             </div>
           </div>
         </div>

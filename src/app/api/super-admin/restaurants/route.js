@@ -7,6 +7,8 @@ import bcrypt from "bcryptjs";
 import { getPlatformSettings } from "@/lib/platformSettings";
 import { validatePlatformPassword } from "@/lib/platformPassword";
 import { notifyPlatformEvent } from "@/lib/platformNotify";
+import { extractIndianMobileDigits } from "@/lib/phoneUtils";
+import { parseSchema, superAdminRestaurantCreateSchema } from "@/lib/validationSchemas";
 
 const VALID_PLANS = ["free", "starter", "pro", "enterprise"];
 
@@ -243,20 +245,27 @@ export async function POST(request) {
   try { body = await request.json(); }
   catch { return Response.json({ success: false, error: "Invalid JSON." }, { status: 400 }); }
 
-  const { name, ownerEmail, ownerName, ownerPassword, plan = "free", phone = "", address = "", status = "active", slug = "" } = body;
-  const allowedStatuses = ["active", "inactive", "suspended"];
+  const cleanSlug = String(body?.slug ?? "").toLowerCase().replace(/[^a-z0-9-]/g, "").trim();
 
-  if (!name?.trim())        return Response.json({ success: false, error: "Restaurant name is required." }, { status: 400 });
-  if (!ownerEmail?.trim())  return Response.json({ success: false, error: "Owner email is required." },     { status: 400 });
-  if (!ownerPassword)       return Response.json({ success: false, error: "Owner password is required." },  { status: 400 });
-  if (!allowedStatuses.includes(status)) return Response.json({ success: false, error: "Invalid status." }, { status: 400 });
-  if (!VALID_PLANS.includes(plan)) return Response.json({ success: false, error: "Invalid plan." }, { status: 400 });
-
-  // Slug validation
-  const cleanSlug = String(slug ?? "").toLowerCase().replace(/[^a-z0-9-]/g, "").trim();
-  if (cleanSlug && !/^[a-z0-9][a-z0-9-]*[a-z0-9]$/.test(cleanSlug) && cleanSlug.length > 1) {
-    return Response.json({ success: false, error: "Invalid slug format." }, { status: 400 });
+  let validated;
+  try {
+    validated = parseSchema(superAdminRestaurantCreateSchema, { ...body, slug: cleanSlug });
+  } catch (err) {
+    return Response.json({ success: false, error: err.message }, { status: 400 });
   }
+
+  const {
+    name,
+    ownerEmail,
+    ownerName,
+    ownerPassword,
+    plan,
+    phone,
+    address,
+    status,
+    slug: validatedSlug,
+  } = validated;
+  const phoneStored = phone ? extractIndianMobileDigits(phone) : "";
 
   try {
     const client = await clientPromise;
@@ -273,12 +282,12 @@ export async function POST(request) {
       return Response.json({ success: false, error: "An account with this email already exists." }, { status: 409 });
     }
 
-    // Duplicate slug check
-    if (cleanSlug) {
-      const existingSlug = await db.collection("restaurants").findOne({ slug: cleanSlug });
-      if (existingSlug) {
-        return Response.json({ success: false, error: "Yeh customer URL (slug) pehle se use ho raha hai. Koi aur slug choose karein." }, { status: 409 });
-      }
+    const existingSlug = await db.collection("restaurants").findOne({ slug: validatedSlug });
+    if (existingSlug) {
+      return Response.json({
+        success: false,
+        error: "Yeh customer URL (slug) pehle se use ho raha hai. Koi aur slug choose karein.",
+      }, { status: 409 });
     }
 
     const session = client.startSession();
@@ -289,10 +298,10 @@ export async function POST(request) {
       await session.withTransaction(async () => {
         // Create restaurant first (get its _id as tenantId)
         const restaurantResult = await db.collection("restaurants").insertOne({
-          name:       name.trim(),
-          slug:       cleanSlug || null,
-          ownerEmail: ownerEmail.toLowerCase().trim(),
-          phone:      phone?.trim() ?? "",
+          name,
+          slug:       validatedSlug,
+          ownerEmail,
+          phone:      phoneStored,
           address:    address?.trim() ?? "",
           plan,
           status,
@@ -306,7 +315,7 @@ export async function POST(request) {
         const hashedPassword = await bcrypt.hash(ownerPassword, 10);
         const userResult = await db.collection("users").insertOne({
           name:         (ownerName?.trim()) || ownerEmail.split("@")[0],
-          email:        ownerEmail.toLowerCase().trim(),
+          email:        ownerEmail,
           password:     hashedPassword,
           role:         "admin",
           restaurantId, // ← tenantId
@@ -355,11 +364,11 @@ export async function POST(request) {
       restaurant: {
         id:         restaurantId.toString(),
         ownerId:    ownerId.toString(),
-        name:       name.trim(),
-        ownerEmail: ownerEmail.toLowerCase().trim(),
+        name,
+        ownerEmail,
         ownerName:  (ownerName?.trim()) || ownerEmail.split("@")[0],
         ownerStatus: status === "active" ? "active" : "inactive",
-        phone:      phone?.trim() ?? "",
+        phone:      phoneStored,
         address:    address?.trim() ?? "",
         plan,
         status,

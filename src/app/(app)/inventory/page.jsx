@@ -15,6 +15,7 @@ import { useApp } from "@/context/AppProviders";
 import { useModuleData } from "@/context/ModuleDataContext";
 import { usePaginatedList } from "@/hooks/usePaginatedList";
 import { useToast } from "@/hooks/useToast";
+import { getInventoryFormFieldErrors } from "@/lib/formValidation";
 import { AlertTriangle, Package, Plus } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
@@ -185,7 +186,11 @@ export default function InventoryPage() {
   };
 
   const saveItem = async () => {
-    if (!form.name.trim() || !form.unit.trim()) return;
+    const validation = getInventoryFormFieldErrors(form);
+    if (!validation.valid) {
+      showToast(validation.message ?? "Fix the highlighted fields.", "error");
+      return;
+    }
     const quantity = Math.max(0, parseInt(form.quantity, 10) || 0);
     const reorderLevel = Math.max(0, parseInt(form.reorderLevel, 10) || 0);
     const payload = {

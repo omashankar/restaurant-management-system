@@ -1,4 +1,6 @@
 import { withTenant } from "@/lib/tenantDb";
+import { extractIndianMobileDigits } from "@/lib/phoneUtils";
+import { parseSchema, customerUpsertSchema } from "@/lib/validationSchemas";
 import { ObjectId } from "mongodb";
 
 function toOid(id) {
@@ -36,30 +38,53 @@ export const PATCH = withTenant(
     }
 
     const body = await request.json();
-    const update = {
-      updatedAt: new Date(),
-    };
-
-    if (typeof body.name === "string") update.name = body.name.trim();
-    if (typeof body.phone === "string") update.phone = body.phone.trim();
-    if (typeof body.email === "string") update.email = body.email.trim();
-    if (typeof body.notes === "string") update.notes = body.notes.trim();
-    if (typeof body.lastVisit === "string" || body.lastVisit === null) update.lastVisit = body.lastVisit;
-    if (typeof body.visits === "number") update.visits = Math.max(0, body.visits);
-    if (Array.isArray(body.orderHistory)) update.orderHistory = body.orderHistory;
 
     const current = await db.collection("customers").findOne(
       { ...tenantFilter, _id },
-      { projection: { phone: 1 } }
+      { projection: { name: 1, phone: 1, email: 1, notes: 1 } }
     );
     if (!current) {
       return Response.json({ success: false, error: "Customer not found." }, { status: 404 });
     }
 
-    if (typeof body.phone === "string" && body.phone.trim() !== current.phone) {
+    const touchesProfile =
+      typeof body.name === "string" ||
+      typeof body.phone === "string" ||
+      typeof body.email === "string" ||
+      typeof body.notes === "string";
+
+    let validatedProfile = null;
+    if (touchesProfile) {
+      try {
+        validatedProfile = parseSchema(customerUpsertSchema, {
+          name: typeof body.name === "string" ? body.name : current.name,
+          phone: typeof body.phone === "string" ? body.phone : current.phone,
+          email: typeof body.email === "string" ? body.email : (current.email ?? ""),
+          notes: typeof body.notes === "string" ? body.notes : (current.notes ?? ""),
+        });
+      } catch (err) {
+        return Response.json({ success: false, error: err.message }, { status: 400 });
+      }
+    }
+
+    const update = {
+      updatedAt: new Date(),
+    };
+
+    if (validatedProfile) {
+      update.name = validatedProfile.name;
+      update.phone = extractIndianMobileDigits(validatedProfile.phone);
+      update.email = validatedProfile.email ?? "";
+      update.notes = validatedProfile.notes ?? "";
+    }
+    if (typeof body.lastVisit === "string" || body.lastVisit === null) update.lastVisit = body.lastVisit;
+    if (typeof body.visits === "number") update.visits = Math.max(0, body.visits);
+    if (Array.isArray(body.orderHistory)) update.orderHistory = body.orderHistory;
+
+    if (validatedProfile && update.phone !== current.phone) {
       const duplicate = await db.collection("customers").findOne({
         ...tenantFilter,
-        phone: body.phone.trim(),
+        phone: update.phone,
         _id: { $ne: _id },
       });
       if (duplicate) {

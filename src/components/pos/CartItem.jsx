@@ -42,6 +42,7 @@ export default function CartItem({
           </button>
           <input
             type="number"
+            inputMode="numeric"
             min={1}
             value={line.qty}
             onChange={(e) => onSetQuantity(line.id, e.target.value)}

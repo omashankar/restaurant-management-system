@@ -12,6 +12,11 @@ import { useApp } from "@/context/AppProviders";
 import { useModuleData } from "@/context/ModuleDataContext";
 import { usePaginatedList } from "@/hooks/usePaginatedList";
 import { useToast } from "@/hooks/useToast";
+import {
+  EMPTY_CUSTOMER_FORM_ERRORS,
+  getCustomerFormFieldErrors,
+} from "@/lib/formValidation";
+import PhoneInput from "@/components/ui/PhoneInput";
 import { Eye, Pencil, Plus, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
@@ -36,6 +41,7 @@ export default function CustomersModulePage() {
   const [fetchError, setFetchError] = useState(null);
   const [visitFilter, setVisitFilter] = useState("all");
   const [modalOpen, setModalOpen] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState(EMPTY_CUSTOMER_FORM_ERRORS);
   const [editingId, setEditingId] = useState(null);
   const [form, setForm] = useState({
     name: "",
@@ -106,6 +112,7 @@ export default function CustomersModulePage() {
   const openCreate = () => {
     setEditingId(null);
     setForm({ name: "", phone: "", email: "", notes: "" });
+    setFieldErrors(EMPTY_CUSTOMER_FORM_ERRORS);
     setModalOpen(true);
   };
 
@@ -117,12 +124,15 @@ export default function CustomersModulePage() {
       email: row.email,
       notes: row.notes ?? "",
     });
+    setFieldErrors(EMPTY_CUSTOMER_FORM_ERRORS);
     setModalOpen(true);
   };
 
   const saveCustomer = async () => {
-    if (!form.name.trim() || !form.phone.trim()) {
-      showToast("Name and phone are required.", "error");
+    const validation = getCustomerFormFieldErrors(form);
+    setFieldErrors(validation.errors);
+    if (!validation.valid) {
+      showToast(validation.message ?? "Fix the highlighted fields.", "error");
       return;
     }
     const payload = {
@@ -374,32 +384,43 @@ export default function CustomersModulePage() {
             <label className="text-xs text-zinc-500">Name</label>
             <input
               value={form.name}
-              onChange={(e) =>
-                setForm((f) => ({ ...f, name: e.target.value }))
-              }
-              className="mt-1 w-full rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2 text-sm text-zinc-100"
+              onChange={(e) => {
+                setForm((f) => ({ ...f, name: e.target.value }));
+                if (fieldErrors.name) setFieldErrors((p) => ({ ...p, name: "" }));
+              }}
+              aria-invalid={fieldErrors.name ? true : undefined}
+              className={`mt-1 w-full rounded-xl border bg-zinc-950/60 px-3 py-2 text-sm text-zinc-100 ${
+                fieldErrors.name ? "border-red-500/50" : "border-zinc-700"
+              }`}
             />
+            {fieldErrors.name && <p className="mt-1 text-xs text-red-400">{fieldErrors.name}</p>}
           </div>
-          <div>
-            <label className="text-xs text-zinc-500">Phone</label>
-            <input
-              value={form.phone}
-              onChange={(e) =>
-                setForm((f) => ({ ...f, phone: e.target.value }))
-              }
-              className="mt-1 w-full rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2 text-sm text-zinc-100"
-            />
-          </div>
+          <PhoneInput
+            id="customer-phone"
+            label="Phone"
+            required
+            value={form.phone}
+            onChange={(digits) => {
+              setForm((f) => ({ ...f, phone: digits }));
+              if (fieldErrors.phone) setFieldErrors((p) => ({ ...p, phone: "" }));
+            }}
+            error={fieldErrors.phone || undefined}
+          />
           <div>
             <label className="text-xs text-zinc-500">Email</label>
             <input
               type="email"
               value={form.email}
-              onChange={(e) =>
-                setForm((f) => ({ ...f, email: e.target.value }))
-              }
-              className="mt-1 w-full rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2 text-sm text-zinc-100"
+              onChange={(e) => {
+                setForm((f) => ({ ...f, email: e.target.value }));
+                if (fieldErrors.email) setFieldErrors((p) => ({ ...p, email: "" }));
+              }}
+              aria-invalid={fieldErrors.email ? true : undefined}
+              className={`mt-1 w-full rounded-xl border bg-zinc-950/60 px-3 py-2 text-sm text-zinc-100 ${
+                fieldErrors.email ? "border-red-500/50" : "border-zinc-700"
+              }`}
             />
+            {fieldErrors.email && <p className="mt-1 text-xs text-red-400">{fieldErrors.email}</p>}
           </div>
           <div>
             <label className="text-xs text-zinc-500">Notes</label>

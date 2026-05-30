@@ -1,39 +1,47 @@
 "use client";
 
 import Modal from "@/components/ui/Modal";
+import PasswordInput from "@/components/ui/PasswordInput";
 import { useProfile } from "@/hooks/useProfile";
-import { CheckCircle2, KeyRound, Loader2, XCircle } from "lucide-react";
+import { CheckCircle2, Loader2, XCircle } from "lucide-react";
 
-function PasswordField({ label, value, onChange, placeholder }) {
-  return (
-    <div>
-      <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-zinc-500">
-        {label}
-      </label>
-      <div className="relative">
-        <KeyRound
-          className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-zinc-500"
-          aria-hidden
-        />
-        <input
-          type="password"
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          placeholder={placeholder}
-          className="w-full rounded-xl border border-zinc-700 bg-zinc-950/60 py-2.5 pl-10 pr-4 text-sm text-zinc-100 outline-none transition-all focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/15"
-        />
-      </div>
-    </div>
-  );
-}
+const ACCENT = {
+  emerald: {
+    btn: "bg-emerald-500 hover:bg-emerald-400",
+    hint: "text-zinc-500",
+  },
+  rose: {
+    btn: "bg-rose-500 hover:bg-rose-400",
+    hint: "text-zinc-500",
+  },
+};
 
-export default function ChangePasswordModal({ open, onClose }) {
-  const { pwForm, setPwField, resetPw, pwDirty, saving, toast, savePassword } = useProfile();
+/**
+ * @param {{ open: boolean; onClose: () => void; variant?: "emerald" | "rose" }} props
+ */
+export default function ChangePasswordModal({ open, onClose, variant = "emerald" }) {
+  const { pwForm, setPwField, resetPw, pwDirty, pwErrors, saving, toast, savePassword } = useProfile();
+  const accent = ACCENT[variant] ?? ACCENT.emerald;
 
   const handleClose = () => {
     resetPw();
     onClose();
   };
+
+  const handleSave = async () => {
+    const ok = await savePassword();
+    if (ok) {
+      setTimeout(() => {
+        resetPw();
+        onClose();
+      }, 1200);
+    }
+  };
+
+  const inputFocusCls =
+    variant === "rose"
+      ? "focus:border-rose-500/50 focus:ring-rose-500/15"
+      : "focus:border-emerald-500/50 focus:ring-emerald-500/20";
 
   return (
     <Modal
@@ -51,34 +59,55 @@ export default function ChangePasswordModal({ open, onClose }) {
           </button>
           <button
             type="button"
-            onClick={savePassword}
+            onClick={handleSave}
             disabled={saving || !pwDirty}
-            className="cursor-pointer inline-flex items-center gap-2 rounded-xl bg-emerald-500 px-5 py-2 text-sm font-semibold text-zinc-950 transition-all hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-40"
+            className={`cursor-pointer inline-flex items-center gap-2 rounded-xl px-5 py-2 text-sm font-semibold text-zinc-950 transition-all disabled:cursor-not-allowed disabled:opacity-40 ${accent.btn}`}
           >
             {saving ? <Loader2 className="size-4 animate-spin" /> : null}
-            {saving ? "Updating..." : "Update Password"}
+            {saving ? "Updating…" : "Update Password"}
           </button>
         </div>
       }
     >
       <div className="space-y-4">
-        <PasswordField
+        <p className={`text-xs ${accent.hint}`}>
+          At least 8 characters, with a number and a special character.
+        </p>
+        <PasswordInput
+          id="pw-current"
           label="Current Password"
           value={pwForm.current}
           onChange={(v) => setPwField("current", v)}
           placeholder="••••••••"
+          autoComplete="current-password"
+          error={pwErrors.current}
+          inputClassName={`w-full rounded-xl border bg-zinc-950/60 py-2.5 pl-10 pr-11 text-sm text-zinc-100 outline-none transition-all ${
+            pwErrors.current ? "border-red-500/50" : "border-zinc-700"
+          } ${inputFocusCls}`}
         />
-        <PasswordField
+        <PasswordInput
+          id="pw-new"
           label="New Password"
           value={pwForm.next}
           onChange={(v) => setPwField("next", v)}
-          placeholder="Min. 6 characters"
+          placeholder="Min. 8 characters"
+          autoComplete="new-password"
+          error={pwErrors.next}
+          inputClassName={`w-full rounded-xl border bg-zinc-950/60 py-2.5 pl-10 pr-11 text-sm text-zinc-100 outline-none transition-all ${
+            pwErrors.next ? "border-red-500/50" : "border-zinc-700"
+          } ${inputFocusCls}`}
         />
-        <PasswordField
+        <PasswordInput
+          id="pw-confirm"
           label="Confirm New Password"
           value={pwForm.confirm}
           onChange={(v) => setPwField("confirm", v)}
           placeholder="Repeat new password"
+          autoComplete="new-password"
+          error={pwErrors.confirm}
+          inputClassName={`w-full rounded-xl border bg-zinc-950/60 py-2.5 pl-10 pr-11 text-sm text-zinc-100 outline-none transition-all ${
+            pwErrors.confirm ? "border-red-500/50" : "border-zinc-700"
+          } ${inputFocusCls}`}
         />
 
         {toast ? (

@@ -1,6 +1,7 @@
 "use client";
 
 import { useModuleData } from "@/context/ModuleDataContext";
+import { extractIndianMobileDigits } from "@/lib/phoneUtils";
 import { useMemo, useState } from "react";
 
 /**
@@ -15,22 +16,26 @@ export function useCustomerSearch() {
   const results = useMemo(() => {
     const q = query.trim().toLowerCase();
     if (!q) return [];
-    return customerRows.filter(
-      (c) =>
-        c.name.toLowerCase().includes(q) ||
-        c.phone.replace(/\s/g, "").includes(q.replace(/\s/g, ""))
-    );
+    const qDigits = extractIndianMobileDigits(q);
+    return customerRows.filter((c) => {
+      const nameMatch = c.name.toLowerCase().includes(q);
+      const phoneDigits = extractIndianMobileDigits(c.phone);
+      const phoneMatch =
+        qDigits.length >= 3 &&
+        (phoneDigits.includes(qDigits) || qDigits.includes(phoneDigits));
+      const rawPhoneMatch = c.phone?.replace(/\s/g, "").includes(q.replace(/\s/g, ""));
+      return nameMatch || phoneMatch || rawPhoneMatch;
+    });
   }, [customerRows, query]);
 
   /** Add a brand-new customer from API and auto-select them */
   const addCustomer = async ({ name, phone, email = "" }) => {
     const payload = {
-      name: name.trim(),
-      phone: phone.trim(),
-      email: email.trim(),
+      name: String(name ?? "").trim(),
+      phone: extractIndianMobileDigits(phone),
+      email: String(email ?? "").trim(),
       notes: "",
     };
-    if (!payload.name || !payload.phone) return null;
 
     try {
       const res = await fetch("/api/customers", {
@@ -39,11 +44,16 @@ export function useCustomerSearch() {
         body: JSON.stringify(payload),
       });
       const data = await res.json();
-      if (!res.ok || !data?.id) return null;
+      if (!res.ok || !data.success || !data.id) {
+        return { ok: false, error: data.error ?? "Could not add customer." };
+      }
 
       const newCustomer = {
         id: data.id,
-        ...payload,
+        name: payload.name,
+        phone: payload.phone,
+        email: payload.email,
+        notes: "",
         visits: 0,
         lastVisit: null,
         orderHistory: [],
@@ -51,9 +61,9 @@ export function useCustomerSearch() {
       setCustomerRows((prev) => [...prev, newCustomer]);
       setSelected(newCustomer);
       setQuery("");
-      return newCustomer;
+      return { ok: true, customer: newCustomer };
     } catch {
-      return null;
+      return { ok: false, error: "Network error. Try again." };
     }
   };
 

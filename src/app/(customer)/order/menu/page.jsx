@@ -9,9 +9,10 @@ import { mergeCmsSection } from "@/lib/customerCmsMerge";
 import { DEFAULTS } from "@/lib/restaurantCmsDefaults";
 import { formatCustomerMoney } from "@/lib/customerCurrency";
 import { customerClasses, customerInteractive, customerPage, customerType } from "@/lib/customerTheme";
+import ItemTypeChipIcon, { FastFilterChipIcon } from "@/components/menu/ItemTypeChipIcon";
 import { ITEM_TYPE_META } from "@/types/menu";
 import { motion, AnimatePresence } from "framer-motion";
-import { Bike, Clock, ConciergeBell, Plus, Search, ShoppingCart, Store, UtensilsCrossed, Zap, X } from "lucide-react";
+import { Bike, Clock, ConciergeBell, Plus, Search, ShoppingCart, Store, UtensilsCrossed, X } from "lucide-react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState, Suspense } from "react";
@@ -192,11 +193,7 @@ function CustomerMenuPageContent() {
                   className={`shrink-0 cursor-pointer inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-semibold transition-all ${
                     isActive ? "bg-customer-primary/10 text-customer-primary ring-1 ring-[var(--customer-primary)]/30" : "border border-customer-border bg-[var(--customer-card)] text-customer-muted hover:border-customer-primary/30 hover:text-customer-primary"
                   }`}>
-                  {t === "veg" && <span className="inline-flex shrink-0 items-center justify-center" style={{ width: 11, height: 11, border: "2px solid #16a34a", borderRadius: 2, backgroundColor: "#fff" }}><span style={{ width: 4, height: 4, borderRadius: "50%", backgroundColor: "#16a34a", display: "block" }} /></span>}
-                  {t === "non-veg" && <span className="inline-flex shrink-0 items-center justify-center" style={{ width: 11, height: 11, border: "2px solid #92400e", borderRadius: 2, backgroundColor: "#fff" }}><span style={{ width: 4, height: 4, borderRadius: "50%", backgroundColor: "#92400e", display: "block" }} /></span>}
-                  {t === "egg"   && <span className="size-2 shrink-0 rounded-full bg-yellow-400" />}
-                  {t === "drink" && <span className="text-sm leading-none">🥤</span>}
-                  {t === "halal" && <span className="text-sm leading-none">🍖</span>}
+                  <ItemTypeChipIcon type={t} />
                   {meta?.label}
                 </button>
               );
@@ -205,7 +202,7 @@ function CustomerMenuPageContent() {
               className={`cursor-pointer shrink-0 inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-semibold transition-all ${
                 fastOnly ? "bg-amber-50 text-amber-600 ring-1 ring-amber-300" : "border border-customer-border bg-[var(--customer-card)] text-customer-muted hover:border-amber-300"
               }`}>
-              <Zap className="size-3 shrink-0" /> {L.fastFilterLabel?.trim() || "Fast (<10 min)"}
+              <FastFilterChipIcon /> {L.fastFilterLabel?.trim() || "Fast (<10 min)"}
             </button>
             <AnimatePresence>
               {hasFilters && (

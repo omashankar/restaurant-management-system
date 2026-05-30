@@ -2,9 +2,11 @@
 
 import SuperAdminSidebar from "./SuperAdminSidebar";
 import ChangePasswordModal from "@/components/rms/ChangePasswordModal";
-import InboxDropdown from "@/components/rms/InboxDropdown";
+import InboxDropdown, { InboxCountBadge } from "@/components/rms/InboxDropdown";
 import { useUser } from "@/context/AuthContext";
 import { useInbox } from "@/hooks/useInbox";
+import { normalizeLogoSrc } from "@/lib/logoUrl";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import {
@@ -45,12 +47,17 @@ export default function SuperAdminLayout({ children }) {
 
   useEffect(() => {
     const onPointerDown = (event) => {
-      if (!profileRef.current) return;
-      if (!profileRef.current.contains(event.target)) setIsProfileOpen(false);
-      if (inboxRef.current && !inboxRef.current.contains(event.target)) setActiveInbox(null);
+      const target = event.target;
+      if (profileRef.current?.contains(target)) return;
+      if (inboxRef.current?.contains(target)) return;
+      setIsProfileOpen(false);
+      setActiveInbox(null);
     };
     const onKeyDown = (event) => {
-      if (event.key === "Escape") setIsProfileOpen(false);
+      if (event.key === "Escape") {
+        setIsProfileOpen(false);
+        setActiveInbox(null);
+      }
     };
     document.addEventListener("mousedown", onPointerDown);
     document.addEventListener("keydown", onKeyDown);
@@ -73,6 +80,7 @@ export default function SuperAdminLayout({ children }) {
 
   if (!user || user.role !== "super_admin") return null;
   const avatarFallback = user.name?.trim()?.[0]?.toUpperCase() || "S";
+  const avatarSrc = normalizeLogoSrc(user.avatarUrl);
 
   return (
     <div className="flex h-screen overflow-hidden bg-zinc-950">
@@ -116,6 +124,7 @@ export default function SuperAdminLayout({ children }) {
                 className="w-56 rounded-xl border border-zinc-800 bg-zinc-900/60 py-2 pl-9 pr-3 text-sm text-zinc-200 outline-none transition-colors placeholder:text-zinc-500 focus:border-rose-500/40"
               />
             </div>
+            <div ref={inboxRef} className="relative flex items-center gap-2">
             <button
               type="button"
               onClick={() => {
@@ -148,9 +157,8 @@ export default function SuperAdminLayout({ children }) {
                 </span>
               ) : null}
             </button>
-            <div ref={inboxRef} className="relative">
               <InboxDropdown
-                open={activeInbox === "messages"}
+                open={activeInbox === "messages" && !isProfileOpen}
                 type="messages"
                 items={messages}
                 loading={inboxLoading}
@@ -158,9 +166,10 @@ export default function SuperAdminLayout({ children }) {
                 onMarkAllRead={markAllRead}
                 onResolveMessage={resolveMessage}
                 onClose={() => setActiveInbox(null)}
+                accent="rose"
               />
               <InboxDropdown
-                open={activeInbox === "notifications"}
+                open={activeInbox === "notifications" && !isProfileOpen}
                 type="notifications"
                 items={notifications}
                 loading={inboxLoading}
@@ -168,6 +177,7 @@ export default function SuperAdminLayout({ children }) {
                 onMarkAllRead={markAllRead}
                 onResolveMessage={resolveMessage}
                 onClose={() => setActiveInbox(null)}
+                accent="rose"
               />
             </div>
 
@@ -182,13 +192,26 @@ export default function SuperAdminLayout({ children }) {
                 aria-haspopup="menu"
                 aria-label={`Open profile menu (${user.name})`}
               >
-                <span className="flex size-9 items-center justify-center rounded-full bg-zinc-800 text-sm font-semibold text-zinc-200 ring-1 ring-zinc-700">
-                  {avatarFallback}
-                </span>
+                {avatarSrc ? (
+                  <Image
+                    src={avatarSrc}
+                    alt=""
+                    width={36}
+                    height={36}
+                    className="size-9 rounded-full object-cover ring-1 ring-zinc-700"
+                    unoptimized
+                  />
+                ) : (
+                  <span className="flex size-9 items-center justify-center rounded-full bg-zinc-800 text-sm font-semibold text-zinc-200 ring-1 ring-zinc-700">
+                    {avatarFallback}
+                  </span>
+                )}
               </button>
 
               <div
-                className={`absolute right-0 z-[60] mt-2 w-[min(240px,calc(100vw-2rem))] origin-top-right rounded-xl border border-zinc-800 bg-zinc-900 p-1.5 shadow-lg shadow-black/40 transition-all duration-150 ${
+                className={`absolute right-0 z-[60] mt-2 origin-top-right rounded-xl border border-zinc-800 bg-zinc-900 p-1.5 shadow-lg shadow-black/40 transition-all duration-150 ${
+                  activeInbox ? "w-[min(360px,calc(100vw-2rem))]" : "w-[min(240px,calc(100vw-2rem))]"
+                } ${
                   isProfileOpen
                     ? "pointer-events-auto translate-y-0 scale-100 opacity-100"
                     : "pointer-events-none -translate-y-1 scale-95 opacity-0"
@@ -228,8 +251,7 @@ export default function SuperAdminLayout({ children }) {
                 <button
                   type="button"
                   onClick={() => {
-                    setIsProfileOpen(false);
-                    setActiveInbox("messages");
+                    setActiveInbox((prev) => (prev === "messages" ? null : "messages"));
                   }}
                   className="cursor-pointer flex w-full items-center justify-between rounded-lg px-2.5 py-2 text-left text-sm text-zinc-200 transition-colors hover:bg-zinc-800"
                   role="menuitem"
@@ -238,15 +260,12 @@ export default function SuperAdminLayout({ children }) {
                     <MessageSquare className="size-4 text-zinc-400" />
                     Messages
                   </span>
-                  <span className="rounded-full bg-emerald-500/20 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-300">
-                    {unread.messages}
-                  </span>
+                  <InboxCountBadge count={unread.messages} tone="emerald" />
                 </button>
                 <button
                   type="button"
                   onClick={() => {
-                    setIsProfileOpen(false);
-                    setActiveInbox("notifications");
+                    setActiveInbox((prev) => (prev === "notifications" ? null : "notifications"));
                   }}
                   className="cursor-pointer flex w-full items-center justify-between rounded-lg px-2.5 py-2 text-left text-sm text-zinc-200 transition-colors hover:bg-zinc-800"
                   role="menuitem"
@@ -255,10 +274,24 @@ export default function SuperAdminLayout({ children }) {
                     <Bell className="size-4 text-zinc-400" />
                     Notifications
                   </span>
-                  <span className="rounded-full bg-amber-500/20 px-1.5 py-0.5 text-[10px] font-semibold text-amber-300">
-                    {unread.notifications}
-                  </span>
+                  <InboxCountBadge count={unread.notifications} tone="amber" />
                 </button>
+                {activeInbox ? (
+                  <div className="mt-1 px-1">
+                    <InboxDropdown
+                      embedded
+                      open
+                      type={activeInbox}
+                      items={activeInbox === "messages" ? messages : notifications}
+                      loading={inboxLoading}
+                      onMarkRead={markRead}
+                      onMarkAllRead={markAllRead}
+                      onResolveMessage={resolveMessage}
+                      onClose={() => setActiveInbox(null)}
+                      accent="rose"
+                    />
+                  </div>
+                ) : null}
                 <div className="my-1 h-px bg-zinc-800" />
                 <button
                   type="button"
@@ -299,6 +332,7 @@ export default function SuperAdminLayout({ children }) {
       <ChangePasswordModal
         open={isChangePasswordOpen}
         onClose={() => setIsChangePasswordOpen(false)}
+        variant="rose"
       />
     </div>
   );

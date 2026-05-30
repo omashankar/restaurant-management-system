@@ -26,6 +26,12 @@ import {
 } from "@/config/accessControlConfig";
 import { useUser } from "@/context/AuthContext";
 import { CheckCircle2, Loader2, Mail, XCircle } from "lucide-react";
+import {
+  validatePaymentBank,
+  validatePaymentGatewaySave,
+  validatePaymentTax,
+  validateRestaurantSettingsPatch,
+} from "@/lib/restaurantSettingsValidation";
 import { useEffect, useMemo, useState } from "react";
 
 const PAYMENT_TABS = ["payments","billing"];
@@ -42,6 +48,7 @@ export default function SettingsPage() {
   const [smtpTestRecipient, setSmtpTestRecipient] = useState("");
   const [toast, setToast] = useState(null);
   const [restaurantSlug, setRestaurantSlug] = useState(null);
+  const [fieldErrors, setFieldErrors] = useState({});
 
   // Payment settings state (separate API)
   const [paySettings, setPaySettings] = useState(EMPTY_PAYMENT_SETTINGS);
@@ -115,6 +122,14 @@ export default function SettingsPage() {
   }
 
   async function savePaySection(section, data) {
+    let validation = { valid: true, message: null };
+    if (section === "gateways") validation = validatePaymentGatewaySave(data);
+    else if (section === "bank") validation = validatePaymentBank(data);
+    else if (section === "tax") validation = validatePaymentTax(data);
+    if (!validation.valid) {
+      showToast("error", validation.message ?? "Fix the highlighted fields.");
+      return;
+    }
     try {
       const res = await fetch("/api/payment-settings", {
         method: "PATCH",
@@ -247,8 +262,17 @@ export default function SettingsPage() {
               </div>
               <SettingsFormSection title="General Settings" description="Basic profile and localization for your restaurant.">
                 <div className="grid gap-4 md:grid-cols-2">
-                  <InputField label="Restaurant Name" value={settings.general.restaurantName}
-                    onChange={(v) => setSettings((p) => ({ ...p, general: { ...p.general, restaurantName: v } }))} />
+                  <InputField
+                    label="Restaurant Name"
+                    value={settings.general.restaurantName}
+                    error={fieldErrors.restaurantName}
+                    onChange={(v) => {
+                      setSettings((p) => ({ ...p, general: { ...p.general, restaurantName: v } }));
+                      if (fieldErrors.restaurantName) {
+                        setFieldErrors((e) => ({ ...e, restaurantName: "" }));
+                      }
+                    }}
+                  />
                   <RestaurantLogoField
                     logoUrl={settings.general.logoUrl ?? ""}
                     onChange={(v) => setSettings((p) => ({ ...p, general: { ...p.general, logoUrl: v } }))}
@@ -284,10 +308,26 @@ export default function SettingsPage() {
           {activeTab === "pos" && (
             <SettingsFormSection title="POS & Charges" description="Control pricing behavior and order calculations.">
               <div className="grid gap-4 md:grid-cols-2">
-                <InputField label="Tax Percentage (%)" type="number" value={settings.pos.taxPercentage}
-                  onChange={(v) => setSettings((p) => ({ ...p, pos: { ...p.pos, taxPercentage: v } }))} />
-                <InputField label="Service Charge (%)" type="number" value={settings.pos.serviceCharge}
-                  onChange={(v) => setSettings((p) => ({ ...p, pos: { ...p.pos, serviceCharge: v } }))} />
+                <InputField
+                  label="Tax Percentage (%)"
+                  type="number"
+                  value={settings.pos.taxPercentage}
+                  error={fieldErrors.taxPercentage}
+                  onChange={(v) => {
+                    setSettings((p) => ({ ...p, pos: { ...p.pos, taxPercentage: v } }));
+                    if (fieldErrors.taxPercentage) setFieldErrors((e) => ({ ...e, taxPercentage: "" }));
+                  }}
+                />
+                <InputField
+                  label="Service Charge (%)"
+                  type="number"
+                  value={settings.pos.serviceCharge}
+                  error={fieldErrors.serviceCharge}
+                  onChange={(v) => {
+                    setSettings((p) => ({ ...p, pos: { ...p.pos, serviceCharge: v } }));
+                    if (fieldErrors.serviceCharge) setFieldErrors((e) => ({ ...e, serviceCharge: "" }));
+                  }}
+                />
               </div>
               <div className="mt-4 grid gap-3 md:grid-cols-2">
                 <ToggleSwitch label="Enable Discount" checked={settings.pos.enableDiscount}
@@ -361,8 +401,16 @@ export default function SettingsPage() {
                 checked={settings.email.enabled}
                 onChange={(v) => setSettings((p) => ({ ...p, email: { ...p.email, enabled: v } }))} />
               <div className="mt-4 grid gap-4 md:grid-cols-2">
-                <InputField label="SMTP Host" placeholder="smtp.example.com" value={settings.email.smtpHost}
-                  onChange={(v) => setSettings((p) => ({ ...p, email: { ...p.email, smtpHost: v } }))} />
+                <InputField
+                  label="SMTP Host"
+                  placeholder="smtp.example.com"
+                  value={settings.email.smtpHost}
+                  error={fieldErrors.smtpHost}
+                  onChange={(v) => {
+                    setSettings((p) => ({ ...p, email: { ...p.email, smtpHost: v } }));
+                    if (fieldErrors.smtpHost) setFieldErrors((e) => ({ ...e, smtpHost: "" }));
+                  }}
+                />
                 <InputField label="SMTP Port" type="number" value={String(settings.email.smtpPort ?? 587)}
                   onChange={(v) => setSettings((p) => ({ ...p, email: { ...p.email, smtpPort: Number(v) || 587 } }))} />
                 <InputField label="SMTP Username" placeholder="user@company.com" value={settings.email.smtpUser}
@@ -453,10 +501,30 @@ export default function SettingsPage() {
           {activeTab === "contact" && (
             <SettingsFormSection title="Contact Details" description="Public-facing contact and location settings.">
               <div className="grid gap-4 md:grid-cols-2">
-                <InputField label="Phone Number" value={settings.contact.phoneNumber}
-                  onChange={(v) => setSettings((p) => ({ ...p, contact: { ...p.contact, phoneNumber: v } }))} />
-                <InputField label="Email" type="email" value={settings.contact.email}
-                  onChange={(v) => setSettings((p) => ({ ...p, contact: { ...p.contact, email: v } }))} />
+                <InputField
+                  label="Phone Number"
+                  type="tel"
+                  value={settings.contact.phoneNumber}
+                  error={fieldErrors.phoneNumber}
+                  onChange={(v) => {
+                    setSettings((p) => ({
+                      ...p,
+                      contact: { ...p.contact, phoneNumber: v.replace(/\D/g, "").slice(0, 10) },
+                    }));
+                    if (fieldErrors.phoneNumber) setFieldErrors((e) => ({ ...e, phoneNumber: "" }));
+                  }}
+                  placeholder="9876543210"
+                />
+                <InputField
+                  label="Email"
+                  type="email"
+                  value={settings.contact.email}
+                  error={fieldErrors.email}
+                  onChange={(v) => {
+                    setSettings((p) => ({ ...p, contact: { ...p.contact, email: v } }));
+                    if (fieldErrors.email) setFieldErrors((e) => ({ ...e, email: "" }));
+                  }}
+                />
                 <InputField label="Address" multiline value={settings.contact.address}
                   onChange={(v) => setSettings((p) => ({ ...p, contact: { ...p.contact, address: v } }))} />
                 <InputField label="Google Maps Link" value={settings.contact.googleMapsLink}
