@@ -3,7 +3,7 @@
 import InputField from "@/components/settings/InputField";
 import PhoneInput from "@/components/ui/PhoneInput";
 
-import { CheckCircle2, Loader2, MessageCircle, Save, Send, XCircle } from "lucide-react";
+import { CheckCircle2, ChevronDown, ChevronUp, Loader2, MessageCircle, Save, Send, XCircle } from "lucide-react";
 import {
   validateWhatsappSettings,
   validateWhatsappTestPhone,
@@ -27,6 +27,49 @@ const VARIABLES = [
 
 const fieldLabelCls =
   "mb-1.5 block text-xs font-medium uppercase tracking-wide text-zinc-500";
+
+const SETUP_STEPS = [
+  {
+    step: 1,
+    title: "Meta Business account बनाएं",
+    detail: "business.facebook.com पर जाएँ → Business account create करें → WhatsApp product add करें।",
+  },
+  {
+    step: 2,
+    title: "WhatsApp Cloud API app setup",
+    detail: "developers.facebook.com → Create App → Business → WhatsApp → API Setup tab खोलें। Phone number add करें और verify करें।",
+  },
+  {
+    step: 3,
+    title: "Phone Number ID copy करें",
+    detail: "Meta → WhatsApp → Phone Numbers → अपना number select करें → Phone Number ID copy करके यहाँ paste करें।",
+  },
+  {
+    step: 4,
+    title: "Permanent System User Token बनाएं",
+    detail: "Meta Business Settings → System Users → Generate Token → permission whatsapp_business_messaging select करें → token copy करके API Token field में paste करें।",
+  },
+  {
+    step: 5,
+    title: "Restaurant Alert Phone set करें",
+    detail: "नीचे Alert Phone में वह number डालें जिस पर नया order alert चाहिए (India: 10-digit mobile)। खाली छोड़ने पर Settings → Contact phone use होगा।",
+  },
+  {
+    step: 6,
+    title: "Settings में SMS/WhatsApp alerts ON करें",
+    detail: "Settings → Notifications → SMS Notifications ON करें। बिना इसके WhatsApp alert नहीं जाएगा, भले credentials save हों।",
+  },
+  {
+    step: 7,
+    title: "New Order Alert template enable करें",
+    detail: "नीचे Message Templates → New Order Alert → Enable ON रखें → message save करें (variables: {order_id}, {amount}, {order_type})।",
+  },
+  {
+    step: 8,
+    title: "Test message भेजकर verify करें",
+    detail: "Page के नीचे Send Real Test Message से अपने WhatsApp number पर test भेजें। Sandbox mode में recipient Meta whitelist में होना चाहिए।",
+  },
+];
 
 function Toggle({ checked, onChange, label, hint }) {
   return (
@@ -61,6 +104,7 @@ export default function WhatsAppPage() {
   const [templates, setTemplates]       = useState({});
   const [fieldErrors, setFieldErrors]   = useState({});
   const [testPhoneError, setTestPhoneError] = useState("");
+  const [guideOpen, setGuideOpen]       = useState(true);
 
   // Load settings on mount
   useEffect(() => {
@@ -190,6 +234,55 @@ export default function WhatsAppPage() {
         </div>
       )}
 
+      {/* Step-by-step setup guide */}
+      <section className="rounded-2xl border border-emerald-500/20 bg-emerald-500/5 p-5">
+        <button
+          type="button"
+          onClick={() => setGuideOpen((v) => !v)}
+          className="cursor-pointer flex w-full items-start justify-between gap-3 text-left"
+        >
+          <div>
+            <h2 className="text-base font-semibold text-emerald-300">
+              WhatsApp Setup Guide — Step by Step
+            </h2>
+            <p className="mt-1 text-xs text-zinc-500">
+              नया order आने पर restaurant phone पर WhatsApp alert — पूरा setup 8 steps में
+            </p>
+          </div>
+          {guideOpen
+            ? <ChevronUp className="size-5 shrink-0 text-emerald-400 mt-0.5" />
+            : <ChevronDown className="size-5 shrink-0 text-emerald-400 mt-0.5" />}
+        </button>
+
+        {guideOpen && (
+          <ol className="mt-4 space-y-3">
+            {SETUP_STEPS.map(({ step, title, detail }) => (
+              <li key={step} className="flex gap-3 rounded-xl border border-zinc-800/80 bg-zinc-950/40 px-4 py-3">
+                <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-emerald-500/15 text-xs font-bold text-emerald-400 ring-1 ring-emerald-500/25">
+                  {step}
+                </span>
+                <div>
+                  <p className="text-sm font-medium text-zinc-200">{title}</p>
+                  <p className="mt-0.5 text-xs leading-relaxed text-zinc-500">{detail}</p>
+                </div>
+              </li>
+            ))}
+          </ol>
+        )}
+
+        <p className="mt-4 text-xs text-zinc-600">
+          Official docs:{" "}
+          <a
+            href="https://developers.facebook.com/docs/whatsapp/cloud-api/get-started"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-emerald-400 hover:underline"
+          >
+            Meta WhatsApp Cloud API →
+          </a>
+        </p>
+      </section>
+
       {/* Enable + Credentials */}
       <section className="rounded-2xl border border-zinc-800 bg-zinc-900/50 p-5 space-y-4">
         <Toggle
@@ -247,11 +340,10 @@ export default function WhatsAppPage() {
 
         {enabled && (
           <div className="rounded-xl border border-zinc-800 bg-zinc-950/40 p-4 text-xs text-zinc-500 space-y-1">
-            <p className="font-semibold text-zinc-400">Setup Guide:</p>
-            <p>1. Go to <a href="https://developers.facebook.com" target="_blank" rel="noopener noreferrer" className="text-emerald-400 hover:underline">developers.facebook.com</a> → Create App → WhatsApp</p>
-            <p>2. Add a phone number and get the Phone Number ID</p>
-            <p>3. Generate a Permanent System User Token with <code className="text-zinc-300">whatsapp_business_messaging</code> permission</p>
-            <p>4. Add customer phone numbers to the test whitelist (sandbox) or go live</p>
+            <p className="font-semibold text-zinc-400">Quick reference:</p>
+            <p>• Token: Meta Business → WhatsApp → API Setup → Generate Token</p>
+            <p>• Phone Number ID: Meta Business → WhatsApp → Phone Numbers</p>
+            <p>• Order alerts: Settings → Notifications → SMS Notifications ON + New Order Alert template enabled</p>
           </div>
         )}
       </section>

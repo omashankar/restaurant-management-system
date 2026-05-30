@@ -287,7 +287,7 @@ export default function SettingsPage() {
                 </div>
               </SettingsFormSection>
 
-              <SettingsFormSection title="Notifications" description="Control in-app inbox alerts and optional email/SMS alerts for new orders.">
+              <SettingsFormSection title="Notifications" description="Control in-app inbox alerts and optional email/SMS alerts for new orders. SMS alerts use WhatsApp — configure credentials under WhatsApp menu.">
                 <div className="grid gap-3 md:grid-cols-2">
                   <ToggleSwitch label="Order Notifications" checked={settings.notifications.orderNotifications}
                     onChange={(v) => setSettings((p) => ({ ...p, notifications: { ...p.notifications, orderNotifications: v } }))} />
@@ -297,9 +297,12 @@ export default function SettingsPage() {
                     onChange={(v) => setSettings((p) => ({ ...p, notifications: { ...p.notifications, lowStockAlerts: v } }))} />
                   <ToggleSwitch label="Email Notifications" checked={settings.notifications.emailNotifications}
                     onChange={(v) => setSettings((p) => ({ ...p, notifications: { ...p.notifications, emailNotifications: v } }))} />
-                  <ToggleSwitch label="SMS Notifications" checked={settings.notifications.smsNotifications}
+                  <ToggleSwitch label="SMS / WhatsApp Alerts" checked={settings.notifications.smsNotifications}
                     onChange={(v) => setSettings((p) => ({ ...p, notifications: { ...p.notifications, smsNotifications: v } }))} />
                 </div>
+                <p className="mt-2 text-xs text-zinc-600">
+                  WhatsApp order alerts: WhatsApp menu → setup guide → enable New Order Alert template.
+                </p>
               </SettingsFormSection>
             </div>
           )}

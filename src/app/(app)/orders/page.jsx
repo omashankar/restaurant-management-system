@@ -50,6 +50,32 @@ const PAYMENT_METHOD_LABEL = {
 const NEXT_STATUS = { new: "preparing", preparing: "ready", ready: "completed" };
 const NEXT_LABEL  = { new: "Start Preparing", preparing: "Mark Ready", ready: "Mark Completed" };
 
+function formatOrderPlacedAt(iso) {
+  if (!iso) return { label: "—", full: "—" };
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return { label: "—", full: "—" };
+
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const orderDay = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  const diffDays = Math.round((today - orderDay) / 86400000);
+  const timeStr = d.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" });
+  const dateStr = d.toLocaleDateString("en-IN", {
+    weekday: "short",
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
+  const full = `${dateStr}, ${timeStr}`;
+
+  if (diffDays === 0) return { label: `Today · ${timeStr}`, full };
+  if (diffDays === 1) return { label: `Yesterday · ${timeStr}`, full };
+  return {
+    label: `${d.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })} · ${timeStr}`,
+    full,
+  };
+}
+
 /* ── Order card ── */
 function OrderCard({ order, currency, onStatusChange, onMarkPaid, canEdit }) {
   const [expanded, setExpanded] = useState(false);
@@ -77,9 +103,8 @@ function OrderCard({ order, currency, onStatusChange, onMarkPaid, canEdit }) {
     setPayUpdating(false);
   };
 
-  const timeStr = order.time ?? (order.createdAt
-    ? new Date(order.createdAt).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })
-    : "—");
+  const placedAt = formatOrderPlacedAt(order.createdAt);
+  const timeStr = order.time ?? placedAt.label;
 
   return (
     <div className={`rounded-2xl border bg-zinc-900/70 shadow-sm transition-all duration-200 hover:shadow-md ${st.border}`}>
@@ -118,7 +143,10 @@ function OrderCard({ order, currency, onStatusChange, onMarkPaid, canEdit }) {
         </div>
 
         <div className="mt-2 flex items-center justify-between">
-          <span className="inline-flex items-center gap-1 text-xs text-zinc-600">
+          <span
+            className="inline-flex items-center gap-1 text-xs text-zinc-600"
+            title={order.createdAt ? placedAt.full : undefined}
+          >
             <Clock className="size-3" /> {timeStr}
           </span>
           <button type="button" onClick={() => setExpanded((v) => !v)}
@@ -130,6 +158,11 @@ function OrderCard({ order, currency, onStatusChange, onMarkPaid, canEdit }) {
 
       {expanded && (
         <div className="border-t border-zinc-800 px-4 py-3 space-y-2">
+          {order.createdAt && placedAt.full !== "—" && (
+            <p className="text-[11px] text-zinc-500">
+              Placed: <span className="text-zinc-400">{placedAt.full}</span>
+            </p>
+          )}
           {/* Items list */}
           {order.items?.length > 0 && (
             <div className="space-y-1">
