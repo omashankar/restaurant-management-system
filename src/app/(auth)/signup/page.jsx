@@ -1,6 +1,15 @@
 "use client";
 
 import { defaultRedirectForRole, useApp } from "@/context/AppProviders";
+import {
+  authBtnPrimaryCls,
+  authInputCls,
+  authInputGroupCls,
+  authInputInlineCls,
+  authLinkCls,
+  authLogoBadgeCls,
+  authSuccessBoxCls,
+} from "@/config/authTheme";
 import PasswordInput from "@/components/ui/PasswordInput";
 import PhoneInput from "@/components/ui/PhoneInput";
 import {
@@ -12,8 +21,6 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
-const inputCls =
-  "mt-1.5 w-full rounded-xl border border-zinc-700 bg-zinc-950/80 px-4 py-3 text-sm text-zinc-100 outline-none transition-all focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/20";
 const fieldErrorCls = "mt-1 text-xs text-red-400";
 
 const EMPTY_FIELD_ERRORS = {
@@ -132,7 +139,7 @@ export default function SignupPage() {
   return (
     <div className="w-full max-w-md">
       <div className="mb-8 text-center">
-        <span className="mx-auto flex size-14 items-center justify-center rounded-2xl bg-emerald-500/15 text-emerald-400 ring-1 ring-emerald-500/25">
+        <span className={authLogoBadgeCls}>
           <UtensilsCrossed className="size-7" aria-hidden />
         </span>
         <h1 className="mt-4 text-2xl font-semibold tracking-tight text-zinc-50">Create account</h1>
@@ -150,7 +157,7 @@ export default function SignupPage() {
               value={restaurantName}
               onChange={(e) => handleRestaurantNameChange(e.target.value)}
               placeholder="e.g. The Grand Kitchen"
-              className={inputCls}
+              className={authInputCls}
               aria-invalid={fieldErrors.restaurantName ? true : undefined}
             />
             <FieldError message={fieldErrors.restaurantName} />
@@ -160,7 +167,7 @@ export default function SignupPage() {
             <label htmlFor="slug" className="text-xs font-medium uppercase tracking-wider text-zinc-500">
               Customer Site URL <span className="text-red-400">*</span>
             </label>
-            <div className="mt-1.5 flex items-center overflow-hidden rounded-xl border border-zinc-700 bg-zinc-950/80 focus-within:border-emerald-500/50 focus-within:ring-2 focus-within:ring-emerald-500/20">
+            <div className={authInputGroupCls}>
               <span className="shrink-0 border-r border-zinc-700 bg-zinc-800/80 px-3 py-3 text-xs text-zinc-500 whitespace-nowrap">
                 yoursite.com/r/
               </span>
@@ -195,7 +202,7 @@ export default function SignupPage() {
                 clearFieldError("name");
               }}
               placeholder="Alex Rivera"
-              className={inputCls}
+              className={authInputCls}
               aria-invalid={fieldErrors.name ? true : undefined}
             />
             <FieldError message={fieldErrors.name} />
@@ -215,7 +222,7 @@ export default function SignupPage() {
                 clearFieldError("email");
               }}
               placeholder="you@restaurant.com"
-              className={inputCls}
+              className={authInputCls}
               aria-invalid={fieldErrors.email ? true : undefined}
             />
             <FieldError message={fieldErrors.email} />
@@ -244,7 +251,7 @@ export default function SignupPage() {
               clearFieldError("password");
             }}
             placeholder="Min 8 characters"
-            inputClassName="w-full rounded-xl border border-zinc-700 bg-zinc-950/80 px-4 py-3 pr-11 text-sm text-zinc-100 outline-none transition-all focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/20"
+            inputClassName={`${authInputInlineCls} px-4 py-3 pr-11`}
             hint={passwordHint}
             error={fieldErrors.password || undefined}
           />
@@ -255,21 +262,21 @@ export default function SignupPage() {
             </p>
           )}
           {successMsg && (
-            <p className="rounded-xl border border-emerald-500/20 bg-emerald-500/10 px-3 py-2 text-xs text-emerald-400">
+            <p className={authSuccessBoxCls}>
               {successMsg}
             </p>
           )}
           <button
             type="submit"
             disabled={loading}
-            className="cursor-pointer w-full rounded-xl bg-emerald-500 py-3 text-sm font-semibold text-zinc-950 transition-all hover:bg-emerald-400 active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed"
+            className={authBtnPrimaryCls}
           >
             {loading ? "Creating account…" : "Create account"}
           </button>
         </form>
         <p className="mt-5 text-center text-sm text-zinc-500">
           Already have an account?{" "}
-          <Link href="/login" className="cursor-pointer font-medium text-emerald-400 hover:text-emerald-300">
+          <Link href="/login" className={authLinkCls}>
             Sign In
           </Link>
         </p>

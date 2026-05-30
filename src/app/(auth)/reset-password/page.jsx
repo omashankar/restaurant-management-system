@@ -4,6 +4,14 @@ import { Eye, EyeOff, Loader2, Lock, UtensilsCrossed } from "lucide-react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { passwordBasicError, passwordMatchError } from "@/lib/formValidation";
+import {
+  authBtnPrimaryCls,
+  authInputWithIconPwCls,
+  authLinkCls,
+  authLogoBadgeCls,
+  authSpinnerCls,
+  authSuccessBoxCls,
+} from "@/config/authTheme";
 import { Suspense, useState } from "react";
 
 function ResetPasswordForm() {
@@ -58,7 +66,7 @@ function ResetPasswordForm() {
   return (
     <div className="w-full max-w-md">
       <div className="mb-8 text-center">
-        <span className="mx-auto flex size-14 items-center justify-center rounded-2xl bg-emerald-500/15 text-emerald-400 ring-1 ring-emerald-500/25">
+        <span className={authLogoBadgeCls}>
           <UtensilsCrossed className="size-7" aria-hidden />
         </span>
         <h1 className="mt-4 text-2xl font-semibold tracking-tight text-zinc-50">
@@ -82,7 +90,7 @@ function ResetPasswordForm() {
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full rounded-xl border border-zinc-700 bg-zinc-950/80 py-3 pl-10 pr-10 text-sm text-zinc-100 outline-none transition-all focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/20"
+                className={authInputWithIconPwCls}
                 placeholder="Minimum 6 characters"
               />
               <button
@@ -106,7 +114,7 @@ function ResetPasswordForm() {
                 required
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                className="w-full rounded-xl border border-zinc-700 bg-zinc-950/80 py-3 pl-10 pr-10 text-sm text-zinc-100 outline-none transition-all focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/20"
+                className={authInputWithIconPwCls}
                 placeholder="Re-enter password"
               />
               <button
@@ -125,7 +133,7 @@ function ResetPasswordForm() {
             </p>
           ) : null}
           {success ? (
-            <p className="rounded-xl border border-emerald-500/20 bg-emerald-500/10 px-3 py-2 text-xs text-emerald-400">
+            <p className={authSuccessBoxCls}>
               {success}
             </p>
           ) : null}
@@ -133,14 +141,14 @@ function ResetPasswordForm() {
           <button
             type="submit"
             disabled={loading}
-            className="cursor-pointer w-full rounded-xl bg-emerald-500 py-3 text-sm font-semibold text-zinc-950 transition-all duration-200 hover:bg-emerald-400 active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed"
+            className={authBtnPrimaryCls}
           >
             {loading ? "Updating..." : "Update password"}
           </button>
         </form>
         <p className="mt-5 text-center text-sm text-zinc-500">
           Back to{" "}
-          <Link href="/login" className="cursor-pointer font-medium text-emerald-400 hover:text-emerald-300">
+          <Link href="/login" className={authLinkCls}>
             Sign In
           </Link>
         </p>
@@ -154,7 +162,7 @@ export default function ResetPasswordPage() {
     <Suspense
       fallback={
         <div className="flex min-h-[40vh] w-full max-w-md items-center justify-center">
-          <Loader2 className="size-8 animate-spin text-emerald-500" aria-hidden />
+          <Loader2 className={authSpinnerCls} aria-hidden />
         </div>
       }
     >

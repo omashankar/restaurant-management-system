@@ -3,6 +3,13 @@
 import { Mail, UtensilsCrossed } from "lucide-react";
 import Link from "next/link";
 import { emailError } from "@/lib/formValidation";
+import {
+  authBtnPrimaryCls,
+  authInputWithIconCls,
+  authLinkCls,
+  authLogoBadgeCls,
+  authSuccessBoxCls,
+} from "@/config/authTheme";
 import { useState } from "react";
 
 export default function ForgotPasswordPage() {
@@ -15,7 +22,7 @@ export default function ForgotPasswordPage() {
   return (
     <div className="w-full max-w-md">
       <div className="mb-8 text-center">
-        <span className="mx-auto flex size-14 items-center justify-center rounded-2xl bg-emerald-500/15 text-emerald-400 ring-1 ring-emerald-500/25">
+        <span className={authLogoBadgeCls}>
           <UtensilsCrossed className="size-7" aria-hidden />
         </span>
         <h1 className="mt-4 text-2xl font-semibold tracking-tight text-zinc-50">
@@ -29,7 +36,7 @@ export default function ForgotPasswordPage() {
       <div className="rounded-2xl border border-zinc-800 bg-zinc-900/80 p-6 shadow-2xl shadow-black/40 backdrop-blur-sm">
         {submitted ? (
           <div className="space-y-4 text-center">
-            <p className="rounded-xl border border-emerald-500/20 bg-emerald-500/10 px-3 py-2 text-sm text-emerald-400">
+            <p className={`${authSuccessBoxCls} text-sm`}>
               If this email exists, reset instructions have been sent.
             </p>
             {devResetLink ? (
@@ -45,7 +52,7 @@ export default function ForgotPasswordPage() {
             ) : null}
             <Link
               href="/login"
-              className="cursor-pointer inline-block text-sm font-medium text-emerald-400 hover:text-emerald-300"
+              className={`${authLinkCls} inline-block text-sm`}
             >
               Back to Sign In
             </Link>
@@ -100,7 +107,7 @@ export default function ForgotPasswordPage() {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full rounded-xl border border-zinc-700 bg-zinc-950/80 py-3 pl-10 pr-4 text-sm text-zinc-100 outline-none transition-all focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/20"
+                  className={authInputWithIconCls}
                   placeholder="you@restaurant.com"
                 />
               </div>
@@ -108,7 +115,7 @@ export default function ForgotPasswordPage() {
             <button
               type="submit"
               disabled={loading}
-              className="cursor-pointer w-full rounded-xl bg-emerald-500 py-3 text-sm font-semibold text-zinc-950 transition-all duration-200 hover:bg-emerald-400 active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed"
+              className={authBtnPrimaryCls}
             >
               {loading ? "Sending..." : "Send reset link"}
             </button>
@@ -121,7 +128,7 @@ export default function ForgotPasswordPage() {
               Remember your password?{" "}
               <Link
                 href="/login"
-                className="cursor-pointer font-medium text-emerald-400 hover:text-emerald-300"
+                className={authLinkCls}
               >
                 Sign In
               </Link>
