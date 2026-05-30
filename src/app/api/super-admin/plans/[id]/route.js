@@ -3,6 +3,11 @@ import { getTokenFromRequest } from "@/lib/authCookies";
 import { verifyToken } from "@/lib/jwt";
 import clientPromise from "@/lib/mongodb";
 import { getClientIp } from "@/lib/rateLimit";
+import {
+  parseSchema,
+  superAdminPlanPatchSchema,
+  superAdminPlanUpsertSchema,
+} from "@/lib/validationSchemas";
 import { ObjectId } from "mongodb";
 
 function superAdminOnly(request) {
@@ -37,19 +42,93 @@ export async function PATCH(request, { params }) {
   try { body = await request.json(); }
   catch { return Response.json({ success: false, error: "Invalid JSON." }, { status: 400 }); }
 
+  const hasPlanFields =
+    body.name != null ||
+    body.monthlyPrice != null ||
+    body.yearlyPrice != null ||
+    body.billingCycle != null ||
+    body.description != null ||
+    Array.isArray(body.features) ||
+    body.limits != null;
+
+  if (!hasPlanFields && body.isActive == null && body.price == null) {
+    return Response.json({ success: false, error: "No valid fields to update." }, { status: 400 });
+  }
+
   const update = { updatedAt: new Date() };
   let monthlyCandidate = null;
   let yearlyCandidate = null;
-  if (body.name != null) {
-    const trimmed = String(body.name).trim();
-    if (!trimmed) return Response.json({ success: false, error: "Plan name cannot be empty." }, { status: 400 });
-    const slug = toPlanSlug(trimmed);
-    if (!slug) {
-      return Response.json({ success: false, error: "Plan name must include letters or numbers." }, { status: 400 });
+
+  if (hasPlanFields) {
+    const limitKeys = ["staff", "tables", "menuItems", "orders"];
+    let normalizedLimits;
+    if (body.limits != null) {
+      normalizedLimits = {};
+      for (const k of limitKeys) {
+        const raw = body.limits[k];
+        if (raw == null || raw === "") {
+          normalizedLimits[k] = -1;
+          continue;
+        }
+        const n = Number(raw);
+        if (!Number.isInteger(n) || n < -1) {
+          return Response.json(
+            { success: false, error: `Invalid limit for ${k}: use -1 (unlimited) or a whole number ≥ -1.` },
+            { status: 400 }
+          );
+        }
+        normalizedLimits[k] = n;
+      }
     }
-    update.name = trimmed;
-    update.slug = slug;
+
+    const patchInput = {};
+    if (body.name != null) patchInput.name = String(body.name).trim();
+    if (body.monthlyPrice != null) patchInput.monthlyPrice = Number(body.monthlyPrice);
+    if (body.yearlyPrice != null) patchInput.yearlyPrice = Number(body.yearlyPrice);
+    if (body.billingCycle != null) patchInput.billingCycle = body.billingCycle;
+    if (body.description != null) patchInput.description = String(body.description).trim();
+    if (Array.isArray(body.features)) patchInput.features = body.features;
+    if (normalizedLimits) patchInput.limits = normalizedLimits;
+
+    const hasAllCoreFields =
+      patchInput.name != null &&
+      patchInput.monthlyPrice != null &&
+      patchInput.yearlyPrice != null &&
+      patchInput.billingCycle != null;
+
+    try {
+      const validated = parseSchema(
+        hasAllCoreFields ? superAdminPlanUpsertSchema : superAdminPlanPatchSchema,
+        hasAllCoreFields
+          ? {
+              ...patchInput,
+              description: patchInput.description ?? "",
+              features: patchInput.features ?? [],
+              limits: patchInput.limits ?? normalizedLimits,
+            }
+          : patchInput
+      );
+      if (validated.name != null) {
+        update.name = validated.name;
+        update.slug = toPlanSlug(validated.name);
+      }
+      if (validated.monthlyPrice != null) {
+        update.monthlyPrice = validated.monthlyPrice;
+        monthlyCandidate = validated.monthlyPrice;
+      }
+      if (validated.yearlyPrice != null) {
+        update.yearlyPrice = validated.yearlyPrice;
+        yearlyCandidate = validated.yearlyPrice;
+      }
+      if (validated.billingCycle != null) update.billingCycle = validated.billingCycle;
+      if (validated.description != null) update.description = validated.description;
+      if (validated.features != null) update.features = validated.features;
+      if (validated.limits != null) update.limits = validated.limits;
+    } catch (err) {
+      return Response.json({ success: false, error: err.message }, { status: 400 });
+    }
   }
+
   if (body.price != null) {
     const price = Number(body.price);
     if (!Number.isFinite(price) || price < 0) {
@@ -57,35 +136,7 @@ export async function PATCH(request, { params }) {
     }
     update.price = price;
   }
-  if (body.monthlyPrice != null) {
-    const monthly = Number(body.monthlyPrice);
-    if (!Number.isFinite(monthly) || monthly < 0) {
-      return Response.json({ success: false, error: "monthlyPrice must be a non-negative number." }, { status: 400 });
-    }
-    update.monthlyPrice = monthly;
-    monthlyCandidate = monthly;
-  }
-  if (body.yearlyPrice != null) {
-    const yearly = Number(body.yearlyPrice);
-    if (!Number.isFinite(yearly) || yearly < 0) {
-      return Response.json({ success: false, error: "yearlyPrice must be a non-negative number." }, { status: 400 });
-    }
-    update.yearlyPrice = yearly;
-    yearlyCandidate = yearly;
-  }
-  if (body.billingCycle != null) {
-    if (!["monthly", "yearly"].includes(body.billingCycle)) {
-      return Response.json({ success: false, error: "Invalid billingCycle." }, { status: 400 });
-    }
-    update.billingCycle = body.billingCycle;
-  }
-  if (body.description != null) update.description = body.description.trim();
-  if (Array.isArray(body.features)) update.features = body.features;
-  if (body.limits)        update.limits = body.limits;
   if (body.isActive != null) update.isActive = Boolean(body.isActive);
-  if (Object.keys(update).length === 1) {
-    return Response.json({ success: false, error: "No valid fields to update." }, { status: 400 });
-  }
 
   try {
     const client = await clientPromise;

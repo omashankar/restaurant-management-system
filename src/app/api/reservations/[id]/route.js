@@ -1,5 +1,6 @@
 import { isReservationSlotAvailable } from "@/lib/reservationConflict";
 import { withTenant } from "@/lib/tenantDb";
+import { parseSchema, reservationCreateSchema } from "@/lib/validationSchemas";
 import { ObjectId } from "mongodb";
 
 const ALLOWED_STATUS = ["pending", "confirmed", "completed", "cancelled"];
@@ -46,6 +47,31 @@ export const PATCH = withTenant(
 
     const current = await db.collection("reservations").findOne({ ...tenantFilter, _id });
     if (!current) return Response.json({ success: false, error: "Reservation not found." }, { status: 404 });
+
+    const touchesCore = PATCH_FIELDS.some(
+      (k) => k !== "status" && k !== "notes" && k !== "area" && body[k] !== undefined,
+    );
+    if (touchesCore) {
+      try {
+        const validated = parseSchema(reservationCreateSchema, {
+          customerName: update.customerName ?? current.customerName,
+          phone: update.phone ?? current.phone ?? "",
+          date: update.date ?? current.date,
+          time: update.time ?? current.time,
+          guests: update.guests ?? current.guests ?? 2,
+          tableNumber: update.tableNumber ?? current.tableNumber,
+          area: update.area ?? current.area ?? "",
+          notes: update.notes ?? current.notes ?? "",
+        });
+        update.customerName = validated.customerName;
+        update.phone = validated.phone?.trim() ?? "";
+        update.date = validated.date;
+        update.time = validated.time;
+        update.guests = validated.guests ?? 2;
+      } catch (err) {
+        return Response.json({ success: false, error: err.message }, { status: 400 });
+      }
+    }
 
     const tableNum = update.tableNumber ?? current.tableNumber;
     const date = update.date ?? current.date;

@@ -8,6 +8,7 @@ import { getPlatformSettings } from "@/lib/platformSettings";
 import { isIpAllowedForSuperAdmin } from "@/lib/platformPassword";
 import { sign2FAChallenge, userRequires2FA } from "@/lib/twoFactor";
 import bcrypt from "bcryptjs";
+import { parseSchema, loginSchema } from "@/lib/validationSchemas";
 
 export async function POST(request) {
   const ip = getClientIp(request);
@@ -42,16 +43,19 @@ export async function POST(request) {
   }
   if (!body) return Response.json({ success: false, error: "Invalid JSON body." }, { status: 400 });
 
-  const { email, password, rememberMe = false } = body ?? {};
-
-  if (!email?.trim() || !password) {
-    return Response.json({ success: false, error: "Email and password are required." }, { status: 400 });
+  let email;
+  let password;
+  let rememberMe;
+  try {
+    ({ email, password, rememberMe } = parseSchema(loginSchema, body));
+  } catch (err) {
+    return Response.json({ success: false, error: err.message }, { status: 400 });
   }
 
   try {
     /* ── Find user by email ── */
     const user = await db.collection("users").findOne({
-      email: email.toLowerCase().trim(),
+      email,
     });
 
     /* ── User not found OR wrong password → same message (prevent enumeration) ── */
@@ -124,6 +128,8 @@ export async function POST(request) {
       id:           user._id.toString(),
       name:         user.name,
       email:        user.email,
+      phone:        user.phone ?? "",
+      avatarUrl:    user.avatarUrl ?? "",
       role:         user.role,
       restaurantId: user.restaurantId?.toString() ?? null,
       status:       user.status,

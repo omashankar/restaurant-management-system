@@ -1,6 +1,13 @@
 "use client";
 
+import InputField from "@/components/settings/InputField";
+import PhoneInput from "@/components/ui/PhoneInput";
+
 import { CheckCircle2, Loader2, MessageCircle, Save, Send, XCircle } from "lucide-react";
+import {
+  validateWhatsappSettings,
+  validateWhatsappTestPhone,
+} from "@/lib/restaurantSettingsValidation";
 import { useEffect, useState } from "react";
 
 const TEMPLATES = [
@@ -18,7 +25,8 @@ const VARIABLES = [
   "{eta}", "{order_type}", "{customer_phone}", "{item_name}", "{quantity}", "{unit}",
 ];
 
-const inputCls = "w-full rounded-xl border border-zinc-800 bg-zinc-950/80 px-3 py-2.5 text-sm text-zinc-100 outline-none transition-colors focus:border-emerald-500/45 placeholder:text-zinc-600";
+const fieldLabelCls =
+  "mb-1.5 block text-xs font-medium uppercase tracking-wide text-zinc-500";
 
 function Toggle({ checked, onChange, label, hint }) {
   return (
@@ -51,6 +59,8 @@ export default function WhatsAppPage() {
   const [phoneNumberId, setPhoneNumberId] = useState("");
   const [alertPhone, setAlertPhone]     = useState("");
   const [templates, setTemplates]       = useState({});
+  const [fieldErrors, setFieldErrors]   = useState({});
+  const [testPhoneError, setTestPhoneError] = useState("");
 
   // Load settings on mount
   useEffect(() => {
@@ -81,6 +91,18 @@ export default function WhatsAppPage() {
   }
 
   async function saveSettings() {
+    const validation = validateWhatsappSettings({
+      enabled,
+      token,
+      phoneNumberId,
+      alertPhone,
+      templates,
+    });
+    setFieldErrors(validation.errors);
+    if (!validation.valid) {
+      setSaveResult({ success: false, message: validation.message ?? "Fix the highlighted fields." });
+      return;
+    }
     setSaving(true);
     setSaveResult(null);
     try {
@@ -100,7 +122,9 @@ export default function WhatsAppPage() {
   }
 
   async function sendTest() {
-    if (!testPhone || testPhone.length < 10) return;
+    const validation = validateWhatsappTestPhone(testPhone);
+    setTestPhoneError(validation.errors.phone ?? "");
+    if (!validation.valid) return;
     setSending(true);
     setTestResult(null);
     try {
@@ -178,44 +202,41 @@ export default function WhatsAppPage() {
         {enabled && (
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
-              <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-zinc-500">
-                API Token (Permanent System User Token)
-              </label>
-              <input
+              <InputField
+                label="API Token (Permanent System User Token)"
                 type="password"
                 value={token}
-                onChange={(e) => setToken(e.target.value)}
+                onChange={setToken}
                 placeholder="EAAxxxxxxxxxxxxxxxx…"
-                className={inputCls}
-                autoComplete="new-password"
+                error={fieldErrors.token}
               />
               <p className="mt-1 text-xs text-zinc-600">
                 Meta Business → WhatsApp → API Setup → Generate Token
               </p>
             </div>
             <div>
-              <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-zinc-500">
-                Phone Number ID
-              </label>
-              <input
+              <InputField
+                label="Phone Number ID"
+                type="tel"
                 value={phoneNumberId}
-                onChange={(e) => setPhoneNumberId(e.target.value)}
+                onChange={(v) => setPhoneNumberId(v.replace(/\D/g, ""))}
                 placeholder="1234567890123"
-                className={inputCls}
+                error={fieldErrors.phoneNumberId}
               />
               <p className="mt-1 text-xs text-zinc-600">
                 Meta Business → WhatsApp → Phone Numbers → Phone Number ID
               </p>
             </div>
             <div className="sm:col-span-2">
-              <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-zinc-500">
-                Alert Phone (Restaurant)
-              </label>
-              <input
+              <PhoneInput
+                id="whatsapp-alert-phone"
+                label="Alert Phone (Restaurant)"
+                labelClassName={fieldLabelCls}
                 value={alertPhone}
-                onChange={(e) => setAlertPhone(e.target.value.replace(/[^\d+\s-]/g, ""))}
-                placeholder="9876543210 — for new order & low stock alerts"
-                className={inputCls}
+                onChange={setAlertPhone}
+                placeholder="9876543210"
+                error={fieldErrors.alertPhone}
+                wrapperClassName="border-zinc-800 bg-zinc-950/80"
               />
               <p className="mt-1 text-xs text-zinc-600">
                 Leave blank to use phone from Settings → Contact. Used for New Order Alert and Low Stock templates.
@@ -338,14 +359,15 @@ export default function WhatsAppPage() {
             <p className="mb-4 text-xs text-zinc-500">
               Sends an actual WhatsApp message using your saved credentials. Phone must be registered on WhatsApp.
             </p>
-            <div className="flex gap-3">
-              <div className="flex items-center rounded-xl border border-zinc-800 bg-zinc-950/80 px-3 text-sm text-zinc-400 shrink-0">+91</div>
-              <input
+            <div className="flex flex-wrap items-start gap-3">
+              <PhoneInput
+                id="whatsapp-test-phone"
                 value={testPhone}
-                onChange={(e) => setTestPhone(e.target.value.replace(/\D/g, "").slice(0, 10))}
+                onChange={setTestPhone}
                 placeholder="9876543210"
-                className={`${inputCls} flex-1`}
-                maxLength={10}
+                error={testPhoneError}
+                wrapperClassName="min-w-[200px] flex-1 border-zinc-800 bg-zinc-950/80"
+                className="min-w-[200px] flex-1"
               />
               <button type="button" onClick={sendTest}
                 disabled={sending || testPhone.length < 10}

@@ -8,6 +8,7 @@ import PaginationBar from "@/components/ui/PaginationBar";
 import TableSkeleton from "@/components/ui/TableSkeleton";
 import { usePaginatedList } from "@/hooks/usePaginatedList";
 import { useToast } from "@/hooks/useToast";
+import { getRecipeFormFieldErrors } from "@/lib/formValidation";
 import { BookOpen, Eye, Pencil, Plus, RefreshCw, X } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 
@@ -102,9 +103,14 @@ export default function RecipesPage() {
   };
 
   const saveRecipe = async () => {
+    const validation = getRecipeFormFieldErrors(form);
+    if (!validation.valid) {
+      showToast(validation.message ?? "Recipe name and menu item are required.", "error");
+      return;
+    }
     const mi = menuItems.find((m) => m.id === form.menuItemId);
-    if (!mi || !form.name.trim()) {
-      showToast("Recipe name and menu item are required.", "error");
+    if (!mi) {
+      showToast("Select a valid menu item.", "error");
       return;
     }
     const ing = form.ingredients.map((s) => s.trim()).filter(Boolean);

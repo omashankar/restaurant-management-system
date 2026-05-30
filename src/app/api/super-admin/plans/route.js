@@ -3,6 +3,7 @@ import { getTokenFromRequest } from "@/lib/authCookies";
 import { verifyToken } from "@/lib/jwt";
 import clientPromise from "@/lib/mongodb";
 import { getClientIp } from "@/lib/rateLimit";
+import { parseSchema, superAdminPlanUpsertSchema } from "@/lib/validationSchemas";
 
 function superAdminOnly(request) {
   const token   = getTokenFromRequest(request);
@@ -84,23 +85,64 @@ export async function POST(request) {
     limits = {},
   } = body;
 
-  if (!name?.trim())    return Response.json({ success: false, error: "Plan name is required." }, { status: 400 });
   const monthlyNum = Number(monthlyPrice);
   const yearlyNum = Number(yearlyPrice);
   const legacyPriceNum = Number(price);
-  const hasDualPrice = Number.isFinite(monthlyNum) && monthlyNum >= 0 && Number.isFinite(yearlyNum) && yearlyNum >= 0;
+  const hasDualPrice =
+    Number.isFinite(monthlyNum) && monthlyNum >= 0 && Number.isFinite(yearlyNum) && yearlyNum >= 0;
   const hasLegacyPrice = Number.isFinite(legacyPriceNum) && legacyPriceNum >= 0;
   if (!hasDualPrice && !hasLegacyPrice) {
-    return Response.json({ success: false, error: "Valid monthlyPrice and yearlyPrice are required." }, { status: 400 });
-  }
-  if (!["monthly", "yearly"].includes(billingCycle)) {
-    return Response.json({ success: false, error: "Invalid billingCycle." }, { status: 400 });
+    return Response.json(
+      { success: false, error: "Valid monthlyPrice and yearlyPrice are required." },
+      { status: 400 }
+    );
   }
 
-  const slug = toPlanSlug(name);
-  if (!slug) {
-    return Response.json({ success: false, error: "Plan name must include letters or numbers." }, { status: 400 });
+  const effectiveMonthly = hasDualPrice
+    ? monthlyNum
+    : billingCycle === "yearly"
+      ? Number((legacyPriceNum / 12).toFixed(2))
+      : legacyPriceNum;
+  const effectiveYearly = hasDualPrice
+    ? yearlyNum
+    : billingCycle === "yearly"
+      ? legacyPriceNum
+      : Number((legacyPriceNum * 12).toFixed(2));
+
+  const limitKeys = ["staff", "tables", "menuItems", "orders"];
+  const normalizedLimits = {};
+  for (const k of limitKeys) {
+    const raw = limits[k];
+    if (raw == null || raw === "") {
+      normalizedLimits[k] = -1;
+      continue;
+    }
+    const n = Number(raw);
+    if (!Number.isInteger(n) || n < -1) {
+      return Response.json(
+        { success: false, error: `Invalid limit for ${k}: use -1 (unlimited) or a whole number ≥ -1.` },
+        { status: 400 }
+      );
+    }
+    normalizedLimits[k] = n;
   }
+
+  let validated;
+  try {
+    validated = parseSchema(superAdminPlanUpsertSchema, {
+      name: String(name ?? "").trim(),
+      monthlyPrice: effectiveMonthly,
+      yearlyPrice: effectiveYearly,
+      billingCycle,
+      description: description?.trim() ?? "",
+      features: Array.isArray(features) ? features : [],
+      limits: normalizedLimits,
+    });
+  } catch (err) {
+    return Response.json({ success: false, error: err.message }, { status: 400 });
+  }
+
+  const slug = toPlanSlug(validated.name);
 
   try {
     const client = await clientPromise;
@@ -109,22 +151,17 @@ export async function POST(request) {
     const existing = await db.collection("plans").findOne({ slug });
     if (existing) return Response.json({ success: false, error: "A plan with this name already exists." }, { status: 409 });
 
-    const effectiveMonthly = hasDualPrice
-      ? monthlyNum
-      : (billingCycle === "yearly" ? Number((legacyPriceNum / 12).toFixed(2)) : legacyPriceNum);
-    const effectiveYearly = hasDualPrice
-      ? yearlyNum
-      : (billingCycle === "yearly" ? legacyPriceNum : Number((legacyPriceNum * 12).toFixed(2)));
     const result = await db.collection("plans").insertOne({
-      name:         name.trim(),
+      name:         validated.name,
       slug,
-      price:        billingCycle === "yearly" ? effectiveYearly : effectiveMonthly,
-      monthlyPrice: effectiveMonthly,
-      yearlyPrice:  effectiveYearly,
-      billingCycle,
-      description:  description?.trim() ?? "",
-      features,
-      limits,
+      price:
+        validated.billingCycle === "yearly" ? validated.yearlyPrice : validated.monthlyPrice,
+      monthlyPrice: validated.monthlyPrice,
+      yearlyPrice:  validated.yearlyPrice,
+      billingCycle: validated.billingCycle,
+      description:  validated.description ?? "",
+      features:     validated.features ?? [],
+      limits:       validated.limits ?? normalizedLimits,
       isActive:     true,
       createdAt:    new Date(),
     });
@@ -134,7 +171,7 @@ export async function POST(request) {
       category: "billing",
       actorId: sa.id,
       targetId: result.insertedId.toString(),
-      targetName: name.trim(),
+      targetName: validated.name,
       meta: { slug },
       ip: getClientIp(request),
     });
@@ -143,10 +180,10 @@ export async function POST(request) {
       success: true,
       plan: {
         id: result.insertedId.toString(),
-        name: name.trim(),
+        name: validated.name,
         slug,
-        monthlyPrice: effectiveMonthly,
-        yearlyPrice: effectiveYearly,
+        monthlyPrice: validated.monthlyPrice,
+        yearlyPrice: validated.yearlyPrice,
       },
     }, { status: 201 });
   } catch (err) {

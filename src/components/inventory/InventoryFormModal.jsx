@@ -98,6 +98,7 @@ export default function InventoryFormModal({
             </label>
             <input
               type="number"
+              inputMode="numeric"
               min={0}
               value={form.quantity}
               onChange={(e) =>
@@ -128,6 +129,7 @@ export default function InventoryFormModal({
           </label>
           <input
             type="number"
+            inputMode="numeric"
             min={0}
             value={form.reorderLevel}
             onChange={(e) =>

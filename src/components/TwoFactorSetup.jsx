@@ -91,7 +91,7 @@ export default function TwoFactorSetup() {
             </p>
           ) : null}
           <input
-            type="text"
+            type="tel"
             inputMode="numeric"
             maxLength={6}
             value={code}

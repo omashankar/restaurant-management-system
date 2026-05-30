@@ -36,7 +36,7 @@ export function useInbox() {
 
   const refresh = useCallback(async () => {
     try {
-      const res = await fetch("/api/inbox", { cache: "no-store" });
+      const res = await fetch("/api/inbox", { cache: "no-store", credentials: "include" });
       const data = await res.json();
       if (!res.ok || !data?.success) return;
       const nextUnread = {
@@ -87,30 +87,11 @@ export function useInbox() {
     await fetch("/api/inbox/read", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
+      credentials: "include",
       body: JSON.stringify({ keys: safeKeys }),
     }).catch(() => null);
-
-    setMessages((prev) =>
-      prev.map((item) => (safeKeys.includes(item.key) ? { ...item, read: true } : item))
-    );
-    setNotifications((prev) =>
-      prev.map((item) => (safeKeys.includes(item.key) ? { ...item, read: true } : item))
-    );
-    setUnread((prev) => {
-      const nextMessages = Math.max(
-        0,
-        messages.filter((m) => !m.read && safeKeys.includes(m.key)).length
-      );
-      const nextNotifications = Math.max(
-        0,
-        notifications.filter((n) => !n.read && safeKeys.includes(n.key)).length
-      );
-      return {
-        messages: Math.max(0, prev.messages - nextMessages),
-        notifications: Math.max(0, prev.notifications - nextNotifications),
-      };
-    });
-  }, [messages, notifications]);
+    await refresh();
+  }, [refresh]);
 
   const markAllRead = useCallback(async (kind) => {
     const keys = kind === "messages"
@@ -126,19 +107,15 @@ export function useInbox() {
     const res = await fetch("/api/inbox/resolve", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
+      credentials: "include",
       body: JSON.stringify({ key: safeKey }),
     }).catch(() => null);
     if (!res) return false;
     const data = await res.json().catch(() => ({ success: false }));
     if (!res.ok || !data?.success) return false;
-
-    setMessages((prev) => prev.filter((item) => item.key !== safeKey));
-    setUnread((prev) => ({
-      ...prev,
-      messages: Math.max(0, prev.messages - 1),
-    }));
+    await refresh();
     return true;
-  }, []);
+  }, [refresh]);
 
   return {
     loading,

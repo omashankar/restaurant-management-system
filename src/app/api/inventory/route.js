@@ -1,5 +1,6 @@
 import { withTenant } from "@/lib/tenantDb";
 import { assertPlatformFeatureForPath } from "@/lib/platformFeatureGuard";
+import { parseSchema, inventoryItemSchema } from "@/lib/validationSchemas";
 import { ObjectId } from "mongodb";
 
 export const GET = withTenant(
@@ -27,16 +28,31 @@ export const POST = withTenant(
     if (blocked) return blocked;
 
     const body = await request.json();
-    const { name, category, quantity, unit, reorderLevel, maxLevel, supplier, notes } = body;
-    if (!name?.trim()) return Response.json({ success: false, error: "name is required." }, { status: 400 });
-    const qty = Math.max(0, Number(quantity) || 0);
+    let data;
+    try {
+      data = parseSchema(inventoryItemSchema, {
+        name: body.name,
+        category: body.category,
+        quantity: body.quantity != null ? Math.max(0, Number(body.quantity) || 0) : 0,
+        unit: body.unit,
+        reorderLevel: body.reorderLevel != null ? Math.max(0, Number(body.reorderLevel) || 0) : 0,
+        supplier: body.supplier,
+        notes: body.notes,
+      });
+    } catch (err) {
+      return Response.json({ success: false, error: err.message }, { status: 400 });
+    }
+    const { name, category, unit, supplier, notes } = data;
+    const qty = data.quantity ?? 0;
+    const reorderLevel = data.reorderLevel ?? 0;
+    const { maxLevel } = body;
     const doc = {
       ...tenantFilter,
-      name: name.trim(),
+      name,
       category: category?.trim() ?? "Other",
       quantity: qty,
-      unit: unit?.trim() || "unit",
-      reorderLevel: Math.max(0, Number(reorderLevel) || 0),
+      unit,
+      reorderLevel,
       maxLevel: maxLevel != null && maxLevel !== "" ? String(maxLevel) : "",
       supplier: supplier?.trim() ?? "",
       notes: notes?.trim() ?? "",

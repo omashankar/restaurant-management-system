@@ -1,4 +1,5 @@
 import { EMPTY_SETTINGS } from "@/config/settingsConfig";
+import { validateRestaurantSettingsPatch } from "@/lib/restaurantSettingsValidation";
 import { withTenant } from "@/lib/tenantDb";
 
 const SECRET_MASK = "********";
@@ -148,6 +149,22 @@ export const PATCH = withTenant(["admin"], async ({ db, restaurantId }, request)
 
   if (Object.keys(updateFields).length === 0) {
     return Response.json({ success: false, error: "No valid data provided." }, { status: 400 });
+  }
+
+  const mergedForValidation = { ...EMPTY_SETTINGS };
+  for (const key of Object.keys(EMPTY_SETTINGS)) {
+    if (updateFields[key] != null) {
+      mergedForValidation[key] = updateFields[key];
+    } else if (existing?.[key] != null) {
+      mergedForValidation[key] = existing[key];
+    }
+  }
+  const validation = validateRestaurantSettingsPatch(mergedForValidation);
+  if (!validation.valid) {
+    return Response.json(
+      { success: false, error: validation.message ?? "Validation failed." },
+      { status: 422 }
+    );
   }
 
   updateFields.updatedAt = new Date();

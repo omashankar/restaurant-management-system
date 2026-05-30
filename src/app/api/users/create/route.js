@@ -1,30 +1,28 @@
 import { withTenant } from "@/lib/tenantDb";
+import { parseSchema, staffCreateSchema } from "@/lib/validationSchemas";
 import bcrypt from "bcryptjs";
 
 export const POST = withTenant(
   ["admin"],
   async ({ db, tenantFilter, restaurantId, payload }, request) => {
-    const { name, email, password, role, phone } = await request.json();
+    const body = await request.json();
+    let data;
+    try {
+      data = parseSchema(staffCreateSchema, body);
+    } catch (err) {
+      return Response.json({ success: false, error: err.message }, { status: 400 });
+    }
+    const { name, email, password, role, phone } = data;
 
-    if (!name?.trim() || !email?.trim() || !password || !role) {
-      return Response.json({ success: false, error: "name, email, password and role are required." }, { status: 400 });
-    }
-    if (!["manager", "waiter", "chef"].includes(role.toLowerCase())) {
-      return Response.json({ success: false, error: "Role must be manager, waiter, or chef." }, { status: 400 });
-    }
-    if (password.length < 6) {
-      return Response.json({ success: false, error: "Password must be at least 6 characters." }, { status: 400 });
-    }
-
-    const existing = await db.collection("users").findOne({ email: email.toLowerCase().trim() });
+    const existing = await db.collection("users").findOne({ email });
     if (existing) return Response.json({ success: false, error: "Email already registered." }, { status: 409 });
 
     const hashedPassword = await bcrypt.hash(password, 10);
     const result = await db.collection("users").insertOne({
-      name: name.trim(),
-      email: email.toLowerCase().trim(),
+      name,
+      email,
       password: hashedPassword,
-      role: role.toLowerCase(),
+      role,
       phone: phone?.trim() ?? "",
       restaurantId,          // ← tenant isolation
       isVerified: true,
@@ -36,9 +34,9 @@ export const POST = withTenant(
       success: true,
       staff: {
         id: result.insertedId.toString(),
-        name: name.trim(),
-        email: email.toLowerCase().trim(),
-        role: role.toLowerCase(),
+        name,
+        email,
+        role,
         phone: phone?.trim() ?? "",
         status: "active",
       },

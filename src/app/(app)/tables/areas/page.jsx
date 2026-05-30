@@ -8,6 +8,10 @@ import { useToast } from "@/hooks/useToast";
 import { ImagePlus, LayoutGrid, Pencil, Plus, RefreshCw, Table2, Trash2, X } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
+import {
+  EMPTY_TABLE_AREA_ERRORS,
+  getTableAreaFieldErrors,
+} from "@/lib/formValidation";
 import { useCallback, useEffect, useState } from "react";
 
 const EMPTY_FORM = { name: "", description: "", color: "emerald", imageUrl: "" };
@@ -22,6 +26,7 @@ export default function TableAreasPage() {
   const [editingId, setEditingId]   = useState(null);
   const [form, setForm]             = useState(EMPTY_FORM);
   const [formError, setFormError]   = useState("");
+  const [fieldErrors, setFieldErrors] = useState(EMPTY_TABLE_AREA_ERRORS);
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [deleting, setDeleting] = useState(false);
   const [imageFile, setImageFile] = useState(null);
@@ -86,6 +91,7 @@ export default function TableAreasPage() {
     setForm(EMPTY_FORM);
     resetImageState();
     setFormError("");
+    setFieldErrors(EMPTY_TABLE_AREA_ERRORS);
     setModalOpen(true);
   };
   const openEdit = (a) => {
@@ -122,7 +128,12 @@ export default function TableAreasPage() {
   };
 
   const save = async () => {
-    if (!form.name.trim()) { setFormError("Area name is required."); return; }
+    const validation = getTableAreaFieldErrors(form);
+    setFieldErrors(validation.errors);
+    if (!validation.valid) {
+      setFormError(validation.message ?? "Area name is required.");
+      return;
+    }
     let imageUrl = removeCurrentImage ? "" : form.imageUrl;
 
     setSaving(true); setFormError("");
@@ -292,7 +303,7 @@ export default function TableAreasPage() {
               className="cursor-pointer rounded-xl border border-zinc-700 px-4 py-2 text-sm text-zinc-300 hover:border-zinc-500">
               Cancel
             </button>
-            <button type="button" onClick={save} disabled={saving || uploadingImage || !form.name.trim()}
+            <button type="button" onClick={save} disabled={saving || uploadingImage}
               className="cursor-pointer rounded-xl bg-emerald-500 px-4 py-2 text-sm font-semibold text-zinc-950 hover:bg-emerald-400 disabled:opacity-40">
               {uploadingImage ? "Uploading image…" : saving ? "Saving…" : "Save"}
             </button>
@@ -302,9 +313,19 @@ export default function TableAreasPage() {
           {formError && <p className="rounded-xl border border-red-500/20 bg-red-500/10 px-3 py-2 text-xs text-red-400">{formError}</p>}
           <div>
             <label className="text-xs font-medium text-zinc-500">Area Name *</label>
-            <input value={form.name} onChange={(e) => set("name", e.target.value)}
+            <input
+              value={form.name}
+              onChange={(e) => {
+                set("name", e.target.value);
+                if (fieldErrors.name) setFieldErrors((p) => ({ ...p, name: "" }));
+              }}
               placeholder="e.g. Indoor, Rooftop, VIP"
-              className="mt-1 w-full rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus:border-emerald-500/50 placeholder:text-zinc-600" />
+              aria-invalid={fieldErrors.name ? true : undefined}
+              className={`mt-1 w-full rounded-xl border bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus:border-emerald-500/50 placeholder:text-zinc-600 ${
+                fieldErrors.name ? "border-red-500/50" : "border-zinc-700"
+              }`}
+            />
+            {fieldErrors.name && <p className="mt-1 text-xs text-red-400">{fieldErrors.name}</p>}
           </div>
           <div>
             <label className="text-xs font-medium text-zinc-500">Description (optional)</label>

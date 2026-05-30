@@ -1,92 +1,167 @@
 "use client";
 
 import { useApp } from "@/context/AppProviders";
-import { useState } from "react";
+import { useUser } from "@/context/AuthContext";
+import {
+  EMPTY_PROFILE_ERRORS,
+  getProfileFormFieldErrors,
+} from "@/lib/formValidation";
+import { validatePasswordChangeForm } from "@/lib/restaurantSettingsValidation";
+import { useEffect, useState } from "react";
 
 /**
  * Manages profile form state, validation, save, and password change.
  */
 export function useProfile() {
   const { user, updateProfile } = useApp();
+  const { setUser } = useUser();
+  // AppProvider shares AuthContext user; keep setUser on both after save/upload
 
   const [saving, setSaving] = useState(false);
-  const [toast, setToast]   = useState(null); // { type: "success"|"error", msg }
+  const [avatarUploading, setAvatarUploading] = useState(false);
+  const [toast, setToast] = useState(null);
 
-  // ── profile form ──────────────────────────────────────────────────────────
-  const [form, setForm] = useState({
-    name:  user?.name  ?? "",
-    email: user?.email ?? "",
-    phone: user?.phone ?? "",
-  });
+  const [form, setForm] = useState({ name: "", email: "", phone: "" });
   const [formDirty, setFormDirty] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState(EMPTY_PROFILE_ERRORS);
+
+  useEffect(() => {
+    if (!user) return;
+    setForm({
+      name: user.name ?? "",
+      email: user.email ?? "",
+      phone: user.phone ?? "",
+    });
+    setFormDirty(false);
+    setFieldErrors(EMPTY_PROFILE_ERRORS);
+  }, [user?.id, user?.name, user?.email, user?.phone]);
 
   const setField = (key, value) => {
     setForm((f) => ({ ...f, [key]: value }));
     setFormDirty(true);
+    setFieldErrors((e) => ({ ...e, [key]: "" }));
   };
 
   const resetForm = () => {
-    setForm({ name: user?.name ?? "", email: user?.email ?? "", phone: user?.phone ?? "" });
+    setForm({
+      name: user?.name ?? "",
+      email: user?.email ?? "",
+      phone: user?.phone ?? "",
+    });
     setFormDirty(false);
+    setFieldErrors(EMPTY_PROFILE_ERRORS);
   };
 
-  // ── password form ─────────────────────────────────────────────────────────
   const [pwForm, setPwForm] = useState({ current: "", next: "", confirm: "" });
   const [pwDirty, setPwDirty] = useState(false);
+  const [pwErrors, setPwErrors] = useState({ current: "", next: "", confirm: "" });
 
   const setPwField = (key, value) => {
     setPwForm((f) => ({ ...f, [key]: value }));
     setPwDirty(true);
+    setPwErrors((e) => ({ ...e, [key]: "" }));
   };
 
   const resetPw = () => {
     setPwForm({ current: "", next: "", confirm: "" });
     setPwDirty(false);
+    setPwErrors({ current: "", next: "", confirm: "" });
   };
 
-  // ── validation ────────────────────────────────────────────────────────────
-  function validateProfile() {
-    if (!form.name.trim())  return "Name is required.";
-    if (!form.email.trim()) return "Email is required.";
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) return "Enter a valid email.";
-    if (form.phone && !/^[\d\s+\-()]{7,15}$/.test(form.phone)) return "Enter a valid phone number.";
-    return null;
-  }
+  const uploadAvatar = async (file) => {
+    if (!file) return;
+    setAvatarUploading(true);
+    try {
+      const fd = new FormData();
+      fd.append("image", file);
+      const res = await fetch("/api/auth/profile/avatar", {
+        method: "POST",
+        credentials: "include",
+        body: fd,
+      });
+      const data = await res.json();
+      if (!data.success) {
+        showToast("error", data.error ?? "Failed to upload profile photo.");
+        return;
+      }
+      if (data.user) {
+        updateProfile(data.user);
+        setUser(data.user);
+      }
+      showToast("success", "Profile photo updated.");
+    } catch {
+      showToast("error", "Network error while uploading photo.");
+    } finally {
+      setAvatarUploading(false);
+    }
+  };
 
-  function validatePassword() {
-    if (!pwForm.current.trim()) return "Current password is required.";
-    if (pwForm.next.length < 6) return "New password must be at least 6 characters.";
-    if (pwForm.next !== pwForm.confirm) return "Passwords do not match.";
-    return null;
-  }
-
-  // ── save profile ──────────────────────────────────────────────────────────
   const saveProfile = async () => {
-    const err = validateProfile();
-    if (err) { showToast("error", err); return; }
+    const validation = getProfileFormFieldErrors(form);
+    setFieldErrors(validation.errors);
+    if (!validation.valid) {
+      showToast("error", validation.message ?? "Fix the highlighted fields.");
+      return;
+    }
 
     setSaving(true);
-    await new Promise((r) => setTimeout(r, 700)); // simulate async
-    updateProfile({ name: form.name.trim(), email: form.email.trim(), phone: form.phone.trim() });
-    setFormDirty(false);
-    setSaving(false);
-    showToast("success", "Profile updated successfully.");
+    try {
+      const res = await fetch("/api/auth/profile", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify(form),
+      });
+      const data = await res.json();
+      if (!data.success) {
+        if (data.errors) setFieldErrors((e) => ({ ...e, ...data.errors }));
+        showToast("error", data.error ?? "Failed to update profile.");
+        return;
+      }
+      updateProfile(data.user);
+      setUser(data.user);
+      setFormDirty(false);
+      showToast("success", "Profile updated successfully.");
+    } catch {
+      showToast("error", "Network error. Please try again.");
+    } finally {
+      setSaving(false);
+    }
   };
 
-  // ── save password ─────────────────────────────────────────────────────────
   const savePassword = async () => {
-    const err = validatePassword();
-    if (err) { showToast("error", err); return; }
+    const validation = validatePasswordChangeForm(pwForm);
+    setPwErrors(validation.errors);
+    if (!validation.valid) {
+      showToast("error", validation.message ?? "Fix the highlighted fields.");
+      return false;
+    }
 
     setSaving(true);
-    await new Promise((r) => setTimeout(r, 700));
-    // In a real app: call API to update password
-    resetPw();
-    setSaving(false);
-    showToast("success", "Password changed successfully.");
+    try {
+      const res = await fetch("/api/auth/change-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify(pwForm),
+      });
+      const data = await res.json();
+      if (!data.success) {
+        if (data.errors) setPwErrors((e) => ({ ...e, ...data.errors }));
+        showToast("error", data.error ?? "Failed to change password.");
+        return false;
+      }
+      resetPw();
+      showToast("success", data.message ?? "Password changed successfully.");
+      return true;
+    } catch {
+      showToast("error", "Network error. Please try again.");
+      return false;
+    } finally {
+      setSaving(false);
+    }
   };
 
-  // ── toast ─────────────────────────────────────────────────────────────────
   const showToast = (type, msg) => {
     setToast({ type, msg });
     setTimeout(() => setToast(null), 3000);
@@ -94,9 +169,21 @@ export function useProfile() {
 
   return {
     user,
-    form, setField, resetForm, formDirty,
-    pwForm, setPwField, resetPw, pwDirty,
-    saving, toast,
-    saveProfile, savePassword,
+    form,
+    setField,
+    resetForm,
+    formDirty,
+    fieldErrors,
+    pwForm,
+    setPwField,
+    resetPw,
+    pwDirty,
+    pwErrors,
+    saving,
+    avatarUploading,
+    toast,
+    saveProfile,
+    uploadAvatar,
+    savePassword,
   };
 }

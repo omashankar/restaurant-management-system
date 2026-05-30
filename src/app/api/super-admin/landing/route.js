@@ -73,7 +73,11 @@ export async function PATCH(request) {
     return Response.json({ success: true, section, updatedAt: new Date() });
   } catch (err) {
     console.error("PATCH landing error:", err.message);
-    return Response.json({ success: false, error: "Something went wrong." }, { status: 500 });
+    const status = err.status && err.status >= 400 && err.status < 600 ? err.status : 500;
+    return Response.json(
+      { success: false, error: err.message ?? "Something went wrong." },
+      { status }
+    );
   }
 }
 

@@ -2,6 +2,7 @@
 
 import { Mail, UtensilsCrossed } from "lucide-react";
 import Link from "next/link";
+import { emailError } from "@/lib/formValidation";
 import { useState } from "react";
 
 export default function ForgotPasswordPage() {
@@ -52,16 +53,23 @@ export default function ForgotPasswordPage() {
         ) : (
           <form
             className="space-y-4"
+            noValidate
             onSubmit={async (e) => {
               e.preventDefault();
-              setLoading(true);
               setError("");
+              const trimmed = email.trim();
+              const err = emailError(trimmed);
+              if (err) {
+                setError(err);
+                return;
+              }
+              setLoading(true);
               setDevResetLink("");
               try {
                 const res = await fetch("/api/auth/forgot-password", {
                   method: "POST",
                   headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify({ email }),
+                  body: JSON.stringify({ email: trimmed }),
                 });
                 const data = await res.json();
                 if (!res.ok || !data?.success) {
@@ -82,7 +90,7 @@ export default function ForgotPasswordPage() {
                 htmlFor="email"
                 className="text-xs font-medium uppercase tracking-wider text-zinc-500"
               >
-                Email
+                Email <span className="text-red-400">*</span>
               </label>
               <div className="relative mt-1.5">
                 <Mail className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-zinc-500" />

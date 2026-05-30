@@ -693,7 +693,7 @@ export default function CheckoutPage() {
               <p className="text-sm text-customer-muted">6-digit code sent to <span className="font-semibold text-customer-text">{otpPhone}</span>.</p>
               <div className="flex items-center justify-between gap-2">
                 {otpDigits.map((digit, idx) => (
-                  <input key={idx} ref={(el) => { otpRefs.current[idx] = el; }} value={digit}
+                  <input key={idx} type="tel" ref={(el) => { otpRefs.current[idx] = el; }} value={digit}
                     onChange={(e) => handleOtpDigitChange(idx, e.target.value)}
                     onKeyDown={(e) => { if (e.key === "Backspace" && !otpDigits[idx] && idx > 0) otpRefs.current[idx - 1]?.focus(); }}
                     inputMode="numeric" maxLength={1}

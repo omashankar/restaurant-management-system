@@ -1,4 +1,5 @@
 import { isReservationSlotAvailable } from "@/lib/reservationConflict";
+import { parseSchema, reservationCreateSchema } from "@/lib/validationSchemas";
 import { withTenant } from "@/lib/tenantDb";
 import { assertPlatformFeatureForPath } from "@/lib/platformFeatureGuard";
 import { ObjectId } from "mongodb";
@@ -36,10 +37,16 @@ export const POST = withTenant(
     if (blocked) return blocked;
 
     const body = await request.json();
-    const { customerName, phone, date, time, guests, tableNumber, notes, area, status } = body;
-    if (!customerName?.trim() || !date || !time) {
-      return Response.json({ success: false, error: "customerName, date and time are required." }, { status: 400 });
+    let data;
+    try {
+      data = parseSchema(reservationCreateSchema, {
+        ...body,
+        guests: body.guests != null && body.guests !== "" ? Number(body.guests) : undefined,
+      });
+    } catch (err) {
+      return Response.json({ success: false, error: err.message }, { status: 400 });
     }
+    const { customerName, phone, date, time, guests, tableNumber, notes, area, status } = data;
     const tableNum = tableNumber?.trim() || "TBD";
     const statusVal = ALLOWED_STATUS.includes(status) ? status : "pending";
 
@@ -64,7 +71,7 @@ export const POST = withTenant(
 
     const doc = {
       ...tenantFilter,
-      customerName: customerName.trim(),
+      customerName,
       phone: phone?.trim() ?? "",
       date,
       time,

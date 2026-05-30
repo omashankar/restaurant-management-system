@@ -137,6 +137,7 @@ export default function VerifyOtpPage() {
                   6-Digit Code
                 </label>
                 <input
+                  type="tel"
                   value={otp}
                   onChange={(e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
                   onKeyDown={(e) => e.key === "Enter" && verify()}
@@ -144,6 +145,7 @@ export default function VerifyOtpPage() {
                   placeholder="••••••"
                   inputMode="numeric"
                   autoComplete="one-time-code"
+                  maxLength={6}
                 />
               </div>
 

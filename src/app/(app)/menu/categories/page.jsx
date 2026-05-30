@@ -11,6 +11,10 @@ import { useModuleData } from "@/context/ModuleDataContext";
 import { useToast } from "@/hooks/useToast";
 import { usePaginatedList } from "@/hooks/usePaginatedList";
 import { FolderTree, Pencil, Plus, RefreshCw, Trash2 } from "lucide-react";
+import {
+  EMPTY_MENU_CATEGORY_ERRORS,
+  getMenuCategoryFieldErrors,
+} from "@/lib/formValidation";
 import { useCallback, useEffect, useState } from "react";
 
 export default function CategoriesPage() {
@@ -22,6 +26,7 @@ export default function CategoriesPage() {
   const [editingId, setEditingId] = useState(null);
   const [form, setForm]         = useState({ name: "", description: "" });
   const [formError, setFormError] = useState("");
+  const [fieldErrors, setFieldErrors] = useState(EMPTY_MENU_CATEGORY_ERRORS);
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [fetchError, setFetchError] = useState("");
   const { refreshMenu } = useModuleData();
@@ -48,11 +53,28 @@ export default function CategoriesPage() {
   const { search, setSearch, page, setPage, pageRows, total, totalPages, pageSize } =
     usePaginatedList(categories, { searchKeys: ["name", "description"], pageSize: 8 });
 
-  const openCreate = () => { setEditingId(null); setForm({ name: "", description: "" }); setFormError(""); setModalOpen(true); };
-  const openEdit   = (row) => { setEditingId(row.id); setForm({ name: row.name, description: row.description ?? "" }); setFormError(""); setModalOpen(true); };
+  const openCreate = () => {
+    setEditingId(null);
+    setForm({ name: "", description: "" });
+    setFormError("");
+    setFieldErrors(EMPTY_MENU_CATEGORY_ERRORS);
+    setModalOpen(true);
+  };
+  const openEdit = (row) => {
+    setEditingId(row.id);
+    setForm({ name: row.name, description: row.description ?? "" });
+    setFormError("");
+    setFieldErrors(EMPTY_MENU_CATEGORY_ERRORS);
+    setModalOpen(true);
+  };
 
   const save = async () => {
-    if (!form.name.trim()) { setFormError("Category name is required."); return; }
+    const validation = getMenuCategoryFieldErrors(form);
+    setFieldErrors(validation.errors);
+    if (!validation.valid) {
+      setFormError(validation.message ?? "Category name is required.");
+      return;
+    }
     setSaving(true); setFormError("");
     try {
       const url    = editingId ? `/api/categories/${editingId}` : "/api/categories";
@@ -146,7 +168,22 @@ export default function CategoriesPage() {
         </div>}>
         <div className="space-y-4">
           {formError && <p className="rounded-xl border border-red-500/20 bg-red-500/10 px-3 py-2 text-xs text-red-400">{formError}</p>}
-          <div><label className="text-xs font-medium text-zinc-500">Category Name *</label><input value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} placeholder="e.g. Starters, Main Course, Drinks" className="mt-1 w-full rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus:border-emerald-500/40 placeholder:text-zinc-600" /></div>
+          <div>
+            <label className="text-xs font-medium text-zinc-500">Category Name *</label>
+            <input
+              value={form.name}
+              onChange={(e) => {
+                setForm((f) => ({ ...f, name: e.target.value }));
+                if (fieldErrors.name) setFieldErrors((p) => ({ ...p, name: "" }));
+              }}
+              placeholder="e.g. Starters, Main Course, Drinks"
+              aria-invalid={fieldErrors.name ? true : undefined}
+              className={`mt-1 w-full rounded-xl border bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus:border-emerald-500/40 placeholder:text-zinc-600 ${
+                fieldErrors.name ? "border-red-500/50" : "border-zinc-700"
+              }`}
+            />
+            {fieldErrors.name && <p className="mt-1 text-xs text-red-400">{fieldErrors.name}</p>}
+          </div>
           <div><label className="text-xs font-medium text-zinc-500">Description (optional)</label><textarea rows={2} value={form.description} onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))} placeholder="Short description" className="mt-1 w-full resize-none rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus:border-emerald-500/40 placeholder:text-zinc-600" /></div>
         </div>
       </Modal>

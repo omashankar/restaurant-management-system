@@ -1,4 +1,6 @@
 import { withTenant } from "@/lib/tenantDb";
+import { extractIndianMobileDigits } from "@/lib/phoneUtils";
+import { parseSchema, customerUpsertSchema } from "@/lib/validationSchemas";
 import { ObjectId } from "mongodb";
 
 export const GET = withTenant(
@@ -20,14 +22,31 @@ export const GET = withTenant(
 export const POST = withTenant(
   ["admin", "manager", "waiter"],
   async ({ db, tenantFilter, payload }, request) => {
-    const { name, phone, email, notes } = await request.json();
-    if (!name?.trim() || !phone?.trim()) return Response.json({ success: false, error: "name and phone are required." }, { status: 400 });
+    const body = await request.json();
+    let data;
+    try {
+      data = parseSchema(customerUpsertSchema, body);
+    } catch (err) {
+      return Response.json({ success: false, error: err.message }, { status: 400 });
+    }
 
-    // Duplicate phone check within restaurant
-    const existing = await db.collection("customers").findOne({ ...tenantFilter, phone: phone.trim() });
+    const phoneStored = extractIndianMobileDigits(data.phone);
+
+    const existing = await db.collection("customers").findOne({ ...tenantFilter, phone: phoneStored });
     if (existing) return Response.json({ success: false, error: "Customer with this phone already exists." }, { status: 409 });
 
-    const doc = { ...tenantFilter, name: name.trim(), phone: phone.trim(), email: email ?? "", notes: notes ?? "", visits: 0, orderHistory: [], lastVisit: null, createdBy: new ObjectId(payload.id), createdAt: new Date() };
+    const doc = {
+      ...tenantFilter,
+      name: data.name,
+      phone: phoneStored,
+      email: data.email ?? "",
+      notes: data.notes ?? "",
+      visits: 0,
+      orderHistory: [],
+      lastVisit: null,
+      createdBy: new ObjectId(payload.id),
+      createdAt: new Date(),
+    };
     const result = await db.collection("customers").insertOne(doc);
     return Response.json({ success: true, id: result.insertedId.toString() }, { status: 201 });
   }

@@ -2,6 +2,7 @@
 
 import { useLanguage } from "@/context/LanguageContext";
 import { CheckCircle2, Loader2, Plus, Printer, Save, Trash2, Wifi, Bluetooth, Usb, XCircle } from "lucide-react";
+import { EMPTY_PRINTER_ERRORS, getPrinterFieldErrors } from "@/lib/formValidation";
 import { useCallback, useEffect, useState } from "react";
 
 const PRINTER_TYPES = [
@@ -44,6 +45,8 @@ export default function PrinterSettingsPage() {
   const [savedPrinters, setSavedPrinters] = useState([]);
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState(EMPTY_PRINTER);
+  const [fieldErrors, setFieldErrors] = useState(EMPTY_PRINTER_ERRORS);
+  const [formError, setFormError] = useState("");
   const [testing, setTesting] = useState("");
   const [testResult, setTestResult] = useState({});
 
@@ -101,7 +104,13 @@ export default function PrinterSettingsPage() {
   }
 
   async function addPrinter() {
-    if (!form.name.trim()) return;
+    const validation = getPrinterFieldErrors(form);
+    setFieldErrors(validation.errors);
+    if (!validation.valid) {
+      setFormError(validation.message ?? "Fix the highlighted fields.");
+      return;
+    }
+    setFormError("");
     const entry = { ...form, id: crypto.randomUUID() };
     const next = [...printers, entry];
     setPrinters(next);
@@ -199,12 +208,26 @@ export default function PrinterSettingsPage() {
       {showForm && (
         <section className="rounded-2xl border border-zinc-700 bg-zinc-900/60 p-5">
           <h2 className="mb-4 text-base font-semibold text-zinc-100">Add New Printer</h2>
+          {formError && (
+            <p className="mb-3 rounded-xl border border-red-500/20 bg-red-500/10 px-3 py-2 text-xs text-red-400">
+              {formError}
+            </p>
+          )}
           <div className="space-y-4">
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
                 <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-zinc-500">{t("printer.printerName")}</label>
-                <input value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
-                  placeholder="e.g. Kitchen Printer" className={inputCls} />
+                <input
+                  value={form.name}
+                  onChange={(e) => {
+                    setForm((f) => ({ ...f, name: e.target.value }));
+                    if (fieldErrors.name) setFieldErrors((p) => ({ ...p, name: "" }));
+                  }}
+                  placeholder="e.g. Kitchen Printer"
+                  aria-invalid={fieldErrors.name ? true : undefined}
+                  className={`${inputCls} ${fieldErrors.name ? "border-red-500/50" : ""}`}
+                />
+                {fieldErrors.name && <p className="mt-1 text-xs text-red-400">{fieldErrors.name}</p>}
               </div>
               <div>
                 <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-zinc-500">Printer Type</label>
@@ -226,13 +249,32 @@ export default function PrinterSettingsPage() {
               <div className="grid gap-4 sm:grid-cols-2">
                 <div>
                   <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-zinc-500">{t("printer.ipAddress")}</label>
-                  <input value={form.ipAddress} onChange={(e) => setForm((f) => ({ ...f, ipAddress: e.target.value }))}
-                    placeholder="192.168.1.100" className={inputCls} />
+                  <input
+                    value={form.ipAddress}
+                    onChange={(e) => {
+                      setForm((f) => ({ ...f, ipAddress: e.target.value }));
+                      if (fieldErrors.ipAddress) setFieldErrors((p) => ({ ...p, ipAddress: "" }));
+                    }}
+                    placeholder="192.168.1.100"
+                    aria-invalid={fieldErrors.ipAddress ? true : undefined}
+                    className={`${inputCls} ${fieldErrors.ipAddress ? "border-red-500/50" : ""}`}
+                  />
+                  {fieldErrors.ipAddress && (
+                    <p className="mt-1 text-xs text-red-400">{fieldErrors.ipAddress}</p>
+                  )}
                 </div>
                 <div>
                   <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-zinc-500">{t("printer.port")}</label>
-                  <input value={form.port} onChange={(e) => setForm((f) => ({ ...f, port: e.target.value }))}
-                    placeholder="9100" className={inputCls} />
+                  <input
+                    type="number"
+                    inputMode="numeric"
+                    min={1}
+                    max={65535}
+                    value={form.port}
+                    onChange={(e) => setForm((f) => ({ ...f, port: e.target.value }))}
+                    placeholder="9100"
+                    className={inputCls}
+                  />
                 </div>
               </div>
             )}
@@ -269,7 +311,7 @@ export default function PrinterSettingsPage() {
                 className="cursor-pointer rounded-xl border border-zinc-700 px-4 py-2 text-sm text-zinc-400 hover:text-zinc-200 transition-colors">
                 Cancel
               </button>
-              <button type="button" onClick={addPrinter} disabled={!form.name.trim() || saving}
+              <button type="button" onClick={addPrinter} disabled={saving}
                 className="cursor-pointer rounded-xl bg-emerald-500 px-4 py-2 text-sm font-semibold text-zinc-950 hover:bg-emerald-400 disabled:opacity-50 transition-colors">
                 Add Printer
               </button>

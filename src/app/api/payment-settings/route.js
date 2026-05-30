@@ -2,6 +2,11 @@ import { withTenant } from "@/lib/tenantDb";
 import { encryptSecret, decryptSecret, isSecretMask, maskSecret } from "@/lib/cryptoUtils";
 import { isOnlinePaymentConfigured } from "@/lib/paymentGateway";
 import { EMPTY_PAYMENT_SETTINGS, ALL_GATEWAYS } from "@/config/paymentConfig";
+import {
+  validatePaymentBank,
+  validatePaymentGatewaySave,
+  validatePaymentTax,
+} from "@/lib/restaurantSettingsValidation";
 
 const GATEWAY_KEYS = ["apiKey", "secretKey", "merchantId", "webhookSecret"];
 
@@ -115,6 +120,17 @@ export const PATCH = withTenant(["admin"], async ({ db, restaurantId }, request)
     updateValue = { ...EMPTY_PAYMENT_SETTINGS.methods, ...(existing?.methods ?? {}), ...data };
   } else {
     updateValue = data;
+  }
+
+  let validation = { valid: true, message: null };
+  if (section === "gateways") validation = validatePaymentGatewaySave(data);
+  else if (section === "bank") validation = validatePaymentBank(data);
+  else if (section === "tax") validation = validatePaymentTax(data);
+  if (!validation.valid) {
+    return Response.json(
+      { success: false, error: validation.message ?? "Validation failed." },
+      { status: 422 }
+    );
   }
 
   await db.collection("restaurant_payment_settings").updateOne(

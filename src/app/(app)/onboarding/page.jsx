@@ -2,8 +2,10 @@
 
 import { useLanguage } from "@/context/LanguageContext";
 import { CheckCircle2, ChevronRight, Loader2, Upload } from "lucide-react";
+import { validateOnboardingFinish, validateOnboardingStep } from "@/lib/restaurantSettingsValidation";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { otpInputProps, phoneInputProps, pincodeInputProps } from "@/lib/formInputTypes";
 
 const RESTAURANT_TYPES = [
   "Restaurant", "Cafe", "Cloud Kitchen", "Bakery", "Fast Food",
@@ -96,6 +98,7 @@ export default function OnboardingPage() {
   const [saveError, setSaveError] = useState("");
   const [otpError, setOtpError] = useState("");
   const [otpHint, setOtpHint] = useState("");
+  const [fieldErrors, setFieldErrors] = useState({});
   const autoSaveTimer = useRef(null);
 
   // Auto-save draft to localStorage
@@ -180,10 +183,16 @@ export default function OnboardingPage() {
   }
 
   function nextStep() {
-    if (step === 1 && !draft.mobileVerified) {
-      setOtpError("Please verify your mobile number before continuing.");
+    const validation = validateOnboardingStep(step, draft);
+    setFieldErrors(validation.errors);
+    if (!validation.valid) {
+      setSaveError(validation.message ?? "Fix the highlighted fields.");
+      if (step === 1 && !draft.mobileVerified) {
+        setOtpError(validation.errors.mobileVerified ?? "Please verify your mobile number.");
+      }
       return;
     }
+    setSaveError("");
     if (step < TOTAL_STEPS) setStep((s) => s + 1);
   }
 
@@ -273,8 +282,14 @@ export default function OnboardingPage() {
               <Field label="Mobile Number">
                 <div className="flex gap-2">
                   <span className="flex items-center rounded-xl border border-zinc-800 bg-zinc-950/80 px-3 text-sm text-zinc-400">+91</span>
-                  <input value={draft.mobile} onChange={(e) => update({ mobile: e.target.value.replace(/\D/g, "").slice(0, 10) })}
-                    placeholder="9876543210" className={inputCls} maxLength={10} />
+                  <input
+                    {...phoneInputProps()}
+                    value={draft.mobile}
+                    onChange={(e) => update({ mobile: e.target.value.replace(/\D/g, "").slice(0, 10) })}
+                    placeholder="9876543210"
+                    className={inputCls}
+                    maxLength={10}
+                  />
                 </div>
               </Field>
 
@@ -297,8 +312,14 @@ export default function OnboardingPage() {
               ) : !draft.mobileVerified ? (
                 <div className="space-y-3">
                   <Field label={`${t("onboarding.enterOtp")} +91 ${draft.mobile}`}>
-                    <input value={otp} onChange={(e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
-                      placeholder="Enter 6-digit OTP" className={inputCls} maxLength={6} />
+                    <input
+                      {...otpInputProps()}
+                      value={otp}
+                      onChange={(e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                      placeholder="Enter 6-digit OTP"
+                      className={inputCls}
+                      maxLength={6}
+                    />
                   </Field>
                   <button type="button" onClick={verifyOtp} disabled={otpLoading || otp.length < 6}
                     className="cursor-pointer w-full rounded-xl bg-emerald-500 py-2.5 text-sm font-semibold text-zinc-950 hover:bg-emerald-400 disabled:opacity-50 transition-colors">
@@ -323,8 +344,22 @@ export default function OnboardingPage() {
           <StepCard title={t("onboarding.step2")} description="Tell us about your restaurant">
             <div className="space-y-4">
               <Field label="Restaurant Name">
-                <input value={draft.restaurantName} onChange={(e) => update({ restaurantName: e.target.value })}
-                  placeholder="e.g. Sharma Ji Ka Dhaba" className={inputCls} />
+                <input
+                  value={draft.restaurantName}
+                  onChange={(e) => {
+                    update({ restaurantName: e.target.value });
+                    if (fieldErrors.restaurantName) setFieldErrors((p) => ({ ...p, restaurantName: "" }));
+                  }}
+                  placeholder="e.g. Sharma Ji Ka Dhaba"
+                  aria-invalid={fieldErrors.restaurantName ? true : undefined}
+                  className={`${inputCls} ${fieldErrors.restaurantName ? "border-red-500/50" : ""}`}
+                />
+                {fieldErrors.restaurantName && (
+                  <p className="text-xs text-red-400">{fieldErrors.restaurantName}</p>
+                )}
+                {fieldErrors.restaurantType && (
+                  <p className="text-xs text-red-400">{fieldErrors.restaurantType}</p>
+                )}
               </Field>
               <Field label={t("onboarding.restaurantType")}>
                 <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
@@ -380,8 +415,14 @@ export default function OnboardingPage() {
                     placeholder="Maharashtra" className={inputCls} />
                 </Field>
                 <Field label="Pincode">
-                  <input value={draft.pincode} onChange={(e) => update({ pincode: e.target.value.replace(/\D/g, "").slice(0, 6) })}
-                    placeholder="400001" className={inputCls} maxLength={6} />
+                  <input
+                    {...pincodeInputProps()}
+                    value={draft.pincode}
+                    onChange={(e) => update({ pincode: e.target.value.replace(/\D/g, "").slice(0, 6) })}
+                    placeholder="400001"
+                    className={inputCls}
+                    maxLength={6}
+                  />
                 </Field>
               </div>
               <Field label={t("onboarding.deliveryRadius")} hint="Customers within this radius can order delivery">
@@ -472,13 +513,13 @@ export default function OnboardingPage() {
                 <Field label={t("onboarding.deliveryCharges")} hint="Flat delivery charge per order">
                   <div className="relative">
                     <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-zinc-500">₹</span>
-                    <input type="number" value={draft.deliveryCharge} onChange={(e) => update({ deliveryCharge: e.target.value })}
+                    <input type="number" inputMode="decimal" min={0} value={draft.deliveryCharge} onChange={(e) => update({ deliveryCharge: e.target.value })}
                       className={`${inputCls} pl-7`} placeholder="40" />
                   </div>
                 </Field>
                 <Field label={t("onboarding.taxRate")} hint="GST applied on orders">
                   <div className="relative">
-                    <input type="number" value={draft.taxRate} onChange={(e) => update({ taxRate: e.target.value })}
+                    <input type="number" inputMode="decimal" min={0} max={100} value={draft.taxRate} onChange={(e) => update({ taxRate: e.target.value })}
                       className={`${inputCls} pr-7`} placeholder="5" />
                     <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-zinc-500">%</span>
                   </div>

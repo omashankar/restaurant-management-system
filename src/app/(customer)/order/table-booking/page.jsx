@@ -379,6 +379,7 @@ export default function TableBookingPage() {
                     </span>
                     <input
                       type="number"
+                      inputMode="numeric"
                       min={1}
                       max={20}
                       value={form.guests}

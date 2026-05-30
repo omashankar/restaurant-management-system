@@ -1,6 +1,7 @@
 "use client";
 
 import { useToast } from "@/hooks/useToast";
+import { validateQrMenuConfig } from "@/lib/restaurantSettingsValidation";
 import { Download, ExternalLink, Printer, Table2, RefreshCw } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState, useCallback } from "react";
@@ -172,6 +173,16 @@ export default function QrMenuPage() {
   }
 
   function printQr() {
+    const validation = validateQrMenuConfig({
+      qrType,
+      tableNumber,
+      tableCount,
+      baseUrl,
+    });
+    if (!validation.valid) {
+      showToast(validation.message ?? "Complete QR settings first.", "error");
+      return;
+    }
     const canvas = document.querySelector("canvas");
     if (!canvas) return;
     const imgData = canvas.toDataURL("image/png");

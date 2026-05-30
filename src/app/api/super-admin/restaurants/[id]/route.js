@@ -3,6 +3,8 @@ import { getTokenFromRequest } from "@/lib/authCookies";
 import { verifyToken } from "@/lib/jwt";
 import clientPromise from "@/lib/mongodb";
 import { getClientIp } from "@/lib/rateLimit";
+import { extractIndianMobileDigits } from "@/lib/phoneUtils";
+import { parseSchema, superAdminRestaurantUpdateSchema } from "@/lib/validationSchemas";
 import { ObjectId } from "mongodb";
 
 function superAdminOnly(request) {
@@ -32,49 +34,47 @@ export async function PATCH(request, { params }) {
   try { body = await request.json(); }
   catch { return Response.json({ success: false, error: "Invalid JSON." }, { status: 400 }); }
 
-  const update = {};
-  if (body.status && ["active", "inactive", "suspended"].includes(body.status)) update.status = body.status;
-  if (body.plan) {
-    if (!VALID_PLANS.includes(body.plan)) {
-      return Response.json({ success: false, error: "Invalid plan." }, { status: 400 });
-    }
-    update.plan = body.plan;
+  const cleanSlug = String(body?.slug ?? "").toLowerCase().replace(/[^a-z0-9-]/g, "").trim();
+
+  let validated;
+  try {
+    validated = parseSchema(superAdminRestaurantUpdateSchema, { ...body, slug: cleanSlug });
+  } catch (err) {
+    return Response.json({ success: false, error: err.message }, { status: 400 });
   }
-  if (body.name)    update.name    = body.name.trim();
-  if (body.phone   != null) update.phone   = body.phone.trim();
-  if (body.address != null) update.address = body.address.trim();
-  // Slug update
-  if (body.slug != null) {
-    const cleanSlug = String(body.slug).toLowerCase().replace(/[^a-z0-9-]/g, "").trim();
-    update.slug = cleanSlug || null;
-  }
-  update.updatedAt = new Date();
-  if (Object.keys(update).length === 1) {
-    return Response.json({ success: false, error: "No valid fields to update." }, { status: 400 });
+
+  const update = {
+    name: validated.name,
+    slug: validated.slug,
+    phone: validated.phone ? extractIndianMobileDigits(validated.phone) : "",
+    address: validated.address?.trim() ?? "",
+    plan: validated.plan,
+    updatedAt: new Date(),
+  };
+
+  if (body.status && ["active", "inactive", "suspended"].includes(body.status)) {
+    update.status = body.status;
   }
 
   try {
     const client = await clientPromise;
     const db     = client.db();
 
-    // Duplicate slug check (apne aap ko exclude karo)
-    if (update.slug) {
-      const existingSlug = await db.collection("restaurants").findOne({
-        slug: update.slug,
-        _id: { $ne: _id },
-      });
-      if (existingSlug) {
-        return Response.json({ success: false, error: "Yeh slug pehle se kisi aur restaurant ke paas hai." }, { status: 409 });
-      }
+    const existingSlug = await db.collection("restaurants").findOne({
+      slug: update.slug,
+      _id: { $ne: _id },
+    });
+    if (existingSlug) {
+      return Response.json({
+        success: false,
+        error: "Yeh slug pehle se kisi aur restaurant ke paas hai.",
+      }, { status: 409 });
     }
 
-    // Slug change hone par cache invalidate karo
-    if (update.slug !== undefined) {
-      const { invalidateRestaurantSlugCache } = await import("@/lib/restaurantResolver");
-      const oldDoc = await db.collection("restaurants").findOne({ _id }, { projection: { slug: 1 } });
-      if (oldDoc?.slug) invalidateRestaurantSlugCache(oldDoc.slug);
-      if (update.slug) invalidateRestaurantSlugCache(update.slug);
-    }
+    const { invalidateRestaurantSlugCache } = await import("@/lib/restaurantResolver");
+    const oldDoc = await db.collection("restaurants").findOne({ _id }, { projection: { slug: 1 } });
+    if (oldDoc?.slug) invalidateRestaurantSlugCache(oldDoc.slug);
+    if (update.slug) invalidateRestaurantSlugCache(update.slug);
 
     const session = client.startSession();
     try {

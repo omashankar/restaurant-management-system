@@ -17,13 +17,13 @@
  * @property {KitchenType} [kitchenType]
  */
 
-/** @type {Record<ItemType, { label: string; dot: string; badge: string; border: string }>} */
+/** @type {Record<ItemType, { label: string; dot: string; badge: string; border: string; emoji?: string }>} */
 export const ITEM_TYPE_META = {
   veg:       { label: "Veg",     dot: "bg-emerald-500", badge: "bg-emerald-500/15 text-emerald-300 ring-emerald-500/25", border: "border-emerald-500/30" },
   "non-veg": { label: "Non-Veg", dot: "bg-red-500",     badge: "bg-red-500/15 text-red-300 ring-red-500/25",           border: "border-red-500/30" },
-  egg:       { label: "Egg",     dot: "bg-yellow-400",   badge: "bg-yellow-500/15 text-yellow-300 ring-yellow-500/25",   border: "border-yellow-500/30" },
-  drink:     { label: "Drink",   dot: "bg-sky-500",      badge: "bg-sky-500/15 text-sky-300 ring-sky-500/25",            border: "border-sky-500/30" },
-  halal:     { label: "Halal",   dot: "bg-teal-500",     badge: "bg-teal-500/15 text-teal-300 ring-teal-500/25",         border: "border-teal-500/30" },
+  egg:       { label: "Egg",     emoji: "🥚", dot: "bg-yellow-400",   badge: "bg-yellow-500/15 text-yellow-300 ring-yellow-500/25",   border: "border-yellow-500/30" },
+  drink:     { label: "Drink",   emoji: "🥤", dot: "bg-sky-500",      badge: "bg-sky-500/15 text-sky-300 ring-sky-500/25",            border: "border-sky-500/30" },
+  halal:     { label: "Halal",   emoji: "🍖", dot: "bg-teal-500",     badge: "bg-teal-500/15 text-teal-300 ring-teal-500/25",         border: "border-teal-500/30" },
   other:     { label: "Other",   dot: "bg-zinc-500",     badge: "bg-zinc-500/15 text-zinc-400 ring-zinc-500/25",         border: "border-zinc-700" },
 };
 

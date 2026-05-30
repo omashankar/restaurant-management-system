@@ -12,6 +12,8 @@ import {
   Pencil, Plus, Save, Star, Trash2, Users,
 } from "lucide-react";
 import Link from "next/link";
+import { decimalInputProps, phoneInputProps } from "@/lib/formInputTypes";
+import { validateLandingSection } from "@/lib/landingValidation";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 /* ── shared input class ── */
@@ -97,7 +99,7 @@ const TABS = [
   { id: "seo",          label: "SEO",          Icon: Search         },
 ];
 
-function NavbarPanel({ data, onChange, onSave, saving }) {
+function NavbarPanel({ data, onChange, onSave, saving, fieldErrors = {}, onClearError }) {
   const links = Array.isArray(data.links) ? data.links : [];
   const logo = data.logo ?? {};
   const ctaPrimary = data.ctaPrimary ?? {};
@@ -111,36 +113,79 @@ function NavbarPanel({ data, onChange, onSave, saving }) {
     <div className="space-y-5">
       <SectionHeader icon={Link2} title="Navbar" description="Customize logo text, links, and top navigation CTAs." />
       <div className="grid gap-4 sm:grid-cols-2">
-        <Field label="Logo Text" required>
+        <Field label="Logo Text" required error={fieldErrors.logoText}>
           <input
             value={logo.text ?? ""}
-            onChange={e => onChange("logo", { ...logo, text: e.target.value })}
+            onChange={(e) => {
+              onChange("logo", { ...logo, text: e.target.value });
+              onClearError?.("logoText");
+            }}
             placeholder="Restaurant OS"
+            maxLength={80}
+            aria-invalid={fieldErrors.logoText ? true : undefined}
             className={ic}
           />
         </Field>
-        <Field label="Logo Icon URL">
+        <Field label="Logo Icon URL" error={fieldErrors.logoIconUrl}>
           <input
             value={logo.iconUrl ?? ""}
-            onChange={e => onChange("logo", { ...logo, iconUrl: e.target.value })}
+            onChange={(e) => {
+              onChange("logo", { ...logo, iconUrl: e.target.value });
+              onClearError?.("logoIconUrl");
+            }}
             placeholder="https://..."
+            aria-invalid={fieldErrors.logoIconUrl ? true : undefined}
             className={ic}
           />
         </Field>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
-        <Field label="Primary CTA Label">
-          <input value={ctaPrimary.label ?? ""} onChange={e => onChange("ctaPrimary", { ...ctaPrimary, label: e.target.value })} placeholder="Get Started" className={ic} />
+        <Field label="Primary CTA Label" error={fieldErrors.ctaPrimaryLabel}>
+          <input
+            value={ctaPrimary.label ?? ""}
+            onChange={(e) => {
+              onChange("ctaPrimary", { ...ctaPrimary, label: e.target.value });
+              onClearError?.("ctaPrimaryLabel");
+            }}
+            placeholder="Get Started"
+            maxLength={40}
+            className={ic}
+          />
         </Field>
-        <Field label="Primary CTA URL">
-          <input value={ctaPrimary.href ?? ""} onChange={e => onChange("ctaPrimary", { ...ctaPrimary, href: e.target.value })} placeholder="/signup" className={ic} />
+        <Field label="Primary CTA URL" error={fieldErrors.ctaPrimaryHref} hint="Internal path or https://…">
+          <input
+            value={ctaPrimary.href ?? ""}
+            onChange={(e) => {
+              onChange("ctaPrimary", { ...ctaPrimary, href: e.target.value });
+              onClearError?.("ctaPrimaryHref");
+            }}
+            placeholder="/signup"
+            className={ic}
+          />
         </Field>
-        <Field label="Secondary CTA Label">
-          <input value={ctaSecondary.label ?? ""} onChange={e => onChange("ctaSecondary", { ...ctaSecondary, label: e.target.value })} placeholder="Login" className={ic} />
+        <Field label="Secondary CTA Label" error={fieldErrors.ctaSecondaryLabel}>
+          <input
+            value={ctaSecondary.label ?? ""}
+            onChange={(e) => {
+              onChange("ctaSecondary", { ...ctaSecondary, label: e.target.value });
+              onClearError?.("ctaSecondaryLabel");
+            }}
+            placeholder="Login"
+            maxLength={40}
+            className={ic}
+          />
         </Field>
-        <Field label="Secondary CTA URL">
-          <input value={ctaSecondary.href ?? ""} onChange={e => onChange("ctaSecondary", { ...ctaSecondary, href: e.target.value })} placeholder="/login" className={ic} />
+        <Field label="Secondary CTA URL" error={fieldErrors.ctaSecondaryHref}>
+          <input
+            value={ctaSecondary.href ?? ""}
+            onChange={(e) => {
+              onChange("ctaSecondary", { ...ctaSecondary, href: e.target.value });
+              onClearError?.("ctaSecondaryHref");
+            }}
+            placeholder="/login"
+            className={ic}
+          />
         </Field>
       </div>
 
@@ -175,39 +220,72 @@ function NavbarPanel({ data, onChange, onSave, saving }) {
 /* ════════════════════════════════════════
    HERO PANEL
 ════════════════════════════════════════ */
-function HeroPanel({ data, onChange, onSave, saving }) {
-  const [errors, setErrors] = useState({});
-
-  const validate = () => {
-    const e = {};
-    if (!data.headline?.trim()) e.headline = "Headline is required.";
-    setErrors(e);
-    return !Object.keys(e).length;
-  };
-
+function HeroPanel({ data, onChange, onSave, saving, fieldErrors = {}, onClearError }) {
   return (
     <div className="space-y-5">
       <SectionHeader icon={LayoutTemplate} title="Hero Section" description="Headline, subheading, and CTA buttons." />
-      <Field label="Badge Text" hint="Small pill shown above the headline.">
-        <input value={data.badge ?? ""} onChange={e => onChange("badge", e.target.value)}
-          placeholder="Built for modern restaurants" className={ic} />
+      <Field label="Badge Text" hint="Small pill shown above the headline." error={fieldErrors.badge}>
+        <input
+          value={data.badge ?? ""}
+          onChange={(e) => {
+            onChange("badge", e.target.value);
+            onClearError?.("badge");
+          }}
+          placeholder="Built for modern restaurants"
+          maxLength={80}
+          className={ic}
+        />
       </Field>
-      <Field label="Headline" required error={errors.headline}>
-        <input value={data.headline ?? ""} onChange={e => { onChange("headline", e.target.value); setErrors(p => ({ ...p, headline: "" })); }}
-          placeholder="All-in-One Restaurant Management System" className={ic} />
+      <Field label="Headline" required error={fieldErrors.headline}>
+        <input
+          value={data.headline ?? ""}
+          onChange={(e) => {
+            onChange("headline", e.target.value);
+            onClearError?.("headline");
+          }}
+          placeholder="All-in-One Restaurant Management System"
+          maxLength={120}
+          aria-invalid={fieldErrors.headline ? true : undefined}
+          className={ic}
+        />
       </Field>
-      <Field label="Sub-headline">
-        <textarea rows={2} value={data.subheadline ?? ""} onChange={e => onChange("subheadline", e.target.value)}
-          placeholder="Manage billing, inventory, staff, and analytics…" className={`${ic} resize-none`} />
+      <Field label="Sub-headline" error={fieldErrors.subheadline}>
+        <textarea
+          rows={2}
+          value={data.subheadline ?? ""}
+          onChange={(e) => {
+            onChange("subheadline", e.target.value);
+            onClearError?.("subheadline");
+          }}
+          placeholder="Manage billing, inventory, staff, and analytics…"
+          maxLength={500}
+          className={`${ic} resize-none`}
+        />
       </Field>
       <div className="grid gap-4 sm:grid-cols-2">
-        <Field label="Primary CTA Text">
-          <input value={data.ctaPrimary ?? ""} onChange={e => onChange("ctaPrimary", e.target.value)}
-            placeholder="Start Free Trial" className={ic} />
+        <Field label="Primary CTA Text" error={fieldErrors.ctaPrimary}>
+          <input
+            value={data.ctaPrimary ?? ""}
+            onChange={(e) => {
+              onChange("ctaPrimary", e.target.value);
+              onClearError?.("ctaPrimary");
+            }}
+            placeholder="Start Free Trial"
+            maxLength={40}
+            className={ic}
+          />
         </Field>
-        <Field label="Secondary CTA Text">
-          <input value={data.ctaSecondary ?? ""} onChange={e => onChange("ctaSecondary", e.target.value)}
-            placeholder="Book a Demo" className={ic} />
+        <Field label="Secondary CTA Text" error={fieldErrors.ctaSecondary}>
+          <input
+            value={data.ctaSecondary ?? ""}
+            onChange={(e) => {
+              onChange("ctaSecondary", e.target.value);
+              onClearError?.("ctaSecondary");
+            }}
+            placeholder="Book a Demo"
+            maxLength={40}
+            className={ic}
+          />
         </Field>
       </div>
 
@@ -228,7 +306,7 @@ function HeroPanel({ data, onChange, onSave, saving }) {
           </div>
         </div>
       )}
-      <SaveBtn saving={saving} onClick={() => { if (validate()) onSave(); }} />
+      <SaveBtn saving={saving} onClick={onSave} />
     </div>
   );
 }
@@ -262,8 +340,16 @@ function ArrayPanel({ items, fields, onSave, saving, icon: Icon, title, descript
 
   const handleSave = async () => {
     const e = {};
-    fields.forEach(f => {
-      if (f.required && !form[f.key]?.toString().trim()) e[f.key] = `${f.label} is required.`;
+    fields.forEach((f) => {
+      if (f.required && !form[f.key]?.toString().trim()) {
+        e[f.key] = `${f.label} is required.`;
+      }
+      if (f.type === "number" && form[f.key] !== "" && form[f.key] != null) {
+        const n = Number(form[f.key]);
+        if (!Number.isFinite(n) || n < 0) {
+          e[f.key] = `${f.label} must be 0 or greater.`;
+        }
+      }
     });
     if (Object.keys(e).length) { setErrors(e); return; }
     setItemSaving(true);
@@ -343,9 +429,16 @@ function ArrayPanel({ items, fields, onSave, saving, icon: Icon, title, descript
                 <Toggle checked={!!form[f.key]} onChange={v => setForm(p => ({ ...p, [f.key]: v }))}
                   label={f.toggleLabel ?? ""} />
               ) : f.type === "number" ? (
-                <input type="number" min="0" value={form[f.key] ?? ""} placeholder={f.placeholder}
-                  onChange={e => { setForm(p => ({ ...p, [f.key]: Number(e.target.value) })); setErrors(p => ({ ...p, [f.key]: "" })); }}
-                  className={ic} />
+                <input
+                  {...decimalInputProps({ min: 0, step: "0.01" })}
+                  value={form[f.key] ?? ""}
+                  placeholder={f.placeholder}
+                  onChange={(e) => {
+                    setForm((p) => ({ ...p, [f.key]: e.target.value }));
+                    setErrors((p) => ({ ...p, [f.key]: "" }));
+                  }}
+                  className={ic}
+                />
               ) : (
                 <input value={form[f.key] ?? ""} placeholder={f.placeholder}
                   onChange={e => { setForm(p => ({ ...p, [f.key]: e.target.value })); setErrors(p => ({ ...p, [f.key]: "" })); }}
@@ -372,7 +465,7 @@ function ArrayPanel({ items, fields, onSave, saving, icon: Icon, title, descript
 /* ════════════════════════════════════════
    FOOTER PANEL
 ════════════════════════════════════════ */
-function FooterPanel({ data, onChange, onSave, saving }) {
+function FooterPanel({ data, onChange, onSave, saving, fieldErrors = {}, onClearError }) {
   const links = Array.isArray(data.links) ? data.links : [];
   const updateLink = (i, k, v) => onChange("links", links.map((l, idx) => idx === i ? { ...l, [k]: v } : l));
   const addLink    = () => onChange("links", [...links, { label: "", href: "" }]);
@@ -382,21 +475,55 @@ function FooterPanel({ data, onChange, onSave, saving }) {
     <div className="space-y-5">
       <SectionHeader icon={Mail} title="Footer" description="Company info, contact details, and footer links." />
       <div className="grid gap-4 sm:grid-cols-2">
-        <Field label="Company Name" required>
-          <input value={data.companyName ?? ""} onChange={e => onChange("companyName", e.target.value)}
-            placeholder="Restaurant OS" className={ic} />
+        <Field label="Company Name" required error={fieldErrors.companyName}>
+          <input
+            value={data.companyName ?? ""}
+            onChange={(e) => {
+              onChange("companyName", e.target.value);
+              onClearError?.("companyName");
+            }}
+            placeholder="Restaurant OS"
+            maxLength={80}
+            aria-invalid={fieldErrors.companyName ? true : undefined}
+            className={ic}
+          />
         </Field>
-        <Field label="Tagline">
-          <input value={data.tagline ?? ""} onChange={e => onChange("tagline", e.target.value)}
-            placeholder="All-in-one platform…" className={ic} />
+        <Field label="Tagline" error={fieldErrors.tagline}>
+          <input
+            value={data.tagline ?? ""}
+            onChange={(e) => {
+              onChange("tagline", e.target.value);
+              onClearError?.("tagline");
+            }}
+            placeholder="All-in-one platform…"
+            maxLength={80}
+            className={ic}
+          />
         </Field>
-        <Field label="Support Email">
-          <input type="email" value={data.email ?? ""} onChange={e => onChange("email", e.target.value)}
-            placeholder="support@rms.com" className={ic} />
+        <Field label="Support Email" error={fieldErrors.email}>
+          <input
+            type="email"
+            value={data.email ?? ""}
+            onChange={(e) => {
+              onChange("email", e.target.value);
+              onClearError?.("email");
+            }}
+            placeholder="support@rms.com"
+            className={ic}
+          />
         </Field>
-        <Field label="Phone">
-          <input value={data.phone ?? ""} onChange={e => onChange("phone", e.target.value)}
-            placeholder="+1 555 000 0000" className={ic} />
+        <Field label="Phone" error={fieldErrors.phone}>
+          <input
+            {...phoneInputProps()}
+            value={data.phone ?? ""}
+            onChange={(e) => {
+              onChange("phone", e.target.value.replace(/\D/g, "").slice(0, 10));
+              onClearError?.("phone");
+            }}
+            placeholder="9876543210"
+            maxLength={10}
+            className={ic}
+          />
         </Field>
         <div className="sm:col-span-2">
           <Field label="Address">
@@ -432,43 +559,108 @@ function FooterPanel({ data, onChange, onSave, saving }) {
   );
 }
 
-function AboutPanel({ data, onChange, onSave, saving }) {
+function AboutPanel({ data, onChange, onSave, saving, fieldErrors = {}, onClearError }) {
   return (
     <div className="space-y-5">
       <SectionHeader icon={Info} title="About Section" description="Control about headline, text, and media details." />
-      <Field label="Headline" required>
-        <input value={data.headline ?? ""} onChange={e => onChange("headline", e.target.value)} placeholder="Built by people who understand restaurants" className={ic} />
+      <Field label="Headline" required error={fieldErrors.headline}>
+        <input
+          value={data.headline ?? ""}
+          onChange={(e) => {
+            onChange("headline", e.target.value);
+            onClearError?.("headline");
+          }}
+          placeholder="Built by people who understand restaurants"
+          maxLength={120}
+          aria-invalid={fieldErrors.headline ? true : undefined}
+          className={ic}
+        />
       </Field>
-      <Field label="Description">
-        <textarea rows={4} value={data.description ?? ""} onChange={e => onChange("description", e.target.value)} placeholder="About your product and mission..." className={`${ic} resize-none`} />
+      <Field label="Description" error={fieldErrors.description}>
+        <textarea
+          rows={4}
+          value={data.description ?? ""}
+          onChange={(e) => {
+            onChange("description", e.target.value);
+            onClearError?.("description");
+          }}
+          placeholder="About your product and mission..."
+          maxLength={500}
+          className={`${ic} resize-none`}
+        />
       </Field>
-      <Field label="Image URL">
-        <input value={data.imageUrl ?? ""} onChange={e => onChange("imageUrl", e.target.value)} placeholder="https://..." className={ic} />
+      <Field label="Image URL" error={fieldErrors.imageUrl}>
+        <input
+          value={data.imageUrl ?? ""}
+          onChange={(e) => {
+            onChange("imageUrl", e.target.value);
+            onClearError?.("imageUrl");
+          }}
+          placeholder="https://..."
+          className={ic}
+        />
       </Field>
       <SaveBtn saving={saving} onClick={onSave} />
     </div>
   );
 }
 
-function ContactPanel({ data, onChange, onSave, saving }) {
+function ContactPanel({ data, onChange, onSave, saving, fieldErrors = {}, onClearError }) {
   return (
     <div className="space-y-5">
       <SectionHeader icon={Mail} title="Contact Section" description="Set support contact details shown on landing page." />
       <div className="grid gap-4 sm:grid-cols-2">
-        <Field label="Email" required>
-          <input type="email" value={data.email ?? ""} onChange={e => onChange("email", e.target.value)} placeholder="support@restaurantos.com" className={ic} />
+        <Field label="Email" required error={fieldErrors.email}>
+          <input
+            type="email"
+            value={data.email ?? ""}
+            onChange={(e) => {
+              onChange("email", e.target.value);
+              onClearError?.("email");
+            }}
+            placeholder="support@restaurantos.com"
+            aria-invalid={fieldErrors.email ? true : undefined}
+            className={ic}
+          />
         </Field>
-        <Field label="Phone">
-          <input value={data.phone ?? ""} onChange={e => onChange("phone", e.target.value)} placeholder="+1 555 000 0000" className={ic} />
+        <Field label="Phone" error={fieldErrors.phone}>
+          <input
+            {...phoneInputProps()}
+            value={data.phone ?? ""}
+            onChange={(e) => {
+              onChange("phone", e.target.value.replace(/\D/g, "").slice(0, 10));
+              onClearError?.("phone");
+            }}
+            placeholder="9876543210"
+            maxLength={10}
+            className={ic}
+          />
         </Field>
         <div className="sm:col-span-2">
-          <Field label="Address">
-            <input value={data.address ?? ""} onChange={e => onChange("address", e.target.value)} placeholder="123 Main Street, City, Country" className={ic} />
+          <Field label="Address" error={fieldErrors.address}>
+            <input
+              value={data.address ?? ""}
+              onChange={(e) => {
+                onChange("address", e.target.value);
+                onClearError?.("address");
+              }}
+              placeholder="123 Main Street, City, Country"
+              maxLength={200}
+              className={ic}
+            />
           </Field>
         </div>
         <div className="sm:col-span-2">
-          <Field label="Map URL">
-            <input value={data.mapUrl ?? ""} onChange={e => onChange("mapUrl", e.target.value)} placeholder="https://maps.google.com/..." className={ic} />
+          <Field label="Map URL" error={fieldErrors.mapUrl} hint="Internal path or https://…">
+            <input
+              value={data.mapUrl ?? ""}
+              onChange={(e) => {
+                onChange("mapUrl", e.target.value);
+                onClearError?.("mapUrl");
+              }}
+              placeholder="https://maps.google.com/..."
+              className={ic}
+            />
           </Field>
         </div>
       </div>
@@ -483,35 +675,82 @@ function ContactPanel({ data, onChange, onSave, saving }) {
   );
 }
 
-function SeoPanel({ data, onChange, onSave, saving }) {
+function SeoPanel({ data, onChange, onSave, saving, fieldErrors = {}, onClearError }) {
   return (
     <div className="space-y-5">
       <SectionHeader icon={Search} title="SEO Settings" description="Manage metadata for search and social previews." />
-      <Field label="Meta Title">
-        <input value={data.title ?? ""} onChange={e => onChange("title", e.target.value)} placeholder="Restaurant OS — All-in-One Restaurant Management System" className={ic} />
+      <Field label="Meta Title" error={fieldErrors.title}>
+        <input
+          value={data.title ?? ""}
+          onChange={(e) => {
+            onChange("title", e.target.value);
+            onClearError?.("title");
+          }}
+          placeholder="Restaurant OS — All-in-One Restaurant Management System"
+          maxLength={70}
+          className={ic}
+        />
       </Field>
-      <Field label="Meta Description">
-        <textarea rows={3} value={data.description ?? ""} onChange={e => onChange("description", e.target.value)} placeholder="Manage billing, inventory, staff, and analytics..." className={`${ic} resize-none`} />
+      <Field label="Meta Description" error={fieldErrors.description}>
+        <textarea
+          rows={3}
+          value={data.description ?? ""}
+          onChange={(e) => {
+            onChange("description", e.target.value);
+            onClearError?.("description");
+          }}
+          placeholder="Manage billing, inventory, staff, and analytics..."
+          maxLength={160}
+          className={`${ic} resize-none`}
+        />
       </Field>
-      <Field label="Keywords">
-        <input value={data.keywords ?? ""} onChange={e => onChange("keywords", e.target.value)} placeholder="restaurant management, POS, inventory, SaaS" className={ic} />
+      <Field label="Keywords" error={fieldErrors.keywords}>
+        <input
+          value={data.keywords ?? ""}
+          onChange={(e) => {
+            onChange("keywords", e.target.value);
+            onClearError?.("keywords");
+          }}
+          placeholder="restaurant management, POS, inventory, SaaS"
+          maxLength={200}
+          className={ic}
+        />
       </Field>
       <div className="grid gap-4 sm:grid-cols-2">
-        <Field label="Open Graph Image URL">
-          <input value={data.ogImage ?? ""} onChange={e => onChange("ogImage", e.target.value)} placeholder="https://..." className={ic} />
+        <Field label="Open Graph Image URL" error={fieldErrors.ogImage}>
+          <input
+            value={data.ogImage ?? ""}
+            onChange={(e) => {
+              onChange("ogImage", e.target.value);
+              onClearError?.("ogImage");
+            }}
+            placeholder="https://..."
+            className={ic}
+          />
         </Field>
         <Field label="Twitter Card Type">
-          <input value={data.twitterCard ?? ""} onChange={e => onChange("twitterCard", e.target.value)} placeholder="summary_large_image" className={ic} />
+          <input
+            value={data.twitterCard ?? ""}
+            onChange={(e) => onChange("twitterCard", e.target.value)}
+            placeholder="summary_large_image"
+            maxLength={40}
+            className={ic}
+          />
         </Field>
       </div>
       <Field
         label="Pricing currency (ISO 4217)"
         hint="Used on public pricing cards — e.g. INR, USD, EUR."
+        error={fieldErrors.priceCurrency}
       >
         <input
           value={data.priceCurrency ?? ""}
-          onChange={(e) => onChange("priceCurrency", e.target.value)}
+          onChange={(e) => {
+            onChange("priceCurrency", e.target.value.toUpperCase().replace(/[^A-Z]/g, "").slice(0, 3));
+            onClearError?.("priceCurrency");
+          }}
           placeholder="INR"
+          maxLength={3}
           className={ic}
         />
       </Field>
@@ -618,59 +857,134 @@ function BenefitsPanel({ data, onChange, onSave, saving }) {
   );
 }
 
-function DemoSectionPanel({ data, onChange, onSave, saving }) {
+function DemoSectionPanel({ data, onChange, onSave, saving, fieldErrors = {}, onClearError }) {
   return (
     <div className="space-y-5">
       <SectionHeader icon={Globe} title="Demo Section" description="Dashboard-style preview strip and section copy." />
       <Toggle checked={data.enabled !== false} onChange={(v) => onChange("enabled", v)} label="Section enabled" />
-      <Field label="Section anchor ID" hint="Navbar “Demo” should match this ID.">
-        <input value={data.sectionId ?? ""} onChange={(e) => onChange("sectionId", e.target.value)} placeholder="demo" className={ic} />
+      <Field label="Section anchor ID" hint="Navbar “Demo” should match this ID." error={fieldErrors.sectionId}>
+        <input
+          value={data.sectionId ?? ""}
+          onChange={(e) => {
+            onChange("sectionId", e.target.value);
+            onClearError?.("sectionId");
+          }}
+          placeholder="demo"
+          maxLength={40}
+          className={ic}
+        />
       </Field>
       <Field label="Eyebrow">
-        <input value={data.eyebrow ?? ""} onChange={(e) => onChange("eyebrow", e.target.value)} className={ic} />
+        <input value={data.eyebrow ?? ""} onChange={(e) => onChange("eyebrow", e.target.value)} maxLength={80} className={ic} />
       </Field>
-      <Field label="Title">
-        <input value={data.title ?? ""} onChange={(e) => onChange("title", e.target.value)} className={ic} />
+      <Field label="Title" error={fieldErrors.title}>
+        <input
+          value={data.title ?? ""}
+          onChange={(e) => {
+            onChange("title", e.target.value);
+            onClearError?.("title");
+          }}
+          maxLength={120}
+          className={ic}
+        />
       </Field>
-      <Field label="Subtext">
-        <textarea rows={3} value={data.subtext ?? ""} onChange={(e) => onChange("subtext", e.target.value)} className={`${ic} resize-none`} />
+      <Field label="Subtext" error={fieldErrors.subtext}>
+        <textarea
+          rows={3}
+          value={data.subtext ?? ""}
+          onChange={(e) => {
+            onChange("subtext", e.target.value);
+            onClearError?.("subtext");
+          }}
+          maxLength={500}
+          className={`${ic} resize-none`}
+        />
       </Field>
       <SaveBtn saving={saving} onClick={onSave} />
     </div>
   );
 }
 
-function CTASectionPanel({ data, onChange, onSave, saving }) {
+function CTASectionPanel({ data, onChange, onSave, saving, fieldErrors = {}, onClearError }) {
   return (
     <div className="space-y-5">
       <SectionHeader icon={LayoutTemplate} title="CTA banner" description="Gradient call-to-action block before the footer." />
       <Toggle checked={data.enabled !== false} onChange={(v) => onChange("enabled", v)} label="Section enabled" />
       <Field label="Section anchor ID">
-        <input value={data.sectionId ?? ""} onChange={(e) => onChange("sectionId", e.target.value)} placeholder="cta" className={ic} />
+        <input value={data.sectionId ?? ""} onChange={(e) => onChange("sectionId", e.target.value)} placeholder="cta" maxLength={40} className={ic} />
       </Field>
       <Field label="Eyebrow">
-        <input value={data.eyebrow ?? ""} onChange={(e) => onChange("eyebrow", e.target.value)} className={ic} />
+        <input value={data.eyebrow ?? ""} onChange={(e) => onChange("eyebrow", e.target.value)} maxLength={80} className={ic} />
       </Field>
-      <Field label="Title">
-        <input value={data.title ?? ""} onChange={(e) => onChange("title", e.target.value)} className={ic} />
+      <Field label="Title" error={fieldErrors.title}>
+        <input
+          value={data.title ?? ""}
+          onChange={(e) => {
+            onChange("title", e.target.value);
+            onClearError?.("title");
+          }}
+          maxLength={120}
+          className={ic}
+        />
       </Field>
-      <Field label="Description">
-        <textarea rows={3} value={data.description ?? ""} onChange={(e) => onChange("description", e.target.value)} className={`${ic} resize-none`} />
+      <Field label="Description" error={fieldErrors.description}>
+        <textarea
+          rows={3}
+          value={data.description ?? ""}
+          onChange={(e) => {
+            onChange("description", e.target.value);
+            onClearError?.("description");
+          }}
+          maxLength={500}
+          className={`${ic} resize-none`}
+        />
       </Field>
       <div className="grid gap-4 sm:grid-cols-2">
-        <Field label="Primary button label">
-          <input value={data.primaryCtaLabel ?? ""} onChange={(e) => onChange("primaryCtaLabel", e.target.value)} className={ic} />
+        <Field label="Primary button label" error={fieldErrors.primaryCtaLabel}>
+          <input
+            value={data.primaryCtaLabel ?? ""}
+            onChange={(e) => {
+              onChange("primaryCtaLabel", e.target.value);
+              onClearError?.("primaryCtaLabel");
+            }}
+            maxLength={40}
+            className={ic}
+          />
         </Field>
-        <Field label="Primary URL" hint="Internal path or https://…">
-          <input value={data.primaryCtaHref ?? ""} onChange={(e) => onChange("primaryCtaHref", e.target.value)} placeholder="/signup" className={ic} />
+        <Field label="Primary URL" hint="Internal path or https://…" error={fieldErrors.primaryCtaHref}>
+          <input
+            value={data.primaryCtaHref ?? ""}
+            onChange={(e) => {
+              onChange("primaryCtaHref", e.target.value);
+              onClearError?.("primaryCtaHref");
+            }}
+            placeholder="/signup"
+            className={ic}
+          />
         </Field>
       </div>
       <div className="grid gap-4 sm:grid-cols-2">
-        <Field label="Secondary button label">
-          <input value={data.secondaryCtaLabel ?? ""} onChange={(e) => onChange("secondaryCtaLabel", e.target.value)} className={ic} />
+        <Field label="Secondary button label" error={fieldErrors.secondaryCtaLabel}>
+          <input
+            value={data.secondaryCtaLabel ?? ""}
+            onChange={(e) => {
+              onChange("secondaryCtaLabel", e.target.value);
+              onClearError?.("secondaryCtaLabel");
+            }}
+            maxLength={40}
+            className={ic}
+          />
         </Field>
-        <Field label="Secondary URL" hint="Use #demo for same-page anchors.">
-          <input value={data.secondaryCtaHref ?? ""} onChange={(e) => onChange("secondaryCtaHref", e.target.value)} placeholder="#demo" className={ic} />
+        <Field label="Secondary URL" hint="Use #demo for same-page anchors." error={fieldErrors.secondaryCtaHref}>
+          <input
+            value={data.secondaryCtaHref ?? ""}
+            onChange={(e) => {
+              onChange("secondaryCtaHref", e.target.value);
+              onClearError?.("secondaryCtaHref");
+            }}
+            placeholder="#demo"
+            className={ic}
+          />
         </Field>
       </div>
       <SaveBtn saving={saving} onClick={onSave} />
@@ -719,8 +1033,13 @@ export default function LandingSitePage() {
   const [fetching, setFetching]   = useState(true);
   const [loadError, setLoadError] = useState("");
   const [saving, setSaving]       = useState(false);
+  const [sectionErrors, setSectionErrors] = useState({});
   const { showToast, ToastUI }    = useToast();
   const panelRef                  = useRef(null);
+
+  const clearSectionError = useCallback((key) => {
+    setSectionErrors((prev) => (prev[key] ? { ...prev, [key]: "" } : prev));
+  }, []);
 
   const normalizePricingForEditor = useCallback((rawContent) => {
     if (!rawContent) return rawContent;
@@ -815,9 +1134,16 @@ export default function LandingSitePage() {
       showToast("Pricing is synced from Plans. Please update /super-admin/plans.", "error");
       return;
     }
+    const payload = overrideData !== undefined ? overrideData : content[activeTab];
+    const validation = validateLandingSection(activeTab, payload);
+    if (!validation.valid) {
+      setSectionErrors(validation.errors);
+      showToast(validation.message ?? "Please fix the highlighted fields.", "error");
+      return;
+    }
+    setSectionErrors({});
     setSaving(true);
     try {
-      const payload = overrideData !== undefined ? overrideData : content[activeTab];
       const res     = await fetch("/api/super-admin/landing", {
         method:  "PATCH",
         headers: { "Content-Type": "application/json" },
@@ -835,7 +1161,13 @@ export default function LandingSitePage() {
 
   const switchTab = (id) => {
     setActiveTab(id);
+    setSectionErrors({});
     panelRef.current?.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const panelValidationProps = {
+    fieldErrors: sectionErrors,
+    onClearError: clearSectionError,
   };
 
   const sectionData = content?.[activeTab] ?? {};
@@ -901,10 +1233,10 @@ export default function LandingSitePage() {
           ) : (
             <>
               {activeTab === "hero" && (
-                <HeroPanel data={sectionData} onChange={handleChange} onSave={handleSave} saving={saving} />
+                <HeroPanel data={sectionData} onChange={handleChange} onSave={handleSave} saving={saving} {...panelValidationProps} />
               )}
               {activeTab === "navbar" && (
-                <NavbarPanel data={sectionData} onChange={handleChange} onSave={() => handleSave()} saving={saving} />
+                <NavbarPanel data={sectionData} onChange={handleChange} onSave={handleSave} saving={saving} {...panelValidationProps} />
               )}
               {activeTab === "features" && (
                 <ArrayPanel
@@ -1027,13 +1359,13 @@ export default function LandingSitePage() {
                 />
               )}
               {activeTab === "footer" && (
-                <FooterPanel data={sectionData} onChange={handleChange} onSave={() => handleSave()} saving={saving} />
+                <FooterPanel data={sectionData} onChange={handleChange} onSave={handleSave} saving={saving} {...panelValidationProps} />
               )}
               {activeTab === "about" && (
-                <AboutPanel data={sectionData} onChange={handleChange} onSave={() => handleSave()} saving={saving} />
+                <AboutPanel data={sectionData} onChange={handleChange} onSave={handleSave} saving={saving} {...panelValidationProps} />
               )}
               {activeTab === "contact" && (
-                <ContactPanel data={sectionData} onChange={handleChange} onSave={() => handleSave()} saving={saving} />
+                <ContactPanel data={sectionData} onChange={handleChange} onSave={handleSave} saving={saving} {...panelValidationProps} />
               )}
               {activeTab === "brands" && (
                 <BrandsPanel data={sectionData} onChange={handleChange} onSave={() => handleSave()} saving={saving} />
@@ -1048,13 +1380,13 @@ export default function LandingSitePage() {
                 <BenefitsPanel data={sectionData} onChange={handleChange} onSave={() => handleSave()} saving={saving} />
               )}
               {activeTab === "demo" && (
-                <DemoSectionPanel data={sectionData} onChange={handleChange} onSave={() => handleSave()} saving={saving} />
+                <DemoSectionPanel data={sectionData} onChange={handleChange} onSave={handleSave} saving={saving} {...panelValidationProps} />
               )}
               {activeTab === "cta" && (
-                <CTASectionPanel data={sectionData} onChange={handleChange} onSave={() => handleSave()} saving={saving} />
+                <CTASectionPanel data={sectionData} onChange={handleChange} onSave={handleSave} saving={saving} {...panelValidationProps} />
               )}
               {activeTab === "seo" && (
-                <SeoPanel data={sectionData} onChange={handleChange} onSave={() => handleSave()} saving={saving} />
+                <SeoPanel data={sectionData} onChange={handleChange} onSave={handleSave} saving={saving} {...panelValidationProps} />
               )}
             </>
           )}

@@ -31,6 +31,7 @@ import {
 import { useToast } from "@/hooks/useToast";
 import { invalidateRestaurantCmsCache } from "@/hooks/useRestaurantCms";
 import { DEFAULTS } from "@/lib/restaurantCmsDefaults";
+import { validateRestaurantCmsSection } from "@/lib/restaurantSettingsValidation";
 import {
   Globe, Loader2, Megaphone, Info, Sparkles,
   ToggleLeft, ToggleRight, ExternalLink, Plus, Trash2, Layers,
@@ -302,6 +303,11 @@ export default function CustomerSitePage() {
   }, [activeTab, showToast]);
 
   const saveDraft = async (section, data) => {
+    const validation = validateRestaurantCmsSection(section, data);
+    if (!validation.valid) {
+      showToast(validation.message ?? "Fix the highlighted fields.", "error");
+      return;
+    }
     setSaving(`draft-${section}`);
     try {
       const res = await fetch("/api/restaurant-cms", {
@@ -324,6 +330,11 @@ export default function CustomerSitePage() {
   };
 
   const publishNow = async (section, data) => {
+    const validation = validateRestaurantCmsSection(section, data);
+    if (!validation.valid) {
+      showToast(validation.message ?? "Fix the highlighted fields.", "error");
+      return;
+    }
     setSaving(`pub-${section}`);
     try {
       const res = await fetch("/api/restaurant-cms", {

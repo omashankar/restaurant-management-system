@@ -4,6 +4,16 @@ import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import Modal from "@/components/ui/Modal";
 import { useToast } from "@/hooks/useToast";
 import {
+  buildAssignPlanSubmitBody,
+  buildPlanSubmitBody,
+  EMPTY_ASSIGN_PLAN_ERRORS,
+  EMPTY_PLAN_FORM_ERRORS,
+  getAssignPlanFieldErrors,
+  getPlanFormFieldErrors,
+} from "@/lib/formValidation";
+import { decimalInputProps, intInputProps } from "@/lib/formInputTypes";
+import { formatSaMoney } from "@/lib/formatSaMoney";
+import {
   Check, CreditCard, Pencil, Plus,
   RefreshCw, Sparkles, Trash2, Users, X,
 } from "lucide-react";
@@ -207,6 +217,12 @@ const PLAN_COLORS = {
 const DEFAULT_COLOR = { bg: "bg-emerald-500/5", border: "border-emerald-500/20", badge: "bg-emerald-500/15 text-emerald-400 ring-emerald-500/25", icon: "text-emerald-400" };
 const BILLING_CYCLES = ["monthly", "yearly"];
 const emptyForm = { name: "", monthlyPrice: "", yearlyPrice: "", billingCycle: "monthly", description: "", features: "", limits: { staff: "", tables: "", menuItems: "", orders: "" } };
+const emptyAssignForm = { restaurantId: "", planSlug: "", startDate: "", endDate: "", trialDays: "0" };
+
+function FieldError({ message }) {
+  if (!message) return null;
+  return <p className="mt-1 text-xs text-red-400">{message}</p>;
+}
 
 /* ─────────────────────────────────────────
    MAIN PAGE
@@ -221,14 +237,16 @@ export default function PlansPage() {
   const [editingId, setEditingId] = useState(null);
   const [form, setForm]           = useState(emptyForm);
   const [formError, setFormError] = useState("");
+  const [fieldErrors, setFieldErrors] = useState(EMPTY_PLAN_FORM_ERRORS);
   const [saving, setSaving]       = useState(false);
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [deleting, setDeleting]   = useState(false);
-  const [assignOpen, setAssignOpen]         = useState(false);
-  const [restaurants, setRestaurants]       = useState([]);
-  const [selectedPlanSlug, setSelectedPlanSlug] = useState("");
-  const [selectedRestaurant, setSelectedRestaurant] = useState("");
-  const [assigning, setAssigning]           = useState(false);
+  const [assignOpen, setAssignOpen] = useState(false);
+  const [assignRestaurants, setAssignRestaurants] = useState([]);
+  const [assignForm, setAssignForm] = useState(emptyAssignForm);
+  const [assignFieldErrors, setAssignFieldErrors] = useState(EMPTY_ASSIGN_PLAN_ERRORS);
+  const [assignError, setAssignError] = useState("");
+  const [assigning, setAssigning] = useState(false);
   const { showToast, ToastUI }    = useToast();
 
   const fetchPlans = useCallback(async () => {
@@ -254,7 +272,13 @@ export default function PlansPage() {
 
   useEffect(() => { fetchPlans(); }, [fetchPlans]);
 
-  const openCreate = () => { setEditingId(null); setForm(emptyForm); setFormError(""); setModalOpen(true); };
+  const openCreate = () => {
+    setEditingId(null);
+    setForm(emptyForm);
+    setFormError("");
+    setFieldErrors(EMPTY_PLAN_FORM_ERRORS);
+    setModalOpen(true);
+  };
 
   const openEdit = (p) => {
     setEditingId(p.id);
@@ -272,34 +296,26 @@ export default function PlansPage() {
         orders:    p.limits?.orders    != null ? String(p.limits.orders)    : "",
       },
     });
-    setFormError(""); setModalOpen(true);
+    setFormError("");
+    setFieldErrors(EMPTY_PLAN_FORM_ERRORS);
+    setModalOpen(true);
+  };
+
+  const clearFieldError = (key) => {
+    if (fieldErrors[key]) setFieldErrors((prev) => ({ ...prev, [key]: "" }));
   };
 
   const save = async () => {
-    if (!form.name.trim()) { setFormError("Plan name is required."); return; }
-    if (form.monthlyPrice === "" || isNaN(Number(form.monthlyPrice)) || Number(form.monthlyPrice) < 0) {
-      setFormError("Valid monthly price is required.");
+    const errors = getPlanFormFieldErrors(form);
+    setFieldErrors(errors);
+    const firstError = Object.values(errors).find(Boolean);
+    if (firstError) {
+      setFormError(firstError);
       return;
     }
-    if (form.yearlyPrice === "" || isNaN(Number(form.yearlyPrice)) || Number(form.yearlyPrice) < 0) {
-      setFormError("Valid yearly price is required.");
-      return;
-    }
-    setSaving(true); setFormError("");
-    const body = {
-      name: form.name.trim(),
-      monthlyPrice: Number(form.monthlyPrice),
-      yearlyPrice: Number(form.yearlyPrice),
-      price: form.billingCycle === "yearly" ? Number(form.yearlyPrice) : Number(form.monthlyPrice),
-      billingCycle: form.billingCycle, description: form.description.trim(),
-      features: form.features.split(",").map((f) => f.trim()).filter(Boolean),
-      limits: {
-        staff:     form.limits.staff     !== "" ? Number(form.limits.staff)     : -1,
-        tables:    form.limits.tables    !== "" ? Number(form.limits.tables)    : -1,
-        menuItems: form.limits.menuItems !== "" ? Number(form.limits.menuItems) : -1,
-        orders:    form.limits.orders    !== "" ? Number(form.limits.orders)    : -1,
-      },
-    };
+    setSaving(true);
+    setFormError("");
+    const body = buildPlanSubmitBody(form);
     try {
       const url    = editingId ? `/api/super-admin/plans/${editingId}` : "/api/super-admin/plans";
       const method = editingId ? "PATCH" : "POST";
@@ -325,29 +341,53 @@ export default function PlansPage() {
     finally { setDeleting(false); }
   };
 
-  const openAssign = async (planSlug) => {
-    setSelectedPlanSlug(planSlug); setSelectedRestaurant(""); setAssignOpen(true);
+  const openAssign = async (planSlug = "") => {
+    setAssignForm({ ...emptyAssignForm, planSlug });
+    setAssignFieldErrors(EMPTY_ASSIGN_PLAN_ERRORS);
+    setAssignError("");
+    setAssignOpen(true);
     try {
-      const res  = await fetch("/api/super-admin/restaurants");
+      const res = await fetch("/api/super-admin/restaurants");
       const data = await res.json();
-      if (data.success) setRestaurants(data.restaurants);
+      if (data.success) setAssignRestaurants(data.restaurants);
     } catch { /* keep */ }
   };
 
+  const clearAssignFieldError = (key) => {
+    if (assignFieldErrors[key]) setAssignFieldErrors((prev) => ({ ...prev, [key]: "" }));
+  };
+
   const assignPlan = async () => {
-    if (!selectedRestaurant) { showToast("Select a restaurant.", "error"); return; }
+    const errors = getAssignPlanFieldErrors(assignForm);
+    setAssignFieldErrors(errors);
+    const firstError = Object.values(errors).find(Boolean);
+    if (firstError) {
+      setAssignError(firstError);
+      return;
+    }
     setAssigning(true);
+    setAssignError("");
     try {
-      const res  = await fetch(`/api/super-admin/restaurants/${selectedRestaurant}/plan`, {
-        method: "PATCH",
+      const res = await fetch("/api/super-admin/subscriptions", {
+        method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ plan: selectedPlanSlug }),
+        body: JSON.stringify(buildAssignPlanSubmitBody(assignForm)),
       });
       const data = await res.json();
-      if (!data.success) { showToast(data.error ?? "Failed.", "error"); return; }
-      showToast("Plan assigned successfully."); setAssignOpen(false); fetchPlans();
-    } catch { showToast("Network error.", "error"); }
-    finally { setAssigning(false); }
+      if (!data.success) {
+        setAssignError(data.error ?? "Failed.");
+        return;
+      }
+      showToast("Plan assigned successfully.");
+      setAssignOpen(false);
+      setAssignForm(emptyAssignForm);
+      setAssignFieldErrors(EMPTY_ASSIGN_PLAN_ERRORS);
+      fetchPlans();
+    } catch {
+      setAssignError("Network error.");
+    } finally {
+      setAssigning(false);
+    }
   };
 
   /* Use DB plans as source of truth for both sections */
@@ -573,65 +613,124 @@ export default function PlansPage() {
             </button>
           </div>
         }>
-        <div className="space-y-4">
+        <form
+          noValidate
+          className="space-y-4"
+          onSubmit={(e) => {
+            e.preventDefault();
+            save();
+          }}
+        >
           {formError && <p className="rounded-xl border border-red-500/20 bg-red-500/10 px-3 py-2 text-xs text-red-400">{formError}</p>}
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
               <label className="text-xs font-medium text-zinc-500">Plan Name *</label>
-              <input value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+              <input
+                value={form.name}
+                onChange={(e) => {
+                  setForm((f) => ({ ...f, name: e.target.value }));
+                  clearFieldError("name");
+                }}
                 placeholder="e.g. Pro"
-                className="mt-1 w-full rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus:border-emerald-500/40 placeholder:text-zinc-600" />
+                aria-invalid={fieldErrors.name ? true : undefined}
+                className="mt-1 w-full rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus:border-emerald-500/40 placeholder:text-zinc-600"
+              />
+              <FieldError message={fieldErrors.name} />
             </div>
             <div>
               <label className="text-xs font-medium text-zinc-500">Monthly Price (USD) *</label>
-              <input type="number" min="0" step="0.01" value={form.monthlyPrice}
-                onChange={(e) => setForm((f) => ({ ...f, monthlyPrice: e.target.value }))}
+              <input
+                {...decimalInputProps({ min: 0, step: "0.01" })}
+                value={form.monthlyPrice}
+                onChange={(e) => {
+                  setForm((f) => ({ ...f, monthlyPrice: e.target.value }));
+                  clearFieldError("monthlyPrice");
+                }}
                 placeholder="29"
-                className="mt-1 w-full rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus:border-emerald-500/40" />
+                aria-invalid={fieldErrors.monthlyPrice ? true : undefined}
+                className="mt-1 w-full rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus:border-emerald-500/40"
+              />
+              <FieldError message={fieldErrors.monthlyPrice} />
             </div>
             <div>
               <label className="text-xs font-medium text-zinc-500">Yearly Price (USD) *</label>
-              <input type="number" min="0" step="0.01" value={form.yearlyPrice}
-                onChange={(e) => setForm((f) => ({ ...f, yearlyPrice: e.target.value }))}
+              <input
+                {...decimalInputProps({ min: 0, step: "0.01" })}
+                value={form.yearlyPrice}
+                onChange={(e) => {
+                  setForm((f) => ({ ...f, yearlyPrice: e.target.value }));
+                  clearFieldError("yearlyPrice");
+                }}
                 placeholder="299"
-                className="mt-1 w-full rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus:border-emerald-500/40" />
+                aria-invalid={fieldErrors.yearlyPrice ? true : undefined}
+                className="mt-1 w-full rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus:border-emerald-500/40"
+              />
+              <FieldError message={fieldErrors.yearlyPrice} />
             </div>
             <div>
               <label className="text-xs font-medium text-zinc-500">Default Billing Cycle</label>
-              <select value={form.billingCycle} onChange={(e) => setForm((f) => ({ ...f, billingCycle: e.target.value }))}
-                className="cursor-pointer mt-1 w-full rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus:border-emerald-500/40">
+              <select
+                value={form.billingCycle}
+                onChange={(e) => {
+                  setForm((f) => ({ ...f, billingCycle: e.target.value }));
+                  clearFieldError("billingCycle");
+                }}
+                className="cursor-pointer mt-1 w-full rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus:border-emerald-500/40"
+              >
                 {BILLING_CYCLES.map((b) => <option key={b} value={b} className="capitalize">{b}</option>)}
               </select>
+              <FieldError message={fieldErrors.billingCycle} />
             </div>
             <div>
               <label className="text-xs font-medium text-zinc-500">Description</label>
-              <input value={form.description} onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
+              <input
+                value={form.description}
+                onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
                 placeholder="Short description"
-                className="mt-1 w-full rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus:border-emerald-500/40 placeholder:text-zinc-600" />
+                maxLength={500}
+                className="mt-1 w-full rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus:border-emerald-500/40 placeholder:text-zinc-600"
+              />
             </div>
           </div>
           <div>
             <label className="text-xs font-medium text-zinc-500">Features <span className="text-zinc-600">(comma-separated)</span></label>
-            <textarea rows={2} value={form.features}
+            <textarea
+              rows={2}
+              value={form.features}
               onChange={(e) => setForm((f) => ({ ...f, features: e.target.value }))}
               placeholder="Full POS, Inventory, Analytics, Priority support"
-              className="mt-1 w-full resize-none rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus:border-emerald-500/40 placeholder:text-zinc-600" />
+              className="mt-1 w-full resize-none rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus:border-emerald-500/40 placeholder:text-zinc-600"
+            />
           </div>
           <div>
             <label className="text-xs font-medium text-zinc-500">Limits <span className="text-zinc-600">(-1 = unlimited)</span></label>
             <div className="mt-1 grid grid-cols-2 gap-2 sm:grid-cols-4">
-              {["staff", "tables", "menuItems", "orders"].map((k) => (
-                <div key={k}>
-                  <label className="text-[10px] capitalize text-zinc-600">{k}</label>
-                  <input type="number" min="-1" value={form.limits[k]}
-                    onChange={(e) => setForm((f) => ({ ...f, limits: { ...f.limits, [k]: e.target.value } }))}
+              {[
+                { key: "staff", label: "staff", errKey: "limitsStaff" },
+                { key: "tables", label: "tables", errKey: "limitsTables" },
+                { key: "menuItems", label: "menuItems", errKey: "limitsMenuItems" },
+                { key: "orders", label: "orders", errKey: "limitsOrders" },
+              ].map(({ key, label, errKey }) => (
+                <div key={key}>
+                  <label className="text-[10px] capitalize text-zinc-600">{label}</label>
+                  <input
+                    {...intInputProps({ min: -1, step: 1 })}
+                    value={form.limits[key]}
+                    onChange={(e) => {
+                      const v = e.target.value.replace(/[^\d-]/g, "");
+                      setForm((f) => ({ ...f, limits: { ...f.limits, [key]: v } }));
+                      clearFieldError(errKey);
+                    }}
                     placeholder="-1"
-                    className="mt-0.5 w-full rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2 text-sm text-zinc-100 outline-none focus:border-emerald-500/40" />
+                    aria-invalid={fieldErrors[errKey] ? true : undefined}
+                    className="mt-0.5 w-full rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2 text-sm text-zinc-100 outline-none focus:border-emerald-500/40"
+                  />
+                  <FieldError message={fieldErrors[errKey]} />
                 </div>
               ))}
             </div>
           </div>
-        </div>
+        </form>
       </Modal>
 
       {/* ── Assign Plan Modal ── */}
@@ -642,27 +741,112 @@ export default function PlansPage() {
               className="cursor-pointer rounded-xl border border-zinc-700 px-4 py-2 text-sm text-zinc-300 hover:border-zinc-500">
               Cancel
             </button>
-            <button type="button" onClick={assignPlan} disabled={assigning || !selectedRestaurant}
+            <button type="button" onClick={assignPlan} disabled={assigning}
               className="cursor-pointer rounded-xl bg-emerald-500 px-4 py-2 text-sm font-semibold text-zinc-950 hover:bg-emerald-400 disabled:opacity-40">
               {assigning ? "Assigning…" : "Assign Plan"}
             </button>
           </div>
         }>
-        <div className="space-y-4">
-          <div className="rounded-xl border border-zinc-800 bg-zinc-950/40 px-4 py-3 text-sm text-zinc-400">
-            Assigning plan: <span className="font-semibold capitalize text-zinc-100">{selectedPlanSlug}</span>
-          </div>
+        <form
+          noValidate
+          className="space-y-4"
+          onSubmit={(e) => {
+            e.preventDefault();
+            assignPlan();
+          }}
+        >
+          {assignError && (
+            <p className="rounded-xl border border-red-500/20 bg-red-500/10 px-3 py-2 text-xs text-red-400">{assignError}</p>
+          )}
           <div>
-            <label className="text-xs font-medium text-zinc-500">Select Restaurant</label>
-            <select value={selectedRestaurant} onChange={(e) => setSelectedRestaurant(e.target.value)}
-              className="cursor-pointer mt-1 w-full rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus:border-emerald-500/40">
+            <label className="text-xs font-medium text-zinc-500">Restaurant *</label>
+            <select
+              value={assignForm.restaurantId}
+              onChange={(e) => {
+                setAssignForm((f) => ({ ...f, restaurantId: e.target.value }));
+                clearAssignFieldError("restaurantId");
+              }}
+              aria-invalid={assignFieldErrors.restaurantId ? true : undefined}
+              className="cursor-pointer mt-1 w-full rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus:border-emerald-500/40"
+            >
               <option value="">— Select restaurant —</option>
-              {restaurants.map((r) => (
-                <option key={r.id} value={r.id}>{r.name} ({r.plan}) — {r.ownerEmail}</option>
+              {assignRestaurants.map((r) => (
+                <option key={r.id} value={r.id}>{r.name} — {r.ownerEmail ?? ""}</option>
               ))}
             </select>
+            <FieldError message={assignFieldErrors.restaurantId} />
           </div>
-        </div>
+          <div>
+            <label className="text-xs font-medium text-zinc-500">Plan *</label>
+            <select
+              value={assignForm.planSlug}
+              onChange={(e) => {
+                setAssignForm((f) => ({ ...f, planSlug: e.target.value }));
+                clearAssignFieldError("planSlug");
+              }}
+              aria-invalid={assignFieldErrors.planSlug ? true : undefined}
+              className="cursor-pointer mt-1 w-full rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus:border-emerald-500/40"
+            >
+              <option value="">— Select plan —</option>
+              {plans.map((p) => (
+                <option key={p.id} value={p.slug}>
+                  {p.name} — {p.price === 0 ? "Free" : `${formatSaMoney(p.price)}/${p.billingCycle}`}
+                </option>
+              ))}
+            </select>
+            <FieldError message={assignFieldErrors.planSlug} />
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div>
+              <label className="text-xs font-medium text-zinc-500">Start Date</label>
+              <input
+                type="date"
+                value={assignForm.startDate}
+                onChange={(e) => {
+                  setAssignForm((f) => ({ ...f, startDate: e.target.value }));
+                  clearAssignFieldError("startDate");
+                  clearAssignFieldError("endDate");
+                }}
+                aria-invalid={assignFieldErrors.startDate ? true : undefined}
+                className="mt-1 w-full rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus:border-emerald-500/40"
+              />
+              <FieldError message={assignFieldErrors.startDate} />
+            </div>
+            <div>
+              <label className="text-xs font-medium text-zinc-500">End Date</label>
+              <input
+                type="date"
+                value={assignForm.endDate}
+                min={assignForm.startDate || undefined}
+                onChange={(e) => {
+                  setAssignForm((f) => ({ ...f, endDate: e.target.value }));
+                  clearAssignFieldError("endDate");
+                  clearAssignFieldError("startDate");
+                }}
+                aria-invalid={assignFieldErrors.endDate ? true : undefined}
+                className="mt-1 w-full rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus:border-emerald-500/40"
+              />
+              <FieldError message={assignFieldErrors.endDate} />
+            </div>
+            <div>
+              <label className="text-xs font-medium text-zinc-500">Trial Days</label>
+              <input
+                {...intInputProps({ min: 0, max: 90, step: 1 })}
+                value={assignForm.trialDays}
+                onChange={(e) => {
+                  const v = e.target.value.replace(/[^\d]/g, "");
+                  setAssignForm((f) => ({ ...f, trialDays: v }));
+                  clearAssignFieldError("trialDays");
+                }}
+                placeholder="0"
+                aria-invalid={assignFieldErrors.trialDays ? true : undefined}
+                className="mt-1 w-full rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus:border-emerald-500/40"
+              />
+              <FieldError message={assignFieldErrors.trialDays} />
+            </div>
+          </div>
+          <p className="text-[11px] text-zinc-600">Leave Start/End blank to use today + 1 billing cycle automatically.</p>
+        </form>
       </Modal>
 
       <ConfirmDialog

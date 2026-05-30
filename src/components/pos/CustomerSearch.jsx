@@ -1,8 +1,14 @@
 "use client";
 
+import PhoneInput from "@/components/ui/PhoneInput";
+
 import { useCustomerSearch } from "@/hooks/useCustomerSearch";
-import { UserPlus, X } from "lucide-react";
+import { getCustomerFormFieldErrors } from "@/lib/formValidation";
+import { extractIndianMobileDigits } from "@/lib/phoneUtils";
+import { Loader2, UserPlus, X } from "lucide-react";
 import { useState } from "react";
+
+const EMPTY_FIELD_ERRORS = { name: "", phone: "", email: "" };
 
 export default function CustomerSearch({ onCustomerSelect }) {
   const {
@@ -15,42 +21,68 @@ export default function CustomerSearch({ onCustomerSelect }) {
 
   const [showAddForm, setShowAddForm] = useState(false);
   const [newForm, setNewForm] = useState({ name: "", phone: "", email: "" });
+  const [addError, setAddError] = useState("");
+  const [fieldErrors, setFieldErrors] = useState(EMPTY_FIELD_ERRORS);
+  const [saving, setSaving] = useState(false);
+
+  const openAddForm = (prefill = {}) => {
+    setShowAddForm(true);
+    setAddError("");
+    setFieldErrors(EMPTY_FIELD_ERRORS);
+    setNewForm({
+      name: prefill.name ?? "",
+      phone: prefill.phone ?? "",
+      email: prefill.email ?? "",
+    });
+  };
 
   const handleSelect = (customer) => {
     setSelected(customer);
     onCustomerSelect?.(customer);
     setQuery("");
     setShowAddForm(false);
+    setFieldErrors(EMPTY_FIELD_ERRORS);
+    setAddError("");
   };
 
-  const [addError, setAddError] = useState("");
+  const handleAdd = async (e) => {
+    e?.preventDefault?.();
+    const validation = getCustomerFormFieldErrors(newForm);
+    setFieldErrors(validation.errors);
+    const firstError = validation.message;
+    if (firstError) return;
 
-  const handleAdd = async () => {
-    if (!newForm.name.trim() || !newForm.phone.trim()) return;
+    setSaving(true);
     setAddError("");
-    const c = await addCustomer(newForm);
-    if (!c) {
-      setAddError("Could not add customer. Phone may already exist.");
+    const result = await addCustomer(newForm);
+    setSaving(false);
+
+    if (!result.ok) {
+      setAddError(result.error ?? "Could not add customer.");
       return;
     }
-    onCustomerSelect?.(c);
+
+    handleSelect(result.customer);
     setNewForm({ name: "", phone: "", email: "" });
-    setShowAddForm(false);
   };
 
   const handleClear = () => {
     clearSelection();
     onCustomerSelect?.(null);
     setShowAddForm(false);
+    setFieldErrors(EMPTY_FIELD_ERRORS);
+    setAddError("");
   };
 
-  // Selected state
   if (selected) {
     return (
       <div className="flex items-center justify-between gap-3 rounded-xl border border-emerald-500/30 bg-emerald-500/5 px-3 py-2.5">
         <div>
           <p className="text-sm font-semibold text-emerald-300">{selected.name}</p>
-          <p className="text-xs text-zinc-500">{selected.phone}{selected.email ? ` · ${selected.email}` : ""}</p>
+          <p className="text-xs text-zinc-500">
+            {selected.phone}
+            {selected.email ? ` · ${selected.email}` : ""}
+          </p>
         </div>
         <button
           type="button"
@@ -66,19 +98,29 @@ export default function CustomerSearch({ onCustomerSelect }) {
 
   return (
     <div className="space-y-2">
-      {/* Search input */}
-      <div className="flex items-center gap-0 rounded-xl border border-zinc-800 bg-zinc-950/80 overflow-hidden">
+      <div className="flex items-center gap-0 overflow-hidden rounded-xl border border-zinc-800 bg-zinc-950/80">
         <input
           type="search"
           value={query}
-          onChange={(e) => { setQuery(e.target.value); setShowAddForm(false); }}
-          placeholder="Customer"
-          className="flex-1 bg-transparent py-2.5 pl-4 pr-2 text-sm text-zinc-100 placeholder:text-zinc-500 outline-none"
+          onChange={(e) => {
+            setQuery(e.target.value);
+            if (!showAddForm) setShowAddForm(false);
+          }}
+          placeholder="Search name or phone"
+          className="flex-1 bg-transparent py-2.5 pl-4 pr-2 text-sm text-zinc-100 outline-none placeholder:text-zinc-500"
         />
         <button
           type="button"
-          onClick={() => setShowAddForm((v) => !v)}
-          className="cursor-pointer flex items-center justify-center size-10 m-1 rounded-lg bg-zinc-800 text-zinc-300 transition-colors hover:bg-zinc-700 hover:text-emerald-400 shrink-0"
+          onClick={() => {
+            if (showAddForm) {
+              setShowAddForm(false);
+              setFieldErrors(EMPTY_FIELD_ERRORS);
+              setAddError("");
+            } else {
+              openAddForm();
+            }
+          }}
+          className="cursor-pointer m-1 flex size-10 shrink-0 items-center justify-center rounded-lg bg-zinc-800 text-zinc-300 transition-colors hover:bg-zinc-700 hover:text-emerald-400"
           aria-label="Add new customer"
           title="Add new customer"
         >
@@ -86,8 +128,7 @@ export default function CustomerSearch({ onCustomerSelect }) {
         </button>
       </div>
 
-      {/* Results dropdown */}
-      {query.trim() && (
+      {query.trim() && !showAddForm && (
         <div className="rounded-xl border border-zinc-800 bg-zinc-900 shadow-xl shadow-black/30">
           {results.length > 0 ? (
             <ul className="divide-y divide-zinc-800/60">
@@ -107,22 +148,23 @@ export default function CustomerSearch({ onCustomerSelect }) {
                 </li>
               ))}
             </ul>
-          ) : null}
+          ) : (
+            <p className="px-4 py-3 text-xs text-zinc-500">No matching customers.</p>
+          )}
 
-          {/* Add new option */}
           <button
             type="button"
             onClick={() => {
-              setShowAddForm(true);
-              // Pre-fill phone if query looks like a number
-              const looksLikePhone = /^[\d\s+\-()]{5,}$/.test(query.trim());
-              setNewForm((f) => ({
-                ...f,
-                phone: looksLikePhone ? query.trim() : f.phone,
-                name: !looksLikePhone ? query.trim() : f.name,
-              }));
+              const raw = query.trim();
+              const digits = extractIndianMobileDigits(raw);
+              const looksLikePhone = digits.length >= 3;
+              openAddForm({
+                phone: looksLikePhone ? digits : "",
+                name: looksLikePhone ? "" : raw,
+              });
+              setQuery("");
             }}
-            className="cursor-pointer flex w-full items-center gap-2 px-4 py-3 text-sm font-semibold text-emerald-400 transition-colors hover:bg-zinc-800/60"
+            className="cursor-pointer flex w-full items-center gap-2 border-t border-zinc-800/60 px-4 py-3 text-sm font-semibold text-emerald-400 transition-colors hover:bg-zinc-800/60"
           >
             <UserPlus className="size-4" />
             Add new customer
@@ -130,49 +172,92 @@ export default function CustomerSearch({ onCustomerSelect }) {
         </div>
       )}
 
-      {/* Add new form */}
       {showAddForm && (
-        <div className="space-y-2 rounded-xl border border-zinc-800 bg-zinc-900/80 p-3">
+        <form
+          noValidate
+          onSubmit={handleAdd}
+          className="space-y-2 rounded-xl border border-zinc-800 bg-zinc-900/80 p-3"
+        >
           <p className="text-xs font-semibold uppercase tracking-wide text-zinc-500">New Customer</p>
-          <input
-            value={newForm.name}
-            onChange={(e) => setNewForm((f) => ({ ...f, name: e.target.value }))}
-            placeholder="Full name *"
-            className="w-full rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2 text-sm text-zinc-100 outline-none focus:border-emerald-500/40"
-          />
-          <input
+          <div>
+            <label className="mb-1 block text-[10px] font-medium text-zinc-500">
+              Full name <span className="text-red-400">*</span>
+            </label>
+            <input
+              value={newForm.name}
+              onChange={(e) => {
+                setNewForm((f) => ({ ...f, name: e.target.value }));
+                if (fieldErrors.name) setFieldErrors((p) => ({ ...p, name: "" }));
+              }}
+              placeholder="e.g. Rahul Sharma"
+              maxLength={80}
+              aria-invalid={fieldErrors.name ? true : undefined}
+              className="w-full rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2 text-sm text-zinc-100 outline-none focus:border-emerald-500/40"
+            />
+            {fieldErrors.name && <p className="mt-1 text-xs text-red-400">{fieldErrors.name}</p>}
+          </div>
+          <PhoneInput
+            id="pos-new-customer-phone"
+            label="Mobile"
+            labelClassName="mb-1 block text-[10px] font-medium text-zinc-500"
+            required
             value={newForm.phone}
-            onChange={(e) => setNewForm((f) => ({ ...f, phone: e.target.value }))}
-            placeholder="Phone *"
-            className="w-full rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2 text-sm text-zinc-100 outline-none focus:border-emerald-500/40"
+            onChange={(digits) => {
+              setNewForm((f) => ({ ...f, phone: digits }));
+              if (fieldErrors.phone) setFieldErrors((p) => ({ ...p, phone: "" }));
+            }}
+            error={fieldErrors.phone || undefined}
+            showPrefix
           />
-          <input
-            value={newForm.email}
-            onChange={(e) => setNewForm((f) => ({ ...f, email: e.target.value }))}
-            placeholder="Email (optional)"
-            className="w-full rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2 text-sm text-zinc-100 outline-none focus:border-emerald-500/40"
-          />
+          <div>
+            <label className="mb-1 block text-[10px] font-medium text-zinc-500">Email (optional)</label>
+            <input
+              type="email"
+              value={newForm.email}
+              onChange={(e) => {
+                setNewForm((f) => ({ ...f, email: e.target.value }));
+                if (fieldErrors.email) setFieldErrors((p) => ({ ...p, email: "" }));
+              }}
+              placeholder="name@example.com"
+              aria-invalid={fieldErrors.email ? true : undefined}
+              className="w-full rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2 text-sm text-zinc-100 outline-none focus:border-emerald-500/40"
+            />
+            {fieldErrors.email && <p className="mt-1 text-xs text-red-400">{fieldErrors.email}</p>}
+          </div>
           {addError && (
-            <p className="text-xs text-red-400">{addError}</p>
+            <p className="rounded-lg border border-red-500/20 bg-red-500/10 px-2 py-1.5 text-xs text-red-400">
+              {addError}
+            </p>
           )}
           <div className="flex gap-2 pt-1">
             <button
-              type="button"
-              onClick={handleAdd}
-              disabled={!newForm.name.trim() || !newForm.phone.trim()}
-              className="cursor-pointer flex-1 rounded-xl bg-emerald-500 py-2 text-sm font-semibold text-zinc-950 hover:bg-emerald-400 disabled:opacity-40"
+              type="submit"
+              disabled={saving}
+              className="cursor-pointer flex flex-1 items-center justify-center gap-2 rounded-xl bg-emerald-500 py-2 text-sm font-semibold text-zinc-950 hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-50"
             >
-              Save & Select
+              {saving ? (
+                <>
+                  <Loader2 className="size-4 animate-spin" />
+                  Saving…
+                </>
+              ) : (
+                "Save & Select"
+              )}
             </button>
             <button
               type="button"
-              onClick={() => setShowAddForm(false)}
-              className="cursor-pointer rounded-xl border border-zinc-700 px-3 py-2 text-sm text-zinc-400 hover:text-zinc-200"
+              onClick={() => {
+                setShowAddForm(false);
+                setFieldErrors(EMPTY_FIELD_ERRORS);
+                setAddError("");
+              }}
+              disabled={saving}
+              className="cursor-pointer rounded-xl border border-zinc-700 px-3 py-2 text-sm text-zinc-400 hover:text-zinc-200 disabled:opacity-50"
             >
               Cancel
             </button>
           </div>
-        </div>
+        </form>
       )}
     </div>
   );

@@ -1,5 +1,6 @@
 import { writeAuditLog } from "@/lib/auditLog";
 import { invalidatePlatformSettingsCache } from "@/lib/platformSettings";
+import { validatePlatformSettingsSectionServer } from "@/lib/platformSettingsValidation";
 import { getTokenFromRequest } from "@/lib/authCookies";
 import { verifyToken } from "@/lib/jwt";
 import clientPromise from "@/lib/mongodb";
@@ -270,6 +271,11 @@ export async function PATCH(request) {
   }
 
   const clean = sanitizeSectionData(section, data);
+
+  const validationError = validatePlatformSettingsSectionServer(section, clean);
+  if (validationError) {
+    return Response.json({ success: false, error: validationError }, { status: 400 });
+  }
 
   try {
     const client = await clientPromise;

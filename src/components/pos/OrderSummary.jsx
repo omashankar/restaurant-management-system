@@ -10,6 +10,7 @@ import {
   Bike, Check, ConciergeBell, CreditCard,
   LayoutGrid, Store, Trash2, Users,
 } from "lucide-react";
+import PhoneInput from "@/components/ui/PhoneInput";
 import { useMemo, useState } from "react";
 
 const ORDER_TYPES = [
@@ -44,6 +45,8 @@ export default function OrderSummary({
   selectedCustomer,
   isPlacing = false,
   note = "", onNoteChange,
+  fieldErrors = {},
+  onClearFieldError,
 }) {
   const { floorTables, tableCategories } = useModuleData();
   const [activeArea, setActiveArea] = useState(null);
@@ -77,7 +80,15 @@ export default function OrderSummary({
         <div className="flex gap-1 border-b border-zinc-800 p-3">
           {ORDER_TYPES.map(({ id, label, Icon }) => (
             <button key={id} type="button"
-              onClick={() => { onOrderTypeChange(id); onTableSelect(""); }}
+              onClick={() => {
+                onOrderTypeChange(id);
+                onTableSelect("");
+                onClearFieldError?.("table");
+                onClearFieldError?.("customer");
+                onClearFieldError?.("deliveryName");
+                onClearFieldError?.("deliveryPhone");
+                onClearFieldError?.("deliveryAddress");
+              }}
               className={`cursor-pointer flex flex-1 items-center justify-center gap-1.5 rounded-xl py-2 text-xs font-semibold transition-all ${
                 orderType === id
                   ? "bg-emerald-500 text-zinc-950"
@@ -127,7 +138,12 @@ export default function OrderSummary({
                     return (
                       <button key={table.id} type="button"
                         disabled={isBlocked}
-                        onClick={() => !isBlocked && onTableSelect(isSelected ? "" : table.id)}
+                        onClick={() => {
+                          if (!isBlocked) {
+                            onTableSelect(isSelected ? "" : table.id);
+                            onClearFieldError?.("table");
+                          }
+                        }}
                         className={`relative flex flex-col items-start rounded-xl border px-2 py-1.5 text-left transition-all ${
                           isBlocked
                             ? "cursor-not-allowed border-zinc-800/40 bg-zinc-900/20 opacity-40"
@@ -172,7 +188,9 @@ export default function OrderSummary({
                       className="cursor-pointer ml-1 text-zinc-600 hover:text-red-400 transition-colors">✕</button>
                   </div>
                 ) : (
-                  <p className="text-[10px] text-amber-500/70">⚠ Select a table</p>
+                  <p className={`text-[10px] ${fieldErrors.table ? "text-red-400" : "text-amber-500/70"}`}>
+                    {fieldErrors.table || "⚠ Select a table"}
+                  </p>
                 )}
                 <button type="button" onClick={() => setPickerOpen(true)}
                   className="cursor-pointer flex items-center gap-1 rounded-lg border border-zinc-700 px-2 py-1 text-[10px] font-medium text-zinc-400 hover:border-zinc-500 hover:text-zinc-200 transition-colors">
@@ -188,12 +206,49 @@ export default function OrderSummary({
           <div className="space-y-2 border-b border-zinc-800 p-3">
             <p className="text-[10px] font-semibold uppercase tracking-wider text-zinc-500">Delivery Details *</p>
             <p className="text-[10px] text-zinc-600">Name, phone & address — customer auto-saved on place order</p>
-            {["name", "phone", "address"].map((field) => (
-              <input key={field} value={delivery[field]}
-                onChange={(e) => onDeliveryChange(field, e.target.value)}
-                placeholder={field === "address" ? "Full delivery address" : field.charAt(0).toUpperCase() + field.slice(1)}
-                className="w-full rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2 text-xs text-zinc-100 outline-none focus:border-emerald-500/40" />
-            ))}
+            <div>
+              <input
+                value={delivery.name}
+                onChange={(e) => {
+                  onDeliveryChange("name", e.target.value);
+                  onClearFieldError?.("deliveryName");
+                }}
+                placeholder="Name *"
+                aria-invalid={fieldErrors.deliveryName ? true : undefined}
+                className="w-full rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2 text-xs text-zinc-100 outline-none focus:border-emerald-500/40"
+              />
+              {fieldErrors.deliveryName && (
+                <p className="mt-1 text-[10px] text-red-400">{fieldErrors.deliveryName}</p>
+              )}
+            </div>
+            <div>
+              <PhoneInput
+                id="pos-delivery-phone"
+                value={delivery.phone}
+                size="sm"
+                onChange={(digits) => {
+                  onDeliveryChange("phone", digits);
+                  onClearFieldError?.("deliveryPhone");
+                }}
+                error={fieldErrors.deliveryPhone || undefined}
+              />
+            </div>
+            <div>
+              <input
+                value={delivery.address}
+                onChange={(e) => {
+                  onDeliveryChange("address", e.target.value);
+                  onClearFieldError?.("deliveryAddress");
+                }}
+                placeholder="Full delivery address *"
+                maxLength={300}
+                aria-invalid={fieldErrors.deliveryAddress ? true : undefined}
+                className="w-full rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2 text-xs text-zinc-100 outline-none focus:border-emerald-500/40"
+              />
+              {fieldErrors.deliveryAddress && (
+                <p className="mt-1 text-[10px] text-red-400">{fieldErrors.deliveryAddress}</p>
+              )}
+            </div>
           </div>
         )}
 
@@ -207,8 +262,16 @@ export default function OrderSummary({
               )}
             </div>
             <div className={orderType === "dine-in" && !selectedTableId ? "pointer-events-none opacity-40" : ""}>
-              <CustomerSearch onCustomerSelect={onCustomerSelect} />
+              <CustomerSearch
+                onCustomerSelect={(c) => {
+                  onCustomerSelect?.(c);
+                  onClearFieldError?.("customer");
+                }}
+              />
             </div>
+            {fieldErrors.customer && (
+              <p className="mt-1.5 text-[10px] text-red-400">{fieldErrors.customer}</p>
+            )}
           </div>
         )}
 

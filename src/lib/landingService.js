@@ -36,6 +36,7 @@
  * SeoDoc     { title, description, keywords, ogImage, twitterCard, priceCurrency }
  */
 
+import { validateLandingSectionServer } from "@/lib/landingValidation";
 import clientPromise from "./mongodb";
 
 const DOC_ID     = "landing";
@@ -295,64 +296,40 @@ export const VALID_SECTIONS = Object.keys(DEFAULTS).filter(k => k !== "version")
 ───────────────────────────────────────── */
 const VALIDATORS = {
   navbar: (d) => {
-    if (!d || typeof d !== "object")   return "navbar must be an object.";
-    if (!d.logo?.text?.trim())         return "navbar.logo.text is required.";
-    if (!Array.isArray(d.links))       return "navbar.links must be an array.";
-    return null;
+    if (!d || typeof d !== "object") return "navbar must be an object.";
+    if (!Array.isArray(d.links)) return "navbar.links must be an array.";
+    return validateLandingSectionServer("navbar", d);
   },
   hero: (d) => {
-    if (!d || typeof d !== "object")   return "hero must be an object.";
-    if (!d.headline?.trim())           return "hero.headline is required.";
-    return null;
+    if (!d || typeof d !== "object") return "hero must be an object.";
+    return validateLandingSectionServer("hero", d);
   },
-  features: (d) => {
-    if (!Array.isArray(d))             return "features must be an array.";
-    for (const f of d) {
-      if (!f.title?.trim())            return "Each feature must have a title.";
-    }
-    return null;
-  },
-  roles: (d) => {
-    if (!Array.isArray(d))             return "roles must be an array.";
-    for (const r of d) {
-      if (!r.role?.trim())             return "Each role must have a role name.";
-    }
-    return null;
-  },
+  features: (d) => validateLandingSectionServer("features", d),
+  roles: (d) => validateLandingSectionServer("roles", d),
   pricing: (d) => {
-    if (!Array.isArray(d))             return "pricing must be an array.";
+    if (!Array.isArray(d)) return "pricing must be an array.";
     for (const p of d) {
-      if (!p.name?.trim())             return "Each plan must have a name.";
-      if (p.price?.monthly == null)    return "Each plan must have a monthly price.";
+      if (!p.name?.trim()) return "Each plan must have a name.";
+      if (p.price?.monthly == null) return "Each plan must have a monthly price.";
     }
     return null;
   },
-  testimonials: (d) => {
-    if (!Array.isArray(d))             return "testimonials must be an array.";
-    for (const t of d) {
-      if (!t.name?.trim())             return "Each testimonial must have a name.";
-      if (!t.quote?.trim())            return "Each testimonial must have a quote.";
-    }
-    return null;
-  },
+  testimonials: (d) => validateLandingSectionServer("testimonials", d),
   about: (d) => {
-    if (!d || typeof d !== "object")   return "about must be an object.";
-    if (!d.headline?.trim())           return "about.headline is required.";
-    return null;
+    if (!d || typeof d !== "object") return "about must be an object.";
+    return validateLandingSectionServer("about", d);
   },
   contact: (d) => {
-    if (!d || typeof d !== "object")   return "contact must be an object.";
-    if (!d.email?.trim())              return "contact.email is required.";
-    return null;
+    if (!d || typeof d !== "object") return "contact must be an object.";
+    return validateLandingSectionServer("contact", d);
   },
   footer: (d) => {
-    if (!d || typeof d !== "object")   return "footer must be an object.";
-    if (!d.companyName?.trim())        return "footer.companyName is required.";
-    return null;
+    if (!d || typeof d !== "object") return "footer must be an object.";
+    return validateLandingSectionServer("footer", d);
   },
   seo: (d) => {
-    if (!d || typeof d !== "object")   return "seo must be an object.";
-    return null;
+    if (!d || typeof d !== "object") return "seo must be an object.";
+    return validateLandingSectionServer("seo", d);
   },
   brands: (d) => {
     if (!d || typeof d !== "object") return "brands must be an object.";
@@ -361,7 +338,9 @@ const VALIDATORS = {
   },
   problemSolution: (d) => {
     if (!d || typeof d !== "object") return "problemSolution must be an object.";
-    if (!Array.isArray(d.problems) || !Array.isArray(d.solutionPoints)) return "problemSolution lists must be arrays.";
+    if (!Array.isArray(d.problems) || !Array.isArray(d.solutionPoints)) {
+      return "problemSolution lists must be arrays.";
+    }
     return null;
   },
   howItWorks: (d) => {
@@ -376,11 +355,11 @@ const VALIDATORS = {
   },
   demo: (d) => {
     if (!d || typeof d !== "object") return "demo must be an object.";
-    return null;
+    return validateLandingSectionServer("demo", d);
   },
   cta: (d) => {
     if (!d || typeof d !== "object") return "cta must be an object.";
-    return null;
+    return validateLandingSectionServer("cta", d);
   },
 };
 
