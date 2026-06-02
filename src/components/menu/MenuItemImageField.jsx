@@ -1,5 +1,10 @@
 "use client";
 
+import {
+  imageUploadStatusLabel,
+  uploadImageWithCompression,
+} from "@/lib/clientImageUpload";
+import { validateImageFileType } from "@/lib/uploadImageShared";
 import { normalizeLogoSrc } from "@/lib/logoUrl";
 import { ImageIcon, Loader2, Trash2, Upload } from "lucide-react";
 import { useRef, useState } from "react";
@@ -17,32 +22,41 @@ export default function MenuItemImageField({
   error = "",
 }) {
   const fileRef = useRef(null);
-  const [uploading, setUploading] = useState(false);
+  const [phase, setPhase] = useState(null);
   const [uploadError, setUploadError] = useState("");
 
+  const busy = phase !== null;
   const previewSrc = normalizeLogoSrc(value);
   const displayError = error || uploadError;
+  const statusLabel = imageUploadStatusLabel(phase);
 
   async function handleFile(file) {
     if (!file) return;
-    setUploadError("");
-    setUploading(true);
-    try {
-      const fd = new FormData();
-      fd.append("image", file);
-      const res = await fetch("/api/uploads/menu-item-image", { method: "POST", body: fd });
-      const data = await res.json();
-      if (!data.success) {
-        setUploadError(data.error ?? "Upload failed.");
-        return;
-      }
-      onChange(data.imageUrl);
-    } catch {
-      setUploadError("Network error while uploading.");
-    } finally {
-      setUploading(false);
+
+    const typeCheck = validateImageFileType(file);
+    if (!typeCheck.ok) {
+      setUploadError(typeCheck.error);
       if (fileRef.current) fileRef.current.value = "";
+      return;
     }
+
+    setUploadError("");
+    setPhase("compressing");
+
+    const data = await uploadImageWithCompression(file, {
+      url: "/api/uploads/menu-item-image",
+      preset: "default",
+      onPhase: setPhase,
+    });
+
+    setPhase(null);
+    if (fileRef.current) fileRef.current.value = "";
+
+    if (!data.success) {
+      setUploadError(data.error ?? "Upload failed.");
+      return;
+    }
+    onChange(data.imageUrl);
   }
 
   return (
@@ -64,21 +78,21 @@ export default function MenuItemImageField({
         <div className="flex flex-wrap gap-2">
           <button
             type="button"
-            disabled={disabled || uploading}
+            disabled={disabled || busy}
             onClick={() => fileRef.current?.click()}
             className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-xs font-medium text-zinc-200 hover:border-ra-primary-40 disabled:opacity-50"
           >
-            {uploading ? (
+            {busy ? (
               <Loader2 className="size-3.5 animate-spin text-ra-primary" />
             ) : (
               <Upload className="size-3.5 text-ra-primary" />
             )}
-            {uploading ? "Uploading…" : "Upload image"}
+            {statusLabel ?? "Upload image"}
           </button>
           {value && (
             <button
               type="button"
-              disabled={disabled || uploading}
+              disabled={disabled || busy}
               onClick={() => onChange("")}
               className="inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-zinc-700 px-3 py-2 text-xs text-zinc-400 hover:border-red-500/40 hover:text-red-400 disabled:opacity-50"
             >
@@ -98,9 +112,9 @@ export default function MenuItemImageField({
         <div>
           <p className="mb-1 text-[11px] text-zinc-500">Or paste image URL</p>
           <input
-            type="url"
+            type="text"
             value={value ?? ""}
-            disabled={disabled || uploading}
+            disabled={disabled || busy}
             onChange={(e) => {
               setUploadError("");
               onChange(e.target.value);
@@ -110,7 +124,9 @@ export default function MenuItemImageField({
           />
         </div>
         {displayError && <p className="text-xs text-red-400">{displayError}</p>}
-        <p className="text-[11px] text-zinc-600">JPG, PNG, or WebP — max 5MB</p>
+        <p className="text-[11px] text-zinc-600">
+          JPG, PNG, or WebP — large photos are compressed automatically
+        </p>
       </div>
     </div>
   );

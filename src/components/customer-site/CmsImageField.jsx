@@ -1,5 +1,10 @@
 "use client";
 
+import {
+  imageUploadStatusLabel,
+  uploadImageWithCompression,
+} from "@/lib/clientImageUpload";
+import { validateImageFileType } from "@/lib/uploadImageShared";
 import { normalizeLogoSrc } from "@/lib/logoUrl";
 import { ImageIcon, Loader2, Trash2, Upload } from "lucide-react";
 import { useRef, useState } from "react";
@@ -19,31 +24,40 @@ export default function CmsImageField({
   previewClassName = "h-28 w-full object-cover",
 }) {
   const fileRef = useRef(null);
-  const [uploading, setUploading] = useState(false);
+  const [phase, setPhase] = useState(null);
   const [error, setError] = useState("");
 
+  const busy = phase !== null;
+  const statusLabel = imageUploadStatusLabel(phase);
   const previewSrc = normalizeLogoSrc(value);
 
   async function handleFile(file) {
     if (!file) return;
-    setError("");
-    setUploading(true);
-    try {
-      const fd = new FormData();
-      fd.append("image", file);
-      const res = await fetch("/api/uploads/cms-image", { method: "POST", body: fd });
-      const data = await res.json();
-      if (!data.success) {
-        setError(data.error ?? "Upload failed.");
-        return;
-      }
-      onChange(data.imageUrl);
-    } catch {
-      setError("Network error while uploading.");
-    } finally {
-      setUploading(false);
+
+    const typeCheck = validateImageFileType(file);
+    if (!typeCheck.ok) {
+      setError(typeCheck.error);
       if (fileRef.current) fileRef.current.value = "";
+      return;
     }
+
+    setError("");
+    setPhase("compressing");
+
+    const data = await uploadImageWithCompression(file, {
+      url: "/api/uploads/cms-image",
+      preset: "default",
+      onPhase: setPhase,
+    });
+
+    setPhase(null);
+    if (fileRef.current) fileRef.current.value = "";
+
+    if (!data.success) {
+      setError(data.error ?? "Upload failed.");
+      return;
+    }
+    onChange(data.imageUrl);
   }
 
   return (
@@ -68,21 +82,21 @@ export default function CmsImageField({
         <div className="flex flex-wrap gap-2">
           <button
             type="button"
-            disabled={disabled || uploading}
+            disabled={disabled || busy}
             onClick={() => fileRef.current?.click()}
             className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-xs font-medium text-zinc-200 hover:border-ra-primary-40 disabled:opacity-50"
           >
-            {uploading ? (
+            {busy ? (
               <Loader2 className="size-3.5 animate-spin text-ra-primary" />
             ) : (
               <Upload className="size-3.5 text-ra-primary" />
             )}
-            {uploading ? "Uploading…" : "Upload image"}
+            {statusLabel ?? "Upload image"}
           </button>
           {value && (
             <button
               type="button"
-              disabled={disabled || uploading}
+              disabled={disabled || busy}
               onClick={() => onChange("")}
               className="inline-flex items-center gap-1.5 rounded-lg border border-zinc-700 px-3 py-2 text-xs text-zinc-400 hover:border-red-500/40 hover:text-red-400 disabled:opacity-50"
             >
@@ -102,15 +116,18 @@ export default function CmsImageField({
         <div>
           <p className="mb-1 text-[11px] text-zinc-500">Or paste image URL</p>
           <input
-            type="url"
+            type="text"
             value={value ?? ""}
-            disabled={disabled}
+            disabled={disabled || busy}
             onChange={(e) => onChange(e.target.value)}
             placeholder="https://… or /uploads/cms-images/…"
             className={inputCls}
           />
         </div>
         {error && <p className="text-xs text-red-400">{error}</p>}
+        <p className="text-[11px] text-zinc-600">
+          JPG, PNG, or WebP — large photos are compressed automatically
+        </p>
       </div>
     </div>
   );
