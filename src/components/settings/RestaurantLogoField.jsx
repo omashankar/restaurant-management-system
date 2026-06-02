@@ -1,5 +1,10 @@
 "use client";
 
+import {
+  imageUploadStatusLabel,
+  uploadImageWithCompression,
+} from "@/lib/clientImageUpload";
+import { validateImageFileType } from "@/lib/uploadImageShared";
 import { ImageIcon, Loader2, Trash2, Upload } from "lucide-react";
 import { useRef, useState } from "react";
 
@@ -8,8 +13,11 @@ const inputCls =
 
 export default function RestaurantLogoField({ logoUrl, onChange, disabled, hint }) {
   const fileRef = useRef(null);
-  const [uploading, setUploading] = useState(false);
+  const [phase, setPhase] = useState(null);
   const [error, setError] = useState("");
+
+  const busy = phase !== null;
+  const statusLabel = imageUploadStatusLabel(phase);
 
   const previewSrc = logoUrl?.trim()
     ? logoUrl.startsWith("http") || logoUrl.startsWith("/")
@@ -19,24 +27,31 @@ export default function RestaurantLogoField({ logoUrl, onChange, disabled, hint 
 
   async function handleFile(file) {
     if (!file) return;
-    setError("");
-    setUploading(true);
-    try {
-      const fd = new FormData();
-      fd.append("image", file);
-      const res = await fetch("/api/uploads/restaurant-logo", { method: "POST", body: fd });
-      const data = await res.json();
-      if (!data.success) {
-        setError(data.error ?? "Upload failed.");
-        return;
-      }
-      onChange(data.logoUrl);
-    } catch {
-      setError("Network error while uploading.");
-    } finally {
-      setUploading(false);
+
+    const typeCheck = validateImageFileType(file);
+    if (!typeCheck.ok) {
+      setError(typeCheck.error);
       if (fileRef.current) fileRef.current.value = "";
+      return;
     }
+
+    setError("");
+    setPhase("compressing");
+
+    const data = await uploadImageWithCompression(file, {
+      url: "/api/uploads/restaurant-logo",
+      preset: "logo",
+      onPhase: setPhase,
+    });
+
+    setPhase(null);
+    if (fileRef.current) fileRef.current.value = "";
+
+    if (!data.success) {
+      setError(data.error ?? "Upload failed.");
+      return;
+    }
+    onChange(data.logoUrl);
   }
 
   return (
@@ -63,21 +78,21 @@ export default function RestaurantLogoField({ logoUrl, onChange, disabled, hint 
           <div className="flex flex-wrap gap-2">
             <button
               type="button"
-              disabled={disabled || uploading}
+              disabled={disabled || busy}
               onClick={() => fileRef.current?.click()}
               className="inline-flex cursor-pointer items-center gap-2 rounded-xl border border-zinc-700 bg-zinc-900 px-4 py-2 text-sm font-medium text-zinc-200 hover-border-ra-primary-40 disabled:opacity-50"
             >
-              {uploading ? (
+              {busy ? (
                 <Loader2 className="size-4 animate-spin text-ra-primary" />
               ) : (
                 <Upload className="size-4 text-ra-primary" />
               )}
-              {uploading ? "Uploading…" : "Upload logo"}
+              {statusLabel ?? "Upload logo"}
             </button>
             {logoUrl && (
               <button
                 type="button"
-                disabled={disabled || uploading}
+                disabled={disabled || busy}
                 onClick={() => onChange("")}
                 className="inline-flex items-center gap-2 rounded-xl border border-zinc-700 px-4 py-2 text-sm text-zinc-400 hover:border-red-500/40 hover:text-red-400 disabled:opacity-50"
               >
@@ -95,15 +110,16 @@ export default function RestaurantLogoField({ logoUrl, onChange, disabled, hint 
           <div>
             <p className="mb-1.5 text-xs text-zinc-500">Or paste image URL</p>
             <input
-              type="url"
+              type="text"
               value={logoUrl ?? ""}
-              disabled={disabled}
+              disabled={disabled || busy}
               onChange={(e) => onChange(e.target.value)}
               placeholder="https://yoursite.com/logo.png"
               className={inputCls}
             />
           </div>
           {error && <p className="text-xs text-red-400">{error}</p>}
+          <p className="text-[11px] text-zinc-600">Large logos are compressed automatically</p>
         </div>
       </div>
     </div>

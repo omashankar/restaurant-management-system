@@ -14,7 +14,7 @@ const QR_TYPES = [
 ];
 
 // Real QR code using qrcode library
-function RealQrCode({ value, size = 220, restaurantName = "" }) {
+function RealQrCode({ value, size = 220, restaurantName = "", canvasId = "qr-preview-canvas" }) {
   const canvasRef = useRef(null);
 
   useEffect(() => {
@@ -57,6 +57,7 @@ function RealQrCode({ value, size = 220, restaurantName = "" }) {
   return (
     <canvas
       ref={canvasRef}
+      id={canvasId}
       className="rounded-xl"
       style={{ imageRendering: "pixelated" }}
     />
@@ -64,6 +65,7 @@ function RealQrCode({ value, size = 220, restaurantName = "" }) {
 }
 
 export default function QrMenuPage() {
+  const qrCanvasId = "qr-preview-canvas";
   const [qrType, setQrType]         = useState("restaurant");
   const [tableNumber, setTableNumber] = useState("");
   const [tableCount, setTableCount]  = useState(10);
@@ -72,6 +74,8 @@ export default function QrMenuPage() {
   const [restaurantSlug, setRestaurantSlug] = useState("");
   const [floorTables, setFloorTables] = useState([]);
   const [settingsError, setSettingsError] = useState(null);
+  const [printingSingle, setPrintingSingle] = useState(false);
+  const [printingAll, setPrintingAll] = useState(false);
   const { showToast, ToastUI } = useToast();
 
   const tableNumbers = useMemo(() => {
@@ -145,6 +149,73 @@ export default function QrMenuPage() {
     return base;
   }, [baseUrl, restaurantSlug, qrType]);
 
+  function escapeHtml(value) {
+    return String(value ?? "")
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll("\"", "&quot;")
+      .replaceAll("'", "&#39;");
+  }
+
+  function openPrintWindow(errorMessage) {
+    const win = window.open("", "_blank", "noopener,noreferrer");
+    if (!win) {
+      showToast(errorMessage, "error");
+      return null;
+    }
+    return win;
+  }
+
+  function printHtmlInHiddenFrame(html) {
+    const iframe = document.createElement("iframe");
+    iframe.style.position = "fixed";
+    iframe.style.right = "0";
+    iframe.style.bottom = "0";
+    iframe.style.width = "0";
+    iframe.style.height = "0";
+    iframe.style.border = "0";
+    iframe.style.visibility = "hidden";
+    document.body.appendChild(iframe);
+
+    const cleanup = () => {
+      setTimeout(() => {
+        try { iframe.remove(); } catch {}
+      }, 1000);
+    };
+
+    const frameDoc = iframe.contentDocument;
+    if (!frameDoc) {
+      cleanup();
+      showToast("Could not prepare print preview.", "error");
+      setPrintingSingle(false);
+      setPrintingAll(false);
+      return;
+    }
+
+    frameDoc.open();
+    frameDoc.write(html);
+    frameDoc.close();
+
+    iframe.onload = () => {
+      const win = iframe.contentWindow;
+      if (!win) {
+        cleanup();
+        showToast("Could not open print dialog.", "error");
+        setPrintingSingle(false);
+        setPrintingAll(false);
+        return;
+      }
+      win.focus();
+      win.onafterprint = () => {
+        cleanup();
+        setPrintingSingle(false);
+        setPrintingAll(false);
+      };
+      setTimeout(() => win.print(), 120);
+    };
+  }
+
   function getQrValue() {
     if (qrType === "table") {
       return buildMenuUrl(tableNumber || tableNumbers[0] || "1");
@@ -162,8 +233,11 @@ export default function QrMenuPage() {
   }
 
   function downloadQr() {
-    const canvas = document.querySelector("canvas");
-    if (!canvas) return;
+    const canvas = document.getElementById(qrCanvasId);
+    if (!canvas) {
+      showToast("QR preview not ready yet.", "error");
+      return;
+    }
     const link = document.createElement("a");
     link.download = qrType === "table"
       ? `qr-table-${tableNumber}.png`
@@ -173,6 +247,7 @@ export default function QrMenuPage() {
   }
 
   function printQr() {
+    setPrintingSingle(true);
     const validation = validateQrMenuConfig({
       qrType,
       tableNumber,
@@ -181,18 +256,24 @@ export default function QrMenuPage() {
     });
     if (!validation.valid) {
       showToast(validation.message ?? "Complete QR settings first.", "error");
+      setPrintingSingle(false);
       return;
     }
-    const canvas = document.querySelector("canvas");
-    if (!canvas) return;
+    const canvas = document.getElementById(qrCanvasId);
+    if (!canvas) {
+      showToast("QR preview not ready yet.", "error");
+      setPrintingSingle(false);
+      return;
+    }
     const imgData = canvas.toDataURL("image/png");
     const label = qrType === "table" ? `Table ${tableNumber}` : restaurantName;
-    const win = window.open("", "_blank");
-    win.document.write(`
+    const safeLabel = escapeHtml(label);
+    const safeUrl = escapeHtml(getQrValue());
+    printHtmlInHiddenFrame(`
       <!DOCTYPE html>
       <html>
       <head>
-        <title>QR Code — ${label}</title>
+        <title>QR Code — ${safeLabel}</title>
         <style>
           * { margin: 0; padding: 0; box-sizing: border-box; }
           body {
@@ -214,22 +295,22 @@ export default function QrMenuPage() {
       <body>
         <div class="qr-wrap">
           <img src="${imgData}" alt="QR Code" />
-          <h2>${label}</h2>
+          <h2>${safeLabel}</h2>
           <p>Scan to order</p>
-          <p class="url">${getQrValue()}</p>
+          <p class="url">${safeUrl}</p>
         </div>
-        <script>window.onload = () => { window.print(); window.close(); }</script>
       </body>
       </html>
     `);
-    win.document.close();
   }
 
   // Bulk print all tables
   function printAllTables() {
+    setPrintingAll(true);
     const targets = tableNumbers.slice(0, 50);
     if (targets.length === 0) {
       showToast("No tables to print.", "error");
+      setPrintingAll(false);
       return;
     }
 
@@ -243,16 +324,15 @@ export default function QrMenuPage() {
         }).then((dataUrl) => ({ dataUrl, table }))
       )
     ).then((results) => {
-      const win = window.open("", "_blank");
       const items = results.map(({ dataUrl, table }) => `
         <div class="qr-item">
           <img src="${dataUrl}" alt="Table ${table}" />
           <p>Table ${table}</p>
-          <small>${restaurantName}</small>
+          <small>${escapeHtml(restaurantName)}</small>
         </div>
       `).join("");
 
-      win.document.write(`
+      printHtmlInHiddenFrame(`
         <!DOCTYPE html>
         <html>
         <head>
@@ -275,11 +355,12 @@ export default function QrMenuPage() {
         </head>
         <body>
           <div class="grid">${items}</div>
-          <script>window.onload = () => { window.print(); window.close(); }</script>
         </body>
         </html>
       `);
-      win.document.close();
+    }).catch(() => {
+      showToast("Could not prepare table QR codes.", "error");
+      setPrintingAll(false);
     });
   }
 
@@ -429,9 +510,10 @@ export default function QrMenuPage() {
                   <p className="text-xs text-zinc-500">Print all table QR codes in one go (4 per row)</p>
                 </div>
                 <button type="button" onClick={printAllTables}
+                  disabled={printingAll}
                   className="cursor-pointer inline-flex items-center gap-2 rounded-xl border border-zinc-700 px-3 py-2 text-sm font-medium text-zinc-300 hover:border-zinc-500 hover:text-zinc-100 transition-colors">
                   <Printer className="size-4" />
-                  Print All
+                  {printingAll ? "Preparing…" : "Print All"}
                 </button>
               </div>
             </section>
@@ -475,6 +557,7 @@ export default function QrMenuPage() {
                     value={getQrValue()}
                     size={220}
                     restaurantName={restaurantName}
+                    canvasId={qrCanvasId}
                   />
                 ) : (
                   <div className="flex size-[220px] items-center justify-center">
@@ -502,9 +585,10 @@ export default function QrMenuPage() {
                 Download QR (PNG)
               </button>
               <button type="button" onClick={printQr}
+                disabled={printingSingle}
                 className="cursor-pointer flex items-center justify-center gap-2 rounded-xl border border-zinc-700 py-2.5 text-sm font-medium text-zinc-300 hover:border-zinc-500 hover:text-zinc-100 transition-colors">
                 <Printer className="size-4" />
-                Print QR
+                {printingSingle ? "Preparing print…" : "Print QR"}
               </button>
             </div>
           </section>

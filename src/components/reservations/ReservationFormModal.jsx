@@ -4,9 +4,9 @@ import Modal from "@/components/ui/Modal";
 import { useModuleData } from "@/context/ModuleDataContext";
 import { useCustomerSearch } from "@/hooks/useCustomerSearch";
 import {
-  getCustomerFormFieldErrors,
   getReservationFormFieldErrors,
   EMPTY_RESERVATION_FORM_ERRORS,
+  validateCustomerForm,
 } from "@/lib/formValidation";
 import PhoneInput from "@/components/ui/PhoneInput";
 import { TIME_SLOTS, formatTimeSlot } from "@/lib/reservationUtils";

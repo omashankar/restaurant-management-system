@@ -23,8 +23,25 @@ export const PATCH = withTenant(
     if (!STAFF_ROLES.includes(existing.role)) {
       return Response.json({ success: false, error: "Only staff roles can be modified here." }, { status: 403 });
     }
+    const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     const update = {};
-    if (body.name)   update.name   = body.name.trim();
+    if (body.name)  update.name  = body.name.trim();
+    if (body.email !== undefined) {
+      const email = String(body.email ?? "").trim().toLowerCase();
+      if (email && !EMAIL_RE.test(email)) {
+        return Response.json({ success: false, error: "Enter a valid email address." }, { status: 400 });
+      }
+      if (email) {
+        const emailConflict = await db.collection("users").findOne(
+          { ...tenantFilter, email, _id: { $ne: _id } },
+          { projection: { _id: 1 } }
+        );
+        if (emailConflict) {
+          return Response.json({ success: false, error: "Email is already in use by another staff member." }, { status: 409 });
+        }
+        update.email = email;
+      }
+    }
     if (body.role) {
       const nextRole = String(body.role).toLowerCase();
       if (!STAFF_ROLES.includes(nextRole)) {

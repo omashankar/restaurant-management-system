@@ -27,10 +27,9 @@ const emptyForm = { name: "", role: "waiter", phone: "", email: "", password: ""
 
 export default function StaffModulePage() {
   const { user } = useUser();
-  const { setStaffRows: setContextStaffRows } = useModuleData();
+  const { staffRows, setStaffRows } = useModuleData();
   const isAdmin = user?.role === "admin";
 
-  const [staffRows, setStaffRows] = useState([]);
   const [loading, setLoading]     = useState(true);
   const [fetchError, setFetchError] = useState(null);
   const [roleFilter, setRoleFilter] = useState("all");
@@ -53,7 +52,6 @@ export default function StaffModulePage() {
       const data = await res.json();
       if (res.ok && data.success && Array.isArray(data.staff)) {
         setStaffRows(data.staff);
-        setContextStaffRows(data.staff);
       } else {
         setFetchError(data?.error ?? "Could not load staff.");
       }
@@ -62,7 +60,7 @@ export default function StaffModulePage() {
     } finally {
       setLoading(false);
     }
-  }, [setContextStaffRows]);
+  }, [setStaffRows]);
 
   useEffect(() => { fetchStaff(); }, [fetchStaff]);
 
@@ -126,11 +124,7 @@ export default function StaffModulePage() {
           setSaving(false);
           return;
         }
-        setStaffRows((prev) => {
-          const next = [data.staff, ...prev];
-          setContextStaffRows(next);
-          return next;
-        });
+        setStaffRows((prev) => [data.staff, ...prev]);
         showToast("Staff member added.");
         setModalOpen(false);
       } catch {
@@ -142,17 +136,17 @@ export default function StaffModulePage() {
         const res  = await fetch(`/api/staff/${editingId}`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ name: form.name, role: form.role, phone: form.phone, status: form.status }),
+          body: JSON.stringify({ name: form.name, email: form.email, role: form.role, phone: form.phone, status: form.status }),
         });
         const data = await res.json();
         if (!data.success) { setFormError(data.error ?? "Failed to update."); setSaving(false); return; }
-        setStaffRows((prev) => {
-          const next = prev.map((s) => s.id === editingId
-            ? { ...s, name: form.name, role: form.role, phone: form.phone, status: form.status }
-            : s);
-          setContextStaffRows(next);
-          return next;
-        });
+        setStaffRows((prev) =>
+          prev.map((s) =>
+            s.id === editingId
+              ? { ...s, name: form.name, email: form.email, role: form.role, phone: form.phone, status: form.status }
+              : s
+          )
+        );
         showToast("Staff member updated.");
         setModalOpen(false);
       } catch { setFormError("Network error."); }
@@ -172,11 +166,7 @@ export default function StaffModulePage() {
       const res  = await fetch(`/api/staff/${deleteTarget.id}`, { method: "DELETE" });
       const data = await res.json();
       if (!data.success) { showToast(data.error ?? "Failed to delete.", "error"); return; }
-      setStaffRows((prev) => {
-        const next = prev.filter((s) => s.id !== deleteTarget.id);
-        setContextStaffRows(next);
-        return next;
-      });
+      setStaffRows((prev) => prev.filter((s) => s.id !== deleteTarget.id));
       showToast(`${deleteTarget.name} removed.`);
       setDeleteTarget(null);
     } catch { showToast("Network error.", "error"); }

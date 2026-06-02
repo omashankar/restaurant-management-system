@@ -6,7 +6,9 @@ import {
   EMPTY_PROFILE_ERRORS,
   getProfileFormFieldErrors,
 } from "@/lib/formValidation";
+import { uploadImageWithCompression } from "@/lib/clientImageUpload";
 import { validatePasswordChangeForm } from "@/lib/restaurantSettingsValidation";
+import { validateImageFileType } from "@/lib/uploadImageShared";
 import { useEffect, useState } from "react";
 
 /**
@@ -70,16 +72,19 @@ export function useProfile() {
 
   const uploadAvatar = async (file) => {
     if (!file) return;
+
+    const typeCheck = validateImageFileType(file);
+    if (!typeCheck.ok) {
+      showToast("error", typeCheck.error);
+      return;
+    }
+
     setAvatarUploading(true);
     try {
-      const fd = new FormData();
-      fd.append("image", file);
-      const res = await fetch("/api/auth/profile/avatar", {
-        method: "POST",
-        credentials: "include",
-        body: fd,
+      const data = await uploadImageWithCompression(file, {
+        url: "/api/auth/profile/avatar",
+        preset: "avatar",
       });
-      const data = await res.json();
       if (!data.success) {
         showToast("error", data.error ?? "Failed to upload profile photo.");
         return;
@@ -89,8 +94,6 @@ export function useProfile() {
         setUser(data.user);
       }
       showToast("success", "Profile photo updated.");
-    } catch {
-      showToast("error", "Network error while uploading photo.");
     } finally {
       setAvatarUploading(false);
     }

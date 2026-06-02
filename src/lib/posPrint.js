@@ -9,17 +9,44 @@ export function paperWidthPx(paperSize) {
 
 export function openPrintWindow(html, paperSize = "80mm") {
   const width = paperWidthPx(paperSize);
-  const win = window.open("", "_blank", `width=${width + 60},height=700`);
-  if (!win) {
-    window.alert("Unable to open print preview. Allow popups for this site.");
+  const iframe = document.createElement("iframe");
+  iframe.style.position = "fixed";
+  iframe.style.right = "0";
+  iframe.style.bottom = "0";
+  iframe.style.width = `${width + 60}px`;
+  iframe.style.height = "0";
+  iframe.style.opacity = "0";
+  iframe.style.pointerEvents = "none";
+  iframe.style.border = "0";
+  document.body.appendChild(iframe);
+
+  const cleanup = () => {
+    setTimeout(() => {
+      try { iframe.remove(); } catch {}
+    }, 1000);
+  };
+
+  const doc = iframe.contentDocument;
+  if (!doc) {
+    cleanup();
+    window.alert("Could not prepare print preview.");
     return false;
   }
-  win.document.write(html);
-  win.document.close();
-  win.focus();
-  win.onload = () => {
-    win.onafterprint = () => win.close();
-    win.print();
+
+  doc.open();
+  doc.write(html);
+  doc.close();
+
+  iframe.onload = () => {
+    const win = iframe.contentWindow;
+    if (!win) {
+      cleanup();
+      window.alert("Could not open print dialog.");
+      return;
+    }
+    win.focus();
+    win.onafterprint = cleanup;
+    setTimeout(() => win.print(), 120);
   };
   return true;
 }

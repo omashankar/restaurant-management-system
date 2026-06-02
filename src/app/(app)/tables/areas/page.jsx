@@ -8,14 +8,15 @@ import { useToast } from "@/hooks/useToast";
 import { ImagePlus, LayoutGrid, Pencil, Plus, RefreshCw, Table2, Trash2, X } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
+import { uploadImageWithCompression } from "@/lib/clientImageUpload";
 import {
   EMPTY_TABLE_AREA_ERRORS,
   getTableAreaFieldErrors,
 } from "@/lib/formValidation";
+import { validateImageFileType } from "@/lib/uploadImageShared";
 import { useCallback, useEffect, useState } from "react";
 
 const EMPTY_FORM = { name: "", description: "", color: "emerald", imageUrl: "" };
-const ALLOWED_TYPES = ["image/jpeg", "image/jpg", "image/png"];
 
 export default function TableAreasPage() {
   const [areas, setAreas]           = useState([]);
@@ -31,7 +32,7 @@ export default function TableAreasPage() {
   const [deleting, setDeleting] = useState(false);
   const [imageFile, setImageFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState("");
-  const [uploadingImage, setUploadingImage] = useState(false);
+  const [imagePhase, setImagePhase] = useState(null);
   const [removeCurrentImage, setRemoveCurrentImage] = useState(false);
   const [fetchError, setFetchError] = useState("");
   const { showToast, ToastUI } = useToast();
@@ -110,7 +111,13 @@ export default function TableAreasPage() {
   const onImagePicked = (event) => {
     const file = event.target.files?.[0];
     if (!file) return;
-    if (!ALLOWED_TYPES.includes(file.type)) {
+    const typeCheck = validateImageFileType(file);
+    if (!typeCheck.ok) {
+      setFormError(typeCheck.error);
+      event.target.value = "";
+      return;
+    }
+    if (typeCheck.mime === "image/webp") {
       setFormError("Only JPG and PNG images are allowed.");
       event.target.value = "";
       return;
@@ -139,11 +146,12 @@ export default function TableAreasPage() {
     setSaving(true); setFormError("");
     try {
       if (imageFile) {
-        setUploadingImage(true);
-        const fd = new FormData();
-        fd.append("image", imageFile);
-        const uploadRes = await fetch("/api/uploads/table-area-image", { method: "POST", body: fd });
-        const uploadData = await uploadRes.json();
+        const uploadData = await uploadImageWithCompression(imageFile, {
+          url: "/api/uploads/table-area-image",
+          preset: "tableArea",
+          onPhase: setImagePhase,
+        });
+        setImagePhase(null);
         if (!uploadData.success) {
           setFormError(uploadData.error ?? "Image upload failed.");
           return;
@@ -168,7 +176,7 @@ export default function TableAreasPage() {
       setModalOpen(false);
     } catch { setFormError("Network error."); }
     finally {
-      setUploadingImage(false);
+      setImagePhase(null);
       setSaving(false);
     }
   };
@@ -303,9 +311,15 @@ export default function TableAreasPage() {
               className="cursor-pointer rounded-xl border border-zinc-700 px-4 py-2 text-sm text-zinc-300 hover:border-zinc-500">
               Cancel
             </button>
-            <button type="button" onClick={save} disabled={saving || uploadingImage}
+            <button type="button" onClick={save} disabled={saving || imagePhase}
               className="cursor-pointer rounded-xl bg-ra-primary px-4 py-2 text-sm font-semibold text-zinc-950 hover:brightness-110 disabled:opacity-40">
-              {uploadingImage ? "Uploading image…" : saving ? "Saving…" : "Save"}
+              {imagePhase === "compressing"
+                ? "Compressing image…"
+                : imagePhase === "uploading"
+                  ? "Uploading image…"
+                  : saving
+                    ? "Saving…"
+                    : "Save"}
             </button>
           </div>
         }>
