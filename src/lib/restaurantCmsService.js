@@ -4,6 +4,7 @@
  */
 
 import clientPromise from "./mongodb";
+import { deleteOrphanedManagedUploads } from "./uploadImage";
 import { mergeCmsSection } from "./customerCmsMerge";
 import { DEFAULTS, VALID_SECTIONS } from "./restaurantCmsDefaults";
 import { validateRestaurantCmsSectionServer } from "./restaurantSettingsValidation";
@@ -78,15 +79,19 @@ export async function saveSection(restaurantId, section, data, { asDraft = false
   }
   validateRestaurantCmsSectionServer(section, data);
   const db = await getDb();
+  const doc = await getRestaurantCmsDoc(restaurantId);
   const now = new Date();
   if (asDraft) {
+    const oldSection = doc?.draft?.[section] ?? doc?.[section];
     await db.collection(COLLECTION).updateOne(
       { restaurantId },
       { $set: { [`draft.${section}`]: data, updatedAt: now, version: VERSION } },
       { upsert: true }
     );
+    await deleteOrphanedManagedUploads(oldSection, data);
     return { section, asDraft: true, updatedAt: now };
   }
+  const oldSection = doc?.[section];
   await db.collection(COLLECTION).updateOne(
     { restaurantId },
     {
@@ -95,6 +100,7 @@ export async function saveSection(restaurantId, section, data, { asDraft = false
     },
     { upsert: true }
   );
+  await deleteOrphanedManagedUploads(oldSection, data);
   return { section, asDraft: false, updatedAt: now };
 }
 
@@ -110,6 +116,7 @@ export async function publishSection(restaurantId, section) {
   }
   validateRestaurantCmsSectionServer(section, data);
   const db = await getDb();
+  const oldSection = doc?.[section];
   const now = new Date();
   await db.collection(COLLECTION).updateOne(
     { restaurantId },
@@ -119,6 +126,7 @@ export async function publishSection(restaurantId, section) {
     },
     { upsert: true }
   );
+  await deleteOrphanedManagedUploads(oldSection, data);
   return { section, updatedAt: now };
 }
 
@@ -139,5 +147,8 @@ export async function publishAllDrafts(restaurantId) {
     $unset[`draft.${section}`] = "";
   }
   await db.collection(COLLECTION).updateOne({ restaurantId }, { $set, $unset }, { upsert: true });
+  for (const section of sections) {
+    await deleteOrphanedManagedUploads(doc?.[section], draft[section]);
+  }
   return { sections, updatedAt: now };
 }

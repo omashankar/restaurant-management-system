@@ -9,12 +9,15 @@
     "lint": "eslint",
     "test": "node --experimental-default-type=module --test \"tests/**/*.test.mjs\"",
     "seed": "node scripts/seed.js",
-    "seed:plans": "node scripts/seedPlans.js"
+    "seed:plans": "node scripts/seedPlans.js",
+    "migrate:uploads": "node scripts/migrate-uploads-to-blob.js",
+    "migrate:uploads:apply": "node scripts/migrate-uploads-to-blob.js --apply"
   },
   "dependencies": {
     "@stripe/react-stripe-js": "^6.3.0",
     "@stripe/stripe-js": "^9.4.0",
     "@tanstack/react-query": "^5.100.10",
+    "@vercel/blob": "^2.4.0",
     "bcryptjs": "^3.0.3",
     "browser-image-compression": "^2.0.2",
     "framer-motion": "^12.38.0",

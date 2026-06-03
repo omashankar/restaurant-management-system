@@ -1,3 +1,4 @@
+import { deleteUploadedImage, deleteUploadedImageIfReplaced } from "@/lib/uploadImage";
 import { withTenant } from "@/lib/tenantDb";
 import { ObjectId } from "mongodb";
 
@@ -36,7 +37,7 @@ export async function PATCH(request, { params }) {
 
       const existing = await db.collection("menuItems").findOne(
         { ...tenantFilter, _id },
-        { projection: { categoryId: 1 } }
+        { projection: { categoryId: 1, image: 1 } }
       );
       if (!existing) {
         return Response.json({ success: false, error: "Item not found." }, { status: 404 });
@@ -53,7 +54,13 @@ export async function PATCH(request, { params }) {
       if (body.itemType)      update.itemType      = body.itemType;
       if (body.kitchenType)   update.kitchenType   = body.kitchenType;
       if (body.prepTime != null) update.prepTime   = body.prepTime;
-      if ("image" in body)    update.image         = body.image;
+      if ("image" in body) {
+        const nextImage =
+          body.image == null || body.image === ""
+            ? null
+            : String(body.image).trim();
+        update.image = nextImage;
+      }
       if ("badge" in body)    update.badge         = body.badge?.trim() || null;
       update.updatedAt = new Date();
 
@@ -64,6 +71,10 @@ export async function PATCH(request, { params }) {
 
       if (result.matchedCount === 0) {
         return Response.json({ success: false, error: "Item not found." }, { status: 404 });
+      }
+
+      if ("image" in body) {
+        await deleteUploadedImageIfReplaced(existing.image, update.image);
       }
 
       const newCategoryId = body.categoryId;
@@ -109,12 +120,16 @@ export async function DELETE(request, { params }) {
       // Get item before delete (for category count update)
       const item = await db.collection("menuItems").findOne(
         { ...tenantFilter, _id },
-        { projection: { categoryId: 1 } }
+        { projection: { categoryId: 1, image: 1 } }
       );
 
       if (!item) return Response.json({ success: false, error: "Item not found." }, { status: 404 });
 
       await db.collection("menuItems").deleteOne({ ...tenantFilter, _id });
+
+      if (item.image) {
+        await deleteUploadedImage(item.image);
+      }
 
       // Decrement category item count
       if (item.categoryId) {

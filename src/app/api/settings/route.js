@@ -1,6 +1,7 @@
 import { EMPTY_SETTINGS } from "@/config/settingsConfig";
 import { resolveRestaurantAdminTheme } from "@/lib/restaurantAdminThemeRuntime";
 import { validateRestaurantSettingsPatch } from "@/lib/restaurantSettingsValidation";
+import { deleteUploadedImageIfReplaced } from "@/lib/uploadImage";
 import { withTenant } from "@/lib/tenantDb";
 
 const SECRET_MASK = "********";
@@ -188,6 +189,10 @@ export const PATCH = withTenant(["admin"], async ({ db, restaurantId }, request)
   );
 
   if (updateFields.general && restaurantId) {
+    const restaurantDoc = await db.collection("restaurants").findOne(
+      { _id: restaurantId },
+      { projection: { logoUrl: 1 } }
+    );
     const restaurantPatch = { updatedAt: new Date() };
     const name = updateFields.general.restaurantName?.trim();
     if (name) restaurantPatch.name = name;
@@ -200,6 +205,14 @@ export const PATCH = withTenant(["admin"], async ({ db, restaurantId }, request)
         { _id: restaurantId },
         { $set: restaurantPatch }
       );
+    }
+    if ("logoUrl" in updateFields.general) {
+      const prevLogo =
+        restaurantDoc?.logoUrl?.trim() ||
+        existing?.general?.logoUrl?.trim() ||
+        "";
+      const nextLogo = String(updateFields.general.logoUrl ?? "").trim();
+      await deleteUploadedImageIfReplaced(prevLogo, nextLogo);
     }
   }
 

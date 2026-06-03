@@ -1,26 +1,13 @@
+import {
+  deleteUploadedImage,
+  deleteUploadedImageIfReplaced,
+} from "@/lib/uploadImage";
 import { withTenant } from "@/lib/tenantDb";
 import { ObjectId } from "mongodb";
-import { unlink } from "node:fs/promises";
-import path from "node:path";
 
 function getFilter(tenantFilter, id) {
   try { return { ...tenantFilter, _id: new ObjectId(id) }; }
   catch { return null; }
-}
-
-function toUploadDiskPath(urlPath) {
-  if (!urlPath || typeof urlPath !== "string" || !urlPath.startsWith("/uploads/")) return null;
-  return path.join(process.cwd(), "public", ...urlPath.replace(/^\//, "").split("/"));
-}
-
-async function removeUploadedImage(urlPath) {
-  const diskPath = toUploadDiskPath(urlPath);
-  if (!diskPath) return;
-  try {
-    await unlink(diskPath);
-  } catch {
-    // Ignore missing-file cleanup failures.
-  }
 }
 
 /* PATCH /api/tables/areas/:id */
@@ -48,9 +35,7 @@ export const PATCH = withTenant(
     });
 
     if (result.matchedCount === 0) return Response.json({ success: false, error: "Area not found." }, { status: 404 });
-    if (existing.imageUrl && existing.imageUrl !== nextImageUrl) {
-      await removeUploadedImage(existing.imageUrl);
-    }
+    await deleteUploadedImageIfReplaced(existing.imageUrl, nextImageUrl);
     return Response.json({ success: true });
   }
 );
@@ -70,7 +55,7 @@ export const DELETE = withTenant(
       { $set: { categoryId: null } }
     );
     if (existing?.imageUrl) {
-      await removeUploadedImage(existing.imageUrl);
+      await deleteUploadedImage(existing.imageUrl);
     }
 
     return Response.json({ success: true });

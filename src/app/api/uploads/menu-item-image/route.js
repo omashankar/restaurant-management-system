@@ -32,13 +32,19 @@ export const POST = withTenant(["admin", "manager"], async ({ payload }, request
     );
   }
 
-  const imageUrl = await saveUploadedImage({
-    file,
-    mime: validation.mime,
-    subdir: "menu-items",
-    namePrefix: "menu",
-    restaurantId: payload.restaurantId,
-  });
-
-  return Response.json({ success: true, imageUrl });
+  try {
+    const imageUrl = await saveUploadedImage({
+      file,
+      mime: validation.mime,
+      subdir: "menu-items",
+      namePrefix: "menu",
+      restaurantId: payload.restaurantId,
+    });
+    return Response.json({ success: true, imageUrl });
+  } catch (err) {
+    return Response.json(
+      { success: false, error: err.message ?? "Upload failed." },
+      { status: 500 }
+    );
+  }
 });

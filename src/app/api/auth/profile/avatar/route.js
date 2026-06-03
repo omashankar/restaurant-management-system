@@ -1,18 +1,14 @@
 import { getAuthPayload } from "@/lib/tenantDb";
 import clientPromise from "@/lib/mongodb";
-import { mkdir, writeFile } from "node:fs/promises";
-import path from "node:path";
-import { randomUUID } from "node:crypto";
+import {
+  deleteUploadedImageIfReplaced,
+  LOGO_UPLOAD_MAX_BYTES,
+  saveUploadedImage,
+  validateImageUploadFile,
+} from "@/lib/uploadImage";
 import { ObjectId } from "mongodb";
 
-const MAX_SIZE_BYTES = 2 * 1024 * 1024;
-const ALLOWED_TYPES = new Set(["image/jpeg", "image/jpg", "image/png", "image/webp"]);
-
-function extensionFromType(type) {
-  if (type === "image/png") return "png";
-  if (type === "image/webp") return "webp";
-  return "jpg";
-}
+export const runtime = "nodejs";
 
 function serializeUser(user) {
   return {
@@ -36,20 +32,24 @@ export async function POST(request) {
       return Response.json({ success: false, error: "Not authenticated." }, { status: 401 });
     }
 
-    const formData = await request.formData();
-    const file = formData.get("image");
-
-    if (!file || typeof file === "string") {
-      return Response.json({ success: false, error: "Profile image is required." }, { status: 400 });
-    }
-    if (!ALLOWED_TYPES.has(file.type)) {
+    let formData;
+    try {
+      formData = await request.formData();
+    } catch (err) {
+      console.error("Avatar upload formData error:", err.message);
       return Response.json(
-        { success: false, error: "Only JPG, PNG, or WebP files are allowed." },
+        { success: false, error: "Could not read the upload." },
         { status: 400 }
       );
     }
-    if (file.size > MAX_SIZE_BYTES) {
-      return Response.json({ success: false, error: "Image must be 2MB or smaller." }, { status: 400 });
+
+    const file = formData.get("image");
+    const validation = validateImageUploadFile(file, LOGO_UPLOAD_MAX_BYTES);
+    if (!validation.ok) {
+      return Response.json(
+        { success: false, error: validation.error },
+        { status: validation.status }
+      );
     }
 
     let _id;
@@ -59,22 +59,27 @@ export async function POST(request) {
       return Response.json({ success: false, error: "Invalid user ID." }, { status: 401 });
     }
 
-    const ext = extensionFromType(file.type);
-    const filename = `user-${payload.id}-${Date.now()}-${randomUUID()}.${ext}`;
-    const uploadDir = path.join(process.cwd(), "public", "uploads", "user-avatars");
-    await mkdir(uploadDir, { recursive: true });
-
-    const bytes = await file.arrayBuffer();
-    await writeFile(path.join(uploadDir, filename), Buffer.from(bytes));
-
-    const avatarUrl = `/uploads/user-avatars/${filename}`;
+    const avatarUrl = await saveUploadedImage({
+      file,
+      mime: validation.mime,
+      subdir: "user-avatars",
+      namePrefix: "user",
+      restaurantId: payload.id,
+    });
 
     const client = await clientPromise;
     const db = client.db();
+    const existing = await db.collection("users").findOne(
+      { _id },
+      { projection: { avatarUrl: 1 } }
+    );
+
     await db.collection("users").updateOne(
       { _id },
       { $set: { avatarUrl, updatedAt: new Date() } }
     );
+
+    await deleteUploadedImageIfReplaced(existing?.avatarUrl, avatarUrl);
 
     const updated = await db.collection("users").findOne(
       { _id },
@@ -88,6 +93,9 @@ export async function POST(request) {
     });
   } catch (err) {
     console.error("/api/auth/profile/avatar error:", err.message);
-    return Response.json({ success: false, error: "Something went wrong." }, { status: 500 });
+    return Response.json(
+      { success: false, error: err.message ?? "Something went wrong." },
+      { status: 500 }
+    );
   }
 }
