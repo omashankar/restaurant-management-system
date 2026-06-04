@@ -3,9 +3,9 @@ import { Users } from "lucide-react";
 export default function CustomerChart({ data = [] }) {
   if (data.length === 0) {
     return (
-      <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-5">
-        <h3 className="text-sm font-semibold text-zinc-100">Customer Analytics</h3>
-        <p className="mt-6 text-center text-sm text-zinc-600">No data yet.</p>
+      <div className="rounded-2xl border admin-shell-border bg-zinc-900/60 p-5">
+        <h3 className="admin-surface-title text-sm font-semibold">Customer Analytics</h3>
+        <p className="mt-6 text-center text-sm admin-surface-faint">No data yet.</p>
       </div>
     );
   }
@@ -18,11 +18,11 @@ export default function CustomerChart({ data = [] }) {
     : 0;
 
   return (
-    <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-5">
+    <div className="rounded-2xl border admin-shell-border bg-zinc-900/60 p-5">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <h3 className="text-sm font-semibold text-zinc-100">Customer Analytics</h3>
-          <p className="text-xs text-zinc-500">New vs returning</p>
+          <h3 className="admin-surface-title text-sm font-semibold">Customer Analytics</h3>
+          <p className="text-xs admin-surface-muted">New vs returning</p>
         </div>
         {Number(change) !== 0 && (
           <span className="inline-flex items-center gap-1.5 rounded-xl border border-sky-500/25 bg-sky-500/10 px-3 py-1 text-xs font-semibold text-sky-400">
@@ -31,8 +31,8 @@ export default function CustomerChart({ data = [] }) {
         )}
       </div>
       <div className="mt-3 flex items-center gap-4">
-        <span className="flex items-center gap-1.5 text-xs text-zinc-400"><span className="size-2.5 rounded-full bg-sky-400" /> New</span>
-        <span className="flex items-center gap-1.5 text-xs text-zinc-500"><span className="size-2.5 rounded-full bg-ra-primary/70" /> Returning</span>
+        <span className="flex items-center gap-1.5 text-xs admin-surface-muted"><span className="size-2.5 rounded-full bg-sky-400" /> New</span>
+        <span className="flex items-center gap-1.5 text-xs admin-surface-muted"><span className="size-2.5 rounded-full bg-ra-primary/70" /> Returning</span>
       </div>
       <div className="mt-4 flex h-44 items-end gap-2">
         {data.map((c, i) => {
@@ -46,7 +46,7 @@ export default function CustomerChart({ data = [] }) {
                 <div className="w-full max-w-[16px] rounded-t-md bg-ra-primary-50 hover:brightness-110/70 transition-all duration-500"
                   style={{ height: `${Math.max(hR, 4)}%` }} />
               </div>
-              <span className="text-[10px] font-medium text-zinc-500">{c.month}</span>
+              <span className="text-[10px] font-medium admin-surface-muted">{c.month}</span>
             </div>
           );
         })}

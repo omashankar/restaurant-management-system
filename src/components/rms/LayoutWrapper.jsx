@@ -1,6 +1,8 @@
 "use client";
 
 import "@/app/(app)/restaurant-admin-theme.css";
+import "@/app/admin-surface-theme.css";
+import { adminShell } from "@/config/adminSurfaceClasses";
 import { useRestaurantAdminThemeStyles } from "@/hooks/useRestaurantAdminThemeStyles";
 import { useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
@@ -106,12 +108,12 @@ export default function LayoutWrapper({ children }) {
 
   // Prevents hydration flicker between server/default and stored client state.
   if (!mounted) {
-    return <div className="h-screen bg-zinc-950" />;
+    return <div className={`h-screen ${adminShell.page}`} />;
   }
 
   return (
     <div
-      className="restaurant-admin-panel h-screen overflow-hidden bg-zinc-950"
+      className={`restaurant-admin-panel ${adminShell.layout}`}
       onTouchStart={onTouchStart}
       onTouchEnd={onTouchEnd}
     >
@@ -135,10 +137,11 @@ export default function LayoutWrapper({ children }) {
           style={{ marginLeft: contentOffset }}
         >
           <TopNavbar
+            showMobileMenu={!mdUp}
             onOpenSidebar={openSidebar}
             onToggleSidebar={toggleSidebar}
           />
-          <main className="flex-1 overflow-y-auto overflow-x-hidden p-4 sm:p-6">
+          <main className={`${adminShell.pageContent} flex-1 overflow-y-auto overflow-x-hidden p-4 sm:p-6`}>
             {children}
           </main>
         </div>

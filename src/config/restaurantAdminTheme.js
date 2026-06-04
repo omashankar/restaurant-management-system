@@ -1,9 +1,29 @@
 /** Restaurant Admin brand defaults — overridden by Settings → Theme at runtime. */
+import { adminBox, adminControl, adminPage, adminText } from "@/config/adminDesignSystem";
+import { adminSurface } from "@/config/adminSurfaceClasses";
+
+export { adminBox, adminControl, adminPage, adminText };
+
 export const RESTAURANT_ADMIN_PRIMARY = "#10b981";
 export const RESTAURANT_ADMIN_ACCENT = "#34d399";
 
 export const raInputCls =
-  "w-full rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus-ra-primary placeholder:text-zinc-600 transition-colors";
+  "admin-surface-input focus-ra-primary transition-colors";
+
+/** Semantic shells — dark/light via admin-surface-theme.css */
+export const raCardCls = adminSurface.card;
+export const raCardSolidCls = adminSurface.cardSolid;
+export const raTableShellCls = adminSurface.tableShell;
+export const raLabelCls = adminSurface.label;
+export const raMutedCls = adminSurface.muted;
+export const raFaintCls = adminSurface.faint;
+export const raBodyCls = adminSurface.body;
+export const raGhostBtnCls = adminSurface.btnGhost;
+export const raIconBtnCls = adminSurface.btnIcon;
+export const raSegmentTrackCls = adminSurface.segmentTrack;
+export const raSegmentBtnCls = adminSurface.segmentBtn;
+export const raSegmentBtnActiveCls = adminSurface.segmentBtnActive;
+export const raDashedBoxCls = adminSurface.dashedBox;
 
 export const raBtnPrimaryCls =
   "ra-btn-primary inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-semibold disabled:cursor-not-allowed transition-colors";
@@ -18,8 +38,13 @@ export const raPageActiveCls =
 
 export const raToggleOnCls = "bg-ra-primary";
 
+/** Filter chips / segment tabs — tinted brand */
 export const raTabActiveCls =
-  "bg-ra-primary text-zinc-950 shadow-ra-primary-glow";
+  "bg-ra-primary-10 text-ra-primary ring-1 ring-ra-primary-25";
+
+/** Settings side nav — light pill + brand icon (matches Super Admin sections nav) */
+export const raSideNavActiveCls =
+  "admin-side-nav-active-pill text-zinc-900 font-semibold";
 
 export const raTabActiveIconCls = "text-ra-primary";
 

@@ -11,11 +11,11 @@ export default function SalesComparison({
   const max    = Math.max(...monthly.map((m) => m.sales ?? 0), 1);
 
   return (
-    <div className="rms-dashboard-card rms-dashboard-card--md flex h-full min-h-0 w-full flex-col rounded-2xl border border-zinc-800 bg-zinc-900/60 p-5">
+    <div className="rms-dashboard-card rms-dashboard-card--md flex h-full min-h-0 w-full flex-col rms-dashboard-card admin-surface-card p-5">
       <div className="flex shrink-0 flex-wrap items-start justify-between gap-3">
         <div>
-          <h3 className="text-sm font-semibold text-zinc-100">Revenue Breakdown</h3>
-          <p className="text-xs text-zinc-500">Current vs previous period</p>
+          <h3 className="admin-surface-title text-sm font-semibold">Revenue Breakdown</h3>
+          <p className="admin-surface-subheading">Current vs previous period</p>
         </div>
         {Number(change) !== 0 && (
           <div className="flex items-center gap-1.5 rounded-xl border border-ra-primary-25 bg-ra-primary-10 px-3 py-1.5">
@@ -28,8 +28,8 @@ export default function SalesComparison({
       </div>
 
       <div className="mt-4 grid grid-cols-2 gap-3">
-        <div className="rounded-xl border border-zinc-800 bg-zinc-950/50 p-3">
-          <p className="text-xs text-zinc-500">This Period</p>
+        <div className="rounded-xl admin-surface-card p-3">
+          <p className="admin-surface-subheading">This Period</p>
           <p className="mt-1 text-xl font-semibold tabular-nums text-zinc-50">
             {formatAdminMoney(current, currency)}
           </p>
@@ -37,8 +37,8 @@ export default function SalesComparison({
             <div className="h-full w-full rounded-full bg-ra-primary-100" />
           </div>
         </div>
-        <div className="rounded-xl border border-zinc-800 bg-zinc-950/50 p-3">
-          <p className="text-xs text-zinc-500">Last Period</p>
+        <div className="rounded-xl admin-surface-card p-3">
+          <p className="admin-surface-subheading">Last Period</p>
           <p className="mt-1 text-xl font-semibold tabular-nums text-zinc-400">
             {formatAdminMoney(previous, currency)}
           </p>
@@ -68,7 +68,7 @@ export default function SalesComparison({
           })}
         </div>
       ) : (
-        <p className="py-6 text-center text-sm text-zinc-600">No monthly data yet.</p>
+        <p className="py-6 text-center text-sm admin-surface-faint">No monthly data yet.</p>
       )}
       </div>
     </div>

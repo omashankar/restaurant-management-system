@@ -1,5 +1,6 @@
-﻿"use client";
+"use client";
 
+import { raIconBadgeCls } from "@/config/restaurantAdminTheme";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import EmptyState from "@/components/ui/EmptyState";
 import ListToolbar from "@/components/ui/ListToolbar";
@@ -162,10 +163,10 @@ export default function TablesModulePage() {
   if (loading) {
     return (
       <div className="space-y-6">
-        <div className="h-8 w-32 animate-pulse rounded-lg bg-zinc-800" />
+        <div className="h-8 w-32 animate-pulse rounded-lg admin-progress-track" />
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {Array.from({ length: 8 }).map((_, i) => (
-            <div key={i} className="h-32 animate-pulse rounded-2xl border border-zinc-800 bg-zinc-900/40" />
+            <div key={i} className="h-32 animate-pulse admin-surface-card" />
           ))}
         </div>
       </div>
@@ -182,21 +183,21 @@ export default function TablesModulePage() {
       {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div className="flex items-start gap-3">
-          <span className="mt-1 flex size-10 shrink-0 items-center justify-center rounded-xl bg-ra-primary-15 text-ra-primary ring-1 ring-ra-primary-25">
+          <span className={`mt-1 ${raIconBadgeCls}`}>
             <Table2 className="size-5" />
           </span>
           <div>
-            <h1 className="text-2xl font-semibold tracking-tight text-zinc-50">Tables</h1>
-            <p className="mt-1 text-sm text-zinc-500">Floor layout · {total} table{total !== 1 ? "s" : ""}</p>
+            <h1 className="admin-page-title text-2xl font-semibold tracking-tight">Tables</h1>
+            <p className="admin-page-desc mt-1 text-sm">Floor layout · {total} table{total !== 1 ? "s" : ""}</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
           <Link href="/tables/areas"
-            className="cursor-pointer inline-flex items-center gap-2 rounded-xl border border-zinc-700 px-4 py-2.5 text-sm font-medium text-zinc-300 hover:border-zinc-500 hover:text-zinc-100">
+            className="cursor-pointer inline-flex items-center gap-2 rounded-xl border admin-shell-border px-4 py-2.5 text-sm font-medium admin-surface-body hover:border-zinc-500 hover:admin-shell-text">
             <LayoutGrid className="size-4" /> Manage Areas
           </Link>
           <button type="button" onClick={fetchAll}
-            className="cursor-pointer flex items-center gap-1.5 rounded-xl border border-zinc-700 px-3 py-2.5 text-sm font-medium text-zinc-400 hover:border-zinc-500 hover:text-zinc-200 transition-colors">
+            className="cursor-pointer flex items-center gap-1.5 rounded-xl border admin-shell-border px-3 py-2.5 text-sm font-medium text-zinc-400 hover:border-zinc-500 hover:admin-shell-text transition-colors">
             <RefreshCw className="size-4" />
           </button>
           {isAdmin && (
@@ -216,13 +217,13 @@ export default function TablesModulePage() {
         filterSlot={
           <div className="flex flex-wrap gap-2">
             <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}
-              className="cursor-pointer rounded-xl border border-zinc-800 bg-zinc-900/60 px-3 py-2 text-sm text-zinc-200">
+              className="cursor-pointer admin-surface-card px-3 py-2 text-sm admin-shell-text">
               <option value="all">All statuses</option>
               <option value="available">Available</option>
               <option value="occupied">Occupied</option>
             </select>
             <select value={categoryFilter} onChange={(e) => setCategoryFilter(e.target.value)}
-              className="cursor-pointer rounded-xl border border-zinc-800 bg-zinc-900/60 px-3 py-2 text-sm text-zinc-200">
+              className="cursor-pointer admin-surface-card px-3 py-2 text-sm admin-shell-text">
               <option value="all">All areas</option>
               {areas.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}
             </select>
@@ -253,26 +254,26 @@ export default function TablesModulePage() {
               const badgeClass = cat ? getCategoryBadge(cat.color) : "bg-zinc-500/15 text-zinc-400 ring-zinc-500/25";
               return (
                 <div key={t.id}
-                  className="group relative rounded-2xl border border-zinc-800 bg-zinc-900/60 p-4 shadow-sm transition-all duration-200 hover:border-ra-primary-30 hover:shadow-lg hover:shadow-ra-primary-soft">
+                  className="group relative admin-surface-card p-4 shadow-sm transition-all duration-200 hover:border-ra-primary-30 hover:shadow-lg hover:shadow-ra-primary-soft">
                   <div className="flex items-start justify-between gap-2">
                     <div>
-                      <p className="text-lg font-semibold text-zinc-50">{t.tableNumber}</p>
-                      {t.zone && <p className="text-xs text-zinc-600">{t.zone}</p>}
+                      <p className="admin-surface-title text-lg font-semibold">{t.tableNumber}</p>
+                      {t.zone && <p className="admin-surface-faint text-xs">{t.zone}</p>}
                     </div>
                     <span className={`shrink-0 rounded-full px-2.5 py-0.5 text-xs font-semibold capitalize ring-1 ${
                       st === "available"
-                        ? "bg-ra-primary-15 text-ra-primary-muted ring-ra-primary-25"
-                        : "bg-red-500/15 text-red-300 ring-red-500/25"
+                        ? "bg-ra-primary-15 text-ra-primary ring-ra-primary-25"
+                        : "bg-red-500/15 text-red-400 ring-red-500/25"
                     }`}>
                       {st}
                     </span>
                   </div>
                   <div className="mt-3 flex items-center justify-between gap-2">
-                    <div className="flex items-center gap-1.5 text-sm text-zinc-400">
+                    <div className="flex items-center gap-1.5 text-sm admin-surface-muted">
                       <Users className="size-3.5" />
-                      <span className="font-medium text-zinc-200">{t.capacity} persons</span>
+                      <span className="font-medium admin-shell-text">{t.capacity} persons</span>
                     </div>
-                    <div title={`${t.capacity} Seater Table`} className="rounded-lg border border-zinc-700/70 bg-zinc-800/70 p-1 text-zinc-300">
+                    <div title={`${t.capacity} Seater Table`} className="rounded-lg border admin-shell-border/70 bg-[var(--admin-hover-strong)] p-1 admin-surface-body">
                       <TableCapacityIcon capacity={t.capacity} className="size-8" />
                     </div>
                   </div>
@@ -283,11 +284,11 @@ export default function TablesModulePage() {
                       </span>
                     </div>
                   )}
-                  <div className="mt-4 flex flex-col gap-1 border-t border-zinc-800/80 pt-3">
+                  <div className="mt-4 flex flex-col gap-1 border-t admin-shell-border pt-3">
                     {st === "available" && (
                       <Link
                         href={`/pos?tableId=${encodeURIComponent(t.id)}`}
-                        className="cursor-pointer flex w-full items-center justify-center gap-1 rounded-lg bg-ra-primary-15 py-2 text-xs font-semibold text-ra-primary-muted ring-1 ring-ra-primary-25 transition-colors hover-bg-ra-primary-15"
+                        className="cursor-pointer flex w-full items-center justify-center gap-1 rounded-lg bg-ra-primary-15 py-2 text-xs font-semibold text-ra-primary ring-1 ring-ra-primary-25 transition-colors hover:bg-ra-primary-20"
                       >
                         <ShoppingCart className="size-3.5" /> Open in POS
                       </Link>
@@ -295,13 +296,13 @@ export default function TablesModulePage() {
                     <div className="flex gap-1">
                     {canEdit && (
                     <button type="button" onClick={() => openEdit(t)}
-                      className="cursor-pointer flex flex-1 items-center justify-center gap-1 rounded-lg border border-zinc-800 py-2 text-xs font-medium text-zinc-400 transition-colors hover-border-ra-primary-40 hover-ra-primary">
+                      className="cursor-pointer flex flex-1 items-center justify-center gap-1 rounded-lg border admin-shell-border py-2 text-xs font-medium text-zinc-400 transition-colors hover-border-ra-primary-40 hover-ra-primary">
                       <Pencil className="size-3.5" /> Edit
                     </button>
                     )}
                     {isAdmin && (
                     <button type="button" onClick={() => setDeleteTarget(t)}
-                      className="cursor-pointer flex flex-1 items-center justify-center gap-1 rounded-lg border border-zinc-800 py-2 text-xs font-medium text-zinc-400 transition-colors hover:border-red-500/40 hover:text-red-400">
+                      className="cursor-pointer flex flex-1 items-center justify-center gap-1 rounded-lg border admin-shell-border py-2 text-xs font-medium text-zinc-400 transition-colors hover:border-red-500/40 hover:text-red-400">
                       <Trash2 className="size-3.5" /> Delete
                     </button>
                     )}
@@ -323,7 +324,7 @@ export default function TablesModulePage() {
         footer={
           <div className="flex justify-end gap-2">
             <button type="button" onClick={() => setModalOpen(false)}
-              className="cursor-pointer rounded-xl border border-zinc-700 px-4 py-2 text-sm text-zinc-300 hover:border-zinc-500">
+              className="cursor-pointer rounded-xl border admin-shell-border px-4 py-2 text-sm admin-surface-body hover:border-zinc-500">
               Cancel
             </button>
             <button type="button" onClick={saveTable} disabled={saving}
@@ -336,7 +337,7 @@ export default function TablesModulePage() {
           {formError && <p className="rounded-xl border border-red-500/20 bg-red-500/10 px-3 py-2 text-xs text-red-400">{formError}</p>}
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
-              <label className="text-xs text-zinc-500">Table Number *</label>
+              <label className="text-xs admin-surface-muted">Table Number *</label>
               <input
                 value={form.tableNumber}
                 onChange={(e) => {
@@ -345,7 +346,7 @@ export default function TablesModulePage() {
                 }}
                 placeholder="T12"
                 aria-invalid={fieldErrors.tableNumber ? true : undefined}
-                className={`mt-1 w-full rounded-xl border bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus-ra-primary ${
+                className={`mt-1 w-full rounded-xl border admin-surface-card px-3 py-2.5 text-sm admin-shell-text outline-none focus-ra-primary ${
                   fieldErrors.tableNumber ? "border-red-500/50" : "border-zinc-700"
                 }`}
               />
@@ -354,7 +355,7 @@ export default function TablesModulePage() {
               )}
             </div>
             <div>
-              <label className="text-xs text-zinc-500">Capacity *</label>
+              <label className="text-xs admin-surface-muted">Capacity *</label>
               <input
                 type="number"
                 min={1}
@@ -364,7 +365,7 @@ export default function TablesModulePage() {
                   if (fieldErrors.capacity) setFieldErrors((p) => ({ ...p, capacity: "" }));
                 }}
                 aria-invalid={fieldErrors.capacity ? true : undefined}
-                className={`mt-1 w-full rounded-xl border bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus-ra-primary ${
+                className={`mt-1 w-full rounded-xl border admin-surface-card px-3 py-2.5 text-sm admin-shell-text outline-none focus-ra-primary ${
                   fieldErrors.capacity ? "border-red-500/50" : "border-zinc-700"
                 }`}
               />
@@ -373,17 +374,17 @@ export default function TablesModulePage() {
               )}
             </div>
             <div>
-              <label className="text-xs text-zinc-500">Status</label>
+              <label className="text-xs admin-surface-muted">Status</label>
               <select value={form.status} onChange={(e) => setForm((f) => ({ ...f, status: e.target.value }))}
-                className="cursor-pointer mt-1 w-full rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus-ra-primary">
+                className="cursor-pointer mt-1 w-full rounded-xl border admin-shell-border admin-surface-card px-3 py-2.5 text-sm admin-shell-text outline-none focus-ra-primary">
                 <option value="available">Available</option>
                 <option value="occupied">Occupied</option>
               </select>
             </div>
             <div>
-              <label className="text-xs text-zinc-500">Area</label>
+              <label className="text-xs admin-surface-muted">Area</label>
               {areas.length === 0 ? (
-                <div className="mt-1 rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-500">
+                <div className="mt-1 rounded-xl border admin-shell-border admin-surface-card px-3 py-2.5 text-sm admin-surface-muted">
                   No areas —{" "}
                   <Link href="/tables/areas" className="cursor-pointer text-ra-primary hover:text-ra-primary-muted">create one</Link>
                 </div>
@@ -395,7 +396,7 @@ export default function TablesModulePage() {
                     if (fieldErrors.categoryId) setFieldErrors((p) => ({ ...p, categoryId: "" }));
                   }}
                   aria-invalid={fieldErrors.categoryId ? true : undefined}
-                  className={`cursor-pointer mt-1 w-full rounded-xl border bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus-ra-primary ${
+                  className={`cursor-pointer mt-1 w-full rounded-xl border admin-surface-card px-3 py-2.5 text-sm admin-shell-text outline-none focus-ra-primary ${
                     fieldErrors.categoryId ? "border-red-500/50" : "border-zinc-700"
                   }`}
                 >

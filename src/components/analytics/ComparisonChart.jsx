@@ -14,9 +14,9 @@ export default function ComparisonChart({ daily = [], monthly = [] }) {
 
   if (data.length === 0) {
     return (
-      <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-5">
-        <h3 className="text-sm font-semibold text-zinc-100">Revenue Comparison</h3>
-        <p className="mt-6 text-center text-sm text-zinc-600">No data yet.</p>
+      <div className="rounded-2xl border admin-shell-border bg-zinc-900/60 p-5">
+        <h3 className="admin-surface-title text-sm font-semibold">Revenue Comparison</h3>
+        <p className="mt-6 text-center text-sm admin-surface-faint">No data yet.</p>
       </div>
     );
   }
@@ -28,11 +28,11 @@ export default function ComparisonChart({ daily = [], monthly = [] }) {
   const positive = Number(change) >= 0;
 
   return (
-    <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-5">
+    <div className="rounded-2xl border admin-shell-border bg-zinc-900/60 p-5">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h3 className="text-sm font-semibold text-zinc-100">Revenue Comparison</h3>
-          <p className="text-xs text-zinc-500">Current vs previous period</p>
+          <h3 className="admin-surface-title text-sm font-semibold">Revenue Comparison</h3>
+          <p className="text-xs admin-surface-muted">Current vs previous period</p>
         </div>
         <div className="flex items-center gap-2">
           {Number(change) !== 0 && (
@@ -43,12 +43,12 @@ export default function ComparisonChart({ daily = [], monthly = [] }) {
               {positive ? "+" : ""}{change}%
             </span>
           )}
-          <div className="flex rounded-xl border border-zinc-800 bg-zinc-950/60 p-0.5">
+          <div className="flex rounded-xl border admin-shell-border bg-zinc-950/60 p-0.5">
             {["Daily", "Monthly"].map((p) => (
               <button
                key={p} type="button" onClick={() => setPeriod(p)}
                 className={`cursor-pointer rounded-lg px-3 py-1.5 text-xs font-semibold transition-all ${
-                  period === p ? "bg-zinc-700 text-zinc-100" : "text-zinc-500 hover:text-zinc-300"
+                  period === p ? "bg-zinc-700 admin-shell-text" : "admin-surface-muted hover:admin-surface-body"
                 }`}>
                 {p}
               </button>
@@ -58,8 +58,8 @@ export default function ComparisonChart({ daily = [], monthly = [] }) {
       </div>
 
       <div className="mt-3 flex items-center gap-4">
-        <span className="flex items-center gap-1.5 text-xs text-zinc-400"><span className="size-2.5 rounded-full bg-ra-primary" /> Current</span>
-        <span className="flex items-center gap-1.5 text-xs text-zinc-500"><span className="size-2.5 rounded-full bg-zinc-600" /> Previous</span>
+        <span className="flex items-center gap-1.5 text-xs admin-surface-muted"><span className="size-2.5 rounded-full bg-ra-primary" /> Current</span>
+        <span className="flex items-center gap-1.5 text-xs admin-surface-muted"><span className="size-2.5 rounded-full bg-zinc-600" /> Previous</span>
       </div>
 
       <div className="mt-4 flex h-44 items-end gap-1 sm:gap-2">
@@ -74,7 +74,7 @@ export default function ComparisonChart({ daily = [], monthly = [] }) {
                 <div className="w-full max-w-[18px] rounded-t-md bg-gradient-to-t from-ra-accent to-ra-primary hover:opacity-90 transition-all duration-500"
                   style={{ height: `${Math.max(hC, 4)}%` }} title={`Current: ${fmt(d.current ?? 0)}`} />
               </div>
-              <span className="text-[10px] font-medium text-zinc-500">{d.label}</span>
+              <span className="text-[10px] font-medium admin-surface-muted">{d.label}</span>
             </div>
           );
         })}

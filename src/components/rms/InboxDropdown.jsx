@@ -1,5 +1,6 @@
 "use client";
 
+import { adminSurface } from "@/config/adminSurfaceClasses";
 import { Loader2 } from "lucide-react";
 import Link from "next/link";
 
@@ -37,12 +38,12 @@ export default function InboxDropdown({
     <div
       className={
         embedded
-          ? "rounded-lg border border-zinc-800 bg-zinc-950/80 p-1.5"
-          : "w-[min(360px,calc(100vw-1rem))] rounded-xl border border-zinc-800 bg-zinc-900 p-1.5 shadow-xl shadow-black/40"
+          ? `rounded-lg p-1.5 ${adminSurface.cardSolid}`
+          : `w-[min(360px,calc(100vw-1rem))] p-1.5 ${adminSurface.dropdown}`
       }
     >
       <div className="flex items-center justify-between px-2.5 py-2">
-        <p className="text-sm font-semibold text-zinc-100">{title}</p>
+        <p className={`text-sm font-semibold ${adminSurface.title}`}>{title}</p>
         <button
           type="button"
           onClick={() => onMarkAllRead(type)}
@@ -54,17 +55,19 @@ export default function InboxDropdown({
       <div className={embedded ? "max-h-56 overflow-y-auto" : "max-h-80 overflow-y-auto"}>
         {loading ? (
           <div className="flex items-center justify-center py-8">
-            <Loader2 className="size-4 animate-spin text-zinc-500" />
+            <Loader2 className={`size-4 animate-spin ${adminSurface.muted}`} />
           </div>
         ) : items.length === 0 ? (
-          <p className="px-3 py-6 text-center text-xs text-zinc-500">No {title.toLowerCase()} yet.</p>
+          <p className={`px-3 py-6 text-center text-xs ${adminSurface.muted}`}>No {title.toLowerCase()} yet.</p>
         ) : (
           <ul className="space-y-1">
             {items.map((item) => (
               <li key={item.key}>
                 <div
-                  className={`rounded-lg px-2.5 py-2 transition-colors ${
-                    item.read ? "bg-zinc-900 text-zinc-400 hover:bg-zinc-800/70" : "bg-zinc-800/60 text-zinc-200 hover:bg-zinc-800"
+                  className={`px-2.5 py-2 transition-colors ${
+                    item.read
+                      ? `rounded-lg ${adminSurface.rowHover}`
+                      : `rounded-lg ${adminSurface.rowHover} bg-[var(--admin-hover)]`
                   }`}
                 >
                   <Link
@@ -78,11 +81,11 @@ export default function InboxDropdown({
                     <div className="flex items-start justify-between gap-3">
                       <div>
                         <p className="text-sm font-medium">{item.title}</p>
-                        <p className="mt-0.5 text-xs text-zinc-500">{item.body}</p>
+                        <p className={`mt-0.5 text-xs ${adminSurface.muted}`}>{item.body}</p>
                       </div>
                       {!item.read ? <span className={`mt-1 size-2 shrink-0 rounded-full ${unreadDot}`} /> : null}
                     </div>
-                    <p className="mt-1 text-[11px] text-zinc-500">{item.ago ?? "just now"}</p>
+                    <p className={`mt-1 text-[11px] ${adminSurface.muted}`}>{item.ago ?? "just now"}</p>
                   </Link>
                   <div className="mt-2 flex items-center gap-2">
                     {type === "messages" && item.actionable ? (

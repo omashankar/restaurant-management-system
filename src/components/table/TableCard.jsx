@@ -64,7 +64,7 @@ export default function TableCard({
           <p className={`text-lg font-bold ${selected ? "text-ra-primary" : !isAvailable ? "text-zinc-500" : "text-zinc-900"}`}>
             {tableName}
           </p>
-          <div className="mt-2 flex items-center gap-1.5 text-xs text-zinc-600">
+          <div className="mt-2 flex items-center gap-1.5 text-xs admin-surface-faint">
             <Users className="size-3.5" />
             <span>{capacity} {capacity === 1 ? "Person" : "People"}</span>
           </div>
@@ -105,7 +105,7 @@ export default function TableCard({
 
       {/* Next available hint */}
       {!isAvailable && nextAvailableTime && (
-        <div className="mt-2 flex items-center gap-1 text-[10px] text-zinc-600">
+        <div className="mt-2 flex items-center gap-1 text-[10px] admin-surface-faint">
           <Clock className="size-3" />
           <span>Free from {nextAvailableTime}</span>
         </div>

@@ -28,10 +28,10 @@ export default function TableCard({
   const s = statusMap[table.status] ?? statusMap.available;
   const capacity = Number(table.seats ?? table.capacity ?? 0) || 0;
   const tableName = table.name ?? table.id;
-  const iconTone = selected ? "text-ra-primary-muted" : "text-zinc-300";
+  const iconTone = selected ? "text-ra-primary-muted" : "admin-surface-body";
   const iconShell = selected
     ? "border-ra-primary-40 bg-ra-primary/[0.08] shadow-[0_0_0_1px_color-mix(in_srgb,var(--ra-primary)_25%,transparent),0_10px_26px_color-mix(in_srgb,var(--ra-primary)_18%,transparent)]"
-    : "border-zinc-700/75 bg-zinc-900/80 shadow-[inset_0_1px_0_rgba(255,255,255,0.05),0_8px_20px_rgba(0,0,0,0.35)]";
+    : "border-zinc-700/75 admin-surface-card shadow-[inset_0_1px_0_rgba(255,255,255,0.05),0_8px_20px_rgba(0,0,0,0.35)]";
 
   return (
     <button
@@ -40,7 +40,7 @@ export default function TableCard({
       className={`relative w-full rounded-2xl border p-4 text-left transition-all duration-200 ${
         selected
           ? "border-ra-primary-60 bg-ra-primary-10 shadow-lg shadow-ra-primary-soft"
-          : "border-zinc-800 bg-zinc-900/60 hover:border-zinc-600 hover:shadow-md"
+          : "admin-shell-border admin-surface-card hover:border-zinc-600 hover:shadow-md"
       } ${className}`}
     >
       <span
@@ -51,7 +51,7 @@ export default function TableCard({
         <div className="flex items-center justify-between gap-2">
           <p className="text-lg font-semibold tracking-tight">{tableName}</p>
           <span
-            className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ring-1 ${s.ring} text-zinc-200`}
+            className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ring-1 ${s.ring} admin-shell-text`}
           >
             <Users className="size-3" aria-hidden />
             {capacity}
@@ -65,8 +65,8 @@ export default function TableCard({
             <TableCapacityIcon capacity={capacity} className={`size-12 ${iconTone}`} />
           </div>
         </div>
-        <p className="mt-2 text-xs text-zinc-500">{table.zone}</p>
-        <p className="mt-2.5 text-xs font-medium uppercase tracking-wide text-zinc-400">
+        <p className="mt-2 text-xs admin-surface-muted">{table.zone}</p>
+        <p className="mt-2.5 text-xs font-medium uppercase tracking-wide admin-surface-muted">
           {s.label}
         </p>
       </div>

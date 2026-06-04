@@ -1,11 +1,21 @@
 "use client";
 
+import { raIconBadgeCls } from "@/config/restaurantAdminTheme";
 import dynamic from "next/dynamic";
 import {
   BarChart3, DollarSign, RefreshCw,
   ShoppingBag, TrendingUp, Trophy,
 } from "lucide-react";
 import { formatAdminMoney } from "@/lib/adminCurrency";
+import {
+  AdminTable,
+  AdminTableBody,
+  AdminTableHead,
+  AdminTableHeadRow,
+  AdminTableRow,
+  AdminTableTd,
+  AdminTableTh,
+} from "@/components/ui/AdminTable";
 import { useCallback, useEffect, useState } from "react";
 
 const TenantAnalyticsCharts = dynamic(
@@ -15,7 +25,7 @@ const TenantAnalyticsCharts = dynamic(
     loading: () => (
       <div className="grid gap-6 lg:grid-cols-2">
         {Array.from({ length: 4 }).map((_, i) => (
-          <div key={i} className="h-64 animate-pulse rounded-2xl border border-zinc-800 bg-zinc-900/40" />
+          <div key={i} className="h-64 animate-pulse admin-surface-card" />
         ))}
       </div>
     ),
@@ -32,12 +42,12 @@ function KpiCard({ title, value, subtitle, icon: Icon, color = "emerald" }) {
   };
   const c = colors[color] ?? colors.emerald;
   return (
-    <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-5 shadow-sm">
+    <div className="admin-surface-card p-5 shadow-sm">
       <div className="flex items-start justify-between gap-3">
         <div>
           <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500">{title}</p>
           <p className={`mt-2 text-2xl font-bold ${c.val}`}>{value}</p>
-          {subtitle && <p className="mt-1 text-xs text-zinc-600">{subtitle}</p>}
+          {subtitle && <p className="mt-1 text-xs admin-surface-faint">{subtitle}</p>}
         </div>
         <span className={`flex size-10 shrink-0 items-center justify-center rounded-xl ring-1 ${c.bg} ${c.ring}`}>
           <Icon className={`size-5 ${c.icon}`} />
@@ -85,15 +95,15 @@ export default function AnalyticsPage() {
   if (loading) {
     return (
       <div className="space-y-6">
-        <div className="h-8 w-40 animate-pulse rounded-lg bg-zinc-800" />
+        <div className="h-8 w-40 animate-pulse rounded-lg admin-progress-track" />
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
           {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="h-28 animate-pulse rounded-2xl border border-zinc-800 bg-zinc-900/40" />
+            <div key={i} className="h-28 animate-pulse admin-surface-card" />
           ))}
         </div>
         <div className="grid gap-6 lg:grid-cols-2">
           {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="h-64 animate-pulse rounded-2xl border border-zinc-800 bg-zinc-900/40" />
+            <div key={i} className="h-64 animate-pulse admin-surface-card" />
           ))}
         </div>
       </div>
@@ -117,27 +127,27 @@ export default function AnalyticsPage() {
 
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div className="flex items-start gap-3">
-          <span className="mt-1 flex size-10 shrink-0 items-center justify-center rounded-xl bg-ra-primary-15 text-ra-primary ring-1 ring-ra-primary-25">
+          <span className={`mt-1 ${raIconBadgeCls}`}>
             <BarChart3 className="size-5" />
           </span>
           <div>
-            <h1 className="text-2xl font-semibold tracking-tight text-zinc-50">Analytics</h1>
-            <p className="mt-1 text-sm text-zinc-500">Revenue, orders, and performance insights.</p>
+            <h1 className="admin-page-title text-2xl font-semibold tracking-tight">Analytics</h1>
+            <p className="admin-page-desc mt-1 text-sm">Revenue, orders, and performance insights.</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <div className="flex rounded-xl border border-zinc-800 p-0.5">
+          <div className="flex rounded-xl border admin-shell-border p-0.5">
             {RANGES.map((r) => (
               <button key={r.value} type="button" onClick={() => setRange(r.value)}
                 className={`cursor-pointer rounded-lg px-3 py-1.5 text-xs font-semibold transition-all ${
-                  range === r.value ? "bg-ra-primary text-zinc-950" : "text-zinc-500 hover:text-zinc-300"
+                  range === r.value ? "bg-ra-primary text-zinc-950" : "text-zinc-500 hover:admin-surface-body"
                 }`}>
                 {r.label}
               </button>
             ))}
           </div>
           <button type="button" onClick={fetchAnalytics}
-            className="cursor-pointer flex items-center gap-1.5 rounded-xl border border-zinc-700 px-3 py-2 text-xs font-medium text-zinc-400 hover:border-zinc-500 hover:text-zinc-200 transition-colors">
+            className="cursor-pointer flex items-center gap-1.5 rounded-xl border admin-shell-border px-3 py-2 text-xs font-medium text-zinc-400 hover:border-zinc-500 hover:admin-shell-text transition-colors">
             <RefreshCw className="size-3.5" />
           </button>
         </div>
@@ -159,33 +169,31 @@ export default function AnalyticsPage() {
       <TenantAnalyticsCharts chartData={chartData} topItems={topItems} orderTypes={orderTypes} currency={currency} />
 
       {topItems.length > 0 && (
-        <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 overflow-hidden">
-          <div className="flex items-center gap-2 border-b border-zinc-800 px-5 py-4">
+        <div className="admin-surface-card overflow-hidden">
+          <div className="flex items-center gap-2 border-b admin-shell-border px-5 py-4">
             <Trophy className="size-4 text-amber-400" />
-            <p className="text-sm font-semibold text-zinc-100">Top Items by Revenue</p>
+            <p className="text-sm font-semibold admin-shell-text">Top Items by Revenue</p>
           </div>
-          <table className="min-w-full text-sm">
-            <thead>
-              <tr className="border-b border-zinc-800 bg-zinc-950/40 text-xs font-semibold uppercase tracking-wider text-zinc-500">
-                <th className="px-5 py-3 text-left">#</th>
-                <th className="px-5 py-3 text-left">Item</th>
-                <th className="px-5 py-3 text-right">Qty Sold</th>
-                <th className="px-5 py-3 text-right">Revenue</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-zinc-800/60">
+          <AdminTable>
+            <AdminTableHead>
+              <AdminTableHeadRow>
+                <AdminTableTh className="px-5">#</AdminTableTh>
+                <AdminTableTh className="px-5">Item</AdminTableTh>
+                <AdminTableTh align="right" className="px-5">Qty Sold</AdminTableTh>
+                <AdminTableTh align="right" className="px-5">Revenue</AdminTableTh>
+              </AdminTableHeadRow>
+            </AdminTableHead>
+            <AdminTableBody>
               {topItems.map((item, i) => (
-                <tr key={item.name} className="hover:bg-zinc-800/30 transition-colors">
-                  <td className="px-5 py-3 text-zinc-600 font-mono text-xs">{i + 1}</td>
-                  <td className="px-5 py-3 font-medium text-zinc-100">{item.name}</td>
-                  <td className="px-5 py-3 text-right tabular-nums text-zinc-300">{item.qty}</td>
-                  <td className="px-5 py-3 text-right tabular-nums font-semibold text-ra-primary">
-                    {fmt(item.revenue)}
-                  </td>
-                </tr>
+                <AdminTableRow key={item.name}>
+                  <AdminTableTd className="px-5 font-mono text-xs admin-surface-muted">{i + 1}</AdminTableTd>
+                  <AdminTableTd className="px-5 font-medium admin-shell-text">{item.name}</AdminTableTd>
+                  <AdminTableTd align="right" className="px-5 admin-surface-body">{item.qty}</AdminTableTd>
+                  <AdminTableTd align="right" className="px-5 font-semibold text-ra-primary">{fmt(item.revenue)}</AdminTableTd>
+                </AdminTableRow>
               ))}
-            </tbody>
-          </table>
+            </AdminTableBody>
+          </AdminTable>
         </div>
       )}
 

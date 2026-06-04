@@ -48,7 +48,7 @@ export default function InventoryFormModal({
           <button
             type="button"
             onClick={onClose}
-            className="cursor-pointer rounded-xl border border-zinc-700 px-4 py-2 text-sm font-medium text-zinc-200 transition-colors hover:bg-zinc-800"
+            className="cursor-pointer rounded-xl border admin-shell-border px-4 py-2 text-sm font-medium admin-shell-text transition-colors hover:bg-[var(--admin-hover)]"
           >
             Cancel
           </button>
@@ -64,25 +64,25 @@ export default function InventoryFormModal({
     >
       <div className="space-y-4">
         <div>
-          <label className="mb-1 block text-xs font-medium text-zinc-400">
+          <label className="mb-1 block text-xs font-medium admin-surface-muted">
             Name
           </label>
           <input
             value={form.name}
             onChange={(e) => onChange({ ...form, name: e.target.value })}
-            className="w-full rounded-xl border border-zinc-800 bg-zinc-950/80 px-3 py-2 text-sm text-zinc-100 outline-none focus-ra-primary"
+            className="admin-surface-input focus-ra-primary w-full px-3 py-2 text-sm"
             placeholder="Item name"
           />
         </div>
         <div>
-          <label className="mb-1 block text-xs font-medium text-zinc-400">
+          <label className="mb-1 block text-xs font-medium admin-surface-muted">
             Category
           </label>
           <input
             list="inventory-category-suggestions"
             value={form.category}
             onChange={(e) => onChange({ ...form, category: e.target.value })}
-            className="w-full rounded-xl border border-zinc-800 bg-zinc-950/80 px-3 py-2 text-sm text-zinc-100 outline-none focus-ra-primary"
+            className="admin-surface-input focus-ra-primary w-full px-3 py-2 text-sm"
             placeholder="e.g. Produce"
           />
           <datalist id="inventory-category-suggestions">
@@ -93,7 +93,7 @@ export default function InventoryFormModal({
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="mb-1 block text-xs font-medium text-zinc-400">
+            <label className="mb-1 block text-xs font-medium admin-surface-muted">
               Quantity
             </label>
             <input
@@ -104,17 +104,17 @@ export default function InventoryFormModal({
               onChange={(e) =>
                 onChange({ ...form, quantity: e.target.value })
               }
-              className="w-full rounded-xl border border-zinc-800 bg-zinc-950/80 px-3 py-2 text-sm text-zinc-100 outline-none focus-ra-primary"
+              className="admin-surface-input focus-ra-primary w-full px-3 py-2 text-sm"
             />
           </div>
           <div>
-            <label className="mb-1 block text-xs font-medium text-zinc-400">
+            <label className="mb-1 block text-xs font-medium admin-surface-muted">
               Unit
             </label>
             <select
               value={form.unit}
               onChange={(e) => onChange({ ...form, unit: e.target.value })}
-              className="cursor-pointer w-full rounded-xl border border-zinc-800 bg-zinc-950/80 px-3 py-2 text-sm text-zinc-100 outline-none focus-ra-primary"
+              className="admin-surface-input focus-ra-primary cursor-pointer w-full px-3 py-2 text-sm"
             >
               <option value="" disabled>Select unit…</option>
               {UNITS.map((u) => (
@@ -124,7 +124,7 @@ export default function InventoryFormModal({
           </div>
         </div>
         <div>
-          <label className="mb-1 block text-xs font-medium text-zinc-400">
+          <label className="mb-1 block text-xs font-medium admin-surface-muted">
             Reorder level
           </label>
           <input
@@ -135,28 +135,28 @@ export default function InventoryFormModal({
             onChange={(e) =>
               onChange({ ...form, reorderLevel: e.target.value })
             }
-            className="w-full rounded-xl border border-zinc-800 bg-zinc-950/80 px-3 py-2 text-sm text-zinc-100 outline-none focus-ra-primary"
+            className="admin-surface-input focus-ra-primary w-full px-3 py-2 text-sm"
           />
         </div>
         <div>
-          <label className="mb-1 block text-xs font-medium text-zinc-400">
+          <label className="mb-1 block text-xs font-medium admin-surface-muted">
             Supplier (optional)
           </label>
           <input
             value={form.supplier}
             onChange={(e) => onChange({ ...form, supplier: e.target.value })}
-            className="w-full rounded-xl border border-zinc-800 bg-zinc-950/80 px-3 py-2 text-sm text-zinc-100 outline-none focus-ra-primary"
+            className="admin-surface-input focus-ra-primary w-full px-3 py-2 text-sm"
           />
         </div>
         <div>
-          <label className="mb-1 block text-xs font-medium text-zinc-400">
+          <label className="mb-1 block text-xs font-medium admin-surface-muted">
             Notes (optional)
           </label>
           <textarea
             rows={2}
             value={form.notes}
             onChange={(e) => onChange({ ...form, notes: e.target.value })}
-            className="w-full resize-none rounded-xl border border-zinc-800 bg-zinc-950/80 px-3 py-2 text-sm text-zinc-100 outline-none focus-ra-primary"
+            className="admin-surface-input focus-ra-primary w-full resize-none px-3 py-2 text-sm"
           />
         </div>
       </div>

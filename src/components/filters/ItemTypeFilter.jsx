@@ -32,7 +32,7 @@ export default function ItemTypeFilter({
                 ? t === "all"
                   ? "bg-zinc-200 text-zinc-900"
                   : `ring-1 ${meta.badge} ${meta.border}`
-                : "bg-zinc-900 text-zinc-400 ring-1 ring-zinc-800 hover:text-zinc-200"
+                : "admin-surface-segment-btn hover:admin-shell-text"
             }`}
             aria-pressed={active}
           >
@@ -49,7 +49,7 @@ export default function ItemTypeFilter({
         className={`cursor-pointer inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold transition-all duration-150 ${
           fastOnly
             ? "bg-amber-500/20 text-amber-300 ring-1 ring-amber-500/30"
-            : "bg-zinc-900 text-zinc-400 ring-1 ring-zinc-800 hover:text-zinc-200"
+            : "admin-surface-segment-btn hover:admin-shell-text"
         }`}
         aria-pressed={fastOnly}
       >

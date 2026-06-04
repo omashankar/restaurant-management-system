@@ -1,7 +1,7 @@
 "use client";
 
 import SuperAdminPageSkeleton from "@/components/super-admin/SuperAdminPageSkeleton";
-import { saSpinnerCls } from "@/config/superAdminTheme";
+import { saIconBadgeCls, saSpinnerCls } from "@/config/superAdminTheme";
 import { useToast } from "@/hooks/useToast";
 import {
   Activity, BarChart3, Building2, CreditCard,
@@ -36,7 +36,7 @@ function StatCard({ label, value, sub, icon: Icon, color, bg, border }) {
         <div className="min-w-0">
           <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500">{label}</p>
           <p className={`mt-2 text-3xl font-bold tabular-nums ${color}`}>{value}</p>
-          {sub && <p className="mt-1 text-xs text-zinc-600">{sub}</p>}
+          {sub && <p className="mt-1 text-xs admin-surface-faint">{sub}</p>}
         </div>
         <span className={`flex size-11 shrink-0 items-center justify-center rounded-xl ${bg}`}>
           <Icon className={`size-5 ${color}`} />
@@ -58,7 +58,7 @@ function BarChart({ data, valueKey = "value", labelKey = "label", color = "bg-sa
         return (
           <div key={i} className="group relative flex flex-1 flex-col items-center gap-1">
             {/* Tooltip */}
-            <div className="pointer-events-none absolute -top-8 left-1/2 z-10 hidden -translate-x-1/2 whitespace-nowrap rounded-lg border border-zinc-700 bg-zinc-900 px-2 py-1 text-[10px] font-semibold text-zinc-200 shadow-lg group-hover:flex">
+            <div className="pointer-events-none absolute -top-8 left-1/2 z-10 hidden -translate-x-1/2 whitespace-nowrap rounded-lg admin-chart-tooltip px-2 py-1 text-[10px] font-semibold admin-shell-text shadow-lg group-hover:flex">
               {prefix}{(d[valueKey] ?? 0).toLocaleString()}
             </div>
             <div className="flex w-full flex-1 flex-col justify-end">
@@ -100,7 +100,7 @@ function DonutChart({ segments, size = 120 }) {
   return (
     <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="-rotate-90">
       {/* Background ring */}
-      <circle cx={cx} cy={cy} r={r} fill="none" stroke="#27272a" strokeWidth={18} />
+      <circle cx={cx} cy={cy} r={r} fill="none" stroke="var(--admin-chart-ring)" strokeWidth={18} />
       {slices.map((s, i) => (
         <circle
           key={i}
@@ -178,19 +178,19 @@ export default function SuperAdminAnalyticsPage() {
       {/* ── Header ── */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div className="flex items-start gap-3">
-          <span className="mt-1 flex size-10 shrink-0 items-center justify-center rounded-xl bg-indigo-500/15 text-indigo-400 ring-1 ring-indigo-500/25">
+          <span className={`mt-1 ${saIconBadgeCls}`}>
             <BarChart3 className="size-5" />
           </span>
           <div>
-            <h1 className="text-2xl font-semibold tracking-tight text-zinc-50">Analytics</h1>
-            <p className="mt-1 text-sm text-zinc-500">Platform-wide performance and growth metrics.</p>
+            <h1 className="admin-page-title text-2xl font-semibold tracking-tight">Analytics</h1>
+            <p className="admin-page-desc mt-1 text-sm">Platform-wide performance and growth metrics.</p>
           </div>
         </div>
         <button
           type="button"
           onClick={fetchAnalytics}
           disabled={loading}
-          className="cursor-pointer flex items-center gap-1.5 rounded-xl border border-zinc-700 px-3 py-2.5 text-sm font-medium text-zinc-400 hover:border-zinc-500 hover:text-zinc-200 disabled:opacity-50 transition-colors"
+          className="cursor-pointer flex items-center gap-1.5 rounded-xl border admin-shell-border px-3 py-2.5 text-sm font-medium text-zinc-400 hover:border-zinc-500 hover:admin-shell-text disabled:opacity-50 transition-colors"
         >
           <RefreshCw className={`size-4 ${loading ? saSpinnerCls : ""}`} />
           Refresh
@@ -202,8 +202,8 @@ export default function SuperAdminAnalyticsPage() {
         <div className="space-y-4">
           <SuperAdminPageSkeleton cards={4} cardClassName="h-28" rows={0} />
           <div className="grid gap-4 lg:grid-cols-2">
-            <div className="h-56 animate-pulse rounded-2xl border border-sa-primary-10 bg-zinc-900/40" />
-            <div className="h-56 animate-pulse rounded-2xl border border-sa-primary-10 bg-zinc-900/40" />
+            <div className="h-56 animate-pulse rounded-2xl border border-sa-primary-10 admin-surface-card" />
+            <div className="h-56 animate-pulse rounded-2xl border border-sa-primary-10 admin-surface-card" />
           </div>
         </div>
       )}
@@ -243,14 +243,14 @@ export default function SuperAdminAnalyticsPage() {
           <div className="grid gap-4 lg:grid-cols-2">
 
             {/* Revenue by month */}
-            <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-5">
+            <div className="admin-surface-card p-5">
               <div className="mb-5 flex items-center gap-2">
                 <TrendingUp className="size-4 text-sa-primary" />
-                <h2 className="text-sm font-semibold text-zinc-100">Revenue — Last 12 Months</h2>
+                <h2 className="text-sm font-semibold admin-shell-text">Revenue — Last 12 Months</h2>
               </div>
               {(data.revenueByMonth ?? []).length === 0 ? (
                 <div className="flex h-40 items-center justify-center">
-                  <p className="text-sm text-zinc-600">No revenue data yet.</p>
+                  <p className="text-sm admin-surface-faint">No revenue data yet.</p>
                 </div>
               ) : (
                 <BarChart
@@ -265,14 +265,14 @@ export default function SuperAdminAnalyticsPage() {
             </div>
 
             {/* Restaurant growth */}
-            <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-5">
+            <div className="admin-surface-card p-5">
               <div className="mb-5 flex items-center gap-2">
                 <Activity className="size-4 text-indigo-400" />
-                <h2 className="text-sm font-semibold text-zinc-100">Restaurant Growth — Last 12 Months</h2>
+                <h2 className="text-sm font-semibold admin-shell-text">Restaurant Growth — Last 12 Months</h2>
               </div>
               {(data.restaurantGrowth ?? []).length === 0 ? (
                 <div className="flex h-40 items-center justify-center">
-                  <p className="text-sm text-zinc-600">No data yet.</p>
+                  <p className="text-sm admin-surface-faint">No data yet.</p>
                 </div>
               ) : (
                 <BarChart
@@ -290,8 +290,8 @@ export default function SuperAdminAnalyticsPage() {
           <div className="grid gap-4 lg:grid-cols-3">
 
             {/* Plan distribution */}
-            <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-5">
-              <h2 className="mb-4 text-sm font-semibold text-zinc-100">Plan Distribution</h2>
+            <div className="admin-surface-card p-5">
+              <h2 className="mb-4 text-sm font-semibold admin-shell-text">Plan Distribution</h2>
               <div className="flex items-center gap-5">
                 <DonutChart segments={planSegments} size={100} />
                 <div className="flex-1 space-y-2">
@@ -305,24 +305,24 @@ export default function SuperAdminAnalyticsPage() {
                           <span className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-semibold capitalize ring-1 ${c.badge}`}>
                             {p.plan}
                           </span>
-                          <span className="text-[10px] text-zinc-500">{p.count} · {pct}%</span>
+                          <span className="text-[10px] admin-surface-faint">{p.count} · {pct}%</span>
                         </div>
-                        <div className="h-1 w-full rounded-full bg-zinc-800">
+                        <div className="h-1 w-full rounded-full admin-progress-track">
                           <div className={`h-1 rounded-full ${c.bar}`} style={{ width: `${pct}%` }} />
                         </div>
                       </div>
                     );
                   })}
                   {(data.planBreakdown ?? []).length === 0 && (
-                    <p className="text-xs text-zinc-600">No data yet.</p>
+                    <p className="text-xs admin-surface-faint">No data yet.</p>
                   )}
                 </div>
               </div>
             </div>
 
             {/* Payment status */}
-            <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-5">
-              <h2 className="mb-4 text-sm font-semibold text-zinc-100">Payment Status</h2>
+            <div className="admin-surface-card p-5">
+              <h2 className="mb-4 text-sm font-semibold admin-shell-text">Payment Status</h2>
               <div className="flex items-center gap-5">
                 <DonutChart segments={statusSegments} size={100} />
                 <div className="flex-1 space-y-2.5">
@@ -335,34 +335,34 @@ export default function SuperAdminAnalyticsPage() {
                           <span className={`size-2 rounded-full ${STATUS_COLOR[p.status] ?? "bg-zinc-500"}`} />
                           <span className="text-xs capitalize text-zinc-400">{p.status}</span>
                         </div>
-                        <span className="text-xs font-semibold tabular-nums text-zinc-300">
+                        <span className="text-xs font-semibold tabular-nums admin-surface-body">
                           {p.count} <span className="font-normal text-zinc-600">({pct}%)</span>
                         </span>
                       </div>
                     );
                   })}
                   {(data.paymentStatus ?? []).length === 0 && (
-                    <p className="text-xs text-zinc-600">No payments yet.</p>
+                    <p className="text-xs admin-surface-faint">No payments yet.</p>
                   )}
                 </div>
               </div>
             </div>
 
             {/* Top restaurants */}
-            <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-5">
-              <h2 className="mb-4 text-sm font-semibold text-zinc-100">Top Restaurants by Revenue</h2>
+            <div className="admin-surface-card p-5">
+              <h2 className="mb-4 text-sm font-semibold admin-shell-text">Top Restaurants by Revenue</h2>
               {(data.topRestaurants ?? []).length === 0 ? (
-                <p className="text-xs text-zinc-600">No revenue data yet.</p>
+                <p className="text-xs admin-surface-faint">No revenue data yet.</p>
               ) : (
                 <ol className="space-y-3">
                   {data.topRestaurants.map((r, i) => (
                     <li key={r.id} className="flex items-center gap-3">
-                      <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-zinc-800 text-[10px] font-bold text-zinc-400">
+                      <span className="flex size-6 shrink-0 items-center justify-center rounded-full admin-rank-badge text-[10px] font-bold text-zinc-400">
                         {i + 1}
                       </span>
                       <div className="min-w-0 flex-1">
-                        <p className="truncate text-xs font-medium text-zinc-200">{r.restaurantName}</p>
-                        <p className="text-[10px] text-zinc-600">{r.txCount} transaction{r.txCount !== 1 ? "s" : ""}</p>
+                        <p className="truncate text-xs font-medium admin-shell-text">{r.restaurantName}</p>
+                        <p className="text-[10px] admin-surface-faint">{r.txCount} transaction{r.txCount !== 1 ? "s" : ""}</p>
                       </div>
                       <span className="shrink-0 text-xs font-semibold tabular-nums text-sa-accent">
                         {formatMoney(r.revenue)}
@@ -376,9 +376,9 @@ export default function SuperAdminAnalyticsPage() {
 
           {/* ── Quick summary row ── */}
           <div className="grid gap-3 sm:grid-cols-3">
-            <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 px-5 py-4">
+            <div className="admin-surface-card px-5 py-4">
               <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500">Avg Revenue / Restaurant</p>
-              <p className="mt-2 text-2xl font-bold tabular-nums text-zinc-100">
+              <p className="mt-2 text-2xl font-bold tabular-nums admin-shell-text">
                 {formatMoney(
                   ov.totalRestaurants
                     ? Math.round((ov.totalRevenue ?? 0) / ov.totalRestaurants)
@@ -386,21 +386,21 @@ export default function SuperAdminAnalyticsPage() {
                 )}
               </p>
             </div>
-            <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 px-5 py-4">
+            <div className="admin-surface-card px-5 py-4">
               <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500">Active Rate</p>
-              <p className="mt-2 text-2xl font-bold tabular-nums text-zinc-100">
+              <p className="mt-2 text-2xl font-bold tabular-nums admin-shell-text">
                 {ov.totalRestaurants
                   ? Math.round(((ov.activeRestaurants ?? 0) / ov.totalRestaurants) * 100)
                   : 0}%
               </p>
-              <p className="mt-1 text-xs text-zinc-600">of restaurants are active</p>
+              <p className="mt-1 text-xs admin-surface-faint">of restaurants are active</p>
             </div>
-            <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 px-5 py-4">
+            <div className="admin-surface-card px-5 py-4">
               <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500">Inactive Restaurants</p>
               <p className="mt-2 text-2xl font-bold tabular-nums text-red-400">
                 {ov.inactiveRestaurants ?? 0}
               </p>
-              <p className="mt-1 text-xs text-zinc-600">need attention</p>
+              <p className="mt-1 text-xs admin-surface-faint">need attention</p>
             </div>
           </div>
         </>

@@ -127,8 +127,8 @@ export default function SuperAdminSupportTicketsPage() {
   return (
     <div className="space-y-5">
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight text-zinc-50">Support Tickets</h1>
-        <p className="mt-1 text-sm text-zinc-500">Platform-wide tenant support queue.</p>
+        <h1 className="admin-page-title text-2xl font-semibold tracking-tight">Support Tickets</h1>
+        <p className="admin-page-desc mt-1 text-sm">Platform-wide tenant support queue.</p>
       </div>
 
       {loadError && (
@@ -137,11 +137,11 @@ export default function SuperAdminSupportTicketsPage() {
         </div>
       )}
 
-      <div className="flex flex-wrap items-center gap-2 rounded-xl border border-zinc-800 bg-zinc-900/40 p-3">
+      <div className="flex flex-wrap items-center gap-2 admin-surface-card p-3">
         <select
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
-          className="rounded-lg border border-zinc-700 bg-zinc-950 px-2.5 py-1.5 text-xs text-zinc-200"
+          className="rounded-lg border admin-shell-border admin-surface-input px-2.5 py-1.5 text-xs admin-shell-text"
         >
           <option value="all">status: all</option>
           {STATUSES.map((s) => (
@@ -153,7 +153,7 @@ export default function SuperAdminSupportTicketsPage() {
         <select
           value={priorityFilter}
           onChange={(e) => setPriorityFilter(e.target.value)}
-          className="rounded-lg border border-zinc-700 bg-zinc-950 px-2.5 py-1.5 text-xs text-zinc-200"
+          className="rounded-lg border admin-shell-border admin-surface-input px-2.5 py-1.5 text-xs admin-shell-text"
         >
           <option value="all">priority: all</option>
           {PRIORITIES.map((p) => (
@@ -165,15 +165,15 @@ export default function SuperAdminSupportTicketsPage() {
         <button
           type="button"
           onClick={loadTickets}
-          className="cursor-pointer inline-flex items-center gap-1 rounded-lg border border-zinc-700 px-2.5 py-1.5 text-xs text-zinc-300 hover:border-zinc-500"
+          className="cursor-pointer inline-flex items-center gap-1 rounded-lg border admin-shell-border px-2.5 py-1.5 text-xs admin-surface-body hover:border-zinc-500"
         >
           <RefreshCcw className="size-3.5" />
           Refresh
         </button>
       </div>
 
-      <div className="overflow-hidden rounded-2xl border border-zinc-800">
-        <div className="grid grid-cols-[130px_1fr_140px_110px_120px_80px] gap-2 border-b border-zinc-800 bg-zinc-950/70 px-4 py-2 text-xs uppercase tracking-wide text-zinc-500">
+      <div className="overflow-hidden rounded-2xl border admin-shell-border">
+        <div className="grid grid-cols-[130px_1fr_140px_110px_120px_80px] gap-2 border-b admin-shell-border admin-table-head px-4 py-2 text-xs uppercase tracking-wide text-zinc-500">
           <span>Ticket</span>
           <span>Subject</span>
           <span>Restaurant</span>
@@ -185,17 +185,17 @@ export default function SuperAdminSupportTicketsPage() {
         {loading ? (
           <SuperAdminPreloader compact message="Loading tickets…" />
         ) : tickets.length === 0 ? (
-          <div className="px-4 py-4 text-sm text-zinc-500">No tickets found.</div>
+          <div className="px-4 py-4 text-sm admin-surface-muted">No tickets found.</div>
         ) : (
-          <div className="divide-y divide-zinc-800">
+          <div className="divide-y admin-shell-divider">
             {tickets.map((ticket) => (
               <div
                 key={String(ticket._id)}
-                className="grid grid-cols-[130px_1fr_140px_110px_120px_80px] gap-2 px-4 py-3 text-sm text-zinc-200"
+                className="grid grid-cols-[130px_1fr_140px_110px_120px_80px] gap-2 px-4 py-3 text-sm admin-shell-text"
               >
                 <div>
                   <p className="font-medium">{ticket.ticketCode}</p>
-                  <p className="text-xs text-zinc-500">
+                  <p className="text-xs admin-surface-muted">
                     {ticket.createdAt ? new Date(ticket.createdAt).toLocaleDateString() : "—"}
                   </p>
                 </div>
@@ -203,11 +203,11 @@ export default function SuperAdminSupportTicketsPage() {
                   <p className="font-medium">{ticket.subject}</p>
                   <p className="mt-0.5 line-clamp-2 text-xs text-zinc-400">{ticket.message}</p>
                 </div>
-                <p className="truncate text-xs text-zinc-300">{ticket.restaurantName || "Unknown"}</p>
+                <p className="truncate text-xs admin-surface-body">{ticket.restaurantName || "Unknown"}</p>
                 <select
                   value={ticket.priority}
                   onChange={(e) => updateTicket(String(ticket._id), { priority: e.target.value })}
-                  className="h-8 rounded-md border border-zinc-700 bg-zinc-900 px-2 text-xs text-zinc-200"
+                  className="h-8 rounded-md border admin-shell-border admin-surface-input px-2 text-xs admin-shell-text"
                 >
                   {PRIORITIES.map((item) => (
                     <option key={item} value={item}>
@@ -218,7 +218,7 @@ export default function SuperAdminSupportTicketsPage() {
                 <select
                   value={ticket.status}
                   onChange={(e) => updateTicket(String(ticket._id), { status: e.target.value })}
-                  className="h-8 rounded-md border border-zinc-700 bg-zinc-900 px-2 text-xs text-zinc-200"
+                  className="h-8 rounded-md border admin-shell-border admin-surface-input px-2 text-xs admin-shell-text"
                 >
                   {STATUSES.map((item) => (
                     <option key={item} value={item}>
@@ -229,7 +229,7 @@ export default function SuperAdminSupportTicketsPage() {
                 <button
                   type="button"
                   onClick={() => openTicket(String(ticket._id))}
-                  className="h-8 rounded-md border border-zinc-700 bg-zinc-900 px-2 text-xs text-zinc-200"
+                  className="h-8 rounded-md border admin-shell-border admin-surface-input px-2 text-xs admin-shell-text"
                 >
                   View
                 </button>
@@ -241,9 +241,9 @@ export default function SuperAdminSupportTicketsPage() {
 
       {selectedTicketId ? (
         <div className="fixed inset-0 z-[120] flex justify-end bg-black/50 p-0">
-          <div className="relative h-full w-full max-w-xl overflow-y-auto border-l border-zinc-800 bg-zinc-950 p-4">
-            <div className="sticky top-0 z-10 mb-4 flex items-center justify-between border-b border-zinc-800 bg-zinc-950/95 pb-3 pt-1 backdrop-blur">
-              <h3 className="text-base font-semibold text-zinc-100">Support ticket</h3>
+          <div className="relative h-full w-full max-w-xl overflow-y-auto border-l admin-shell-border admin-surface-card-solid p-4">
+            <div className="sticky top-0 z-10 mb-4 flex items-center justify-between border-b admin-shell-border admin-surface-card pb-3 pt-1 backdrop-blur">
+              <h3 className="text-base font-semibold admin-shell-text">Support ticket</h3>
               <button
                 type="button"
                 onClick={() => {
@@ -251,38 +251,38 @@ export default function SuperAdminSupportTicketsPage() {
                   setSelectedTicket(null);
                   setNote("");
                 }}
-                className="cursor-pointer relative z-20 rounded-lg border border-zinc-700 p-1.5 text-zinc-300 hover:border-zinc-500"
+                className="cursor-pointer relative z-20 rounded-lg border admin-shell-border p-1.5 admin-surface-body hover:border-zinc-500"
               >
                 <X className="size-4" />
               </button>
             </div>
             {loadingDetail ? (
-              <div className="flex items-center gap-2 text-sm text-zinc-500">
+              <div className="flex items-center gap-2 text-sm admin-surface-muted">
                 <Loader2 className={saSpinnerCls} />
                 Loading ticket...
               </div>
             ) : !selectedTicket ? (
-              <p className="text-sm text-zinc-500">Ticket not available.</p>
+              <p className="text-sm admin-surface-muted">Ticket not available.</p>
             ) : (
               <div className="space-y-4">
-                <div className="rounded-xl border border-zinc-800 bg-zinc-900/40 p-3">
-                  <p className="text-sm font-semibold text-zinc-100">
+                <div className="admin-surface-card p-3">
+                  <p className="text-sm font-semibold admin-shell-text">
                     {selectedTicket.ticketCode} · {selectedTicket.subject}
                   </p>
                   <p className="mt-1 text-xs text-zinc-400">
                     {selectedTicket.restaurantName || "Unknown Restaurant"}
                   </p>
-                  <p className="mt-2 text-sm text-zinc-300">{selectedTicket.message}</p>
+                  <p className="mt-2 text-sm admin-surface-body">{selectedTicket.message}</p>
                 </div>
                 <div className="space-y-2">
                   <p className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Timeline</p>
                   <div className="space-y-2">
                     {(selectedTicket.updates || []).slice().reverse().map((u, idx) => (
-                      <div key={`${u.at}-${idx}`} className="rounded-lg border border-zinc-800 bg-zinc-900/30 p-2.5">
+                      <div key={`${u.at}-${idx}`} className="rounded-lg border admin-shell-border admin-surface-card p-2.5">
                         <p className="text-xs text-zinc-400">
                           {u.at ? new Date(u.at).toLocaleString() : "—"} · {u.role || "user"}
                         </p>
-                        <p className="mt-0.5 text-sm text-zinc-200">{u.note}</p>
+                        <p className="mt-0.5 text-sm admin-shell-text">{u.note}</p>
                       </div>
                     ))}
                   </div>
@@ -293,7 +293,7 @@ export default function SuperAdminSupportTicketsPage() {
                     rows={3}
                     value={note}
                     onChange={(e) => setNote(e.target.value)}
-                    className="w-full rounded-xl border border-zinc-800 bg-zinc-950/80 px-3 py-2.5 text-sm text-zinc-100 outline-none transition-colors focus-sa-primary"
+                    className="w-full admin-surface-card px-3 py-2.5 text-sm admin-shell-text outline-none transition-colors focus-sa-primary"
                     placeholder="Add investigation notes or resolution detail..."
                   />
                   <button
@@ -315,8 +315,8 @@ export default function SuperAdminSupportTicketsPage() {
         <div
           className={`fixed bottom-5 right-5 z-50 rounded-xl border px-4 py-2 text-sm ${
             toast.type === "success"
-              ? "border-sa-accent-30 bg-zinc-900 text-sa-accent-muted"
-              : "border-red-500/30 bg-zinc-900 text-red-300"
+              ? "border-sa-accent-30 admin-surface-card text-sa-accent-muted"
+              : "border-red-500/30 admin-surface-card text-red-300"
           }`}
         >
           {toast.message}

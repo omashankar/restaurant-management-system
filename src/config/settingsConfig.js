@@ -1,15 +1,26 @@
 import { DEFAULT_ACCESS_CONTROL } from "./accessControlConfig";
+import {
+  Clock,
+  CreditCard,
+  Mail,
+  MapPin,
+  Palette,
+  Receipt,
+  Settings,
+  Shield,
+  ShoppingCart,
+} from "lucide-react";
 
 export const SETTINGS_TABS = [
-  { id: "general",       label: "General" },
-  { id: "pos",           label: "POS & Charges" },
-  { id: "payments",      label: "Payments" },
-  { id: "billing",       label: "Billing Info" },
-  { id: "accessControl", label: "Access Control" },
-  { id: "email",         label: "Email / SMTP" },
-  { id: "hours",         label: "Opening Hours" },
-  { id: "contact",       label: "Contact" },
-  { id: "theme",         label: "Theme" },
+  { id: "general",       label: "General",       Icon: Settings },
+  { id: "pos",           label: "POS & Charges", Icon: ShoppingCart },
+  { id: "payments",      label: "Payments",      Icon: CreditCard },
+  { id: "billing",       label: "Billing Info",  Icon: Receipt },
+  { id: "accessControl", label: "Access Control", Icon: Shield },
+  { id: "email",         label: "Email / SMTP",  Icon: Mail },
+  { id: "hours",         label: "Opening Hours", Icon: Clock },
+  { id: "contact",       label: "Contact",       Icon: MapPin },
+  { id: "theme",         label: "Theme",         Icon: Palette },
 ];
 
 export const EMPTY_SETTINGS = {

@@ -1,5 +1,7 @@
 "use client";
 
+import { raInputCls } from "@/config/restaurantAdminTheme";
+import { adminSurface } from "@/config/adminSurfaceClasses";
 import { useLanguage } from "@/context/LanguageContext";
 import { CheckCircle2, ChevronRight, Loader2, Upload } from "lucide-react";
 import { validateOnboardingFinish, validateOnboardingStep } from "@/lib/restaurantSettingsValidation";
@@ -37,10 +39,10 @@ function ProgressBar({ current, total }) {
   return (
     <div className="mb-8">
       <div className="flex items-center justify-between mb-2">
-        <span className="text-xs text-zinc-500">Step {current} of {total}</span>
+        <span className="text-xs admin-surface-muted">Step {current} of {total}</span>
         <span className="text-xs text-ra-primary font-medium">{pct}% complete</span>
       </div>
-      <div className="h-2 rounded-full bg-zinc-800">
+      <div className="h-2 rounded-full admin-surface-segment-track">
         <div
           className="h-2 rounded-full bg-ra-primary transition-all duration-500"
           style={{ width: `${pct}%` }}
@@ -51,7 +53,7 @@ function ProgressBar({ current, total }) {
           <div key={i} className={`flex size-7 items-center justify-center rounded-full text-xs font-bold transition-all ${
             i + 1 < current ? "bg-ra-primary text-zinc-950" :
             i + 1 === current ? "bg-ra-primary-20 text-ra-primary ring-2 ring-ra-primary-25" :
-            "bg-zinc-800 text-zinc-600"
+            "admin-surface-segment-btn"
           }`}>
             {i + 1 < current ? <CheckCircle2 className="size-4" /> : i + 1}
           </div>
@@ -63,10 +65,10 @@ function ProgressBar({ current, total }) {
 
 function StepCard({ title, description, children }) {
   return (
-    <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-6 sm:p-8">
+    <div className={`${adminSurface.card} p-6 sm:p-8`}>
       <div className="mb-6">
-        <h2 className="text-xl font-semibold text-zinc-50">{title}</h2>
-        {description && <p className="mt-1 text-sm text-zinc-500">{description}</p>}
+        <h2 className={`text-xl font-semibold ${adminSurface.title}`}>{title}</h2>
+        {description && <p className="admin-page-desc mt-1 text-sm">{description}</p>}
       </div>
       {children}
     </div>
@@ -78,12 +80,12 @@ function Field({ label, hint, children }) {
     <div>
       <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-zinc-500">{label}</label>
       {children}
-      {hint && <p className="mt-1 text-xs text-zinc-600">{hint}</p>}
+      {hint && <p className="mt-1 text-xs admin-surface-faint">{hint}</p>}
     </div>
   );
 }
 
-const inputCls = "w-full rounded-xl border border-zinc-800 bg-zinc-950/80 px-3 py-2.5 text-sm text-zinc-100 outline-none transition-colors focus-ra-primary placeholder:text-zinc-600";
+const inputCls = raInputCls;
 
 export default function OnboardingPage() {
   const { t } = useLanguage();
@@ -262,11 +264,11 @@ export default function OnboardingPage() {
   }
 
   return (
-    <div className="min-h-screen bg-zinc-950 px-4 py-8">
+    <div className="min-h-screen admin-shell-bg px-4 py-8">
       <div className="mx-auto max-w-2xl">
         {/* Header */}
         <div className="mb-8 text-center">
-          <h1 className="text-3xl font-bold text-zinc-50">{t("onboarding.title")}</h1>
+          <h1 className="admin-page-title text-3xl font-bold">{t("onboarding.title")}</h1>
           <p className="mt-2 text-zinc-500">{t("onboarding.subtitle")}</p>
           {autoSaveMsg && (
             <p className="mt-2 text-xs text-ra-primary">✓ {autoSaveMsg}</p>
@@ -281,7 +283,7 @@ export default function OnboardingPage() {
             <div className="space-y-4">
               <Field label="Mobile Number">
                 <div className="flex gap-2">
-                  <span className="flex items-center rounded-xl border border-zinc-800 bg-zinc-950/80 px-3 text-sm text-zinc-400">+91</span>
+                  <span className="flex items-center admin-surface-card px-3 text-sm admin-surface-muted">+91</span>
                   <input
                     {...phoneInputProps()}
                     value={draft.mobile}
@@ -326,7 +328,7 @@ export default function OnboardingPage() {
                     {otpLoading ? <Loader2 className="mx-auto size-4 animate-spin" /> : "Verify OTP"}
                   </button>
                   <button type="button" onClick={sendOtp} disabled={otpLoading}
-                    className="cursor-pointer w-full text-sm text-zinc-500 hover:text-zinc-300 transition-colors disabled:opacity-50">
+                    className="cursor-pointer w-full text-sm admin-surface-muted hover:admin-surface-body transition-colors disabled:opacity-50">
                     {t("onboarding.resendOtp")}
                   </button>
                 </div>
@@ -368,7 +370,7 @@ export default function OnboardingPage() {
                       className={`cursor-pointer rounded-xl border px-3 py-2 text-sm font-medium transition-all ${
                         draft.restaurantType === type
                           ? "border-ra-primary-40 bg-ra-primary-15 text-ra-primary"
-                          : "border-zinc-800 bg-zinc-950/40 text-zinc-400 hover:border-zinc-700 hover:text-zinc-200"
+                          : "admin-shell-border admin-surface-segment-track text-zinc-400 hover:border-zinc-700 hover:admin-shell-text"
                       }`}>
                       {type}
                     </button>
@@ -377,7 +379,7 @@ export default function OnboardingPage() {
               </Field>
               <div className="grid gap-4 sm:grid-cols-2">
                 <Field label={t("onboarding.uploadLogo")}>
-                  <label className="flex cursor-pointer items-center gap-2 rounded-xl border border-zinc-800 bg-zinc-950/80 px-3 py-2.5 text-sm text-zinc-400 hover:border-zinc-700 transition-colors">
+                  <label className="flex cursor-pointer items-center gap-2 admin-surface-card px-3 py-2.5 text-sm admin-surface-muted hover:border-zinc-700 transition-colors">
                     <Upload className="size-4" />
                     <span>{draft.logoName || "Choose logo (PNG/JPG)"}</span>
                     <input type="file" className="hidden" accept="image/*"
@@ -385,7 +387,7 @@ export default function OnboardingPage() {
                   </label>
                 </Field>
                 <Field label={t("onboarding.uploadBanner")}>
-                  <label className="flex cursor-pointer items-center gap-2 rounded-xl border border-zinc-800 bg-zinc-950/80 px-3 py-2.5 text-sm text-zinc-400 hover:border-zinc-700 transition-colors">
+                  <label className="flex cursor-pointer items-center gap-2 admin-surface-card px-3 py-2.5 text-sm admin-surface-muted hover:border-zinc-700 transition-colors">
                     <Upload className="size-4" />
                     <span>{draft.bannerName || "Choose banner (1200×400)"}</span>
                     <input type="file" className="hidden" accept="image/*"
@@ -430,15 +432,15 @@ export default function OnboardingPage() {
                   <input type="range" min="1" max="30" value={draft.deliveryRadius}
                     onChange={(e) => update({ deliveryRadius: e.target.value })}
                     className="flex-1 accent-ra-primary" />
-                  <span className="w-16 rounded-xl border border-zinc-800 bg-zinc-950/80 px-3 py-2 text-center text-sm font-semibold text-ra-primary">
+                  <span className="w-16 admin-surface-card px-3 py-2 text-center text-sm font-semibold text-ra-primary">
                     {draft.deliveryRadius} km
                   </span>
                 </div>
               </Field>
               {/* Google Maps placeholder */}
-              <div className="rounded-xl border border-zinc-800 bg-zinc-950/40 p-4 text-center text-sm text-zinc-500">
+              <div className="rounded-xl admin-surface-card p-4 text-center text-sm admin-surface-muted">
                 📍 Google Maps integration — pin your exact location
-                <p className="mt-1 text-xs text-zinc-600">Add NEXT_PUBLIC_GOOGLE_MAPS_KEY to .env to enable map picker</p>
+                <p className="mt-1 text-xs admin-surface-faint">Add NEXT_PUBLIC_GOOGLE_MAPS_KEY to .env to enable map picker</p>
               </div>
             </div>
           </StepCard>
@@ -452,7 +454,7 @@ export default function OnboardingPage() {
                 <input value={draft.upiId} onChange={(e) => update({ upiId: e.target.value })}
                   placeholder="yourname@upi or 9876543210@paytm" className={inputCls} />
               </Field>
-              <div className="rounded-xl border border-zinc-800 bg-zinc-950/40 p-4">
+              <div className="rounded-xl admin-surface-card p-4">
                 <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-zinc-500">Bank Account (for settlements)</p>
                 <div className="grid gap-3 sm:grid-cols-2">
                   <Field label="Bank Name">
@@ -480,7 +482,7 @@ export default function OnboardingPage() {
         {step === 5 && (
           <StepCard title={t("onboarding.step5")} description="Add your first categories and menu items">
             <div className="space-y-4">
-              <div className="rounded-xl border border-zinc-800 bg-zinc-950/40 p-4">
+              <div className="rounded-xl admin-surface-card p-4">
                 <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-zinc-500">Quick Categories</p>
                 <div className="flex flex-wrap gap-2">
                   {["Starters", "Main Course", "Breads", "Rice & Biryani", "Desserts", "Beverages", "Thali", "Snacks"].map((cat) => {
@@ -489,7 +491,7 @@ export default function OnboardingPage() {
                       <button key={cat} type="button"
                         onClick={() => update({ categories: active ? draft.categories.filter((c) => c !== cat) : [...draft.categories, cat] })}
                         className={`cursor-pointer rounded-xl border px-3 py-1.5 text-xs font-semibold transition-all ${
-                          active ? "border-ra-primary-40 bg-ra-primary-15 text-ra-primary" : "border-zinc-800 bg-zinc-950/40 text-zinc-500 hover:border-zinc-700 hover:text-zinc-300"
+                          active ? "border-ra-primary-40 bg-ra-primary-15 text-ra-primary" : "admin-shell-border admin-surface-segment-track text-zinc-500 hover:border-zinc-700 hover:admin-surface-body"
                         }`}>
                         {active ? "✓ " : ""}{cat}
                       </button>
@@ -497,9 +499,9 @@ export default function OnboardingPage() {
                   })}
                 </div>
               </div>
-              <div className="rounded-xl border border-zinc-700 bg-zinc-950/60 p-4 text-center text-sm text-zinc-500">
+              <div className="rounded-xl border admin-shell-border admin-surface-card p-4 text-center text-sm admin-surface-muted">
                 <p>You can add detailed menu items after setup</p>
-                <p className="mt-1 text-xs text-zinc-600">Go to Menu → Menu Items to add dishes with photos, prices, and descriptions</p>
+                <p className="mt-1 text-xs admin-surface-faint">Go to Menu → Menu Items to add dishes with photos, prices, and descriptions</p>
               </div>
             </div>
           </StepCard>
@@ -512,7 +514,7 @@ export default function OnboardingPage() {
               <div className="grid gap-3 sm:grid-cols-2">
                 <Field label={t("onboarding.deliveryCharges")} hint="Flat delivery charge per order">
                   <div className="relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-zinc-500">₹</span>
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm admin-surface-muted">₹</span>
                     <input type="number" inputMode="decimal" min={0} value={draft.deliveryCharge} onChange={(e) => update({ deliveryCharge: e.target.value })}
                       className={`${inputCls} pl-7`} placeholder="40" />
                   </div>
@@ -521,7 +523,7 @@ export default function OnboardingPage() {
                   <div className="relative">
                     <input type="number" inputMode="decimal" min={0} max={100} value={draft.taxRate} onChange={(e) => update({ taxRate: e.target.value })}
                       className={`${inputCls} pr-7`} placeholder="5" />
-                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-zinc-500">%</span>
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm admin-surface-muted">%</span>
                   </div>
                 </Field>
               </div>
@@ -529,16 +531,16 @@ export default function OnboardingPage() {
                 <p className="mb-2 text-xs font-medium uppercase tracking-wide text-zinc-500">{t("onboarding.openingHours")}</p>
                 <div className="space-y-2">
                   {draft.openingHours.map((row, i) => (
-                    <div key={row.day} className="flex items-center gap-3 rounded-xl border border-zinc-800 bg-zinc-950/40 px-3 py-2">
-                      <span className="w-24 text-xs font-medium text-zinc-300">{row.day.slice(0, 3)}</span>
+                    <div key={row.day} className="flex items-center gap-3 rounded-xl admin-surface-card px-3 py-2">
+                      <span className="w-24 text-xs font-medium admin-surface-body">{row.day.slice(0, 3)}</span>
                       <input type="time" value={row.open} disabled={row.closed}
                         onChange={(e) => update({ openingHours: draft.openingHours.map((d, j) => j === i ? { ...d, open: e.target.value } : d) })}
-                        className="rounded-lg border border-zinc-800 bg-zinc-950 px-2 py-1 text-xs text-zinc-200 outline-none disabled:opacity-40" />
-                      <span className="text-xs text-zinc-600">to</span>
+                        className="admin-surface-input rounded-lg px-2 py-1 text-xs outline-none disabled:opacity-40" />
+                      <span className="text-xs admin-surface-faint">to</span>
                       <input type="time" value={row.close} disabled={row.closed}
                         onChange={(e) => update({ openingHours: draft.openingHours.map((d, j) => j === i ? { ...d, close: e.target.value } : d) })}
-                        className="rounded-lg border border-zinc-800 bg-zinc-950 px-2 py-1 text-xs text-zinc-200 outline-none disabled:opacity-40" />
-                      <label className="ml-auto flex items-center gap-1.5 text-xs text-zinc-500 cursor-pointer">
+                        className="admin-surface-input rounded-lg px-2 py-1 text-xs outline-none disabled:opacity-40" />
+                      <label className="ml-auto flex items-center gap-1.5 text-xs admin-surface-muted cursor-pointer">
                         <input type="checkbox" checked={row.closed}
                           onChange={(e) => update({ openingHours: draft.openingHours.map((d, j) => j === i ? { ...d, closed: e.target.checked } : d) })}
                           className="accent-red-500" />
@@ -568,9 +570,9 @@ export default function OnboardingPage() {
                   { label: "Tax Rate", value: `${draft.taxRate}%` },
                   { label: "Delivery Charge", value: `₹${draft.deliveryCharge}` },
                 ].map(({ label, value }) => (
-                  <div key={label} className="flex items-center justify-between rounded-xl border border-zinc-800 bg-zinc-950/40 px-4 py-2.5 text-sm">
+                  <div key={label} className="flex items-center justify-between rounded-xl admin-surface-card px-4 py-2.5 text-sm">
                     <span className="text-zinc-500">{label}</span>
-                    <span className="font-medium text-zinc-200">{value}</span>
+                    <span className="font-medium admin-shell-text">{value}</span>
                   </div>
                 ))}
               </div>
@@ -587,12 +589,12 @@ export default function OnboardingPage() {
 
         <div className="mt-6 flex items-center justify-between">
           <button type="button" onClick={prevStep} disabled={step === 1}
-            className="cursor-pointer rounded-xl border border-zinc-700 px-5 py-2.5 text-sm font-medium text-zinc-400 hover:border-zinc-500 hover:text-zinc-200 disabled:opacity-30 transition-colors">
+            className="cursor-pointer rounded-xl border admin-shell-border px-5 py-2.5 text-sm font-medium text-zinc-400 hover:border-zinc-500 hover:admin-shell-text disabled:opacity-30 transition-colors">
             ← {t("back")}
           </button>
 
           <button type="button" onClick={() => setStep(s => Math.min(s + 1, TOTAL_STEPS))}
-            className="cursor-pointer text-xs text-zinc-600 hover:text-zinc-400 transition-colors">
+            className="cursor-pointer text-xs admin-surface-faint hover:text-zinc-400 transition-colors">
             {t("onboarding.skipStep")}
           </button>
 

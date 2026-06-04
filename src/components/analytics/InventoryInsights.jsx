@@ -9,18 +9,18 @@ export default function InventoryInsights({ lowStock = [], mostUsed = [] }) {
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-2">
             <AlertTriangle className="size-4 text-amber-400" />
-            <h3 className="text-sm font-semibold text-zinc-100">Low Stock Alerts</h3>
+            <h3 className="admin-surface-title text-sm font-semibold">Low Stock Alerts</h3>
           </div>
           <Link href="/inventory" className="cursor-pointer text-xs font-medium text-amber-400 hover:text-amber-300">Manage →</Link>
         </div>
         {lowStock.length === 0 ? (
-          <p className="mt-4 text-sm text-zinc-600">All items in stock.</p>
+          <p className="mt-4 text-sm admin-surface-faint">All items in stock.</p>
         ) : (
           <div className="mt-4 space-y-2">
             {lowStock.map((item) => (
               <div key={item.id ?? item.name}
-                className="flex items-center justify-between gap-2 rounded-xl border border-zinc-800/60 bg-zinc-900/60 px-3 py-2.5">
-                <span className="text-sm text-zinc-300">{item.name}</span>
+                className="flex items-center justify-between gap-2 rounded-xl border admin-shell-border/60 bg-zinc-900/60 px-3 py-2.5">
+                <span className="text-sm admin-surface-body">{item.name}</span>
                 <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ring-1 ${
                   item.quantity === 0 ? "bg-red-500/15 text-red-400 ring-red-500/25" : "bg-amber-500/15 text-amber-300 ring-amber-500/25"
                 }`}>
@@ -33,13 +33,13 @@ export default function InventoryInsights({ lowStock = [], mostUsed = [] }) {
       </div>
 
       {/* Most used */}
-      <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-5">
+      <div className="rounded-2xl border admin-shell-border bg-zinc-900/60 p-5">
         <div className="flex items-center gap-2">
           <Package className="size-4 text-ra-primary" />
-          <h3 className="text-sm font-semibold text-zinc-100">Most Used Ingredients</h3>
+          <h3 className="admin-surface-title text-sm font-semibold">Most Used Ingredients</h3>
         </div>
         {mostUsed.length === 0 ? (
-          <p className="mt-4 text-sm text-zinc-600">No usage data yet.</p>
+          <p className="mt-4 text-sm admin-surface-faint">No usage data yet.</p>
         ) : (
           <div className="mt-4 space-y-3">
             {mostUsed.map((item, i) => {
@@ -47,8 +47,8 @@ export default function InventoryInsights({ lowStock = [], mostUsed = [] }) {
               return (
                 <div key={item.name} className="space-y-1">
                   <div className="flex items-center justify-between gap-2">
-                    <span className="text-sm text-zinc-300">{item.name}</span>
-                    <span className="text-xs tabular-nums text-zinc-500">{item.usage} {item.unit}</span>
+                    <span className="text-sm admin-surface-body">{item.name}</span>
+                    <span className="text-xs tabular-nums admin-surface-muted">{item.usage} {item.unit}</span>
                   </div>
                   <div className="h-1.5 w-full overflow-hidden rounded-full bg-zinc-800">
                     <div className="h-full rounded-full bg-ra-primary/60 transition-all duration-500" style={{ width: `${pct}%` }} />

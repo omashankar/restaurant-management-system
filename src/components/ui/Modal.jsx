@@ -1,5 +1,6 @@
 "use client";
 
+import { adminPortalScope, adminShell, adminSurface } from "@/config/adminSurfaceClasses";
 import { X } from "lucide-react";
 import { useEffect } from "react";
 import { createPortal } from "react-dom";
@@ -20,7 +21,7 @@ export default function Modal({ open, title, onClose, children, footer }) {
 
   return createPortal(
     <div
-      className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6"
+      className={`${adminPortalScope} fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6`}
       role="dialog"
       aria-modal="true"
       aria-labelledby={titleId}
@@ -31,13 +32,12 @@ export default function Modal({ open, title, onClose, children, footer }) {
         onClick={onClose}
         aria-label="Close dialog"
       />
-      <div className="relative z-10 flex max-h-[min(90vh,720px)] w-full max-w-lg flex-col rounded-2xl border border-zinc-800 bg-zinc-900 shadow-2xl shadow-black/50 duration-200">
-        <div className="flex shrink-0 items-start justify-between gap-4 border-b border-zinc-800 px-5 py-4">
+      <div
+        className={`relative z-10 flex max-h-[min(90vh,720px)] w-full max-w-lg flex-col ${adminSurface.cardSolid} shadow-2xl duration-200`}
+      >
+        <div className={`flex shrink-0 items-start justify-between gap-4 border-b ${adminShell.borderB} px-5 py-4`}>
           {title ? (
-            <h2
-              id={titleId}
-              className="text-lg font-semibold tracking-tight text-zinc-50"
-            >
+            <h2 id={titleId} className="text-lg font-semibold tracking-tight">
               {title}
             </h2>
           ) : (
@@ -46,7 +46,7 @@ export default function Modal({ open, title, onClose, children, footer }) {
           <button
             type="button"
             onClick={onClose}
-            className="cursor-pointer rounded-lg p-1.5 text-zinc-500 transition-colors hover:bg-zinc-800 hover:text-zinc-200"
+            className={`cursor-pointer rounded-lg p-1.5 ${adminSurface.muted} transition-colors hover:bg-[var(--admin-hover)] hover:text-[var(--admin-text)]`}
             aria-label="Close"
           >
             <X className="size-5" />
@@ -54,9 +54,7 @@ export default function Modal({ open, title, onClose, children, footer }) {
         </div>
         <div className="min-h-0 flex-1 overflow-y-auto px-5 py-4">{children}</div>
         {footer ? (
-          <div className="shrink-0 border-t border-zinc-800 px-5 py-4">
-            {footer}
-          </div>
+          <div className={`shrink-0 border-t ${adminShell.borderT} px-5 py-4`}>{footer}</div>
         ) : null}
       </div>
     </div>,

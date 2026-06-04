@@ -1,5 +1,6 @@
 "use client";
 
+import { adminSurface } from "@/config/adminSurfaceClasses";
 import { useMemo, useState } from "react";
 
 const FILTERS = ["Today", "Weekly", "Monthly", "Yearly"];
@@ -21,28 +22,28 @@ export default function SalesChart({ data = {} }) {
   );
 
   return (
-    <div className="rms-dashboard-card rms-dashboard-card--lg flex h-full min-h-0 w-full flex-col rounded-2xl border border-zinc-800 bg-zinc-900/60 p-5">
+    <div className={`rms-dashboard-card rms-dashboard-card--lg flex h-full min-h-0 w-full flex-col p-5 ${adminSurface.card}`}>
       <div className="flex shrink-0 flex-wrap items-start justify-between gap-3">
         <div>
-          <h3 className="text-sm font-semibold text-zinc-100">Sales Analytics</h3>
-          <p className="text-xs text-zinc-500">Revenue and order volume over time</p>
+          <h3 className={`text-sm font-semibold ${adminSurface.title}`}>Sales Analytics</h3>
+          <p className={`text-xs ${adminSurface.muted}`}>Revenue and order volume over time</p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <div className="flex rounded-xl border border-zinc-800 bg-zinc-950/60 p-0.5">
+          <div className={adminSurface.segmentTrack}>
             {["sales", "orders"].map((t) => (
               <button key={t} type="button" onClick={() => setActiveTab(t)}
-                className={`cursor-pointer rounded-lg px-3 py-1.5 text-xs font-semibold capitalize transition-all ${
-                  activeTab === t ? "bg-ra-primary text-zinc-950" : "text-zinc-400 hover:text-zinc-200"
+                className={`${adminSurface.segmentBtn} ${
+                  activeTab === t ? "bg-ra-primary text-zinc-950" : ""
                 }`}>
                 {t}
               </button>
             ))}
           </div>
-          <div className="flex rounded-xl border border-zinc-800 bg-zinc-950/60 p-0.5">
+          <div className={adminSurface.segmentTrack}>
             {FILTERS.map((f) => (
               <button key={f} type="button" onClick={() => setActiveFilter(f)}
-                className={`cursor-pointer rounded-lg px-3 py-1.5 text-xs font-semibold transition-all ${
-                  activeFilter === f ? "bg-zinc-700 text-zinc-100" : "text-zinc-500 hover:text-zinc-300"
+                className={`${adminSurface.segmentBtn} ${
+                  activeFilter === f ? adminSurface.segmentBtnActive : ""
                 }`}>
                 {f}
               </button>
@@ -53,8 +54,8 @@ export default function SalesChart({ data = {} }) {
 
       <div className="rms-dashboard-card__body rms-dashboard-card__body--y mt-4 min-h-0 flex-1 pr-1">
       {chartData.length === 0 ? (
-        <div className="flex min-h-[12rem] items-center justify-center rounded-xl border border-dashed border-zinc-800">
-          <p className="text-sm text-zinc-600">No data for this period yet.</p>
+        <div className={`min-h-[12rem] ${adminSurface.dashedBox}`}>
+          <p className={`text-sm ${adminSurface.faint}`}>No data for this period yet.</p>
         </div>
       ) : (
         <div className="flex min-h-[12rem] items-end gap-1.5 sm:gap-2">
@@ -63,7 +64,7 @@ export default function SalesChart({ data = {} }) {
             const h   = Math.round((val / max) * 100);
             return (
               <div key={d.label} className="group flex flex-1 flex-col items-center gap-1.5">
-                <span className="hidden text-[10px] text-zinc-500 opacity-0 transition-opacity group-hover:opacity-100 sm:block">
+                <span className="hidden text-[10px] admin-surface-faint opacity-0 transition-opacity group-hover:opacity-100 sm:block">
                   {activeTab === "sales" ? fmt(val) : val}
                 </span>
                 <div className="flex h-40 w-full items-end justify-center">

@@ -14,8 +14,8 @@ export default function AnalyticsFilters({ dateRange, setDateRange, orderType, s
   };
 
   return (
-    <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-zinc-800 bg-zinc-900/50 px-4 py-3">
-      <Filter className="size-4 shrink-0 text-zinc-500" aria-hidden />
+    <div className="flex flex-wrap items-center gap-3 rounded-2xl border admin-shell-border bg-zinc-900/50 px-4 py-3">
+      <Filter className="size-4 shrink-0 admin-surface-muted" aria-hidden />
 
       {/* Date range */}
       <div className="flex flex-wrap gap-1">
@@ -27,7 +27,7 @@ export default function AnalyticsFilters({ dateRange, setDateRange, orderType, s
             className={`cursor-pointer rounded-lg px-3 py-1.5 text-xs font-semibold transition-all ${
               dateRange === r
                 ? "bg-ra-primary text-zinc-950"
-                : "bg-zinc-800 text-zinc-400 hover:text-zinc-200"
+                : "bg-zinc-800 admin-surface-muted hover:admin-shell-text"
             }`}
           >
             {r}
@@ -41,7 +41,7 @@ export default function AnalyticsFilters({ dateRange, setDateRange, orderType, s
       <select
         value={orderType}
         onChange={(e) => setOrderType(e.target.value)}
-        className="rounded-xl border border-zinc-700 bg-zinc-900 px-3 py-1.5 text-xs text-zinc-200 outline-none focus-ra-primary"
+        className="rounded-xl border admin-shell-border bg-zinc-900 px-3 py-1.5 text-xs admin-shell-text outline-none focus-ra-primary"
       >
         {ORDER_TYPES.map((t) => (
           <option key={t} value={t}>{t}</option>
@@ -55,7 +55,7 @@ export default function AnalyticsFilters({ dateRange, setDateRange, orderType, s
           onClick={handleExportCSV}
           disabled={!canExport}
           title={!canExport ? "Export requires admin access" : undefined}
-          className="cursor-pointer inline-flex items-center gap-1.5 rounded-xl border border-zinc-700 px-3 py-1.5 text-xs font-semibold text-zinc-300 transition-colors hover-border-ra-primary-40 hover-ra-primary disabled:cursor-not-allowed disabled:opacity-40"
+          className="cursor-pointer inline-flex items-center gap-1.5 rounded-xl border admin-shell-border px-3 py-1.5 text-xs font-semibold admin-surface-body transition-colors hover-border-ra-primary-40 hover-ra-primary disabled:cursor-not-allowed disabled:opacity-40"
         >
           <Download className="size-3.5" />
           CSV
@@ -65,7 +65,7 @@ export default function AnalyticsFilters({ dateRange, setDateRange, orderType, s
           onClick={handleExportPDF}
           disabled={!canExport}
           title={!canExport ? "Export requires admin access" : undefined}
-          className="cursor-pointer inline-flex items-center gap-1.5 rounded-xl border border-zinc-700 px-3 py-1.5 text-xs font-semibold text-zinc-300 transition-colors hover:border-indigo-500/40 hover:text-indigo-400 disabled:cursor-not-allowed disabled:opacity-40"
+          className="cursor-pointer inline-flex items-center gap-1.5 rounded-xl border admin-shell-border px-3 py-1.5 text-xs font-semibold admin-surface-body transition-colors hover:border-indigo-500/40 hover:text-indigo-400 disabled:cursor-not-allowed disabled:opacity-40"
         >
           <Download className="size-3.5" />
           PDF

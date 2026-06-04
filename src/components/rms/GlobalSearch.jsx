@@ -1,5 +1,6 @@
 "use client";
 
+import { adminSurface } from "@/config/adminSurfaceClasses";
 import { useModuleData } from "@/context/ModuleDataContext";
 import { Search, X } from "lucide-react";
 import Link from "next/link";
@@ -142,8 +143,8 @@ export default function GlobalSearch() {
   return (
     <div ref={containerRef} className="relative">
       {/* Search input */}
-      <div className="relative flex items-center">
-        <Search className="pointer-events-none absolute left-3 size-4 text-zinc-500" />
+      <div className="admin-search-wrap relative flex items-center">
+        <Search className="admin-search-icon" strokeWidth={2} aria-hidden />
         <input
           ref={inputRef}
           type="text"
@@ -151,26 +152,26 @@ export default function GlobalSearch() {
           onChange={(e) => { setQuery(e.target.value); setOpen(true); }}
           onFocus={() => setOpen(true)}
           placeholder="Search… (Ctrl+K)"
-          className="h-9 w-48 rounded-xl border border-zinc-800 bg-zinc-900/70 pl-9 pr-8 text-sm text-zinc-100 placeholder:text-zinc-600 outline-none focus-ra-primary focus:w-64 transition-all duration-200"
+          className={`${adminSurface.searchCompact} focus-ra-primary pr-9`}
         />
-        {query && (
+        {query ? (
           <button
             type="button"
             onClick={() => { setQuery(""); setDebouncedQuery(""); setOpen(false); }}
-            className="absolute right-2.5 text-zinc-500 hover:text-zinc-300"
+            className={`absolute right-2.5 top-1/2 z-10 -translate-y-1/2 ${adminSurface.muted} transition-opacity hover:opacity-80`}
           >
             <X className="size-3.5" />
           </button>
-        )}
+        ) : null}
       </div>
 
       {/* Results dropdown */}
       {open && query.trim().length >= 2 && (
-        <div className="absolute right-0 top-full z-50 mt-2 w-80 rounded-2xl border border-zinc-800 bg-zinc-900 shadow-2xl shadow-black/50">
+        <div className={`absolute right-0 top-full z-50 mt-2 w-80 ${adminSurface.dropdown}`}>
           {debouncedQuery !== query.trim() ? (
-            <div className="px-4 py-6 text-center text-sm text-zinc-500">Searching…</div>
+            <div className={`px-4 py-6 text-center text-sm ${adminSurface.muted}`}>Searching…</div>
           ) : results.length === 0 ? (
-            <div className="px-4 py-6 text-center text-sm text-zinc-600">
+            <div className={`px-4 py-6 text-center text-sm ${adminSurface.faint}`}>
               No results for &ldquo;{debouncedQuery}&rdquo;
             </div>
           ) : (
@@ -182,14 +183,14 @@ export default function GlobalSearch() {
                     <Link
                       href={r.href}
                       onClick={() => { setOpen(false); setQuery(""); setDebouncedQuery(""); }}
-                      className="flex items-center gap-3 px-3 py-2.5 transition-colors hover:bg-zinc-800/60"
+                      className={`flex items-center gap-3 px-3 py-2.5 ${adminSurface.rowHover}`}
                     >
                       <span className={`flex size-7 shrink-0 items-center justify-center rounded-lg text-[10px] font-bold ${cat.bg} ${cat.color}`}>
                         {cat.label[0]}
                       </span>
                       <div className="min-w-0 flex-1">
-                        <p className="truncate text-sm font-medium text-zinc-100">{r.title}</p>
-                        <p className="truncate text-xs text-zinc-500">{r.sub}</p>
+                        <p className={`truncate text-sm font-medium ${adminSurface.title}`}>{r.title}</p>
+                        <p className={`truncate text-xs ${adminSurface.muted}`}>{r.sub}</p>
                       </div>
                       <span className={`shrink-0 rounded-full px-1.5 py-0.5 text-[9px] font-semibold ${cat.bg} ${cat.color}`}>
                         {cat.label}
@@ -200,7 +201,7 @@ export default function GlobalSearch() {
               })}
             </ul>
           )}
-          <div className="border-t border-zinc-800 px-3 py-2 text-[10px] text-zinc-700">
+          <div className={`border-t admin-shell-border px-3 py-2 text-[10px] ${adminSurface.faint}`}>
             {results.length} result{results.length !== 1 ? "s" : ""} · Press Esc to close
           </div>
         </div>

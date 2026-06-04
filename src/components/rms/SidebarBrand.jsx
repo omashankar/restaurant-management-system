@@ -1,5 +1,6 @@
 "use client";
 
+import { adminSurface } from "@/config/adminSurfaceClasses";
 import { normalizeLogoSrc } from "@/lib/logoUrl";
 import { UtensilsCrossed } from "lucide-react";
 
@@ -17,7 +18,7 @@ export default function SidebarBrand({
       <span
         className={`flex size-10 shrink-0 items-center justify-center rounded-xl ring-1 ${
           src
-            ? "bg-zinc-900 ring-ra-primary-25"
+            ? "bg-[var(--admin-control)] ring-ra-primary-25"
             : "bg-ra-primary-15 text-ra-primary ring-ra-primary-25"
         }`}
       >
@@ -37,11 +38,11 @@ export default function SidebarBrand({
       </span>
       {!collapsed ? (
         <div className="min-w-0">
-          <p className="truncate text-sm font-semibold tracking-tight text-zinc-100" title={name}>
+          <p className={`truncate text-sm font-semibold tracking-tight ${adminSurface.title}`} title={name}>
             {name}
           </p>
           {tagline ? (
-            <p className="truncate text-[11px] text-zinc-500">{tagline}</p>
+            <p className={`truncate text-[11px] ${adminSurface.muted}`}>{tagline}</p>
           ) : null}
         </div>
       ) : null}

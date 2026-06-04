@@ -26,13 +26,13 @@ export default function SettlementSection({ data, onChange, onSave }) {
             className={`cursor-pointer rounded-xl border p-4 text-left transition-all ${
               data.frequency === f.value
                 ? "border-ra-primary-40 bg-ra-primary-10 ring-1 ring-ra-primary-25"
-                : "border-zinc-800 bg-zinc-950/40 hover:border-zinc-700"
+                : "admin-shell-border bg-zinc-950/40 hover:border-zinc-700"
             }`}
           >
-            <p className={`text-sm font-semibold ${data.frequency === f.value ? "text-ra-primary" : "text-zinc-200"}`}>
+            <p className={`text-sm font-semibold ${data.frequency === f.value ? "text-ra-primary" : "admin-shell-text"}`}>
               {f.label}
             </p>
-            <p className="mt-0.5 text-xs text-zinc-500">{f.desc}</p>
+            <p className="mt-0.5 text-xs admin-surface-muted">{f.desc}</p>
           </button>
         ))}
       </div>

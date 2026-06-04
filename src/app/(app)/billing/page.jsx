@@ -1,5 +1,6 @@
 "use client";
 
+import { raIconBadgeCls } from "@/config/restaurantAdminTheme";
 import StripePaymentModal from "@/components/payments/StripePaymentModal";
 import PaymentTransactionsSection from "@/components/payment-settings/PaymentTransactionsSection";
 import { useRestaurantTheme } from "@/hooks/useRestaurantTheme";
@@ -189,23 +190,23 @@ export default function BillingPage() {
       {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div className="flex items-start gap-3">
-          <span className="mt-1 flex size-10 shrink-0 items-center justify-center rounded-xl bg-indigo-500/15 text-indigo-400 ring-1 ring-indigo-500/25">
+          <span className={`mt-1 ${raIconBadgeCls}`}>
             <CreditCard className="size-5" />
           </span>
           <div>
-            <h1 className="text-2xl font-semibold tracking-tight text-zinc-50">Billing</h1>
-            <p className="mt-1 text-sm text-zinc-500">Manage your subscription plan and view payment transactions.</p>
+            <h1 className="admin-page-title text-2xl font-semibold tracking-tight">Billing</h1>
+            <p className="admin-page-desc mt-1 text-sm">Manage your subscription plan and view payment transactions.</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
           {/* Tabs */}
-          <div className="flex rounded-xl border border-zinc-800 bg-zinc-900/60 p-1">
+          <div className="flex admin-surface-card p-1">
             {TABS.map((tab) => (
               <button key={tab.id} type="button" onClick={() => setActiveTab(tab.id)}
                 className={`cursor-pointer rounded-lg px-4 py-1.5 text-sm font-medium transition-colors ${
                   activeTab === tab.id
                     ? "bg-ra-primary text-zinc-950"
-                    : "text-zinc-400 hover:text-zinc-200"
+                    : "text-zinc-400 hover:admin-shell-text"
                 }`}>
                 {tab.label}
               </button>
@@ -213,7 +214,7 @@ export default function BillingPage() {
           </div>
           {activeTab === "subscription" && (
             <button type="button" onClick={fetchOverview}
-              className="cursor-pointer inline-flex items-center gap-2 rounded-xl border border-zinc-700 px-3 py-2 text-sm text-zinc-300 hover:border-zinc-500">
+              className="cursor-pointer inline-flex items-center gap-2 rounded-xl border admin-shell-border px-3 py-2 text-sm admin-surface-body hover:border-zinc-500">
               <RefreshCw className={`size-4 ${loading ? "animate-spin" : ""}`} />
             </button>
           )}
@@ -235,15 +236,15 @@ export default function BillingPage() {
       ) : null}
 
       <div className="grid gap-4 md:grid-cols-3">
-        <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-5 md:col-span-2">
+        <div className="admin-surface-card p-5 md:col-span-2">
           <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500">Current Plan</p>
           <div className="mt-2 flex items-center gap-3">
-            <h2 className="text-xl font-semibold text-zinc-100">{currentPlan?.name ?? "Free"}</h2>
+            <h2 className="text-xl font-semibold admin-shell-text">{currentPlan?.name ?? "Free"}</h2>
             <span className="rounded-full bg-ra-primary-15 px-2.5 py-0.5 text-xs font-semibold capitalize text-ra-primary ring-1 ring-ra-primary-25">
               {subscription?.status ?? profile?.subscriptionStatus ?? "active"}
             </span>
           </div>
-          <p className="mt-2 text-sm text-zinc-500">
+          <p className="mt-2 text-sm admin-surface-muted">
             {subscription?.endDate
               ? `Valid until ${new Date(subscription.endDate).toLocaleDateString("en-US", {
                   month: "short",
@@ -254,7 +255,7 @@ export default function BillingPage() {
           </p>
         </div>
 
-        <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-5">
+        <div className="admin-surface-card p-5">
           <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500">Billing Cycle</p>
           <div className="mt-3 grid grid-cols-2 gap-2">
             {["monthly", "yearly"].map((cycle) => (
@@ -265,7 +266,7 @@ export default function BillingPage() {
                 className={`cursor-pointer rounded-xl border px-3 py-2 text-sm font-medium capitalize transition-colors ${
                   billingCycle === cycle
                     ? "border-ra-primary-40 bg-ra-primary-10 text-ra-primary-muted"
-                    : "border-zinc-700 text-zinc-400 hover:border-zinc-500 hover:text-zinc-200"
+                    : "border-zinc-700 text-zinc-400 hover:border-zinc-500 hover:admin-shell-text"
                 }`}
               >
                 {cycle}
@@ -278,7 +279,7 @@ export default function BillingPage() {
       {loading ? (
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {Array.from({ length: 3 }).map((_, idx) => (
-            <div key={idx} className="h-52 animate-pulse rounded-2xl border border-zinc-800 bg-zinc-900/40" />
+            <div key={idx} className="h-52 animate-pulse admin-surface-card" />
           ))}
         </div>
       ) : (
@@ -293,7 +294,7 @@ export default function BillingPage() {
                 className={`rounded-2xl border p-5 ${PLAN_COLORS[idx % PLAN_COLORS.length]} ${isCurrent ? "ring-1 ring-ra-primary-25" : ""}`}
               >
                 <div className="flex items-start justify-between gap-2">
-                  <h3 className="text-lg font-semibold text-zinc-100">{plan.name}</h3>
+                  <h3 className="text-lg font-semibold admin-shell-text">{plan.name}</h3>
                   {isCurrent && (
                     <span className="inline-flex items-center gap-1 rounded-full bg-ra-primary-15 px-2 py-0.5 text-xs font-semibold text-ra-primary-muted ring-1 ring-ra-primary-25">
                       <CheckCircle2 className="size-3" />
@@ -301,11 +302,11 @@ export default function BillingPage() {
                     </span>
                   )}
                 </div>
-                <p className="mt-2 text-3xl font-bold text-zinc-100">
+                <p className="mt-2 text-3xl font-bold admin-shell-text">
                   Rs {Number(amount ?? 0).toLocaleString("en-IN")}
                   <span className="ml-1 text-sm font-medium text-zinc-500">/{billingCycle === "yearly" ? "year" : "month"}</span>
                 </p>
-                <p className="mt-2 min-h-10 text-sm text-zinc-500">{plan.description || "No description provided."}</p>
+                <p className="mt-2 min-h-10 text-sm admin-surface-muted">{plan.description || "No description provided."}</p>
                 <ul className="mt-4 space-y-1 text-xs text-zinc-400">
                   {plan.features.slice(0, 4).map((feature) => (
                     <li key={feature}>• {feature}</li>

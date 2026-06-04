@@ -1,5 +1,6 @@
 "use client";
 
+import { adminPortalScope, adminShell, adminSurface } from "@/config/adminSurfaceClasses";
 import SidebarBrand from "@/components/rms/SidebarBrand";
 import { navForRole } from "@/config/navigation";
 import { useApp } from "@/context/AppProviders";
@@ -117,11 +118,11 @@ export default function Sidebar({
 
   return (
     <aside
-      className={`relative flex h-full shrink-0 flex-col border-r border-zinc-800 bg-zinc-950 transition-[width] duration-300 ease-out ${
+      className={`${adminShell.sidebar} ${
         collapsed ? "w-[72px]" : "w-64"
       }`}
     >
-      <div className="flex h-16 items-center justify-between gap-2 border-b border-zinc-800 px-3">
+      <div className={`flex h-16 items-center justify-between gap-2 ${adminShell.borderB} px-3`}>
         <SidebarBrand
           collapsed={collapsed}
           name={brandName}
@@ -136,7 +137,7 @@ export default function Sidebar({
               const next = !collapsed;
               onCollapsedChange?.(next);
             }}
-            className="cursor-pointer group relative inline-flex shrink-0 items-center justify-center rounded-lg border border-zinc-800 bg-zinc-900/50 p-1.5 text-zinc-400 transition-colors hover:border-zinc-600 hover:text-zinc-200"
+            className={`${adminSurface.sidebarToggle} group relative`}
             aria-expanded={!collapsed}
             aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
           >
@@ -191,8 +192,8 @@ export default function Sidebar({
                     : "w-full items-center gap-3 px-3 py-2.5"
                 } ${
                   active
-                    ? "bg-ra-primary-15 text-ra-primary-muted ring-1 ring-ra-primary-25"
-                    : "text-zinc-400 hover:bg-zinc-900 hover:text-zinc-100"
+                    ? "bg-ra-primary-15 text-ra-primary ring-1 ring-ra-primary-25"
+                    : adminSurface.navLink
                 }`}
               >
                 {active ? (
@@ -255,8 +256,8 @@ export default function Sidebar({
                 aria-label={label}
                 className={`relative group flex size-11 items-center justify-center rounded-xl p-0 transition-all duration-200 ${
                   groupActive
-                    ? "bg-ra-primary-15 text-ra-primary-muted ring-1 ring-ra-primary-25"
-                    : "text-zinc-400 hover:bg-zinc-900 hover:text-zinc-100"
+                    ? "bg-ra-primary-15 text-ra-primary ring-1 ring-ra-primary-25"
+                    : adminSurface.navLink
                 }`}
               >
                 {groupActive ? (
@@ -283,11 +284,8 @@ export default function Sidebar({
               <button
                 type="button"
                 onClick={() => toggleGroup(id)}
-                className={`cursor-pointer relative flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-medium transition-all duration-200 ${
-                  groupActive
-                    ? "bg-zinc-900 text-zinc-100 ring-1 ring-zinc-800"
-                    : "text-zinc-400 hover:bg-zinc-900 hover:text-zinc-100"
-                }`}
+                className={adminSurface.navGroupBtn}
+                data-active={groupActive ? "true" : "false"}
               >
                 {groupActive ? (
                   <span
@@ -305,14 +303,14 @@ export default function Sidebar({
                   {label}
                 </span>
                 <ChevronDown
-                  className={`size-4 shrink-0 text-zinc-500 transition-transform duration-200 ${
+                  className={`size-4 shrink-0 admin-surface-muted transition-transform duration-200 ${
                     open ? "rotate-180" : ""
                   }`}
                   aria-hidden
                 />
               </button>
               <div
-                className={`ml-2 overflow-hidden border-l border-zinc-800 pl-2 transition-[max-height,opacity] duration-300 ${
+                className={`ml-2 overflow-hidden border-l ${adminShell.borderR} pl-2 transition-[max-height,opacity] duration-300 ${
                   open ? "max-h-64 opacity-100" : "max-h-0 opacity-0"
                 }`}
               >
@@ -329,8 +327,8 @@ export default function Sidebar({
                         onClick={onNavigate}
                         className={`group relative flex items-center gap-2 rounded-lg py-2 pl-2 pr-2 text-sm transition-all duration-200 ${
                           active
-                            ? "bg-ra-primary-15 font-medium text-ra-primary-muted"
-                            : "text-zinc-500 hover:bg-zinc-900 hover:text-zinc-200"
+                            ? "bg-ra-primary-15 font-medium text-ra-primary"
+                            : `${adminSurface.muted} hover:bg-[var(--admin-hover)] hover:text-[var(--admin-text)]`
                         }`}
                       >
                         {active ? (
@@ -351,9 +349,9 @@ export default function Sidebar({
         })}
         </nav>
 
-        <div className="border-t border-zinc-800 p-2">
+        <div className={`border-t ${adminShell.borderT} p-2`}>
           <p
-            className={`text-center text-xs text-zinc-500 ${
+            className={`text-center text-xs ${adminSurface.muted} ${
               collapsed ? "px-0" : "px-2"
             }`}
             title={collapsed ? `${brandName} © ${new Date().getFullYear()}` : undefined}
@@ -366,7 +364,7 @@ export default function Sidebar({
         ? createPortal(
             <div
               ref={popoverRef}
-              className="fixed z-[100] w-56 rounded-xl border border-zinc-800 bg-zinc-900/95 p-2 shadow-2xl shadow-black/50 backdrop-blur-sm transition-all duration-150"
+              className={`${adminPortalScope} ${adminSurface.dropdown} fixed z-[100] w-56 p-2 backdrop-blur-sm transition-all duration-150`}
               style={{
                 left: popover.left,
                 top: popover.top,
@@ -377,7 +375,7 @@ export default function Sidebar({
               role="menu"
               aria-label={`${popoverItem.label} menu`}
             >
-              <p className="px-2 py-1 text-xs font-semibold uppercase tracking-wide text-zinc-400">
+              <p className={`px-2 py-1 text-xs font-semibold uppercase tracking-wide ${adminSurface.muted}`}>
                 {popoverItem.label}
               </p>
               <div className="mt-1 space-y-0.5">
@@ -387,7 +385,7 @@ export default function Sidebar({
                       key={child.href}
                       href={child.href}
                       onClick={() => closePopoverNow()}
-                      className="flex items-center rounded-lg px-2 py-2 text-sm text-zinc-200 transition-colors hover:bg-zinc-800"
+                      className={adminSurface.menuItem}
                       role="menuitem"
                     >
                       {child.label}
@@ -397,7 +395,7 @@ export default function Sidebar({
                   <Link
                     href={popoverItem.href}
                     onClick={() => closePopoverNow()}
-                    className="flex items-center rounded-lg px-2 py-2 text-sm text-zinc-200 transition-colors hover:bg-zinc-800"
+                    className="flex items-center rounded-lg px-2 py-2 text-sm admin-shell-text transition-colors hover:bg-[var(--admin-hover)]"
                     role="menuitem"
                   >
                     Open {popoverItem.label}

@@ -32,22 +32,22 @@ export default function HeaderLayoutEditor({
 
   return (
     <div className="space-y-5">
-      <div className="flex items-center justify-between gap-3 border-b border-zinc-800 pb-4">
+      <div className="flex items-center justify-between gap-3 border-b admin-shell-border pb-4">
         <div>
-          <h3 className="text-lg font-semibold text-zinc-50">Edit Header</h3>
-          <p className="text-sm text-zinc-500">Navbar, top bar, colors, and menu links</p>
+          <h3 className="admin-surface-title text-lg font-semibold">Edit Header</h3>
+          <p className="text-sm admin-surface-muted">Navbar, top bar, colors, and menu links</p>
         </div>
         <button
           type="button"
           onClick={onBack}
-          className="inline-flex items-center gap-2 rounded-xl border border-zinc-700 px-3 py-2 text-sm text-zinc-300 hover:border-ra-primary-40"
+          className="inline-flex items-center gap-2 rounded-xl border admin-shell-border px-3 py-2 text-sm admin-surface-body hover:border-ra-primary-40"
         >
           <ArrowLeft className="size-4" /> Back
         </button>
       </div>
 
       <p className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Logo upload</p>
-      <p className="text-sm text-zinc-400">
+      <p className="text-sm admin-surface-muted">
         Upload your full brand image (icon + name in one file). No separate HTML text is shown on the
         customer site — only these images. Empty fields use Settings → General logo.
       </p>

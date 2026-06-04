@@ -1,5 +1,6 @@
 "use client";
 
+import { raIconBadgeCls } from "@/config/restaurantAdminTheme";
 import { useUser } from "@/context/AuthContext";
 import { formatAdminMoney } from "@/lib/adminCurrency";
 import {
@@ -11,6 +12,7 @@ import {
   EMPTY_CREATE_ORDER_ERRORS,
   getCreateOrderFieldErrors,
 } from "@/lib/formValidation";
+import SearchField from "@/components/ui/SearchField";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useLiveRefresh } from "@/hooks/useLiveRefresh";
 
@@ -19,8 +21,8 @@ const STATUS_CFG = {
   new:       { label: "New",       badge: "bg-amber-500/15 text-amber-300 ring-1 ring-amber-500/25",   border: "border-amber-500/30"   },
   preparing: { label: "Preparing", badge: "bg-sky-500/15 text-sky-300 ring-1 ring-sky-500/25",         border: "border-sky-500/20"     },
   ready:     { label: "Ready",     badge: "bg-ra-primary-15 text-ra-primary-muted ring-1 ring-ra-primary-25", border: "border-ra-primary-30" },
-  completed: { label: "Completed", badge: "bg-zinc-500/15 text-zinc-400 ring-1 ring-zinc-500/25",      border: "border-zinc-800"       },
-  cancelled: { label: "Cancelled", badge: "bg-red-500/15 text-red-400 ring-1 ring-red-500/25",         border: "border-zinc-800"       },
+  completed: { label: "Completed", badge: "bg-zinc-500/15 text-zinc-400 ring-1 ring-zinc-500/25",      border: "admin-shell-border"       },
+  cancelled: { label: "Cancelled", badge: "bg-red-500/15 text-red-400 ring-1 ring-red-500/25",         border: "admin-shell-border"       },
 };
 
 const TYPE_ICON = {
@@ -108,7 +110,7 @@ function OrderCard({ order, currency, onStatusChange, onMarkPaid, canEdit }) {
   const timeStr = order.time ?? placedAt.label;
 
   return (
-    <div className={`rounded-2xl border bg-zinc-900/70 shadow-sm transition-all duration-200 hover:shadow-md ${st.border}`}>
+    <div className={`rounded-2xl border admin-surface-card shadow-sm transition-all duration-200 hover:shadow-md ${st.border}`}>
       <div className="p-4">
         <div className="flex items-start justify-between gap-2">
           <div className="flex items-center gap-2">
@@ -119,7 +121,7 @@ function OrderCard({ order, currency, onStatusChange, onMarkPaid, canEdit }) {
               <p className="font-mono text-sm font-semibold text-ra-primary">
                 {order.orderId ?? order.id?.slice(-8).toUpperCase()}
               </p>
-              <p className="text-xs text-zinc-500">
+              <p className="text-xs admin-surface-muted">
                 {order.tableNumber ? `Table ${order.tableNumber}` : (order.type ?? order.orderType) === "delivery" ? "Delivery" : "Takeaway"}
               </p>
             </div>
@@ -130,12 +132,12 @@ function OrderCard({ order, currency, onStatusChange, onMarkPaid, canEdit }) {
         </div>
 
         <div className="mt-3 flex items-center justify-between">
-          <p className="text-sm text-zinc-400">{order.customer}</p>
-          <p className="text-base font-bold text-zinc-100">{formatAdminMoney(orderTotal, currency)}</p>
+          <p className="text-sm admin-surface-muted">{order.customer}</p>
+          <p className="text-base font-bold admin-shell-text">{formatAdminMoney(orderTotal, currency)}</p>
         </div>
 
         <div className="mt-2 flex items-center justify-between gap-2">
-          <span className="rounded-full border border-zinc-700 px-2 py-0.5 text-[11px] text-zinc-300">
+          <span className="rounded-full border admin-shell-border px-2 py-0.5 text-[11px] admin-surface-body">
             {PAYMENT_METHOD_LABEL[paymentMethod] ?? paymentMethod}
           </span>
           <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold capitalize ${PAYMENT_STATUS_CFG[paymentStatus] ?? PAYMENT_STATUS_CFG.pending}`}>
@@ -145,22 +147,22 @@ function OrderCard({ order, currency, onStatusChange, onMarkPaid, canEdit }) {
 
         <div className="mt-2 flex items-center justify-between">
           <span
-            className="inline-flex items-center gap-1 text-xs text-zinc-600"
+            className="inline-flex items-center gap-1 text-xs admin-surface-faint"
             title={order.createdAt ? placedAt.full : undefined}
           >
             <Clock className="size-3" /> {timeStr}
           </span>
           <button type="button" onClick={() => setExpanded((v) => !v)}
-            className="cursor-pointer inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-medium text-zinc-500 hover:bg-zinc-800 hover:text-zinc-200 transition-colors">
+            className="cursor-pointer inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-medium admin-surface-muted hover:bg-[var(--admin-hover)] hover:admin-shell-text transition-colors">
             {expanded ? <><ChevronUp className="size-3" /> Less</> : <><ChevronDown className="size-3" /> Details</>}
           </button>
         </div>
       </div>
 
       {expanded && (
-        <div className="border-t border-zinc-800 px-4 py-3 space-y-2">
+        <div className="border-t admin-shell-border px-4 py-3 space-y-2">
           {order.createdAt && placedAt.full !== "—" && (
-            <p className="text-[11px] text-zinc-500">
+            <p className="text-[11px] admin-surface-faint">
               Placed: <span className="text-zinc-400">{placedAt.full}</span>
             </p>
           )}
@@ -183,7 +185,7 @@ function OrderCard({ order, currency, onStatusChange, onMarkPaid, canEdit }) {
             </div>
           )}
           {(order.subtotal != null || order.taxAmount > 0 || order.serviceCharge > 0) && (
-            <div className="space-y-0.5 border-t border-zinc-800 pt-2 text-[11px] text-zinc-500">
+            <div className="space-y-0.5 border-t admin-shell-border pt-2 text-[11px] admin-surface-faint">
               {order.subtotal != null && (
                 <div className="flex justify-between">
                   <span>Subtotal</span>
@@ -205,7 +207,7 @@ function OrderCard({ order, currency, onStatusChange, onMarkPaid, canEdit }) {
             </div>
           )}
           {order.notes && (
-            <p className="text-xs text-amber-400/80 border-t border-zinc-800 pt-2">Note: {order.notes}</p>
+            <p className="text-xs text-amber-400/80 border-t admin-shell-border pt-2">Note: {order.notes}</p>
           )}
           {canEdit && paymentStatus !== "paid" && (
             <button
@@ -223,7 +225,7 @@ function OrderCard({ order, currency, onStatusChange, onMarkPaid, canEdit }) {
               className={`cursor-pointer mt-2 flex w-full items-center justify-center gap-2 rounded-xl py-2 text-xs font-bold transition-all disabled:opacity-50 ${
                 next === "preparing" ? "bg-sky-500/15 text-sky-300 ring-1 ring-sky-500/25 hover:bg-sky-500/25"
                 : next === "ready"   ? "bg-ra-primary text-zinc-950 hover:brightness-110"
-                :                      "bg-zinc-800 text-zinc-300 hover:bg-zinc-700"
+                :                      "admin-surface-segment-btn admin-surface-body"
               }`}>
               <CheckCircle2 className="size-3.5" />
               {updating ? "Updating…" : NEXT_LABEL[order.status]}
@@ -231,7 +233,7 @@ function OrderCard({ order, currency, onStatusChange, onMarkPaid, canEdit }) {
           )}
           {canEdit && order.status === "new" && (
             <button type="button" onClick={() => onStatusChange(order.id, "cancelled")}
-              className="cursor-pointer flex w-full items-center justify-center gap-1.5 rounded-xl border border-zinc-800 py-1.5 text-xs text-zinc-500 hover:border-red-500/30 hover:text-red-400 transition-colors">
+              className="cursor-pointer flex w-full items-center justify-center gap-1.5 rounded-xl border admin-shell-border py-1.5 text-xs admin-surface-muted hover:border-red-500/30 hover:text-red-400 transition-colors">
               <X className="size-3" /> Cancel Order
             </button>
           )}
@@ -354,41 +356,41 @@ function CreateOrderModal({ open, onClose, onCreated, currency = "INR" }) {
   return (
     <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
       <button type="button" className="cursor-pointer absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative z-10 flex w-full max-w-2xl flex-col rounded-2xl border border-zinc-800 bg-zinc-900 shadow-2xl max-h-[90vh]">
+      <div className="relative z-10 flex w-full max-w-2xl flex-col rounded-2xl border admin-shell-border admin-surface-card-solid shadow-2xl max-h-[90vh]">
 
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-zinc-800 px-5 py-4">
+        <div className="flex items-center justify-between border-b admin-shell-border px-5 py-4">
           <h2 className="text-base font-bold text-zinc-50">New Order</h2>
-          <button type="button" onClick={onClose} className="cursor-pointer rounded-lg p-2 text-zinc-500 hover:bg-zinc-800 hover:text-zinc-200">
+          <button type="button" onClick={onClose} className="cursor-pointer rounded-lg p-2 text-zinc-500 hover:bg-[var(--admin-hover)] hover:admin-shell-text">
             <X className="size-5" />
           </button>
         </div>
 
         <div className="flex flex-1 overflow-hidden">
           {/* Left — menu */}
-          <div className="flex flex-1 flex-col border-r border-zinc-800 overflow-hidden">
-            <div className="p-3 border-b border-zinc-800">
-              <div className="relative">
-                <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-zinc-500" />
-                <input value={search} onChange={(e) => setSearch(e.target.value)}
-                  placeholder="Search menu…"
-                  className="w-full rounded-xl border border-zinc-700 bg-zinc-950/60 py-2 pl-9 pr-3 text-sm text-zinc-100 outline-none focus-ra-primary placeholder:text-zinc-600" />
-              </div>
+          <div className="flex flex-1 flex-col border-r admin-shell-border overflow-hidden">
+            <div className="p-3 border-b admin-shell-border">
+              <SearchField
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search menu…"
+                inputClassName="focus-ra-primary"
+              />
             </div>
             <div className="flex-1 overflow-y-auto p-3 space-y-1.5">
               {filteredMenu.map((item) => (
                 <button key={item.id} type="button" onClick={() => addItem(item)}
-                  className="cursor-pointer flex w-full items-center justify-between rounded-xl border border-zinc-800 bg-zinc-950/40 px-3 py-2.5 text-left hover:border-ra-primary-30 hover:bg-ra-primary-5 transition-all">
+                  className="cursor-pointer flex w-full items-center justify-between rounded-xl admin-surface-card px-3 py-2.5 text-left hover:border-ra-primary-30 hover:bg-ra-primary-5 transition-all">
                   <div>
-                    <p className="text-sm font-medium text-zinc-100">{item.name}</p>
-                    <p className="text-xs text-zinc-500">{item.categoryName}</p>
+                    <p className="text-sm font-medium admin-shell-text">{item.name}</p>
+                    <p className="text-xs admin-surface-muted">{item.categoryName}</p>
                   </div>
                   <span className="text-sm font-bold text-ra-primary">
                     {formatAdminMoney(item.price, currency)}
                   </span>
                 </button>
               ))}
-              {filteredMenu.length === 0 && <p className="py-8 text-center text-xs text-zinc-600">No items found.</p>}
+              {filteredMenu.length === 0 && <p className="py-8 text-center text-xs admin-surface-faint">No items found.</p>}
             </div>
           </div>
 
@@ -397,7 +399,7 @@ function CreateOrderModal({ open, onClose, onCreated, currency = "INR" }) {
             <div className="flex-1 overflow-y-auto p-3 space-y-3">
               {/* Order type */}
               <div>
-                <label className="text-xs font-medium text-zinc-500">Order Type</label>
+                <label className="text-xs font-medium admin-surface-muted">Order Type</label>
                 <select
                   value={form.orderType}
                   onChange={(e) => {
@@ -405,7 +407,7 @@ function CreateOrderModal({ open, onClose, onCreated, currency = "INR" }) {
                     setFieldErrors(EMPTY_CREATE_ORDER_ERRORS);
                     setError("");
                   }}
-                  className="cursor-pointer mt-1 w-full rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2 text-sm text-zinc-100 outline-none focus-ra-primary"
+                  className="cursor-pointer mt-1 w-full rounded-xl border admin-shell-border admin-surface-card px-3 py-2 text-sm admin-shell-text outline-none focus-ra-primary"
                 >
                   <option value="dine-in">Dine-In</option>
                   <option value="takeaway">Takeaway</option>
@@ -416,7 +418,7 @@ function CreateOrderModal({ open, onClose, onCreated, currency = "INR" }) {
               {/* Table (dine-in) */}
               {form.orderType === "dine-in" && (
                 <div>
-                  <label className="text-xs font-medium text-zinc-500">Table *</label>
+                  <label className="text-xs font-medium admin-surface-muted">Table *</label>
                   <select
                     value={form.tableNumber}
                     onChange={(e) => {
@@ -427,7 +429,7 @@ function CreateOrderModal({ open, onClose, onCreated, currency = "INR" }) {
                       setError("");
                     }}
                     aria-invalid={fieldErrors.tableNumber ? true : undefined}
-                    className={`cursor-pointer mt-1 w-full rounded-xl border bg-zinc-950/60 px-3 py-2 text-sm text-zinc-100 outline-none focus-ra-primary ${
+                    className={`cursor-pointer mt-1 w-full rounded-xl border admin-surface-card px-3 py-2 text-sm admin-shell-text outline-none focus-ra-primary ${
                       fieldErrors.tableNumber ? "border-red-500/50" : "border-zinc-700"
                     }`}
                   >
@@ -442,7 +444,7 @@ function CreateOrderModal({ open, onClose, onCreated, currency = "INR" }) {
 
               {/* Customer */}
               <div>
-                <label className="text-xs font-medium text-zinc-500">
+                <label className="text-xs font-medium admin-surface-muted">
                   {form.orderType === "delivery" ? "Customer name" : "Customer"}
                   <span className="text-red-400"> *</span>
                 </label>
@@ -455,7 +457,7 @@ function CreateOrderModal({ open, onClose, onCreated, currency = "INR" }) {
                   }}
                   placeholder={form.orderType === "delivery" ? "e.g. Rahul Sharma" : "e.g. Rahul Sharma (not Walk-in)"}
                   aria-invalid={fieldErrors.customer ? true : undefined}
-                  className={`mt-1 w-full rounded-xl border bg-zinc-950/60 px-3 py-2 text-sm text-zinc-100 outline-none focus-ra-primary placeholder:text-zinc-600 ${
+                  className={`mt-1 w-full rounded-xl border admin-surface-card px-3 py-2 text-sm admin-shell-text outline-none focus-ra-primary placeholder:admin-surface-faint ${
                     fieldErrors.customer ? "border-red-500/50" : "border-zinc-700"
                   }`}
                 />
@@ -466,7 +468,7 @@ function CreateOrderModal({ open, onClose, onCreated, currency = "INR" }) {
 
               {/* Notes / delivery address */}
               <div>
-                <label className="text-xs font-medium text-zinc-500">
+                <label className="text-xs font-medium admin-surface-muted">
                   {form.orderType === "delivery" ? "Delivery address" : "Notes"}
                   {form.orderType === "delivery" ? <span className="text-red-400"> *</span> : null}
                 </label>
@@ -484,7 +486,7 @@ function CreateOrderModal({ open, onClose, onCreated, currency = "INR" }) {
                       : "Special requests…"
                   }
                   aria-invalid={fieldErrors.notes ? true : undefined}
-                  className={`mt-1 w-full resize-none rounded-xl border bg-zinc-950/60 px-3 py-2 text-sm text-zinc-100 outline-none focus-ra-primary placeholder:text-zinc-600 ${
+                  className={`mt-1 w-full resize-none rounded-xl border admin-surface-card px-3 py-2 text-sm admin-shell-text outline-none focus-ra-primary placeholder:admin-surface-faint ${
                     fieldErrors.notes ? "border-red-500/50" : "border-zinc-700"
                   }`}
                 />
@@ -495,14 +497,14 @@ function CreateOrderModal({ open, onClose, onCreated, currency = "INR" }) {
 
               {/* Cart */}
               <div>
-                <p className="text-xs font-medium text-zinc-500 mb-1.5">Items ({cart.length})</p>
+                <p className="text-xs font-medium admin-surface-muted mb-1.5">Items ({cart.length})</p>
                 {cart.length === 0 ? (
-                  <p className="text-xs text-zinc-600 py-3 text-center">No items added</p>
+                  <p className="text-xs admin-surface-faint py-3 text-center">No items added</p>
                 ) : (
                   <div className="space-y-1.5">
                     {cart.map((line) => (
-                      <div key={line.id} className="flex items-center justify-between rounded-lg bg-zinc-950/40 px-2.5 py-2 text-xs">
-                        <span className="text-zinc-300">{line.qty}× {line.name}</span>
+                      <div key={line.id} className="flex items-center justify-between rounded-lg admin-surface-segment-track px-2.5 py-2 text-xs">
+                        <span className="admin-surface-body">{line.qty}× {line.name}</span>
                         <div className="flex items-center gap-2">
                           <span className="text-ra-primary">
                             {formatAdminMoney(line.price * line.qty, currency)}
@@ -520,9 +522,9 @@ function CreateOrderModal({ open, onClose, onCreated, currency = "INR" }) {
             </div>
 
             {/* Footer */}
-            <div className="border-t border-zinc-800 p-3 space-y-2">
+            <div className="border-t admin-shell-border p-3 space-y-2">
               {error && <p className="text-xs text-red-400">{error}</p>}
-              <div className="space-y-0.5 text-xs text-zinc-500">
+              <div className="space-y-0.5 text-xs admin-surface-muted">
                 <div className="flex justify-between">
                   <span>Subtotal</span>
                   <span>{formatAdminMoney(subtotal, currency)}</span>
@@ -533,7 +535,7 @@ function CreateOrderModal({ open, onClose, onCreated, currency = "INR" }) {
                     <span>{formatAdminMoney(taxAmount, currency)}</span>
                   </div>
                 )}
-                <div className="flex justify-between text-sm font-bold text-zinc-100">
+                <div className="flex justify-between text-sm font-bold admin-shell-text">
                   <span>Total</span>
                   <span className="text-ra-primary">{formatAdminMoney(total, currency)}</span>
                 </div>
@@ -567,7 +569,7 @@ function CreateOrderModal({ open, onClose, onCreated, currency = "INR" }) {
                 {saving ? "Placing…" : "Place Order"}
               </button>
               {!canPlaceOrder && cart.length > 0 && orderValidation.message && !error && (
-                <p className="text-center text-[10px] text-zinc-500">{orderValidation.message}</p>
+                <p className="text-center text-[10px] admin-surface-faint">{orderValidation.message}</p>
               )}
             </div>
           </div>
@@ -687,12 +689,12 @@ export default function OrdersPage() {
   if (loading) {
     return (
       <div className="space-y-6">
-        <div className="h-8 w-32 animate-pulse rounded-lg bg-zinc-800" />
+        <div className="h-8 w-32 animate-pulse rounded-lg admin-progress-track" />
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
-          {Array.from({ length: 5 }).map((_, i) => <div key={i} className="h-16 animate-pulse rounded-2xl border border-zinc-800 bg-zinc-900/40" />)}
+          {Array.from({ length: 5 }).map((_, i) => <div key={i} className="h-16 animate-pulse admin-surface-card" />)}
         </div>
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-          {Array.from({ length: 8 }).map((_, i) => <div key={i} className="h-32 animate-pulse rounded-2xl border border-zinc-800 bg-zinc-900/40" />)}
+          {Array.from({ length: 8 }).map((_, i) => <div key={i} className="h-32 animate-pulse admin-surface-card" />)}
         </div>
       </div>
     );
@@ -709,12 +711,12 @@ export default function OrdersPage() {
         {/* Header */}
         <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div className="flex items-start gap-3">
-            <span className="mt-1 flex size-10 shrink-0 items-center justify-center rounded-xl bg-ra-primary-15 text-ra-primary ring-1 ring-ra-primary-25">
+            <span className={`mt-1 ${raIconBadgeCls}`}>
               <UtensilsCrossed className="size-5" />
             </span>
             <div>
-              <h1 className="text-2xl font-semibold tracking-tight text-zinc-50">Orders</h1>
-              <p className="mt-1 text-sm text-zinc-500">
+              <h1 className="admin-page-title text-2xl font-semibold tracking-tight">Orders</h1>
+              <p className="admin-page-desc mt-1 text-sm">
                 {orders.length} total ·{" "}
                 <span className="inline-flex items-center gap-1.5">
                   <span className="size-1.5 animate-pulse rounded-full bg-ra-accent" />
@@ -728,11 +730,11 @@ export default function OrdersPage() {
           </div>
           <div className="flex items-center gap-2">
             <button type="button" onClick={() => fetchOrders()}
-              className="cursor-pointer flex items-center gap-1.5 rounded-xl border border-zinc-700 px-3 py-2 text-xs font-medium text-zinc-400 hover:border-zinc-500 hover:text-zinc-200 transition-colors">
+              className="cursor-pointer flex items-center gap-1.5 rounded-xl border admin-shell-border px-3 py-2 text-xs font-medium text-zinc-400 hover:border-zinc-500 hover:admin-shell-text transition-colors">
               <RefreshCw className="size-3.5" />
             </button>
             <button type="button" onClick={() => setSortNew((v) => !v)}
-              className="cursor-pointer inline-flex items-center gap-2 rounded-xl border border-zinc-800 bg-zinc-900/60 px-4 py-2 text-xs font-medium text-zinc-400 hover:border-zinc-600 hover:text-zinc-200 transition-colors">
+              className="cursor-pointer inline-flex items-center gap-2 admin-surface-card px-4 py-2 text-xs font-medium text-zinc-400 hover:border-zinc-600 hover:admin-shell-text transition-colors">
               <Clock className="size-3.5" />
               {sortNew ? "Newest first" : "Oldest first"}
             </button>
@@ -758,24 +760,25 @@ export default function OrdersPage() {
               onClick={() => setFilter(filter === key ? "all" : key)}
               className={`cursor-pointer rounded-2xl border p-3 text-left transition-all hover:-translate-y-0.5 ${bg} ${border} ${filter === key ? "ring-1 ring-current" : ""}`}>
               <p className={`text-xl font-bold ${color}`}>{summary[key]}</p>
-              <p className="mt-0.5 text-xs text-zinc-500">{label}</p>
+              <p className="mt-0.5 text-xs admin-surface-muted">{label}</p>
             </button>
           ))}
         </div>
 
         {/* Search */}
-        <div className="relative max-w-xs">
-          <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-zinc-500" />
-          <input value={search} onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search order, customer, table…"
-            className="w-full rounded-xl border border-zinc-800 bg-zinc-900/70 py-2.5 pl-10 pr-4 text-sm text-zinc-100 placeholder:text-zinc-600 outline-none focus-ra-primary" />
-        </div>
+        <SearchField
+          className="max-w-xs"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Search order, customer, table…"
+          inputClassName="focus-ra-primary"
+        />
 
         {/* Grid */}
         {filtered.length === 0 ? (
-          <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-zinc-800 bg-zinc-900/40 py-20 text-center">
+          <div className="flex flex-col items-center justify-center gap-3 admin-surface-card py-20 text-center">
             <UtensilsCrossed className="size-10 text-zinc-700" />
-            <p className="text-sm text-zinc-500">No orders found.</p>
+            <p className="text-sm admin-surface-muted">No orders found.</p>
             {canEdit && (
               <button type="button" onClick={() => setCreateOpen(true)}
                 className="cursor-pointer rounded-xl bg-ra-primary px-4 py-2 text-sm font-bold text-zinc-950 hover:brightness-110">

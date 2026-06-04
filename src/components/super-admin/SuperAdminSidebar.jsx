@@ -14,6 +14,7 @@ import {
   Settings,
   Shield,
 } from "lucide-react";
+import { adminShell, adminSurface } from "@/config/adminSurfaceClasses";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -53,25 +54,25 @@ export default function SuperAdminSidebar() {
   const isActive = (href) => pathname === href || pathname.startsWith(href + "/");
 
   return (
-    <aside className={`relative flex h-full shrink-0 flex-col border-r border-zinc-800 bg-zinc-950 transition-[width] duration-300 ease-out ${
+    <aside className={`${adminShell.sidebar} ${
       collapsed ? "w-[72px]" : "w-60"
     }`}>
 
       {/* ── Logo ── */}
-      <div className="flex h-16 items-center justify-between gap-2 border-b border-zinc-800 px-3">
+      <div className={`flex h-16 items-center justify-between gap-2 ${adminShell.borderB} px-3`}>
         <div className="flex min-w-0 items-center gap-2.5">
           <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-sa-primary-15 text-sa-primary ring-1 ring-sa-primary-25">
             <Shield className="size-5" />
           </span>
           {!collapsed && (
             <div className="min-w-0">
-              <p className="truncate text-sm font-bold tracking-tight text-zinc-100">Super Admin</p>
-              <p className="truncate text-[10px] text-zinc-500">RMS Control Panel</p>
+              <p className={`truncate text-sm font-bold tracking-tight ${adminSurface.title}`}>Super Admin</p>
+              <p className={`truncate text-[10px] ${adminSurface.muted}`}>RMS Control Panel</p>
             </div>
           )}
         </div>
         <button type="button" onClick={() => setCollapsed((v) => !v)}
-          className="cursor-pointer flex shrink-0 items-center justify-center rounded-lg border border-zinc-800 bg-zinc-900/50 p-1.5 text-zinc-400 hover:border-zinc-600 hover:text-zinc-200 transition-colors"
+          className={adminSurface.sidebarToggle}
           aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}>
           {collapsed ? <ChevronRight className="size-4" /> : <ChevronLeft className="size-4" />}
         </button>
@@ -91,7 +92,7 @@ export default function SuperAdminSidebar() {
               } ${
                 active
                   ? "bg-sa-primary-15 text-sa-primary-muted ring-1 ring-sa-primary-25"
-                  : "text-zinc-400 hover:bg-zinc-900 hover:text-zinc-100"
+                  : adminSurface.navLink
               }`}>
               {active && (
                 <span className="absolute inset-y-1 left-0 w-0.5 rounded-r sa-nav-active-bar" aria-hidden />
@@ -105,9 +106,9 @@ export default function SuperAdminSidebar() {
       </nav>
 
       {/* ── Footer ── */}
-      <div className="border-t border-zinc-800 p-2">
+      <div className="border-t admin-shell-border p-2">
         <p
-          className={`text-center text-xs text-zinc-500 ${collapsed ? "px-0" : "px-2"}`}
+          className={`text-center text-xs admin-surface-muted ${collapsed ? "px-0" : "px-2"}`}
           title={collapsed ? "RMS © 2026" : undefined}
         >
           {collapsed ? "©" : "RMS © 2026"}

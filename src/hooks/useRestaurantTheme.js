@@ -7,6 +7,7 @@ import {
   RESTAURANT_THEME_ROLES,
 } from "@/lib/restaurantAdminRoutes";
 import { resolveRestaurantAdminTheme } from "@/lib/restaurantAdminThemeRuntime";
+import { mergeLiveAdminTheme } from "@/lib/mergeLiveAdminTheme";
 import {
   applyRestaurantDocumentTheme,
   readStoredRestaurantTheme,
@@ -115,10 +116,14 @@ export function useRestaurantTheme() {
           setTheme(localTheme);
           return;
         }
-        const next = resolveRestaurantAdminTheme({
+        const apiNext = resolveRestaurantAdminTheme({
           ...EMPTY_SETTINGS.theme,
           ...(data.settings?.theme ?? {}),
         });
+        const stored = readStoredRestaurantTheme();
+        const next = stored
+          ? resolveRestaurantAdminTheme(mergeLiveAdminTheme(apiNext, stored))
+          : apiNext;
         _cache = next;
         _cacheTime = Date.now();
         writeStoredRestaurantTheme(next);
@@ -132,8 +137,8 @@ export function useRestaurantTheme() {
     }
 
     const onUpdate = (event) => {
-      if (event?.detail?.primaryColor) {
-        setTheme(event.detail);
+      if (event?.detail && typeof event.detail === "object") {
+        setTheme(resolveRestaurantAdminTheme(event.detail));
         return;
       }
       load();

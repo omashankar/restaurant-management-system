@@ -13,20 +13,20 @@ const typeStyles = {
 
 export default function SmartInsights({ insights = [] }) {
   return (
-    <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-5">
+    <div className="rounded-2xl border admin-shell-border bg-zinc-900/60 p-5">
       <div className="flex items-center gap-2">
         <span className="flex size-8 items-center justify-center rounded-lg bg-violet-500/15 text-violet-400 ring-1 ring-violet-500/20">
           <Lightbulb className="size-4" />
         </span>
         <div>
-          <h3 className="text-sm font-semibold text-zinc-100">Smart Insights</h3>
-          <p className="text-xs text-zinc-500">Auto-generated from your data</p>
+          <h3 className="admin-surface-title text-sm font-semibold">Smart Insights</h3>
+          <p className="text-xs admin-surface-muted">Auto-generated from your data</p>
         </div>
         <span className="ml-auto rounded-full border border-violet-500/30 bg-violet-500/10 px-2.5 py-0.5 text-[10px] font-semibold text-violet-400">Live</span>
       </div>
 
       {insights.length === 0 ? (
-        <p className="mt-6 text-center text-sm text-zinc-600">No insights yet — place some orders first.</p>
+        <p className="mt-6 text-center text-sm admin-surface-faint">No insights yet — place some orders first.</p>
       ) : (
         <div className="mt-4 grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
           {insights.map((insight, i) => {

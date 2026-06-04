@@ -9,7 +9,7 @@ import { ImageIcon, Loader2, Trash2, Upload } from "lucide-react";
 import { useRef, useState } from "react";
 
 const inputCls =
-  "w-full rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus-ra-primary placeholder:text-zinc-600";
+  "admin-surface-input focus-ra-primary px-3 py-2.5 placeholder:admin-surface-faint";
 
 export default function RestaurantLogoField({ logoUrl, onChange, disabled, hint }) {
   const fileRef = useRef(null);
@@ -59,13 +59,13 @@ export default function RestaurantLogoField({ logoUrl, onChange, disabled, hint 
       <label className="block text-xs font-medium uppercase tracking-wide text-zinc-500">
         Restaurant logo
       </label>
-      <p className="text-xs text-zinc-600">
+      <p className="text-xs admin-surface-faint">
         {hint ??
           "Fallback only if Customer Site → Website layout → Header has no logo. Prefer uploading logos there (full wordmark image)."}
       </p>
 
-      <div className="flex flex-col gap-4 rounded-xl border border-zinc-800 bg-zinc-950/50 p-4 sm:flex-row sm:items-start">
-        <div className="flex size-24 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-zinc-700 bg-zinc-900">
+      <div className="flex flex-col gap-4 rounded-xl admin-surface-card p-4 sm:flex-row sm:items-start">
+        <div className="flex size-24 shrink-0 items-center justify-center overflow-hidden rounded-xl border admin-shell-border bg-zinc-900">
           {previewSrc ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={previewSrc} alt="Logo preview" className="max-h-full max-w-full object-contain p-2" />
@@ -80,7 +80,7 @@ export default function RestaurantLogoField({ logoUrl, onChange, disabled, hint 
               type="button"
               disabled={disabled || busy}
               onClick={() => fileRef.current?.click()}
-              className="inline-flex cursor-pointer items-center gap-2 rounded-xl border border-zinc-700 bg-zinc-900 px-4 py-2 text-sm font-medium text-zinc-200 hover-border-ra-primary-40 disabled:opacity-50"
+              className="inline-flex cursor-pointer items-center gap-2 rounded-xl border admin-shell-border bg-zinc-900 px-4 py-2 text-sm font-medium admin-shell-text hover-border-ra-primary-40 disabled:opacity-50"
             >
               {busy ? (
                 <Loader2 className="size-4 animate-spin text-ra-primary" />
@@ -94,7 +94,7 @@ export default function RestaurantLogoField({ logoUrl, onChange, disabled, hint 
                 type="button"
                 disabled={disabled || busy}
                 onClick={() => onChange("")}
-                className="inline-flex items-center gap-2 rounded-xl border border-zinc-700 px-4 py-2 text-sm text-zinc-400 hover:border-red-500/40 hover:text-red-400 disabled:opacity-50"
+                className="inline-flex items-center gap-2 rounded-xl border admin-shell-border px-4 py-2 text-sm admin-surface-muted hover:border-red-500/40 hover:text-red-400 disabled:opacity-50"
               >
                 <Trash2 className="size-4" /> Remove
               </button>
@@ -108,7 +108,7 @@ export default function RestaurantLogoField({ logoUrl, onChange, disabled, hint 
             onChange={(e) => handleFile(e.target.files?.[0])}
           />
           <div>
-            <p className="mb-1.5 text-xs text-zinc-500">Or paste image URL</p>
+            <p className="mb-1.5 text-xs admin-surface-muted">Or paste image URL</p>
             <input
               type="text"
               value={logoUrl ?? ""}

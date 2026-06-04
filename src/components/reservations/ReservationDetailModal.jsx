@@ -24,7 +24,7 @@ function dotForTone(tone) {
     );
   if (tone === "skip")
     return (
-      <span className="flex size-8 items-center justify-center rounded-full bg-zinc-800 text-zinc-600 ring-2 ring-zinc-700">
+      <span className="flex size-8 items-center justify-center rounded-full bg-zinc-800 admin-surface-faint ring-2 ring-zinc-700">
         <Circle className="size-4" />
       </span>
     );
@@ -49,7 +49,7 @@ export default function ReservationDetailModal({ open, onClose, reservation }) {
         <button
           type="button"
           onClick={onClose}
-          className="cursor-pointer rounded-xl border border-zinc-700 px-4 py-2 text-sm font-medium text-zinc-300 hover:border-zinc-500"
+          className="cursor-pointer rounded-xl border admin-shell-border px-4 py-2 text-sm font-medium admin-surface-body hover:border-zinc-500"
         >
           Close
         </button>
@@ -58,10 +58,10 @@ export default function ReservationDetailModal({ open, onClose, reservation }) {
       <div className="space-y-6">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
-            <h3 className="text-lg font-semibold text-zinc-50">
+            <h3 className="admin-surface-title text-lg font-semibold">
               {reservation.customerName}
             </h3>
-            <p className="text-xs text-zinc-500">{reservation.id}</p>
+            <p className="text-xs admin-surface-muted">{reservation.id}</p>
           </div>
           <StatusBadge status={reservation.status} />
         </div>
@@ -77,27 +77,27 @@ export default function ReservationDetailModal({ open, onClose, reservation }) {
           ].map(([k, v]) => (
             <div
               key={k}
-              className="rounded-xl border border-zinc-800 bg-zinc-950/50 px-3 py-3 transition-colors duration-200 hover:border-zinc-700"
+              className="rounded-xl border admin-shell-border bg-zinc-950/50 px-3 py-3 transition-colors duration-200 hover:border-zinc-700"
             >
-              <p className="text-[10px] font-bold uppercase tracking-wider text-zinc-500">
+              <p className="text-[10px] font-bold uppercase tracking-wider admin-surface-muted">
                 {k}
               </p>
-              <p className="mt-1 text-sm font-medium text-zinc-200">{v}</p>
+              <p className="mt-1 text-sm font-medium admin-shell-text">{v}</p>
             </div>
           ))}
         </div>
 
         <div>
-          <p className="text-[10px] font-bold uppercase tracking-wider text-zinc-500">
+          <p className="text-[10px] font-bold uppercase tracking-wider admin-surface-muted">
             Notes
           </p>
-          <p className="mt-1 text-sm leading-relaxed text-zinc-400">
+          <p className="mt-1 text-sm leading-relaxed admin-surface-muted">
             {reservation.notes || "—"}
           </p>
         </div>
 
         <div>
-          <p className="text-xs font-bold uppercase tracking-wider text-zinc-500">
+          <p className="text-xs font-bold uppercase tracking-wider admin-surface-muted">
             Timeline
           </p>
           <ol className="mt-4 space-y-0">
@@ -115,8 +115,8 @@ export default function ReservationDetailModal({ open, onClose, reservation }) {
                 ) : null}
                 <div className="relative z-10 shrink-0">{dotForTone(step.tone)}</div>
                 <div className="min-w-0 pt-1">
-                  <p className="font-medium text-zinc-200">{step.label}</p>
-                  <p className="text-xs text-zinc-500">
+                  <p className="font-medium admin-shell-text">{step.label}</p>
+                  <p className="text-xs admin-surface-muted">
                     {step.at
                       ? new Date(step.at).toLocaleString(undefined, {
                           dateStyle: "medium",

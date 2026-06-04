@@ -1,5 +1,6 @@
 "use client";
 
+import { raIconBadgeCls } from "@/config/restaurantAdminTheme";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import EmptyState from "@/components/ui/EmptyState";
 import Modal from "@/components/ui/Modal";
@@ -198,10 +199,10 @@ export default function TableAreasPage() {
   if (loading) {
     return (
       <div className="space-y-4">
-        <div className="h-8 w-40 animate-pulse rounded-lg bg-zinc-800" />
+        <div className="h-8 w-40 animate-pulse rounded-lg admin-progress-track" />
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {Array.from({ length: 6 }).map((_, i) => (
-            <div key={i} className="h-28 animate-pulse rounded-2xl border border-zinc-800 bg-zinc-900/40" />
+            <div key={i} className="h-28 animate-pulse admin-surface-card" />
           ))}
         </div>
       </div>
@@ -218,21 +219,21 @@ export default function TableAreasPage() {
       {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div className="flex items-start gap-3">
-          <span className="mt-1 flex size-10 shrink-0 items-center justify-center rounded-xl bg-ra-primary-15 text-ra-primary ring-1 ring-ra-primary-25">
+          <span className={`mt-1 ${raIconBadgeCls}`}>
             <LayoutGrid className="size-5" />
           </span>
           <div>
-            <h1 className="text-2xl font-semibold tracking-tight text-zinc-50">Table Areas</h1>
-            <p className="mt-1 text-sm text-zinc-500">Seating areas — assign to tables for filtering.</p>
+            <h1 className="admin-page-title text-2xl font-semibold tracking-tight">Table Areas</h1>
+            <p className="admin-page-desc mt-1 text-sm">Seating areas — assign to tables for filtering.</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
           <Link href="/tables"
-            className="cursor-pointer inline-flex items-center gap-2 rounded-xl border border-zinc-700 px-4 py-2.5 text-sm font-medium text-zinc-300 hover:border-zinc-500">
+            className="cursor-pointer inline-flex items-center gap-2 rounded-xl border admin-shell-border px-4 py-2.5 text-sm font-medium admin-surface-body hover:border-zinc-500">
             <Table2 className="size-4" /> Tables
           </Link>
           <button type="button" onClick={fetchAreas}
-            className="cursor-pointer flex items-center gap-1.5 rounded-xl border border-zinc-700 px-3 py-2.5 text-sm font-medium text-zinc-400 hover:border-zinc-500 hover:text-zinc-200 transition-colors">
+            className="cursor-pointer flex items-center gap-1.5 rounded-xl border admin-shell-border px-3 py-2.5 text-sm font-medium text-zinc-400 hover:border-zinc-500 hover:admin-shell-text transition-colors">
             <RefreshCw className="size-4" />
           </button>
           <button type="button" onClick={openCreate}
@@ -261,9 +262,9 @@ export default function TableAreasPage() {
             const count = tableCounts[area.id] ?? 0;
             return (
               <div key={area.id}
-                className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-5 shadow-sm transition-all duration-200 hover:border-zinc-700 hover:shadow-md">
+                className="admin-surface-card p-5 shadow-sm transition-all duration-200 hover:border-zinc-700 hover:shadow-md">
                 {area.imageUrl ? (
-                  <div className="mb-3 overflow-hidden rounded-xl border border-zinc-800 bg-zinc-950/50">
+                  <div className="mb-3 overflow-hidden rounded-xl admin-surface-card">
                     <Image
                       src={area.imageUrl}
                       alt={`${area.name} area`}
@@ -279,20 +280,20 @@ export default function TableAreasPage() {
                       <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold ring-1 ${badgeClass}`}>
                         {area.name}
                       </span>
-                      <span className="text-xs text-zinc-600">{count} table{count !== 1 ? "s" : ""}</span>
+                      <span className="text-xs admin-surface-faint">{count} table{count !== 1 ? "s" : ""}</span>
                     </div>
                     {area.description && (
                       <p className="mt-2 text-xs leading-relaxed text-zinc-500">{area.description}</p>
                     )}
                   </div>
                 </div>
-                <div className="mt-4 flex gap-1.5 border-t border-zinc-800/80 pt-3">
+                <div className="mt-4 flex gap-1.5 border-t admin-shell-border pt-3">
                   <button type="button" onClick={() => openEdit(area)}
-                    className="cursor-pointer flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-zinc-800 py-2 text-xs font-medium text-zinc-400 transition-colors hover-border-ra-primary-40 hover-ra-primary">
+                    className="cursor-pointer flex flex-1 items-center justify-center gap-1.5 rounded-lg border admin-shell-border py-2 text-xs font-medium text-zinc-400 transition-colors hover-border-ra-primary-40 hover-ra-primary">
                     <Pencil className="size-3.5" /> Edit
                   </button>
                   <button type="button" onClick={() => setDeleteTarget(area)}
-                    className="cursor-pointer flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-zinc-800 py-2 text-xs font-medium text-zinc-400 transition-colors hover:border-red-500/40 hover:text-red-400">
+                    className="cursor-pointer flex flex-1 items-center justify-center gap-1.5 rounded-lg border admin-shell-border py-2 text-xs font-medium text-zinc-400 transition-colors hover:border-red-500/40 hover:text-red-400">
                     <Trash2 className="size-3.5" /> Delete
                   </button>
                 </div>
@@ -308,7 +309,7 @@ export default function TableAreasPage() {
         footer={
           <div className="flex justify-end gap-2">
             <button type="button" onClick={() => setModalOpen(false)}
-              className="cursor-pointer rounded-xl border border-zinc-700 px-4 py-2 text-sm text-zinc-300 hover:border-zinc-500">
+              className="cursor-pointer rounded-xl border admin-shell-border px-4 py-2 text-sm admin-surface-body hover:border-zinc-500">
               Cancel
             </button>
             <button type="button" onClick={save} disabled={saving || imagePhase}
@@ -326,7 +327,7 @@ export default function TableAreasPage() {
         <div className="space-y-4">
           {formError && <p className="rounded-xl border border-red-500/20 bg-red-500/10 px-3 py-2 text-xs text-red-400">{formError}</p>}
           <div>
-            <label className="text-xs font-medium text-zinc-500">Area Name *</label>
+            <label className="text-xs font-medium admin-surface-muted">Area Name *</label>
             <input
               value={form.name}
               onChange={(e) => {
@@ -335,22 +336,22 @@ export default function TableAreasPage() {
               }}
               placeholder="e.g. Indoor, Rooftop, VIP"
               aria-invalid={fieldErrors.name ? true : undefined}
-              className={`mt-1 w-full rounded-xl border bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus-ra-primary placeholder:text-zinc-600 ${
+              className={`mt-1 w-full rounded-xl border admin-surface-card px-3 py-2.5 text-sm admin-shell-text outline-none focus-ra-primary placeholder:admin-surface-faint ${
                 fieldErrors.name ? "border-red-500/50" : "border-zinc-700"
               }`}
             />
             {fieldErrors.name && <p className="mt-1 text-xs text-red-400">{fieldErrors.name}</p>}
           </div>
           <div>
-            <label className="text-xs font-medium text-zinc-500">Description (optional)</label>
+            <label className="text-xs font-medium admin-surface-muted">Description (optional)</label>
             <input value={form.description} onChange={(e) => set("description", e.target.value)}
               placeholder="Short description"
-              className="mt-1 w-full rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus-ra-primary placeholder:text-zinc-600" />
+              className="mt-1 w-full rounded-xl border admin-shell-border admin-surface-card px-3 py-2.5 text-sm admin-shell-text outline-none focus-ra-primary placeholder:admin-surface-faint" />
           </div>
           <div>
-            <label className="text-xs font-medium text-zinc-500">Area Image (JPG, PNG)</label>
+            <label className="text-xs font-medium admin-surface-muted">Area Image (JPG, PNG)</label>
             <div className="mt-2 space-y-3">
-              <label className="flex cursor-pointer items-center justify-center gap-2 rounded-xl border border-dashed border-zinc-700 bg-zinc-950/40 px-4 py-3 text-sm text-zinc-400 hover:border-zinc-600 hover:text-zinc-200">
+              <label className="flex cursor-pointer items-center justify-center gap-2 rounded-xl border border-dashed border-zinc-700 admin-surface-segment-track px-4 py-3 text-sm admin-surface-muted hover:border-zinc-600 hover:admin-shell-text">
                 <ImagePlus className="size-4" />
                 <span>{imageFile ? "Change selected image" : "Choose image"}</span>
                 <input
@@ -362,21 +363,21 @@ export default function TableAreasPage() {
               </label>
 
               {(previewUrl || (!removeCurrentImage && form.imageUrl)) ? (
-                <div className="overflow-hidden rounded-xl border border-zinc-800 bg-zinc-950/50">
+                <div className="overflow-hidden rounded-xl admin-surface-card">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={previewUrl || form.imageUrl}
                     alt="Area preview"
                     className="h-36 w-full object-cover"
                   />
-                  <div className="flex items-center justify-between border-t border-zinc-800 px-3 py-2">
-                    <p className="text-xs text-zinc-500">
+                  <div className="flex items-center justify-between border-t admin-shell-border px-3 py-2">
+                    <p className="text-xs admin-surface-muted">
                       {imageFile ? "New image selected (preview)" : "Current saved image"}
                     </p>
                     <button
                       type="button"
                       onClick={clearImage}
-                      className="inline-flex cursor-pointer items-center gap-1 rounded-lg border border-zinc-700 px-2.5 py-1 text-xs text-zinc-300 hover:border-red-500/40 hover:text-red-300"
+                      className="inline-flex cursor-pointer items-center gap-1 rounded-lg border admin-shell-border px-2.5 py-1 text-xs admin-surface-body hover:border-red-500/40 hover:text-red-300"
                     >
                       <X className="size-3.5" />
                       Delete image
@@ -384,19 +385,19 @@ export default function TableAreasPage() {
                   </div>
                 </div>
               ) : (
-                <p className="text-xs text-zinc-600">No image selected.</p>
+                <p className="text-xs admin-surface-faint">No image selected.</p>
               )}
             </div>
           </div>
           <div>
-            <label className="text-xs font-medium text-zinc-500">Color</label>
+            <label className="text-xs font-medium admin-surface-muted">Color</label>
             <div className="mt-2 flex flex-wrap gap-2">
               {CATEGORY_COLORS.map((c) => (
                 <button key={c.id} type="button" onClick={() => set("color", c.id)}
                   className={`cursor-pointer flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium transition-all ${
                     form.color === c.id
-                      ? "border-zinc-500 bg-zinc-800 text-zinc-100 ring-1 ring-zinc-600"
-                      : "border-zinc-800 text-zinc-500 hover:border-zinc-700 hover:text-zinc-300"
+                      ? "admin-surface-segment-btn-active admin-shell-text ring-1 admin-shell-border"
+                      : "admin-shell-border text-zinc-500 hover:border-zinc-700 hover:admin-surface-body"
                   }`}>
                   <span className={`size-2.5 rounded-full ${c.dot}`} />
                   {c.label}
@@ -405,8 +406,8 @@ export default function TableAreasPage() {
             </div>
           </div>
           {form.name && (
-            <div className="rounded-xl border border-zinc-800 bg-zinc-950/40 px-4 py-3">
-              <p className="mb-2 text-xs text-zinc-600">Preview</p>
+            <div className="rounded-xl admin-surface-card px-4 py-3">
+              <p className="mb-2 text-xs admin-surface-faint">Preview</p>
               <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold ring-1 ${getCategoryBadge(form.color)}`}>
                 {form.name}
               </span>

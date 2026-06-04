@@ -1,7 +1,7 @@
 /* Super Admin dynamic theme — defaults on :root; saved theme via bootstrap script + JS */
 
 :root {
-  --sa-primary: #f43f5e;
+  --sa-primary: #a3e635;
   --sa-accent: #10b981;
 }
 
@@ -66,16 +66,18 @@
 :is(.super-admin-panel, :root[data-super-admin-theme]) .shadow-sa-primary-glow {
   box-shadow: 0 10px 15px -3px color-mix(in srgb, var(--sa-primary) 18%, transparent);
 }
-:is(.super-admin-panel, :root[data-super-admin-theme]) .sa-btn-primary {
+:is(.super-admin-panel, :root[data-super-admin-theme]) :is(.sa-btn-primary, button.bg-sa-primary, a.bg-sa-primary) {
   cursor: pointer;
-  background-color: var(--sa-primary);
+  background-color: var(--sa-primary) !important;
   color: #09090b;
+  border-color: transparent;
 }
-:is(.super-admin-panel, :root[data-super-admin-theme]) .sa-btn-primary:hover:not(:disabled) {
+:is(.super-admin-panel, :root[data-super-admin-theme]) :is(.sa-btn-primary, button.bg-sa-primary, a.bg-sa-primary):hover:not(:disabled) {
   filter: brightness(1.08);
 }
-:is(.super-admin-panel, :root[data-super-admin-theme]) .sa-btn-primary:disabled {
+:is(.super-admin-panel, :root[data-super-admin-theme]) :is(.sa-btn-primary, button.bg-sa-primary, a.bg-sa-primary):disabled {
   opacity: 0.5;
+  cursor: not-allowed;
 }
 :is(.super-admin-panel, :root[data-super-admin-theme]) .sa-nav-active {
   background-color: color-mix(in srgb, var(--sa-primary) 15%, transparent);

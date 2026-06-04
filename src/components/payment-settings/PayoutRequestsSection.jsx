@@ -56,11 +56,11 @@ export default function PayoutRequestsSection({ settlement, showToast }) {
   }
 
   return (
-    <section className="rounded-2xl border border-zinc-800 bg-zinc-900/50 p-5 sm:p-6">
+    <section className="admin-surface-card p-5 sm:p-6">
       <div className="mb-5 flex items-center justify-between">
         <div>
-          <h2 className="text-lg font-semibold text-zinc-100">Payout Requests</h2>
-          <p className="mt-1 text-sm text-zinc-500">
+          <h2 className="text-lg font-semibold admin-shell-text">Payout Requests</h2>
+          <p className="mt-1 text-sm admin-surface-muted">
             Request manual withdrawals. Min: ₹{settlement?.minWithdrawalAmount ?? 100}.
           </p>
         </div>
@@ -70,7 +70,7 @@ export default function PayoutRequestsSection({ settlement, showToast }) {
             + Request Payout
           </button>
           <button type="button" onClick={fetchData}
-            className="cursor-pointer flex items-center gap-1.5 rounded-xl border border-zinc-700 px-3 py-2 text-sm text-zinc-400 hover:border-zinc-500 hover:text-zinc-200 transition-colors">
+            className="cursor-pointer flex items-center gap-1.5 rounded-xl border admin-shell-border px-3 py-2 text-sm admin-surface-muted hover:border-zinc-500 hover:admin-shell-text transition-colors">
             <RefreshCw className={`size-4 ${loading ? "animate-spin" : ""}`} />
           </button>
         </div>
@@ -78,25 +78,25 @@ export default function PayoutRequestsSection({ settlement, showToast }) {
 
       {/* Request form */}
       {showForm && (
-        <div className="mb-5 rounded-xl border border-zinc-700 bg-zinc-950/60 p-4 space-y-3">
-          <p className="text-sm font-semibold text-zinc-200">New Payout Request</p>
+        <div className="mb-5 rounded-xl border admin-shell-border bg-zinc-950/60 p-4 space-y-3">
+          <p className="text-sm font-semibold admin-shell-text">New Payout Request</p>
           <div className="grid gap-3 sm:grid-cols-2">
             <div>
-              <label className="mb-1 block text-xs text-zinc-500">Amount (₹)</label>
+              <label className="mb-1 block text-xs admin-surface-muted">Amount (₹)</label>
               <input type="number" value={amount} onChange={(e) => setAmount(e.target.value)}
                 placeholder={`Min ₹${settlement?.minWithdrawalAmount ?? 100}`}
-                className="w-full rounded-xl border border-zinc-800 bg-zinc-950/80 px-3 py-2.5 text-sm text-zinc-100 outline-none focus-ra-primary" />
+                className="w-full rounded-xl border admin-shell-border bg-zinc-950/80 px-3 py-2.5 text-sm admin-shell-text outline-none focus-ra-primary" />
             </div>
             <div>
-              <label className="mb-1 block text-xs text-zinc-500">Note (optional)</label>
+              <label className="mb-1 block text-xs admin-surface-muted">Note (optional)</label>
               <input value={note} onChange={(e) => setNote(e.target.value)}
                 placeholder="Any note for admin"
-                className="w-full rounded-xl border border-zinc-800 bg-zinc-950/80 px-3 py-2.5 text-sm text-zinc-100 outline-none focus-ra-primary" />
+                className="w-full rounded-xl border admin-shell-border bg-zinc-950/80 px-3 py-2.5 text-sm admin-shell-text outline-none focus-ra-primary" />
             </div>
           </div>
           <div className="flex gap-2 justify-end">
             <button type="button" onClick={() => setShowForm(false)}
-              className="cursor-pointer rounded-xl border border-zinc-700 px-3 py-2 text-sm text-zinc-400 hover:text-zinc-200 transition-colors">
+              className="cursor-pointer rounded-xl border admin-shell-border px-3 py-2 text-sm admin-surface-muted hover:admin-shell-text transition-colors">
               Cancel
             </button>
             <button type="button" onClick={submitRequest} disabled={submitting}
@@ -111,19 +111,19 @@ export default function PayoutRequestsSection({ settlement, showToast }) {
       {loading ? (
         <div className="space-y-2">
           {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="h-12 animate-pulse rounded-xl border border-zinc-800 bg-zinc-900/40" />
+            <div key={i} className="h-12 animate-pulse admin-surface-card" />
           ))}
         </div>
       ) : requests.length === 0 ? (
-        <div className="flex flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-zinc-800 py-16 text-center">
-          <p className="text-sm text-zinc-500">No payout requests yet.</p>
+        <div className="flex flex-col items-center justify-center gap-2 rounded-2xl border border-dashed admin-shell-border py-16 text-center">
+          <p className="text-sm admin-surface-muted">No payout requests yet.</p>
         </div>
       ) : (
-        <div className="overflow-hidden rounded-2xl border border-zinc-800">
+        <div className="overflow-hidden rounded-2xl border admin-shell-border">
           <div className="overflow-x-auto">
             <table className="min-w-full text-left text-sm">
               <thead>
-                <tr className="border-b border-zinc-800 bg-zinc-950/60 text-xs font-semibold uppercase tracking-wider text-zinc-500">
+                <tr className="admin-table-head-row">
                   <th className="px-4 py-3">Request ID</th>
                   <th className="px-4 py-3">Amount</th>
                   <th className="px-4 py-3">Status</th>
@@ -132,19 +132,19 @@ export default function PayoutRequestsSection({ settlement, showToast }) {
                   <th className="px-4 py-3">Date</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-zinc-800/60">
+              <tbody className="divide-y admin-shell-divider">
                 {requests.map((r) => (
-                  <tr key={r.id} className="transition-colors hover:bg-zinc-800/20">
-                    <td className="px-4 py-3 font-mono text-xs text-zinc-500">{r.requestId}</td>
-                    <td className="px-4 py-3 font-semibold tabular-nums text-zinc-100">₹{r.amount.toLocaleString()}</td>
+                  <tr key={r.id} className="transition-colors hover:bg-[var(--admin-hover)]">
+                    <td className="px-4 py-3 font-mono text-xs admin-surface-muted">{r.requestId}</td>
+                    <td className="px-4 py-3 font-semibold tabular-nums admin-shell-text">₹{r.amount.toLocaleString()}</td>
                     <td className="px-4 py-3">
                       <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold capitalize ${STATUS_BADGE[r.status] ?? STATUS_BADGE.pending}`}>
                         {r.status}
                       </span>
                     </td>
-                    <td className="hidden px-4 py-3 text-xs text-zinc-500 md:table-cell">{r.note || "—"}</td>
-                    <td className="hidden px-4 py-3 text-xs text-zinc-500 md:table-cell">{r.adminNote || "—"}</td>
-                    <td className="px-4 py-3 text-xs text-zinc-600">
+                    <td className="hidden px-4 py-3 text-xs admin-surface-muted md:table-cell">{r.note || "—"}</td>
+                    <td className="hidden px-4 py-3 text-xs admin-surface-muted md:table-cell">{r.adminNote || "—"}</td>
+                    <td className="px-4 py-3 text-xs admin-surface-faint">
                       {r.createdAt ? new Date(r.createdAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }) : "—"}
                     </td>
                   </tr>
@@ -153,15 +153,15 @@ export default function PayoutRequestsSection({ settlement, showToast }) {
             </table>
           </div>
           {pagination.pages > 1 && (
-            <div className="flex items-center justify-between border-t border-zinc-800 px-4 py-3">
-              <p className="text-xs text-zinc-600">{pagination.total} total</p>
+            <div className="flex items-center justify-between border-t admin-shell-border px-4 py-3">
+              <p className="text-xs admin-surface-faint">{pagination.total} total</p>
               <div className="flex gap-1">
                 <button type="button" onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page <= 1}
-                  className="cursor-pointer flex size-8 items-center justify-center rounded-lg border border-zinc-800 text-zinc-400 hover:border-zinc-600 disabled:opacity-30">
+                  className="cursor-pointer flex size-8 items-center justify-center rounded-lg border admin-shell-border admin-surface-muted hover:border-zinc-600 disabled:opacity-30">
                   <ChevronLeft className="size-4" />
                 </button>
                 <button type="button" onClick={() => setPage((p) => Math.min(pagination.pages, p + 1))} disabled={page >= pagination.pages}
-                  className="cursor-pointer flex size-8 items-center justify-center rounded-lg border border-zinc-800 text-zinc-400 hover:border-zinc-600 disabled:opacity-30">
+                  className="cursor-pointer flex size-8 items-center justify-center rounded-lg border admin-shell-border admin-surface-muted hover:border-zinc-600 disabled:opacity-30">
                   <ChevronRight className="size-4" />
                 </button>
               </div>

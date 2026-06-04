@@ -1,7 +1,8 @@
 "use client";
 
 import SuperAdminPageSkeleton from "@/components/super-admin/SuperAdminPageSkeleton";
-import { saSpinnerCls } from "@/config/superAdminTheme";
+import { saIconBadgeCls, saSpinnerCls } from "@/config/superAdminTheme";
+import SearchField from "@/components/ui/SearchField";
 import { useToast } from "@/hooks/useToast";
 import {
   Activity, AlertTriangle, Building2,
@@ -144,12 +145,12 @@ export default function LogsPage() {
       {/* ── Header ── */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div className="flex items-start gap-3">
-          <span className="mt-1 flex size-10 shrink-0 items-center justify-center rounded-xl bg-amber-500/15 text-amber-400 ring-1 ring-amber-500/25">
+          <span className={`mt-1 ${saIconBadgeCls}`}>
             <ClipboardList className="size-5" />
           </span>
           <div>
-            <h1 className="text-2xl font-semibold tracking-tight text-zinc-50">Audit Logs</h1>
-            <p className="mt-1 text-sm text-zinc-500">
+            <h1 className="admin-page-title text-2xl font-semibold tracking-tight">Audit Logs</h1>
+            <p className="admin-page-desc mt-1 text-sm">
               System activity and admin action history.
               <span className="ml-2 tabular-nums text-zinc-600">{pagination.total.toLocaleString()} entries</span>
             </p>
@@ -159,7 +160,7 @@ export default function LogsPage() {
           type="button"
           onClick={fetchLogs}
           disabled={loading}
-          className="cursor-pointer flex items-center gap-1.5 rounded-xl border border-zinc-700 px-3 py-2.5 text-sm font-medium text-zinc-400 hover:border-zinc-500 hover:text-zinc-200 disabled:opacity-50 transition-colors"
+          className="cursor-pointer flex items-center gap-1.5 rounded-xl border admin-shell-border px-3 py-2.5 text-sm font-medium text-zinc-400 hover:border-zinc-500 hover:admin-shell-text disabled:opacity-50 transition-colors"
         >
           <RefreshCw className={`size-4 ${loading ? saSpinnerCls : ""}`} />
           Refresh
@@ -184,15 +185,15 @@ export default function LogsPage() {
               onClick={() => setCategory(id)}
               className={`cursor-pointer flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-xs font-medium transition-all ${
                 active
-                  ? "border-zinc-600 bg-zinc-800 text-zinc-100"
-                  : "border-zinc-800 bg-zinc-900/40 text-zinc-500 hover:border-zinc-700 hover:text-zinc-300"
+                  ? "border-zinc-600 admin-surface-segment-btn-active admin-shell-text"
+                  : "admin-shell-border admin-surface-card text-zinc-500 hover:admin-surface-body"
               }`}
             >
               <Icon className={`size-3.5 ${active ? color : ""}`} />
               {label}
               {count > 0 && (
                 <span className={`rounded-full px-1.5 py-0.5 text-[9px] font-bold tabular-nums ${
-                  active ? "bg-zinc-700 text-zinc-300" : "bg-zinc-800 text-zinc-600"
+                  active ? "admin-surface-segment-btn-active admin-surface-body" : "admin-surface-segment-btn"
                 }`}>
                   {count}
                 </span>
@@ -203,55 +204,45 @@ export default function LogsPage() {
       </div>
 
       {/* ── Search ── */}
-      <div className="relative max-w-sm">
-        <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-zinc-500" />
-        <input
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder="Search action, actor, target…"
-          className="w-full rounded-xl border border-zinc-800 bg-zinc-900/70 py-2.5 pl-10 pr-9 text-sm text-zinc-100 placeholder:text-zinc-600 outline-none focus-sa-primary"
-        />
-        {search && (
-          <button
-            type="button"
-            onClick={() => setSearch("")}
-            className="cursor-pointer absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-300"
-          >
-            <X className="size-4" />
-          </button>
-        )}
-      </div>
+      <SearchField
+        className="max-w-sm"
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+        placeholder="Search action, actor, target…"
+        clearable
+        inputClassName="focus-sa-primary"
+      />
 
       {/* ── Log list ── */}
       {loading ? (
         <SuperAdminPageSkeleton rows={10} rowClassName="h-14" />
       ) : logs.length === 0 ? (
-        <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-zinc-800 py-20 text-center">
+        <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-dashed admin-shell-border py-20 text-center">
           <ClipboardList className="size-10 text-zinc-700" />
-          <p className="text-sm text-zinc-500">
+          <p className="text-sm admin-surface-muted">
             {search || category !== "all" ? "No logs match your filters." : "No audit logs yet."}
           </p>
-          <p className="text-xs text-zinc-600">
+          <p className="text-xs admin-surface-faint">
             Logs are recorded automatically as admins perform actions.
           </p>
         </div>
       ) : (
-        <div className="overflow-hidden rounded-2xl border border-zinc-800 bg-zinc-900/60">
+        <div className="overflow-hidden admin-surface-card">
           {/* Table header */}
-          <div className="hidden border-b border-zinc-800 bg-zinc-950/60 px-4 py-2.5 text-xs font-semibold uppercase tracking-wider text-zinc-500 sm:grid sm:grid-cols-[1fr_140px_140px_100px]">
+          <div className="admin-table-list-header hidden border-b admin-shell-border px-4 py-2.5 text-xs font-semibold uppercase tracking-wider admin-surface-muted sm:grid sm:grid-cols-[1fr_140px_140px_100px]">
             <span>Action</span>
             <span>Actor</span>
             <span>Target</span>
             <span className="text-right">Time</span>
           </div>
 
-          <div className="divide-y divide-zinc-800/60">
+          <div className="divide-y admin-shell-divider">
             {logs.map((log) => {
               const cs = categoryStyle(log.category);
               return (
                 <div
                   key={log.id}
-                  className="flex flex-col gap-1.5 px-4 py-3 transition-colors hover:bg-zinc-800/20 sm:grid sm:grid-cols-[1fr_140px_140px_100px] sm:items-center sm:gap-3"
+                  className="flex flex-col gap-1.5 px-4 py-3 transition-colors hover:admin-shell-hover sm:grid sm:grid-cols-[1fr_140px_140px_100px] sm:items-center sm:gap-3"
                 >
                   {/* Action */}
                   <div className="flex items-center gap-2.5 min-w-0">
@@ -259,7 +250,7 @@ export default function LogsPage() {
                       <span className={`size-2 rounded-full ${cs.dot}`} />
                     </span>
                     <div className="min-w-0">
-                      <p className="truncate text-sm font-medium text-zinc-100">
+                      <p className="truncate text-sm font-medium admin-shell-text">
                         {actionLabel(log.action)}
                       </p>
                       <div className="flex items-center gap-2 mt-0.5">
@@ -275,7 +266,7 @@ export default function LogsPage() {
 
                   {/* Actor */}
                   <div className="flex items-center gap-2 min-w-0 sm:justify-start">
-                    <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-zinc-800 text-[10px] font-bold text-zinc-400">
+                    <span className="flex size-6 shrink-0 items-center justify-center rounded-full admin-rank-badge text-[10px] font-bold text-zinc-400">
                       {log.actorName?.[0]?.toUpperCase() ?? "S"}
                     </span>
                     <span className="truncate text-xs text-zinc-400">{log.actorName}</span>
@@ -284,7 +275,7 @@ export default function LogsPage() {
                   {/* Target */}
                   <div className="min-w-0">
                     {log.targetName ? (
-                      <span className="truncate text-xs text-zinc-500">{log.targetName}</span>
+                      <span className="truncate text-xs admin-surface-muted">{log.targetName}</span>
                     ) : (
                       <span className="text-xs text-zinc-700">—</span>
                     )}
@@ -293,7 +284,7 @@ export default function LogsPage() {
                   {/* Time */}
                   <div className="sm:text-right">
                     <span
-                      className="text-xs text-zinc-600"
+                      className="text-xs admin-surface-faint"
                       title={log.createdAt ? new Date(log.createdAt).toLocaleString() : ""}
                     >
                       {relativeTime(log.createdAt)}
@@ -305,8 +296,8 @@ export default function LogsPage() {
           </div>
 
           {/* Pagination */}
-          <div className="flex items-center justify-between border-t border-zinc-800 px-4 py-3">
-            <p className="text-xs text-zinc-600">
+          <div className="flex items-center justify-between border-t admin-shell-border px-4 py-3">
+            <p className="text-xs admin-surface-faint">
               {pagination.total.toLocaleString()} log{pagination.total !== 1 ? "s" : ""}
               {pagination.pages > 1 && ` · page ${pagination.page} of ${pagination.pages}`}
             </p>
@@ -316,7 +307,7 @@ export default function LogsPage() {
                   type="button"
                   onClick={() => setPage((p) => Math.max(1, p - 1))}
                   disabled={page <= 1}
-                  className="cursor-pointer flex size-8 items-center justify-center rounded-lg border border-zinc-800 text-zinc-400 hover:border-zinc-600 hover:text-zinc-200 disabled:opacity-30 transition-colors"
+                  className="cursor-pointer flex size-8 items-center justify-center rounded-lg border admin-shell-border text-zinc-400 hover:border-zinc-600 hover:admin-shell-text disabled:opacity-30 transition-colors"
                 >
                   <ChevronLeft className="size-4" />
                 </button>
@@ -330,7 +321,7 @@ export default function LogsPage() {
                       className={`cursor-pointer flex size-8 items-center justify-center rounded-lg border text-xs font-medium transition-colors ${
                         n === page
                           ? "border-sa-primary-40 bg-sa-primary-10 text-sa-primary"
-                          : "border-zinc-800 text-zinc-500 hover:border-zinc-600 hover:text-zinc-300"
+                          : "admin-shell-border text-zinc-500 hover:border-zinc-600 hover:admin-surface-body"
                       }`}
                     >
                       {n}
@@ -341,7 +332,7 @@ export default function LogsPage() {
                   type="button"
                   onClick={() => setPage((p) => Math.min(pagination.pages, p + 1))}
                   disabled={page >= pagination.pages}
-                  className="cursor-pointer flex size-8 items-center justify-center rounded-lg border border-zinc-800 text-zinc-400 hover:border-zinc-600 hover:text-zinc-200 disabled:opacity-30 transition-colors"
+                  className="cursor-pointer flex size-8 items-center justify-center rounded-lg border admin-shell-border text-zinc-400 hover:border-zinc-600 hover:admin-shell-text disabled:opacity-30 transition-colors"
                 >
                   <ChevronRight className="size-4" />
                 </button>

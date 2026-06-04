@@ -49,7 +49,7 @@ export default function PushNotificationEnable({ vapidPublicKey }) {
   };
 
   return (
-    <div className="rounded-xl border border-zinc-800 bg-zinc-950/50 p-4">
+    <div className="rounded-xl admin-surface-card p-4">
       <button
         type="button"
         onClick={enable}

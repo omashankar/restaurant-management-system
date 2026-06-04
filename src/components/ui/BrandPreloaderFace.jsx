@@ -41,7 +41,7 @@ export function BrandPreloaderFace({
 
   if (compact) {
     return (
-      <div className="flex items-center justify-center gap-2 py-12 text-sm text-zinc-500">
+      <div className="flex items-center justify-center gap-2 py-12 text-sm admin-surface-muted">
         <Loader2 className={isSuperAdmin || isAuth || isRestaurantAdmin ? spinnerCls : "size-4 animate-spin text-zinc-400"} />
         <span>{subtitle ?? defaultSubtitle}</span>
       </div>
@@ -67,7 +67,7 @@ export function BrandPreloaderFace({
       </div>
 
       <div>
-        <p className="text-sm font-semibold tracking-wide text-zinc-100">
+        <p className="text-sm font-semibold tracking-wide admin-shell-text">
           {title ?? defaultTitle}
         </p>
         <p className="mt-1 text-xs text-zinc-400">{subtitle ?? defaultSubtitle}</p>

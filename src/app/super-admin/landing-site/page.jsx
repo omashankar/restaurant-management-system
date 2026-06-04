@@ -1,7 +1,10 @@
-﻿"use client";
+"use client";
 
 import SuperAdminPageSkeleton from "@/components/super-admin/SuperAdminPageSkeleton";
-import { saTabActiveIconCls } from "@/config/superAdminTheme";
+import AdminSectionHeader from "@/components/ui/AdminSectionHeader";
+import { AdminSideNav, AdminSideNavItem, AdminSideNavList } from "@/components/ui/AdminSideNav";
+import { adminSurface } from "@/config/adminSurfaceClasses";
+import { saBtnPrimaryCls, saIconBadgeCls, saSideNavActiveCls } from "@/config/superAdminTheme";
 import { formatLandingCurrency } from "@/lib/formatLandingCurrency";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import IconPicker from "@/components/ui/IconPicker";
@@ -19,7 +22,7 @@ import { validateLandingSection } from "@/lib/landingValidation";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 /* ── shared input class ── */
-const ic = "w-full rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus-sa-primary placeholder:text-zinc-600 transition-colors";
+const ic = "w-full rounded-xl border admin-shell-border admin-surface-card px-3 py-2.5 text-sm admin-shell-text outline-none focus-sa-primary placeholder:admin-surface-faint transition-colors";
 
 /* ── Field wrapper ── */
 function Field({ label, required, error, hint, children }) {
@@ -38,10 +41,10 @@ function Field({ label, required, error, hint, children }) {
 /* ── Toggle switch ── */
 function Toggle({ checked, onChange, label, description }) {
   return (
-    <label className="cursor-pointer flex items-center justify-between gap-4 rounded-xl border border-zinc-800 bg-zinc-900/40 px-4 py-3 hover:border-zinc-700 transition-colors">
+    <label className="cursor-pointer flex items-center justify-between gap-4 admin-surface-card px-4 py-3 hover:border-zinc-700 transition-colors">
       <div>
-        <p className="text-sm font-medium text-zinc-200">{label}</p>
-        {description && <p className="mt-0.5 text-xs text-zinc-500">{description}</p>}
+        <p className="text-sm font-medium admin-shell-text">{label}</p>
+        {description && <p className="mt-0.5 text-xs admin-surface-muted">{description}</p>}
       </div>
       <button type="button" role="switch" aria-checked={checked} onClick={() => onChange(!checked)}
         className={`cursor-pointer relative inline-flex h-5 w-9 shrink-0 items-center rounded-full transition-colors ${checked ? "bg-sa-primary" : "bg-zinc-700"}`}>
@@ -51,27 +54,12 @@ function Toggle({ checked, onChange, label, description }) {
   );
 }
 
-/* ── Section header ── */
-function SectionHeader({ icon: Icon, title, description }) {
-  return (
-    <div className="flex items-start gap-3 pb-5 border-b border-zinc-800">
-      <span className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-xl bg-zinc-800 text-zinc-400 ring-1 ring-zinc-700">
-        <Icon className="size-4" />
-      </span>
-      <div>
-        <h2 className="text-base font-semibold text-zinc-100">{title}</h2>
-        <p className="mt-0.5 text-xs text-zinc-500">{description}</p>
-      </div>
-    </div>
-  );
-}
-
 /* ── Save button ── */
 function SaveBtn({ saving, onClick }) {
   return (
     <div className="flex justify-end pt-2">
       <button type="button" onClick={onClick} disabled={saving}
-        className="cursor-pointer inline-flex items-center gap-2 rounded-xl bg-sa-primary px-5 py-2.5 text-sm font-semibold text-zinc-950 hover:brightness-110 disabled:opacity-50 transition-colors">
+        className={`cursor-pointer ${saBtnPrimaryCls} disabled:opacity-50`}>
         {saving
           ? <span className="size-3.5 animate-spin rounded-full border-2 border-zinc-950/30 border-t-zinc-950" />
           : <Save className="size-4" />}
@@ -113,7 +101,7 @@ function NavbarPanel({ data, onChange, onSave, saving, fieldErrors = {}, onClear
 
   return (
     <div className="space-y-5">
-      <SectionHeader icon={Link2} title="Navbar" description="Customize logo text, links, and top navigation CTAs." />
+      <AdminSectionHeader icon={Link2} title="Navbar" description="Customize logo text, links, and top navigation CTAs." />
       <div className="grid gap-4 sm:grid-cols-2">
         <Field label="Logo Text" required error={fieldErrors.logoText}>
           <input
@@ -195,7 +183,7 @@ function NavbarPanel({ data, onChange, onSave, saving, fieldErrors = {}, onClear
         <p className="block text-xs font-medium text-zinc-400 mb-2">Navigation Links</p>
         <div className="space-y-2">
           {links.map((l, i) => (
-            <div key={i} className="grid gap-2 rounded-xl border border-zinc-800 bg-zinc-900/40 p-3 sm:grid-cols-3">
+            <div key={i} className="grid gap-2 admin-surface-card p-3 sm:grid-cols-3">
               <input value={l.label ?? ""} onChange={e => updateLink(i, "label", e.target.value)} placeholder="Label" className={ic} />
               <input value={l.href ?? ""} onChange={e => updateLink(i, "href", e.target.value)} placeholder="#features or /page" className={ic} />
               <div className="flex items-center gap-2">
@@ -209,7 +197,7 @@ function NavbarPanel({ data, onChange, onSave, saving, fieldErrors = {}, onClear
               </div>
             </div>
           ))}
-          <button type="button" onClick={addLink} className="cursor-pointer flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-zinc-700 py-2.5 text-sm text-zinc-500 hover-border-sa-primary-40 hover-sa-primary transition-colors">
+          <button type="button" onClick={addLink} className="cursor-pointer flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-zinc-700 py-2.5 text-sm admin-surface-muted hover-border-sa-primary-40 hover-sa-primary transition-colors">
             <Plus className="size-4" /> Add Nav Link
           </button>
         </div>
@@ -225,7 +213,7 @@ function NavbarPanel({ data, onChange, onSave, saving, fieldErrors = {}, onClear
 function HeroPanel({ data, onChange, onSave, saving, fieldErrors = {}, onClearError }) {
   return (
     <div className="space-y-5">
-      <SectionHeader icon={LayoutTemplate} title="Hero Section" description="Headline, subheading, and CTA buttons." />
+      <AdminSectionHeader icon={LayoutTemplate} title="Hero Section" description="Headline, subheading, and CTA buttons." />
       <Field label="Badge Text" hint="Small pill shown above the headline." error={fieldErrors.badge}>
         <input
           value={data.badge ?? ""}
@@ -293,18 +281,18 @@ function HeroPanel({ data, onChange, onSave, saving, fieldErrors = {}, onClearEr
 
       {/* Live preview */}
       {(data.headline || data.badge) && (
-        <div className="rounded-2xl border border-zinc-800 bg-zinc-950/60 p-5">
+        <div className="admin-surface-card p-5">
           <p className="mb-3 text-[10px] font-semibold uppercase tracking-widest text-zinc-600">Live Preview</p>
           {data.badge && (
             <span className="inline-flex rounded-full border border-indigo-500/30 bg-indigo-500/10 px-3 py-1 text-xs font-semibold text-indigo-400">
               {data.badge}
             </span>
           )}
-          {data.headline && <h3 className="mt-3 text-xl font-bold text-zinc-100">{data.headline}</h3>}
-          {data.subheadline && <p className="mt-2 text-sm text-zinc-400">{data.subheadline}</p>}
+          {data.headline && <h3 className="mt-3 text-xl font-bold admin-shell-text">{data.headline}</h3>}
+          {data.subheadline && <p className="mt-2 text-sm admin-surface-muted">{data.subheadline}</p>}
           <div className="mt-4 flex flex-wrap gap-2">
-            {data.ctaPrimary && <span className="rounded-xl bg-indigo-600 px-4 py-2 text-xs font-semibold text-white">{data.ctaPrimary}</span>}
-            {data.ctaSecondary && <span className="rounded-xl border border-zinc-600 px-4 py-2 text-xs font-semibold text-zinc-300">{data.ctaSecondary}</span>}
+            {data.ctaPrimary && <span className="rounded-xl bg-sa-primary px-4 py-2 text-xs font-semibold text-zinc-950">{data.ctaPrimary}</span>}
+            {data.ctaSecondary && <span className="rounded-xl border border-zinc-600 px-4 py-2 text-xs font-semibold admin-surface-body">{data.ctaSecondary}</span>}
           </div>
         </div>
       )}
@@ -370,20 +358,20 @@ function ArrayPanel({ items, fields, onSave, saving, icon: Icon, title, descript
 
   return (
     <div className="space-y-5">
-      <SectionHeader icon={Icon} title={title} description={description} />
+      <AdminSectionHeader icon={Icon} title={title} description={description} />
 
       <div className="space-y-2">
         {items.length === 0 && (
-          <div className="rounded-xl border border-dashed border-zinc-800 py-10 text-center text-sm text-zinc-600">
+          <div className="rounded-xl border border-dashed admin-shell-border py-10 text-center text-sm admin-surface-faint">
             No items yet. Add your first one.
           </div>
         )}
         {items.map((item, i) => (
-          <div key={item.id ?? i} className="flex items-center gap-3 rounded-xl border border-zinc-800 bg-zinc-900/40 px-4 py-3 hover:border-zinc-700 transition-colors">
+          <div key={item.id ?? i} className="flex items-center gap-3 admin-surface-card px-4 py-3 hover:border-zinc-700 transition-colors">
             <div className="min-w-0 flex-1">{renderCard(item)}</div>
             <div className="flex shrink-0 items-center gap-1">
               <button type="button" onClick={() => openEdit(i)}
-                className="cursor-pointer rounded-lg p-1.5 text-zinc-500 hover:bg-zinc-700/60 hover:text-zinc-200 transition-colors">
+                className="cursor-pointer rounded-lg p-1.5 text-zinc-500 hover:bg-zinc-700/60 hover:admin-shell-text transition-colors">
                 <Pencil className="size-3.5" />
               </button>
               <button type="button" onClick={() => setDeleteIdx(i)}
@@ -396,7 +384,7 @@ function ArrayPanel({ items, fields, onSave, saving, icon: Icon, title, descript
       </div>
 
       <button type="button" onClick={openAdd}
-        className="cursor-pointer flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-zinc-700 py-3 text-sm text-zinc-500 hover-border-sa-primary-40 hover-sa-primary transition-colors">
+        className="cursor-pointer flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-zinc-700 py-3 text-sm admin-surface-muted hover-border-sa-primary-40 hover-sa-primary transition-colors">
         <Plus className="size-4" /> Add {title.replace(/s$/, "")}
       </button>
 
@@ -406,7 +394,7 @@ function ArrayPanel({ items, fields, onSave, saving, icon: Icon, title, descript
         footer={
           <div className="flex justify-end gap-2">
             <button type="button" onClick={() => setEditIdx(null)}
-              className="cursor-pointer rounded-xl border border-zinc-700 px-4 py-2 text-sm text-zinc-300 hover:border-zinc-500 transition-colors">
+              className="cursor-pointer rounded-xl border admin-shell-border px-4 py-2 text-sm admin-surface-body hover:border-zinc-500 transition-colors">
               Cancel
             </button>
             <button type="button" disabled={itemSaving} onClick={handleSave}
@@ -475,7 +463,7 @@ function FooterPanel({ data, onChange, onSave, saving, fieldErrors = {}, onClear
 
   return (
     <div className="space-y-5">
-      <SectionHeader icon={Mail} title="Footer" description="Company info, contact details, and footer links." />
+      <AdminSectionHeader icon={Mail} title="Footer" description="Company info, contact details, and footer links." />
       <div className="grid gap-4 sm:grid-cols-2">
         <Field label="Company Name" required error={fieldErrors.companyName}>
           <input
@@ -551,7 +539,7 @@ function FooterPanel({ data, onChange, onSave, saving, fieldErrors = {}, onClear
             </div>
           ))}
           <button type="button" onClick={addLink}
-            className="cursor-pointer flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-zinc-700 py-2.5 text-sm text-zinc-500 hover-border-sa-primary-40 hover-sa-primary transition-colors">
+            className="cursor-pointer flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-zinc-700 py-2.5 text-sm admin-surface-muted hover-border-sa-primary-40 hover-sa-primary transition-colors">
             <Plus className="size-4" /> Add Link
           </button>
         </div>
@@ -564,7 +552,7 @@ function FooterPanel({ data, onChange, onSave, saving, fieldErrors = {}, onClear
 function AboutPanel({ data, onChange, onSave, saving, fieldErrors = {}, onClearError }) {
   return (
     <div className="space-y-5">
-      <SectionHeader icon={Info} title="About Section" description="Control about headline, text, and media details." />
+      <AdminSectionHeader icon={Info} title="About Section" description="Control about headline, text, and media details." />
       <Field label="Headline" required error={fieldErrors.headline}>
         <input
           value={data.headline ?? ""}
@@ -610,7 +598,7 @@ function AboutPanel({ data, onChange, onSave, saving, fieldErrors = {}, onClearE
 function ContactPanel({ data, onChange, onSave, saving, fieldErrors = {}, onClearError }) {
   return (
     <div className="space-y-5">
-      <SectionHeader icon={Mail} title="Contact Section" description="Set support contact details shown on landing page." />
+      <AdminSectionHeader icon={Mail} title="Contact Section" description="Set support contact details shown on landing page." />
       <div className="grid gap-4 sm:grid-cols-2">
         <Field label="Email" required error={fieldErrors.email}>
           <input
@@ -680,7 +668,7 @@ function ContactPanel({ data, onChange, onSave, saving, fieldErrors = {}, onClea
 function SeoPanel({ data, onChange, onSave, saving, fieldErrors = {}, onClearError }) {
   return (
     <div className="space-y-5">
-      <SectionHeader icon={Search} title="SEO Settings" description="Manage metadata for search and social previews." />
+      <AdminSectionHeader icon={Search} title="SEO Settings" description="Manage metadata for search and social previews." />
       <Field label="Meta Title" error={fieldErrors.title}>
         <input
           value={data.title ?? ""}
@@ -767,7 +755,7 @@ const fromLines = (txt) => String(txt ?? "").split("\n").map((x) => x.trim()).fi
 function BrandsPanel({ data, onChange, onSave, saving }) {
   return (
     <div className="space-y-5">
-      <SectionHeader icon={Star} title="Brand Strip" description="Trusted-by label and brand chips." />
+      <AdminSectionHeader icon={Star} title="Brand Strip" description="Trusted-by label and brand chips." />
       <Field label="Eyebrow">
         <input value={data.eyebrow ?? ""} onChange={(e) => onChange("eyebrow", e.target.value)} placeholder="Trusted by" className={ic} />
       </Field>
@@ -787,7 +775,7 @@ function BrandsPanel({ data, onChange, onSave, saving }) {
 function ProblemSolutionPanel({ data, onChange, onSave, saving }) {
   return (
     <div className="space-y-5">
-      <SectionHeader icon={AlertCircle} title="Problem / Solution" description="Edit both cards shown under hero." />
+      <AdminSectionHeader icon={AlertCircle} title="Problem / Solution" description="Edit both cards shown under hero." />
       <div className="grid gap-4 sm:grid-cols-2">
         <Field label="Problem Eyebrow"><input value={data.problemEyebrow ?? ""} onChange={(e) => onChange("problemEyebrow", e.target.value)} className={ic} /></Field>
         <Field label="Problem Title"><input value={data.problemTitle ?? ""} onChange={(e) => onChange("problemTitle", e.target.value)} className={ic} /></Field>
@@ -813,7 +801,7 @@ function HowItWorksPanel({ data, onChange, onSave, saving }) {
   const textValue = steps.map((s) => `${s.n}|${s.title}|${s.text}|${s.icon ?? "Circle"}`).join("\n");
   return (
     <div className="space-y-5">
-      <SectionHeader icon={BarChart3} title="How It Works" description="Flow steps. Format: number|title|text|icon" />
+      <AdminSectionHeader icon={BarChart3} title="How It Works" description="Flow steps. Format: number|title|text|icon" />
       <div className="grid gap-4 sm:grid-cols-3">
         <Field label="Eyebrow"><input value={data.eyebrow ?? ""} onChange={(e) => onChange("eyebrow", e.target.value)} className={ic} /></Field>
         <Field label="Title"><input value={data.title ?? ""} onChange={(e) => onChange("title", e.target.value)} className={ic} /></Field>
@@ -841,7 +829,7 @@ function HowItWorksPanel({ data, onChange, onSave, saving }) {
 function BenefitsPanel({ data, onChange, onSave, saving }) {
   return (
     <div className="space-y-5">
-      <SectionHeader icon={Users} title="Benefits Block" description="Device card + Why RMS card content." />
+      <AdminSectionHeader icon={Users} title="Benefits Block" description="Device card + Why RMS card content." />
       <div className="grid gap-4 sm:grid-cols-2">
         <Field label="Device Badge"><input value={data.deviceBadge ?? ""} onChange={(e) => onChange("deviceBadge", e.target.value)} className={ic} /></Field>
         <Field label="Why Badge"><input value={data.whyBadge ?? ""} onChange={(e) => onChange("whyBadge", e.target.value)} className={ic} /></Field>
@@ -862,7 +850,7 @@ function BenefitsPanel({ data, onChange, onSave, saving }) {
 function DemoSectionPanel({ data, onChange, onSave, saving, fieldErrors = {}, onClearError }) {
   return (
     <div className="space-y-5">
-      <SectionHeader icon={Globe} title="Demo Section" description="Dashboard-style preview strip and section copy." />
+      <AdminSectionHeader icon={Globe} title="Demo Section" description="Dashboard-style preview strip and section copy." />
       <Toggle checked={data.enabled !== false} onChange={(v) => onChange("enabled", v)} label="Section enabled" />
       <Field label="Section anchor ID" hint="Navbar “Demo” should match this ID." error={fieldErrors.sectionId}>
         <input
@@ -910,7 +898,7 @@ function DemoSectionPanel({ data, onChange, onSave, saving, fieldErrors = {}, on
 function CTASectionPanel({ data, onChange, onSave, saving, fieldErrors = {}, onClearError }) {
   return (
     <div className="space-y-5">
-      <SectionHeader icon={LayoutTemplate} title="CTA banner" description="Gradient call-to-action block before the footer." />
+      <AdminSectionHeader icon={LayoutTemplate} title="CTA banner" description="Gradient call-to-action block before the footer." />
       <Toggle checked={data.enabled !== false} onChange={(v) => onChange("enabled", v)} label="Section enabled" />
       <Field label="Section anchor ID">
         <input value={data.sectionId ?? ""} onChange={(e) => onChange("sectionId", e.target.value)} placeholder="cta" maxLength={40} className={ic} />
@@ -1180,18 +1168,18 @@ export default function LandingSitePage() {
       {/* ── Page header ── */}
       <div className="flex items-center justify-between">
         <div className="flex items-start gap-3">
-          <span className="mt-1 flex size-10 shrink-0 items-center justify-center rounded-xl bg-sky-500/15 text-sky-400 ring-1 ring-sky-500/25">
+          <span className={`mt-1 ${saIconBadgeCls}`}>
             <Globe className="size-5" />
           </span>
           <div>
-            <h1 className="text-2xl font-semibold tracking-tight text-zinc-50">Landing Site</h1>
-            <p className="mt-1 text-sm text-zinc-500">
+            <h1 className="admin-page-title text-2xl font-semibold tracking-tight">Landing Site</h1>
+            <p className="admin-page-desc mt-1 text-sm">
               Manage your public-facing website content. Changes go live immediately.
             </p>
           </div>
         </div>
         <Link href="/?preview=1" target="_blank"
-          className="cursor-pointer inline-flex items-center gap-1.5 rounded-xl border border-zinc-700 px-3 py-2 text-xs font-medium text-zinc-400 hover:border-zinc-500 hover:text-zinc-200 transition-colors">
+          className="cursor-pointer inline-flex items-center gap-1.5 rounded-xl border admin-shell-border px-3 py-2 text-xs font-medium text-zinc-400 hover:border-zinc-500 hover:admin-shell-text transition-colors">
           <Globe className="size-3.5" /> Preview Site
         </Link>
       </div>
@@ -1202,32 +1190,33 @@ export default function LandingSitePage() {
         </div>
       )}
 
-      <div className="flex flex-col gap-4 lg:flex-row lg:gap-6">
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:gap-6">
 
-        {/* ── Tab sidebar ── */}
-        <nav className="flex gap-1 overflow-x-auto pb-1 lg:flex-col lg:w-44 lg:shrink-0 lg:pb-0">
-          {TABS.map(({ id, label, Icon }) => {
-            const active = id === activeTab;
-            return (
-              <button key={id} type="button" onClick={() => switchTab(id)}
-                className={`cursor-pointer flex shrink-0 items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm font-medium transition-all whitespace-nowrap lg:w-full ${
-                  active
-                    ? "bg-zinc-800 text-zinc-100 ring-1 ring-zinc-700"
-                    : "text-zinc-500 hover:bg-zinc-900 hover:text-zinc-300"
-                }`}>
-                <Icon className={`size-4 shrink-0 ${active ? saTabActiveIconCls : ""}`} />
+        <AdminSideNav className="w-full lg:w-52">
+          <p className={`px-2 pb-2 pt-1 text-xs font-semibold uppercase tracking-wide ${adminSurface.muted}`}>
+            Sections
+          </p>
+          <AdminSideNavList className="lg:gap-0.5">
+            {TABS.map(({ id, label, Icon }) => (
+              <AdminSideNavItem
+                key={id}
+                active={id === activeTab}
+                activeClassName={id === activeTab ? saSideNavActiveCls : ""}
+                onClick={() => switchTab(id)}
+                icon={Icon}
+              >
                 {label}
-              </button>
-            );
-          })}
-        </nav>
+              </AdminSideNavItem>
+            ))}
+          </AdminSideNavList>
+        </AdminSideNav>
 
         {/* ── Content panel ── */}
-        <div ref={panelRef} className="min-w-0 flex-1 rounded-2xl border border-zinc-800 bg-zinc-900/60 p-5 sm:p-6">
+        <div ref={panelRef} className="min-w-0 flex-1 admin-surface-card p-5 sm:p-6">
           {fetching ? (
             <SuperAdminPageSkeleton rows={4} />
           ) : !content ? (
-            <div className="py-20 text-center text-sm text-zinc-600">Failed to load content.</div>
+            <div className="py-20 text-center text-sm admin-surface-faint">Failed to load content.</div>
           ) : (
             <>
               {activeTab === "hero" && (
@@ -1247,8 +1236,8 @@ export default function LandingSitePage() {
                   description="Highlight the key capabilities of your platform."
                   renderCard={item => (
                     <>
-                      <p className="text-sm font-medium text-zinc-100">{item.title}</p>
-                      <p className="text-xs text-zinc-500 truncate">{item.description}</p>
+                      <p className="text-sm font-medium admin-shell-text">{item.title}</p>
+                      <p className="text-xs admin-surface-muted truncate">{item.description}</p>
                     </>
                   )}
                 />
@@ -1270,8 +1259,8 @@ export default function LandingSitePage() {
                           <RoleIcon className="size-4" />
                         </span>
                         <div className="min-w-0">
-                          <p className="text-sm font-medium text-zinc-100">{item.role}</p>
-                          <p className="text-xs text-zinc-500 truncate">{item.description}</p>
+                          <p className="text-sm font-medium admin-shell-text">{item.role}</p>
+                          <p className="text-xs admin-surface-muted truncate">{item.description}</p>
                         </div>
                       </div>
                     );
@@ -1292,12 +1281,12 @@ export default function LandingSitePage() {
                     </Link>
                   </div>
                   <div className="flex justify-end">
-                    <div className="inline-flex rounded-xl border border-zinc-700 bg-zinc-900 p-1">
+                    <div className="inline-flex rounded-xl border admin-shell-border admin-surface-segment-track p-1">
                       <button
                         type="button"
                         onClick={() => setPricingView("monthly")}
                         className={`cursor-pointer rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors ${
-                          pricingView === "monthly" ? "bg-sa-primary text-zinc-950" : "text-zinc-400 hover:bg-zinc-800"
+                          pricingView === "monthly" ? "bg-sa-primary text-zinc-950" : "text-zinc-400 hover:bg-[var(--admin-hover)]"
                         }`}
                       >
                         Monthly
@@ -1306,7 +1295,7 @@ export default function LandingSitePage() {
                         type="button"
                         onClick={() => setPricingView("yearly")}
                         className={`cursor-pointer rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors ${
-                          pricingView === "yearly" ? "bg-sa-primary text-zinc-950" : "text-zinc-400 hover:bg-zinc-800"
+                          pricingView === "yearly" ? "bg-sa-primary text-zinc-950" : "text-zinc-400 hover:bg-[var(--admin-hover)]"
                         }`}
                       >
                         Yearly
@@ -1315,13 +1304,13 @@ export default function LandingSitePage() {
                   </div>
                   <div className="space-y-2">
                     {(content.pricing ?? []).map((item) => (
-                      <div key={item.id ?? item.slug ?? item.name} className="rounded-xl border border-zinc-800 bg-zinc-900/40 px-4 py-3">
+                      <div key={item.id ?? item.slug ?? item.name} className="admin-surface-card px-4 py-3">
                         <div className="flex items-center gap-2">
-                          <p className="text-sm font-medium text-zinc-100">{item.name}</p>
+                          <p className="text-sm font-medium admin-shell-text">{item.name}</p>
                           {item.badge && <span className="rounded-full bg-amber-500/15 px-2 py-0.5 text-[10px] font-semibold text-amber-400">{item.badge}</span>}
                           {item.highlight && <span className="rounded-full bg-indigo-500/15 px-2 py-0.5 text-[10px] font-semibold text-indigo-400">Featured</span>}
                         </div>
-                        <p className="text-xs font-semibold text-zinc-300">
+                        <p className="text-xs font-semibold admin-surface-body">
                           {formatLandingCurrency(
                             pricingView === "yearly"
                               ? (item.yearlyPrice ?? item.price?.yearly ?? item.monthlyPrice ?? item.price?.monthly ?? 0)
@@ -1330,7 +1319,7 @@ export default function LandingSitePage() {
                           )}
                           <span className="ml-1 text-zinc-500">/{pricingView === "yearly" ? "yr" : "mo"}</span>
                         </p>
-                        <p className="text-xs text-zinc-500">{item.description}</p>
+                        <p className="text-xs admin-surface-muted">{item.description}</p>
                       </div>
                     ))}
                   </div>
@@ -1347,11 +1336,11 @@ export default function LandingSitePage() {
                   description="Customer reviews shown on the landing page."
                   renderCard={item => (
                     <>
-                      <p className="text-sm font-medium text-zinc-100">
+                      <p className="text-sm font-medium admin-shell-text">
                         {item.name}
                         {item.role && <span className="ml-1.5 text-xs font-normal text-zinc-500">— {item.role}</span>}
                       </p>
-                      <p className="text-xs text-zinc-500 truncate">{item.quote}</p>
+                      <p className="text-xs admin-surface-muted truncate">{item.quote}</p>
                     </>
                   )}
                 />

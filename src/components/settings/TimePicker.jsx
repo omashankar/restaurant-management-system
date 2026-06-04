@@ -3,15 +3,13 @@
 export default function TimePicker({ label, value, onChange, disabled = false }) {
   return (
     <div>
-      <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-zinc-500">
-        {label}
-      </label>
+      <label className="admin-surface-label mb-1.5 block">{label}</label>
       <input
         type="time"
         value={value}
         onChange={(e) => onChange(e.target.value)}
         disabled={disabled}
-        className="w-full rounded-xl border border-zinc-800 bg-zinc-950/80 px-3 py-2.5 text-sm text-zinc-100 outline-none transition-colors focus-ra-primary disabled:cursor-not-allowed disabled:opacity-50"
+        className="admin-surface-input focus-ra-primary w-full px-3 py-2.5 text-sm transition-colors disabled:cursor-not-allowed disabled:opacity-50"
       />
     </div>
   );

@@ -1,3 +1,4 @@
+import { adminSurface } from "@/config/adminSurfaceClasses";
 import { TrendingDown, TrendingUp } from "lucide-react";
 
 export default function StatsCard({
@@ -11,23 +12,23 @@ export default function StatsCard({
   const positive = trend != null && trend >= 0;
   return (
     <div
-      className={`group relative overflow-hidden rounded-2xl border border-zinc-800 bg-zinc-900/80 p-5 shadow-lg shadow-black/20 transition-all duration-200 hover-border-ra-primary-40 hover:shadow-ra-primary-soft ${className}`}
+      className={`${adminSurface.cardSolid} group relative overflow-hidden p-5 transition-all duration-200 hover-border-ra-primary-40 hover:shadow-ra-primary-soft ${className}`}
     >
       <div className="flex items-start justify-between gap-3">
         <div>
-          <p className="text-xs font-medium uppercase tracking-wider text-zinc-500">
+          <p className={`text-xs font-medium uppercase tracking-wider ${adminSurface.muted}`}>
             {title}
           </p>
-          <p className="mt-2 text-2xl font-semibold tracking-tight text-zinc-50">
+          <p className="mt-2 text-2xl font-semibold tracking-tight admin-shell-text">
             {value}
           </p>
           {subtitle ? (
-            <p className="mt-1 text-sm text-zinc-500">{subtitle}</p>
+            <p className={`mt-1 text-sm ${adminSurface.muted}`}>{subtitle}</p>
           ) : null}
           {trend != null ? (
             <p
               className={`mt-2 inline-flex items-center gap-1 text-xs font-medium ${
-                positive ? "text-ra-primary" : "text-amber-400"
+                positive ? "text-ra-primary" : "text-amber-500"
               }`}
             >
               {positive ? (

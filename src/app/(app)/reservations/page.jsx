@@ -230,10 +230,10 @@ export default function ReservationsPage() {
                 <CalendarClock className="size-5" aria-hidden />
               </span>
               <div>
-                <h1 className="text-2xl font-semibold tracking-tight text-zinc-50 md:text-3xl">
+                <h1 className="admin-page-title text-2xl font-semibold tracking-tight md:text-3xl">
                   Reservations
                 </h1>
-                <p className="mt-1 text-sm text-zinc-500">
+                <p className="admin-page-desc mt-1 text-sm">
                   Booking-style book · search, filter, and manage holds.
                 </p>
               </div>

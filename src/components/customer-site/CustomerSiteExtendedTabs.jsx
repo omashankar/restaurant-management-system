@@ -5,7 +5,7 @@ import { CMS_EDITOR_SECTION, CMS_EDITOR_SECTION_TIGHT } from "@/config/customerS
 import { DEFAULTS } from "@/lib/restaurantCmsDefaults";
 
 const inputCls =
-  "w-full rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus-ra-primary placeholder:text-zinc-600";
+  "admin-surface-input focus-ra-primary w-full px-3 py-2.5 text-sm outline-none focus-ra-primary placeholder:admin-surface-faint";
 const textareaCls = inputCls + " resize-none";
 
 function Field({ label, hint, children, className = "" }) {
@@ -21,8 +21,8 @@ function Field({ label, hint, children, className = "" }) {
 function HeaderBlock({ title, headers, onChange, showAction = false }) {
   const h = headers ?? {};
   return (
-    <div className="rounded-xl border border-zinc-800/80 p-3 space-y-2">
-      <p className="text-xs font-semibold text-zinc-300">{title}</p>
+    <div className="rounded-xl border admin-shell-border/80 p-3 space-y-2">
+      <p className="text-xs font-semibold admin-surface-body">{title}</p>
       <input
         value={h.badge ?? ""}
         onChange={(e) => onChange({ ...h, badge: e.target.value })}
@@ -62,7 +62,7 @@ export function HomeSectionsTab({ home, setHome, saving, onSaveDraft, onPublish 
 
   return (
     <div className={CMS_EDITOR_SECTION}>
-      <p className="text-xs text-zinc-500">
+      <p className="text-xs admin-surface-muted">
         Lower home page: order types, categories title, featured, menu preview, steps, reviews, and bottom CTA.
       </p>
 
@@ -71,7 +71,7 @@ export function HomeSectionsTab({ home, setHome, saving, onSaveDraft, onPublish 
         <p className="text-xs font-medium text-zinc-400">Order type cards (do not change IDs)</p>
         <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
         {(home.orderTypes ?? []).map((t, i) => (
-          <div key={t.id} className="rounded-xl border border-zinc-800 p-3 space-y-2">
+          <div key={t.id} className="rounded-xl border admin-shell-border p-3 space-y-2">
             <p className="text-[11px] font-semibold text-zinc-500 uppercase">{t.id}</p>
             <input
               value={t.title}
@@ -109,8 +109,8 @@ export function HomeSectionsTab({ home, setHome, saving, onSaveDraft, onPublish 
       <HeaderBlock title="How it works" headers={home.sectionHeaders?.steps} onChange={(v) => setHeader("steps", v)} />
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
         {(home.steps ?? []).map((step, i) => (
-          <div key={step.n} className="rounded-xl border border-zinc-800 p-3 space-y-2">
-            <p className="text-xs text-zinc-500">Step {step.n}</p>
+          <div key={step.n} className="rounded-xl border admin-shell-border p-3 space-y-2">
+            <p className="text-xs admin-surface-muted">Step {step.n}</p>
             <input
               value={step.title}
               onChange={(e) =>
@@ -141,7 +141,7 @@ export function HomeSectionsTab({ home, setHome, saving, onSaveDraft, onPublish 
       <HeaderBlock title="Reviews" headers={home.sectionHeaders?.reviews} onChange={(v) => setHeader("reviews", v)} />
       <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
         {(home.reviews ?? []).map((r, i) => (
-          <div key={i} className="rounded-xl border border-zinc-800 p-3 space-y-2">
+          <div key={i} className="rounded-xl border admin-shell-border p-3 space-y-2">
             <input
               value={r.name}
               onChange={(e) =>
@@ -248,11 +248,11 @@ export function AboutExtrasFields({ about, setAbout }) {
   const setFh = (val) => setAbout((p) => ({ ...p, featuresHeader: val }));
 
   return (
-    <div className="space-y-4 border-t border-zinc-800 pt-5 mt-5">
+    <div className="space-y-4 border-t admin-shell-border pt-5 mt-5">
       <p className="text-xs font-semibold uppercase tracking-wide text-zinc-500">About page — extra sections</p>
       <HeaderBlock title="Features block" headers={about.featuresHeader} onChange={setFh} />
       {(about.features ?? DEFAULTS.about.features).map((f, i) => (
-        <div key={i} className="rounded-xl border border-zinc-800 p-3 space-y-2">
+        <div key={i} className="rounded-xl border admin-shell-border p-3 space-y-2">
           <input
             value={f.title}
             onChange={(e) =>
@@ -280,7 +280,7 @@ export function AboutExtrasFields({ about, setAbout }) {
         </div>
       ))}
       <HeaderBlock title="Visit us" headers={about.visitHeader} onChange={(v) => setAbout((p) => ({ ...p, visitHeader: v }))} />
-      <p className="text-xs text-zinc-600">Address / phone / hours come from Settings.</p>
+      <p className="text-xs admin-surface-faint">Address / phone / hours come from Settings.</p>
       <p className="text-xs font-medium text-zinc-400">Bottom CTA on About</p>
       <Field label="Title">
         <input
@@ -343,7 +343,7 @@ export function ContactPageTab({ contact, setContact, saving, onSaveDraft, onPub
   ];
   return (
     <div className={`${CMS_EDITOR_SECTION} space-y-4`}>
-      <p className="text-xs text-zinc-500">Contact page headings and form labels. Address/phone/email → Settings.</p>
+      <p className="text-xs admin-surface-muted">Contact page headings and form labels. Address/phone/email → Settings.</p>
       {fields.map((key) => (
         <Field key={key} label={key}>
           {key.includes("subtitle") || key.includes("Message") ? (
@@ -376,7 +376,7 @@ export function BookingPageTab({ booking, setBooking, saving, onSaveDraft, onPub
   const fields = Object.keys(DEFAULTS.booking);
   return (
     <div className={CMS_EDITOR_SECTION_TIGHT}>
-      <p className="text-xs text-zinc-500">Table booking page labels. Tables/areas → Tables admin.</p>
+      <p className="text-xs admin-surface-muted">Table booking page labels. Tables/areas → Tables admin.</p>
       {fields.map((key) => (
         <Field key={key} label={key}>
           <input
@@ -400,7 +400,7 @@ export function MenuLabelsTab({ menu, setMenu, saving, onSaveDraft, onPublish })
   const fields = Object.keys(DEFAULTS.menu);
   return (
     <div className={CMS_EDITOR_SECTION_TIGHT}>
-      <p className="text-xs text-zinc-500">Menu page text only. Dishes & prices → Menu → Items.</p>
+      <p className="text-xs admin-surface-muted">Menu page text only. Dishes & prices → Menu → Items.</p>
       {fields.map((key) => (
         <Field key={key} label={key}>
           <input

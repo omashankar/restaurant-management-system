@@ -38,15 +38,15 @@ export default function FooterLayoutEditor({
 
   return (
     <div className="space-y-5">
-      <div className="flex items-center justify-between gap-3 border-b border-zinc-800 pb-4">
+      <div className="flex items-center justify-between gap-3 border-b admin-shell-border pb-4">
         <div>
-          <h3 className="text-lg font-semibold text-zinc-50">Edit Footer</h3>
-          <p className="text-sm text-zinc-500">Footer content, links, colors, and newsletter</p>
+          <h3 className="admin-surface-title text-lg font-semibold">Edit Footer</h3>
+          <p className="text-sm admin-surface-muted">Footer content, links, colors, and newsletter</p>
         </div>
         <button
           type="button"
           onClick={onBack}
-          className="inline-flex items-center gap-2 rounded-xl border border-zinc-700 px-3 py-2 text-sm text-zinc-300 hover:border-ra-primary-40"
+          className="inline-flex items-center gap-2 rounded-xl border admin-shell-border px-3 py-2 text-sm admin-surface-body hover:border-ra-primary-40"
         >
           <ArrowLeft className="size-4" /> Back
         </button>
@@ -61,8 +61,8 @@ export default function FooterLayoutEditor({
         <LayoutColorRow label="Font color" value={colors.font} onChange={(v) => setColors("font", v)} />
       </div>
 
-      <p className="rounded-xl border border-zinc-800 bg-zinc-950/40 px-3 py-2.5 text-xs text-zinc-500">
-        Logo images are set under <strong className="text-zinc-300">Website layout → Header → Logo upload</strong>{" "}
+      <p className="rounded-xl border admin-shell-border bg-zinc-950/40 px-3 py-2.5 text-xs admin-surface-muted">
+        Logo images are set under <strong className="admin-surface-body">Website layout → Header → Logo upload</strong>{" "}
         (header logo + dark mode logo). Footer uses the dark logo automatically.
       </p>
 
@@ -80,7 +80,7 @@ export default function FooterLayoutEditor({
           maxLength={150}
           className={layoutInputCls + " resize-none"}
         />
-        <p className="text-right text-[10px] text-zinc-600">{(footer.tagline ?? "").length}/150</p>
+        <p className="text-right text-[10px] admin-surface-faint">{(footer.tagline ?? "").length}/150</p>
       </LayoutSection>
 
       <LayoutSection
@@ -89,7 +89,7 @@ export default function FooterLayoutEditor({
         enabled={footer.showOpeningHours !== false}
         onToggle={() => setFooter({ showOpeningHours: footer.showOpeningHours === false })}
       >
-        <p className="text-xs text-zinc-500">
+        <p className="text-xs admin-surface-muted">
           Hours are loaded from{" "}
           <Link href="/settings" className="text-ra-primary hover:underline">
             Settings → Hours
@@ -104,7 +104,7 @@ export default function FooterLayoutEditor({
         enabled={footer.showAppDownload === true}
         onToggle={() => setFooter({ showAppDownload: !footer.showAppDownload })}
       >
-        <label className="flex items-center gap-2 text-sm text-zinc-300">
+        <label className="flex items-center gap-2 text-sm admin-surface-body">
           <input
             type="checkbox"
             checked={footer.showAppleStore !== false}
@@ -121,7 +121,7 @@ export default function FooterLayoutEditor({
             className={layoutInputCls}
           />
         </LayoutField>
-        <label className="flex items-center gap-2 text-sm text-zinc-300">
+        <label className="flex items-center gap-2 text-sm admin-surface-body">
           <input
             type="checkbox"
             checked={footer.showPlayStore !== false}

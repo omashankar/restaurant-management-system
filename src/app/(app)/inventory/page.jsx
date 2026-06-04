@@ -272,7 +272,7 @@ export default function InventoryPage() {
   if (!hydrated || loading) {
     return (
       <div className="space-y-6">
-        <div className="h-8 w-40 rounded-lg bg-zinc-800 animate-pulse" />
+        <div className="h-8 w-40 rounded-lg admin-progress-track animate-pulse" />
         <TableSkeleton rows={8} cols={7} />
       </div>
     );
@@ -282,10 +282,10 @@ export default function InventoryPage() {
     <div className="space-y-8">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-zinc-50">
+          <h1 className="admin-page-title text-2xl font-semibold tracking-tight">
             Inventory
           </h1>
-          <p className="mt-1 text-sm text-zinc-500">
+          <p className="admin-page-desc mt-1 text-sm">
             Par levels, stock status, and movement history.
           </p>
         </div>
@@ -314,7 +314,7 @@ export default function InventoryPage() {
       ) : null}
 
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <div className="rounded-2xl border border-zinc-800 bg-zinc-900/50 px-4 py-4 transition-colors hover:border-zinc-700">
+        <div className="admin-surface-card px-4 py-4 transition-colors hover:border-zinc-700">
           <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">
             Total SKUs
           </p>
@@ -322,7 +322,7 @@ export default function InventoryPage() {
             {stats.total}
           </p>
         </div>
-        <div className="rounded-2xl border border-zinc-800 bg-zinc-900/50 px-4 py-4 transition-colors hover:border-ra-primary-20">
+        <div className="admin-surface-card px-4 py-4 transition-colors hover:border-ra-primary-20">
           <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">
             In stock
           </p>
@@ -330,7 +330,7 @@ export default function InventoryPage() {
             {stats.ok}
           </p>
         </div>
-        <div className="rounded-2xl border border-zinc-800 bg-zinc-900/50 px-4 py-4 transition-colors hover:border-amber-500/25">
+        <div className="admin-surface-card px-4 py-4 transition-colors hover:border-amber-500/25">
           <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">
             Low stock
           </p>
@@ -338,7 +338,7 @@ export default function InventoryPage() {
             {stats.low}
           </p>
         </div>
-        <div className="rounded-2xl border border-zinc-800 bg-zinc-900/50 px-4 py-4 transition-colors hover:border-red-500/25">
+        <div className="admin-surface-card px-4 py-4 transition-colors hover:border-red-500/25">
           <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">
             Out of stock
           </p>
@@ -351,12 +351,12 @@ export default function InventoryPage() {
       <section className="space-y-3">
         <div className="flex items-center gap-2">
           <AlertTriangle className="size-4 text-amber-400" aria-hidden />
-          <h2 className="text-sm font-semibold text-zinc-200">
+          <h2 className="text-sm font-semibold admin-shell-text">
             Attention needed
           </h2>
         </div>
         {alertItems.length === 0 ? (
-          <div className="flex items-center gap-3 rounded-2xl border border-ra-primary-25 bg-ra-primary-5 px-4 py-4 text-sm text-zinc-400">
+          <div className="flex items-center gap-3 rounded-2xl border border-ra-primary-25 bg-ra-primary-5 px-4 py-4 text-sm admin-surface-muted">
             <Package className="size-5 shrink-0 text-ra-primary" />
             All items are above reorder levels.
           </div>
@@ -381,7 +381,7 @@ export default function InventoryPage() {
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="rounded-xl border border-zinc-800 bg-zinc-900/60 px-3 py-2 text-sm text-zinc-200"
+            className="admin-surface-card px-3 py-2 text-sm admin-shell-text"
           >
             <option value="all">All statuses</option>
             <option value="in">In stock</option>

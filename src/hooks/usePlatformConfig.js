@@ -1,5 +1,6 @@
 "use client";
 
+import { mergeLiveAdminTheme } from "@/lib/mergeLiveAdminTheme";
 import {
   applySuperAdminDocumentTheme,
   readStoredSuperAdminTheme,
@@ -19,7 +20,7 @@ const DEFAULT_CONFIG = {
   },
   currency: "INR",
   language: "en",
-  theme: { primaryColor: "#f43f5e", accentColor: "#10b981", darkMode: true },
+  theme: { primaryColor: "#a3e635", accentColor: "#10b981", darkMode: true },
   integrations: { googleAnalyticsId: "", metaPixelId: "" },
 };
 
@@ -131,11 +132,16 @@ export function usePlatformConfig() {
         const data = await res.json();
         if (!mounted) return;
         const next = mergeConfig(data);
-        _cache = next;
+        const stored = readStoredSuperAdminTheme();
+        const mergedTheme = stored
+          ? resolveSuperAdminTheme(mergeLiveAdminTheme(next.theme, stored))
+          : resolveSuperAdminTheme(next.theme);
+        const withLiveTheme = { ...next, theme: mergedTheme };
+        _cache = withLiveTheme;
         _cacheTime = Date.now();
-        writeStoredSuperAdminTheme(next.theme);
-        applySuperAdminDocumentTheme(next.theme);
-        setConfig(next);
+        writeStoredSuperAdminTheme(mergedTheme);
+        applySuperAdminDocumentTheme(mergedTheme);
+        setConfig(withLiveTheme);
       } catch {
         if (mounted) setConfig(_cache ?? DEFAULT_CONFIG);
       } finally {
@@ -145,7 +151,7 @@ export function usePlatformConfig() {
 
     const onUpdate = () => load();
     const onThemeUpdate = (event) => {
-      if (!event?.detail?.primaryColor) return;
+      if (!event?.detail) return;
       if (!mounted) return;
       setConfig((prev) =>
         mergeConfig({

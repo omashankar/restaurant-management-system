@@ -1,7 +1,20 @@
 "use client";
 
+import { raIconBadgeCls } from "@/config/restaurantAdminTheme";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import DataTableShell from "@/components/ui/DataTableShell";
+import {
+  AdminTable,
+  AdminTableActionsCell,
+  AdminTableBody,
+  AdminTableHead,
+  AdminTableHeadRow,
+  AdminTableIconButton,
+  AdminTableRow,
+  AdminTableTd,
+  AdminTableTh,
+  AdminTableThActions,
+} from "@/components/ui/AdminTable";
 import EmptyState from "@/components/ui/EmptyState";
 import ListToolbar from "@/components/ui/ListToolbar";
 import Modal from "@/components/ui/Modal";
@@ -110,7 +123,7 @@ export default function CategoriesPage() {
     finally { setDeleting(false); }
   };
 
-  if (loading) return <div className="space-y-6"><div className="h-8 w-56 animate-pulse rounded-lg bg-zinc-800" /><TableSkeleton rows={6} cols={4} /></div>;
+  if (loading) return <div className="space-y-6"><div className="h-8 w-56 animate-pulse rounded-lg admin-progress-track" /><TableSkeleton rows={6} cols={4} /></div>;
 
   return (
     <div className="space-y-6">
@@ -121,11 +134,11 @@ export default function CategoriesPage() {
       )}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div className="flex items-start gap-3">
-          <span className="mt-1 flex size-10 shrink-0 items-center justify-center rounded-xl bg-ra-primary-15 text-ra-primary ring-1 ring-ra-primary-25"><FolderTree className="size-5" /></span>
-          <div><h1 className="text-2xl font-semibold tracking-tight text-zinc-50">Categories</h1><p className="mt-1 text-sm text-zinc-500">Group menu items for POS and printing.</p></div>
+          <span className={`mt-1 ${raIconBadgeCls}`}><FolderTree className="size-5" /></span>
+          <div><h1 className="admin-page-title text-2xl font-semibold tracking-tight">Categories</h1><p className="admin-page-desc mt-1 text-sm">Group menu items for POS and printing.</p></div>
         </div>
         <div className="flex items-center gap-2">
-          <button type="button" onClick={fetchCategories} className="cursor-pointer flex items-center gap-1.5 rounded-xl border border-zinc-700 px-3 py-2.5 text-sm font-medium text-zinc-400 hover:border-zinc-500 hover:text-zinc-200 transition-colors"><RefreshCw className="size-4" /></button>
+          <button type="button" onClick={fetchCategories} className="cursor-pointer flex items-center gap-1.5 rounded-xl border admin-shell-border px-3 py-2.5 text-sm font-medium text-zinc-400 hover:border-zinc-500 hover:admin-shell-text transition-colors"><RefreshCw className="size-4" /></button>
           <button type="button" onClick={openCreate} className="cursor-pointer inline-flex items-center gap-2 rounded-xl bg-ra-primary px-4 py-2.5 text-sm font-semibold text-zinc-950 hover:brightness-110"><Plus className="size-4" /> Add Category</button>
         </div>
       </div>
@@ -137,39 +150,50 @@ export default function CategoriesPage() {
           action={<button type="button" onClick={openCreate} className="cursor-pointer rounded-xl bg-ra-primary px-4 py-2 text-sm font-semibold text-zinc-950 hover:brightness-110">Add Category</button>} />
       ) : (
         <DataTableShell>
-          <table className="min-w-full text-left text-sm">
-            <thead><tr className="border-b border-zinc-800 bg-zinc-950/60 text-xs font-semibold uppercase tracking-wider text-zinc-500">
-              <th className="px-4 py-3">Category</th><th className="px-4 py-3">Description</th><th className="px-4 py-3">Items</th><th className="px-4 py-3 text-right">Actions</th>
-            </tr></thead>
-            <tbody className="divide-y divide-zinc-800/80">
+          <AdminTable>
+            <AdminTableHead>
+              <AdminTableHeadRow>
+                <AdminTableTh>Category</AdminTableTh>
+                <AdminTableTh>Description</AdminTableTh>
+                <AdminTableTh>Items</AdminTableTh>
+                <AdminTableThActions />
+              </AdminTableHeadRow>
+            </AdminTableHead>
+            <AdminTableBody>
               {pageRows.map((row) => (
-                <tr key={row.id} className="transition-colors hover:bg-zinc-800/40">
-                  <td className="px-4 py-3 font-medium text-zinc-100">{row.name}</td>
-                  <td className="px-4 py-3 text-zinc-500 text-xs">{row.description || "â€”"}</td>
-                  <td className="px-4 py-3"><span className="inline-flex rounded-full bg-zinc-800 px-2.5 py-0.5 text-xs font-semibold text-zinc-300">{row.itemCount ?? 0}</span></td>
-                  <td className="px-4 py-3 text-right">
-                    <div className="flex justify-end gap-1">
-                      <button type="button" onClick={() => openEdit(row)} className="cursor-pointer rounded-lg p-2 text-zinc-400 hover:bg-zinc-800 hover-ra-primary"><Pencil className="size-4" /></button>
-                      <button type="button" onClick={() => setDeleteTarget(row)} className="cursor-pointer rounded-lg p-2 text-zinc-400 hover:bg-red-500/15 hover:text-red-400"><Trash2 className="size-4" /></button>
-                    </div>
-                  </td>
-                </tr>
+                <AdminTableRow key={row.id}>
+                  <AdminTableTd className="font-medium admin-shell-text">{row.name}</AdminTableTd>
+                  <AdminTableTd className="text-xs admin-surface-muted">{row.description || "—"}</AdminTableTd>
+                  <AdminTableTd>
+                    <span className="inline-flex rounded-full bg-[var(--admin-hover-strong)] px-2.5 py-0.5 text-xs font-semibold admin-surface-body">
+                      {row.itemCount ?? 0}
+                    </span>
+                  </AdminTableTd>
+                  <AdminTableActionsCell>
+                    <AdminTableIconButton onClick={() => openEdit(row)} aria-label="Edit">
+                      <Pencil className="size-4" />
+                    </AdminTableIconButton>
+                    <AdminTableIconButton variant="danger" onClick={() => setDeleteTarget(row)} aria-label="Delete">
+                      <Trash2 className="size-4" />
+                    </AdminTableIconButton>
+                  </AdminTableActionsCell>
+                </AdminTableRow>
               ))}
-            </tbody>
-          </table>
+            </AdminTableBody>
+          </AdminTable>
           <div className="px-4 pb-4"><PaginationBar page={page} totalPages={totalPages} total={total} pageSize={pageSize} onPageChange={setPage} /></div>
         </DataTableShell>
       )}
 
       <Modal open={modalOpen} onClose={() => setModalOpen(false)} title={editingId ? "Edit Category" : "Add Category"}
         footer={<div className="flex justify-end gap-2">
-          <button type="button" onClick={() => setModalOpen(false)} className="cursor-pointer rounded-xl border border-zinc-700 px-4 py-2 text-sm text-zinc-300 hover:border-zinc-500">Cancel</button>
+          <button type="button" onClick={() => setModalOpen(false)} className="cursor-pointer rounded-xl border admin-shell-border px-4 py-2 text-sm admin-surface-body hover:border-zinc-500">Cancel</button>
           <button type="button" onClick={save} disabled={saving} className="cursor-pointer rounded-xl bg-ra-primary px-4 py-2 text-sm font-semibold text-zinc-950 hover:brightness-110 disabled:opacity-40">{saving ? "Saving…" : "Save"}</button>
         </div>}>
         <div className="space-y-4">
           {formError && <p className="rounded-xl border border-red-500/20 bg-red-500/10 px-3 py-2 text-xs text-red-400">{formError}</p>}
           <div>
-            <label className="text-xs font-medium text-zinc-500">Category Name *</label>
+            <label className="text-xs font-medium admin-surface-muted">Category Name *</label>
             <input
               value={form.name}
               onChange={(e) => {
@@ -178,13 +202,13 @@ export default function CategoriesPage() {
               }}
               placeholder="e.g. Starters, Main Course, Drinks"
               aria-invalid={fieldErrors.name ? true : undefined}
-              className={`mt-1 w-full rounded-xl border bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus-ra-primary placeholder:text-zinc-600 ${
+              className={`mt-1 w-full rounded-xl border admin-surface-card px-3 py-2.5 text-sm admin-shell-text outline-none focus-ra-primary placeholder:admin-surface-faint ${
                 fieldErrors.name ? "border-red-500/50" : "border-zinc-700"
               }`}
             />
             {fieldErrors.name && <p className="mt-1 text-xs text-red-400">{fieldErrors.name}</p>}
           </div>
-          <div><label className="text-xs font-medium text-zinc-500">Description (optional)</label><textarea rows={2} value={form.description} onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))} placeholder="Short description" className="mt-1 w-full resize-none rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus-ra-primary placeholder:text-zinc-600" /></div>
+          <div><label className="text-xs font-medium admin-surface-muted">Description (optional)</label><textarea rows={2} value={form.description} onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))} placeholder="Short description" className="mt-1 w-full resize-none rounded-xl border admin-shell-border admin-surface-card px-3 py-2.5 text-sm admin-shell-text outline-none focus-ra-primary placeholder:admin-surface-faint" /></div>
         </div>
       </Modal>
 

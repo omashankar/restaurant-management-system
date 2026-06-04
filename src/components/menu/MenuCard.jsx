@@ -68,7 +68,7 @@ export default function MenuCard({
     <article
       className={[
         "group relative flex flex-col overflow-hidden rounded-2xl",
-        "border border-zinc-800/80 border-l-[3px]", accentBorder,
+        "border admin-shell-border/80 border-l-[3px]", accentBorder,
         "bg-zinc-900 shadow-md shadow-black/30",
         "transition-all duration-200",
         isDisabled
@@ -88,7 +88,7 @@ export default function MenuCard({
           className={`h-full w-full object-cover transition-transform duration-300 ${!isDisabled ? "group-hover:scale-[1.04]" : ""}`}
           onError={() => setImgError(true)}
         />
-        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-zinc-950/70 via-zinc-950/10 to-transparent" />
+        <div className="menu-card-image-scrim pointer-events-none absolute inset-0" aria-hidden />
 
         {/* top-left: category (menu variant) */}
         {isMenu && (
@@ -107,10 +107,10 @@ export default function MenuCard({
           </span>
         )}
         {isPOS && item.prepTime != null && (
-          <span className={`absolute right-2 top-2 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[9px] font-semibold backdrop-blur-sm ${
+          <span className={`menu-card-image-badge absolute right-2 top-2 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[9px] font-semibold ${
             isFast
               ? "bg-amber-500/90 text-zinc-950"
-              : "bg-zinc-950/75 text-zinc-300"
+              : ""
           }`}>
             {isFast ? <Zap className="size-2.5 shrink-0" aria-hidden /> : <Clock className="size-2.5 shrink-0" aria-hidden />}
             {item.prepTime}m
@@ -118,7 +118,7 @@ export default function MenuCard({
         )}
 
         {/* bottom: price overlay */}
-        <span className="absolute bottom-2 right-2 rounded-lg bg-zinc-950/80 px-2.5 py-1 text-sm font-bold tabular-nums text-ra-primary backdrop-blur-sm">
+        <span className="menu-card-image-badge menu-card-image-price absolute bottom-2 right-2 rounded-lg px-2.5 py-1 text-sm font-bold tabular-nums text-ra-primary">
           ${Number(item.price).toFixed(2)}
         </span>
 
@@ -132,7 +132,7 @@ export default function MenuCard({
       <div className="flex flex-1 flex-col gap-1.5 p-3">
 
         {/* Name */}
-        <h3 className={`line-clamp-1 flex items-center gap-1.5 text-sm font-semibold text-zinc-100 transition-colors ${!isDisabled ? "group-hover:text-white" : ""}`}>
+        <h3 className={`line-clamp-1 flex items-center gap-1.5 admin-surface-title text-sm font-semibold transition-colors ${!isDisabled ? "group-hover:text-white" : ""}`}>
           <AdminFoodTypeIndicator type={item.itemType} size={13} />
           {item.name}
         </h3>
@@ -190,7 +190,7 @@ export default function MenuCard({
             <button
               type="button"
               onClick={(e) => { e.stopPropagation(); onEdit(item); }}
-              className="cursor-pointer flex flex-1 items-center justify-center gap-1.5 rounded-xl border border-zinc-700/80 bg-zinc-800/40 py-2 text-xs font-semibold text-zinc-300 transition-all hover-border-ra-primary-50 hover-bg-ra-primary-10 hover:text-ra-primary-muted"
+              className="admin-surface-btn-ghost cursor-pointer flex flex-1 items-center justify-center gap-1.5 py-2 text-xs font-semibold transition-all hover:border-[color-mix(in_srgb,var(--ra-primary)_40%,var(--admin-border))] hover:bg-[color-mix(in_srgb,var(--ra-primary)_8%,var(--admin-surface))] hover:text-ra-primary"
             >
               <Pencil className="size-3.5" aria-hidden />
               Edit
@@ -198,7 +198,7 @@ export default function MenuCard({
             <button
               type="button"
               onClick={(e) => { e.stopPropagation(); onDelete(item); }}
-              className="cursor-pointer flex flex-1 items-center justify-center gap-1.5 rounded-xl border border-zinc-700/80 bg-zinc-800/40 py-2 text-xs font-semibold text-zinc-400 transition-all hover:border-red-500/40 hover:bg-red-500/10 hover:text-red-400"
+              className="admin-surface-btn-ghost cursor-pointer flex flex-1 items-center justify-center gap-1.5 py-2 text-xs font-semibold text-[var(--admin-text-muted)] transition-all hover:border-red-300 hover:bg-red-50 hover:text-red-600"
             >
               <Trash2 className="size-3.5" aria-hidden />
               Delete

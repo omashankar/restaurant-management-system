@@ -7,9 +7,9 @@ export default function TopItemsTable({ items = [] }) {
 
   if (items.length === 0) {
     return (
-      <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-5">
-        <h3 className="text-sm font-semibold text-zinc-100">Top Performing Items</h3>
-        <p className="mt-6 text-center text-sm text-zinc-600">No order data yet.</p>
+      <div className="admin-surface-card p-5">
+        <h3 className="admin-surface-title text-sm font-semibold">Top Performing Items</h3>
+        <p className="mt-6 text-center text-sm admin-surface-faint">No order data yet.</p>
       </div>
     );
   }
@@ -23,17 +23,17 @@ export default function TopItemsTable({ items = [] }) {
     : (sorted[0]?.qty ?? sorted[0]?.quantity ?? 1);
 
   return (
-    <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-5">
+    <div className="admin-surface-card p-5">
       <div className="flex items-center justify-between gap-3">
         <div>
-          <h3 className="text-sm font-semibold text-zinc-100">Top Performing Items</h3>
-          <p className="text-xs text-zinc-500">Best dishes this period</p>
+          <h3 className="admin-surface-title text-sm font-semibold">Top Performing Items</h3>
+          <p className="text-xs admin-surface-muted">Best dishes this period</p>
         </div>
-        <div className="flex rounded-xl border border-zinc-800 bg-zinc-950/60 p-0.5">
+        <div className="flex rounded-xl border admin-shell-border bg-zinc-950/60 p-0.5">
           {["Revenue", "Quantity"].map((t) => (
             <button key={t} type="button" onClick={() => setTab(t)}
               className={`cursor-pointer rounded-lg px-3 py-1.5 text-xs font-semibold transition-all ${
-                tab === t ? "bg-ra-primary text-zinc-950" : "text-zinc-500 hover:text-zinc-300"
+                tab === t ? "bg-ra-primary text-zinc-950" : "admin-surface-muted hover:admin-surface-body"
               }`}>
               {t}
             </button>
@@ -48,8 +48,8 @@ export default function TopItemsTable({ items = [] }) {
             <div key={item.name ?? i} className="space-y-1">
               <div className="flex items-center justify-between gap-2">
                 <div className="flex min-w-0 items-center gap-2">
-                  <span className="w-4 shrink-0 text-xs font-bold tabular-nums text-zinc-500">{i + 1}</span>
-                  <span className="truncate text-sm font-medium text-zinc-200">{item.name}</span>
+                  <span className="w-4 shrink-0 text-xs font-bold tabular-nums admin-surface-muted">{i + 1}</span>
+                  <span className="truncate text-sm font-medium admin-shell-text">{item.name}</span>
                 </div>
                 <span className="shrink-0 text-xs font-semibold tabular-nums text-ra-primary">
                   {tab === "Revenue" ? `$${Number(item.revenue ?? 0).toFixed(0)}` : `${val} sold`}

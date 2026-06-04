@@ -56,11 +56,11 @@ export default function WebsiteLayoutTab({
 
   return (
     <div className={CMS_EDITOR_SECTION}>
-      <p className="text-sm text-zinc-400">
-        Global theme plus full <strong className="text-zinc-200">header</strong> and{" "}
-        <strong className="text-zinc-200">footer</strong> editors for your customer website.
-        Upload full logo images in <strong className="text-zinc-300">Header</strong> (no text beside logo on site).
-        Fallback logo: <strong className="text-zinc-300">Settings → General</strong>.
+      <p className="text-sm admin-surface-muted">
+        Global theme plus full <strong className="admin-shell-text">header</strong> and{" "}
+        <strong className="admin-shell-text">footer</strong> editors for your customer website.
+        Upload full logo images in <strong className="admin-surface-body">Header</strong> (no text beside logo on site).
+        Fallback logo: <strong className="admin-surface-body">Settings → General</strong>.
       </p>
 
       <div className="grid gap-4 lg:grid-cols-2">
@@ -111,28 +111,28 @@ export default function WebsiteLayoutTab({
         <button
           type="button"
           onClick={() => setView("header")}
-          className="flex cursor-pointer items-center gap-3 rounded-xl border border-zinc-800 bg-zinc-950/40 px-4 py-4 text-left transition-colors hover:border-ra-primary-40 hover:bg-zinc-900/60"
+          className="flex cursor-pointer items-center gap-3 rounded-xl border admin-shell-border bg-zinc-950/40 px-4 py-4 text-left transition-colors hover:border-ra-primary-40 hover:bg-[var(--admin-hover)]/60"
         >
           <span className="flex size-10 items-center justify-center rounded-lg bg-ra-primary-15 text-ra-primary">
             <Pencil className="size-4" />
           </span>
           <div className="min-w-0 flex-1">
-            <p className="text-sm font-semibold text-zinc-100">Header</p>
-            <p className="text-xs text-zinc-500">Menu, colors, location bar, search</p>
+            <p className="admin-surface-title text-sm font-semibold">Header</p>
+            <p className="text-xs admin-surface-muted">Menu, colors, location bar, search</p>
           </div>
           <ChevronRight className="size-5 text-zinc-500" />
         </button>
         <button
           type="button"
           onClick={() => setView("footer")}
-          className="flex cursor-pointer items-center gap-3 rounded-xl border border-zinc-800 bg-zinc-950/40 px-4 py-4 text-left transition-colors hover:border-ra-primary-40 hover:bg-zinc-900/60"
+          className="flex cursor-pointer items-center gap-3 rounded-xl border admin-shell-border bg-zinc-950/40 px-4 py-4 text-left transition-colors hover:border-ra-primary-40 hover:bg-[var(--admin-hover)]/60"
         >
           <span className="flex size-10 items-center justify-center rounded-lg bg-ra-primary-15 text-ra-primary">
             <Pencil className="size-4" />
           </span>
           <div className="min-w-0 flex-1">
-            <p className="text-sm font-semibold text-zinc-100">Footer</p>
-            <p className="text-xs text-zinc-500">Links, newsletter, hours, copyright</p>
+            <p className="admin-surface-title text-sm font-semibold">Footer</p>
+            <p className="text-xs admin-surface-muted">Links, newsletter, hours, copyright</p>
           </div>
           <ChevronRight className="size-5 text-zinc-500" />
         </button>

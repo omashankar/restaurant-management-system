@@ -10,7 +10,7 @@ import { ImageIcon, Loader2, Trash2, Upload } from "lucide-react";
 import { useRef, useState } from "react";
 
 const inputCls =
-  "w-full rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus-ra-primary placeholder:text-zinc-600";
+  "admin-surface-input focus-ra-primary w-full px-3 py-2.5 text-sm outline-none focus-ra-primary placeholder:admin-surface-faint";
 
 /**
  * CMS image: upload file or paste URL (hero, about, gallery, banners).
@@ -67,8 +67,8 @@ export default function CmsImageField({
       )}
       {hint && <p className="text-[11px] text-zinc-600">{hint}</p>}
 
-      <div className="rounded-xl border border-zinc-800 bg-zinc-950/50 p-3 space-y-3">
-        <div className="overflow-hidden rounded-lg border border-zinc-700 bg-zinc-900">
+      <div className="rounded-xl admin-surface-card p-3 space-y-3">
+        <div className="overflow-hidden rounded-lg border admin-shell-border bg-zinc-900">
           {previewSrc ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={previewSrc} alt="" className={previewClassName} />
@@ -84,7 +84,7 @@ export default function CmsImageField({
             type="button"
             disabled={disabled || busy}
             onClick={() => fileRef.current?.click()}
-            className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-xs font-medium text-zinc-200 hover:border-ra-primary-40 disabled:opacity-50"
+            className="inline-flex cursor-pointer items-center gap-2 rounded-lg border admin-shell-border bg-zinc-900 px-3 py-2 text-xs font-medium admin-shell-text hover:border-ra-primary-40 disabled:opacity-50"
           >
             {busy ? (
               <Loader2 className="size-3.5 animate-spin text-ra-primary" />
@@ -98,7 +98,7 @@ export default function CmsImageField({
               type="button"
               disabled={disabled || busy}
               onClick={() => onChange("")}
-              className="inline-flex items-center gap-1.5 rounded-lg border border-zinc-700 px-3 py-2 text-xs text-zinc-400 hover:border-red-500/40 hover:text-red-400 disabled:opacity-50"
+              className="inline-flex items-center gap-1.5 rounded-lg border admin-shell-border px-3 py-2 text-xs text-zinc-400 hover:border-red-500/40 hover:text-red-400 disabled:opacity-50"
             >
               <Trash2 className="size-3.5" /> Remove
             </button>
@@ -114,7 +114,7 @@ export default function CmsImageField({
         />
 
         <div>
-          <p className="mb-1 text-[11px] text-zinc-500">Or paste image URL</p>
+          <p className="mb-1 text-[11px] admin-surface-faint">Or paste image URL</p>
           <input
             type="text"
             value={value ?? ""}

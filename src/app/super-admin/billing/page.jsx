@@ -1,9 +1,22 @@
 "use client";
 
 import SuperAdminPageSkeleton from "@/components/super-admin/SuperAdminPageSkeleton";
-import { saIconBadgeCls, saSpinnerCls } from "@/config/superAdminTheme";
+import { saIconBadgeCls, saInputCls, saSpinnerCls } from "@/config/superAdminTheme";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import Modal from "@/components/ui/Modal";
+import DataTableShell from "@/components/ui/DataTableShell";
+import {
+  AdminTable,
+  AdminTableActionsCell,
+  AdminTableBody,
+  AdminTableHead,
+  AdminTableHeadRow,
+  AdminTableIconButton,
+  AdminTableRow,
+  AdminTableTd,
+  AdminTableTh,
+  AdminTableThActions,
+} from "@/components/ui/AdminTable";
 import { formatSaMoney } from "@/lib/formatSaMoney";
 import {
   buildAssignPlanSubmitBody,
@@ -47,7 +60,7 @@ const PLAN_BAR = {
   pro: "bg-indigo-500", enterprise: "bg-amber-500",
 };
 
-const inputCls = "w-full rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus-sa-primary placeholder:text-zinc-600 transition-colors";
+const inputCls = saInputCls;
 
 function FieldError({ message }) {
   if (!message) return null;
@@ -214,8 +227,8 @@ export default function BillingPage() {
             <Receipt className="size-5" />
           </span>
           <div>
-            <h1 className="text-2xl font-semibold tracking-tight text-zinc-50">Billing</h1>
-            <p className="mt-1 text-sm text-zinc-500">
+            <h1 className="admin-page-title text-2xl font-semibold tracking-tight">Billing</h1>
+            <p className="admin-page-desc mt-1 text-sm">
               Manage which plan each restaurant is on (active, trial, expired).{" "}
               <Link href="/super-admin/payments" className="text-sa-primary hover:text-sa-primary-muted underline-offset-2 hover:underline">
                 View payment history →
@@ -229,8 +242,8 @@ export default function BillingPage() {
             onClick={() => setActiveTab("overview")}
             className={`cursor-pointer rounded-xl px-3 py-2 text-sm font-medium transition-colors ${
               activeTab === "overview"
-                ? "bg-zinc-800 text-zinc-100"
-                : "text-zinc-500 hover:bg-zinc-900 hover:text-zinc-300"
+                ? "admin-surface-segment-btn-active admin-shell-text"
+                : "admin-surface-segment-btn hover:admin-surface-body"
             }`}
           >
             Overview
@@ -240,14 +253,14 @@ export default function BillingPage() {
             onClick={() => setActiveTab("subscriptions")}
             className={`cursor-pointer rounded-xl px-3 py-2 text-sm font-medium transition-colors ${
               activeTab === "subscriptions"
-                ? "bg-zinc-800 text-zinc-100"
-                : "text-zinc-500 hover:bg-zinc-900 hover:text-zinc-300"
+                ? "admin-surface-segment-btn-active admin-shell-text"
+                : "admin-surface-segment-btn hover:admin-surface-body"
             }`}
           >
             Subscriptions
           </button>
           <button type="button" onClick={fetchAll}
-            className="cursor-pointer flex items-center gap-1.5 rounded-xl border border-zinc-700 px-3 py-2.5 text-sm font-medium text-zinc-400 hover:border-zinc-500 hover:text-zinc-200 transition-colors">
+            className="cursor-pointer flex items-center gap-1.5 rounded-xl border admin-shell-border px-3 py-2.5 text-sm font-medium text-zinc-400 hover:border-zinc-500 hover:admin-shell-text transition-colors">
             <RefreshCw className={"size-4 " + (loading ? saSpinnerCls : "")} />
           </button>
           <button type="button"
@@ -292,37 +305,37 @@ export default function BillingPage() {
           </div>
 
           <div className="grid gap-6 lg:grid-cols-3">
-            <div className="lg:col-span-2 rounded-2xl border border-zinc-800 bg-zinc-900/60 p-5">
+            <div className="lg:col-span-2 admin-surface-card p-5">
               <div className="flex items-center gap-2 mb-5">
                 <TrendingUp className="size-4 text-sa-accent" />
-                <h2 className="text-sm font-semibold text-zinc-100">Revenue — Last 6 Months</h2>
+                <h2 className="text-sm font-semibold admin-shell-text">Revenue — Last 6 Months</h2>
               </div>
               {!billing?.revenueByMonth?.length ? (
                 <div className="flex h-40 items-center justify-center">
-                  <p className="text-sm text-zinc-600">No revenue data yet.</p>
+                  <p className="text-sm admin-surface-faint">No revenue data yet.</p>
                 </div>
               ) : (
                 <div className="flex items-end gap-1.5 h-40">
                   {billing.revenueByMonth.map((m) => (
                     <div key={m.label} className="group flex flex-1 flex-col items-center gap-1">
                       <div className="relative flex flex-1 w-full flex-col justify-end">
-                        <div className="absolute -top-7 left-1/2 -translate-x-1/2 hidden group-hover:flex whitespace-nowrap rounded-lg border border-zinc-700 bg-zinc-900 px-2 py-1 text-[10px] font-semibold text-zinc-200 shadow-lg z-10">
+                        <div className="absolute -top-7 left-1/2 -translate-x-1/2 hidden group-hover:flex whitespace-nowrap rounded-lg admin-chart-tooltip px-2 py-1 text-[10px] font-semibold admin-shell-text shadow-lg z-10">
                           {formatSaMoney(m.revenue)}
                         </div>
                         <div className="w-full rounded-t-md bg-sa-accent-30 hover:bg-sa-accent-50 transition-colors cursor-default"
                           style={{ height: Math.max(4, (m.revenue / maxRevenue) * 100) + "%" }} />
                       </div>
-                      <p className="text-[10px] text-zinc-600 text-center leading-tight shrink-0">{m.label}</p>
+                      <p className="text-[10px] admin-surface-faint text-center leading-tight shrink-0">{m.label}</p>
                     </div>
                   ))}
                 </div>
               )}
             </div>
 
-            <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-5">
-              <h2 className="mb-4 text-sm font-semibold text-zinc-100">Plan Distribution</h2>
+            <div className="admin-surface-card p-5">
+              <h2 className="mb-4 text-sm font-semibold admin-shell-text">Plan Distribution</h2>
               {!billing?.planBreakdown?.length ? (
-                <p className="text-sm text-zinc-600">No data.</p>
+                <p className="text-sm admin-surface-faint">No data.</p>
               ) : (
                 <div className="space-y-3">
                   {billing.planBreakdown.map((p, planIdx) => {
@@ -334,9 +347,9 @@ export default function BillingPage() {
                           <span className={"inline-flex rounded-full px-2 py-0.5 text-xs font-semibold capitalize ring-1 " + (PLAN_BADGE[p.plan] ?? PLAN_BADGE.free)}>
                             {p.plan}
                           </span>
-                          <span className="text-xs text-zinc-500">{p.count} · {pct}%</span>
+                          <span className="text-xs admin-surface-muted">{p.count} · {pct}%</span>
                         </div>
-                        <div className="h-1.5 w-full rounded-full bg-zinc-800">
+                        <div className="h-1.5 w-full rounded-full admin-progress-track">
                           <div className={"h-1.5 rounded-full " + (PLAN_BAR[p.plan] ?? "bg-zinc-500")} style={{ width: pct + "%" }} />
                         </div>
                       </div>
@@ -351,14 +364,14 @@ export default function BillingPage() {
           )}
 
           {activeTab === "subscriptions" && (
-          <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60">
-            <div className="flex items-center justify-between border-b border-zinc-800 px-5 py-4">
+          <div className="admin-surface-card">
+            <div className="flex items-center justify-between border-b admin-shell-border px-5 py-4">
               <div>
-                <h2 className="text-sm font-semibold text-zinc-100">Subscriptions</h2>
-                <p className="mt-0.5 text-xs text-zinc-500">Track plan assignments, expiry, and status per restaurant.</p>
+                <h2 className="text-sm font-semibold admin-shell-text">Subscriptions</h2>
+                <p className="mt-0.5 text-xs admin-surface-muted">Track plan assignments, expiry, and status per restaurant.</p>
               </div>
               <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}
-                className="cursor-pointer rounded-xl border border-zinc-800 bg-zinc-900/70 px-3 py-2 text-xs text-zinc-200 outline-none focus-sa-primary">
+                className="cursor-pointer admin-surface-card px-3 py-2 text-xs admin-shell-text outline-none focus-sa-primary">
                 <option value="all">All statuses</option>
                 {["active","trial","expired","cancelled"].map((s) => (
                   <option key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1)}</option>
@@ -369,98 +382,102 @@ export default function BillingPage() {
             {subs.length === 0 ? (
               <div className="flex flex-col items-center justify-center gap-3 py-16 text-center">
                 <CreditCard className="size-10 text-zinc-700" />
-                <p className="text-sm text-zinc-500">No subscriptions found.</p>
+                <p className="text-sm admin-surface-muted">No subscriptions found.</p>
                 <button type="button" onClick={() => openAssignModal()}
                   className="cursor-pointer rounded-xl bg-sa-primary px-4 py-2 text-sm font-semibold text-zinc-950 hover:brightness-110">
                   Assign First Plan
                 </button>
               </div>
             ) : (
-              <div className="overflow-x-auto">
-                <table className="min-w-full text-left text-sm">
-                  <thead>
-                    <tr className="border-b border-zinc-800 bg-zinc-950/40 text-xs font-semibold uppercase tracking-wider text-zinc-500">
-                      <th className="px-4 py-3">Restaurant</th>
-                      <th className="px-4 py-3">Plan</th>
-                      <th className="px-4 py-3">Status</th>
-                      <th className="hidden px-4 py-3 md:table-cell">Start</th>
-                      <th className="hidden px-4 py-3 md:table-cell">Expires</th>
-                      <th className="hidden px-4 py-3 lg:table-cell">Days Left</th>
-                      <th className="px-4 py-3 text-right">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-zinc-800/60">
+              <DataTableShell>
+                <AdminTable>
+                  <AdminTableHead>
+                    <AdminTableHeadRow>
+                      <AdminTableTh>Restaurant</AdminTableTh>
+                      <AdminTableTh>Plan</AdminTableTh>
+                      <AdminTableTh>Status</AdminTableTh>
+                      <AdminTableTh hidden="md">Start</AdminTableTh>
+                      <AdminTableTh hidden="md">Expires</AdminTableTh>
+                      <AdminTableTh hidden="lg">Days Left</AdminTableTh>
+                      <AdminTableThActions />
+                    </AdminTableHeadRow>
+                  </AdminTableHead>
+                  <AdminTableBody>
                     {subs.map((s) => {
                       const StatusIcon = STATUS_ICON[s.status] ?? CheckCircle2;
                       const isExpiring = s.daysLeft != null && s.daysLeft <= 7 && s.status === "active";
                       return (
-                        <tr key={s.id} className={"transition-colors hover:bg-zinc-800/20 " + (s.status === "cancelled" ? "opacity-50" : "")}>
-                          <td className="px-4 py-3">
+                        <AdminTableRow key={s.id} className={s.status === "cancelled" ? "opacity-50" : ""}>
+                          <AdminTableTd>
                             <div className="flex items-center gap-3">
-                              <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-zinc-800 text-xs font-bold text-zinc-300">
+                              <span className="flex size-8 shrink-0 items-center justify-center rounded-lg admin-rank-badge text-xs font-bold admin-surface-body">
                                 {s.restaurantName?.[0]?.toUpperCase()}
                               </span>
                               <div className="min-w-0">
-                                <p className="truncate font-medium text-zinc-100">{s.restaurantName}</p>
-                                <p className="truncate text-xs text-zinc-500">{s.restaurantEmail}</p>
+                                <p className="truncate font-medium admin-shell-text">{s.restaurantName}</p>
+                                <p className="truncate text-xs admin-surface-muted">{s.restaurantEmail}</p>
                               </div>
                             </div>
-                          </td>
-                          <td className="px-4 py-3">
+                          </AdminTableTd>
+                          <AdminTableTd>
                             <span className={"inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold capitalize ring-1 " + (PLAN_BADGE[s.planSlug] ?? PLAN_BADGE.free)}>
                               {s.planName}
                             </span>
                             {s.price > 0 && (
-                              <p className="mt-0.5 text-[10px] text-zinc-600">{formatSaMoney(s.price)}/{s.billingCycle}</p>
+                              <p className="mt-0.5 text-[10px] admin-surface-faint">{formatSaMoney(s.price)}/{s.billingCycle}</p>
                             )}
-                          </td>
-                          <td className="px-4 py-3">
+                          </AdminTableTd>
+                          <AdminTableTd>
                             <span className={"inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-semibold capitalize ring-1 " + (STATUS_BADGE[s.status] ?? STATUS_BADGE.cancelled)}>
                               <StatusIcon className="size-3" />
                               {s.status}
                             </span>
-                          </td>
-                          <td className="hidden px-4 py-3 text-xs text-zinc-600 md:table-cell">
+                          </AdminTableTd>
+                          <AdminTableTd hidden="md" className="text-xs admin-surface-faint">
                             {s.startDate ? new Date(s.startDate).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "—"}
-                          </td>
-                          <td className="hidden px-4 py-3 md:table-cell">
+                          </AdminTableTd>
+                          <AdminTableTd hidden="md">
                             {s.endDate ? (
                               <span className={"text-xs " + (isExpiring ? "font-semibold text-amber-400" : "text-zinc-600")}>
                                 {new Date(s.endDate).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
                               </span>
                             ) : <span className="text-xs text-zinc-700">—</span>}
-                          </td>
-                          <td className="hidden px-4 py-3 lg:table-cell">
+                          </AdminTableTd>
+                          <AdminTableTd hidden="lg">
                             {s.daysLeft != null ? (
                               <span className={"text-xs font-semibold tabular-nums " + (s.daysLeft === 0 ? "text-red-400" : s.daysLeft <= 7 ? "text-amber-400" : "text-zinc-400")}>
                                 {s.daysLeft === 0 ? "Today" : s.daysLeft + "d"}
                               </span>
                             ) : <span className="text-xs text-zinc-700">—</span>}
-                          </td>
-                          <td className="px-4 py-3 text-right">
-                            <div className="flex items-center justify-end gap-1">
-                              <button type="button" onClick={() => { setRenewTarget(s); setRenewDays("30"); }}
+                          </AdminTableTd>
+                          <AdminTableActionsCell>
+                              <AdminTableIconButton
+                                onClick={() => { setRenewTarget(s); setRenewDays("30"); }}
                                 title="Renew / extend"
-                                className="cursor-pointer rounded-lg p-2 text-zinc-400 hover-bg-sa-primary-15 hover-sa-primary transition-colors">
+                                aria-label="Renew / extend"
+                                className="hover:text-sa-primary"
+                              >
                                 <RotateCcw className="size-4" />
-                              </button>
+                              </AdminTableIconButton>
                               {s.status !== "cancelled" && (
-                                <button type="button" onClick={() => setCancelTarget(s)}
+                                <AdminTableIconButton
+                                  variant="danger"
+                                  onClick={() => setCancelTarget(s)}
                                   title="Cancel subscription"
-                                  className="cursor-pointer rounded-lg p-2 text-zinc-400 hover:bg-red-500/15 hover:text-red-400 transition-colors">
+                                  aria-label="Cancel subscription"
+                                >
                                   <Ban className="size-4" />
-                                </button>
+                                </AdminTableIconButton>
                               )}
-                            </div>
-                          </td>
-                        </tr>
+                          </AdminTableActionsCell>
+                        </AdminTableRow>
                       );
                     })}
-                  </tbody>
-                </table>
-              </div>
+                  </AdminTableBody>
+                </AdminTable>
+              </DataTableShell>
             )}
-            <div className="border-t border-zinc-800 px-4 py-2.5 text-xs text-zinc-600">
+            <div className="border-t admin-shell-border px-4 py-2.5 text-xs admin-surface-faint">
               {subs.length} subscription{subs.length !== 1 ? "s" : ""}
             </div>
           </div>
@@ -472,7 +489,7 @@ export default function BillingPage() {
         footer={
           <div className="flex justify-end gap-2">
             <button type="button" onClick={() => setAssignOpen(false)}
-              className="cursor-pointer rounded-xl border border-zinc-700 px-4 py-2 text-sm text-zinc-300 hover:border-zinc-500 transition-colors">
+              className="cursor-pointer rounded-xl border admin-shell-border px-4 py-2 text-sm admin-surface-body hover:border-zinc-500 transition-colors">
               Cancel
             </button>
             <button type="button" onClick={handleAssign} disabled={assigning}
@@ -587,7 +604,7 @@ export default function BillingPage() {
         footer={
           <div className="flex justify-end gap-2">
             <button type="button" onClick={() => setRenewTarget(null)}
-              className="cursor-pointer rounded-xl border border-zinc-700 px-4 py-2 text-sm text-zinc-300 hover:border-zinc-500 transition-colors">
+              className="cursor-pointer rounded-xl border admin-shell-border px-4 py-2 text-sm admin-surface-body hover:border-zinc-500 transition-colors">
               Cancel
             </button>
             <button type="button" onClick={handleRenew} disabled={renewing}
@@ -598,8 +615,8 @@ export default function BillingPage() {
         }>
         {renewTarget && (
           <div className="space-y-4">
-            <div className="rounded-xl border border-zinc-800 bg-zinc-950/40 px-4 py-3 text-sm text-zinc-400">
-              <span className="font-medium text-zinc-100">{renewTarget.restaurantName}</span>
+            <div className="rounded-xl admin-surface-card px-4 py-3 text-sm admin-surface-muted">
+              <span className="font-medium admin-shell-text">{renewTarget.restaurantName}</span>
               {" · "}
               <span className={"inline-flex rounded-full px-2 py-0.5 text-xs font-semibold capitalize ring-1 " + (PLAN_BADGE[renewTarget.planSlug] ?? PLAN_BADGE.free)}>
                 {renewTarget.planName}

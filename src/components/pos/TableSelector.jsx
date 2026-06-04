@@ -19,11 +19,11 @@ export default function TableSelector({ tables, selectedTableId, onSelect, compa
             className={`cursor-pointer rounded-xl border px-2 py-1.5 text-left transition-all ${
               selected
                 ? "border-ra-primary-60 bg-ra-primary-10"
-                : "border-zinc-800 bg-zinc-900/50 hover:border-zinc-700"
+                : "admin-shell-border bg-zinc-900/50 hover:border-zinc-700"
             }`}
             aria-pressed={selected}
           >
-            <p className={`font-semibold text-zinc-100 ${compact ? "text-xs" : "text-sm"}`}>{table.name}</p>
+            <p className={`font-semibold admin-shell-text ${compact ? "text-xs" : "text-sm"}`}>{table.name}</p>
             <span
               className={`mt-1 inline-flex rounded-md border px-1.5 py-0.5 font-medium capitalize ${compact ? "text-[9px]" : "text-[11px]"} ${
                 STATUS_STYLE[table.status] ?? STATUS_STYLE.available
