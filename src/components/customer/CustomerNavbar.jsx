@@ -60,11 +60,13 @@ export default function CustomerNavbar() {
   const headerBg = headerColors.background?.trim() || "#ffffff";
   const headerFont = headerColors.font?.trim() || "#333333";
   const headerIcon = headerColors.icon?.trim() || "#9c9c9c";
-  const stickyCls = headerCfg.sticky !== false ? "sticky top-0" : "";
+  const isSticky = headerCfg.sticky !== false;
+  const stickyCls = isSticky ? "sticky top-0 z-50" : "relative z-40";
 
   return (
     <header
-      className={`${stickyCls} z-50 w-full transition-shadow duration-300 ${scrolled ? "shadow-md" : ""}`}
+      data-sticky-header={isSticky ? "true" : "false"}
+      className={`${stickyCls} w-full transition-shadow duration-300 ${isSticky && scrolled ? "shadow-md" : ""}`}
       style={{ backgroundColor: headerBg, color: headerFont }}
     >
 
@@ -102,10 +104,10 @@ export default function CustomerNavbar() {
       <div className="border-b border-black/5" style={{ backgroundColor: headerBg }}>
         <div className="mx-auto flex min-h-[4.25rem] max-w-7xl items-center justify-between gap-2 px-4 py-2 sm:min-h-[4.5rem] sm:gap-4 sm:px-6 lg:px-8">
 
-          {/* Logo — image only (full mark from CMS) */}
+          {/* Logo — respects header.showBrandText from Website layout */}
           <Link href={link("/home")} className="flex shrink-0 items-center min-w-0">
             <motion.div whileHover={{ scale: 1.02 }} transition={{ type: "spring", stiffness: 400 }}>
-              <RestaurantLogo size="md" mode="light" imageOnly />
+              <RestaurantLogo size="md" mode="light" />
             </motion.div>
           </Link>
 

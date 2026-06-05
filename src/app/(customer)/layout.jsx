@@ -32,14 +32,16 @@ export default function CustomerLayout({ children }) {
   return (
     <CustomerProvider>
       <CustomerThemeProvider>
-        <div className="flex min-h-screen flex-col overflow-x-hidden bg-[var(--customer-bg,#fff)] text-[var(--customer-text,#111827)]">
+        <div className="flex min-h-screen flex-col bg-[var(--customer-bg,#fff)] text-[var(--customer-text,#111827)]">
           <CustomerNavbar />
-          <main className="flex-1">
-            <PageTransition>
-              <PlatformFeatureGate>{children}</PlatformFeatureGate>
-            </PageTransition>
-          </main>
-          <CustomerFooter />
+          <div className="flex flex-1 flex-col overflow-x-clip">
+            <main className="flex-1">
+              <PageTransition>
+                <PlatformFeatureGate>{children}</PlatformFeatureGate>
+              </PageTransition>
+            </main>
+            <CustomerFooter />
+          </div>
           <CustomerToasts />
           <OrderTypeModal />
           <CartDrawer />

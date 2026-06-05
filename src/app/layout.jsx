@@ -1,4 +1,13 @@
-import { Geist, Geist_Mono, Poppins, Inter } from "next/font/google";
+import {
+  DM_Sans,
+  Geist,
+  Geist_Mono,
+  Inter,
+  Nunito,
+  Open_Sans,
+  Poppins,
+  Roboto,
+} from "next/font/google";
 import "./globals.css";
 import Providers from "./providers";
 import PlatformScripts from "@/components/PlatformScripts";
@@ -29,6 +38,34 @@ const inter = Inter({
   display: "swap",
 });
 
+const nunito = Nunito({
+  variable: "--font-nunito",
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700", "800", "900"],
+  display: "swap",
+});
+
+const dmSans = DM_Sans({
+  variable: "--font-dm-sans",
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  display: "swap",
+});
+
+const roboto = Roboto({
+  variable: "--font-roboto",
+  subsets: ["latin"],
+  weight: ["300", "400", "500", "700"],
+  display: "swap",
+});
+
+const openSans = Open_Sans({
+  variable: "--font-open-sans",
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  display: "swap",
+});
+
 export const metadata = {
   title: "RMS · Restaurant Management",
   description: "Premium India-focused Restaurant POS & Food Ordering System",
@@ -49,7 +86,7 @@ export default function RootLayout({ children }) {
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} ${poppins.variable} ${inter.variable} h-full`}
+      className={`${geistSans.variable} ${geistMono.variable} ${poppins.variable} ${inter.variable} ${nunito.variable} ${dmSans.variable} ${roboto.variable} ${openSans.variable} h-full`}
       suppressHydrationWarning
     >
       <head>

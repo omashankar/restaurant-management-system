@@ -48,8 +48,8 @@ export default function HeaderLayoutEditor({
 
       <p className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Logo upload</p>
       <p className="text-sm admin-surface-muted">
-        Upload your full brand image (icon + name in one file). No separate HTML text is shown on the
-        customer site — only these images. Empty fields use Settings → General logo.
+        Upload your full brand image (icon + name in one file). With &quot;Show restaurant name as text&quot;
+        off, only the image is shown. Empty fields use Settings → General logo.
       </p>
       <div className="grid gap-4 lg:grid-cols-2">
         <CmsImageField
@@ -78,9 +78,9 @@ export default function HeaderLayoutEditor({
 
       <LayoutToggle
         label="Sticky header"
-        hint="Header stays at top when scrolling"
+        hint="On = navbar stays fixed at top while scrolling. Click Publish header after changing."
         enabled={header.sticky !== false}
-        onToggle={() => setHeader({ sticky: header.sticky === false })}
+        onToggle={() => setHeader({ sticky: header.sticky === false ? true : false })}
       />
 
       <LayoutToggle

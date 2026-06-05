@@ -59,7 +59,7 @@ export default function WebsiteLayoutTab({
       <p className="text-sm admin-surface-muted">
         Global theme plus full <strong className="admin-shell-text">header</strong> and{" "}
         <strong className="admin-shell-text">footer</strong> editors for your customer website.
-        Upload full logo images in <strong className="admin-surface-body">Header</strong> (no text beside logo on site).
+        Upload full logo images in <strong className="admin-surface-body">Header</strong> (optional text name toggle in header editor).
         Fallback logo: <strong className="admin-surface-body">Settings → General</strong>.
       </p>
 

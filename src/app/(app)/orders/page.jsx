@@ -249,6 +249,7 @@ function OrderCard({ order, currency, onStatusChange, onMarkPaid, canEdit }) {
 /* ── Create Order Modal ── */
 function CreateOrderModal({ open, onClose, onCreated, currency = "INR" }) {
   const [tables, setTables]   = useState([]);
+  const [areas, setAreas]     = useState([]);
   const [menuItems, setMenuItems] = useState([]);
   const [cart, setCart]       = useState([]);
   const [form, setForm]       = useState({ orderType: "dine-in", tableNumber: "", customer: "", notes: "" });
@@ -276,12 +277,14 @@ function CreateOrderModal({ open, onClose, onCreated, currency = "INR" }) {
     setPaymentStatus("paid");
     Promise.all([
       fetch("/api/tables"),
+      fetch("/api/tables/areas"),
       fetch("/api/menu?status=active"),
       fetch("/api/settings"),
     ])
-      .then(([t, m, s]) => Promise.all([t.json(), m.json(), s.json()]))
-      .then(([td, md, sd]) => {
+      .then(([t, a, m, s]) => Promise.all([t.json(), a.json(), m.json(), s.json()]))
+      .then(([td, ad, md, sd]) => {
         if (td.success) setTables(td.tables.filter((t) => t.status === "available"));
+        if (ad.success) setAreas(ad.areas);
         if (md.success) setMenuItems(md.items);
         if (sd.success) {
           setTaxPercent(parseFloat(sd.settings?.pos?.taxPercentage ?? "0") || 0);
@@ -289,6 +292,35 @@ function CreateOrderModal({ open, onClose, onCreated, currency = "INR" }) {
         }
       }).catch(() => {});
   }, [open]);
+
+  const areaNameById = useMemo(
+    () => Object.fromEntries(areas.map((a) => [a.id, a.name])),
+    [areas]
+  );
+
+  const tablesByArea = useMemo(() => {
+    const groups = new Map();
+    for (const table of tables) {
+      const areaId = table.categoryId ?? "";
+      const areaName = areaId ? (areaNameById[areaId] ?? "Unknown area") : "No area assigned";
+      if (!groups.has(areaId)) {
+        groups.set(areaId, { areaId, areaName, tables: [] });
+      }
+      groups.get(areaId).tables.push(table);
+    }
+    return [...groups.values()]
+      .map((g) => ({
+        ...g,
+        tables: [...g.tables].sort((a, b) =>
+          String(a.tableNumber).localeCompare(String(b.tableNumber), undefined, { numeric: true })
+        ),
+      }))
+      .sort((a, b) => {
+        if (!a.areaId) return 1;
+        if (!b.areaId) return -1;
+        return a.areaName.localeCompare(b.areaName);
+      });
+  }, [tables, areaNameById]);
 
   const filteredMenu = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -436,9 +468,22 @@ function CreateOrderModal({ open, onClose, onCreated, currency = "INR" }) {
                       fieldErrors.tableNumber ? "border-red-500/50" : "border-zinc-700"
                     }`}
                   >
-                    <option value="">— Select —</option>
-                    {tables.map((t) => <option key={t.id} value={t.tableNumber}>{t.tableNumber} ({t.capacity}p)</option>)}
+                    <option value="">— Select table —</option>
+                    {tablesByArea.map((group) => (
+                      <optgroup key={group.areaId || "unassigned"} label={group.areaName}>
+                        {group.tables.map((t) => (
+                          <option key={t.id} value={t.tableNumber}>
+                            {t.tableNumber} ({t.capacity}p)
+                          </option>
+                        ))}
+                      </optgroup>
+                    ))}
                   </select>
+                  {tables.length === 0 && (
+                    <p className="mt-1 text-[10px] text-amber-400/90">
+                      No available tables. Add tables under Tables → Tables List, or mark occupied tables as Available.
+                    </p>
+                  )}
                   {fieldErrors.tableNumber && (
                     <p className="mt-1 text-xs text-red-400">{fieldErrors.tableNumber}</p>
                   )}
