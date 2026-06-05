@@ -276,6 +276,7 @@ export default function RecipesPage() {
               total={total}
               pageSize={pageSize}
               onPageChange={setPage}
+              hideWhenSinglePage
             />
           </div>
         </DataTableShell>

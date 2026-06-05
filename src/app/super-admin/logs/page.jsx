@@ -3,10 +3,11 @@
 import SuperAdminPageSkeleton from "@/components/super-admin/SuperAdminPageSkeleton";
 import { saIconBadgeCls, saSpinnerCls } from "@/config/superAdminTheme";
 import SearchField from "@/components/ui/SearchField";
+import PaginationBar from "@/components/ui/PaginationBar";
 import { useToast } from "@/hooks/useToast";
 import {
   Activity, AlertTriangle, Building2,
-  ChevronLeft, ChevronRight, ClipboardList,
+  ClipboardList,
   CreditCard, RefreshCw, Search, Settings,
   Shield, User, X,
 } from "lucide-react";
@@ -295,49 +296,15 @@ export default function LogsPage() {
             })}
           </div>
 
-          {/* Pagination */}
-          <div className="flex items-center justify-between admin-surface-divider-t px-4 py-3">
-            <p className="text-xs admin-surface-faint">
-              {pagination.total.toLocaleString()} log{pagination.total !== 1 ? "s" : ""}
-              {pagination.pages > 1 && ` · page ${pagination.page} of ${pagination.pages}`}
-            </p>
-            {pagination.pages > 1 && (
-              <div className="flex items-center gap-1">
-                <button
-                  type="button"
-                  onClick={() => setPage((p) => Math.max(1, p - 1))}
-                  disabled={page <= 1}
-                  className="cursor-pointer flex size-8 items-center justify-center rounded-lg border admin-shell-border text-zinc-400 hover:border-zinc-600 hover:admin-shell-text disabled:opacity-30 transition-colors"
-                >
-                  <ChevronLeft className="size-4" />
-                </button>
-                {Array.from({ length: Math.min(pagination.pages, 5) }, (_, i) => {
-                  const n = Math.max(1, Math.min(pagination.pages - 4, page - 2)) + i;
-                  return (
-                    <button
-                      key={n}
-                      type="button"
-                      onClick={() => setPage(n)}
-                      className={`cursor-pointer flex size-8 items-center justify-center rounded-lg border text-xs font-medium transition-colors ${
-                        n === page
-                          ? "border-sa-primary-40 bg-sa-primary-10 text-sa-primary"
-                          : "admin-shell-border text-zinc-500 hover:border-zinc-600 hover:admin-surface-body"
-                      }`}
-                    >
-                      {n}
-                    </button>
-                  );
-                })}
-                <button
-                  type="button"
-                  onClick={() => setPage((p) => Math.min(pagination.pages, p + 1))}
-                  disabled={page >= pagination.pages}
-                  className="cursor-pointer flex size-8 items-center justify-center rounded-lg border admin-shell-border text-zinc-400 hover:border-zinc-600 hover:admin-shell-text disabled:opacity-30 transition-colors"
-                >
-                  <ChevronRight className="size-4" />
-                </button>
-              </div>
-            )}
+          <div className="px-4 pb-4">
+            <PaginationBar
+              page={page}
+              totalPages={pagination.pages}
+              total={pagination.total}
+              pageSize={25}
+              onPageChange={setPage}
+              hideWhenSinglePage
+            />
           </div>
         </div>
       )}

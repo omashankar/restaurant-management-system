@@ -32,7 +32,10 @@ import {
   TrendingUp,
 } from "lucide-react";
 import Link from "next/link";
+import PaginationBar from "@/components/ui/PaginationBar";
 import { useCallback, useEffect, useMemo, useState } from "react";
+
+const SUBS_PAGE_SIZE = 15;
 
 const PLAN_BADGE = {
   free:       "bg-zinc-500/15 text-zinc-400 ring-zinc-500/25",
@@ -84,6 +87,8 @@ export default function BillingPage() {
   const [loading, setLoading]         = useState(true);
   const [loadError, setLoadError]     = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [subsPage, setSubsPage] = useState(1);
+  const [subsPagination, setSubsPagination] = useState({ total: 0, pages: 1 });
 
   const [assignOpen, setAssignOpen]   = useState(false);
   const [assignForm, setAssignForm] = useState(emptyAssignForm);
@@ -100,11 +105,18 @@ export default function BillingPage() {
 
   const { showToast, ToastUI } = useToast();
 
+  useEffect(() => {
+    setSubsPage(1);
+  }, [statusFilter]);
+
   const fetchAll = useCallback(async () => {
     setLoading(true);
     setLoadError("");
     try {
-      const params = new URLSearchParams();
+      const params = new URLSearchParams({
+        page: String(subsPage),
+        limit: String(SUBS_PAGE_SIZE),
+      });
       if (statusFilter !== "all") params.set("status", statusFilter);
       const [subsRes, billingRes, plansRes, restRes] = await Promise.all([
         fetch("/api/super-admin/subscriptions?" + params),
@@ -118,7 +130,10 @@ export default function BillingPage() {
       if (!subsData.success && !billingData.success) {
         setLoadError(subsData.error ?? billingData.error ?? "Failed to load billing data.");
       }
-      if (subsData.success)    setSubs(subsData.subscriptions);
+      if (subsData.success) {
+        setSubs(subsData.subscriptions);
+        if (subsData.pagination) setSubsPagination(subsData.pagination);
+      }
       if (billingData.success) setBilling(billingData);
       if (plansData.success)   setPlans(plansData.plans);
       if (restData.success)    setRestaurants(restData.restaurants);
@@ -127,7 +142,7 @@ export default function BillingPage() {
       showToast("Failed to load.", "error");
     }
     finally { setLoading(false); }
-  }, [statusFilter, showToast]);
+  }, [statusFilter, subsPage, showToast]);
 
   useEffect(() => { fetchAll(); }, [fetchAll]);
 
@@ -477,8 +492,15 @@ export default function BillingPage() {
                 </AdminTable>
               </DataTableShell>
             )}
-            <div className="admin-surface-divider-t px-4 py-2.5 text-xs admin-surface-faint">
-              {subs.length} subscription{subs.length !== 1 ? "s" : ""}
+            <div className="px-4 pb-4">
+              <PaginationBar
+                page={subsPage}
+                totalPages={subsPagination.pages}
+                total={subsPagination.total}
+                pageSize={SUBS_PAGE_SIZE}
+                onPageChange={setSubsPage}
+                hideWhenSinglePage
+              />
             </div>
           </div>
           )}

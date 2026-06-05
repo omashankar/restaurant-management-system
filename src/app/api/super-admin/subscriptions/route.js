@@ -4,6 +4,7 @@ import clientPromise from "@/lib/mongodb";
 import { assignPlan } from "@/lib/subscription";
 import { parseSchema, superAdminAssignPlanSchema } from "@/lib/validationSchemas";
 import { ObjectId } from "mongodb";
+import { buildPaginationMeta, paginationSkip, parseLimitParam, parsePageParam } from "@/lib/pagination";
 
 function superAdminOnly(request) {
   const token   = getTokenFromRequest(request);
@@ -25,14 +26,15 @@ export async function GET(request) {
     const filter = {};
     if (statusFilter !== "all") filter.status = statusFilter;
 
-    const rawLimit = parseInt(searchParams.get("limit") ?? "2000", 10);
-    const limit = Number.isFinite(rawLimit) ? Math.min(Math.max(rawLimit, 1), 5000) : 2000;
+    const page = parsePageParam(searchParams.get("page"));
+    const limit = parseLimitParam(searchParams.get("limit"), { defaultLimit: 15, maxLimit: 100 });
+    const skip = paginationSkip(page, limit);
 
-    const subs = await db.collection("subscriptions")
-      .find(filter)
-      .sort({ updatedAt: -1 })
-      .limit(limit)
-      .toArray();
+    const col = db.collection("subscriptions");
+    const [subs, total] = await Promise.all([
+      col.find(filter).sort({ updatedAt: -1 }).skip(skip).limit(limit).toArray(),
+      col.countDocuments(filter),
+    ]);
 
     const rIds = [...new Set(subs.map((s) => s.restaurantId?.toString()).filter(Boolean))];
     let restaurantMap = {};
@@ -45,6 +47,7 @@ export async function GET(request) {
     }
 
     const now = new Date();
+    const pagination = buildPaginationMeta({ page, limit, total });
     return Response.json({
       success: true,
       subscriptions: subs.map((s) => {
@@ -70,6 +73,7 @@ export async function GET(request) {
           updatedAt:        s.updatedAt,
         };
       }),
+      pagination: { page: pagination.page, limit, total, pages: pagination.pages },
     });
   } catch (err) {
     console.error("GET subscriptions error:", err.message);

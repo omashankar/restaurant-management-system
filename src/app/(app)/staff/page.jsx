@@ -314,7 +314,7 @@ export default function StaffModulePage() {
             </AdminTableBody>
           </AdminTable>
           <div className="px-4 pb-4">
-            <PaginationBar page={page} totalPages={totalPages} total={total} pageSize={pageSize} onPageChange={setPage} />
+            <PaginationBar page={page} totalPages={totalPages} total={total} pageSize={pageSize} onPageChange={setPage} hideWhenSinglePage />
           </div>
         </DataTableShell>
       )}

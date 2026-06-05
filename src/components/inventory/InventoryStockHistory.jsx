@@ -1,6 +1,8 @@
 "use client";
 
 import { computeInventoryStatus } from "@/components/inventory/inventoryUtils";
+import PaginationBar from "@/components/ui/PaginationBar";
+import { usePaginatedList } from "@/hooks/usePaginatedList";
 import { TrendingDown, TrendingUp } from "lucide-react";
 
 function formatShortDate(iso) {
@@ -17,6 +19,18 @@ function formatShortDate(iso) {
 }
 
 export default function InventoryStockHistory({ historyEntries, items }) {
+  const {
+    page,
+    setPage,
+    pageRows,
+    total,
+    totalPages,
+    pageSize,
+  } = usePaginatedList(historyEntries, {
+    searchKeys: ["itemName", "message"],
+    pageSize: 8,
+  });
+
   const maxQty = Math.max(1, ...items.map((i) => Number(i.quantity) || 0));
   const sortedItems = [...items].sort(
     (a, b) => (Number(b.quantity) || 0) - (Number(a.quantity) || 0)
@@ -32,11 +46,11 @@ export default function InventoryStockHistory({ historyEntries, items }) {
         <p className="mt-0.5 text-xs admin-surface-muted">
           Latest stock movements (newest first)
         </p>
-        <ul className="mt-4 max-h-[280px] space-y-3 overflow-y-auto pr-1">
-          {historyEntries.length === 0 ? (
+        <ul className="mt-4 space-y-3 pr-1">
+          {total === 0 ? (
             <li className="text-sm admin-surface-muted">No history yet.</li>
           ) : (
-            historyEntries.map((entry) => {
+            pageRows.map((entry) => {
               const up = entry.delta > 0;
               return (
                 <li
@@ -71,6 +85,17 @@ export default function InventoryStockHistory({ historyEntries, items }) {
             })
           )}
         </ul>
+        {total > 0 && (
+          <PaginationBar
+            page={page}
+            totalPages={totalPages}
+            total={total}
+            pageSize={pageSize}
+            onPageChange={setPage}
+            hideWhenSinglePage
+            className="mt-3 border-t-0 pt-2"
+          />
+        )}
       </div>
 
       <div className="rounded-2xl border admin-shell-border bg-zinc-900/40 p-5">

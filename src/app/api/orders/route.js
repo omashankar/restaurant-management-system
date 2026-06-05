@@ -1,5 +1,6 @@
 import { withTenant } from "@/lib/tenantDb";
 import { logInfo } from "@/lib/logger";
+import { buildPaginationMeta, paginationSkip, parseLimitParam, parsePageParam } from "@/lib/pagination";
 import { sendNewOrderAlertEmail } from "@/lib/emailService";
 import { getRestaurantNotificationPrefs } from "@/lib/restaurantNotificationPrefs";
 import { orderCreateSchema, parseSchema } from "@/lib/validationSchemas";
@@ -26,18 +27,44 @@ export const GET = withTenant(
   async ({ db, tenantFilter }, request) => {
     const { searchParams } = new URL(request.url);
     const status = searchParams.get("status");
+    const q = (searchParams.get("q") ?? "").trim();
+    const sort = searchParams.get("sort") === "oldest" ? 1 : -1;
+    const page = parsePageParam(searchParams.get("page"));
+    const limit = parseLimitParam(searchParams.get("limit"), { defaultLimit: 12, maxLimit: 100 });
+    const skip = paginationSkip(page, limit);
+
     const filter = { ...tenantFilter };
     if (status && status !== "all") filter.status = status;
+    if (q) {
+      filter.$or = [
+        { orderId: { $regex: q, $options: "i" } },
+        { customer: { $regex: q, $options: "i" } },
+        { tableNumber: { $regex: q, $options: "i" } },
+      ];
+    }
 
-    const orders = await db.collection("orders")
-      .find(filter)
-      .sort({ createdAt: -1 })
-      .limit(200)
-      .toArray();
+    const col = db.collection("orders");
+    const [orders, total, summaryRows] = await Promise.all([
+      col.find(filter).sort({ createdAt: sort }).skip(skip).limit(limit).toArray(),
+      col.countDocuments(filter),
+      col.aggregate([
+        { $match: tenantFilter },
+        { $group: { _id: "$status", count: { $sum: 1 } } },
+      ]).toArray(),
+    ]);
+
+    const summary = { new: 0, preparing: 0, ready: 0, completed: 0, cancelled: 0 };
+    for (const row of summaryRows) {
+      if (row._id && summary[row._id] !== undefined) summary[row._id] = row.count;
+    }
+
+    const pagination = buildPaginationMeta({ page, limit, total });
 
     return Response.json({
       success: true,
       orders: orders.map((o) => ({ ...o, id: o._id.toString(), _id: undefined })),
+      pagination: { page: pagination.page, limit, total, pages: pagination.pages },
+      summary,
     });
   }
 );

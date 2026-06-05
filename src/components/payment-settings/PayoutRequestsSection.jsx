@@ -1,7 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { ChevronLeft, ChevronRight, Loader2, RefreshCw } from "lucide-react";
+import PaginationBar from "@/components/ui/PaginationBar";
+import { Loader2, RefreshCw } from "lucide-react";
 
 const STATUS_BADGE = {
   pending:  "bg-amber-500/15 text-amber-400 ring-1 ring-amber-500/25",
@@ -152,21 +153,16 @@ export default function PayoutRequestsSection({ settlement, showToast }) {
               </tbody>
             </table>
           </div>
-          {pagination.pages > 1 && (
-            <div className="flex items-center justify-between admin-surface-divider-t px-4 py-3">
-              <p className="text-xs admin-surface-faint">{pagination.total} total</p>
-              <div className="flex gap-1">
-                <button type="button" onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page <= 1}
-                  className="cursor-pointer flex size-8 items-center justify-center rounded-lg border admin-shell-border admin-surface-muted hover:border-zinc-600 disabled:opacity-30">
-                  <ChevronLeft className="size-4" />
-                </button>
-                <button type="button" onClick={() => setPage((p) => Math.min(pagination.pages, p + 1))} disabled={page >= pagination.pages}
-                  className="cursor-pointer flex size-8 items-center justify-center rounded-lg border admin-shell-border admin-surface-muted hover:border-zinc-600 disabled:opacity-30">
-                  <ChevronRight className="size-4" />
-                </button>
-              </div>
-            </div>
-          )}
+          <div className="px-4 pb-4">
+            <PaginationBar
+              page={page}
+              totalPages={pagination.pages}
+              total={pagination.total}
+              pageSize={20}
+              onPageChange={setPage}
+              hideWhenSinglePage
+            />
+          </div>
         </div>
       )}
     </section>

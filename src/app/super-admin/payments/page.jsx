@@ -3,6 +3,7 @@
 import SuperAdminPageSkeleton from "@/components/super-admin/SuperAdminPageSkeleton";
 import { saIconBadgeCls, saSpinnerCls } from "@/config/superAdminTheme";
 import SearchField from "@/components/ui/SearchField";
+import PaginationBar from "@/components/ui/PaginationBar";
 import DataTableShell from "@/components/ui/DataTableShell";
 import {
   AdminTable,
@@ -16,7 +17,7 @@ import {
 import { formatSaMoney } from "@/lib/formatSaMoney";
 import { useToast } from "@/hooks/useToast";
 import {
-  CheckCircle2, ChevronLeft, ChevronRight,
+  CheckCircle2,
   Clock, DollarSign, Download, FileText, RefreshCw, Search, XCircle,
 } from "lucide-react";
 import Link from "next/link";
@@ -284,26 +285,16 @@ export default function PaymentsPage() {
               </AdminTableBody>
             </AdminTable>
 
-          {/* Pagination */}
-          {pagination.pages > 1 && (
-            <div className="flex items-center justify-between admin-surface-divider-t px-4 py-3">
-              <p className="text-xs admin-surface-faint">
-                {pagination.total} total · page {pagination.page} of {pagination.pages}
-              </p>
-              <div className="flex items-center gap-1">
-                <button type="button" onClick={() => setPage((p) => Math.max(1, p - 1))}
-                  disabled={page <= 1}
-                  className="cursor-pointer flex size-8 items-center justify-center rounded-lg border admin-shell-border text-zinc-400 hover:border-zinc-600 hover:admin-shell-text disabled:opacity-30 transition-colors">
-                  <ChevronLeft className="size-4" />
-                </button>
-                <button type="button" onClick={() => setPage((p) => Math.min(pagination.pages, p + 1))}
-                  disabled={page >= pagination.pages}
-                  className="cursor-pointer flex size-8 items-center justify-center rounded-lg border admin-shell-border text-zinc-400 hover:border-zinc-600 hover:admin-shell-text disabled:opacity-30 transition-colors">
-                  <ChevronRight className="size-4" />
-                </button>
-              </div>
-            </div>
-          )}
+          <div className="px-4 pb-4">
+            <PaginationBar
+              page={page}
+              totalPages={pagination.pages}
+              total={pagination.total}
+              pageSize={20}
+              onPageChange={setPage}
+              hideWhenSinglePage
+            />
+          </div>
         </DataTableShell>
       )}
       </>
@@ -374,8 +365,15 @@ export default function PaymentsPage() {
                 ))}
               </AdminTableBody>
             </AdminTable>
-          <div className="admin-surface-divider-t px-4 py-2.5 text-xs admin-surface-faint">
-            {invoiceRows.length} subscription invoice{invoiceRows.length !== 1 ? "s" : ""}
+          <div className="px-4 pb-4">
+            <PaginationBar
+              page={page}
+              totalPages={pagination.pages}
+              total={pagination.total}
+              pageSize={20}
+              onPageChange={setPage}
+              hideWhenSinglePage
+            />
           </div>
         </DataTableShell>
       )}

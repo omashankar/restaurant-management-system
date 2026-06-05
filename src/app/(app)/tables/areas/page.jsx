@@ -15,6 +15,8 @@ import {
   getTableAreaFieldErrors,
 } from "@/lib/formValidation";
 import { validateImageFileType } from "@/lib/uploadImageShared";
+import PaginationBar from "@/components/ui/PaginationBar";
+import { usePaginatedList } from "@/hooks/usePaginatedList";
 import { useCallback, useEffect, useState } from "react";
 
 const EMPTY_FORM = { name: "", description: "", color: "emerald", imageUrl: "" };
@@ -87,6 +89,11 @@ export default function TableAreasPage() {
       }
     };
   }, [previewUrl]);
+
+  const { page, setPage, pageRows, total, totalPages, pageSize } = usePaginatedList(areas, {
+    searchKeys: ["name", "description"],
+    pageSize: 9,
+  });
 
   const openCreate = () => {
     setEditingId(null);
@@ -244,7 +251,7 @@ export default function TableAreasPage() {
       </div>
 
       {/* Grid */}
-      {areas.length === 0 ? (
+      {total === 0 ? (
         <EmptyState
           title="No areas yet"
           description="Create seating areas like Indoor, Outdoor, VIP to organize your tables."
@@ -256,8 +263,9 @@ export default function TableAreasPage() {
           }
         />
       ) : (
+        <>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {areas.map((area) => {
+          {pageRows.map((area) => {
             const badgeClass = getCategoryBadge(area.color);
             const count = tableCounts[area.id] ?? 0;
             return (
@@ -301,6 +309,15 @@ export default function TableAreasPage() {
             );
           })}
         </div>
+        <PaginationBar
+          page={page}
+          totalPages={totalPages}
+          total={total}
+          pageSize={pageSize}
+          onPageChange={setPage}
+          hideWhenSinglePage
+        />
+        </>
       )}
 
       {/* Modal */}

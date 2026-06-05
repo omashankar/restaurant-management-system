@@ -7,15 +7,7 @@ import {
   ShoppingBag, TrendingUp, Trophy,
 } from "lucide-react";
 import { formatAdminMoney } from "@/lib/adminCurrency";
-import {
-  AdminTable,
-  AdminTableBody,
-  AdminTableHead,
-  AdminTableHeadRow,
-  AdminTableRow,
-  AdminTableTd,
-  AdminTableTh,
-} from "@/components/ui/AdminTable";
+import TopItemsTable from "@/components/analytics/TopItemsTable";
 import { useCallback, useEffect, useState } from "react";
 
 const TenantAnalyticsCharts = dynamic(
@@ -168,34 +160,7 @@ export default function AnalyticsPage() {
 
       <TenantAnalyticsCharts chartData={chartData} topItems={topItems} orderTypes={orderTypes} currency={currency} />
 
-      {topItems.length > 0 && (
-        <div className="admin-surface-card overflow-hidden">
-          <div className="flex items-center gap-2 admin-surface-divider-b px-5 py-4">
-            <Trophy className="size-4 text-amber-400" />
-            <p className="text-sm font-semibold admin-shell-text">Top Items by Revenue</p>
-          </div>
-          <AdminTable>
-            <AdminTableHead>
-              <AdminTableHeadRow>
-                <AdminTableTh className="px-5">#</AdminTableTh>
-                <AdminTableTh className="px-5">Item</AdminTableTh>
-                <AdminTableTh align="right" className="px-5">Qty Sold</AdminTableTh>
-                <AdminTableTh align="right" className="px-5">Revenue</AdminTableTh>
-              </AdminTableHeadRow>
-            </AdminTableHead>
-            <AdminTableBody>
-              {topItems.map((item, i) => (
-                <AdminTableRow key={item.name}>
-                  <AdminTableTd className="px-5 font-mono text-xs admin-surface-muted">{i + 1}</AdminTableTd>
-                  <AdminTableTd className="px-5 font-medium admin-shell-text">{item.name}</AdminTableTd>
-                  <AdminTableTd align="right" className="px-5 admin-surface-body">{item.qty}</AdminTableTd>
-                  <AdminTableTd align="right" className="px-5 font-semibold text-ra-primary">{fmt(item.revenue)}</AdminTableTd>
-                </AdminTableRow>
-              ))}
-            </AdminTableBody>
-          </AdminTable>
-        </div>
-      )}
+      <TopItemsTable items={topItems} formatMoney={fmt} />
 
     </div>
   );

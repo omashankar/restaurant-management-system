@@ -346,6 +346,7 @@ export default function CustomersModulePage() {
               total={total}
               pageSize={pageSize}
               onPageChange={setPage}
+              hideWhenSinglePage
             />
           </div>
         </DataTableShell>

@@ -15,8 +15,11 @@ import {
   ticketStatusSelectCls,
 } from "@/config/supportTicketConfig";
 import { saInputCls, saSpinnerCls } from "@/config/superAdminTheme";
+import PaginationBar from "@/components/ui/PaginationBar";
 import { Loader2, RefreshCcw, X } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
+
+const TICKETS_PAGE_SIZE = 15;
 
 export default function SuperAdminSupportTicketsPage() {
   const [tickets, setTickets] = useState([]);
@@ -25,6 +28,8 @@ export default function SuperAdminSupportTicketsPage() {
   const [loadError, setLoadError] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [priorityFilter, setPriorityFilter] = useState("all");
+  const [page, setPage] = useState(1);
+  const [pagination, setPagination] = useState({ total: 0, pages: 1 });
   const [toast, setToast] = useState(null);
   const [selectedTicketId, setSelectedTicketId] = useState("");
   const [selectedTicket, setSelectedTicket] = useState(null);
@@ -37,20 +42,30 @@ export default function SuperAdminSupportTicketsPage() {
     setTimeout(() => setToast(null), 2200);
   }
 
+  useEffect(() => {
+    setPage(1);
+  }, [statusFilter, priorityFilter]);
+
   async function loadTickets() {
     setLoading(true);
     setLoadError("");
     try {
-      const params = new URLSearchParams();
+      const params = new URLSearchParams({
+        page: String(page),
+        limit: String(TICKETS_PAGE_SIZE),
+      });
       if (statusFilter !== "all") params.set("status", statusFilter);
       if (priorityFilter !== "all") params.set("priority", priorityFilter);
       const [listRes, statsRes] = await Promise.all([
         fetch(`/api/super-admin/support-tickets?${params.toString()}`, { cache: "no-store" }),
-        fetch("/api/super-admin/support-tickets?limit=200", { cache: "no-store" }),
+        fetch("/api/super-admin/support-tickets?stats=1", { cache: "no-store" }),
       ]);
       const data = await listRes.json();
       const statsData = await statsRes.json();
-      if (data.success) setTickets(data.tickets || []);
+      if (data.success) {
+        setTickets(data.tickets || []);
+        if (data.pagination) setPagination(data.pagination);
+      }
       else {
         const message = data.error || "Failed to load tickets.";
         setLoadError(message);
@@ -69,7 +84,7 @@ export default function SuperAdminSupportTicketsPage() {
   useEffect(() => {
     loadTickets();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [statusFilter, priorityFilter]);
+  }, [statusFilter, priorityFilter, page]);
 
   async function updateTicket(ticketId, payload) {
     const mergeTicket = (prev) =>
@@ -284,6 +299,18 @@ export default function SuperAdminSupportTicketsPage() {
           </div>
         )}
         </div>
+        {!loading && tickets.length > 0 && (
+          <div className="px-4 pb-4">
+            <PaginationBar
+              page={page}
+              totalPages={pagination.pages}
+              total={pagination.total}
+              pageSize={TICKETS_PAGE_SIZE}
+              onPageChange={setPage}
+              hideWhenSinglePage
+            />
+          </div>
+        )}
       </DataTableShell>
 
       {selectedTicketId ? (

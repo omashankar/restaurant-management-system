@@ -1,4 +1,5 @@
 import { withTenant } from "@/lib/tenantDb";
+import { buildPaginationMeta, paginationSkip, parseLimitParam, parsePageParam } from "@/lib/pagination";
 
 const ALLOWED_PRIORITIES = ["low", "medium", "high", "urgent"];
 const ALLOWED_STATUSES = ["open", "in_progress", "resolved", "closed"];
@@ -21,8 +22,9 @@ export const GET = withTenant(
     const status = normalizeText(searchParams.get("status"), 20).toLowerCase();
     const priority = normalizeText(searchParams.get("priority"), 20).toLowerCase();
     const q = normalizeText(searchParams.get("q"), 80);
-    const limitRaw = Number(searchParams.get("limit") ?? 50);
-    const limit = Number.isFinite(limitRaw) ? Math.min(100, Math.max(1, limitRaw)) : 50;
+    const page = parsePageParam(searchParams.get("page"));
+    const limit = parseLimitParam(searchParams.get("limit"), { defaultLimit: 10, maxLimit: 100 });
+    const statsOnly = searchParams.get("stats") === "1";
 
     const query = { restaurantId };
     if (ALLOWED_STATUSES.includes(status)) query.status = status;
@@ -36,13 +38,27 @@ export const GET = withTenant(
     }
 
     try {
-      const tickets = await db
-        .collection("support_tickets")
-        .find(query)
-        .sort({ updatedAt: -1, createdAt: -1 })
-        .limit(limit)
-        .toArray();
-      return Response.json({ success: true, tickets });
+      const col = db.collection("support_tickets");
+      if (statsOnly) {
+        const tickets = await col
+          .find({ restaurantId })
+          .sort({ updatedAt: -1, createdAt: -1 })
+          .limit(200)
+          .toArray();
+        return Response.json({ success: true, tickets });
+      }
+
+      const skip = paginationSkip(page, limit);
+      const [tickets, total] = await Promise.all([
+        col.find(query).sort({ updatedAt: -1, createdAt: -1 }).skip(skip).limit(limit).toArray(),
+        col.countDocuments(query),
+      ]);
+      const pagination = buildPaginationMeta({ page, limit, total });
+      return Response.json({
+        success: true,
+        tickets,
+        pagination: { page: pagination.page, limit, total, pages: pagination.pages },
+      });
     } catch (err) {
       console.error("support.tickets.GET failed:", err.message);
       return Response.json(

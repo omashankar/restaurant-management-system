@@ -313,7 +313,7 @@ export default function TablesModulePage() {
             })}
           </div>
           <div className="px-1">
-            <PaginationBar page={page} totalPages={totalPages} total={total} pageSize={pageSize} onPageChange={setPage} />
+            <PaginationBar page={page} totalPages={totalPages} total={total} pageSize={pageSize} onPageChange={setPage} hideWhenSinglePage />
           </div>
         </>
       )}

@@ -181,7 +181,9 @@ export default function CategoriesPage() {
               ))}
             </AdminTableBody>
           </AdminTable>
-          <div className="px-4 pb-4"><PaginationBar page={page} totalPages={totalPages} total={total} pageSize={pageSize} onPageChange={setPage} /></div>
+          <div className="px-4 pb-4">
+            <PaginationBar page={page} totalPages={totalPages} total={total} pageSize={pageSize} onPageChange={setPage} hideWhenSinglePage />
+          </div>
         </DataTableShell>
       )}
 

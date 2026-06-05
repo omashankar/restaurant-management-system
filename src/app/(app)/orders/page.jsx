@@ -13,8 +13,11 @@ import {
   getCreateOrderFieldErrors,
 } from "@/lib/formValidation";
 import SearchField from "@/components/ui/SearchField";
+import PaginationBar from "@/components/ui/PaginationBar";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useLiveRefresh } from "@/hooks/useLiveRefresh";
+
+const ORDERS_PAGE_SIZE = 12;
 
 /* ── Config ── */
 const STATUS_CFG = {
@@ -589,8 +592,15 @@ export default function OrdersPage() {
   const [filter, setFilter]     = useState("all");
   const [search, setSearch]     = useState("");
   const [sortNew, setSortNew]   = useState(true);
+  const [page, setPage]         = useState(1);
+  const [pagination, setPagination] = useState({ total: 0, pages: 1 });
+  const [summary, setSummary]   = useState({ new: 0, preparing: 0, ready: 0, completed: 0, cancelled: 0 });
   const [createOpen, setCreateOpen] = useState(false);
   const [lastUpdated, setLastUpdated] = useState(null);
+
+  useEffect(() => {
+    setPage(1);
+  }, [filter, search, sortNew]);
 
   const canEdit = ["admin", "manager", "waiter"].includes(user?.role);
 
@@ -611,10 +621,19 @@ export default function OrdersPage() {
       setFetchError("");
     }
     try {
-      const res  = await fetch("/api/orders", { cache: "no-store" });
+      const params = new URLSearchParams({
+        page: String(page),
+        limit: String(ORDERS_PAGE_SIZE),
+        sort: sortNew ? "newest" : "oldest",
+      });
+      if (filter !== "all") params.set("status", filter);
+      if (search.trim()) params.set("q", search.trim());
+      const res  = await fetch(`/api/orders?${params}`, { cache: "no-store" });
       const data = await res.json();
       if (data.success) {
         setOrders(data.orders);
+        if (data.pagination) setPagination(data.pagination);
+        if (data.summary) setSummary(data.summary);
         setLastUpdated(new Date());
       } else if (!silent) {
         setFetchError(data.error ?? "Could not load orders.");
@@ -624,10 +643,10 @@ export default function OrdersPage() {
     } finally {
       if (!silent) setLoading(false);
     }
-  }, []);
+  }, [page, filter, search, sortNew]);
 
   useEffect(() => { fetchOrders(); }, [fetchOrders]);
-  useLiveRefresh(fetchOrders);
+  useLiveRefresh(() => fetchOrders(true));
 
   const handleStatusChange = useCallback(async (id, status) => {
     const res  = await fetch(`/api/orders/${id}`, {
@@ -663,28 +682,15 @@ export default function OrdersPage() {
     }
   }, []);
 
-  const handleCreated = useCallback((order) => {
-    setOrders((prev) => [order, ...prev]);
-  }, []);
+  const handleCreated = useCallback(() => {
+    setPage(1);
+    fetchOrders(true);
+  }, [fetchOrders]);
 
-  const summary = useMemo(() => {
-    const counts = { new: 0, preparing: 0, ready: 0, completed: 0, cancelled: 0 };
-    orders.forEach((o) => { if (counts[o.status] !== undefined) counts[o.status]++; });
-    return counts;
-  }, [orders]);
-
-  const filtered = useMemo(() => {
-    let list = filter === "all" ? orders : orders.filter((o) => o.status === filter);
-    if (search.trim()) {
-      const q = search.trim().toLowerCase();
-      list = list.filter((o) =>
-        (o.orderId ?? o.id ?? "").toLowerCase().includes(q) ||
-        (o.customer ?? "").toLowerCase().includes(q) ||
-        (o.tableNumber ?? "").toLowerCase().includes(q)
-      );
-    }
-    return sortNew ? list : [...list].reverse();
-  }, [filter, search, sortNew, orders]);
+  const totalOrders = useMemo(
+    () => Object.values(summary).reduce((s, n) => s + n, 0),
+    [summary]
+  );
 
   if (loading) {
     return (
@@ -717,7 +723,7 @@ export default function OrdersPage() {
             <div>
               <h1 className="admin-page-title text-2xl font-semibold tracking-tight">Orders</h1>
               <p className="admin-page-desc mt-1 text-sm">
-                {orders.length} total ·{" "}
+                {totalOrders} total ·{" "}
                 <span className="inline-flex items-center gap-1.5">
                   <span className="size-1.5 animate-pulse rounded-full bg-ra-accent" />
                   Live
@@ -775,7 +781,7 @@ export default function OrdersPage() {
         />
 
         {/* Grid */}
-        {filtered.length === 0 ? (
+        {orders.length === 0 ? (
           <div className="flex flex-col items-center justify-center gap-3 admin-surface-card py-20 text-center">
             <UtensilsCrossed className="size-10 text-zinc-700" />
             <p className="text-sm admin-surface-muted">No orders found.</p>
@@ -787,18 +793,28 @@ export default function OrdersPage() {
             )}
           </div>
         ) : (
-          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-            {filtered.map((o) => (
-              <OrderCard
-                key={o.id}
-                order={o}
-                currency={currency}
-                onStatusChange={handleStatusChange}
-                onMarkPaid={handleMarkPaid}
-                canEdit={canEdit}
-              />
-            ))}
-          </div>
+          <>
+            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+              {orders.map((o) => (
+                <OrderCard
+                  key={o.id}
+                  order={o}
+                  currency={currency}
+                  onStatusChange={handleStatusChange}
+                  onMarkPaid={handleMarkPaid}
+                  canEdit={canEdit}
+                />
+              ))}
+            </div>
+            <PaginationBar
+              page={page}
+              totalPages={pagination.pages}
+              total={pagination.total}
+              pageSize={ORDERS_PAGE_SIZE}
+              onPageChange={setPage}
+              hideWhenSinglePage
+            />
+          </>
         )}
       </div>
 

@@ -5,6 +5,7 @@ import SuperAdminPageSkeleton from "@/components/super-admin/SuperAdminPageSkele
 import { saIconBadgeCls, saSpinnerCls } from "@/config/superAdminTheme";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import SearchField from "@/components/ui/SearchField";
+import PaginationBar from "@/components/ui/PaginationBar";
 import DataTableShell from "@/components/ui/DataTableShell";
 import {
   AdminTable,
@@ -29,7 +30,7 @@ import {
   getRestaurantEditFieldErrors,
 } from "@/lib/formValidation";
 import {
-  Building2, Calendar, ChevronLeft, ChevronRight,
+  Building2, Calendar,
   Crown, Eye, Mail, MapPin,
   Pencil, Phone, Plus, RefreshCw, ShieldCheck, ShieldOff,
   Search, Trash2, X,
@@ -690,30 +691,15 @@ export default function RestaurantsPage() {
               </AdminTableBody>
             </AdminTable>
 
-          {/* Pagination */}
-          <div className="flex items-center justify-between admin-surface-divider-t px-4 py-3">
-            <p className="text-xs admin-surface-faint">
-              {totalCount} restaurant{totalCount !== 1 ? "s" : ""}
-              {totalPages > 1 && " · page " + page + " of " + totalPages}
-            </p>
-            {totalPages > 1 && (
-              <div className="flex items-center gap-1">
-                <button type="button" onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page <= 1}
-                  className="cursor-pointer flex size-8 items-center justify-center rounded-lg border admin-shell-border text-zinc-400 hover:border-zinc-600 hover:admin-shell-text disabled:opacity-30 transition-colors">
-                  <ChevronLeft className="size-4" />
-                </button>
-                {Array.from({ length: totalPages }, (_, i) => i + 1).map((n) => (
-                  <button key={n} type="button" onClick={() => setPage(n)}
-                    className={"cursor-pointer flex size-8 items-center justify-center rounded-lg border text-xs font-medium transition-colors " + (n === page ? "border-sa-primary-40 bg-sa-primary-10 text-sa-primary" : "admin-shell-border text-zinc-500 hover:border-zinc-600 hover:admin-surface-body")}>
-                    {n}
-                  </button>
-                ))}
-                <button type="button" onClick={() => setPage((p) => Math.min(totalPages, p + 1))} disabled={page >= totalPages}
-                  className="cursor-pointer flex size-8 items-center justify-center rounded-lg border admin-shell-border text-zinc-400 hover:border-zinc-600 hover:admin-shell-text disabled:opacity-30 transition-colors">
-                  <ChevronRight className="size-4" />
-                </button>
-              </div>
-            )}
+          <div className="px-4 pb-4">
+            <PaginationBar
+              page={page}
+              totalPages={totalPages}
+              total={totalCount}
+              pageSize={PAGE_SIZE}
+              onPageChange={setPage}
+              hideWhenSinglePage
+            />
           </div>
         </DataTableShell>
       )}

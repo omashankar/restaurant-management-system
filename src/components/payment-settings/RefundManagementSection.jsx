@@ -1,7 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { ChevronLeft, ChevronRight, RefreshCw } from "lucide-react";
+import PaginationBar from "@/components/ui/PaginationBar";
+import { RefreshCw } from "lucide-react";
 import { Loader2 } from "lucide-react";
 
 const STATUS_BADGE = {
@@ -215,21 +216,16 @@ export default function RefundManagementSection({ showToast }) {
               </tbody>
             </table>
           </div>
-          {pagination.pages > 1 && (
-            <div className="flex items-center justify-between admin-surface-divider-t px-4 py-3">
-              <p className="text-xs admin-surface-faint">{pagination.total} total</p>
-              <div className="flex gap-1">
-                <button type="button" onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page <= 1}
-                  className="cursor-pointer flex size-8 items-center justify-center rounded-lg border admin-shell-border admin-surface-muted hover:border-zinc-600 disabled:opacity-30">
-                  <ChevronLeft className="size-4" />
-                </button>
-                <button type="button" onClick={() => setPage((p) => Math.min(pagination.pages, p + 1))} disabled={page >= pagination.pages}
-                  className="cursor-pointer flex size-8 items-center justify-center rounded-lg border admin-shell-border admin-surface-muted hover:border-zinc-600 disabled:opacity-30">
-                  <ChevronRight className="size-4" />
-                </button>
-              </div>
-            </div>
-          )}
+          <div className="px-4 pb-4">
+            <PaginationBar
+              page={page}
+              totalPages={pagination.pages}
+              total={pagination.total}
+              pageSize={20}
+              onPageChange={setPage}
+              hideWhenSinglePage
+            />
+          </div>
         </div>
       )}
     </section>

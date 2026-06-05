@@ -1,6 +1,6 @@
 "use client";
 
-import DataTableShell from "@/components/ui/DataTableShell";
+import CustomerOrderHistoryTable from "@/components/customers/CustomerOrderHistoryTable";
 import TableSkeleton from "@/components/ui/TableSkeleton";
 import { useModuleData } from "@/context/ModuleDataContext";
 import { ArrowLeft, Mail, Phone, StickyNote } from "lucide-react";
@@ -159,46 +159,7 @@ export default function CustomerDetailPage() {
         <p className="admin-page-desc mt-1 text-sm">
           Orders linked from POS when this guest was selected at checkout.
         </p>
-        <DataTableShell className="mt-4">
-          <table className="min-w-full text-left text-sm">
-            <thead>
-              <tr className="border-b admin-shell-border admin-surface-card text-xs font-semibold uppercase tracking-wider text-zinc-500">
-                <th className="px-4 py-3">Order</th>
-                <th className="px-4 py-3">Date</th>
-                <th className="px-4 py-3">Summary</th>
-                <th className="px-4 py-3 text-right">Total</th>
-              </tr>
-            </thead>
-            <tbody>
-              {customer.orderHistory?.length ? (
-                customer.orderHistory.map((o) => (
-                  <tr
-                    key={o.id}
-                    className="transition-colors hover:bg-[var(--admin-hover)]"
-                  >
-                    <td className="px-4 py-3 font-mono text-xs text-ra-primary/90">
-                      {o.id}
-                    </td>
-                    <td className="px-4 py-3 text-zinc-400">{o.date}</td>
-                    <td className="px-4 py-3 admin-surface-body">{o.items}</td>
-                    <td className="px-4 py-3 text-right font-medium tabular-nums admin-shell-text">
-                      ${Number(o.total ?? 0).toFixed(2)}
-                    </td>
-                  </tr>
-                ))
-              ) : (
-                <tr>
-                  <td
-                    colSpan={4}
-                    className="px-4 py-10 text-center text-sm admin-surface-muted"
-                  >
-                    No orders yet.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </DataTableShell>
+        <CustomerOrderHistoryTable orders={customer.orderHistory ?? []} />
       </div>
     </div>
   );

@@ -443,6 +443,7 @@ export default function InventoryPage() {
                 total={total}
                 pageSize={pageSize}
                 onPageChange={setPage}
+                hideWhenSinglePage
               />
             </div>
           }
@@ -450,7 +451,7 @@ export default function InventoryPage() {
       )}
 
       <InventoryStockHistory
-        historyEntries={sortedHistory.slice(0, 12)}
+        historyEntries={sortedHistory}
         items={inventoryRows}
       />
 

@@ -9,13 +9,17 @@ export default function PaginationBar({
   total,
   pageSize,
   onPageChange,
+  className = "",
+  hideWhenSinglePage = false,
 }) {
+  if (hideWhenSinglePage && totalPages <= 1) return null;
+
   const from = total === 0 ? 0 : (page - 1) * pageSize + 1;
   const to = Math.min(page * pageSize, total);
 
   return (
     <div
-      className={`flex flex-col items-stretch justify-between gap-3 border-t ${adminShell.borderT} pt-4 text-sm sm:flex-row sm:items-center`}
+      className={`flex flex-col items-stretch justify-between gap-3 border-t ${adminShell.borderT} pt-4 text-sm sm:flex-row sm:items-center ${className}`}
     >
       <p className={adminSurface.muted}>
         {total === 0 ? (

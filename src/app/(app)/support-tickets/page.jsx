@@ -21,7 +21,10 @@ import {
   ticketStatusSelectCls,
 } from "@/config/supportTicketConfig";
 import { raInputCls } from "@/config/restaurantAdminTheme";
+import PaginationBar from "@/components/ui/PaginationBar";
 import { useEffect, useMemo, useState } from "react";
+
+const TICKETS_PAGE_SIZE = 10;
 
 const inputCls = raInputCls;
 
@@ -34,6 +37,8 @@ export default function SupportTicketsPage() {
   const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState(null);
   const [statusFilter, setStatusFilter] = useState("all");
+  const [page, setPage] = useState(1);
+  const [pagination, setPagination] = useState({ total: 0, pages: 1 });
   const [selectedTicketId, setSelectedTicketId] = useState("");
   const [selectedTicket, setSelectedTicket] = useState(null);
   const [loadingDetail, setLoadingDetail] = useState(false);
@@ -53,19 +58,29 @@ export default function SupportTicketsPage() {
     setTimeout(() => setToast(null), 2400);
   }
 
+  useEffect(() => {
+    setPage(1);
+  }, [statusFilter]);
+
   async function loadTickets() {
     setLoading(true);
     setLoadError(null);
     try {
-      const params = new URLSearchParams();
+      const params = new URLSearchParams({
+        page: String(page),
+        limit: String(TICKETS_PAGE_SIZE),
+      });
       if (statusFilter !== "all") params.set("status", statusFilter);
       const [listRes, statsRes] = await Promise.all([
         fetch(`/api/support/tickets?${params.toString()}`, { cache: "no-store" }),
-        fetch("/api/support/tickets?limit=100", { cache: "no-store" }),
+        fetch("/api/support/tickets?stats=1", { cache: "no-store" }),
       ]);
       const data = await listRes.json();
       const statsData = await statsRes.json();
-      if (data.success) setTickets(data.tickets || []);
+      if (data.success) {
+        setTickets(data.tickets || []);
+        if (data.pagination) setPagination(data.pagination);
+      }
       else {
         const msg = data.error || "Failed to load tickets.";
         setLoadError(msg);
@@ -84,7 +99,7 @@ export default function SupportTicketsPage() {
   useEffect(() => {
     loadTickets();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [statusFilter]);
+  }, [statusFilter, page]);
 
   async function createTicket(e) {
     e.preventDefault();
@@ -378,6 +393,16 @@ export default function SupportTicketsPage() {
               </div>
             ))}
           </div>
+        )}
+        {!loading && tickets.length > 0 && (
+          <PaginationBar
+            page={page}
+            totalPages={pagination.pages}
+            total={pagination.total}
+            pageSize={TICKETS_PAGE_SIZE}
+            onPageChange={setPage}
+            hideWhenSinglePage
+          />
         )}
       </div>
 

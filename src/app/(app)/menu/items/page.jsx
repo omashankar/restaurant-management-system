@@ -11,6 +11,8 @@ import AdminFoodTypeIndicator from "@/components/menu/AdminFoodTypeIndicator";
 import { useModuleData } from "@/context/ModuleDataContext";
 import { useToast } from "@/hooks/useToast";
 import SearchField from "@/components/ui/SearchField";
+import PaginationBar from "@/components/ui/PaginationBar";
+import { usePaginatedList } from "@/hooks/usePaginatedList";
 import {
   AdminTable,
   AdminTableActionsCell,
@@ -57,7 +59,6 @@ export default function MenuItemsPage() {
   const [loading, setLoading]       = useState(true);
   const [saving, setSaving]         = useState(false);
   const [activeCategory, setActiveCategory] = useState("all");
-  const [search, setSearch]         = useState("");
   const [viewMode, setViewMode]     = useState("grid"); // grid | list
   const [modalOpen, setModalOpen]   = useState(false);
   const [editingId, setEditingId]   = useState(null);
@@ -98,17 +99,21 @@ export default function MenuItemsPage() {
 
   useEffect(() => { fetchAll(); }, [fetchAll]);
 
-  /* ── Filter ── */
-  const filtered = useMemo(() => {
-    const q = search.trim().toLowerCase();
-    return items.filter((item) => {
-      if (activeCategory !== "all" && item.categoryId !== activeCategory) return false;
-      if (!q) return true;
-      return item.name.toLowerCase().includes(q) ||
-             (item.categoryName ?? "").toLowerCase().includes(q) ||
-             String(item.price).includes(q);
-    });
-  }, [items, activeCategory, search]);
+  const {
+    search,
+    setSearch,
+    page,
+    setPage,
+    pageRows,
+    total,
+    totalPages,
+    pageSize,
+  } = usePaginatedList(items, {
+    searchKeys: ["name", "categoryName", "price"],
+    pageSize: 12,
+    filter: (item) => activeCategory === "all" || item.categoryId === activeCategory,
+    resetKey: activeCategory,
+  });
 
   // Only show categories that have at least one menu item
   const categoriesWithItems = useMemo(() => {
@@ -302,18 +307,28 @@ export default function MenuItemsPage() {
       </div>
 
       {/* Items */}
-      {filtered.length === 0 ? (
+      {total === 0 ? (
         <EmptyState
           title="No items found"
           description={search ? "Try a different search." : "Add your first menu item."}
           action={<button type="button" onClick={openCreate} className="cursor-pointer rounded-xl bg-ra-primary px-4 py-2 text-sm font-semibold text-zinc-950 hover:brightness-110">Add Item</button>}
         />
       ) : viewMode === "grid" ? (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {filtered.map((item) => (
-            <MenuCard key={item.id} variant="menu" item={item} onEdit={openEdit} onDelete={setDeleteTarget} />
-          ))}
-        </div>
+        <>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {pageRows.map((item) => (
+              <MenuCard key={item.id} variant="menu" item={item} onEdit={openEdit} onDelete={setDeleteTarget} />
+            ))}
+          </div>
+          <PaginationBar
+            page={page}
+            totalPages={totalPages}
+            total={total}
+            pageSize={pageSize}
+            onPageChange={setPage}
+            hideWhenSinglePage
+          />
+        </>
       ) : (
         /* List view */
         <div className="overflow-hidden admin-surface-card">
@@ -328,7 +343,7 @@ export default function MenuItemsPage() {
               </AdminTableHeadRow>
             </AdminTableHead>
             <AdminTableBody>
-              {filtered.map((item) => (
+              {pageRows.map((item) => (
                 <AdminTableRow key={item.id}>
                   <AdminTableTd className="font-medium admin-shell-text">
                     <span className="inline-flex items-center gap-1.5">
@@ -357,6 +372,16 @@ export default function MenuItemsPage() {
               ))}
             </AdminTableBody>
           </AdminTable>
+          <div className="px-4 pb-4">
+            <PaginationBar
+              page={page}
+              totalPages={totalPages}
+              total={total}
+              pageSize={pageSize}
+              onPageChange={setPage}
+              hideWhenSinglePage
+            />
+          </div>
         </div>
       )}
 
