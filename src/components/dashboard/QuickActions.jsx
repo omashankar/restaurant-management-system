@@ -7,6 +7,7 @@ import {
   Table2,
   UtensilsCrossed,
 } from "lucide-react";
+import { adminSurface } from "@/config/adminSurfaceClasses";
 import Link from "next/link";
 
 const ALL_ACTIONS = [
@@ -57,10 +58,10 @@ export default function QuickActions() {
   const visible = ALL_ACTIONS.filter((a) => hasPermission(a.permission));
 
   return (
-    <div className="rms-dashboard-card rms-dashboard-card--lg flex h-full min-h-0 w-full flex-col rounded-2xl border border-zinc-800 bg-zinc-900/60 p-5">
+    <div className="rms-dashboard-card rms-dashboard-card--lg flex h-full min-h-0 w-full flex-col rms-dashboard-card admin-surface-card p-5">
       <div className="shrink-0">
-        <h3 className="text-sm font-semibold text-zinc-100">Quick Actions</h3>
-        <p className="mt-0.5 text-xs text-zinc-500">Shortcuts for common tasks</p>
+        <h3 className="admin-surface-title text-sm font-semibold">Quick Actions</h3>
+        <p className="mt-0.5 admin-surface-subheading">Shortcuts for common tasks</p>
       </div>
       <div className="rms-dashboard-card__body rms-dashboard-card__body--y mt-4 min-h-0 flex-1 pr-1">
       <div className="grid grid-cols-2 gap-2">
@@ -70,14 +71,14 @@ export default function QuickActions() {
             <Link
               key={href}
               href={href}
-              className={`group flex flex-col gap-3 rounded-xl border border-zinc-800 bg-zinc-950/50 p-3.5 transition-all duration-200 ${a.hover}`}
+              className={`group flex flex-col gap-3 rounded-xl border admin-shell-border bg-[var(--admin-hover)] p-3.5 transition-all duration-200 ${a.hover}`}
             >
               <span className={`flex size-9 items-center justify-center rounded-lg ring-1 transition-transform duration-200 group-hover:scale-105 ${a.icon}`}>
                 <Icon className="size-4" aria-hidden />
               </span>
               <div>
-                <p className="text-sm font-semibold text-zinc-200">{label}</p>
-                <p className="text-xs text-zinc-600">{sub}</p>
+                <p className="text-sm font-semibold admin-shell-text">{label}</p>
+                <p className={`text-xs ${adminSurface.muted}`}>{sub}</p>
               </div>
             </Link>
           );

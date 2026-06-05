@@ -22,7 +22,7 @@ const SIZE_STYLES = {
 };
 
 const standaloneFieldCls =
-  "w-full rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2 text-sm text-zinc-100 outline-none transition-colors placeholder:text-zinc-500 focus-ra-primary";
+  "admin-surface-input focus-ra-primary w-full px-3 py-2 text-sm transition-colors";
 
 /**
  * Indian mobile (+91 prefix, 10 digits). Letters are stripped — only digits 0–9.
@@ -30,7 +30,7 @@ const standaloneFieldCls =
 export default function PhoneInput({
   id,
   label,
-  labelClassName = "mb-1 block text-xs font-medium text-zinc-500",
+  labelClassName = "admin-surface-label mb-1 block",
   required = false,
   value = "",
   onChange,
@@ -61,7 +61,7 @@ export default function PhoneInput({
 
   // Never pass full field styles (border, rounded, bg) on inputClassName — shell owns the box.
   const innerCls = [
-    "min-w-0 flex-1 border-0 bg-transparent pl-2 pr-3 shadow-none outline-none ring-0 placeholder:text-zinc-500 focus:ring-0",
+    "min-w-0 flex-1 border-0 bg-transparent pl-2 pr-3 shadow-none outline-none ring-0 placeholder:admin-surface-faint focus:ring-0",
     sz.inner,
     inputClassName,
   ]

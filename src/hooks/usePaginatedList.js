@@ -51,6 +51,7 @@ export function usePaginatedList(items, opts) {
     setSearch,
     page: safePage,
     setPage,
+    filtered,
     pageRows,
     total: filtered.length,
     totalPages,

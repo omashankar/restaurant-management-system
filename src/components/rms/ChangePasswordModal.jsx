@@ -1,5 +1,6 @@
 "use client";
 
+import { adminSurface } from "@/config/adminSurfaceClasses";
 import Modal from "@/components/ui/Modal";
 import PasswordInput from "@/components/ui/PasswordInput";
 import { useProfile } from "@/hooks/useProfile";
@@ -8,22 +9,22 @@ import { CheckCircle2, Loader2, XCircle } from "lucide-react";
 const ACCENT = {
   emerald: {
     btn: "ra-btn-primary",
-    hint: "text-zinc-500",
+    hint: "admin-surface-muted",
     focus: "focus-ra-primary",
   },
   ra: {
     btn: "ra-btn-primary",
-    hint: "text-zinc-500",
+    hint: "admin-surface-muted",
     focus: "focus-ra-primary",
   },
   rose: {
     btn: "sa-btn-primary",
-    hint: "text-zinc-500",
+    hint: "admin-surface-muted",
     focus: "focus-sa-primary",
   },
   sa: {
     btn: "sa-btn-primary",
-    hint: "text-zinc-500",
+    hint: "admin-surface-muted",
     focus: "focus-sa-primary",
   },
 };
@@ -62,7 +63,7 @@ export default function ChangePasswordModal({ open, onClose, variant = "emerald"
           <button
             type="button"
             onClick={handleClose}
-            className="cursor-pointer rounded-xl border border-zinc-700 px-4 py-2 text-sm font-medium text-zinc-300 transition-colors hover:border-zinc-500 hover:text-zinc-100"
+            className="cursor-pointer rounded-xl border admin-shell-border px-4 py-2 text-sm font-medium admin-surface-body transition-colors hover:border-zinc-500 hover:admin-shell-text"
           >
             Cancel
           </button>
@@ -92,7 +93,7 @@ export default function ChangePasswordModal({ open, onClose, variant = "emerald"
           placeholder="••••••••"
           autoComplete="current-password"
           error={pwErrors.current}
-          inputClassName={`w-full rounded-xl border bg-zinc-950/60 py-2.5 pl-10 pr-11 text-sm text-zinc-100 outline-none transition-all ${
+          inputClassName={`${adminSurface.input} py-2.5 pl-10 pr-11 ${
             pwErrors.current ? "border-red-500/50" : "border-zinc-700"
           } ${inputFocusCls}`}
         />
@@ -104,7 +105,7 @@ export default function ChangePasswordModal({ open, onClose, variant = "emerald"
           placeholder="Min. 8 characters"
           autoComplete="new-password"
           error={pwErrors.next}
-          inputClassName={`w-full rounded-xl border bg-zinc-950/60 py-2.5 pl-10 pr-11 text-sm text-zinc-100 outline-none transition-all ${
+          inputClassName={`${adminSurface.input} py-2.5 pl-10 pr-11 ${
             pwErrors.next ? "border-red-500/50" : "border-zinc-700"
           } ${inputFocusCls}`}
         />
@@ -116,7 +117,7 @@ export default function ChangePasswordModal({ open, onClose, variant = "emerald"
           placeholder="Repeat new password"
           autoComplete="new-password"
           error={pwErrors.confirm}
-          inputClassName={`w-full rounded-xl border bg-zinc-950/60 py-2.5 pl-10 pr-11 text-sm text-zinc-100 outline-none transition-all ${
+          inputClassName={`${adminSurface.input} py-2.5 pl-10 pr-11 ${
             pwErrors.confirm ? "border-red-500/50" : "border-zinc-700"
           } ${inputFocusCls}`}
         />
@@ -126,7 +127,7 @@ export default function ChangePasswordModal({ open, onClose, variant = "emerald"
             className={`flex items-center gap-2.5 rounded-xl border px-3 py-2 text-sm font-medium ${
               toast.type === "success"
                 ? "border-ra-primary-30 bg-ra-primary-10 text-ra-primary-muted"
-                : "border-red-500/30 bg-red-500/10 text-red-300"
+                : "border-red-500/30 bg-red-500/10 text-red-400"
             }`}
           >
             {toast.type === "success" ? (

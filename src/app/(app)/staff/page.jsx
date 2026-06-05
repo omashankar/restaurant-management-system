@@ -1,7 +1,20 @@
 "use client";
 
+import { raIconBadgeCls } from "@/config/restaurantAdminTheme";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import DataTableShell from "@/components/ui/DataTableShell";
+import {
+  AdminTable,
+  AdminTableActionsCell,
+  AdminTableBody,
+  AdminTableHead,
+  AdminTableHeadRow,
+  AdminTableIconButton,
+  AdminTableRow,
+  AdminTableTd,
+  AdminTableTh,
+  AdminTableThActions,
+} from "@/components/ui/AdminTable";
 import EmptyState from "@/components/ui/EmptyState";
 import ListToolbar from "@/components/ui/ListToolbar";
 import Modal from "@/components/ui/Modal";
@@ -176,7 +189,7 @@ export default function StaffModulePage() {
   if (loading) {
     return (
       <div className="space-y-6">
-        <div className="h-8 w-28 animate-pulse rounded-lg bg-zinc-800" />
+        <div className="h-8 w-28 animate-pulse rounded-lg admin-progress-track" />
         <TableSkeleton rows={8} cols={5} />
       </div>
     );
@@ -188,17 +201,17 @@ export default function StaffModulePage() {
       {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div className="flex items-start gap-3">
-          <span className="mt-1 flex size-10 shrink-0 items-center justify-center rounded-xl bg-ra-primary-15 text-ra-primary ring-1 ring-ra-primary-25">
+          <span className={`mt-1 ${raIconBadgeCls}`}>
             <Users className="size-5" />
           </span>
           <div>
-            <h1 className="text-2xl font-semibold tracking-tight text-zinc-50">Staff</h1>
-            <p className="mt-1 text-sm text-zinc-500">Team roster · {total} member{total !== 1 ? "s" : ""}</p>
+            <h1 className="admin-page-title text-2xl font-semibold tracking-tight">Staff</h1>
+            <p className="admin-page-desc mt-1 text-sm">Team roster · {total} member{total !== 1 ? "s" : ""}</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
           <button type="button" onClick={fetchStaff}
-            className="cursor-pointer flex items-center gap-1.5 rounded-xl border border-zinc-700 px-3 py-2 text-xs font-medium text-zinc-400 hover:border-zinc-500 hover:text-zinc-200 transition-colors">
+            className="cursor-pointer flex items-center gap-1.5 rounded-xl border admin-shell-border px-3 py-2 text-xs font-medium text-zinc-400 hover:border-zinc-500 hover:admin-shell-text transition-colors">
             <RefreshCw className="size-3.5" /> Refresh
           </button>
           {isAdmin && (
@@ -211,7 +224,7 @@ export default function StaffModulePage() {
       </div>
 
       {fetchError ? (
-        <div className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">
+        <div className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-400">
           {fetchError}
         </div>
       ) : null}
@@ -223,7 +236,7 @@ export default function StaffModulePage() {
         searchPlaceholder="Search name, email, phone…"
         filterSlot={
           <select value={roleFilter} onChange={(e) => setRoleFilter(e.target.value)}
-            className="cursor-pointer rounded-xl border border-zinc-800 bg-zinc-900/60 px-3 py-2 text-sm text-zinc-200">
+            className="cursor-pointer admin-surface-card px-3 py-2 text-sm admin-shell-text">
             <option value="all">All roles</option>
             {STAFF_ROLES.map((r) => <option key={r} value={r}>{ROLE_LABEL[r]}</option>)}
           </select>
@@ -244,29 +257,29 @@ export default function StaffModulePage() {
         />
       ) : (
         <DataTableShell>
-          <table className="min-w-full text-left text-sm">
-            <thead>
-              <tr className="border-b border-zinc-800 bg-zinc-950/60 text-xs font-semibold uppercase tracking-wider text-zinc-500">
-                <th className="px-4 py-3">Name</th>
-                <th className="px-4 py-3">Role</th>
-                <th className="hidden px-4 py-3 md:table-cell">Email</th>
-                <th className="hidden px-4 py-3 md:table-cell">Phone</th>
-                <th className="px-4 py-3">Status</th>
-                {isAdmin && <th className="px-4 py-3 text-right">Actions</th>}
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-zinc-800/80">
+          <AdminTable>
+            <AdminTableHead>
+              <AdminTableHeadRow>
+                <AdminTableTh>Name</AdminTableTh>
+                <AdminTableTh>Role</AdminTableTh>
+                <AdminTableTh hidden="md">Email</AdminTableTh>
+                <AdminTableTh hidden="md">Phone</AdminTableTh>
+                <AdminTableTh>Status</AdminTableTh>
+                {isAdmin && <AdminTableThActions />}
+              </AdminTableHeadRow>
+            </AdminTableHead>
+            <AdminTableBody>
               {pageRows.map((row) => (
-                <tr key={row.id} className="transition-colors hover:bg-zinc-800/40">
-                  <td className="px-4 py-3">
+                <AdminTableRow key={row.id}>
+                  <AdminTableTd>
                     <div className="flex items-center gap-3">
-                      <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-zinc-800 text-xs font-bold text-zinc-300 ring-1 ring-zinc-700">
+                      <span className="flex size-8 shrink-0 items-center justify-center rounded-full admin-rank-badge text-xs font-bold admin-surface-body ring-1 ring-zinc-700">
                         {row.name?.[0]?.toUpperCase()}
                       </span>
-                      <span className="font-medium text-zinc-100">{row.name}</span>
+                      <span className="font-medium admin-shell-text">{row.name}</span>
                     </div>
-                  </td>
-                  <td className="px-4 py-3">
+                  </AdminTableTd>
+                  <AdminTableTd>
                     <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold capitalize ring-1 ${
                       row.role === "manager" ? "bg-indigo-500/15 text-indigo-300 ring-indigo-500/25"
                       : row.role === "chef"  ? "bg-amber-500/15 text-amber-300 ring-amber-500/25"
@@ -274,10 +287,10 @@ export default function StaffModulePage() {
                     }`}>
                       {ROLE_LABEL[row.role] ?? row.role}
                     </span>
-                  </td>
-                  <td className="hidden px-4 py-3 text-zinc-400 md:table-cell">{row.email}</td>
-                  <td className="hidden px-4 py-3 tabular-nums text-zinc-500 md:table-cell">{row.phone || "—"}</td>
-                  <td className="px-4 py-3">
+                  </AdminTableTd>
+                  <AdminTableTd hidden="md" className="admin-surface-muted">{row.email}</AdminTableTd>
+                  <AdminTableTd hidden="md" className="tabular-nums admin-surface-muted">{row.phone || "—"}</AdminTableTd>
+                  <AdminTableTd>
                     <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold capitalize ring-1 ${
                       row.status === "active"
                         ? "bg-ra-primary-15 text-ra-primary-muted ring-ra-primary-25"
@@ -285,27 +298,23 @@ export default function StaffModulePage() {
                     }`}>
                       {row.status?.replace("-", " ")}
                     </span>
-                  </td>
+                  </AdminTableTd>
                   {isAdmin && (
-                    <td className="px-4 py-3 text-right">
-                      <div className="flex justify-end gap-1">
-                        <button type="button" onClick={() => openEdit(row)}
-                          className="cursor-pointer rounded-lg p-2 text-zinc-400 hover:bg-zinc-800 hover-ra-primary" aria-label="Edit">
-                          <Pencil className="size-4" />
-                        </button>
-                        <button type="button" onClick={() => setDeleteTarget(row)}
-                          className="cursor-pointer rounded-lg p-2 text-zinc-400 hover:bg-red-500/15 hover:text-red-400" aria-label="Delete">
-                          <Trash2 className="size-4" />
-                        </button>
-                      </div>
-                    </td>
+                    <AdminTableActionsCell>
+                      <AdminTableIconButton onClick={() => openEdit(row)} aria-label="Edit">
+                        <Pencil className="size-4" />
+                      </AdminTableIconButton>
+                      <AdminTableIconButton variant="danger" onClick={() => setDeleteTarget(row)} aria-label="Delete">
+                        <Trash2 className="size-4" />
+                      </AdminTableIconButton>
+                    </AdminTableActionsCell>
                   )}
-                </tr>
+                </AdminTableRow>
               ))}
-            </tbody>
-          </table>
+            </AdminTableBody>
+          </AdminTable>
           <div className="px-4 pb-4">
-            <PaginationBar page={page} totalPages={totalPages} total={total} pageSize={pageSize} onPageChange={setPage} />
+            <PaginationBar page={page} totalPages={totalPages} total={total} pageSize={pageSize} onPageChange={setPage} hideWhenSinglePage />
           </div>
         </DataTableShell>
       )}
@@ -318,7 +327,7 @@ export default function StaffModulePage() {
         footer={
           <div className="flex justify-end gap-2">
             <button type="button" onClick={() => setModalOpen(false)}
-              className="cursor-pointer rounded-xl border border-zinc-700 px-4 py-2 text-sm text-zinc-300 hover:border-zinc-500">
+              className="cursor-pointer rounded-xl border admin-shell-border px-4 py-2 text-sm admin-surface-body hover:border-zinc-500">
               Cancel
             </button>
             <button type="button" onClick={saveStaff} disabled={saving}
@@ -334,7 +343,7 @@ export default function StaffModulePage() {
           )}
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
-              <label className="text-xs font-medium text-zinc-500">Full Name *</label>
+              <label className="text-xs font-medium admin-surface-muted">Full Name *</label>
               <input
                 value={form.name}
                 onChange={(e) => {
@@ -343,14 +352,14 @@ export default function StaffModulePage() {
                 }}
                 placeholder="Alex Rivera"
                 aria-invalid={fieldErrors.name ? true : undefined}
-                className={`mt-1 w-full rounded-xl border bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus-ra-primary placeholder:text-zinc-600 ${
+                className={`mt-1 w-full rounded-xl border admin-surface-card px-3 py-2.5 text-sm admin-shell-text outline-none focus-ra-primary placeholder:admin-surface-faint ${
                   fieldErrors.name ? "border-red-500/50" : "border-zinc-700"
                 }`}
               />
               {fieldErrors.name && <p className="mt-1 text-xs text-red-400">{fieldErrors.name}</p>}
             </div>
             <div>
-              <label className="text-xs font-medium text-zinc-500">Email *</label>
+              <label className="text-xs font-medium admin-surface-muted">Email *</label>
               <input
                 type="email"
                 value={form.email}
@@ -360,16 +369,16 @@ export default function StaffModulePage() {
                 }}
                 placeholder="alex@restaurant.com"
                 aria-invalid={fieldErrors.email ? true : undefined}
-                className={`mt-1 w-full rounded-xl border bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus-ra-primary placeholder:text-zinc-600 ${
+                className={`mt-1 w-full rounded-xl border admin-surface-card px-3 py-2.5 text-sm admin-shell-text outline-none focus-ra-primary placeholder:admin-surface-faint ${
                   fieldErrors.email ? "border-red-500/50" : "border-zinc-700"
                 }`}
               />
               {fieldErrors.email && <p className="mt-1 text-xs text-red-400">{fieldErrors.email}</p>}
             </div>
             <div>
-              <label className="text-xs font-medium text-zinc-500">Role *</label>
+              <label className="text-xs font-medium admin-surface-muted">Role *</label>
               <select value={form.role} onChange={(e) => setForm((f) => ({ ...f, role: e.target.value }))}
-                className="cursor-pointer mt-1 w-full rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus-ra-primary">
+                className="cursor-pointer mt-1 w-full rounded-xl border admin-shell-border admin-surface-card px-3 py-2.5 text-sm admin-shell-text outline-none focus-ra-primary">
                 {STAFF_ROLES.map((r) => <option key={r} value={r}>{ROLE_LABEL[r]}</option>)}
               </select>
             </div>
@@ -396,8 +405,8 @@ export default function StaffModulePage() {
                     if (fieldErrors.password) setFieldErrors((p) => ({ ...p, password: "" }));
                   }}
                   placeholder="••••••••"
-                  labelClassName="text-xs font-medium text-zinc-500"
-                  inputClassName={`w-full rounded-xl border bg-zinc-950/60 px-3 py-2.5 pr-11 text-sm text-zinc-100 outline-none focus-ra-primary placeholder:text-zinc-600 ${
+                  labelClassName="text-xs font-medium admin-surface-muted"
+                  inputClassName={`w-full rounded-xl border admin-surface-card px-3 py-2.5 pr-11 text-sm admin-shell-text outline-none focus-ra-primary placeholder:admin-surface-faint ${
                     fieldErrors.password ? "border-red-500/50" : "border-zinc-700"
                   }`}
                 />
@@ -408,9 +417,9 @@ export default function StaffModulePage() {
             )}
             {editingId && (
               <div>
-                <label className="text-xs font-medium text-zinc-500">Status</label>
+                <label className="text-xs font-medium admin-surface-muted">Status</label>
                 <select value={form.status} onChange={(e) => setForm((f) => ({ ...f, status: e.target.value }))}
-                  className="cursor-pointer mt-1 w-full rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus-ra-primary">
+                  className="cursor-pointer mt-1 w-full rounded-xl border admin-shell-border admin-surface-card px-3 py-2.5 text-sm admin-shell-text outline-none focus-ra-primary">
                   <option value="active">Active</option>
                   <option value="on-leave">On Leave</option>
                 </select>

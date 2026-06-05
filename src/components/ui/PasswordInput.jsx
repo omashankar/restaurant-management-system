@@ -4,7 +4,7 @@ import { Eye, EyeOff } from "lucide-react";
 import { useState } from "react";
 
 const defaultInputCls =
-  "w-full rounded-xl border border-zinc-700 bg-zinc-950/80 px-4 py-3 pr-11 text-sm text-zinc-100 outline-none transition-all focus-ra-primary focus:ring-2 focus:ring-ra-primary-25";
+  "admin-surface-input w-full rounded-xl border px-4 py-3 pr-11 text-sm outline-none transition-all focus-ra-primary focus:ring-2 focus:ring-ra-primary-25";
 
 /**
  * Password field with show / hide toggle (auth & admin forms).
@@ -12,7 +12,7 @@ const defaultInputCls =
 export default function PasswordInput({
   id,
   label,
-  labelClassName = "text-xs font-medium uppercase tracking-wider text-zinc-500",
+  labelClassName = "text-xs font-medium uppercase tracking-wider text-zinc-500 admin-surface-label",
   required = false,
   value,
   onChange,
@@ -56,7 +56,7 @@ export default function PasswordInput({
           type="button"
           onClick={() => setVisible((v) => !v)}
           disabled={disabled}
-          className="cursor-pointer absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-300 disabled:cursor-not-allowed disabled:opacity-50"
+          className="cursor-pointer absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:admin-surface-body admin-surface-muted disabled:cursor-not-allowed disabled:opacity-50"
           aria-label={visible ? "Hide password" : "Show password"}
         >
           {visible ? <EyeOff className="size-4" aria-hidden /> : <Eye className="size-4" aria-hidden />}

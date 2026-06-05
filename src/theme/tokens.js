@@ -1,5 +1,6 @@
 import { DEFAULT_CUSTOMER_THEME } from "@/lib/customerThemeDefaults";
 import { mergeCmsSection } from "@/lib/customerCmsMerge";
+import { resolveCustomerFontStack } from "@/theme/customerFonts";
 import { clampHex, generatePalette } from "@/theme/palette";
 import { DEFAULT_PRIMARY, DEFAULT_SECONDARY } from "@/theme/constants";
 
@@ -22,8 +23,7 @@ export function buildThemeCssVars(stored, modeOverride = null) {
       : t.colorMode === "dark"
         ? "dark"
         : "light";
-  const font =
-    String(t.fontFamily ?? "").trim() || DEFAULT_CUSTOMER_THEME.fontFamily;
+  const font = resolveCustomerFontStack(t.fontFamily);
   const palette = generatePalette(primary, secondary, mode);
 
   const headerBg = t.header?.colors?.background?.trim();
@@ -85,13 +85,12 @@ export function themeRootClassName(mode) {
   return isDark ? "customer-theme customer-dark" : "customer-theme";
 }
 
-/** Serializable snapshot for localStorage */
-export function themeSnapshot(stored, mode) {
+/** Serializable snapshot for localStorage (colors + font only; not user mode preference). */
+export function themeSnapshot(stored) {
   const t = resolveThemeInput(stored);
   return {
     primaryColor: clampHex(t.primaryColor, DEFAULT_PRIMARY),
     secondaryColor: clampHex(t.secondaryColor, DEFAULT_SECONDARY),
-    colorMode: mode === "dark" ? "dark" : "light",
     fontFamily: t.fontFamily ?? DEFAULT_CUSTOMER_THEME.fontFamily,
     updatedAt: Date.now(),
   };

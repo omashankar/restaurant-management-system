@@ -60,14 +60,14 @@ export default function TwoFactorSetup() {
   };
 
   return (
-    <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-6">
+    <div className="admin-surface-card p-6">
       <div className="mb-4 flex items-center gap-3">
         <span className="sa-icon-badge flex size-9 items-center justify-center rounded-xl">
           <Shield className="size-4" />
         </span>
         <div>
-          <h2 className="text-sm font-semibold text-zinc-100">Two-factor authentication</h2>
-          <p className="text-xs text-zinc-500">
+          <h2 className="admin-surface-title text-sm font-semibold">Two-factor authentication</h2>
+          <p className="text-xs admin-surface-muted">
             Required when platform 2FA is enabled. Use Google Authenticator or similar.
           </p>
         </div>
@@ -91,8 +91,8 @@ export default function TwoFactorSetup() {
             <img src={qr} alt="QR code for authenticator" className="mx-auto size-44 rounded-lg bg-white p-2" />
           ) : null}
           {secret ? (
-            <p className="break-all text-center text-xs text-zinc-500">
-              Manual key: <span className="font-mono text-zinc-300">{secret}</span>
+            <p className="break-all text-center text-xs admin-surface-muted">
+              Manual key: <span className="font-mono admin-surface-body">{secret}</span>
             </p>
           ) : null}
           <input

@@ -3,6 +3,7 @@
 import { ROLES, roleLabel, useApp } from "@/context/AppProviders";
 import { useUser } from "@/context/AuthContext";
 import GlobalSearch from "@/components/rms/GlobalSearch";
+import AdminColorModeToggle from "@/components/admin/AdminColorModeToggle";
 import LanguageSwitcher from "@/components/ui/LanguageSwitcher";
 import ChangePasswordModal from "@/components/rms/ChangePasswordModal";
 import InboxDropdown, { InboxCountBadge } from "@/components/rms/InboxDropdown";
@@ -16,12 +17,17 @@ import {
   MessageSquare,
   User,
 } from "lucide-react";
+import { AdminAvatarButton } from "@/components/admin/AdminMenu";
+import { adminShell, adminSurface } from "@/config/adminSurfaceClasses";
 import { normalizeLogoSrc } from "@/lib/logoUrl";
-import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
-export default function TopNavbar({ onOpenSidebar, onToggleSidebar }) {
+export default function TopNavbar({
+  onOpenSidebar,
+  onToggleSidebar,
+  showMobileMenu = true,
+}) {
   const { user: appUser, logout, setDemoRole } = useApp();
   const { user: dbUser } = useUser();
   // Prefer DB user (has real name from MongoDB), fallback to app user
@@ -80,22 +86,24 @@ export default function TopNavbar({ onOpenSidebar, onToggleSidebar }) {
   const avatarSrc = normalizeLogoSrc(user.avatarUrl);
 
   return (
-    <header className="sticky top-0 z-50 flex h-16 items-center justify-between gap-4 border-b border-zinc-800 bg-zinc-950/90 px-4 backdrop-blur-md">
+    <header className={adminShell.header}>
       <div className="flex items-center gap-3">
-        <button
-          type="button"
-          onClick={onToggleSidebar ?? onOpenSidebar}
-          className="cursor-pointer inline-flex items-center justify-center rounded-xl border border-zinc-800 bg-zinc-900/40 p-2 text-zinc-200 transition-colors hover:bg-zinc-900 md:hidden"
-          aria-label="Open sidebar"
-        >
-          <Menu className="size-5" aria-hidden />
-        </button>
+        {showMobileMenu ? (
+          <button
+            type="button"
+            onClick={onToggleSidebar ?? onOpenSidebar}
+            className={adminSurface.btnIcon}
+            aria-label="Open menu"
+          >
+            <Menu className="size-5" aria-hidden />
+          </button>
+        ) : null}
 
         <div className="hidden min-w-0 sm:block">
-          <p className="truncate text-xs font-medium uppercase tracking-widest text-zinc-500">
+          <p className={`truncate text-xs font-medium uppercase tracking-widest ${adminSurface.muted}`}>
             Restaurant Management System
           </p>
-          <p className="truncate text-sm font-semibold text-zinc-100">
+          <p className={`truncate text-sm font-semibold ${adminSurface.title}`}>
             {roleLabel(user.role)} workspace
           </p>
         </div>
@@ -109,13 +117,14 @@ export default function TopNavbar({ onOpenSidebar, onToggleSidebar }) {
         <LanguageSwitcher compact />
 
         <div ref={inboxRef} className="relative flex items-center gap-2">
+        <AdminColorModeToggle portal="ra" />
         <button
           type="button"
           onClick={() => {
             setIsProfileOpen(false);
             setActiveInbox((prev) => (prev === "messages" ? null : "messages"));
           }}
-          className="cursor-pointer relative inline-flex items-center justify-center rounded-xl border border-zinc-800 bg-zinc-900/60 p-2 text-zinc-300 transition-colors hover:border-zinc-700 hover:text-zinc-100"
+          className={`${adminSurface.btnIcon} relative`}
           aria-label="Messages"
         >
           <MessageSquare className="size-4" />
@@ -132,7 +141,7 @@ export default function TopNavbar({ onOpenSidebar, onToggleSidebar }) {
             setIsProfileOpen(false);
             setActiveInbox((prev) => (prev === "notifications" ? null : "notifications"));
           }}
-          className="cursor-pointer relative inline-flex items-center justify-center rounded-xl border border-zinc-800 bg-zinc-900/60 p-2 text-zinc-300 transition-colors hover:border-zinc-700 hover:text-zinc-100"
+          className={`${adminSurface.btnIcon} relative`}
           aria-label="Notifications"
         >
           <Bell className="size-4" />
@@ -174,20 +183,20 @@ export default function TopNavbar({ onOpenSidebar, onToggleSidebar }) {
         >
           <button
             type="button"
-            className="cursor-pointer inline-flex items-center gap-2 rounded-xl border border-zinc-800 bg-zinc-900/80 px-3 py-2 text-xs font-medium text-zinc-200 transition-colors hover-border-ra-primary-40"
+            className={`${adminSurface.btnGhost} text-xs hover-border-ra-primary-40`}
             aria-expanded={open}
             aria-haspopup="listbox"
           >
             <span>Demo: switch role</span>
             <ChevronDown
-              className={`size-4 text-zinc-500 transition-transform ${open ? "rotate-180" : ""}`}
+              className={`size-4 ${adminSurface.muted} transition-transform ${open ? "rotate-180" : ""}`}
             />
           </button>
 
           {open ? (
             <ul
               role="listbox"
-              className="absolute right-0 top-full mt-1 min-w-[180px] rounded-xl border border-zinc-800 bg-zinc-900 py-1 shadow-xl shadow-black/40"
+              className={`absolute right-0 top-full z-50 mt-1 min-w-[180px] py-1 ${adminSurface.dropdown}`}
             >
               {ROLES.map((r) => (
                 <li key={r} role="option" aria-selected={user.role === r}>
@@ -200,8 +209,8 @@ export default function TopNavbar({ onOpenSidebar, onToggleSidebar }) {
                       else if (r === "waiter") router.push("/pos");
                       else router.push("/dashboard");
                     }}
-                    className={`cursor-pointer flex w-full items-center gap-2 px-3 py-2 text-left text-sm transition-colors hover:bg-zinc-800 ${
-                      user.role === r ? "text-ra-primary" : "text-zinc-300"
+                    className={`cursor-pointer flex w-full items-center gap-2 px-3 py-2 text-left text-sm ${adminSurface.rowHover} ${
+                      user.role === r ? "text-ra-primary" : adminSurface.body
                     }`}
                   >
                     {roleLabel(r)}
@@ -212,35 +221,19 @@ export default function TopNavbar({ onOpenSidebar, onToggleSidebar }) {
           ) : null}
         </div>
 
-        <div className="hidden h-8 w-px bg-zinc-800 md:block" aria-hidden />
+        <div className={`hidden h-8 w-px ${adminShell.divider} md:block`} aria-hidden />
 
         <div ref={profileRef} className="relative">
-          <button
-            type="button"
+          <AdminAvatarButton
+            avatarSrc={avatarSrc}
+            fallback={avatarFallback}
+            open={isProfileOpen}
             onClick={() => setIsProfileOpen((v) => !v)}
-            className="cursor-pointer inline-flex items-center justify-center rounded-full border border-zinc-800 bg-zinc-900/60 p-0.5 text-zinc-200 outline-none ring-ra-primary-20 transition-colors hover:border-zinc-700 hover:ring-2 hover:ring-ra-primary-20 focus-visible:ring-2 focus-visible:ring-ra-primary-40"
-            aria-expanded={isProfileOpen}
-            aria-haspopup="menu"
-            aria-label={`Open profile menu (${user.name})`}
-          >
-            {avatarSrc ? (
-              <Image
-                src={avatarSrc}
-                alt=""
-                width={36}
-                height={36}
-                className="size-9 rounded-full object-cover ring-1 ring-zinc-700"
-                unoptimized
-              />
-            ) : (
-              <span className="flex size-9 items-center justify-center rounded-full bg-zinc-800 text-sm font-semibold text-zinc-200 ring-1 ring-zinc-700">
-                {avatarFallback}
-              </span>
-            )}
-          </button>
+            label={`Open profile menu (${user.name})`}
+          />
 
           <div
-            className={`absolute right-0 z-[60] mt-2 origin-top-right rounded-xl border border-zinc-800 bg-zinc-900 p-1.5 shadow-lg shadow-black/40 transition-all duration-150 ${
+            className={`absolute right-0 z-[60] mt-2 origin-top-right p-1.5 ${adminSurface.dropdown} transition-all duration-150 ${
               activeInbox ? "w-[min(360px,calc(100vw-2rem))]" : "w-[min(220px,calc(100vw-2rem))]"
             } ${
               isProfileOpen
@@ -251,16 +244,16 @@ export default function TopNavbar({ onOpenSidebar, onToggleSidebar }) {
             aria-hidden={!isProfileOpen}
           >
             <div className="px-2.5 py-2">
-              <p className="truncate text-sm font-medium text-zinc-100">{user.name}</p>
-              <p className="truncate text-xs text-zinc-500">{roleLabel(user.role)}</p>
+              <p className={`truncate text-sm font-medium ${adminSurface.title}`}>{user.name}</p>
+              <p className={`truncate text-xs ${adminSurface.muted}`}>{roleLabel(user.role)}</p>
             </div>
 
             <div className="md:hidden">
-              <div className="mb-1 h-px bg-zinc-800" />
-              <p className="mb-1.5 px-1.5 text-[10px] font-semibold uppercase tracking-wider text-zinc-500">
+              <div className={`mb-1 h-px ${adminShell.divider}`} />
+              <p className={`mb-1.5 px-1.5 text-[10px] font-semibold uppercase tracking-wider ${adminSurface.muted}`}>
                 Demo · switch role
               </p>
-              <ul className="mb-1 max-h-40 overflow-y-auto rounded-xl border border-zinc-800/80 bg-zinc-950/40 py-0.5">
+              <ul className={`admin-surface-menu-nested mb-1 max-h-40 overflow-y-auto rounded-xl py-0.5`}>
                 {ROLES.map((r) => (
                   <li key={r}>
                     <button
@@ -272,8 +265,8 @@ export default function TopNavbar({ onOpenSidebar, onToggleSidebar }) {
                         else if (r === "waiter") router.push("/pos");
                         else router.push("/dashboard");
                       }}
-                      className={`cursor-pointer flex w-full items-center px-2.5 py-2 text-left text-sm transition-colors hover:bg-zinc-800 ${
-                        user.role === r ? "font-medium text-ra-primary" : "text-zinc-300"
+                      className={`${adminSurface.menuItem} px-2.5 py-2 ${
+                        user.role === r ? "font-medium text-ra-primary" : ""
                       }`}
                       role="menuitem"
                     >
@@ -284,17 +277,17 @@ export default function TopNavbar({ onOpenSidebar, onToggleSidebar }) {
               </ul>
             </div>
 
-            <div className="mb-1 h-px bg-zinc-800" />
+            <div className={`mb-1 h-px ${adminShell.divider}`} />
             <button
               type="button"
               onClick={() => {
                 setIsProfileOpen(false);
                 router.push(user.role === "super_admin" ? "/super-admin/profile" : "/profile");
               }}
-              className="cursor-pointer flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left text-sm text-zinc-200 transition-colors hover:bg-zinc-800"
+              className={adminSurface.menuItem}
               role="menuitem"
             >
-              <User className="size-4 text-zinc-400" />
+              <User className="admin-surface-menu-item-icon size-4 shrink-0" />
               Profile
             </button>
             <button
@@ -303,10 +296,10 @@ export default function TopNavbar({ onOpenSidebar, onToggleSidebar }) {
                 setIsProfileOpen(false);
                 setIsChangePasswordOpen(true);
               }}
-              className="cursor-pointer flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left text-sm text-zinc-200 transition-colors hover:bg-zinc-800"
+              className={adminSurface.menuItem}
               role="menuitem"
             >
-              <KeyRound className="size-4 text-zinc-400" />
+              <KeyRound className="admin-surface-menu-item-icon size-4 shrink-0" />
               Change Password
             </button>
             <button
@@ -314,11 +307,11 @@ export default function TopNavbar({ onOpenSidebar, onToggleSidebar }) {
               onClick={() => {
                 setActiveInbox((prev) => (prev === "messages" ? null : "messages"));
               }}
-              className="cursor-pointer flex w-full items-center justify-between rounded-lg px-2.5 py-2 text-left text-sm text-zinc-200 transition-colors hover:bg-zinc-800"
+              className={`${adminSurface.menuItem} justify-between`}
               role="menuitem"
             >
               <span className="inline-flex items-center gap-2">
-                <MessageSquare className="size-4 text-zinc-400" />
+                <MessageSquare className="admin-surface-menu-item-icon size-4 shrink-0" />
                 Messages
               </span>
               <InboxCountBadge count={unread.messages} tone="ra" />
@@ -328,11 +321,11 @@ export default function TopNavbar({ onOpenSidebar, onToggleSidebar }) {
               onClick={() => {
                 setActiveInbox((prev) => (prev === "notifications" ? null : "notifications"));
               }}
-              className="cursor-pointer flex w-full items-center justify-between rounded-lg px-2.5 py-2 text-left text-sm text-zinc-200 transition-colors hover:bg-zinc-800"
+              className={`${adminSurface.menuItem} justify-between`}
               role="menuitem"
             >
               <span className="inline-flex items-center gap-2">
-                <Bell className="size-4 text-zinc-400" />
+                <Bell className="admin-surface-menu-item-icon size-4 shrink-0" />
                 Notifications
               </span>
               <InboxCountBadge count={unread.notifications} tone="amber" />
@@ -353,7 +346,7 @@ export default function TopNavbar({ onOpenSidebar, onToggleSidebar }) {
               </div>
             ) : null}
 
-            <div className="my-1 h-px bg-zinc-800" />
+            <div className={`my-1 h-px ${adminShell.divider}`} />
 
             <button
               type="button"
@@ -363,10 +356,10 @@ export default function TopNavbar({ onOpenSidebar, onToggleSidebar }) {
                 logout();
                 router.push("/login");
               }}
-              className="cursor-pointer flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left text-sm text-zinc-200 transition-colors hover:bg-red-500/10 hover:text-red-300"
+              className={`${adminSurface.menuItem} admin-surface-menu-item--danger`}
               role="menuitem"
             >
-              <LogOut className="size-4 text-zinc-400" />
+              <LogOut className="admin-surface-menu-item-icon size-4 shrink-0" />
               Logout
             </button>
           </div>

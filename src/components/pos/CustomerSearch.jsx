@@ -79,7 +79,7 @@ export default function CustomerSearch({ onCustomerSelect }) {
       <div className="flex items-center justify-between gap-3 rounded-xl border border-ra-primary-30 bg-ra-primary-5 px-3 py-2.5">
         <div>
           <p className="text-sm font-semibold text-ra-primary-muted">{selected.name}</p>
-          <p className="text-xs text-zinc-500">
+          <p className="text-xs admin-surface-muted">
             {selected.phone}
             {selected.email ? ` · ${selected.email}` : ""}
           </p>
@@ -87,7 +87,7 @@ export default function CustomerSearch({ onCustomerSelect }) {
         <button
           type="button"
           onClick={handleClear}
-          className="cursor-pointer rounded-lg p-1 text-zinc-500 hover:text-zinc-200"
+          className="cursor-pointer rounded-lg p-1 admin-surface-muted hover:admin-shell-text"
           aria-label="Remove customer"
         >
           <X className="size-4" />
@@ -98,7 +98,7 @@ export default function CustomerSearch({ onCustomerSelect }) {
 
   return (
     <div className="space-y-2">
-      <div className="flex items-center gap-0 overflow-hidden rounded-xl border border-zinc-800 bg-zinc-950/80">
+      <div className="flex items-center gap-0 overflow-hidden admin-surface-card">
         <input
           type="search"
           value={query}
@@ -107,7 +107,7 @@ export default function CustomerSearch({ onCustomerSelect }) {
             if (!showAddForm) setShowAddForm(false);
           }}
           placeholder="Search name or phone"
-          className="flex-1 bg-transparent py-2.5 pl-4 pr-2 text-sm text-zinc-100 outline-none placeholder:text-zinc-500"
+          className="flex-1 bg-transparent py-2.5 pl-4 pr-2 text-sm admin-shell-text outline-none placeholder:admin-surface-muted"
         />
         <button
           type="button"
@@ -120,7 +120,7 @@ export default function CustomerSearch({ onCustomerSelect }) {
               openAddForm();
             }
           }}
-          className="cursor-pointer m-1 flex size-10 shrink-0 items-center justify-center rounded-lg bg-zinc-800 text-zinc-300 transition-colors hover:bg-zinc-700 hover-ra-primary"
+          className="cursor-pointer m-1 flex size-10 shrink-0 items-center justify-center rounded-lg bg-zinc-800 admin-surface-body transition-colors hover:bg-zinc-700 hover-ra-primary"
           aria-label="Add new customer"
           title="Add new customer"
         >
@@ -129,27 +129,27 @@ export default function CustomerSearch({ onCustomerSelect }) {
       </div>
 
       {query.trim() && !showAddForm && (
-        <div className="rounded-xl border border-zinc-800 bg-zinc-900 shadow-xl shadow-black/30">
+        <div className="rounded-xl border admin-shell-border bg-zinc-900 shadow-xl shadow-black/30">
           {results.length > 0 ? (
-            <ul className="divide-y divide-zinc-800/60">
+            <ul className="admin-table-body">
               {results.map((c) => (
                 <li key={c.id}>
                   <button
                     type="button"
                     onClick={() => handleSelect(c)}
-                    className="cursor-pointer flex w-full items-center justify-between gap-3 px-4 py-3 text-left transition-colors hover:bg-zinc-800/60"
+                    className="cursor-pointer flex w-full items-center justify-between gap-3 px-4 py-3 text-left transition-colors hover:admin-shell-hover"
                   >
                     <div>
-                      <p className="text-sm font-medium text-zinc-100">{c.name}</p>
-                      <p className="text-xs text-zinc-500">{c.phone}</p>
+                      <p className="text-sm font-medium admin-shell-text">{c.name}</p>
+                      <p className="text-xs admin-surface-muted">{c.phone}</p>
                     </div>
-                    <span className="text-xs text-zinc-600">{c.visits ?? 0} visits</span>
+                    <span className="text-xs admin-surface-faint">{c.visits ?? 0} visits</span>
                   </button>
                 </li>
               ))}
             </ul>
           ) : (
-            <p className="px-4 py-3 text-xs text-zinc-500">No matching customers.</p>
+            <p className="px-4 py-3 text-xs admin-surface-muted">No matching customers.</p>
           )}
 
           <button
@@ -164,7 +164,7 @@ export default function CustomerSearch({ onCustomerSelect }) {
               });
               setQuery("");
             }}
-            className="cursor-pointer flex w-full items-center gap-2 border-t border-zinc-800/60 px-4 py-3 text-sm font-semibold text-ra-primary transition-colors hover:bg-zinc-800/60"
+            className="cursor-pointer flex w-full items-center gap-2 border-t admin-shell-border/60 px-4 py-3 text-sm font-semibold text-ra-primary transition-colors hover:admin-shell-hover"
           >
             <UserPlus className="size-4" />
             Add new customer
@@ -176,11 +176,11 @@ export default function CustomerSearch({ onCustomerSelect }) {
         <form
           noValidate
           onSubmit={handleAdd}
-          className="space-y-2 rounded-xl border border-zinc-800 bg-zinc-900/80 p-3"
+          className="space-y-2 rounded-xl border admin-shell-border bg-zinc-900/80 p-3"
         >
-          <p className="text-xs font-semibold uppercase tracking-wide text-zinc-500">New Customer</p>
+          <p className="text-xs font-semibold uppercase tracking-wide admin-surface-muted">New Customer</p>
           <div>
-            <label className="mb-1 block text-[10px] font-medium text-zinc-500">
+            <label className="mb-1 block text-[10px] font-medium admin-surface-muted">
               Full name <span className="text-red-400">*</span>
             </label>
             <input
@@ -192,14 +192,14 @@ export default function CustomerSearch({ onCustomerSelect }) {
               placeholder="e.g. Rahul Sharma"
               maxLength={80}
               aria-invalid={fieldErrors.name ? true : undefined}
-              className="w-full rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2 text-sm text-zinc-100 outline-none focus-ra-primary"
+              className="admin-surface-input focus-ra-primary px-3 py-2"
             />
             {fieldErrors.name && <p className="mt-1 text-xs text-red-400">{fieldErrors.name}</p>}
           </div>
           <PhoneInput
             id="pos-new-customer-phone"
             label="Mobile"
-            labelClassName="mb-1 block text-[10px] font-medium text-zinc-500"
+            labelClassName="mb-1 block text-[10px] font-medium admin-surface-muted"
             required
             value={newForm.phone}
             onChange={(digits) => {
@@ -210,7 +210,7 @@ export default function CustomerSearch({ onCustomerSelect }) {
             showPrefix
           />
           <div>
-            <label className="mb-1 block text-[10px] font-medium text-zinc-500">Email (optional)</label>
+            <label className="mb-1 block text-[10px] font-medium admin-surface-muted">Email (optional)</label>
             <input
               type="email"
               value={newForm.email}
@@ -220,7 +220,7 @@ export default function CustomerSearch({ onCustomerSelect }) {
               }}
               placeholder="name@example.com"
               aria-invalid={fieldErrors.email ? true : undefined}
-              className="w-full rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2 text-sm text-zinc-100 outline-none focus-ra-primary"
+              className="admin-surface-input focus-ra-primary px-3 py-2"
             />
             {fieldErrors.email && <p className="mt-1 text-xs text-red-400">{fieldErrors.email}</p>}
           </div>
@@ -252,7 +252,7 @@ export default function CustomerSearch({ onCustomerSelect }) {
                 setAddError("");
               }}
               disabled={saving}
-              className="cursor-pointer rounded-xl border border-zinc-700 px-3 py-2 text-sm text-zinc-400 hover:text-zinc-200 disabled:opacity-50"
+              className="cursor-pointer rounded-xl border admin-shell-border px-3 py-2 text-sm admin-surface-muted hover:admin-shell-text disabled:opacity-50"
             >
               Cancel
             </button>

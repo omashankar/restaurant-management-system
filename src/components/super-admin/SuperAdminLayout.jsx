@@ -1,6 +1,10 @@
 "use client";
 
 import "@/app/super-admin/super-admin-theme.css";
+import "@/app/admin-surface-theme.css";
+import AdminColorModeToggle from "@/components/admin/AdminColorModeToggle";
+import { AdminAvatarButton } from "@/components/admin/AdminMenu";
+import { adminShell, adminSurface } from "@/config/adminSurfaceClasses";
 import SuperAdminPreloader from "./SuperAdminPreloader";
 import SuperAdminSidebar from "./SuperAdminSidebar";
 import ChangePasswordModal from "@/components/rms/ChangePasswordModal";
@@ -9,7 +13,6 @@ import { useUser } from "@/context/AuthContext";
 import { useInbox } from "@/hooks/useInbox";
 import { useSuperAdminThemeStyles } from "@/hooks/useSuperAdminThemeStyles";
 import { normalizeLogoSrc } from "@/lib/logoUrl";
-import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import {
@@ -73,7 +76,7 @@ export default function SuperAdminLayout({ children }) {
 
   if (loading || !hydrated) {
     return (
-      <div className="super-admin-panel min-h-screen bg-zinc-950">
+      <div className={`super-admin-panel min-h-screen ${adminShell.page}`}>
         <SuperAdminPreloader />
       </div>
     );
@@ -84,7 +87,7 @@ export default function SuperAdminLayout({ children }) {
   const avatarSrc = normalizeLogoSrc(user.avatarUrl);
 
   return (
-    <div className="super-admin-panel flex h-screen overflow-hidden bg-zinc-950">
+    <div className={`super-admin-panel flex ${adminShell.layout}`}>
 
       {/* ── Desktop sidebar ── */}
       <div className="hidden md:flex">
@@ -106,33 +109,34 @@ export default function SuperAdminLayout({ children }) {
       {/* ── Main content ── */}
       <div className="flex min-w-0 flex-1 flex-col">
         {/* Desktop topbar */}
-        <header className="hidden h-16 items-center justify-between gap-4 border-b border-zinc-800 bg-zinc-950/90 px-4 backdrop-blur-md md:flex">
+        <header className={`${adminShell.headerDesktop} admin-shell-header backdrop-blur-md`}>
           <div className="min-w-0">
-            <p className="truncate text-xs font-medium uppercase tracking-widest text-zinc-500">
+            <p className={`truncate text-xs font-medium uppercase tracking-widest ${adminSurface.muted}`}>
               Super Admin Console
             </p>
-            <p className="truncate text-sm font-semibold text-zinc-100">
+            <p className={`truncate text-sm font-semibold ${adminSurface.title}`}>
               Platform control workspace
             </p>
           </div>
 
           <div className="flex items-center gap-3">
-            <div className="relative hidden lg:block">
-              <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-zinc-500" />
+            <div className="admin-search-wrap relative hidden lg:block">
+              <Search className="admin-search-icon" strokeWidth={2} aria-hidden />
               <input
                 type="text"
                 placeholder="Search..."
-                className="w-56 rounded-xl border border-zinc-800 bg-zinc-900/60 py-2 pl-9 pr-3 text-sm text-zinc-200 outline-none transition-colors placeholder:text-zinc-500 focus-sa-primary"
+                className={`w-56 ${adminSurface.searchCompact} focus-sa-primary`}
               />
             </div>
             <div ref={inboxRef} className="relative flex items-center gap-2">
+            <AdminColorModeToggle portal="sa" />
             <button
               type="button"
               onClick={() => {
                 setIsProfileOpen(false);
                 setActiveInbox((prev) => (prev === "messages" ? null : "messages"));
               }}
-              className="cursor-pointer relative inline-flex items-center justify-center rounded-xl border border-zinc-800 bg-zinc-900/60 p-2 text-zinc-300 transition-colors hover:border-zinc-700 hover:text-zinc-100"
+              className={`${adminSurface.btnIcon} relative`}
               aria-label="Messages"
             >
               <MessageSquare className="size-4" />
@@ -148,7 +152,7 @@ export default function SuperAdminLayout({ children }) {
                 setIsProfileOpen(false);
                 setActiveInbox((prev) => (prev === "notifications" ? null : "notifications"));
               }}
-              className="cursor-pointer relative inline-flex items-center justify-center rounded-xl border border-zinc-800 bg-zinc-900/60 p-2 text-zinc-300 transition-colors hover:border-zinc-700 hover:text-zinc-100"
+              className={`${adminSurface.btnIcon} relative`}
               aria-label="Notifications"
             >
               <Bell className="size-4" />
@@ -182,35 +186,20 @@ export default function SuperAdminLayout({ children }) {
               />
             </div>
 
-            <div className="h-8 w-px bg-zinc-800" aria-hidden />
+            <div className={`h-8 w-px ${adminShell.divider}`} aria-hidden />
 
             <div ref={profileRef} className="relative">
-              <button
-                type="button"
+              <AdminAvatarButton
+                avatarSrc={avatarSrc}
+                fallback={avatarFallback}
+                open={isProfileOpen}
                 onClick={() => setIsProfileOpen((v) => !v)}
-                className="cursor-pointer inline-flex items-center justify-center rounded-full border border-zinc-800 bg-zinc-900/60 p-0.5 text-zinc-200 transition-colors hover:border-zinc-700"
-                aria-expanded={isProfileOpen}
-                aria-haspopup="menu"
-                aria-label={`Open profile menu (${user.name})`}
-              >
-                {avatarSrc ? (
-                  <Image
-                    src={avatarSrc}
-                    alt=""
-                    width={36}
-                    height={36}
-                    className="size-9 rounded-full object-cover ring-1 ring-zinc-700"
-                    unoptimized
-                  />
-                ) : (
-                  <span className="flex size-9 items-center justify-center rounded-full bg-zinc-800 text-sm font-semibold text-zinc-200 ring-1 ring-zinc-700">
-                    {avatarFallback}
-                  </span>
-                )}
-              </button>
+                label={`Open profile menu (${user.name})`}
+                ringClass="ring-sa-primary-20"
+              />
 
               <div
-                className={`absolute right-0 z-[60] mt-2 origin-top-right rounded-xl border border-zinc-800 bg-zinc-900 p-1.5 shadow-lg shadow-black/40 transition-all duration-150 ${
+                className={`absolute right-0 z-[60] mt-2 origin-top-right p-1.5 ${adminSurface.dropdown} transition-all duration-150 ${
                   activeInbox ? "w-[min(360px,calc(100vw-2rem))]" : "w-[min(240px,calc(100vw-2rem))]"
                 } ${
                   isProfileOpen
@@ -221,20 +210,20 @@ export default function SuperAdminLayout({ children }) {
                 aria-hidden={!isProfileOpen}
               >
                 <div className="px-2.5 py-2">
-                  <p className="truncate text-sm font-medium text-zinc-100">{user.name}</p>
-                  <p className="truncate text-xs text-zinc-500">Super Admin</p>
+                  <p className={`truncate text-sm font-medium ${adminSurface.title}`}>{user.name}</p>
+                  <p className={`truncate text-xs ${adminSurface.muted}`}>Super Admin</p>
                 </div>
-                <div className="mb-1 h-px bg-zinc-800" />
+                <div className={`mb-1 h-px ${adminShell.divider}`} />
                 <button
                   type="button"
                   onClick={() => {
                     setIsProfileOpen(false);
                     router.push("/super-admin/profile");
                   }}
-                  className="cursor-pointer flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left text-sm text-zinc-200 transition-colors hover:bg-zinc-800"
+                  className={adminSurface.menuItem}
                   role="menuitem"
                 >
-                  <User className="size-4 text-zinc-400" />
+                  <User className="admin-surface-menu-item-icon size-4 shrink-0" />
                   Profile
                 </button>
                 <button
@@ -243,10 +232,10 @@ export default function SuperAdminLayout({ children }) {
                     setIsProfileOpen(false);
                     setIsChangePasswordOpen(true);
                   }}
-                  className="cursor-pointer flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left text-sm text-zinc-200 transition-colors hover:bg-zinc-800"
+                  className={adminSurface.menuItem}
                   role="menuitem"
                 >
-                  <KeyRound className="size-4 text-zinc-400" />
+                  <KeyRound className="admin-surface-menu-item-icon size-4 shrink-0" />
                   Change Password
                 </button>
                 <button
@@ -254,11 +243,11 @@ export default function SuperAdminLayout({ children }) {
                   onClick={() => {
                     setActiveInbox((prev) => (prev === "messages" ? null : "messages"));
                   }}
-                  className="cursor-pointer flex w-full items-center justify-between rounded-lg px-2.5 py-2 text-left text-sm text-zinc-200 transition-colors hover:bg-zinc-800"
+                  className={`${adminSurface.menuItem} justify-between`}
                   role="menuitem"
                 >
                   <span className="inline-flex items-center gap-2">
-                    <MessageSquare className="size-4 text-zinc-400" />
+                    <MessageSquare className="admin-surface-menu-item-icon size-4 shrink-0" />
                     Messages
                   </span>
                   <InboxCountBadge count={unread.messages} tone="sa" />
@@ -268,11 +257,11 @@ export default function SuperAdminLayout({ children }) {
                   onClick={() => {
                     setActiveInbox((prev) => (prev === "notifications" ? null : "notifications"));
                   }}
-                  className="cursor-pointer flex w-full items-center justify-between rounded-lg px-2.5 py-2 text-left text-sm text-zinc-200 transition-colors hover:bg-zinc-800"
+                  className={`${adminSurface.menuItem} justify-between`}
                   role="menuitem"
                 >
                   <span className="inline-flex items-center gap-2">
-                    <Bell className="size-4 text-zinc-400" />
+                    <Bell className="admin-surface-menu-item-icon size-4 shrink-0" />
                     Notifications
                   </span>
                   <InboxCountBadge count={unread.notifications} tone="amber" />
@@ -293,7 +282,7 @@ export default function SuperAdminLayout({ children }) {
                     />
                   </div>
                 ) : null}
-                <div className="my-1 h-px bg-zinc-800" />
+                <div className={`my-1 h-px ${adminShell.divider}`} />
                 <button
                   type="button"
                   onClick={async () => {
@@ -302,10 +291,10 @@ export default function SuperAdminLayout({ children }) {
                     clearUser();
                     router.push("/login");
                   }}
-                  className="cursor-pointer flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left text-sm text-zinc-200 transition-colors hover:bg-red-500/10 hover:text-red-300"
+                  className={`${adminSurface.menuItem} admin-surface-menu-item--danger`}
                   role="menuitem"
                 >
-                  <LogOut className="size-4 text-zinc-400" />
+                  <LogOut className="admin-surface-menu-item-icon size-4 shrink-0" />
                   Logout
                 </button>
               </div>
@@ -314,19 +303,19 @@ export default function SuperAdminLayout({ children }) {
         </header>
 
         {/* Mobile topbar */}
-        <header className="flex h-14 items-center justify-between border-b border-zinc-800 bg-zinc-950/90 px-4 backdrop-blur-md md:hidden">
+        <header className={`${adminShell.headerCompact} admin-shell-header backdrop-blur-md md:hidden`}>
           <button type="button" onClick={() => setMobileOpen(true)}
-            className="cursor-pointer flex size-9 items-center justify-center rounded-xl border border-zinc-800 text-zinc-400 hover:bg-zinc-900 hover:text-zinc-200">
+            className={adminSurface.btnIcon}>
             <Menu className="size-5" />
           </button>
           <div className="flex items-center gap-2">
             <Shield className="size-4 text-sa-primary" />
-            <span className="text-sm font-semibold text-zinc-100">Super Admin</span>
+            <span className={`text-sm font-semibold ${adminSurface.title}`}>Super Admin</span>
           </div>
-          <div className="size-9" /> {/* spacer */}
+          <AdminColorModeToggle portal="sa" />
         </header>
 
-        <main className="flex-1 overflow-y-auto overflow-x-hidden p-4 sm:p-6">
+        <main className={`${adminShell.pageContent} flex-1 overflow-y-auto overflow-x-hidden p-4 sm:p-6`}>
           {children}
         </main>
       </div>

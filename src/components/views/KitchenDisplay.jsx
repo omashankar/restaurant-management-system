@@ -6,29 +6,35 @@ import {
 } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { useLiveRefresh } from "@/hooks/useLiveRefresh";
+import { adminShell } from "@/config/adminSurfaceClasses";
 
 /* ── Column config ── */
 const COLUMNS = [
   { key: "new",       label: "New",       accent: "text-amber-400",   headerBg: "bg-amber-500/10 border-amber-500/20",     borderLeft: "border-l-amber-400",   badge: "bg-amber-500/15 text-amber-300 ring-1 ring-amber-500/25",   dot: "bg-amber-400"   },
   { key: "preparing", label: "Preparing", accent: "text-sky-400",     headerBg: "bg-sky-500/10 border-sky-500/20",         borderLeft: "border-l-sky-400",     badge: "bg-sky-500/15 text-sky-300 ring-1 ring-sky-500/25",         dot: "bg-sky-400"     },
-  { key: "ready",     label: "Ready",     accent: "text-ra-primary", headerBg: "bg-ra-primary-10 border-ra-primary-20", borderLeft: "border-l-ra-accent", badge: "bg-ra-primary-15 text-ra-primary-muted ring-1 ring-ra-primary-25", dot: "bg-ra-accent" },
+  { key: "ready",     label: "Ready",     accent: "text-ra-primary", headerBg: "bg-ra-primary-10 border-ra-primary-20", borderLeft: "border-l-ra-accent", badge: "bg-ra-primary-15 text-ra-primary ring-1 ring-ra-primary-25", dot: "bg-ra-accent" },
 ];
+
+function elapsedMinutes(createdAt, elapsedMin) {
+  if (elapsedMin != null && Number.isFinite(Number(elapsedMin))) {
+    return Math.min(Math.max(0, Number(elapsedMin)), 999);
+  }
+  if (!createdAt) return 0;
+  const t = new Date(createdAt).getTime();
+  if (!Number.isFinite(t)) return 0;
+  return Math.min(Math.max(0, Math.floor((Date.now() - t) / 60000)), 999);
+}
 
 /* ── Elapsed timer badge ── */
 function ElapsedBadge({ createdAt, elapsedMin }) {
-  const [mins, setMins] = useState(() => {
-    if (elapsedMin != null) return elapsedMin;
-    if (createdAt) return Math.floor((Date.now() - new Date(createdAt).getTime()) / 60000);
-    return 0;
-  });
+  const [mins, setMins] = useState(() => elapsedMinutes(createdAt, elapsedMin));
 
   useEffect(() => {
     const id = setInterval(() => {
-      if (createdAt) setMins(Math.floor((Date.now() - new Date(createdAt).getTime()) / 60000));
-      else setMins((m) => m + 1);
+      setMins(elapsedMinutes(createdAt, elapsedMin));
     }, 30_000);
     return () => clearInterval(id);
-  }, [createdAt]);
+  }, [createdAt, elapsedMin]);
 
   const urgent = mins >= 15;
   const warn   = mins >= 8;
@@ -36,7 +42,7 @@ function ElapsedBadge({ createdAt, elapsedMin }) {
     <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold ${
       urgent ? "bg-red-500/15 text-red-400 ring-1 ring-red-500/25" :
       warn   ? "bg-amber-500/15 text-amber-400 ring-1 ring-amber-500/25" :
-               "bg-zinc-800 text-zinc-500"
+               "kitchen-elapsed-normal admin-surface-muted"
     }`}>
       <Clock className="size-3" />{mins}m
     </span>
@@ -62,7 +68,7 @@ function TypePill({ type }) {
     "takeaway": { label: "Takeaway", color: "text-indigo-400"  },
     "delivery": { label: "Delivery", color: "text-sky-400"     },
   };
-  const c = cfg[type] ?? { label: type, color: "text-zinc-500" };
+  const c = cfg[type] ?? { label: type, color: "admin-surface-muted" };
   return <span className={`text-[10px] font-semibold uppercase tracking-wide ${c.color}`}>{c.label}</span>;
 }
 
@@ -79,9 +85,9 @@ function TicketCard({ ticket, col, onAction, updating }) {
   const items = ticket.items ?? [];
 
   return (
-    <article className={`rounded-2xl border border-zinc-800 bg-zinc-900/80 shadow-md shadow-black/20 border-l-4 ${col.borderLeft} transition-all duration-200 hover:border-zinc-700`}>
+    <article className={`kitchen-ticket-card rounded-2xl border-l-4 admin-surface-card shadow-md shadow-black/20 ${col.borderLeft} transition-all duration-200`}>
       {/* Header */}
-      <div className="flex items-start justify-between gap-2 border-b border-zinc-800/80 p-4">
+      <div className={`flex items-start justify-between gap-2 p-4 ${adminShell.dividerB}`}>
         <div className="space-y-1">
           <div className="flex items-center gap-2">
             <p className="font-mono text-sm font-semibold text-ra-primary">
@@ -89,11 +95,11 @@ function TicketCard({ ticket, col, onAction, updating }) {
             </p>
             <ElapsedBadge createdAt={ticket.createdAt} elapsedMin={ticket.elapsedMin} />
           </div>
-          <p className="text-base font-bold text-zinc-100">{headline}</p>
+          <p className="text-base font-bold admin-shell-text">{headline}</p>
           <div className="flex items-center gap-2">
             <TypePill type={orderType} />
-            <span className="text-zinc-700">·</span>
-            <span className="text-xs text-zinc-600">{placedAt}</span>
+            <span className="admin-surface-faint">·</span>
+            <span className="text-xs admin-surface-faint">{placedAt}</span>
           </div>
         </div>
         <span className={`shrink-0 rounded-full px-2.5 py-0.5 text-xs font-bold uppercase tracking-wide ${col.badge}`}>
@@ -104,15 +110,15 @@ function TicketCard({ ticket, col, onAction, updating }) {
       {/* Items */}
       <ul className="space-y-1.5 p-4">
         {items.length === 0 ? (
-          <li className="rounded-lg bg-zinc-950/50 px-3 py-2 text-xs text-zinc-500">No items listed</li>
+          <li className="kitchen-item-row rounded-lg px-3 py-2 text-xs admin-surface-muted">No items listed</li>
         ) : (
           items.map((it, idx) => (
-            <li key={idx} className="rounded-lg bg-zinc-950/50 px-3 py-2 text-sm">
+            <li key={idx} className="kitchen-item-row rounded-lg px-3 py-2 text-sm">
               <div className="flex items-center gap-2">
-                <span className="flex size-5 shrink-0 items-center justify-center rounded-md bg-zinc-800 text-xs font-bold text-zinc-300">
+                <span className="kitchen-qty-badge flex size-5 shrink-0 items-center justify-center rounded-md text-xs font-bold">
                   {it.qty}
                 </span>
-                <span className="font-medium text-zinc-100">{it.name}</span>
+                <span className="font-medium admin-shell-text">{it.name}</span>
               </div>
               {it.note?.trim() && (
                 <p className="mt-1 pl-7 text-xs font-medium text-amber-400">{it.note.trim()}</p>
@@ -128,7 +134,7 @@ function TicketCard({ ticket, col, onAction, updating }) {
       </ul>
 
       {/* Action button */}
-      <div className="border-t border-zinc-800/80 p-3">
+      <div className={`p-3 ${adminShell.dividerT}`}>
         {ticket.status === "new" && (
           <button type="button" disabled={isUpdating}
             onClick={() => onAction(ticket.id, "preparing")}
@@ -148,7 +154,7 @@ function TicketCard({ ticket, col, onAction, updating }) {
         {ticket.status === "ready" && (
           <button type="button" disabled={isUpdating}
             onClick={() => onAction(ticket.id, "completed")}
-            className="cursor-pointer flex w-full items-center justify-center gap-2 rounded-xl bg-zinc-800 py-2.5 text-sm font-semibold text-zinc-300 transition-all hover:bg-zinc-700 active:scale-[0.98] disabled:opacity-50">
+            className="kitchen-mark-served cursor-pointer flex w-full items-center justify-center gap-2 rounded-xl py-2.5 text-sm font-semibold transition-all active:scale-[0.98] disabled:opacity-50">
             <UtensilsCrossed className="size-4" />
             {isUpdating ? "Updating…" : "Mark Served"}
           </button>
@@ -233,7 +239,7 @@ export default function KitchenDisplay() {
             <div key={i} className="space-y-3">
               <div className="h-10 animate-pulse rounded-xl bg-zinc-800" />
               {Array.from({ length: 2 }).map((_, j) => (
-                <div key={j} className="h-40 animate-pulse rounded-2xl border border-zinc-800 bg-zinc-900/40" />
+                <div key={j} className="h-40 animate-pulse admin-surface-card" />
               ))}
             </div>
           ))}
@@ -243,9 +249,9 @@ export default function KitchenDisplay() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="kitchen-display space-y-6">
       {(fetchError || actionError) && (
-        <div className="rounded-xl border border-red-500/25 bg-red-500/10 px-4 py-3 text-sm text-red-300">
+        <div className="rounded-xl border border-red-500/25 bg-red-500/10 px-4 py-3 text-sm text-red-400">
           {fetchError || actionError}
         </div>
       )}
@@ -257,8 +263,8 @@ export default function KitchenDisplay() {
             <ChefHat className="size-5" />
           </span>
           <div>
-            <h1 className="text-2xl font-semibold tracking-tight text-zinc-50">Kitchen Display</h1>
-            <p className="mt-1 text-sm text-zinc-500">
+            <h1 className="admin-page-title text-2xl font-semibold tracking-tight">Kitchen Display</h1>
+            <p className="mt-1 text-sm admin-surface-muted">
               <span className="inline-flex items-center gap-1.5">
                 <span className="size-1.5 animate-pulse rounded-full bg-ra-accent" />
                 Live
@@ -272,27 +278,27 @@ export default function KitchenDisplay() {
 
         <div className="flex items-center gap-3">
           {/* Live counts */}
-          <div className="flex items-center gap-3 rounded-xl border border-zinc-800 bg-zinc-900/60 px-4 py-2 text-xs">
+          <div className="flex items-center gap-3 admin-surface-card px-4 py-2 text-xs">
             {COLUMNS.map((col) => (
               <span key={col.key} className="flex items-center gap-1.5">
                 <span className={`size-2 rounded-full ${col.dot}`} />
                 <span className={`font-bold ${col.accent}`}>{colCount(col.key)}</span>
-                <span className="text-zinc-600">{col.label}</span>
+                <span className="admin-surface-faint">{col.label}</span>
               </span>
             ))}
           </div>
           <button type="button" onClick={() => fetchOrders()}
-            className="cursor-pointer flex items-center gap-1.5 rounded-xl border border-zinc-800 bg-zinc-900/60 px-3 py-2 text-xs font-medium text-zinc-500 hover:border-zinc-600 hover:text-zinc-300 transition-colors">
+            className="cursor-pointer flex items-center gap-1.5 admin-surface-card px-3 py-2 text-xs font-medium admin-surface-muted hover:border-zinc-600 hover:admin-surface-body transition-colors">
             <RefreshCw className="size-3.5" /> Refresh
           </button>
         </div>
       </div>
 
       {/* Timer legend */}
-      <div className="flex flex-wrap items-center gap-4 text-xs text-zinc-500">
+      <div className="flex flex-wrap items-center gap-4 text-xs admin-surface-muted">
         <span className="flex items-center gap-1.5">
-          <Clock className="size-3.5 text-zinc-600" />
-          Timer: <span className="text-zinc-400">normal</span>
+          <Clock className="size-3.5 admin-surface-faint" />
+          Timer: <span className="admin-surface-muted">normal</span>
           <span className="mx-1">·</span>
           <span className="text-amber-400">8m+ warn</span>
           <span className="mx-1">·</span>
@@ -302,11 +308,11 @@ export default function KitchenDisplay() {
 
       {/* Empty state */}
       {active.length === 0 && (
-        <div className="flex flex-col items-center justify-center gap-4 rounded-2xl border border-dashed border-zinc-800 py-24 text-center">
+        <div className="flex flex-col items-center justify-center gap-4 rounded-2xl border border-dashed admin-shell-border py-24 text-center">
           <ChefHat className="size-12 text-zinc-700" />
           <div>
-            <p className="text-base font-semibold text-zinc-400">Kitchen is clear</p>
-            <p className="mt-1 text-sm text-zinc-600">No active orders right now.</p>
+            <p className="text-base font-semibold admin-surface-muted">Kitchen is clear</p>
+            <p className="mt-1 text-sm admin-surface-faint">No active orders right now.</p>
           </div>
         </div>
       )}
@@ -331,7 +337,7 @@ export default function KitchenDisplay() {
 
                 {/* Tickets */}
                 {colTickets.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-zinc-800 py-10 text-center">
+                  <div className="flex flex-col items-center justify-center gap-2 rounded-2xl border border-dashed admin-shell-border py-10 text-center">
                     <ChefHat className="size-7 text-zinc-800" />
                     <p className="text-xs text-zinc-700">No {col.label.toLowerCase()} orders</p>
                   </div>

@@ -26,11 +26,11 @@ export default function ChefDashboard({ tickets: initialTickets = [], topItems =
     <div className="space-y-8">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-zinc-50">Kitchen View</h1>
-          <p className="mt-1 text-sm text-zinc-500">Incoming tickets and order queue.</p>
+          <h1 className="admin-page-title">Kitchen View</h1>
+          <p className="admin-page-desc">Incoming tickets and order queue.</p>
         </div>
         <Link href="/kitchen"
-          className="cursor-pointer inline-flex items-center gap-2 rounded-xl border border-zinc-700 px-4 py-2 text-sm font-semibold text-zinc-200 hover-border-ra-primary-40">
+          className="cursor-pointer inline-flex items-center gap-2 rounded-xl border admin-shell-border px-4 py-2 text-sm font-semibold admin-shell-text hover-border-ra-primary-40">
           <MonitorPlay className="size-4" /> Full KDS
         </Link>
       </div>
@@ -42,9 +42,9 @@ export default function ChefDashboard({ tickets: initialTickets = [], topItems =
       </div>
 
       <section>
-        <h2 className="mb-3 text-sm font-semibold text-zinc-100">Live Queue</h2>
+        <h2 className="mb-3 text-sm font-semibold admin-shell-text">Live Queue</h2>
         {tickets.length === 0 ? (
-          <p className="text-sm text-zinc-600">No active tickets. Kitchen is clear.</p>
+          <p className="text-sm admin-surface-faint">No active tickets. Kitchen is clear.</p>
         ) : (
           <div className="grid gap-4 lg:grid-cols-3">
             {tickets.map((ticket) => {
@@ -54,14 +54,14 @@ export default function ChefDashboard({ tickets: initialTickets = [], topItems =
                 : "—");
               return (
                 <article key={ticket.id}
-                  className={`rounded-2xl border border-zinc-800 bg-zinc-900/70 border-l-4 ${tone.border}`}>
-                  <div className="flex items-start justify-between gap-2 border-b border-zinc-800/80 p-4">
+                  className={`admin-surface-card border-l-4 ${tone.border}`}>
+                  <div className="flex items-start justify-between gap-2 admin-surface-divider-b p-4">
                     <div>
                       <p className="font-mono text-sm text-ra-primary/90">{ticket.orderId ?? ticket.id}</p>
-                      <p className="mt-1 text-lg font-semibold text-zinc-100">
+                      <p className="mt-1 text-lg font-semibold admin-shell-text">
                         {ticket.tableNumber ? `Table ${ticket.tableNumber}` : ticket.customer ?? "—"}
                       </p>
-                      <p className="mt-1 inline-flex items-center gap-1.5 text-xs text-zinc-500">
+                      <p className="mt-1 inline-flex items-center gap-1.5 text-xs admin-surface-muted">
                         <Clock className="size-3.5" /> {placedAt}
                       </p>
                     </div>
@@ -69,17 +69,17 @@ export default function ChefDashboard({ tickets: initialTickets = [], topItems =
                       {tone.label}
                     </span>
                   </div>
-                  <ul className="space-y-2 p-4 text-sm text-zinc-300">
+                  <ul className="space-y-2 p-4 text-sm admin-surface-body">
                     {(ticket.items ?? []).map((it, idx) => (
                       <li key={idx} className="flex justify-between gap-2 rounded-lg bg-zinc-950/50 px-3 py-2">
                         <span>
-                          <span className="font-semibold text-zinc-100">{it.qty}×</span> {it.name}
+                          <span className="font-semibold admin-shell-text">{it.qty}×</span> {it.name}
                           {it.note && <span className="mt-0.5 block text-xs text-amber-400/90">{it.note}</span>}
                         </span>
                       </li>
                     ))}
                   </ul>
-                  <div className="flex gap-2 border-t border-zinc-800/80 p-4">
+                  <div className="flex gap-2 admin-surface-divider-t p-4">
                     {ticket.status === "new" && (
                       <button type="button" onClick={() => updateStatus(ticket.id, "preparing")}
                         className="cursor-pointer flex flex-1 items-center justify-center gap-2 rounded-xl bg-sky-500/20 px-3 py-2.5 text-sm font-semibold text-sky-200 ring-1 ring-sky-500/30 hover:bg-sky-500/30">

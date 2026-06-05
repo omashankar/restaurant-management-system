@@ -3,6 +3,18 @@
 import { computeInventoryStatus } from "@/components/inventory/inventoryUtils";
 import InventoryStatusBadge from "@/components/inventory/InventoryStatusBadge";
 import DataTableShell from "@/components/ui/DataTableShell";
+import {
+  AdminTable,
+  AdminTableActionsCell,
+  AdminTableBody,
+  AdminTableHead,
+  AdminTableHeadRow,
+  AdminTableIconButton,
+  AdminTableRow,
+  AdminTableTd,
+  AdminTableTh,
+  AdminTableThActions,
+} from "@/components/ui/AdminTable";
 import { Minus, Pencil, Plus, RefreshCw, Trash2 } from "lucide-react";
 import { useState } from "react";
 
@@ -38,7 +50,7 @@ function QtyEditor({ row, onUpdateQty }) {
       <button
         type="button"
         onClick={() => { const n = Math.max(0, (parseInt(val,10)||0) - 1); setVal(String(n)); setDirty(true); onUpdateQty?.(row, -1); }}
-        className="cursor-pointer flex size-7 items-center justify-center rounded-lg border border-zinc-700 text-zinc-400 transition-colors hover:border-red-500/40 hover:bg-red-500/10 hover:text-red-400"
+        className="cursor-pointer flex size-7 items-center justify-center rounded-lg border admin-shell-border admin-surface-muted transition-colors hover:border-red-500/40 hover:bg-red-500/10 hover:text-red-400"
         aria-label="Decrease"
       >
         <Minus className="size-3.5" />
@@ -50,14 +62,14 @@ function QtyEditor({ row, onUpdateQty }) {
         value={val}
         onChange={handleChange}
         onKeyDown={handleKeyDown}
-        className="w-16 rounded-lg border border-zinc-700 bg-zinc-950/60 px-1.5 py-1 text-center text-sm tabular-nums text-zinc-100 outline-none focus-ra-primary"
+        className="w-16 rounded-lg border admin-shell-border bg-zinc-950/60 px-1.5 py-1 text-center text-sm tabular-nums admin-shell-text outline-none focus-ra-primary"
         aria-label="Quantity"
       />
 
       <button
         type="button"
         onClick={() => { const n = (parseInt(val,10)||0) + 1; setVal(String(n)); setDirty(true); onUpdateQty?.(row, +1); }}
-        className="cursor-pointer flex size-7 items-center justify-center rounded-lg border border-zinc-700 text-zinc-400 transition-colors hover-border-ra-primary-40 hover-bg-ra-primary-10 hover-ra-primary"
+        className="cursor-pointer flex size-7 items-center justify-center rounded-lg border admin-shell-border admin-surface-muted transition-colors hover-border-ra-primary-40 hover-bg-ra-primary-10 hover-ra-primary"
         aria-label="Increase"
       >
         <Plus className="size-3.5" />
@@ -69,7 +81,7 @@ function QtyEditor({ row, onUpdateQty }) {
         className={`cursor-pointer flex size-7 items-center justify-center rounded-lg border transition-colors ${
           dirty
             ? "border-ra-primary-50 bg-ra-primary-15 text-ra-primary hover-bg-ra-primary-15"
-            : "border-zinc-700 text-zinc-600 hover:border-zinc-600 hover:text-zinc-400"
+            : "border-zinc-700 admin-surface-faint hover:border-zinc-600 hover:admin-surface-muted"
         }`}
         aria-label="Apply quantity"
         title="Apply (Enter)"
@@ -83,20 +95,20 @@ function QtyEditor({ row, onUpdateQty }) {
 export default function InventoryTable({ rows, onEdit, onDelete, onUpdateQty, footer }) {
   return (
     <DataTableShell>
-      <table className="w-full min-w-[800px] text-left text-sm">
-        <thead>
-          <tr className="border-b border-zinc-800 text-xs font-medium uppercase tracking-wide text-zinc-500">
-            <th className="px-4 py-3">Name</th>
-            <th className="hidden px-4 py-3 md:table-cell">Category</th>
-            <th className="px-4 py-3 text-center">QTY</th>
-            <th className="px-4 py-3 text-center tabular-nums">Reorder</th>
-            <th className="hidden px-4 py-3 lg:table-cell">Unit</th>
-            <th className="px-4 py-3">Status</th>
-            <th className="px-4 py-3">Update QTY</th>
-            <th className="px-4 py-3 text-right">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
+      <AdminTable className="w-full min-w-[800px]">
+        <AdminTableHead>
+          <AdminTableHeadRow>
+            <AdminTableTh>Name</AdminTableTh>
+            <AdminTableTh hidden="md">Category</AdminTableTh>
+            <AdminTableTh align="center">QTY</AdminTableTh>
+            <AdminTableTh align="center">Reorder</AdminTableTh>
+            <AdminTableTh hidden="lg">Unit</AdminTableTh>
+            <AdminTableTh>Status</AdminTableTh>
+            <AdminTableTh>Update QTY</AdminTableTh>
+            <AdminTableThActions />
+          </AdminTableHeadRow>
+        </AdminTableHead>
+        <AdminTableBody className="divide-y-0">
           {rows.map((row) => {
             const status = computeInventoryStatus(row);
             const rowAccent =
@@ -104,68 +116,36 @@ export default function InventoryTable({ rows, onEdit, onDelete, onUpdateQty, fo
                 ? "bg-red-500/[0.06]"
                 : status === "low"
                   ? "bg-amber-500/[0.06]"
-                  : "hover:bg-zinc-800/40";
+                  : "hover:bg-[var(--admin-hover)]";
             return (
-              <tr
+              <AdminTableRow
                 key={row.id}
-                className={`border-b border-zinc-800/80 transition-colors duration-150 ${rowAccent}`}
+                className={`border-b border-[var(--admin-border-subtle)] transition-colors duration-150 ${rowAccent}`}
               >
-                <td className="px-4 py-3 font-medium text-zinc-100">
-                  {row.name}
-                </td>
-                <td className="hidden px-4 py-3 text-zinc-400 md:table-cell">
-                  {row.category}
-                </td>
-
-                {/* QTY — plain number */}
-                <td className="px-4 py-3 text-center tabular-nums font-semibold text-zinc-200">
-                  {row.quantity}
-                </td>
-
-                {/* Reorder */}
-                <td className="px-4 py-3 text-center tabular-nums text-zinc-400">
-                  {row.reorderLevel}
-                </td>
-
-                <td className="hidden px-4 py-3 text-zinc-400 lg:table-cell">
-                  {row.unit}
-                </td>
-                <td className="px-4 py-3">
+                <AdminTableTd className="font-medium admin-shell-text">{row.name}</AdminTableTd>
+                <AdminTableTd hidden="md" className="admin-surface-muted">{row.category}</AdminTableTd>
+                <AdminTableTd align="center" className="font-semibold admin-shell-text">{row.quantity}</AdminTableTd>
+                <AdminTableTd align="center" className="admin-surface-muted">{row.reorderLevel}</AdminTableTd>
+                <AdminTableTd hidden="lg" className="admin-surface-muted">{row.unit}</AdminTableTd>
+                <AdminTableTd>
                   <InventoryStatusBadge item={row} />
-                </td>
-
-                <td className="px-4 py-3">
+                </AdminTableTd>
+                <AdminTableTd>
                   <QtyEditor row={row} onUpdateQty={onUpdateQty} />
-                </td>
-
-                {/* Actions: qty editor | edit | delete */}
-                <td className="px-4 py-3">
-                  <div className="flex items-center justify-end gap-1">
-                    {/* <QtyEditor row={row} onUpdateQty={onUpdateQty} /> */}
-                    {/* <div className="mx-1 h-4 w-px bg-zinc-700" /> */}
-                    <button
-                      type="button"
-                      onClick={() => onEdit(row)}
-                      className="cursor-pointer rounded-lg p-2 text-zinc-400 transition-colors hover:bg-zinc-800 hover:text-zinc-100"
-                      aria-label={`Edit ${row.name}`}
-                    >
-                      <Pencil className="size-4" />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => onDelete(row)}
-                      className="cursor-pointer rounded-lg p-2 text-zinc-400 transition-colors hover:bg-red-500/15 hover:text-red-300"
-                      aria-label={`Delete ${row.name}`}
-                    >
-                      <Trash2 className="size-4" />
-                    </button>
-                  </div>
-                </td>
-              </tr>
+                </AdminTableTd>
+                <AdminTableActionsCell>
+                  <AdminTableIconButton onClick={() => onEdit(row)} aria-label={`Edit ${row.name}`}>
+                    <Pencil className="size-4" />
+                  </AdminTableIconButton>
+                  <AdminTableIconButton variant="danger" onClick={() => onDelete(row)} aria-label={`Delete ${row.name}`}>
+                    <Trash2 className="size-4" />
+                  </AdminTableIconButton>
+                </AdminTableActionsCell>
+              </AdminTableRow>
             );
           })}
-        </tbody>
-      </table>
+        </AdminTableBody>
+      </AdminTable>
       {footer}
     </DataTableShell>
   );

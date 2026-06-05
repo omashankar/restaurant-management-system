@@ -47,9 +47,9 @@ export default function TaxSettingsSection({ data, onChange, onSave }) {
       </div>
 
       {data.gstNumber && (
-        <div className="mt-4 rounded-xl border border-zinc-800 bg-zinc-950/40 px-4 py-3 text-xs text-zinc-500">
-          GST will be auto-applied at <span className="font-semibold text-zinc-300">{data.gstPercentage || 0}%</span> on all orders.
-          Invoices will be prefixed with <span className="font-semibold text-zinc-300">{data.invoicePrefix || "INV"}</span>.
+        <div className="mt-4 rounded-xl border admin-shell-border bg-[var(--admin-hover)] px-4 py-3 text-xs admin-surface-muted">
+          GST will be auto-applied at <span className="font-semibold admin-surface-body">{data.gstPercentage || 0}%</span> on all orders.
+          Invoices will be prefixed with <span className="font-semibold admin-surface-body">{data.invoicePrefix || "INV"}</span>.
         </div>
       )}
     </SectionCard>

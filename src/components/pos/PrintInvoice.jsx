@@ -46,7 +46,7 @@ export default function PrintInvoice({
     <button
       type="button"
       onClick={handlePrint}
-      className="cursor-pointer inline-flex items-center gap-2 rounded-xl border border-zinc-700 px-4 py-2 text-sm font-semibold text-zinc-200 transition-colors hover-border-ra-primary-40 hover:text-ra-primary-muted"
+      className="cursor-pointer inline-flex items-center gap-2 rounded-xl border admin-shell-border px-4 py-2 text-sm font-semibold admin-shell-text transition-colors hover-border-ra-primary-40 hover:text-ra-primary-muted"
     >
       <Printer className="size-4" />
       Print Bill

@@ -4,7 +4,7 @@ export default function ReservationTableSkeleton() {
   return (
     <DataTableShell>
       <div className="min-w-[800px] space-y-0 p-4">
-        <div className="mb-3 flex gap-3 border-b border-zinc-800 pb-3">
+        <div className="mb-3 flex gap-3 border-b admin-shell-border pb-3">
           {Array.from({ length: 8 }).map((_, i) => (
             <div
               key={i}
@@ -13,11 +13,11 @@ export default function ReservationTableSkeleton() {
           ))}
         </div>
         {Array.from({ length: 6 }).map((_, r) => (
-          <div key={r} className="flex gap-3 border-b border-zinc-800/60 py-3">
+          <div key={r} className="flex gap-3 border-b admin-shell-border/60 py-3">
             {Array.from({ length: 8 }).map((_, c) => (
               <div
                 key={c}
-                className="h-4 flex-1 rounded bg-zinc-800/70 animate-pulse"
+                className="h-4 flex-1 rounded bg-[var(--admin-hover-strong)] animate-pulse"
                 style={{ animationDelay: `${(r * 8 + c) * 40}ms` }}
               />
             ))}

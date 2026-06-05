@@ -27,52 +27,58 @@ export default function ReservationCalendarView({ rows, onView, onEdit, onDelete
 
   if (groups.length === 0) return null;
 
+  function gridCls(count) {
+    if (count <= 1) return "grid max-w-lg grid-cols-1 gap-4";
+    if (count === 2) return "grid grid-cols-1 gap-4 sm:grid-cols-2";
+    return "grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3";
+  }
+
   return (
     <div className="space-y-8">
       {groups.map(({ date, items }) => (
         <section key={date}>
-          <h3 className="sticky top-0 z-10 mb-4 inline-flex rounded-lg bg-zinc-950/90 px-3 py-1.5 text-sm font-semibold text-ra-primary ring-1 ring-ra-primary-25 backdrop-blur-sm">
+          <h3 className="sticky top-0 z-10 mb-4 inline-flex rounded-lg border border-ra-primary-25 bg-[var(--admin-surface)] px-3 py-1.5 text-sm font-semibold text-ra-primary backdrop-blur-sm">
             {formatReservationDate(date)}
           </h3>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className={gridCls(items.length)}>
             {items.map((r) => (
               <div
                 key={r.id}
-                className="group rounded-2xl border border-zinc-800 bg-gradient-to-b from-zinc-900/80 to-zinc-950/80 p-4 shadow-lg shadow-black/20 transition-all duration-300 hover:-translate-y-0.5 hover-border-ra-primary-40 hover:shadow-ra-primary-soft"
+                className="group rounded-2xl border admin-shell-border bg-[var(--admin-surface)] p-4 transition-colors hover:border-ra-primary-40 hover:bg-[var(--admin-hover)]"
               >
                 <div className="flex items-start justify-between gap-2">
                   <div>
-                    <p className="font-semibold text-zinc-100">{r.customerName}</p>
-                    <p className="text-xs text-zinc-500">{r.phone}</p>
+                    <p className="font-semibold admin-shell-text">{r.customerName}</p>
+                    <p className="text-xs admin-surface-muted">{r.phone}</p>
                   </div>
                   <StatusBadge status={r.status} />
                 </div>
-                <div className="mt-3 flex flex-wrap gap-3 text-xs text-zinc-400">
-                  <span className="rounded-md bg-zinc-800/80 px-2 py-1 font-medium text-zinc-300">
+                <div className="mt-3 flex flex-wrap gap-3 text-xs admin-surface-muted">
+                  <span className="rounded-md bg-[var(--admin-hover-strong)] px-2 py-1 font-medium admin-surface-body">
                     {formatTimeSlot(r.time)}
                   </span>
                   <span>
                     {r.guests} guests ·{" "}
-                    <span className="font-mono text-ra-primary-muted">
+                    <span className="font-mono text-ra-primary">
                       {r.tableNumber}
                     </span>
                   </span>
                   {r.area && (
-                    <span className="rounded-md bg-zinc-800/80 px-2 py-1 text-zinc-400">
+                    <span className="rounded-md bg-[var(--admin-hover-strong)] px-2 py-1 admin-surface-muted">
                       {r.area}
                     </span>
                   )}
                 </div>
                 {r.notes ? (
-                  <p className="mt-2 line-clamp-2 text-xs text-zinc-500">
+                  <p className="mt-2 line-clamp-2 text-xs admin-surface-muted">
                     {r.notes}
                   </p>
                 ) : null}
-                <div className="mt-4 flex gap-1 border-t border-zinc-800/80 pt-3">
+                <div className="mt-4 flex gap-1 admin-surface-divider-t pt-3">
                   <button
                     type="button"
                     onClick={() => onView(r)}
-                    className="cursor-pointer flex flex-1 items-center justify-center gap-1 rounded-lg py-2 text-xs font-medium text-zinc-400 transition-colors hover:bg-zinc-800 hover:text-sky-400"
+                    className="cursor-pointer flex flex-1 items-center justify-center gap-1 rounded-lg py-2 text-xs font-medium text-[var(--admin-text-muted)] transition-colors hover:bg-[var(--admin-hover)] hover:text-sky-600"
                   >
                     <Eye className="size-3.5" />
                     View
@@ -80,7 +86,7 @@ export default function ReservationCalendarView({ rows, onView, onEdit, onDelete
                   <button
                     type="button"
                     onClick={() => onEdit(r)}
-                    className="cursor-pointer flex flex-1 items-center justify-center gap-1 rounded-lg py-2 text-xs font-medium text-zinc-400 transition-colors hover:bg-zinc-800 hover-ra-primary"
+                    className="cursor-pointer flex flex-1 items-center justify-center gap-1 rounded-lg py-2 text-xs font-medium text-[var(--admin-text-muted)] transition-colors hover:bg-[var(--admin-hover)] hover:text-ra-primary"
                   >
                     <Pencil className="size-3.5" />
                     Edit
@@ -88,7 +94,7 @@ export default function ReservationCalendarView({ rows, onView, onEdit, onDelete
                   <button
                     type="button"
                     onClick={() => onDelete(r)}
-                    className="cursor-pointer flex flex-1 items-center justify-center gap-1 rounded-lg py-2 text-xs font-medium text-zinc-400 transition-colors hover:bg-red-500/15 hover:text-red-400"
+                    className="cursor-pointer flex flex-1 items-center justify-center gap-1 rounded-lg py-2 text-xs font-medium text-[var(--admin-text-muted)] transition-colors hover:bg-red-500/10 hover:text-red-600"
                   >
                     <Trash2 className="size-3.5" />
                     Delete

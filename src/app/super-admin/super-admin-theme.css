@@ -1,7 +1,7 @@
 /* Super Admin dynamic theme — defaults on :root; saved theme via bootstrap script + JS */
 
 :root {
-  --sa-primary: #f43f5e;
+  --sa-primary: #a3e635;
   --sa-accent: #10b981;
 }
 
@@ -66,16 +66,18 @@
 :is(.super-admin-panel, :root[data-super-admin-theme]) .shadow-sa-primary-glow {
   box-shadow: 0 10px 15px -3px color-mix(in srgb, var(--sa-primary) 18%, transparent);
 }
-:is(.super-admin-panel, :root[data-super-admin-theme]) .sa-btn-primary {
+:is(.super-admin-panel, :root[data-super-admin-theme]) :is(.sa-btn-primary, button.bg-sa-primary, a.bg-sa-primary) {
   cursor: pointer;
-  background-color: var(--sa-primary);
+  background-color: var(--sa-primary) !important;
   color: #09090b;
+  border-color: transparent;
 }
-:is(.super-admin-panel, :root[data-super-admin-theme]) .sa-btn-primary:hover:not(:disabled) {
+:is(.super-admin-panel, :root[data-super-admin-theme]) :is(.sa-btn-primary, button.bg-sa-primary, a.bg-sa-primary):hover:not(:disabled) {
   filter: brightness(1.08);
 }
-:is(.super-admin-panel, :root[data-super-admin-theme]) .sa-btn-primary:disabled {
+:is(.super-admin-panel, :root[data-super-admin-theme]) :is(.sa-btn-primary, button.bg-sa-primary, a.bg-sa-primary):disabled {
   opacity: 0.5;
+  cursor: not-allowed;
 }
 :is(.super-admin-panel, :root[data-super-admin-theme]) .sa-nav-active {
   background-color: color-mix(in srgb, var(--sa-primary) 15%, transparent);
@@ -112,8 +114,15 @@
   background-color: rgb(24 24 27 / 0.4);
 }
 :is(.super-admin-panel, :root[data-super-admin-theme]) .focus-sa-primary:focus {
-  border-color: color-mix(in srgb, var(--sa-primary) 50%, transparent);
+  border-color: color-mix(in srgb, var(--sa-primary) 55%, var(--admin-border, transparent));
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--sa-primary) 22%, transparent);
   outline: none;
+}
+
+html[data-admin-mode="dark"]
+  :is(.super-admin-panel, :root[data-super-admin-theme])
+  .focus-sa-primary:focus {
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--sa-primary) 32%, transparent);
 }
 :is(.super-admin-panel, :root[data-super-admin-theme]) .focus-within-sa-primary:focus-within {
   border-color: color-mix(in srgb, var(--sa-primary) 40%, transparent);
@@ -141,7 +150,7 @@
   box-shadow: 0 10px 15px -3px color-mix(in srgb, var(--sa-primary) 18%, transparent);
 }
 :is(.super-admin-panel, :root[data-super-admin-theme]) .sa-preloader-spin {
-  border-color: rgb(63 63 70);
+  animation: admin-preloader-spin 0.9s linear infinite;
   border-top-color: var(--sa-primary);
 }
 

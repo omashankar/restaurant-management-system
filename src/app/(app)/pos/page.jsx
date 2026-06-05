@@ -419,8 +419,8 @@ function PosPageContent() {
   return (
     <div className="space-y-4">
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight text-zinc-50">POS</h1>
-        <p className="mt-1 text-sm text-zinc-500">1 Dine-In · 2 Takeaway · 3 Delivery · / Search · Ctrl+Enter Place</p>
+        <h1 className="admin-page-title text-2xl font-semibold tracking-tight">POS</h1>
+        <p className="admin-page-desc mt-1 text-sm">1 Dine-In · 2 Takeaway · 3 Delivery · / Search · Ctrl+Enter Place</p>
       </div>
 
       <div className="grid gap-6 xl:grid-cols-10">
@@ -441,8 +441,8 @@ function PosPageContent() {
                   onClick={() => setActiveItemType(t)}
                   className={`cursor-pointer inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold transition-all duration-150 ${
                     active
-                      ? "bg-ra-primary/20 text-ra-primary-muted ring-1 ring-ra-primary-25"
-                      : "bg-zinc-900 text-zinc-400 ring-1 ring-zinc-800 hover:text-zinc-200"
+                      ? "bg-ra-primary/20 text-ra-primary ring-1 ring-ra-primary-25"
+                      : "border admin-shell-border bg-[var(--admin-surface)] text-[var(--admin-text-muted)] hover:bg-[var(--admin-hover)] hover:text-[var(--admin-text)]"
                   }`}
                   aria-pressed={active}
                 >
@@ -458,7 +458,7 @@ function PosPageContent() {
               className={`cursor-pointer inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold transition-all duration-150 ${
                 fastOnly
                   ? "bg-amber-500/20 text-amber-300 ring-1 ring-amber-500/30"
-                  : "bg-zinc-900 text-zinc-400 ring-1 ring-zinc-800 hover:text-zinc-200"
+                  : "admin-surface-card admin-surface-muted ring-1 admin-shell-border hover:admin-shell-text"
               }`}
               aria-pressed={fastOnly}
             >
@@ -470,7 +470,7 @@ function PosPageContent() {
             search={search}
             onSearchChange={setSearch}
             searchPlaceholder="Search menu (/)"
-            endSlot={<span className="rounded-lg border border-zinc-800 px-2.5 py-1 text-xs text-zinc-400">{filteredItems.length} items</span>}
+            endSlot={<span className="rounded-lg border admin-shell-border px-2.5 py-1 text-xs text-zinc-400">{filteredItems.length} items</span>}
           />
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {filteredItems.map((item) => (
@@ -483,7 +483,7 @@ function PosPageContent() {
               />
             ))}
             {filteredItems.length === 0 && (
-              <p className="col-span-full py-12 text-center text-sm text-zinc-600">No items match the current filters.</p>
+              <p className="col-span-full py-12 text-center text-sm admin-surface-faint">No items match the current filters.</p>
             )}
           </div>
         </section>
@@ -559,19 +559,19 @@ function PosPageContent() {
         <div className="space-y-3">
           {lastOrder?.customer && (
             <div className="rounded-xl border border-ra-primary-25 bg-ra-primary-5 px-3 py-2">
-              <p className="text-[10px] text-zinc-500">Customer</p>
+              <p className="text-[10px] admin-surface-faint">Customer</p>
               <p className="text-sm font-semibold text-ra-primary-muted">
                 {lastOrder.customer}{lastOrder.phone ? ` · ${lastOrder.phone}` : ""}
               </p>
             </div>
           )}
-          <p className="text-sm text-zinc-400">Kitchen tickets dispatched:</p>
+          <p className="text-sm admin-surface-muted">Kitchen tickets dispatched:</p>
           {Object.entries(kitchenRouting).map(([k, items]) => (
-            <div key={k} className="rounded-xl border border-zinc-800 bg-zinc-950/60 p-3">
+            <div key={k} className="admin-surface-card p-3">
               <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wide text-zinc-400">{KITCHEN_LABELS[k] ?? k}</p>
               <ul className="space-y-1">
                 {items.map((it, i) => (
-                  <li key={i} className="text-sm text-zinc-300">
+                  <li key={i} className="text-sm admin-surface-body">
                     <div className="flex justify-between">
                       <span>{it.name}</span>
                       <span className="text-zinc-500">×{it.qty}</span>
@@ -594,7 +594,7 @@ export default function PosPage() {
   return (
     <Suspense
       fallback={
-        <div className="flex min-h-[50vh] items-center justify-center text-sm text-zinc-500">
+        <div className="flex min-h-[50vh] items-center justify-center text-sm admin-surface-muted">
           Loading POS…
         </div>
       }

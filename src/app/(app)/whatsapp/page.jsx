@@ -73,10 +73,10 @@ const SETUP_STEPS = [
 
 function Toggle({ checked, onChange, label, hint }) {
   return (
-    <label className="flex cursor-pointer items-start justify-between gap-4 rounded-xl border border-zinc-800 bg-zinc-950/40 px-4 py-3">
+    <label className="flex cursor-pointer items-start justify-between gap-4 rounded-xl admin-surface-card px-4 py-3">
       <span>
-        <span className="block text-sm font-medium text-zinc-200">{label}</span>
-        {hint && <span className="mt-0.5 block text-xs text-zinc-500">{hint}</span>}
+        <span className="block text-sm font-medium admin-shell-text">{label}</span>
+        {hint && <span className="mt-0.5 block text-xs admin-surface-muted">{hint}</span>}
       </span>
       <button type="button" role="switch" aria-checked={checked} onClick={() => onChange(!checked)}
         className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors ${checked ? "bg-ra-primary" : "bg-zinc-700"}`}>
@@ -202,8 +202,8 @@ export default function WhatsAppPage() {
       {/* Header */}
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-zinc-50">WhatsApp Automation</h1>
-          <p className="mt-1 text-sm text-zinc-500">
+          <h1 className="admin-page-title text-2xl font-semibold tracking-tight">WhatsApp Automation</h1>
+          <p className="admin-page-desc mt-1 text-sm">
             Send real WhatsApp messages via Meta Business API for orders, payments, and alerts.
           </p>
         </div>
@@ -245,7 +245,7 @@ export default function WhatsAppPage() {
             <h2 className="text-base font-semibold text-ra-primary-muted">
               WhatsApp Setup Guide — Step by Step
             </h2>
-            <p className="mt-1 text-xs text-zinc-500">
+            <p className="mt-1 text-xs admin-surface-muted">
               नया order आने पर restaurant phone पर WhatsApp alert — पूरा setup 8 steps में
             </p>
           </div>
@@ -257,20 +257,20 @@ export default function WhatsAppPage() {
         {guideOpen && (
           <ol className="mt-4 space-y-3">
             {SETUP_STEPS.map(({ step, title, detail }) => (
-              <li key={step} className="flex gap-3 rounded-xl border border-zinc-800/80 bg-zinc-950/40 px-4 py-3">
+              <li key={step} className="flex gap-3 rounded-xl border admin-shell-border bg-[var(--admin-surface)] px-4 py-3">
                 <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-ra-primary-15 text-xs font-bold text-ra-primary ring-1 ring-ra-primary-25">
                   {step}
                 </span>
-                <div>
-                  <p className="text-sm font-medium text-zinc-200">{title}</p>
-                  <p className="mt-0.5 text-xs leading-relaxed text-zinc-500">{detail}</p>
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-medium admin-shell-text">{title}</p>
+                  <p className="mt-0.5 text-xs leading-relaxed admin-surface-muted">{detail}</p>
                 </div>
               </li>
             ))}
           </ol>
         )}
 
-        <p className="mt-4 text-xs text-zinc-600">
+        <p className="mt-4 text-xs admin-surface-faint">
           Official docs:{" "}
           <a
             href="https://developers.facebook.com/docs/whatsapp/cloud-api/get-started"
@@ -284,7 +284,7 @@ export default function WhatsAppPage() {
       </section>
 
       {/* Enable + Credentials */}
-      <section className="rounded-2xl border border-zinc-800 bg-zinc-900/50 p-5 space-y-4">
+      <section className="admin-surface-card p-5 space-y-4">
         <Toggle
           label="Enable WhatsApp Automation"
           hint="Send automated messages to customers and staff via Meta WhatsApp Business API"
@@ -303,7 +303,7 @@ export default function WhatsAppPage() {
                 placeholder="EAAxxxxxxxxxxxxxxxx…"
                 error={fieldErrors.token}
               />
-              <p className="mt-1 text-xs text-zinc-600">
+              <p className="mt-1 text-xs admin-surface-faint">
                 Meta Business → WhatsApp → API Setup → Generate Token
               </p>
             </div>
@@ -316,7 +316,7 @@ export default function WhatsAppPage() {
                 placeholder="1234567890123"
                 error={fieldErrors.phoneNumberId}
               />
-              <p className="mt-1 text-xs text-zinc-600">
+              <p className="mt-1 text-xs admin-surface-faint">
                 Meta Business → WhatsApp → Phone Numbers → Phone Number ID
               </p>
             </div>
@@ -329,9 +329,9 @@ export default function WhatsAppPage() {
                 onChange={setAlertPhone}
                 placeholder="9876543210"
                 error={fieldErrors.alertPhone}
-                wrapperClassName="border-zinc-800 bg-zinc-950/80"
+                wrapperClassName="admin-shell-border admin-surface-card"
               />
-              <p className="mt-1 text-xs text-zinc-600">
+              <p className="mt-1 text-xs admin-surface-faint">
                 Leave blank to use phone from Settings → Contact. Used for New Order Alert and Low Stock templates.
               </p>
             </div>
@@ -339,7 +339,7 @@ export default function WhatsAppPage() {
         )}
 
         {enabled && (
-          <div className="rounded-xl border border-zinc-800 bg-zinc-950/40 p-4 text-xs text-zinc-500 space-y-1">
+          <div className="rounded-xl admin-surface-card p-4 text-xs admin-surface-muted space-y-1">
             <p className="font-semibold text-zinc-400">Quick reference:</p>
             <p>• Token: Meta Business → WhatsApp → API Setup → Generate Token</p>
             <p>• Phone Number ID: Meta Business → WhatsApp → Phone Numbers</p>
@@ -353,7 +353,7 @@ export default function WhatsAppPage() {
           {/* Templates */}
           <div className="grid gap-5 lg:grid-cols-[260px_1fr]">
             {/* Template list */}
-            <section className="rounded-2xl border border-zinc-800 bg-zinc-900/50 p-4">
+            <section className="admin-surface-card p-4">
               <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-zinc-500">Message Templates</p>
               <div className="space-y-1">
                 {TEMPLATES.map((tp) => {
@@ -363,7 +363,7 @@ export default function WhatsAppPage() {
                       className={`cursor-pointer w-full rounded-xl px-3 py-2.5 text-left transition-all ${
                         activeTemplate === tp.id
                           ? "bg-ra-primary-15 text-ra-primary ring-1 ring-ra-primary-25"
-                          : "text-zinc-400 hover:bg-zinc-800/60 hover:text-zinc-200"
+                          : "text-zinc-400 hover:admin-shell-hover hover:admin-shell-text"
                       }`}>
                       <div className="flex items-center justify-between gap-2">
                         <span className="text-sm">
@@ -376,7 +376,7 @@ export default function WhatsAppPage() {
                       </div>
                       <div className="mt-1 flex items-center gap-1">
                         <div className={`size-1.5 rounded-full ${cfg.enabled ? "bg-ra-accent" : "bg-zinc-600"}`} />
-                        <span className="text-xs text-zinc-600">{cfg.enabled ? "Active" : "Disabled"}</span>
+                        <span className="text-xs admin-surface-faint">{cfg.enabled ? "Active" : "Disabled"}</span>
                       </div>
                     </button>
                   );
@@ -386,13 +386,13 @@ export default function WhatsAppPage() {
 
             {/* Template editor */}
             {active && (
-              <section className="rounded-2xl border border-zinc-800 bg-zinc-900/50 p-5">
+              <section className="admin-surface-card p-5">
                 <div className="mb-4 flex items-center justify-between gap-4">
                   <div>
-                    <h2 className="text-base font-semibold text-zinc-100">
+                    <h2 className="text-base font-semibold admin-shell-text">
                       {active.emoji} {active.event}
                     </h2>
-                    <p className="text-xs text-zinc-500">Sent to: {active.audience}</p>
+                    <p className="text-xs admin-surface-muted">Sent to: {active.audience}</p>
                   </div>
                   <Toggle
                     label="Enable"
@@ -409,18 +409,18 @@ export default function WhatsAppPage() {
                     rows={5}
                     value={activeConfig.message ?? ""}
                     onChange={(e) => updateTemplate(active.id, { message: e.target.value })}
-                    className="w-full resize-none rounded-xl border border-zinc-800 bg-zinc-950/80 px-3 py-2.5 text-sm text-zinc-100 outline-none focus-ra-primary"
+                    className="w-full resize-none admin-surface-card px-3 py-2.5 text-sm admin-shell-text outline-none focus-ra-primary"
                   />
                 </div>
 
                 {/* Variables */}
                 <div className="mt-3">
-                  <p className="mb-2 text-xs text-zinc-500">Click to insert variable:</p>
+                  <p className="mb-2 text-xs admin-surface-muted">Click to insert variable:</p>
                   <div className="flex flex-wrap gap-1.5">
                     {VARIABLES.map((v) => (
                       <button key={v} type="button"
                         onClick={() => updateTemplate(active.id, { message: (activeConfig.message ?? "") + v })}
-                        className="cursor-pointer rounded-lg border border-zinc-700 bg-zinc-950/60 px-2 py-0.5 font-mono text-xs text-zinc-400 hover:border-zinc-500 hover:text-zinc-200 transition-colors">
+                        className="cursor-pointer rounded-lg border admin-shell-border admin-surface-card px-2 py-0.5 font-mono text-xs text-zinc-400 hover:border-zinc-500 hover:admin-shell-text transition-colors">
                         {v}
                       </button>
                     ))}
@@ -428,7 +428,7 @@ export default function WhatsAppPage() {
                 </div>
 
                 {/* Preview */}
-                <div className="mt-4 rounded-xl border border-zinc-800 bg-zinc-950/40 p-4">
+                <div className="mt-4 rounded-xl admin-surface-card p-4">
                   <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-zinc-500">Preview</p>
                   <div className="rounded-xl bg-[#dcf8c6] p-3 text-sm text-zinc-900 max-w-xs whitespace-pre-wrap">
                     {(activeConfig.message ?? "")
@@ -446,9 +446,9 @@ export default function WhatsAppPage() {
           </div>
 
           {/* Test message */}
-          <section className="rounded-2xl border border-zinc-800 bg-zinc-900/50 p-5">
-            <h2 className="mb-1 text-base font-semibold text-zinc-100">Send Real Test Message</h2>
-            <p className="mb-4 text-xs text-zinc-500">
+          <section className="admin-surface-card p-5">
+            <h2 className="mb-1 text-base font-semibold admin-shell-text">Send Real Test Message</h2>
+            <p className="mb-4 text-xs admin-surface-muted">
               Sends an actual WhatsApp message using your saved credentials. Phone must be registered on WhatsApp.
             </p>
             <div className="flex flex-wrap items-start gap-3">
@@ -458,7 +458,7 @@ export default function WhatsAppPage() {
                 onChange={setTestPhone}
                 placeholder="9876543210"
                 error={testPhoneError}
-                wrapperClassName="min-w-[200px] flex-1 border-zinc-800 bg-zinc-950/80"
+                wrapperClassName="min-w-[200px] flex-1 admin-shell-border admin-surface-card"
                 className="min-w-[200px] flex-1"
               />
               <button type="button" onClick={sendTest}
@@ -486,15 +486,15 @@ export default function WhatsAppPage() {
 
       {/* Info when disabled */}
       {!enabled && (
-        <section className="rounded-2xl border border-zinc-800 bg-zinc-900/50 p-5">
+        <section className="admin-surface-card p-5">
           <div className="flex items-start gap-4">
             <MessageCircle className="size-8 text-ra-primary shrink-0 mt-1" />
             <div>
-              <h2 className="text-base font-semibold text-zinc-100">WhatsApp Business API</h2>
-              <p className="mt-1 text-sm text-zinc-500">
+              <h2 className="text-base font-semibold admin-shell-text">WhatsApp Business API</h2>
+              <p className="admin-page-desc mt-1 text-sm">
                 Enable to send real WhatsApp messages automatically when orders are placed, prepared, or delivered.
               </p>
-              <div className="mt-3 grid gap-2 sm:grid-cols-2 text-xs text-zinc-500">
+              <div className="mt-3 grid gap-2 sm:grid-cols-2 text-xs admin-surface-muted">
                 <div>✅ Order confirmed → customer</div>
                 <div>✅ Order preparing → customer</div>
                 <div>✅ Out for delivery → customer</div>
@@ -502,7 +502,7 @@ export default function WhatsAppPage() {
                 <div>✅ Payment received → customer</div>
                 <div>✅ New order alert → restaurant</div>
               </div>
-              <p className="mt-3 text-xs text-zinc-600">
+              <p className="mt-3 text-xs admin-surface-faint">
                 Requires Meta Business WhatsApp API.{" "}
                 <a href="https://developers.facebook.com/docs/whatsapp/cloud-api/get-started"
                   target="_blank" rel="noopener noreferrer"

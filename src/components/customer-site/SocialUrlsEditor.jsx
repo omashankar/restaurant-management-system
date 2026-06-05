@@ -13,10 +13,10 @@ const SOCIAL_FIELDS = [
 
 export default function SocialUrlsEditor({ social, setSocial, saving, onSaveDraft, onPublish }) {
   return (
-    <div className="space-y-4 rounded-xl border border-zinc-800 bg-zinc-950/30 p-4">
+    <div className="space-y-4 rounded-xl border border-[var(--admin-border-subtle)] bg-[var(--admin-surface-soft)] p-4">
       <div>
-        <p className="text-sm font-semibold text-zinc-200">Social media links</p>
-        <p className="mt-1 text-xs text-zinc-500">
+        <p className="text-sm font-semibold admin-shell-text">Social media links</p>
+        <p className="mt-1 text-xs admin-surface-muted">
           One place for all URLs — header icons, footer, contact page, and mobile menu. Enable or disable
           each platform in Footer editor → Social media icons.
         </p>

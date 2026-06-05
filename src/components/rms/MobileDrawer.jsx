@@ -1,5 +1,6 @@
 "use client";
 
+import { adminShell, adminSurface } from "@/config/adminSurfaceClasses";
 import { useEffect } from "react";
 import { X } from "lucide-react";
 
@@ -15,7 +16,7 @@ export default function MobileDrawer({ open, onClose, children }) {
 
   return (
     <div
-      className={`fixed inset-0 z-[60] transition-opacity duration-200 ${
+      className={`admin-mobile-overlay fixed inset-0 z-[60] transition-opacity duration-200 ${
         open ? "pointer-events-auto bg-black/40 opacity-100" : "pointer-events-none opacity-0"
       }`}
       aria-hidden={!open}
@@ -29,7 +30,7 @@ export default function MobileDrawer({ open, onClose, children }) {
       <button
         type="button"
         onClick={onClose}
-        className={`absolute right-4 top-4 z-10 rounded-xl border border-zinc-800 bg-zinc-950/70 p-2 text-zinc-200 shadow-lg shadow-black/30 transition-opacity duration-200 ${
+        className={`absolute right-4 top-4 z-10 ${adminSurface.btnIcon} transition-opacity duration-200 ${
           open ? "opacity-100" : "opacity-0"
         }`}
         aria-label="Close sidebar"
@@ -37,7 +38,7 @@ export default function MobileDrawer({ open, onClose, children }) {
         <X className="size-4" aria-hidden />
       </button>
       <div
-        className={`absolute left-0 top-0 h-full w-[280px] max-w-[85vw] transform border-r border-zinc-800 bg-zinc-950 transition-transform duration-200 ${
+        className={`admin-shell-sidebar absolute left-0 top-0 h-full w-[280px] max-w-[85vw] transform border-r ${adminShell.borderR} transition-transform duration-200 ${
           open ? "translate-x-0" : "-translate-x-full"
         }`}
       >
@@ -46,4 +47,3 @@ export default function MobileDrawer({ open, onClose, children }) {
     </div>
   );
 }
-

@@ -21,16 +21,16 @@ export default function AreaSelector({ selected, onChange, counts = {} }) {
             className={`cursor-pointer group flex flex-col items-start gap-3 rounded-2xl border p-4 text-left transition-all duration-200 hover:-translate-y-0.5 ${
               isActive
                 ? activeClasses
-                : `border-zinc-800 bg-zinc-900/50 text-zinc-300 ${hoverClasses}`
+                : `admin-shell-border bg-zinc-900/50 admin-surface-body ${hoverClasses}`
             }`}
           >
-            <span className={`flex size-10 items-center justify-center rounded-xl transition-colors ${isActive ? "bg-zinc-800/60" : iconBg}`}>
+            <span className={`flex size-10 items-center justify-center rounded-xl transition-colors ${isActive ? "admin-surface-segment-track" : iconBg}`}>
               <Icon className={`size-5 ${isActive ? "text-current" : iconColor}`} />
             </span>
             <div>
-              <p className={`text-sm font-bold ${isActive ? "text-current" : "text-zinc-100"}`}>{label}</p>
+              <p className={`text-sm font-bold ${isActive ? "text-current" : "admin-shell-text"}`}>{label}</p>
               {info && (
-                <p className="mt-0.5 text-xs text-zinc-500">
+                <p className="mt-0.5 text-xs admin-surface-muted">
                   {info.available}/{info.total} available
                 </p>
               )}

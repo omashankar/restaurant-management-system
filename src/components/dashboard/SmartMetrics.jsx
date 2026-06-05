@@ -1,3 +1,4 @@
+import { adminSurface } from "@/config/adminSurfaceClasses";
 import { Activity, Package, Table2, Trophy } from "lucide-react";
 
 export default function SmartMetrics({
@@ -12,38 +13,38 @@ export default function SmartMetrics({
   return (
     <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
       {/* Peak Hours */}
-      <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-4">
+      <div className="admin-surface-card p-4">
         <div className="flex items-center gap-2">
           <span className="flex size-8 items-center justify-center rounded-lg bg-indigo-500/15 text-indigo-400 ring-1 ring-indigo-500/20">
             <Activity className="size-4" />
           </span>
-          <p className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Peak Hours</p>
+          <p className={`text-xs font-semibold uppercase tracking-wide ${adminSurface.muted}`}>Peak Hours</p>
         </div>
-        <p className="mt-3 text-lg font-semibold text-zinc-50">{peakHour}</p>
-        <p className="mt-2 text-xs text-zinc-500">Based on order history</p>
+        <p className="mt-3 admin-surface-title text-lg font-semibold">{peakHour}</p>
+        <p className="mt-2 admin-surface-subheading">Based on order history</p>
       </div>
 
       {/* Best Category */}
-      <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-4">
+      <div className="admin-surface-card p-4">
         <div className="flex items-center gap-2">
           <span className="flex size-8 items-center justify-center rounded-lg bg-amber-500/15 text-amber-400 ring-1 ring-amber-500/20">
             <Trophy className="size-4" />
           </span>
-          <p className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Best Category</p>
+          <p className={`text-xs font-semibold uppercase tracking-wide ${adminSurface.muted}`}>Best Category</p>
         </div>
-        <p className="mt-3 text-lg font-semibold text-zinc-50">{bestCategory}</p>
-        <p className="mt-2 text-xs text-zinc-500">Top performing category</p>
+        <p className="mt-3 admin-surface-title text-lg font-semibold">{bestCategory}</p>
+        <p className="mt-2 admin-surface-subheading">Top performing category</p>
       </div>
 
       {/* Low Stock */}
-      <div className={`rounded-2xl border p-4 ${lowStockCount > 0 ? "border-amber-500/25 bg-amber-500/5" : "border-zinc-800 bg-zinc-900/60"}`}>
+      <div className={`p-4 ${lowStockCount > 0 ? "rounded-2xl border border-amber-500/25 bg-amber-500/5" : adminSurface.card}`}>
         <div className="flex items-center gap-2">
           <span className={`flex size-8 items-center justify-center rounded-lg ring-1 ${lowStockCount > 0 ? "bg-amber-500/15 text-amber-400 ring-amber-500/25" : "bg-zinc-800 text-zinc-500 ring-zinc-700"}`}>
             <Package className="size-4" />
           </span>
-          <p className={`text-xs font-semibold uppercase tracking-wide ${lowStockCount > 0 ? "text-amber-500/80" : "text-zinc-500"}`}>Low Stock</p>
+          <p className={`text-xs font-semibold uppercase tracking-wide ${lowStockCount > 0 ? "text-amber-500/80" : adminSurface.muted}`}>Low Stock</p>
         </div>
-        <p className="mt-3 text-lg font-semibold text-zinc-50">{lowStockCount} items</p>
+        <p className="mt-3 admin-surface-title text-lg font-semibold">{lowStockCount} items</p>
         {lowStockItems.length > 0 ? (
           <div className="rms-dashboard-card__body rms-dashboard-card__body--y mt-3 max-h-28 space-y-1.5 pr-1">
             {lowStockItems.map((item, i) => (
@@ -58,19 +59,19 @@ export default function SmartMetrics({
             ))}
           </div>
         ) : (
-          <p className="mt-2 text-xs text-zinc-600">All items in stock.</p>
+          <p className="mt-2 text-xs admin-surface-faint">All items in stock.</p>
         )}
       </div>
 
       {/* Active Tables */}
-      <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-4">
+      <div className="admin-surface-card p-4">
         <div className="flex items-center gap-2">
           <span className="flex size-8 items-center justify-center rounded-lg bg-ra-primary-15 text-ra-primary ring-1 ring-ra-primary-20">
             <Table2 className="size-4" />
           </span>
-          <p className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Active Tables</p>
+          <p className={`text-xs font-semibold uppercase tracking-wide ${adminSurface.muted}`}>Active Tables</p>
         </div>
-        <p className="mt-3 text-lg font-semibold text-zinc-50">{activeTables} / {totalTables}</p>
+        <p className="mt-3 admin-surface-title text-lg font-semibold">{activeTables} / {totalTables}</p>
         {tableList.length > 0 ? (
           <div className="rms-dashboard-card__body rms-dashboard-card__body--y mt-3 max-h-32 pr-1">
             <div className="flex flex-wrap gap-1.5">
@@ -85,9 +86,9 @@ export default function SmartMetrics({
             </div>
           </div>
         ) : (
-          <p className="mt-2 text-xs text-zinc-600">No tables configured.</p>
+          <p className="mt-2 text-xs admin-surface-faint">No tables configured.</p>
         )}
-        <p className="mt-2 shrink-0 text-xs text-zinc-500">{totalTables - activeTables} available now</p>
+        <p className="mt-2 shrink-0 admin-surface-subheading">{totalTables - activeTables} available now</p>
       </div>
     </div>
   );

@@ -1,6 +1,6 @@
 "use client";
 
-import DataTableShell from "@/components/ui/DataTableShell";
+import CustomerOrderHistoryTable from "@/components/customers/CustomerOrderHistoryTable";
 import TableSkeleton from "@/components/ui/TableSkeleton";
 import { useModuleData } from "@/context/ModuleDataContext";
 import { ArrowLeft, Mail, Phone, StickyNote } from "lucide-react";
@@ -77,7 +77,7 @@ export default function CustomerDetailPage() {
   if (!hydrated || loading) {
     return (
       <div className="space-y-6">
-        <div className="h-10 w-64 rounded-lg bg-zinc-800 animate-pulse" />
+        <div className="h-10 w-64 rounded-lg admin-progress-track animate-pulse" />
         <TableSkeleton rows={4} cols={4} />
       </div>
     );
@@ -85,7 +85,7 @@ export default function CustomerDetailPage() {
 
   if (!customer) {
     return (
-      <div className="rounded-2xl border border-zinc-800 bg-zinc-900/50 p-10 text-center">
+      <div className="admin-surface-card p-10 text-center">
         <p className="text-zinc-400">{fetchError ?? "Customer not found."}</p>
         <Link
           href="/customers"
@@ -114,91 +114,52 @@ export default function CustomerDetailPage() {
       </Link>
 
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight text-zinc-50">
+        <h1 className="admin-page-title text-2xl font-semibold tracking-tight">
           {customer.name}
         </h1>
-        <p className="mt-1 text-sm text-zinc-500">
+        <p className="admin-page-desc mt-1 text-sm">
           Guest profile · {customer.visits} visits · last visit {lastVisitLabel}
         </p>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
-        <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-5 transition-colors hover:border-zinc-700">
+        <div className="admin-surface-card p-5 transition-colors hover:border-zinc-700">
           <div className="flex items-center gap-2 text-zinc-500">
             <Phone className="size-4 text-ra-primary/80" />
             <span className="text-xs font-semibold uppercase tracking-wide">
               Phone
             </span>
           </div>
-          <p className="mt-2 tabular-nums text-zinc-100">{customer.phone}</p>
+          <p className="mt-2 tabular-nums admin-shell-text">{customer.phone}</p>
         </div>
-        <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-5 transition-colors hover:border-zinc-700">
+        <div className="admin-surface-card p-5 transition-colors hover:border-zinc-700">
           <div className="flex items-center gap-2 text-zinc-500">
             <Mail className="size-4 text-ra-primary/80" />
             <span className="text-xs font-semibold uppercase tracking-wide">
               Email
             </span>
           </div>
-          <p className="mt-2 truncate text-zinc-100">{customer.email || "—"}</p>
+          <p className="mt-2 truncate admin-shell-text">{customer.email || "—"}</p>
         </div>
-        <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-5 sm:col-span-2">
+        <div className="admin-surface-card p-5 sm:col-span-2">
           <div className="flex items-center gap-2 text-zinc-500">
             <StickyNote className="size-4 text-ra-primary/80" />
             <span className="text-xs font-semibold uppercase tracking-wide">
               Notes
             </span>
           </div>
-          <p className="mt-2 text-sm leading-relaxed text-zinc-300">
+          <p className="mt-2 text-sm leading-relaxed admin-surface-body">
             {customer.notes || "No notes on file."}
           </p>
         </div>
       </div>
 
       <div>
-        <h2 className="text-lg font-semibold text-zinc-100">Order history</h2>
-        <p className="mt-1 text-sm text-zinc-500">
+        <h2 className="text-lg font-semibold admin-shell-text">Order history</h2>
+        <p className="admin-page-desc mt-1 text-sm">
           Orders linked from POS when this guest was selected at checkout.
         </p>
-        <DataTableShell className="mt-4">
-          <table className="min-w-full text-left text-sm">
-            <thead>
-              <tr className="border-b border-zinc-800 bg-zinc-950/60 text-xs font-semibold uppercase tracking-wider text-zinc-500">
-                <th className="px-4 py-3">Order</th>
-                <th className="px-4 py-3">Date</th>
-                <th className="px-4 py-3">Summary</th>
-                <th className="px-4 py-3 text-right">Total</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-zinc-800/80">
-              {customer.orderHistory?.length ? (
-                customer.orderHistory.map((o) => (
-                  <tr
-                    key={o.id}
-                    className="transition-colors hover:bg-zinc-800/30"
-                  >
-                    <td className="px-4 py-3 font-mono text-xs text-ra-primary/90">
-                      {o.id}
-                    </td>
-                    <td className="px-4 py-3 text-zinc-400">{o.date}</td>
-                    <td className="px-4 py-3 text-zinc-300">{o.items}</td>
-                    <td className="px-4 py-3 text-right font-medium tabular-nums text-zinc-100">
-                      ${Number(o.total ?? 0).toFixed(2)}
-                    </td>
-                  </tr>
-                ))
-              ) : (
-                <tr>
-                  <td
-                    colSpan={4}
-                    className="px-4 py-10 text-center text-sm text-zinc-500"
-                  >
-                    No orders yet.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </DataTableShell>
+        <CustomerOrderHistoryTable orders={customer.orderHistory ?? []} />
       </div>
     </div>
   );

@@ -37,7 +37,7 @@ export default function CmsNavItemsEditor({
       {list.map((item, index) => (
         <div
           key={item.id ?? index}
-          className="rounded-xl border border-zinc-800 bg-zinc-950/50 p-3 space-y-2"
+          className="rounded-xl admin-surface-card p-3 space-y-2"
         >
           <div className="flex items-start justify-between gap-2">
             <div className="min-w-0 flex-1 space-y-2">
@@ -70,7 +70,7 @@ export default function CmsNavItemsEditor({
               <button
                 type="button"
                 onClick={() => update(index, { enabled: item.enabled === false })}
-                className="rounded-lg border border-zinc-700 p-1.5 text-zinc-400 hover-ra-primary"
+                className="rounded-lg border border-[var(--admin-border-subtle)] bg-[var(--admin-surface)] p-1.5 admin-surface-muted transition-colors hover:border-ra-primary-40 hover:text-ra-primary"
                 title={item.enabled === false ? "Show" : "Hide"}
               >
                 {item.enabled === false ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
@@ -79,7 +79,7 @@ export default function CmsNavItemsEditor({
                 type="button"
                 disabled={index === 0}
                 onClick={() => move(index, -1)}
-                className="rounded-lg border border-zinc-700 p-1.5 text-zinc-500 disabled:opacity-30"
+                className="rounded-lg border border-[var(--admin-border-subtle)] bg-[var(--admin-surface)] p-1.5 admin-surface-faint transition-colors disabled:opacity-30"
               >
                 <ChevronUp className="size-4" />
               </button>
@@ -87,7 +87,7 @@ export default function CmsNavItemsEditor({
                 type="button"
                 disabled={index === list.length - 1}
                 onClick={() => move(index, 1)}
-                className="rounded-lg border border-zinc-700 p-1.5 text-zinc-500 disabled:opacity-30"
+                className="rounded-lg border border-[var(--admin-border-subtle)] bg-[var(--admin-surface)] p-1.5 admin-surface-faint transition-colors disabled:opacity-30"
               >
                 <ChevronDown className="size-4" />
               </button>
@@ -105,7 +105,7 @@ export default function CmsNavItemsEditor({
       <button
         type="button"
         onClick={add}
-        className="flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-zinc-700 py-3 text-sm font-medium text-zinc-400 hover:border-ra-primary-40 hover-ra-primary"
+        className="flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-[var(--admin-border)] py-3 text-sm font-medium admin-surface-muted transition-colors hover:border-ra-primary-40 hover:text-ra-primary"
       >
         <Plus className="size-4" /> {addLabel}
       </button>

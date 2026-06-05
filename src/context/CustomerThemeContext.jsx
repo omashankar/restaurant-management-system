@@ -42,7 +42,7 @@ export function CustomerThemeProvider({ children }) {
     setBootCache(cached);
     const preferred = loadModePreference(slug);
     const cmsMode = cmsTheme?.colorMode === "dark" ? "dark" : "light";
-    setModeState(preferred ?? cached?.colorMode ?? cmsMode);
+    setModeState(preferred ?? cmsMode);
     setHydrated(true);
   }, [slug, cmsTheme?.colorMode]);
 
@@ -59,8 +59,13 @@ export function CustomerThemeProvider({ children }) {
 
   useEffect(() => {
     if (!hydrated || cmsLoading) return;
-    const snapshot = themeSnapshot(effectiveTheme, mode);
-    saveThemeCache(slug, snapshot);
+    const snapshot = themeSnapshot(effectiveTheme);
+    const prev = loadThemeCache(slug) ?? {};
+    saveThemeCache(slug, {
+      ...snapshot,
+      userColorMode: prev.userColorMode,
+      hasUserColorModeChoice: prev.hasUserColorModeChoice,
+    });
   }, [hydrated, cmsLoading, effectiveTheme, mode, slug]);
 
   const setMode = useCallback(

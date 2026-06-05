@@ -11,6 +11,7 @@ import SalesComparison from "@/components/dashboard/SalesComparison";
 import SmartMetrics from "@/components/dashboard/SmartMetrics";
 import TopDishes from "@/components/dashboard/TopDishes";
 import Can from "@/components/rbac/Can";
+import { adminSurface } from "@/config/adminSurfaceClasses";
 import { useDashboardData } from "@/hooks/useDashboardData";
 import { usePermission } from "@/hooks/usePermission";
 import { RefreshCw } from "lucide-react";
@@ -27,10 +28,10 @@ export default function MainDashboard() {
     <div className="space-y-8">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-zinc-50">
+          <h1 className={adminSurface.heading}>
             {role === "admin" ? "Command center" : "Shift overview"}
           </h1>
-          <p className="mt-1 text-sm text-zinc-500">
+          <p className={`mt-1 text-sm ${adminSurface.muted}`}>
             {role === "admin"
               ? "Live snapshot of sales, orders, and floor activity."
               : "Live metrics for your shift."}
@@ -48,7 +49,7 @@ export default function MainDashboard() {
         <button
           type="button"
           onClick={dashboard.refresh}
-          className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-xl border border-zinc-700 px-4 py-2 text-sm font-medium text-zinc-300 transition-colors hover-border-ra-primary-40 hover:text-zinc-100"
+          className={`${adminSurface.btnGhost} hover-border-ra-primary-40`}
         >
           <RefreshCw className="size-4" />
           Refresh
@@ -56,7 +57,7 @@ export default function MainDashboard() {
       </div>
 
       {dashboard.error && (
-        <p className="rounded-xl border border-red-500/25 bg-red-500/10 px-4 py-3 text-sm text-red-300">
+        <p className="rounded-xl border border-red-500/25 bg-red-500/10 px-4 py-3 text-sm text-red-400">
           {dashboard.error}
         </p>
       )}

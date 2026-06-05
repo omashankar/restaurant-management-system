@@ -1,12 +1,14 @@
 "use client";
 
+import { adminSurface } from "@/config/adminSurfaceClasses";
+
 export default function SettingsFormSection({ title, description, children }) {
   return (
-    <section className="rounded-2xl border border-zinc-800 bg-zinc-900/50 p-5 sm:p-6">
+    <section className={`${adminSurface.cardSolid} p-5 sm:p-6`}>
       <div className="mb-5">
-        <h2 className="text-lg font-semibold text-zinc-100">{title}</h2>
+        <h2 className={`text-lg font-semibold ${adminSurface.title}`}>{title}</h2>
         {description ? (
-          <p className="mt-1 text-sm text-zinc-500">{description}</p>
+          <p className={`mt-1 text-sm ${adminSurface.muted}`}>{description}</p>
         ) : null}
       </div>
       {children}

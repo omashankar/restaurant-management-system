@@ -12,7 +12,7 @@ export default function RoleCard({
       className={`rounded-2xl border p-4 transition-all duration-200 hover:scale-[1.01] ${
         isLimited
           ? "border-amber-500/30 bg-amber-500/5 hover:border-amber-500/50"
-          : "border-zinc-800 bg-zinc-900/60 hover-border-ra-primary-40"
+          : "admin-shell-border admin-surface-card hover-border-ra-primary-40"
       } ${className}`}
     >
       <div className="flex items-start gap-3">
@@ -30,9 +30,9 @@ export default function RoleCard({
           )}
         </span>
         <div>
-          <p className="font-medium text-zinc-100">{title}</p>
+          <p className="font-medium admin-shell-text">{title}</p>
           {description ? (
-            <p className="mt-1 text-sm leading-relaxed text-zinc-500">
+            <p className="mt-1 text-sm leading-relaxed admin-surface-muted">
               {description}
             </p>
           ) : null}

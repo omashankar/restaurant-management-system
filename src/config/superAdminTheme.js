@@ -1,9 +1,29 @@
 /** Super Admin brand defaults — overridden by Settings → Theme at runtime. */
-export const SUPER_ADMIN_PRIMARY = "#f43f5e";
+import { adminBox, adminControl, adminPage, adminText } from "@/config/adminDesignSystem";
+import { adminSurface } from "@/config/adminSurfaceClasses";
+
+export { adminBox, adminControl, adminPage, adminText };
+
+/** Lime brand default — matches light Super Admin UI; overridden in Settings → Theme */
+export const SUPER_ADMIN_PRIMARY = "#a3e635";
 export const SUPER_ADMIN_ACCENT = "#10b981";
 
 export const saInputCls =
-  "w-full rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus-sa-primary placeholder:text-zinc-600 transition-colors";
+  "admin-surface-input focus-sa-primary transition-colors";
+
+export const saCardCls = adminSurface.card;
+export const saCardSolidCls = adminSurface.cardSolid;
+export const saTableShellCls = adminSurface.tableShell;
+export const saLabelCls = adminSurface.label;
+export const saMutedCls = adminSurface.muted;
+export const saFaintCls = adminSurface.faint;
+export const saBodyCls = adminSurface.body;
+export const saGhostBtnCls = adminSurface.btnGhost;
+export const saIconBtnCls = adminSurface.btnIcon;
+export const saSegmentTrackCls = adminSurface.segmentTrack;
+export const saSegmentBtnCls = adminSurface.segmentBtn;
+export const saSegmentBtnActiveCls = adminSurface.segmentBtnActive;
+export const saDashedBoxCls = adminSurface.dashedBox;
 
 export const saBtnPrimaryCls =
   "sa-btn-primary inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-semibold disabled:cursor-not-allowed transition-colors";
@@ -19,8 +39,13 @@ export const saPageActiveCls =
 
 export const saToggleOnCls = "bg-sa-primary";
 
+/** Subtle chip style (filters, secondary tabs) */
 export const saTabActiveCls =
-  "bg-sa-primary-10 text-zinc-100 ring-1 ring-sa-primary-25";
+  "bg-sa-primary-10 text-sa-primary ring-1 ring-sa-primary-25";
+
+/** Settings / Landing side nav — light pill + brand icon */
+export const saSideNavActiveCls =
+  "admin-side-nav-active-pill text-zinc-900 font-semibold";
 
 export const saTabActiveIconCls = "text-sa-primary";
 

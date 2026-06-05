@@ -1,5 +1,6 @@
 "use client";
 
+import { adminShell } from "@/config/adminSurfaceClasses";
 import { BrandPreloaderFace } from "@/components/ui/BrandPreloaderFace";
 
 export default function SuperAdminPreloader({
@@ -16,7 +17,7 @@ export default function SuperAdminPreloader({
   }
 
   return (
-    <div className={`super-admin-panel flex min-h-screen items-center justify-center bg-zinc-950 ${className}`}>
+    <div className={`super-admin-panel flex min-h-screen items-center justify-center ${adminShell.page} ${className}`}>
       <BrandPreloaderFace variant="super-admin" subtitle={message} />
     </div>
   );

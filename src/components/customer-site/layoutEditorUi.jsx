@@ -1,14 +1,20 @@
 "use client";
 
-export const layoutInputCls =
-  "w-full rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus-ra-primary placeholder:text-zinc-600";
+import {
+  CMS_EDITOR_CONTROL_ROW,
+  CMS_EDITOR_INPUT,
+  CMS_EDITOR_PANEL,
+  CMS_EDITOR_PANEL_HEAD,
+} from "@/config/customerSiteEditorClasses";
+
+export const layoutInputCls = CMS_EDITOR_INPUT;
 
 export function LayoutField({ label, hint, children }) {
   return (
     <div>
-      <label className="mb-1.5 block text-xs font-medium text-zinc-400">{label}</label>
+      <label className="mb-1.5 block text-xs font-medium admin-surface-muted">{label}</label>
       {children}
-      {hint && <p className="mt-1 text-[11px] text-zinc-600">{hint}</p>}
+      {hint && <p className="mt-1 text-[11px] admin-surface-faint">{hint}</p>}
     </div>
   );
 }
@@ -16,7 +22,7 @@ export function LayoutField({ label, hint, children }) {
 export function LayoutColorRow({ label, value, onChange }) {
   const hex = value?.match(/^#[0-9A-Fa-f]{6}$/) ? value : "#ffffff";
   return (
-    <div className="flex items-center gap-3 rounded-xl border border-zinc-800 bg-zinc-950/40 px-3 py-2.5">
+    <div className={CMS_EDITOR_CONTROL_ROW}>
       <input
         type="color"
         value={hex}
@@ -24,12 +30,12 @@ export function LayoutColorRow({ label, value, onChange }) {
         className="size-10 shrink-0 cursor-pointer rounded-lg border-0 bg-transparent"
       />
       <div className="min-w-0 flex-1">
-        <p className="text-sm font-medium text-zinc-200">{label}</p>
+        <p className="text-sm font-medium admin-shell-text">{label}</p>
         <input
           value={value ?? ""}
           onChange={(e) => onChange(e.target.value)}
           placeholder="#FFFFFF"
-          className="mt-1 w-full bg-transparent font-mono text-xs text-zinc-400 outline-none"
+          className="mt-1 w-full bg-transparent font-mono text-xs admin-surface-muted outline-none"
         />
       </div>
     </div>
@@ -38,16 +44,16 @@ export function LayoutColorRow({ label, value, onChange }) {
 
 export function LayoutToggle({ label, hint, enabled, onToggle }) {
   return (
-    <label className="flex cursor-pointer items-center justify-between gap-3 rounded-xl border border-zinc-800 bg-zinc-950/40 px-3 py-2.5">
+    <label className={`cursor-pointer ${CMS_EDITOR_CONTROL_ROW}`}>
       <div>
-        <p className="text-sm font-medium text-zinc-200">{label}</p>
-        {hint && <p className="text-xs text-zinc-500">{hint}</p>}
+        <p className="text-sm font-medium admin-shell-text">{label}</p>
+        {hint && <p className="text-xs admin-surface-muted">{hint}</p>}
       </div>
       <input
         type="checkbox"
         checked={enabled}
         onChange={onToggle}
-        className="size-4 rounded border-zinc-600 accent-ra-primary"
+        className="size-4 rounded border-[var(--admin-border)] accent-ra-primary"
       />
     </label>
   );
@@ -55,18 +61,18 @@ export function LayoutToggle({ label, hint, enabled, onToggle }) {
 
 export function LayoutSection({ title, subtitle, enabled, onToggle, children }) {
   return (
-    <div className="rounded-xl border border-zinc-800 bg-zinc-950/30 overflow-hidden">
-      <div className="flex items-center justify-between gap-3 border-b border-zinc-800/80 px-4 py-3">
+    <div className={CMS_EDITOR_PANEL}>
+      <div className={CMS_EDITOR_PANEL_HEAD}>
         <div>
-          <p className="text-sm font-semibold text-zinc-100">{title}</p>
-          {subtitle && <p className="text-xs text-zinc-500">{subtitle}</p>}
+          <p className="admin-surface-title text-sm font-semibold">{title}</p>
+          {subtitle && <p className="text-xs admin-surface-muted">{subtitle}</p>}
         </div>
         {onToggle != null && (
           <input
             type="checkbox"
             checked={enabled}
             onChange={onToggle}
-            className="size-4 rounded border-zinc-600 accent-ra-primary"
+            className="size-4 rounded border-[var(--admin-border)] accent-ra-primary"
           />
         )}
       </div>

@@ -8,6 +8,7 @@ import { useUser } from "@/context/AuthContext";
 import { BrandPreloaderFace } from "@/components/ui/BrandPreloaderFace";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useLayoutEffect, useState } from "react";
+import { adminShell } from "@/config/adminSurfaceClasses";
 import LayoutWrapper from "./LayoutWrapper";
 import RestrictedPage from "./RestrictedPage";
 
@@ -46,7 +47,7 @@ export default function Shell({ children }) {
   /* ── Loading states ── */
   if (loading || !hydrated || !appHydrated) {
     return (
-      <div className="restaurant-admin-panel flex min-h-screen items-center justify-center bg-zinc-950">
+      <div className={`restaurant-admin-panel ${adminShell.pageCentered}`}>
         <BrandPreloaderFace variant="restaurant-admin" subtitle="Loading workspace…" />
       </div>
     );
@@ -54,7 +55,7 @@ export default function Shell({ children }) {
 
   if (!user) {
     return (
-      <div className="restaurant-admin-panel flex min-h-screen items-center justify-center bg-zinc-950">
+      <div className={`restaurant-admin-panel ${adminShell.pageCentered}`}>
         <BrandPreloaderFace variant="restaurant-admin" subtitle="Redirecting…" compact />
       </div>
     );
@@ -62,7 +63,7 @@ export default function Shell({ children }) {
 
   if (routing) {
     return (
-      <div className="restaurant-admin-panel flex min-h-screen items-center justify-center bg-zinc-950">
+      <div className={`restaurant-admin-panel ${adminShell.pageCentered}`}>
         <BrandPreloaderFace variant="restaurant-admin" subtitle="Opening workspace…" compact />
       </div>
     );

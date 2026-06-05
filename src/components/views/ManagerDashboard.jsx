@@ -28,17 +28,17 @@ export default function ManagerDashboard({
           </span>
           <div>
             <p className="font-medium text-amber-200">Manager scope</p>
-            <p className="mt-1 text-sm text-zinc-500">Some modules are view-only. Destructive actions are disabled.</p>
+            <p className="mt-1 text-sm admin-surface-muted">Some modules are view-only. Destructive actions are disabled.</p>
           </div>
         </div>
-        <Link href="/analytics" className="cursor-pointer shrink-0 rounded-xl border border-zinc-700 px-4 py-2 text-center text-sm font-medium text-zinc-200 hover-border-ra-primary-40">
+        <Link href="/analytics" className="cursor-pointer shrink-0 rounded-xl border admin-shell-border px-4 py-2 text-center text-sm font-medium admin-shell-text hover-border-ra-primary-40">
           Open analytics
         </Link>
       </div>
 
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight text-zinc-50">Shift overview</h1>
-        <p className="mt-1 text-sm text-zinc-500">Live metrics without sensitive HR controls.</p>
+        <h1 className="admin-page-title">Shift overview</h1>
+        <p className="mt-1 text-sm admin-surface-muted">Live metrics without sensitive HR controls.</p>
       </div>
 
       <div className="grid gap-4 md:grid-cols-3">

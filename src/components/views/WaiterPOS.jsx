@@ -47,14 +47,14 @@ export default function WaiterPOS() {
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-semibold tracking-tight text-zinc-50">Service POS</h1>
-        <p className="mt-1 text-sm text-zinc-500">Select table → add items → place order → next guest.</p>
+        <p className="mt-1 text-sm admin-surface-muted">Select table → add items → place order → next guest.</p>
       </div>
 
       <div className="flex flex-wrap gap-2">
         {[{ n: 1, label: "Table" }, { n: 2, label: "Menu" }, { n: 3, label: "Review" }, { n: 4, label: "Done" }].map((s) => (
           <button key={s.n} type="button" onClick={() => setStep(Math.min(s.n, step))}
             className={`cursor-pointer rounded-full px-4 py-1.5 text-xs font-semibold uppercase tracking-wide transition-all ${
-              step === s.n ? "bg-ra-primary text-zinc-950" : step > s.n ? "bg-zinc-800 text-zinc-300" : "bg-zinc-900 text-zinc-600 ring-1 ring-zinc-800"
+              step === s.n ? "bg-ra-primary text-zinc-950" : step > s.n ? "bg-zinc-800 admin-surface-body" : "bg-zinc-900 admin-surface-faint ring-1 ring-zinc-800"
             }`}>
             {s.n}. {s.label}
           </button>
@@ -63,9 +63,9 @@ export default function WaiterPOS() {
 
       {step === 1 && (
         <div>
-          <h2 className="mb-4 text-sm font-semibold text-zinc-300">Select a table</h2>
+          <h2 className="mb-4 text-sm font-semibold admin-surface-body">Select a table</h2>
           {tableData.length === 0 ? (
-            <p className="text-sm text-zinc-600">No available tables. Check the Tables module.</p>
+            <p className="text-sm admin-surface-faint">No available tables. Check the Tables module.</p>
           ) : (
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
               {tableData.map((t) => (
@@ -81,40 +81,40 @@ export default function WaiterPOS() {
         <div className="grid gap-6 xl:grid-cols-3">
           <div className="space-y-4 xl:col-span-2">
             <div className="flex items-center justify-between">
-              <h2 className="text-sm font-semibold text-zinc-300">Menu — {selectedTable?.name ?? "Table"}</h2>
+              <h2 className="text-sm font-semibold admin-surface-body">Menu — {selectedTable?.name ?? "Table"}</h2>
               <button type="button" onClick={() => setStep(1)} className="cursor-pointer text-xs font-medium text-ra-primary hover:text-ra-primary-muted">Change table</button>
             </div>
             {activeItems.length === 0 ? (
-              <p className="text-sm text-zinc-600">No menu items. Add items in the Menu module.</p>
+              <p className="text-sm admin-surface-faint">No menu items. Add items in the Menu module.</p>
             ) : (
               <div className="grid gap-3 sm:grid-cols-2">
                 {activeItems.map((item) => <MenuItemCard key={item.id} item={item} onAdd={addItem} />)}
               </div>
             )}
           </div>
-          <aside className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-4 xl:sticky xl:top-24 xl:self-start">
-            <h3 className="text-sm font-semibold text-zinc-100">Order summary</h3>
-            <p className="mt-1 text-xs text-zinc-500">{selectedTable ? `Table ${selectedTable.name}` : "No table"}</p>
+          <aside className="admin-surface-card p-4 xl:sticky xl:top-24 xl:self-start">
+            <h3 className="text-sm font-semibold admin-shell-text">Order summary</h3>
+            <p className="mt-1 text-xs admin-surface-muted">{selectedTable ? `Table ${selectedTable.name}` : "No table"}</p>
             <ul className="mt-4 max-h-64 space-y-2 overflow-y-auto text-sm">
               {cart.length === 0 ? (
-                <li className="text-zinc-600">No items yet.</li>
+                <li className="admin-surface-faint">No items yet.</li>
               ) : cart.map((line) => (
-                <li key={line.id} className="flex items-center justify-between gap-2 rounded-lg bg-zinc-950/60 px-2 py-2">
-                  <span className="text-zinc-300">{line.qty}× {line.name}</span>
+                <li key={line.id} className="flex items-center justify-between gap-2 rounded-lg admin-surface-card px-2 py-2">
+                  <span className="admin-surface-body">{line.qty}× {line.name}</span>
                   <span className="flex items-center gap-2">
                     <span className="font-medium text-ra-primary">${(line.price * line.qty).toFixed(2)}</span>
                     <button type="button" onClick={() => removeLine(line.id)}
-                      className="cursor-pointer rounded-lg p-1 text-zinc-500 hover:bg-red-500/15 hover:text-red-400">
+                      className="cursor-pointer rounded-lg p-1 admin-surface-muted hover:bg-red-500/15 hover:text-red-400">
                       <Trash2 className="size-4" />
                     </button>
                   </span>
                 </li>
               ))}
             </ul>
-            <div className="mt-4 border-t border-zinc-800 pt-4">
+            <div className="mt-4 border-t admin-shell-border pt-4">
               <div className="flex justify-between text-sm">
-                <span className="text-zinc-500">Subtotal</span>
-                <span className="font-semibold text-zinc-100">${total.toFixed(2)}</span>
+                <span className="admin-surface-muted">Subtotal</span>
+                <span className="font-semibold admin-shell-text">${total.toFixed(2)}</span>
               </div>
               <button type="button" disabled={!selectedTable || cart.length === 0} onClick={() => setStep(3)}
                 className="cursor-pointer mt-4 w-full rounded-xl bg-ra-primary py-3 text-sm font-semibold text-zinc-950 hover:brightness-110 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-40">
@@ -126,10 +126,10 @@ export default function WaiterPOS() {
       )}
 
       {step === 3 && (
-        <div className="mx-auto max-w-lg rounded-2xl border border-zinc-800 bg-zinc-900/60 p-6">
-          <h2 className="text-lg font-semibold text-zinc-100">Confirm order</h2>
-          <p className="mt-1 text-sm text-zinc-500">Table {selectedTable?.name} · {cart.length} lines</p>
-          <ul className="mt-4 space-y-2 text-sm text-zinc-300">
+        <div className="mx-auto max-w-lg admin-surface-card p-6">
+          <h2 className="text-lg font-semibold admin-shell-text">Confirm order</h2>
+          <p className="mt-1 text-sm admin-surface-muted">Table {selectedTable?.name} · {cart.length} lines</p>
+          <ul className="mt-4 space-y-2 text-sm admin-surface-body">
             {cart.map((line) => (
               <li key={line.id} className="flex justify-between">
                 <span>{line.qty}× {line.name}</span>
@@ -137,11 +137,11 @@ export default function WaiterPOS() {
               </li>
             ))}
           </ul>
-          <p className="mt-4 flex justify-between border-t border-zinc-800 pt-4 text-base font-semibold text-zinc-50">
+          <p className="mt-4 flex justify-between border-t admin-shell-border pt-4 admin-surface-title text-base font-semibold">
             <span>Total</span><span>${total.toFixed(2)}</span>
           </p>
           <div className="mt-6 flex gap-3">
-            <button type="button" onClick={() => setStep(2)} className="cursor-pointer flex-1 rounded-xl border border-zinc-700 py-3 text-sm font-medium text-zinc-200 hover:border-zinc-500">Back</button>
+            <button type="button" onClick={() => setStep(2)} className="cursor-pointer flex-1 rounded-xl border admin-shell-border py-3 text-sm font-medium admin-shell-text hover:border-zinc-500">Back</button>
             <button type="button" onClick={placeOrder} className="cursor-pointer flex-1 rounded-xl bg-ra-primary py-3 text-sm font-semibold text-zinc-950 hover:brightness-110 active:scale-[0.98]">Place order</button>
           </div>
         </div>
@@ -153,7 +153,7 @@ export default function WaiterPOS() {
             <Check className="size-8" />
           </span>
           <p className="mt-6 text-lg font-semibold text-ra-primary-muted">Sent to kitchen</p>
-          <p className="mt-2 text-sm text-zinc-500">Resetting for next guest…</p>
+          <p className="mt-2 text-sm admin-surface-muted">Resetting for next guest…</p>
         </div>
       )}
     </div>

@@ -1,5 +1,6 @@
 "use client";
 
+import { adminSurface } from "@/config/adminSurfaceClasses";
 import { RESTAURANT_ADMIN_PRIMARY } from "@/config/restaurantAdminTheme";
 import { useRestaurantTheme } from "@/hooks/useRestaurantTheme";
 
@@ -45,17 +46,17 @@ export default function DonutChart({ channels = DEFAULT_CHANNELS }) {
   });
 
   return (
-    <div className="rms-dashboard-card rms-dashboard-card--md flex h-full min-h-0 w-full flex-col rounded-2xl border border-zinc-800 bg-zinc-900/60 p-5">
+    <div className={`rms-dashboard-card rms-dashboard-card--md flex h-full min-h-0 w-full flex-col p-5 ${adminSurface.card}`}>
       <div className="shrink-0">
-        <h3 className="text-sm font-semibold text-zinc-100">Order Channels</h3>
-        <p className="text-xs text-zinc-500">Online vs offline split</p>
+        <h3 className={`text-sm font-semibold ${adminSurface.title}`}>Order Channels</h3>
+        <p className={`text-xs ${adminSurface.muted}`}>Online vs offline split</p>
       </div>
 
       <div className="rms-dashboard-card__body rms-dashboard-card__body--y mt-4 min-h-0 flex-1 pr-1">
       <div className="flex flex-col items-center gap-4 sm:flex-row sm:items-center sm:justify-around">
         <div className="relative shrink-0">
           <svg width="140" height="140" viewBox="0 0 140 140" aria-hidden>
-            <circle cx={cx} cy={cy} r={r} fill="none" stroke="#27272a" strokeWidth="18" />
+            <circle cx={cx} cy={cy} r={r} fill="none" stroke="var(--admin-chart-ring)" strokeWidth="18" />
             {total > 0 && segments.map((seg) => (
               <circle key={seg.id} cx={cx} cy={cy} r={r} fill="none"
                 stroke={seg.color} strokeWidth="18"
@@ -65,8 +66,8 @@ export default function DonutChart({ channels = DEFAULT_CHANNELS }) {
             ))}
           </svg>
           <div className="absolute inset-0 flex flex-col items-center justify-center">
-            <p className="text-xl font-semibold text-zinc-50">{total > 0 ? `${total}` : "—"}</p>
-            <p className="text-[10px] text-zinc-500">Orders</p>
+            <p className="text-xl font-semibold">{total > 0 ? `${total}` : "—"}</p>
+            <p className={`text-[10px] ${adminSurface.muted}`}>Orders</p>
           </div>
         </div>
 
@@ -75,8 +76,8 @@ export default function DonutChart({ channels = DEFAULT_CHANNELS }) {
             <div key={c.id} className="flex items-center gap-3">
               <span className="size-3 shrink-0 rounded-full" style={{ backgroundColor: c.color }} />
               <div>
-                <p className="text-sm font-medium text-zinc-200">{c.label}</p>
-                <p className="text-xs text-zinc-500">{c.value} orders</p>
+                <p className={`text-sm font-medium ${adminSurface.body}`}>{c.label}</p>
+                <p className={`text-xs ${adminSurface.muted}`}>{c.value} orders</p>
               </div>
             </div>
           ))}

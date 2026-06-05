@@ -13,8 +13,15 @@ export {
 
 export const LOGO_UPLOAD_MAX_BYTES = 2 * 1024 * 1024;
 
+/** Blob when token is set, store is connected (BLOB_STORE_ID), or running on Vercel (OIDC). */
 function useBlobStorage() {
-  return Boolean(process.env.BLOB_READ_WRITE_TOKEN?.trim());
+  if (process.env.BLOB_READ_WRITE_TOKEN?.trim()) return true;
+  if (process.env.BLOB_STORE_ID?.trim()) return true;
+  return process.env.VERCEL === "1";
+}
+
+function isVercelRuntime() {
+  return process.env.VERCEL === "1";
 }
 
 function buildFilename(namePrefix, restaurantId, ext) {
@@ -60,12 +67,20 @@ export async function saveUploadedImage({
     if (useBlobStorage()) {
       return await saveToBlob({ bytes, mime, subdir, filename });
     }
-    return await saveToLocalDisk({ bytes, subdir, filename });
+    if (!isVercelRuntime()) {
+      return await saveToLocalDisk({ bytes, subdir, filename });
+    }
+    throw new Error(
+      "Blob storage is not configured for this Vercel project. Connect a public Blob store and redeploy."
+    );
   } catch (err) {
     console.error("saveUploadedImage failed:", err?.message ?? err);
+    if (err instanceof Error && err.message.includes("Blob storage is not configured")) {
+      throw err;
+    }
     throw new Error(
-      useBlobStorage()
-        ? "Image upload failed. Check Vercel Blob storage configuration."
+      useBlobStorage() || isVercelRuntime()
+        ? "Image upload failed. In Vercel: Storage → connect Public Blob → add BLOB_READ_WRITE_TOKEN → Redeploy."
         : "Image upload failed. Could not save file."
     );
   }

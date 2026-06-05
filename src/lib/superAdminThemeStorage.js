@@ -1,3 +1,4 @@
+import { applyAdminColorMode, reapplyPortalAdminColorMode } from "@/lib/adminColorMode";
 import { resolveSuperAdminTheme } from "@/lib/superAdminThemeRuntime";
 
 export const SUPER_ADMIN_THEME_STORAGE_KEY = "rms-super-admin-theme";
@@ -43,6 +44,7 @@ export function applySuperAdminDocumentTheme(theme) {
   document.documentElement.style.setProperty("--sa-accent", resolved.accentColor);
   document.documentElement.style.setProperty("--platform-primary", resolved.primaryColor);
   document.documentElement.style.setProperty("--platform-accent", resolved.accentColor);
+  applyAdminColorMode(resolved);
   return resolved;
 }
 
@@ -52,10 +54,11 @@ export function clearSuperAdminDocumentTheme() {
   for (const key of ["--sa-primary", "--sa-accent", "--platform-primary", "--platform-accent"]) {
     document.documentElement.style.removeProperty(key);
   }
+  reapplyPortalAdminColorMode();
 }
 
 /** Inline script — runs synchronously in layout before React hydration. */
 export function superAdminThemeBootstrapScript() {
   const key = SUPER_ADMIN_THEME_STORAGE_KEY;
-  return `(function(){try{var r=localStorage.getItem(${JSON.stringify(key)});if(!r)return;var t=JSON.parse(r);var d=document.documentElement;if(t.primaryColor){d.style.setProperty("--sa-primary",t.primaryColor);d.style.setProperty("--platform-primary",t.primaryColor);}if(t.accentColor){d.style.setProperty("--sa-accent",t.accentColor);d.style.setProperty("--platform-accent",t.accentColor);}d.dataset.superAdminTheme="true";}catch(e){}})();`;
+  return `(function(){try{var p=location.pathname||"";if(p.indexOf("/super-admin")!==0)return;var r=localStorage.getItem(${JSON.stringify(key)});if(!r)return;var t=JSON.parse(r);var d=document.documentElement;if(t.primaryColor){d.style.setProperty("--sa-primary",t.primaryColor);d.style.setProperty("--platform-primary",t.primaryColor);}if(t.accentColor){d.style.setProperty("--sa-accent",t.accentColor);d.style.setProperty("--platform-accent",t.accentColor);}d.dataset.superAdminTheme="true";}catch(e){}})();`;
 }

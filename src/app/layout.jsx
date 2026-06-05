@@ -1,10 +1,18 @@
-import { Geist, Geist_Mono, Poppins, Inter } from "next/font/google";
+import {
+  DM_Sans,
+  Geist,
+  Geist_Mono,
+  Inter,
+  Nunito,
+  Open_Sans,
+  Poppins,
+  Roboto,
+} from "next/font/google";
 import "./globals.css";
 import Providers from "./providers";
 import PlatformScripts from "@/components/PlatformScripts";
 import PlatformThemeStyles from "@/components/PlatformThemeStyles";
-import RestaurantThemeBootstrap from "@/components/RestaurantThemeBootstrap";
-import SuperAdminThemeBootstrap from "@/components/SuperAdminThemeBootstrap";
+import AdminThemeBootstrap from "@/components/AdminThemeBootstrap";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -30,6 +38,34 @@ const inter = Inter({
   display: "swap",
 });
 
+const nunito = Nunito({
+  variable: "--font-nunito",
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700", "800", "900"],
+  display: "swap",
+});
+
+const dmSans = DM_Sans({
+  variable: "--font-dm-sans",
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  display: "swap",
+});
+
+const roboto = Roboto({
+  variable: "--font-roboto",
+  subsets: ["latin"],
+  weight: ["300", "400", "500", "700"],
+  display: "swap",
+});
+
+const openSans = Open_Sans({
+  variable: "--font-open-sans",
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  display: "swap",
+});
+
 export const metadata = {
   title: "RMS · Restaurant Management",
   description: "Premium India-focused Restaurant POS & Food Ordering System",
@@ -50,12 +86,13 @@ export default function RootLayout({ children }) {
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} ${poppins.variable} ${inter.variable} h-full`}
+      className={`${geistSans.variable} ${geistMono.variable} ${poppins.variable} ${inter.variable} ${nunito.variable} ${dmSans.variable} ${roboto.variable} ${openSans.variable} h-full`}
       suppressHydrationWarning
     >
+      <head>
+        <AdminThemeBootstrap />
+      </head>
       <body className="min-h-full" suppressHydrationWarning>
-        <RestaurantThemeBootstrap />
-        <SuperAdminThemeBootstrap />
         <PlatformThemeStyles />
         <PlatformScripts />
         <Providers>{children}</Providers>

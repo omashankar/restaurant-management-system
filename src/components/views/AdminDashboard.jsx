@@ -16,7 +16,7 @@ export default function AdminDashboard() {
         <h1 className="text-2xl font-semibold tracking-tight text-zinc-50">
           Command center
         </h1>
-        <p className="mt-1 text-sm text-zinc-500">
+        <p className="mt-1 text-sm admin-surface-muted">
           Live snapshot of sales, orders, and floor activity.
         </p>
       </div>

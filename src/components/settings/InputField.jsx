@@ -1,5 +1,6 @@
 "use client";
 
+import { adminSurface } from "@/config/adminSurfaceClasses";
 import { raInputCls } from "@/config/restaurantAdminTheme";
 
 export default function InputField({
@@ -15,8 +16,8 @@ export default function InputField({
   step,
   error,
 }) {
-  const borderCls = error ? "border-red-500/50" : "border-zinc-800";
-  const fieldCls = `${raInputCls} border ${borderCls} bg-zinc-950/80 focus-ra-primary`;
+  const borderCls = error ? "border-red-500/50" : "";
+  const fieldCls = `${raInputCls} ${borderCls}`.trim();
   const inputMode =
     type === "number"
       ? step != null && String(step).includes(".")
@@ -27,7 +28,7 @@ export default function InputField({
         : undefined;
   return (
     <div>
-      <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-zinc-500">
+      <label className={adminSurface.label}>
         {label}
       </label>
       {options ? (

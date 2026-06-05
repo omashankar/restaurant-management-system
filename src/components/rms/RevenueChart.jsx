@@ -9,12 +9,12 @@ export default function RevenueChart({ data, className = "" }) {
   );
   return (
     <div
-      className={`rounded-2xl border border-zinc-800 bg-zinc-900/60 p-5 ${className}`}
+      className={`admin-surface-card p-5 ${className}`}
     >
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="text-sm font-semibold text-zinc-100">Revenue</h3>
-          <p className="text-xs text-zinc-500">Last 7 days · mock data</p>
+          <h3 className="admin-surface-title text-sm font-semibold">Revenue</h3>
+          <p className="text-xs admin-surface-muted">Last 7 days · mock data</p>
         </div>
       </div>
       <div className="mt-6 flex h-44 items-end gap-2">
@@ -32,7 +32,7 @@ export default function RevenueChart({ data, className = "" }) {
                   title={`${d.day}: $${d.amount}`}
                 />
               </div>
-              <span className="text-[10px] font-medium uppercase tracking-wide text-zinc-500">
+              <span className="text-[10px] font-medium uppercase tracking-wide admin-surface-muted">
                 {d.day}
               </span>
             </div>

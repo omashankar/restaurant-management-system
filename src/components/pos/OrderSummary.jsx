@@ -1,5 +1,7 @@
 "use client";
 
+import { adminShell, adminSurface } from "@/config/adminSurfaceClasses";
+import { adminControl } from "@/config/adminDesignSystem";
 import CartItem from "@/components/pos/CartItem";
 import CustomerSearch from "@/components/pos/CustomerSearch";
 import TablePickerModal from "@/components/pos/TablePickerModal";
@@ -74,10 +76,10 @@ export default function OrderSummary({
 
   return (
     <>
-      <aside className="flex h-full min-h-[520px] flex-col rounded-2xl border border-zinc-800 bg-zinc-900/60 shadow-lg shadow-black/20">
+      <aside className="flex h-full min-h-[520px] flex-col admin-surface-card shadow-lg shadow-black/20">
 
         {/* ── Order type tabs ── */}
-        <div className="flex gap-1 border-b border-zinc-800 p-3">
+        <div className={`flex gap-1 border-b ${adminShell.borderB} p-3`}>
           {ORDER_TYPES.map(({ id, label, Icon }) => (
             <button key={id} type="button"
               onClick={() => {
@@ -92,7 +94,7 @@ export default function OrderSummary({
               className={`cursor-pointer flex flex-1 items-center justify-center gap-1.5 rounded-xl py-2 text-xs font-semibold transition-all ${
                 orderType === id
                   ? "bg-ra-primary text-zinc-950"
-                  : "text-zinc-400 hover:bg-zinc-800 hover:text-zinc-200"
+                  : `${adminSurface.muted} hover:bg-[var(--admin-hover)] hover:admin-shell-text`
               }`}
               aria-pressed={orderType === id}>
               <Icon className="size-3.5" />{label}
@@ -102,7 +104,7 @@ export default function OrderSummary({
 
         {/* ══ DINE-IN: Area tabs + table grid ══ */}
         {orderType === "dine-in" && (
-          <div className="border-b border-zinc-800">
+          <div className={`border-b ${adminShell.borderB}`}>
 
             {/* Area filter pills */}
             <div className="flex gap-1.5 overflow-x-auto px-3 pt-2.5 pb-2 [scrollbar-width:none]">
@@ -116,8 +118,8 @@ export default function OrderSummary({
                     onClick={() => setActiveArea(area.id)}
                     className={`cursor-pointer flex shrink-0 items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs font-semibold transition-all ${
                       isActive
-                        ? "border-zinc-600 bg-zinc-800 text-zinc-100"
-                        : "border-zinc-800 text-zinc-500 hover:border-zinc-700 hover:text-zinc-300"
+                        ? "border-[var(--admin-border)] bg-[var(--admin-hover-strong)] admin-shell-text"
+                        : `border-[var(--admin-border-subtle)] ${adminSurface.muted} hover:border-[var(--admin-border)] hover:admin-surface-body`
                     }`}>
                     {area.name}
                     <span className={`rounded-full px-1.5 py-0.5 text-[9px] font-bold ring-1 ${getCategoryBadge(area.color)}`}>
@@ -146,26 +148,26 @@ export default function OrderSummary({
                         }}
                         className={`relative flex flex-col items-start rounded-xl border px-2 py-1.5 text-left transition-all ${
                           isBlocked
-                            ? "cursor-not-allowed border-zinc-800/40 bg-zinc-900/20 opacity-40"
+                            ? "cursor-not-allowed admin-shell-border/40 bg-zinc-900/20 opacity-40"
                             : isSelected
                             ? "cursor-pointer border-ra-primary-50 bg-ra-primary-10 ring-1 ring-ra-primary-20"
-                            : "cursor-pointer border-zinc-800 bg-zinc-900/50 hover:border-zinc-600"
+                            : "cursor-pointer border-[var(--admin-border)] bg-[var(--admin-hover)] hover:border-[var(--admin-border)]"
                         }`}>
                         {isSelected && (
                           <span className="absolute right-1 top-1 flex size-3.5 items-center justify-center rounded-full bg-ra-primary text-zinc-950">
                             <Check className="size-2" strokeWidth={3} />
                           </span>
                         )}
-                        <p className={`text-[11px] font-bold ${isSelected ? "text-ra-primary-muted" : isBlocked ? "text-zinc-600" : "text-zinc-100"}`}>
+                        <p className={`text-[11px] font-bold ${isSelected ? "text-ra-primary-muted" : isBlocked ? "admin-surface-faint" : "admin-shell-text"}`}>
                           {table.tableNumber}
                         </p>
-                        <span className="flex items-center gap-0.5 text-[9px] text-zinc-600">
+                        <span className="flex items-center gap-0.5 text-[9px] admin-surface-faint">
                           <Users className="size-2" />{table.capacity}
                         </span>
                         <span className={`mt-0.5 rounded px-1 py-0.5 text-[8px] font-semibold leading-none ${
                           isBlocked ? "bg-red-500/10 text-red-500"
                           : isSelected ? "bg-ra-primary/20 text-ra-primary"
-                          : "bg-ra-primary-10 text-ra-accent"
+                          : "bg-ra-primary-10 text-ra-primary"
                         }`}>
                           {isBlocked ? table.status : isSelected ? "✓" : "Free"}
                         </span>
@@ -180,12 +182,12 @@ export default function OrderSummary({
                 {selectedTable ? (
                   <div className="flex items-center gap-1.5 text-[10px]">
                     <span className="font-bold text-ra-primary">{selectedTable.tableNumber}</span>
-                    <span className="flex items-center gap-0.5 text-zinc-500">
+                    <span className="flex items-center gap-0.5 admin-surface-muted">
                       <Users className="size-2.5" />{selectedTable.capacity}
                     </span>
-                    {selectedCat && <span className="text-zinc-600">· {selectedCat.name}</span>}
+                    {selectedCat && <span className="admin-surface-faint">· {selectedCat.name}</span>}
                     <button type="button" onClick={() => onTableSelect("")}
-                      className="cursor-pointer ml-1 text-zinc-600 hover:text-red-400 transition-colors">✕</button>
+                      className="cursor-pointer ml-1 admin-surface-faint hover:text-red-400 transition-colors">✕</button>
                   </div>
                 ) : (
                   <p className={`text-[10px] ${fieldErrors.table ? "text-red-400" : "text-amber-500/70"}`}>
@@ -193,7 +195,7 @@ export default function OrderSummary({
                   </p>
                 )}
                 <button type="button" onClick={() => setPickerOpen(true)}
-                  className="cursor-pointer flex items-center gap-1 rounded-lg border border-zinc-700 px-2 py-1 text-[10px] font-medium text-zinc-400 hover:border-zinc-500 hover:text-zinc-200 transition-colors">
+                  className={`cursor-pointer flex items-center gap-1 rounded-lg border admin-shell-border px-2 py-1 text-[10px] font-medium ${adminSurface.muted} hover:border-[var(--admin-border)] hover:admin-shell-text transition-colors`}>
                   <LayoutGrid className="size-3" /> All Areas
                 </button>
               </div>
@@ -203,9 +205,9 @@ export default function OrderSummary({
 
         {/* ── Delivery fields ── */}
         {orderType === "delivery" && (
-          <div className="space-y-2 border-b border-zinc-800 p-3">
-            <p className="text-[10px] font-semibold uppercase tracking-wider text-zinc-500">Delivery Details *</p>
-            <p className="text-[10px] text-zinc-600">Name, phone & address — customer auto-saved on place order</p>
+          <div className={`space-y-2 border-b ${adminShell.borderB} p-3`}>
+            <p className="text-[10px] font-semibold uppercase tracking-wider admin-surface-muted">Delivery Details *</p>
+            <p className="text-[10px] admin-surface-faint">Name, phone & address — customer auto-saved on place order</p>
             <div>
               <input
                 value={delivery.name}
@@ -215,7 +217,7 @@ export default function OrderSummary({
                 }}
                 placeholder="Name *"
                 aria-invalid={fieldErrors.deliveryName ? true : undefined}
-                className="w-full rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2 text-xs text-zinc-100 outline-none focus-ra-primary"
+                className={`${adminControl.input} w-full px-3 py-2 text-xs focus-ra-primary`}
               />
               {fieldErrors.deliveryName && (
                 <p className="mt-1 text-[10px] text-red-400">{fieldErrors.deliveryName}</p>
@@ -243,7 +245,7 @@ export default function OrderSummary({
                 placeholder="Full delivery address *"
                 maxLength={300}
                 aria-invalid={fieldErrors.deliveryAddress ? true : undefined}
-                className="w-full rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2 text-xs text-zinc-100 outline-none focus-ra-primary"
+                className={`${adminControl.input} w-full px-3 py-2 text-xs focus-ra-primary`}
               />
               {fieldErrors.deliveryAddress && (
                 <p className="mt-1 text-[10px] text-red-400">{fieldErrors.deliveryAddress}</p>
@@ -254,11 +256,11 @@ export default function OrderSummary({
 
         {/* ── Customer search (dine-in / takeaway only) ── */}
         {orderType !== "delivery" && (
-          <div className="border-b border-zinc-800 p-3">
+          <div className="admin-surface-divider-b p-3">
             <div className="mb-1.5 flex items-center justify-between">
-              <p className="text-[10px] font-semibold uppercase tracking-wider text-zinc-500">Customer *</p>
+              <p className="text-[10px] font-semibold uppercase tracking-wider admin-surface-muted">Customer *</p>
               {orderType === "dine-in" && !selectedTableId && (
-                <span className="text-[10px] text-zinc-600">Select table first</span>
+                <span className="text-[10px] admin-surface-faint">Select table first</span>
               )}
             </div>
             <div className={orderType === "dine-in" && !selectedTableId ? "pointer-events-none opacity-40" : ""}>
@@ -277,7 +279,7 @@ export default function OrderSummary({
 
         {/* ── Cart header ── */}
         <div className="px-4 pt-3">
-          <h2 className="text-sm font-semibold text-zinc-100">Order Summary</h2>
+          <h2 className="text-sm font-semibold admin-shell-text">Order Summary</h2>
         </div>
 
         {/* ── Cart items ── */}
@@ -303,12 +305,12 @@ export default function OrderSummary({
         </div>
 
         {/* ── Totals + actions ── */}
-        <div className="border-t border-zinc-800 p-3 space-y-3">
+        <div className="admin-surface-divider-t p-3 space-y-3">
 
           {/* Order note */}
           {cart.length > 0 && (
             <div>
-              <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-zinc-500">
+              <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wider admin-surface-muted">
                 Order Note <span className="normal-case font-normal text-zinc-700">(optional)</span>
               </label>
               <textarea
@@ -316,28 +318,28 @@ export default function OrderSummary({
                 value={note}
                 onChange={(e) => onNoteChange?.(e.target.value)}
                 placeholder="Allergies, special requests…"
-                className="w-full resize-none rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2 text-xs text-zinc-100 outline-none focus-ra-primary placeholder:text-zinc-600 transition-colors"
+                className="w-full resize-none rounded-xl border admin-shell-border admin-surface-card px-3 py-2 text-xs admin-shell-text outline-none focus-ra-primary placeholder:admin-surface-faint transition-colors"
               />
             </div>
           )}
           <div className="space-y-1 text-xs">
-            <div className="flex justify-between text-zinc-400">
+            <div className="flex justify-between admin-surface-muted">
               <span>Subtotal</span>
-              <span className="text-zinc-200">{currency} {subtotal.toFixed(2)}</span>
+              <span className="admin-shell-text">{currency} {subtotal.toFixed(2)}</span>
             </div>
             {taxAmount > 0 && (
-              <div className="flex justify-between text-zinc-400">
+              <div className="flex justify-between admin-surface-muted">
                 <span>Tax {taxPercent > 0 ? `(${taxPercent}%)` : ""}</span>
-                <span className="text-zinc-200">{currency} {taxAmount.toFixed(2)}</span>
+                <span className="admin-shell-text">{currency} {taxAmount.toFixed(2)}</span>
               </div>
             )}
             {serviceCharge > 0 && (
-              <div className="flex justify-between text-zinc-400">
+              <div className="flex justify-between admin-surface-muted">
                 <span>Service Charge {serviceChargePercent > 0 ? `(${serviceChargePercent}%)` : ""}</span>
-                <span className="text-zinc-200">{currency} {serviceCharge.toFixed(2)}</span>
+                <span className="admin-shell-text">{currency} {serviceCharge.toFixed(2)}</span>
               </div>
             )}
-            <div className="flex justify-between border-t border-zinc-800 pt-1.5 text-sm font-semibold text-zinc-100">
+            <div className="flex justify-between admin-surface-divider-t pt-1.5 text-sm font-semibold admin-shell-text">
               <span>Total</span>
               <span>{currency} {total.toFixed(2)}</span>
             </div>
@@ -365,8 +367,8 @@ export default function OrderSummary({
           )}
 
           {cart.length > 0 && (
-            <div className="space-y-2 rounded-xl border border-zinc-800 bg-zinc-950/40 p-2.5">
-              <p className="text-[10px] font-semibold uppercase tracking-wider text-zinc-500">Payment</p>
+            <div className="space-y-2 rounded-xl admin-surface-card p-2.5">
+              <p className="text-[10px] font-semibold uppercase tracking-wider admin-surface-muted">Payment</p>
               <div className="flex flex-wrap gap-1">
                 {POS_PAYMENT_METHODS.map(({ id, label }) => (
                   <button
@@ -376,7 +378,7 @@ export default function OrderSummary({
                     className={`cursor-pointer rounded-lg px-2.5 py-1.5 text-[11px] font-semibold transition-all ${
                       paymentMethod === id
                         ? "bg-ra-primary/20 text-ra-primary-muted ring-1 ring-ra-primary-25"
-                        : "text-zinc-500 hover:bg-zinc-800 hover:text-zinc-300"
+                        : "admin-surface-muted hover:bg-[var(--admin-hover)] hover:admin-surface-body"
                     }`}
                   >
                     {label}
@@ -397,7 +399,7 @@ export default function OrderSummary({
                         ? id === "paid"
                           ? "bg-ra-primary text-zinc-950"
                           : "bg-amber-500/20 text-amber-300 ring-1 ring-amber-500/30"
-                        : "bg-zinc-900 text-zinc-500 hover:text-zinc-300"
+                        : "bg-zinc-900 admin-surface-muted hover:admin-surface-body"
                     }`}
                   >
                     {label}
@@ -414,7 +416,7 @@ export default function OrderSummary({
               : <><CreditCard className="size-4" /> Place Order</>}
           </button>
           <button type="button" onClick={onClearCart} disabled={cart.length === 0}
-            className="cursor-pointer flex w-full items-center justify-center gap-2 rounded-xl border border-zinc-700 py-2 text-xs font-medium text-zinc-400 transition-all hover:border-zinc-500 hover:text-zinc-200 disabled:opacity-40">
+            className="cursor-pointer flex w-full items-center justify-center gap-2 rounded-xl border admin-shell-border py-2 text-xs font-medium admin-surface-muted transition-all hover:border-zinc-500 hover:admin-shell-text disabled:opacity-40">
             <Trash2 className="size-3.5" /> Clear
           </button>
         </div>

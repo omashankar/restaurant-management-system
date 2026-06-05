@@ -5,8 +5,8 @@ import { useUser } from "@/context/AuthContext";
 import { useModuleData } from "@/context/ModuleDataContext";
 import { BrandPreloaderFace } from "@/components/ui/BrandPreloaderFace";
 import { isAuthRoute } from "@/config/authTheme";
-import { useSuperAdminThemeStyles } from "@/hooks/useSuperAdminThemeStyles";
 import { usePlatformConfig } from "@/hooks/usePlatformConfig";
+import "@/app/admin-surface-theme.css";
 import "@/app/super-admin/super-admin-theme.css";
 import "@/app/(app)/restaurant-admin-theme.css";
 import "@/app/(auth)/auth-theme.css";
@@ -19,7 +19,6 @@ export default function AppPreloader() {
   const pathname = usePathname();
   const isSuperAdmin = pathname?.startsWith("/super-admin");
   const isAuth = !isSuperAdmin && isAuthRoute(pathname);
-  useSuperAdminThemeStyles();
   usePlatformConfig();
 
   const ready = isSuperAdmin
@@ -30,13 +29,13 @@ export default function AppPreloader() {
   const panelClass = isSuperAdmin
     ? "super-admin-panel"
     : isAuth
-      ? ""
+      ? "admin-portal-scope"
       : "restaurant-admin-panel";
 
   return (
     <div
       aria-hidden={ready}
-      className={`${panelClass} pointer-events-none fixed inset-0 z-[120] flex items-center justify-center bg-zinc-950/95 text-zinc-100 transition-opacity duration-500 ${
+      className={`${panelClass} admin-preloader-overlay pointer-events-none fixed inset-0 z-[120] flex items-center justify-center transition-opacity duration-500 ${
         ready ? "opacity-0" : "opacity-100"
       }`}
     >

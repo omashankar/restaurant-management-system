@@ -2,6 +2,18 @@
 
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import DataTableShell from "@/components/ui/DataTableShell";
+import {
+  AdminTable,
+  AdminTableActionsCell,
+  AdminTableBody,
+  AdminTableHead,
+  AdminTableHeadRow,
+  AdminTableIconButton,
+  AdminTableRow,
+  AdminTableTd,
+  AdminTableTh,
+  AdminTableThActions,
+} from "@/components/ui/AdminTable";
 import EmptyState from "@/components/ui/EmptyState";
 import ListToolbar from "@/components/ui/ListToolbar";
 import Modal from "@/components/ui/Modal";
@@ -211,7 +223,7 @@ export default function CustomersModulePage() {
   if (!hydrated || loading) {
     return (
       <div className="space-y-6">
-        <div className="h-8 w-40 rounded-lg bg-zinc-800 animate-pulse" />
+        <div className="h-8 w-40 rounded-lg admin-progress-track animate-pulse" />
         <TableSkeleton rows={8} cols={6} />
       </div>
     );
@@ -229,10 +241,10 @@ export default function CustomersModulePage() {
 
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-zinc-50">
+          <h1 className="admin-page-title text-2xl font-semibold tracking-tight">
             Customers
           </h1>
-          <p className="mt-1 text-sm text-zinc-500">
+          <p className="admin-page-desc mt-1 text-sm">
             CRM list with visit history on profile.
           </p>
         </div>
@@ -247,7 +259,7 @@ export default function CustomersModulePage() {
       </div>
 
       {fetchError ? (
-        <div className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">
+        <div className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-400">
           {fetchError}
         </div>
       ) : null}
@@ -260,7 +272,7 @@ export default function CustomersModulePage() {
           <select
             value={visitFilter}
             onChange={(e) => setVisitFilter(e.target.value)}
-            className="rounded-xl border border-zinc-800 bg-zinc-900/60 px-3 py-2 text-sm text-zinc-200"
+            className="admin-surface-card px-3 py-2 text-sm admin-shell-text"
           >
             <option value="all">All visits</option>
             <option value="1-5">1–5 visits</option>
@@ -286,64 +298,47 @@ export default function CustomersModulePage() {
         />
       ) : (
         <DataTableShell>
-          <table className="min-w-full text-left text-sm">
-            <thead>
-              <tr className="border-b border-zinc-800 bg-zinc-950/60 text-xs font-semibold uppercase tracking-wider text-zinc-500">
-                <th className="px-4 py-3">Name</th>
-                <th className="px-4 py-3">Phone</th>
-                <th className="px-4 py-3">Visits</th>
-                <th className="px-4 py-3">Last visit</th>
-                <th className="px-4 py-3 text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-zinc-800/80">
+          <AdminTable>
+            <AdminTableHead>
+              <AdminTableHeadRow>
+                <AdminTableTh>Name</AdminTableTh>
+                <AdminTableTh>Phone</AdminTableTh>
+                <AdminTableTh>Visits</AdminTableTh>
+                <AdminTableTh>Last visit</AdminTableTh>
+                <AdminTableThActions />
+              </AdminTableHeadRow>
+            </AdminTableHead>
+            <AdminTableBody>
               {pageRows.map((row) => (
-                <tr
-                  key={row.id}
-                  className="transition-colors hover:bg-zinc-800/40"
-                >
-                  <td className="px-4 py-3 font-medium text-zinc-100">
-                    {row.name}
-                  </td>
-                  <td className="px-4 py-3 tabular-nums text-zinc-500">
-                    {row.phone}
-                  </td>
-                  <td className="px-4 py-3 tabular-nums text-zinc-300">
-                    {row.visits}
-                  </td>
-                  <td className="px-4 py-3 text-zinc-500">{row.lastVisit}</td>
-                  <td className="px-4 py-3 text-right">
-                    <div className="flex justify-end gap-1">
-                      <Link
-                        href={`/customers/${row.id}`}
-                        className="cursor-pointer rounded-lg p-2 text-zinc-400 transition-colors hover:bg-zinc-800 hover:text-sky-400"
-                        aria-label="View"
-                      >
-                        <Eye className="size-4" />
-                      </Link>
-                      <button
-                        type="button"
-                        onClick={() => openEdit(row)}
-                        className="cursor-pointer rounded-lg p-2 text-zinc-400 hover:bg-zinc-800 hover-ra-primary"
-                        aria-label="Edit"
-                      >
-                        <Pencil className="size-4" />
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setDeleteTarget(row)}
-                        disabled={!canDelete}
-                        className="cursor-pointer rounded-lg p-2 text-zinc-400 hover:bg-red-500/15 hover:text-red-400 disabled:cursor-not-allowed disabled:opacity-40"
-                        aria-label="Delete"
-                      >
-                        <Trash2 className="size-4" />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
+                <AdminTableRow key={row.id}>
+                  <AdminTableTd className="font-medium admin-shell-text">{row.name}</AdminTableTd>
+                  <AdminTableTd className="tabular-nums admin-surface-muted">{row.phone}</AdminTableTd>
+                  <AdminTableTd className="tabular-nums admin-surface-body">{row.visits}</AdminTableTd>
+                  <AdminTableTd className="admin-surface-muted">{row.lastVisit}</AdminTableTd>
+                  <AdminTableActionsCell>
+                    <Link
+                      href={`/customers/${row.id}`}
+                      className="admin-table-icon-btn rounded-lg p-2 admin-surface-muted transition-colors hover:bg-[var(--admin-hover)] hover:text-sky-600"
+                      aria-label="View"
+                    >
+                      <Eye className="size-4" />
+                    </Link>
+                    <AdminTableIconButton onClick={() => openEdit(row)} aria-label="Edit">
+                      <Pencil className="size-4" />
+                    </AdminTableIconButton>
+                    <AdminTableIconButton
+                      variant="danger"
+                      onClick={() => setDeleteTarget(row)}
+                      disabled={!canDelete}
+                      aria-label="Delete"
+                    >
+                      <Trash2 className="size-4" />
+                    </AdminTableIconButton>
+                  </AdminTableActionsCell>
+                </AdminTableRow>
               ))}
-            </tbody>
-          </table>
+            </AdminTableBody>
+          </AdminTable>
           <div className="px-4 pb-4">
             <PaginationBar
               page={page}
@@ -351,6 +346,7 @@ export default function CustomersModulePage() {
               total={total}
               pageSize={pageSize}
               onPageChange={setPage}
+              hideWhenSinglePage
             />
           </div>
         </DataTableShell>
@@ -365,7 +361,7 @@ export default function CustomersModulePage() {
             <button
               type="button"
               onClick={() => setModalOpen(false)}
-              className="cursor-pointer rounded-xl border border-zinc-700 px-4 py-2 text-sm text-zinc-300"
+              className="cursor-pointer rounded-xl border admin-shell-border px-4 py-2 text-sm admin-surface-body"
             >
               Cancel
             </button>
@@ -381,7 +377,7 @@ export default function CustomersModulePage() {
       >
         <div className="space-y-4">
           <div>
-            <label className="text-xs text-zinc-500">Name</label>
+            <label className="text-xs admin-surface-muted">Name</label>
             <input
               value={form.name}
               onChange={(e) => {
@@ -389,7 +385,7 @@ export default function CustomersModulePage() {
                 if (fieldErrors.name) setFieldErrors((p) => ({ ...p, name: "" }));
               }}
               aria-invalid={fieldErrors.name ? true : undefined}
-              className={`mt-1 w-full rounded-xl border bg-zinc-950/60 px-3 py-2 text-sm text-zinc-100 ${
+              className={`mt-1 w-full rounded-xl border admin-surface-card px-3 py-2 text-sm admin-shell-text ${
                 fieldErrors.name ? "border-red-500/50" : "border-zinc-700"
               }`}
             />
@@ -407,7 +403,7 @@ export default function CustomersModulePage() {
             error={fieldErrors.phone || undefined}
           />
           <div>
-            <label className="text-xs text-zinc-500">Email</label>
+            <label className="text-xs admin-surface-muted">Email</label>
             <input
               type="email"
               value={form.email}
@@ -416,21 +412,21 @@ export default function CustomersModulePage() {
                 if (fieldErrors.email) setFieldErrors((p) => ({ ...p, email: "" }));
               }}
               aria-invalid={fieldErrors.email ? true : undefined}
-              className={`mt-1 w-full rounded-xl border bg-zinc-950/60 px-3 py-2 text-sm text-zinc-100 ${
+              className={`mt-1 w-full rounded-xl border admin-surface-card px-3 py-2 text-sm admin-shell-text ${
                 fieldErrors.email ? "border-red-500/50" : "border-zinc-700"
               }`}
             />
             {fieldErrors.email && <p className="mt-1 text-xs text-red-400">{fieldErrors.email}</p>}
           </div>
           <div>
-            <label className="text-xs text-zinc-500">Notes</label>
+            <label className="text-xs admin-surface-muted">Notes</label>
             <textarea
               rows={3}
               value={form.notes}
               onChange={(e) =>
                 setForm((f) => ({ ...f, notes: e.target.value }))
               }
-              className="mt-1 w-full resize-none rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2 text-sm text-zinc-100"
+              className="mt-1 w-full resize-none rounded-xl border admin-shell-border admin-surface-card px-3 py-2 text-sm admin-shell-text"
             />
           </div>
         </div>

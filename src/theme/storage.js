@@ -33,14 +33,20 @@ export function saveThemeCache(slug, snapshot) {
   writeAll(all);
 }
 
-/** User's light/dark preference override per restaurant */
+/** User's explicit light/dark choice (Theme switcher only — not CMS default). */
 export function loadModePreference(slug) {
   const c = loadThemeCache(slug);
-  if (c?.colorMode === "dark" || c?.colorMode === "light") return c.colorMode;
+  if (c?.hasUserColorModeChoice && (c.userColorMode === "dark" || c.userColorMode === "light")) {
+    return c.userColorMode;
+  }
   return null;
 }
 
 export function saveModePreference(slug, mode) {
   const prev = loadThemeCache(slug) ?? {};
-  saveThemeCache(slug, { ...prev, colorMode: mode });
+  saveThemeCache(slug, {
+    ...prev,
+    userColorMode: mode === "dark" ? "dark" : "light",
+    hasUserColorModeChoice: true,
+  });
 }

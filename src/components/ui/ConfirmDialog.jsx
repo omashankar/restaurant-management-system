@@ -1,5 +1,6 @@
 "use client";
 
+import { adminPortalScope, adminSurface } from "@/config/adminSurfaceClasses";
 import { AlertTriangle } from "lucide-react";
 import { useEffect } from "react";
 import { createPortal } from "react-dom";
@@ -27,7 +28,7 @@ export default function ConfirmDialog({
   if (!open) return null;
 
   return createPortal(
-    <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
+    <div className={`${adminPortalScope} fixed inset-0 z-[110] flex items-center justify-center p-4`}>
       <button
         type="button"
         className="cursor-pointer absolute inset-0 bg-black/60 backdrop-blur-sm duration-150"
@@ -37,7 +38,7 @@ export default function ConfirmDialog({
       <div
         role="alertdialog"
         aria-modal="true"
-        className="relative z-10 w-full max-w-md rounded-2xl border border-zinc-800 bg-zinc-900 p-6 shadow-2xl duration-150"
+        className={`relative z-10 w-full max-w-md rounded-2xl p-6 shadow-2xl duration-150 ${adminSurface.cardSolid}`}
       >
         <div className="flex gap-4">
           <span
@@ -50,16 +51,10 @@ export default function ConfirmDialog({
             <AlertTriangle className="size-5" />
           </span>
           <div className="min-w-0">
-            <h3 className="font-semibold text-zinc-100">{title}</h3>
-            <p className="mt-2 text-sm leading-relaxed text-zinc-500">
-              {message}
-            </p>
+            <h3 className={`font-semibold ${adminSurface.title}`}>{title}</h3>
+            <p className={`mt-2 text-sm leading-relaxed ${adminSurface.muted}`}>{message}</p>
             <div className="mt-6 flex flex-wrap justify-end gap-2">
-              <button
-                type="button"
-                onClick={onCancel}
-                className="cursor-pointer rounded-xl border border-zinc-700 px-4 py-2 text-sm font-medium text-zinc-300 transition-colors hover:border-zinc-500"
-              >
+              <button type="button" onClick={onCancel} className={adminSurface.btnGhost}>
                 {cancelLabel}
               </button>
               <button

@@ -125,10 +125,10 @@ function CustomerSearchField({ onSelect, initialName = "", initialPhone = "" }) 
       <div className="flex items-center justify-between gap-3 rounded-xl border border-ra-primary-30 bg-ra-primary-5 px-3 py-2.5">
         <div>
           <p className="text-sm font-semibold text-ra-primary-muted">{selected.name}</p>
-          <p className="text-xs text-zinc-500">{selected.phone}{selected.email ? ` · ${selected.email}` : ""}</p>
+          <p className="text-xs admin-surface-muted">{selected.phone}{selected.email ? ` · ${selected.email}` : ""}</p>
         </div>
         <button type="button" onClick={handleClear}
-          className="cursor-pointer rounded-lg p-1 text-zinc-500 hover:text-zinc-200" aria-label="Clear">
+          className="cursor-pointer rounded-lg p-1 admin-surface-muted hover:admin-shell-text" aria-label="Clear">
           <X className="size-4" />
         </button>
       </div>
@@ -138,8 +138,8 @@ function CustomerSearchField({ onSelect, initialName = "", initialPhone = "" }) 
   return (
     <div ref={wrapRef} className="space-y-2">
       {/* Search input */}
-      <div className="flex overflow-hidden rounded-xl border border-zinc-700 bg-zinc-950/60 focus-within-ra-primary">
-        <span className="flex items-center pl-3 text-zinc-500">
+      <div className="flex overflow-hidden rounded-xl border admin-shell-border admin-surface-card focus-within-ra-primary">
+        <span className="flex items-center pl-3 admin-surface-muted">
           <Search className="size-4" />
         </span>
         <input
@@ -148,36 +148,36 @@ function CustomerSearchField({ onSelect, initialName = "", initialPhone = "" }) 
           onChange={(e) => { setQuery(e.target.value); setShowDrop(true); setShowAdd(false); }}
           onFocus={() => { if (query.trim()) setShowDrop(true); }}
           placeholder="Search by name or phone…"
-          className="flex-1 bg-transparent px-3 py-2.5 text-sm text-zinc-100 outline-none placeholder:text-zinc-600"
+          className="flex-1 bg-transparent px-3 py-2.5 text-sm admin-shell-text outline-none placeholder:admin-surface-faint"
         />
         <button type="button" onClick={() => { setShowAdd((v) => !v); setShowDrop(false); }}
           title="Add new customer"
-          className="cursor-pointer flex items-center justify-center px-3 text-zinc-500 hover-ra-primary transition-colors">
+          className="cursor-pointer flex items-center justify-center px-3 admin-surface-muted hover-ra-primary transition-colors">
           <UserPlus className="size-4" />
         </button>
       </div>
 
       {/* Dropdown results */}
       {showDrop && query.trim() && (
-        <div className="rounded-xl border border-zinc-800 bg-zinc-900 shadow-xl shadow-black/40 overflow-hidden">
+        <div className="rounded-xl border admin-shell-border bg-zinc-900 shadow-xl shadow-black/40 overflow-hidden">
           {results.length > 0 && (
-            <ul className="divide-y divide-zinc-800/60 max-h-48 overflow-y-auto">
+            <ul className="admin-table-body max-h-48 overflow-y-auto">
               {results.map((c) => (
                 <li key={c.id}>
                   <button type="button" onClick={() => handleSelect(c)}
-                    className="cursor-pointer flex w-full items-center justify-between gap-3 px-4 py-2.5 text-left hover:bg-zinc-800/60 transition-colors">
+                    className="cursor-pointer flex w-full items-center justify-between gap-3 px-4 py-2.5 text-left hover:admin-shell-hover transition-colors">
                     <div>
-                      <p className="text-sm font-medium text-zinc-100">{c.name}</p>
-                      <p className="text-xs text-zinc-500">{c.phone}</p>
+                      <p className="text-sm font-medium admin-shell-text">{c.name}</p>
+                      <p className="text-xs admin-surface-muted">{c.phone}</p>
                     </div>
-                    <span className="shrink-0 text-xs text-zinc-600">{c.visits ?? 0} visits</span>
+                    <span className="shrink-0 text-xs admin-surface-faint">{c.visits ?? 0} visits</span>
                   </button>
                 </li>
               ))}
             </ul>
           )}
           {results.length === 0 && (
-            <p className="px-4 py-3 text-xs text-zinc-500">No customers found for &ldquo;{query}&rdquo;</p>
+            <p className="px-4 py-3 text-xs admin-surface-muted">No customers found for &ldquo;{query}&rdquo;</p>
           )}
           {/* Add new shortcut */}
           <button type="button"
@@ -191,7 +191,7 @@ function CustomerSearchField({ onSelect, initialName = "", initialPhone = "" }) 
               setShowAdd(true);
               setShowDrop(false);
             }}
-            className="cursor-pointer flex w-full items-center gap-2 border-t border-zinc-800 px-4 py-2.5 text-sm font-semibold text-ra-primary hover:bg-zinc-800/60 transition-colors">
+            className="cursor-pointer flex w-full items-center gap-2 border-t admin-shell-border px-4 py-2.5 text-sm font-semibold text-ra-primary hover:admin-shell-hover transition-colors">
             <UserPlus className="size-4" /> Add &ldquo;{query}&rdquo; as new customer
           </button>
         </div>
@@ -199,11 +199,11 @@ function CustomerSearchField({ onSelect, initialName = "", initialPhone = "" }) 
 
       {/* Add new form */}
       {showAdd && (
-        <div className="space-y-2 rounded-xl border border-zinc-800 bg-zinc-900/80 p-3">
-          <p className="text-xs font-semibold uppercase tracking-wide text-zinc-500">New Customer</p>
+        <div className="space-y-2 rounded-xl border admin-shell-border bg-zinc-900/80 p-3">
+          <p className="text-xs font-semibold uppercase tracking-wide admin-surface-muted">New Customer</p>
           <input value={newForm.name} onChange={(e) => setNewForm((f) => ({ ...f, name: e.target.value }))}
             placeholder="Full name *"
-            className="w-full rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2 text-sm text-zinc-100 outline-none focus-ra-primary placeholder:text-zinc-600" />
+            className="admin-surface-input focus-ra-primary px-3 py-2 placeholder:admin-surface-faint" />
           <PhoneInput
             id="reservation-new-customer-phone"
             value={newForm.phone}
@@ -211,7 +211,7 @@ function CustomerSearchField({ onSelect, initialName = "", initialPhone = "" }) 
           />
           <input type="email" value={newForm.email} onChange={(e) => setNewForm((f) => ({ ...f, email: e.target.value }))}
             placeholder="Email (optional)"
-            className="w-full rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2 text-sm text-zinc-100 outline-none focus-ra-primary placeholder:text-zinc-600" />
+            className="admin-surface-input focus-ra-primary px-3 py-2 placeholder:admin-surface-faint" />
           <div className="flex gap-2 pt-1">
             <button type="button" onClick={handleAdd}
               disabled={!newForm.name.trim() || !newForm.phone.trim()}
@@ -219,7 +219,7 @@ function CustomerSearchField({ onSelect, initialName = "", initialPhone = "" }) 
               Save & Select
             </button>
             <button type="button" onClick={() => setShowAdd(false)}
-              className="cursor-pointer rounded-xl border border-zinc-700 px-3 py-2 text-sm text-zinc-400 hover:text-zinc-200">
+              className="cursor-pointer rounded-xl border admin-shell-border px-3 py-2 text-sm admin-surface-muted hover:admin-shell-text">
               Cancel
             </button>
           </div>
@@ -360,7 +360,7 @@ export default function ReservationFormModal({ open, onClose, editing, tableOpti
       footer={
         <div className="flex flex-wrap justify-end gap-2">
           <button type="button" onClick={onClose}
-            className="cursor-pointer rounded-xl border border-zinc-700 px-4 py-2 text-sm font-medium text-zinc-300 hover:border-zinc-500">
+            className="cursor-pointer rounded-xl border admin-shell-border px-4 py-2 text-sm font-medium admin-surface-body hover:border-zinc-500">
             Cancel
           </button>
           <button type="button" onClick={submit}
@@ -374,7 +374,7 @@ export default function ReservationFormModal({ open, onClose, editing, tableOpti
 
         {/* ── Customer search ── */}
         <div>
-          <label className="mb-1.5 block text-xs font-medium text-zinc-500">Customer</label>
+          <label className="mb-1.5 admin-surface-label">Customer</label>
           <CustomerSearchField
             key={open ? "open" : "closed"}
             onSelect={handleCustomerSelect}
@@ -386,7 +386,7 @@ export default function ReservationFormModal({ open, onClose, editing, tableOpti
         {/* ── Name + Phone (manual fallback, auto-filled by search) ── */}
         <div className="grid gap-4 sm:grid-cols-2">
           <div>
-            <label className="text-xs font-medium text-zinc-500">Name *</label>
+            <label className="text-xs font-medium admin-surface-muted">Name *</label>
             <input
               value={form.customerName}
               onChange={(e) => {
@@ -398,7 +398,7 @@ export default function ReservationFormModal({ open, onClose, editing, tableOpti
               }}
               placeholder="Full name"
               aria-invalid={fieldErrors.customerName ? true : undefined}
-              className={`mt-1 w-full rounded-xl border bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus-ra-primary placeholder:text-zinc-600 ${
+              className={`mt-1 w-full rounded-xl border admin-surface-card px-3 py-2.5 text-sm admin-shell-text outline-none focus-ra-primary placeholder:admin-surface-faint ${
                 fieldErrors.customerName ? "border-red-500/50" : "border-zinc-700"
               }`}
             />
@@ -409,7 +409,7 @@ export default function ReservationFormModal({ open, onClose, editing, tableOpti
           <PhoneInput
             id="reservation-phone"
             label="Phone *"
-            labelClassName="text-xs font-medium text-zinc-500"
+            labelClassName="text-xs font-medium admin-surface-muted"
             required
             value={form.phone}
             onChange={(digits) => {
@@ -423,7 +423,7 @@ export default function ReservationFormModal({ open, onClose, editing, tableOpti
 
         <div className="grid gap-4 sm:grid-cols-2">
           <div>
-            <label className="text-xs font-medium text-zinc-500">Guests</label>
+            <label className="text-xs font-medium admin-surface-muted">Guests</label>
             <input
               type="number"
               inputMode="numeric"
@@ -436,7 +436,7 @@ export default function ReservationFormModal({ open, onClose, editing, tableOpti
                 setSaveError("");
               }}
               aria-invalid={fieldErrors.guests ? true : undefined}
-              className={`mt-1 w-full rounded-xl border bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus-ra-primary ${
+              className={`mt-1 w-full rounded-xl border admin-surface-card px-3 py-2.5 text-sm admin-shell-text outline-none focus-ra-primary ${
                 fieldErrors.guests ? "border-red-500/50" : "border-zinc-700"
               }`}
             />
@@ -445,7 +445,7 @@ export default function ReservationFormModal({ open, onClose, editing, tableOpti
             )}
           </div>
           <div>
-            <label className="text-xs font-medium text-zinc-500">Date</label>
+            <label className="text-xs font-medium admin-surface-muted">Date</label>
             <input
               type="date"
               value={form.date}
@@ -455,14 +455,14 @@ export default function ReservationFormModal({ open, onClose, editing, tableOpti
                 setSaveError("");
               }}
               aria-invalid={fieldErrors.date ? true : undefined}
-              className={`mt-1 w-full rounded-xl border bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus-ra-primary [color-scheme:dark] ${
+              className={`mt-1 w-full rounded-xl border admin-surface-card px-3 py-2.5 text-sm admin-shell-text outline-none focus-ra-primary ${
                 fieldErrors.date ? "border-red-500/50" : "border-zinc-700"
               }`}
             />
             {fieldErrors.date && <p className="mt-1 text-xs text-red-400">{fieldErrors.date}</p>}
           </div>
           <div>
-            <label className="text-xs font-medium text-zinc-500">Time slot</label>
+            <label className="text-xs font-medium admin-surface-muted">Time slot</label>
             <select
               value={form.time}
               onChange={(e) => {
@@ -471,7 +471,7 @@ export default function ReservationFormModal({ open, onClose, editing, tableOpti
                 setSaveError("");
               }}
               aria-invalid={fieldErrors.time ? true : undefined}
-              className={`cursor-pointer mt-1 w-full rounded-xl border bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus-ra-primary ${
+              className={`cursor-pointer mt-1 w-full rounded-xl border admin-surface-card px-3 py-2.5 text-sm admin-shell-text outline-none focus-ra-primary ${
                 fieldErrors.time ? "border-red-500/50" : "border-zinc-700"
               }`}
             >
@@ -481,10 +481,10 @@ export default function ReservationFormModal({ open, onClose, editing, tableOpti
             </select>
           </div>
           <div>
-            <label className="text-xs font-medium text-zinc-500">Status</label>
+            <label className="text-xs font-medium admin-surface-muted">Status</label>
             <select value={form.status}
               onChange={(e) => setForm((f) => ({ ...f, status: e.target.value }))}
-              className="cursor-pointer mt-1 w-full rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus-ra-primary">
+              className="cursor-pointer mt-1 admin-surface-input focus-ra-primary px-3 py-2.5">
               <option value="pending">Pending</option>
               <option value="confirmed">Confirmed</option>
               <option value="completed">Completed</option>
@@ -495,7 +495,7 @@ export default function ReservationFormModal({ open, onClose, editing, tableOpti
 
         {/* ── Table with availability ── */}
         <div>
-          <label className="text-xs font-medium text-zinc-500">Table *</label>
+          <label className="text-xs font-medium admin-surface-muted">Table *</label>
           <select
             value={form.tableNumber}
             onChange={(e) => {
@@ -506,7 +506,7 @@ export default function ReservationFormModal({ open, onClose, editing, tableOpti
               setSaveError("");
             }}
             aria-invalid={fieldErrors.tableNumber ? true : undefined}
-            className={`cursor-pointer mt-1 w-full rounded-xl border px-3 py-2.5 text-sm text-zinc-100 outline-none bg-zinc-950/60 ${
+            className={`cursor-pointer mt-1 w-full rounded-xl border px-3 py-2.5 text-sm admin-shell-text outline-none admin-surface-card ${
               isConflict || fieldErrors.tableNumber
                 ? "border-red-500/50 focus:border-red-500/50"
                 : "border-zinc-700 focus-ra-primary"
@@ -540,13 +540,13 @@ export default function ReservationFormModal({ open, onClose, editing, tableOpti
 
         {/* ── Area (auto-filled, editable) ── */}
         <div>
-          <label className="text-xs font-medium text-zinc-500">
+          <label className="text-xs font-medium admin-surface-muted">
             Area
-            {form.area && <span className="ml-1 text-zinc-600">(auto-filled from table)</span>}
+            {form.area && <span className="ml-1 admin-surface-faint">(auto-filled from table)</span>}
           </label>
           <select value={form.area}
             onChange={(e) => setForm((f) => ({ ...f, area: e.target.value }))}
-            className="cursor-pointer mt-1 w-full rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus-ra-primary">
+            className="cursor-pointer mt-1 admin-surface-input focus-ra-primary px-3 py-2.5">
             <option value="">— Select area —</option>
             {tableCategories.map((c) => (
               <option key={c.id} value={c.name}>{c.name}</option>
@@ -556,10 +556,10 @@ export default function ReservationFormModal({ open, onClose, editing, tableOpti
 
         {/* ── Notes ── */}
         <div>
-          <label className="text-xs font-medium text-zinc-500">Special notes</label>
+          <label className="text-xs font-medium admin-surface-muted">Special notes</label>
           <textarea rows={2} value={form.notes}
             onChange={(e) => setForm((f) => ({ ...f, notes: e.target.value }))}
-            className="mt-1 w-full resize-none rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus-ra-primary" />
+            className="mt-1 w-full resize-none rounded-xl border admin-shell-border admin-surface-card px-3 py-2.5 text-sm admin-shell-text outline-none focus-ra-primary" />
         </div>
       </div>
     </Modal>

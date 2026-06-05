@@ -27,7 +27,7 @@ export default function MenuItemCard({ item, onAdd, isPopping }) {
 
   return (
     <article
-      className={`group overflow-hidden rounded-2xl border border-zinc-800 border-l-4 ${accentBorder} bg-zinc-900/60 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-black/20 ${
+      className={`group overflow-hidden rounded-2xl border admin-shell-border border-l-4 ${accentBorder} bg-zinc-900/60 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-black/20 ${
         isPopping ? "ring-2 ring-ra-primary-40" : ""
       }`}
     >
@@ -50,7 +50,7 @@ export default function MenuItemCard({ item, onAdd, isPopping }) {
         )}
         {/* Prep time badge */}
         {item.prepTime != null && (
-          <span className="absolute right-2 top-2 inline-flex items-center gap-1 rounded-full bg-zinc-950/80 px-2 py-0.5 text-[10px] font-semibold text-zinc-300 ring-1 ring-zinc-700 backdrop-blur-sm">
+          <span className="absolute right-2 top-2 inline-flex items-center gap-1 rounded-full bg-zinc-950/80 px-2 py-0.5 text-[10px] font-semibold admin-surface-body ring-1 ring-zinc-700 backdrop-blur-sm">
             <Clock className="size-2.5" aria-hidden />
             {item.prepTime}m
           </span>
@@ -58,7 +58,7 @@ export default function MenuItemCard({ item, onAdd, isPopping }) {
       </div>
 
       <div className="space-y-2 p-3">
-        <p className="truncate font-medium text-zinc-100">{item.name}</p>
+        <p className="truncate font-medium admin-shell-text">{item.name}</p>
         <div className="flex items-center justify-between gap-2">
           <span className="text-sm font-semibold text-ra-primary">
             ${item.price.toFixed(2)}

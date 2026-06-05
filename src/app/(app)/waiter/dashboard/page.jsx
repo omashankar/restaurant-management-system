@@ -39,13 +39,13 @@ function WaiterDashboardData() {
   if (loading) {
     return (
       <div className="space-y-6">
-        <div className="h-8 w-40 animate-pulse rounded-lg bg-zinc-800" />
+        <div className="h-8 w-40 animate-pulse rounded-lg admin-progress-track" />
         <div className="grid gap-4 sm:grid-cols-3">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="h-28 animate-pulse rounded-2xl border border-zinc-800 bg-zinc-900/40" />
+            <div key={i} className="h-28 animate-pulse admin-surface-card" />
           ))}
         </div>
-        <div className="h-48 animate-pulse rounded-2xl border border-zinc-800 bg-zinc-900/40" />
+        <div className="h-48 animate-pulse admin-surface-card" />
       </div>
     );
   }

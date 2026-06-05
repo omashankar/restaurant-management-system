@@ -7,6 +7,7 @@ import {
   RESTAURANT_THEME_ROLES,
 } from "@/lib/restaurantAdminRoutes";
 import { resolveRestaurantAdminTheme } from "@/lib/restaurantAdminThemeRuntime";
+import { mergeLiveAdminTheme } from "@/lib/mergeLiveAdminTheme";
 import {
   applyRestaurantDocumentTheme,
   readStoredRestaurantTheme,
@@ -34,7 +35,10 @@ function warmCacheFromStorage() {
   return _cache;
 }
 
-if (typeof window !== "undefined") {
+if (
+  typeof window !== "undefined" &&
+  !window.location.pathname.startsWith("/super-admin")
+) {
   warmCacheFromStorage();
 }
 
@@ -44,7 +48,12 @@ export function updateRestaurantThemeCache(theme) {
   _cache = next;
   _cacheTime = Date.now();
   writeStoredRestaurantTheme(next);
-  applyRestaurantDocumentTheme(next);
+  if (
+    typeof window === "undefined" ||
+    !window.location.pathname.startsWith("/super-admin")
+  ) {
+    applyRestaurantDocumentTheme(next);
+  }
   if (typeof window !== "undefined") {
     window.dispatchEvent(
       new CustomEvent("restaurant-theme-updated", { detail: next })
@@ -83,7 +92,12 @@ export function useRestaurantTheme() {
       if (stored && !_cache) {
         _cache = stored;
         _cacheTime = Date.now();
-        applyRestaurantDocumentTheme(stored);
+        if (
+          typeof window === "undefined" ||
+          !window.location.pathname.startsWith("/super-admin")
+        ) {
+          applyRestaurantDocumentTheme(stored);
+        }
         if (mounted) {
           setTheme(stored);
           setLoading(false);
@@ -115,14 +129,23 @@ export function useRestaurantTheme() {
           setTheme(localTheme);
           return;
         }
-        const next = resolveRestaurantAdminTheme({
+        const apiNext = resolveRestaurantAdminTheme({
           ...EMPTY_SETTINGS.theme,
           ...(data.settings?.theme ?? {}),
         });
+        const stored = readStoredRestaurantTheme();
+        const next = stored
+          ? resolveRestaurantAdminTheme(mergeLiveAdminTheme(apiNext, stored))
+          : apiNext;
         _cache = next;
         _cacheTime = Date.now();
         writeStoredRestaurantTheme(next);
-        applyRestaurantDocumentTheme(next);
+        if (
+          typeof window === "undefined" ||
+          !window.location.pathname.startsWith("/super-admin")
+        ) {
+          applyRestaurantDocumentTheme(next);
+        }
         setTheme(next);
       } catch {
         if (mounted) setTheme(localTheme);
@@ -132,8 +155,8 @@ export function useRestaurantTheme() {
     }
 
     const onUpdate = (event) => {
-      if (event?.detail?.primaryColor) {
-        setTheme(event.detail);
+      if (event?.detail && typeof event.detail === "object") {
+        setTheme(resolveRestaurantAdminTheme(event.detail));
         return;
       }
       load();

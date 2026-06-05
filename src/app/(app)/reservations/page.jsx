@@ -9,6 +9,8 @@ import SearchFilterBar from "@/components/reservations/SearchFilterBar";
 import RoleCard from "@/components/rms/RoleCard";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import EmptyState from "@/components/ui/EmptyState";
+import PaginationBar from "@/components/ui/PaginationBar";
+import { usePaginatedList } from "@/hooks/usePaginatedList";
 import { useApp } from "@/context/AppProviders";
 import { useModuleData } from "@/context/ModuleDataContext";
 import { useToast } from "@/hooks/useToast";
@@ -47,7 +49,6 @@ export default function ReservationsPage() {
 
   const [loading, setLoading] = useState(true);
   const [fetchError, setFetchError] = useState(null);
-  const [search, setSearch] = useState("");
   const [dateFilter, setDateFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [areaFilter, setAreaFilter] = useState("all");
@@ -97,19 +98,28 @@ export default function ReservationsPage() {
     [floorTables]
   );
 
-  const filteredRows = useMemo(() => {
-    const q = search.trim().toLowerCase();
-    return reservationRows.filter((r) => {
+  const filterKey = `${statusFilter}|${dateFilter}|${areaFilter}`;
+  const {
+    search,
+    setSearch,
+    page,
+    setPage,
+    pageRows,
+    filtered: filteredRows,
+    total,
+    totalPages,
+    pageSize,
+  } = usePaginatedList(reservationRows, {
+    searchKeys: ["customerName", "phone"],
+    pageSize: 10,
+    filter: (r) => {
       if (statusFilter !== "all" && r.status !== statusFilter) return false;
       if (dateFilter && r.date !== dateFilter) return false;
       if (areaFilter !== "all" && (r.area ?? "") !== areaFilter) return false;
-      if (!q) return true;
-      return (
-        r.customerName.toLowerCase().includes(q) ||
-        r.phone.replace(/\s/g, "").includes(q.replace(/\s/g, ""))
-      );
-    });
-  }, [reservationRows, search, dateFilter, statusFilter, areaFilter]);
+      return true;
+    },
+    resetKey: filterKey,
+  });
 
   // Unique area names from categories for filter dropdown
   const areaOptions = useMemo(
@@ -230,10 +240,10 @@ export default function ReservationsPage() {
                 <CalendarClock className="size-5" aria-hidden />
               </span>
               <div>
-                <h1 className="text-2xl font-semibold tracking-tight text-zinc-50 md:text-3xl">
+                <h1 className="admin-page-title text-2xl font-semibold tracking-tight md:text-3xl">
                   Reservations
                 </h1>
-                <p className="mt-1 text-sm text-zinc-500">
+                <p className="admin-page-desc mt-1 text-sm">
                   Booking-style book · search, filter, and manage holds.
                 </p>
               </div>
@@ -249,7 +259,7 @@ export default function ReservationsPage() {
           </div>
 
           {fetchError ? (
-            <div className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">
+            <div className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-400">
               {fetchError}
             </div>
           ) : null}
@@ -268,7 +278,7 @@ export default function ReservationsPage() {
             onViewModeChange={setViewMode}
           />
 
-          {filteredRows.length === 0 ? (
+          {total === 0 ? (
             <EmptyState
               title="No reservations found"
               description="Try different filters or add a new booking."
@@ -285,11 +295,20 @@ export default function ReservationsPage() {
           ) : viewMode === "table" ? (
             <div className="overflow-hidden transition-opacity duration-300">
               <ReservationTable
-                rows={filteredRows}
+                rows={pageRows}
                 onView={setViewing}
                 onEdit={openEdit}
                 onDelete={setDeleteTarget}
                 canDelete={canDelete}
+              />
+              <PaginationBar
+                page={page}
+                totalPages={totalPages}
+                total={total}
+                pageSize={pageSize}
+                onPageChange={setPage}
+                hideWhenSinglePage
+                className="px-1 pt-3"
               />
             </div>
           ) : (

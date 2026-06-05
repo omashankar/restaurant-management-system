@@ -1,13 +1,14 @@
 "use client";
 
-import { raInputCls, raTabActiveCls, raToggleOnCls } from "@/config/restaurantAdminTheme";
+import { adminSurface } from "@/config/adminSurfaceClasses";
+import { raToggleOnCls } from "@/config/restaurantAdminTheme";
 
 export default function ToggleSwitch({ checked, onChange, label, hint }) {
   return (
-    <label className="flex items-start justify-between gap-4 rounded-xl border border-zinc-800 bg-zinc-950/40 px-4 py-3">
+    <label className={`flex items-start justify-between gap-4 rounded-xl border px-4 py-3 ${adminSurface.card}`}>
       <span className="min-w-0">
-        <span className="block text-sm font-medium text-zinc-200">{label}</span>
-        {hint ? <span className="mt-0.5 block text-xs text-zinc-500">{hint}</span> : null}
+        <span className={`block text-sm font-medium ${adminSurface.title}`}>{label}</span>
+        {hint ? <span className={`mt-0.5 block text-xs ${adminSurface.muted}`}>{hint}</span> : null}
       </span>
       <button
         type="button"
@@ -15,7 +16,7 @@ export default function ToggleSwitch({ checked, onChange, label, hint }) {
         aria-checked={checked}
         onClick={() => onChange(!checked)}
         className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors ${
-          checked ? raToggleOnCls : "bg-zinc-700"
+          checked ? raToggleOnCls : "bg-[var(--admin-border)]"
         }`}
       >
         <span

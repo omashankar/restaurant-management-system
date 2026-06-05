@@ -1,5 +1,6 @@
 "use client";
 
+import { raIconBadgeCls } from "@/config/restaurantAdminTheme";
 import MenuCard from "@/components/menu/MenuCard";
 import MenuItemImageField from "@/components/menu/MenuItemImageField";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
@@ -9,7 +10,22 @@ import { DEFAULT_KITCHEN_FOR_TYPE, ITEM_TYPE_META, KITCHEN_TYPE_LABELS } from "@
 import AdminFoodTypeIndicator from "@/components/menu/AdminFoodTypeIndicator";
 import { useModuleData } from "@/context/ModuleDataContext";
 import { useToast } from "@/hooks/useToast";
-import { LayoutGrid, List, Plus, RefreshCw, Search, UtensilsCrossed } from "lucide-react";
+import SearchField from "@/components/ui/SearchField";
+import PaginationBar from "@/components/ui/PaginationBar";
+import { usePaginatedList } from "@/hooks/usePaginatedList";
+import {
+  AdminTable,
+  AdminTableActionsCell,
+  AdminTableBody,
+  AdminTableHead,
+  AdminTableHeadRow,
+  AdminTableIconButton,
+  AdminTableRow,
+  AdminTableTd,
+  AdminTableTh,
+  AdminTableThActions,
+} from "@/components/ui/AdminTable";
+import { LayoutGrid, List, Pencil, Plus, RefreshCw, Trash2, UtensilsCrossed } from "lucide-react";
 import {
   EMPTY_MENU_ITEM_ERRORS,
   getMenuItemFieldErrors,
@@ -24,12 +40,12 @@ function GridSkeleton() {
   return (
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
       {Array.from({ length: 8 }).map((_, i) => (
-        <div key={i} className="overflow-hidden rounded-2xl border border-zinc-800 bg-zinc-900/40 animate-pulse">
-          <div className="aspect-[5/3] bg-zinc-800" />
+        <div key={i} className="overflow-hidden admin-surface-card animate-pulse">
+          <div className="aspect-[5/3] admin-progress-track" />
           <div className="space-y-3 p-4">
-            <div className="h-4 w-3/4 rounded bg-zinc-800" />
-            <div className="h-4 w-1/2 rounded bg-zinc-800" />
-            <div className="h-10 rounded-xl bg-zinc-800" />
+            <div className="h-4 w-3/4 rounded admin-progress-track" />
+            <div className="h-4 w-1/2 rounded admin-progress-track" />
+            <div className="h-10 rounded-xl admin-progress-track" />
           </div>
         </div>
       ))}
@@ -43,7 +59,6 @@ export default function MenuItemsPage() {
   const [loading, setLoading]       = useState(true);
   const [saving, setSaving]         = useState(false);
   const [activeCategory, setActiveCategory] = useState("all");
-  const [search, setSearch]         = useState("");
   const [viewMode, setViewMode]     = useState("grid"); // grid | list
   const [modalOpen, setModalOpen]   = useState(false);
   const [editingId, setEditingId]   = useState(null);
@@ -84,17 +99,21 @@ export default function MenuItemsPage() {
 
   useEffect(() => { fetchAll(); }, [fetchAll]);
 
-  /* ── Filter ── */
-  const filtered = useMemo(() => {
-    const q = search.trim().toLowerCase();
-    return items.filter((item) => {
-      if (activeCategory !== "all" && item.categoryId !== activeCategory) return false;
-      if (!q) return true;
-      return item.name.toLowerCase().includes(q) ||
-             (item.categoryName ?? "").toLowerCase().includes(q) ||
-             String(item.price).includes(q);
-    });
-  }, [items, activeCategory, search]);
+  const {
+    search,
+    setSearch,
+    page,
+    setPage,
+    pageRows,
+    total,
+    totalPages,
+    pageSize,
+  } = usePaginatedList(items, {
+    searchKeys: ["name", "categoryName", "price"],
+    pageSize: 12,
+    filter: (item) => activeCategory === "all" || item.categoryId === activeCategory,
+    resetKey: activeCategory,
+  });
 
   // Only show categories that have at least one menu item
   const categoriesWithItems = useMemo(() => {
@@ -196,7 +215,7 @@ export default function MenuItemsPage() {
   if (loading) {
     return (
       <div className="space-y-8">
-        <div className="h-10 w-64 animate-pulse rounded-lg bg-zinc-800" />
+        <div className="h-10 w-64 animate-pulse rounded-lg admin-progress-track" />
         <GridSkeleton />
       </div>
     );
@@ -205,24 +224,24 @@ export default function MenuItemsPage() {
   return (
     <div className="space-y-6">
       {fetchError && (
-        <div className="rounded-xl border border-red-500/25 bg-red-500/10 px-4 py-3 text-sm text-red-300">
+        <div className="rounded-xl border border-red-500/25 bg-red-500/10 px-4 py-3 text-sm text-red-400">
           {fetchError}
         </div>
       )}
       {/* Header */}
       <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div className="flex items-start gap-3">
-          <span className="mt-1 flex size-10 shrink-0 items-center justify-center rounded-xl bg-ra-primary-15 text-ra-primary ring-1 ring-ra-primary-25">
+          <span className={`mt-1 ${raIconBadgeCls}`}>
             <UtensilsCrossed className="size-5" />
           </span>
           <div>
-            <h1 className="text-2xl font-semibold tracking-tight text-zinc-50 md:text-3xl">Menu Items</h1>
-            <p className="mt-1 text-sm text-zinc-500">Full catalog · filter, search, and update.</p>
+            <h1 className="admin-page-title text-2xl font-semibold tracking-tight md:text-3xl">Menu Items</h1>
+            <p className="admin-page-desc mt-1 text-sm">Full catalog · filter, search, and update.</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
           <button type="button" onClick={fetchAll}
-            className="cursor-pointer flex items-center gap-1.5 rounded-xl border border-zinc-700 px-3 py-2.5 text-sm font-medium text-zinc-400 hover:border-zinc-500 hover:text-zinc-200 transition-colors">
+            className="cursor-pointer flex items-center gap-1.5 rounded-xl border admin-shell-border px-3 py-2.5 text-sm font-medium text-zinc-400 hover:border-zinc-500 hover:admin-shell-text transition-colors">
             <RefreshCw className="size-4" />
           </button>
           <button type="button" onClick={openCreate}
@@ -235,13 +254,13 @@ export default function MenuItemsPage() {
       {/* Stats */}
       <div className="grid grid-cols-3 gap-3">
         {[
-          { label: "Total",    value: stats.total,    color: "text-zinc-100",    bg: "bg-zinc-900/60",   border: "border-zinc-800"       },
+          { label: "Total",    value: stats.total,    color: "admin-shell-text",    bg: "admin-surface-card",   border: "admin-shell-border"       },
           { label: "Active",   value: stats.active,   color: "text-ra-primary", bg: "bg-ra-primary-5", border: "border-ra-primary-20" },
-          { label: "Inactive", value: stats.inactive, color: "text-zinc-500",    bg: "bg-zinc-900/40",   border: "border-zinc-800"       },
+          { label: "Inactive", value: stats.inactive, color: "text-zinc-500",    bg: "admin-surface-card",   border: "admin-shell-border"       },
         ].map(({ label, value, color, bg, border }) => (
           <div key={label} className={`rounded-2xl border px-4 py-3 ${bg} ${border}`}>
             <p className={`text-xl font-bold ${color}`}>{value}</p>
-            <p className="mt-0.5 text-xs text-zinc-500">{label}</p>
+            <p className="mt-0.5 text-xs admin-surface-muted">{label}</p>
           </div>
         ))}
       </div>
@@ -249,14 +268,14 @@ export default function MenuItemsPage() {
       {/* Category tabs + search + view toggle */}
       <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
         {/* Category pills */}
-        <div className="flex-1 overflow-x-auto pb-1 [scrollbar-width:none]">
-          <div className="flex min-w-max gap-2">
+        <div className="flex-1 overflow-x-auto bg-transparent pb-1 [scrollbar-width:none]">
+          <div className="flex min-w-max gap-2 bg-transparent">
             {[{ id: "all", name: "All" }, ...categoriesWithItems].map((cat) => (
               <button key={cat.id} type="button" onClick={() => setActiveCategory(cat.id)}
                 className={`cursor-pointer rounded-full px-4 py-2 text-sm font-semibold transition-all ${
                   activeCategory === cat.id
                     ? "bg-ra-primary text-zinc-950 shadow-ra-primary-glow"
-                    : "bg-zinc-900 text-zinc-300 ring-1 ring-zinc-800 hover:bg-zinc-800"
+                    : "border admin-shell-border bg-[var(--admin-surface)] text-[var(--admin-text-secondary)] shadow-sm hover:bg-[var(--admin-hover)]"
                 }`}>
                 {cat.name}
               </button>
@@ -266,20 +285,21 @@ export default function MenuItemsPage() {
 
         <div className="flex items-center gap-2 shrink-0">
           {/* Search */}
-          <div className="relative">
-            <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-zinc-500" />
-            <input value={search} onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search…"
-              className="w-48 rounded-xl border border-zinc-800 bg-zinc-900/70 py-2 pl-9 pr-3 text-sm text-zinc-100 placeholder:text-zinc-600 outline-none focus-ra-primary" />
-          </div>
+          <SearchField
+            className="w-48 shrink-0"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search…"
+            inputClassName="focus-ra-primary"
+          />
           {/* View toggle */}
-          <div className="flex rounded-xl border border-zinc-800 p-0.5">
+          <div className="flex rounded-xl border admin-shell-border p-0.5">
             <button type="button" onClick={() => setViewMode("grid")}
-              className={`cursor-pointer flex items-center gap-1 rounded-lg px-3 py-1.5 text-xs font-semibold transition-all ${viewMode === "grid" ? "bg-ra-primary text-zinc-950" : "text-zinc-500 hover:text-zinc-300"}`}>
+              className={`cursor-pointer flex items-center gap-1 rounded-lg px-3 py-1.5 text-xs font-semibold transition-all ${viewMode === "grid" ? "bg-ra-primary text-zinc-950" : "text-zinc-500 hover:admin-surface-body"}`}>
               <LayoutGrid className="size-3.5" />
             </button>
             <button type="button" onClick={() => setViewMode("list")}
-              className={`cursor-pointer flex items-center gap-1 rounded-lg px-3 py-1.5 text-xs font-semibold transition-all ${viewMode === "list" ? "bg-ra-primary text-zinc-950" : "text-zinc-500 hover:text-zinc-300"}`}>
+              className={`cursor-pointer flex items-center gap-1 rounded-lg px-3 py-1.5 text-xs font-semibold transition-all ${viewMode === "list" ? "bg-ra-primary text-zinc-950" : "text-zinc-500 hover:admin-surface-body"}`}>
               <List className="size-3.5" />
             </button>
           </div>
@@ -287,65 +307,81 @@ export default function MenuItemsPage() {
       </div>
 
       {/* Items */}
-      {filtered.length === 0 ? (
+      {total === 0 ? (
         <EmptyState
           title="No items found"
           description={search ? "Try a different search." : "Add your first menu item."}
           action={<button type="button" onClick={openCreate} className="cursor-pointer rounded-xl bg-ra-primary px-4 py-2 text-sm font-semibold text-zinc-950 hover:brightness-110">Add Item</button>}
         />
       ) : viewMode === "grid" ? (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {filtered.map((item) => (
-            <MenuCard key={item.id} variant="menu" item={item} onEdit={openEdit} onDelete={setDeleteTarget} />
-          ))}
-        </div>
+        <>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {pageRows.map((item) => (
+              <MenuCard key={item.id} variant="menu" item={item} onEdit={openEdit} onDelete={setDeleteTarget} />
+            ))}
+          </div>
+          <PaginationBar
+            page={page}
+            totalPages={totalPages}
+            total={total}
+            pageSize={pageSize}
+            onPageChange={setPage}
+            hideWhenSinglePage
+          />
+        </>
       ) : (
         /* List view */
-        <div className="overflow-hidden rounded-2xl border border-zinc-800 bg-zinc-900/60">
-          <table className="min-w-full text-left text-sm">
-            <thead>
-              <tr className="border-b border-zinc-800 bg-zinc-950/60 text-xs font-semibold uppercase tracking-wider text-zinc-500">
-                <th className="px-4 py-3">Name</th>
-                <th className="px-4 py-3">Category</th>
-                <th className="px-4 py-3">Price</th>
-                <th className="px-4 py-3">Status</th>
-                <th className="px-4 py-3 text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-zinc-800/80">
-              {filtered.map((item) => (
-                <tr key={item.id} className="transition-colors hover:bg-zinc-800/40">
-                  <td className="px-4 py-3 font-medium text-zinc-100">
+        <div className="overflow-hidden admin-surface-card">
+          <AdminTable>
+            <AdminTableHead>
+              <AdminTableHeadRow>
+                <AdminTableTh>Name</AdminTableTh>
+                <AdminTableTh>Category</AdminTableTh>
+                <AdminTableTh>Price</AdminTableTh>
+                <AdminTableTh>Status</AdminTableTh>
+                <AdminTableThActions />
+              </AdminTableHeadRow>
+            </AdminTableHead>
+            <AdminTableBody>
+              {pageRows.map((item) => (
+                <AdminTableRow key={item.id}>
+                  <AdminTableTd className="font-medium admin-shell-text">
                     <span className="inline-flex items-center gap-1.5">
                       <AdminFoodTypeIndicator type={item.itemType} size={13} />
                       {item.name}
                     </span>
-                  </td>
-                  <td className="px-4 py-3 text-zinc-400">{item.categoryName}</td>
-                  <td className="px-4 py-3 font-semibold text-ra-primary">${Number(item.price).toFixed(2)}</td>
-                  <td className="px-4 py-3">
+                  </AdminTableTd>
+                  <AdminTableTd className="admin-surface-muted">{item.categoryName}</AdminTableTd>
+                  <AdminTableTd className="font-semibold text-ra-primary">${Number(item.price).toFixed(2)}</AdminTableTd>
+                  <AdminTableTd>
                     <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold ring-1 ${
                       item.status === "active"
                         ? "bg-ra-primary-15 text-ra-primary-muted ring-ra-primary-25"
                         : "bg-zinc-500/15 text-zinc-400 ring-zinc-500/25"
                     }`}>{item.status}</span>
-                  </td>
-                  <td className="px-4 py-3 text-right">
-                    <div className="flex justify-end gap-1">
-                      <button type="button" onClick={() => openEdit(item)}
-                        className="cursor-pointer rounded-lg p-2 text-zinc-400 hover:bg-zinc-800 hover-ra-primary">
-                        <svg className="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
-                      </button>
-                      <button type="button" onClick={() => setDeleteTarget(item)}
-                        className="cursor-pointer rounded-lg p-2 text-zinc-400 hover:bg-red-500/15 hover:text-red-400">
-                        <svg className="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                      </button>
-                    </div>
-                  </td>
-                </tr>
+                  </AdminTableTd>
+                  <AdminTableActionsCell>
+                    <AdminTableIconButton onClick={() => openEdit(item)} aria-label="Edit">
+                      <Pencil className="size-4" />
+                    </AdminTableIconButton>
+                    <AdminTableIconButton variant="danger" onClick={() => setDeleteTarget(item)} aria-label="Delete">
+                      <Trash2 className="size-4" />
+                    </AdminTableIconButton>
+                  </AdminTableActionsCell>
+                </AdminTableRow>
               ))}
-            </tbody>
-          </table>
+            </AdminTableBody>
+          </AdminTable>
+          <div className="px-4 pb-4">
+            <PaginationBar
+              page={page}
+              totalPages={totalPages}
+              total={total}
+              pageSize={pageSize}
+              onPageChange={setPage}
+              hideWhenSinglePage
+            />
+          </div>
         </div>
       )}
 
@@ -355,7 +391,7 @@ export default function MenuItemsPage() {
         footer={
           <div className="flex justify-end gap-2">
             <button type="button" onClick={() => setModalOpen(false)}
-              className="cursor-pointer rounded-xl border border-zinc-700 px-4 py-2 text-sm text-zinc-300 hover:border-zinc-500">
+              className="cursor-pointer rounded-xl border admin-shell-border px-4 py-2 text-sm admin-surface-body hover:border-zinc-500">
               Cancel
             </button>
             <button type="button" onClick={save} disabled={saving}
@@ -368,7 +404,7 @@ export default function MenuItemsPage() {
           {formError && <p className="rounded-xl border border-red-500/20 bg-red-500/10 px-3 py-2 text-xs text-red-400">{formError}</p>}
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="sm:col-span-2">
-              <label className="text-xs font-medium text-zinc-500">Item Name *</label>
+              <label className="text-xs font-medium admin-surface-muted">Item Name *</label>
               <input
                 value={form.name}
                 onChange={(e) => {
@@ -377,14 +413,14 @@ export default function MenuItemsPage() {
                 }}
                 placeholder="e.g. Grilled Chicken"
                 aria-invalid={fieldErrors.name ? true : undefined}
-                className={`mt-1 w-full rounded-xl border bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus-ra-primary placeholder:text-zinc-600 ${
+                className={`mt-1 w-full rounded-xl border admin-surface-card px-3 py-2.5 text-sm admin-shell-text outline-none focus-ra-primary placeholder:admin-surface-faint ${
                   fieldErrors.name ? "border-red-500/50" : "border-zinc-700"
                 }`}
               />
               {fieldErrors.name && <p className="mt-1 text-xs text-red-400">{fieldErrors.name}</p>}
             </div>
             <div>
-              <label className="text-xs font-medium text-zinc-500">Category *</label>
+              <label className="text-xs font-medium admin-surface-muted">Category *</label>
               <select
                 value={form.categoryId}
                 onChange={(e) => {
@@ -392,7 +428,7 @@ export default function MenuItemsPage() {
                   if (fieldErrors.categoryId) setFieldErrors((p) => ({ ...p, categoryId: "" }));
                 }}
                 aria-invalid={fieldErrors.categoryId ? true : undefined}
-                className={`cursor-pointer mt-1 w-full rounded-xl border bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus-ra-primary ${
+                className={`cursor-pointer mt-1 w-full rounded-xl border admin-surface-card px-3 py-2.5 text-sm admin-shell-text outline-none focus-ra-primary ${
                   fieldErrors.categoryId ? "border-red-500/50" : "border-zinc-700"
                 }`}
               >
@@ -404,7 +440,7 @@ export default function MenuItemsPage() {
               )}
             </div>
             <div>
-              <label className="text-xs font-medium text-zinc-500">Price *</label>
+              <label className="text-xs font-medium admin-surface-muted">Price *</label>
               <input
                 type="number"
                 inputMode="decimal"
@@ -417,17 +453,17 @@ export default function MenuItemsPage() {
                 }}
                 placeholder="0.00"
                 aria-invalid={fieldErrors.price ? true : undefined}
-                className={`mt-1 w-full rounded-xl border bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus-ra-primary ${
+                className={`mt-1 w-full rounded-xl border admin-surface-card px-3 py-2.5 text-sm admin-shell-text outline-none focus-ra-primary ${
                   fieldErrors.price ? "border-red-500/50" : "border-zinc-700"
                 }`}
               />
               {fieldErrors.price && <p className="mt-1 text-xs text-red-400">{fieldErrors.price}</p>}
             </div>
             <div>
-              <label className="text-xs font-medium text-zinc-500">Item Type</label>
+              <label className="text-xs font-medium admin-surface-muted">Item Type</label>
               <select value={form.itemType}
                 onChange={(e) => setForm((f) => ({ ...f, itemType: e.target.value, kitchenType: DEFAULT_KITCHEN_FOR_TYPE[e.target.value] ?? "default_kitchen" }))}
-                className="cursor-pointer mt-1 w-full rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus-ra-primary">
+                className="cursor-pointer mt-1 w-full rounded-xl border admin-shell-border admin-surface-card px-3 py-2.5 text-sm admin-shell-text outline-none focus-ra-primary">
                 {ITEM_TYPES.map((t) => {
                   const label = t.charAt(0).toUpperCase() + t.slice(1);
                   return <option key={t} value={t}>{label}</option>;
@@ -435,38 +471,38 @@ export default function MenuItemsPage() {
               </select>
             </div>
             <div>
-              <label className="text-xs font-medium text-zinc-500">Prep Time (min)</label>
+              <label className="text-xs font-medium admin-surface-muted">Prep Time (min)</label>
               <input type="number" inputMode="numeric" min="0" max="120" value={form.prepTime}
                 onChange={(e) => setForm((f) => ({ ...f, prepTime: e.target.value }))}
                 placeholder="e.g. 10"
-                className="mt-1 w-full rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus-ra-primary" />
+                className="mt-1 w-full rounded-xl border admin-shell-border admin-surface-card px-3 py-2.5 text-sm admin-shell-text outline-none focus-ra-primary" />
             </div>
             <div>
-              <label className="text-xs font-medium text-zinc-500">Kitchen</label>
+              <label className="text-xs font-medium admin-surface-muted">Kitchen</label>
               <select value={form.kitchenType} onChange={(e) => setForm((f) => ({ ...f, kitchenType: e.target.value }))}
-                className="cursor-pointer mt-1 w-full rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus-ra-primary">
+                className="cursor-pointer mt-1 w-full rounded-xl border admin-shell-border admin-surface-card px-3 py-2.5 text-sm admin-shell-text outline-none focus-ra-primary">
                 {KITCHEN_TYPES.map((k) => <option key={k} value={k}>{KITCHEN_TYPE_LABELS[k]}</option>)}
               </select>
             </div>
             <div>
-              <label className="text-xs font-medium text-zinc-500">Status</label>
+              <label className="text-xs font-medium admin-surface-muted">Status</label>
               <select value={form.status} onChange={(e) => setForm((f) => ({ ...f, status: e.target.value }))}
-                className="cursor-pointer mt-1 w-full rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus-ra-primary">
+                className="cursor-pointer mt-1 w-full rounded-xl border admin-shell-border admin-surface-card px-3 py-2.5 text-sm admin-shell-text outline-none focus-ra-primary">
                 <option value="active">Active</option>
                 <option value="inactive">Inactive</option>
               </select>
             </div>
             <div className="sm:col-span-2">
-              <label className="text-xs font-medium text-zinc-500">Featured badge (optional)</label>
+              <label className="text-xs font-medium admin-surface-muted">Featured badge (optional)</label>
               <input value={form.badge} onChange={(e) => setForm((f) => ({ ...f, badge: e.target.value }))}
                 placeholder="e.g. Chef's Pick — shows on customer home"
-                className="mt-1 w-full rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus-ra-primary placeholder:text-zinc-600" />
+                className="mt-1 w-full rounded-xl border admin-shell-border admin-surface-card px-3 py-2.5 text-sm admin-shell-text outline-none focus-ra-primary placeholder:admin-surface-faint" />
             </div>
             <div className="sm:col-span-2">
-              <label className="text-xs font-medium text-zinc-500">Description</label>
+              <label className="text-xs font-medium admin-surface-muted">Description</label>
               <textarea rows={2} value={form.description} onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
                 placeholder="Short description…"
-                className="mt-1 w-full resize-none rounded-xl border border-zinc-700 bg-zinc-950/60 px-3 py-2.5 text-sm text-zinc-100 outline-none focus-ra-primary placeholder:text-zinc-600" />
+                className="mt-1 w-full resize-none rounded-xl border admin-shell-border admin-surface-card px-3 py-2.5 text-sm admin-shell-text outline-none focus-ra-primary placeholder:admin-surface-faint" />
             </div>
             <div className="sm:col-span-2">
               <MenuItemImageField

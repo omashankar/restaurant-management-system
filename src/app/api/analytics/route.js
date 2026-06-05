@@ -48,7 +48,7 @@ export const GET = withTenant(
           revenue: { $sum: { $multiply: ["$items.price", "$items.qty"] } },
         }},
         { $sort: { qty: -1 } },
-        { $limit: 10 },
+        { $limit: 50 },
       ]).toArray(),
 
       /* Daily revenue (last N days) */

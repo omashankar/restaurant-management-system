@@ -1,6 +1,9 @@
 "use client";
 
 import SuperAdminPageSkeleton from "@/components/super-admin/SuperAdminPageSkeleton";
+import AdminSectionHeader from "@/components/ui/AdminSectionHeader";
+import { AdminSideNav, AdminSideNavItem, AdminSideNavList } from "@/components/ui/AdminSideNav";
+import { adminSurface } from "@/config/adminSurfaceClasses";
 import PushNotificationEnable from "@/components/PushNotificationEnable";
 import { useToast } from "@/hooks/useToast";
 import { invalidatePlatformConfigCache, updateSuperAdminThemeCache } from "@/hooks/usePlatformConfig";
@@ -13,11 +16,26 @@ import {
 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 
-import { saBtnPrimaryCls, saInputCls, saSpinnerCls, SUPER_ADMIN_ACCENT, SUPER_ADMIN_PRIMARY } from "@/config/superAdminTheme";
+import {
+  saBtnPrimaryCls,
+  saBtnPrimarySmCls,
+  saIconBadgeCls,
+  saInputCls,
+  saSpinnerCls,
+  saSideNavActiveCls,
+  SUPER_ADMIN_ACCENT,
+  SUPER_ADMIN_PRIMARY,
+} from "@/config/superAdminTheme";
 import {
   clearSuperAdminThemePreview,
   dispatchSuperAdminThemePreview,
 } from "@/lib/superAdminThemeRuntime";
+import { mergeLiveAdminTheme } from "@/lib/mergeLiveAdminTheme";
+import { resolveSuperAdminTheme } from "@/lib/superAdminThemeRuntime";
+import {
+  applySuperAdminDocumentTheme,
+  readStoredSuperAdminTheme,
+} from "@/lib/superAdminThemeStorage";
 
 /* ── Shared styles ── */
 const inputCls = saInputCls;
@@ -39,30 +57,16 @@ function Field({ label, hint, error, required, children }) {
 
 function Toggle({ checked, onChange, label, description }) {
   return (
-    <label className="cursor-pointer flex items-start justify-between gap-4 rounded-xl border border-zinc-800 bg-zinc-900/40 px-4 py-3 hover:border-zinc-700 transition-colors">
+    <label className="cursor-pointer flex items-start justify-between gap-4 admin-surface-card px-4 py-3 hover:border-[var(--admin-border)] transition-colors">
       <div className="min-w-0">
-        <p className="text-sm font-medium text-zinc-200">{label}</p>
-        {description && <p className="mt-0.5 text-xs text-zinc-500">{description}</p>}
+        <p className="text-sm font-medium admin-shell-text">{label}</p>
+        {description && <p className="mt-0.5 text-xs admin-surface-muted">{description}</p>}
       </div>
       <button type="button" role="switch" aria-checked={checked} onClick={() => onChange(!checked)}
-        className={`cursor-pointer relative mt-0.5 inline-flex h-5 w-9 shrink-0 items-center rounded-full transition-colors ${checked ? "bg-sa-primary" : "bg-zinc-700"}`}>
+        className={`cursor-pointer relative mt-0.5 inline-flex h-5 w-9 shrink-0 items-center rounded-full transition-colors ${checked ? "bg-sa-primary" : "bg-[var(--admin-border)]"}`}>
         <span className={`inline-block size-3.5 rounded-full bg-white shadow transition-transform ${checked ? "translate-x-4" : "translate-x-0.5"}`} />
       </button>
     </label>
-  );
-}
-
-function SectionHeader({ icon: Icon, title, description }) {
-  return (
-    <div className="flex items-start gap-3 pb-4 border-b border-zinc-800">
-      <span className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-xl bg-zinc-800 text-zinc-400 ring-1 ring-zinc-700">
-        <Icon className="size-4" />
-      </span>
-      <div>
-        <h2 className="text-base font-semibold text-zinc-100">{title}</h2>
-        <p className="mt-0.5 text-xs text-zinc-500">{description}</p>
-      </div>
-    </div>
   );
 }
 
@@ -70,7 +74,7 @@ function SaveButton({ saving, onClick }) {
   return (
     <div className="flex justify-end pt-2">
       <button type="button" onClick={onClick} disabled={saving}
-        className="cursor-pointer inline-flex items-center gap-2 rounded-xl bg-sa-primary px-5 py-2.5 text-sm font-semibold text-zinc-950 hover:brightness-110 disabled:opacity-50 transition-colors">
+        className={`cursor-pointer ${saBtnPrimaryCls} disabled:opacity-50`}>
         {saving ? <span className="size-3.5 animate-spin rounded-full border-2 border-zinc-950/30 border-t-zinc-950" /> : <Save className="size-4" />}
         {saving ? "Saving…" : "Save Changes"}
       </button>
@@ -82,7 +86,7 @@ function SaveButton({ saving, onClick }) {
 function AppSection({ data, onChange, onSave, saving, fieldErrors = {}, onClearError }) {
   return (
     <div className="space-y-5">
-      <SectionHeader icon={Settings} title="App Settings" description="Platform identity and contact information." />
+      <AdminSectionHeader icon={Settings} title="App Settings" description="Platform identity and contact information." />
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="sm:col-span-2">
           <Field label="Platform Name" required error={fieldErrors.name}>
@@ -214,7 +218,7 @@ function EmailSection({ data, onChange, onSave, saving, fieldErrors = {}, onClea
 
   return (
     <div className="space-y-5">
-      <SectionHeader icon={Key} title="Email / SMTP" description="Outbound email configuration." />
+      <AdminSectionHeader icon={Key} title="Email / SMTP" description="Outbound email configuration." />
       <div className="grid gap-4 sm:grid-cols-2">
         <Field label="SMTP Host" error={fieldErrors.smtpHost}>
           <input
@@ -282,16 +286,16 @@ function EmailSection({ data, onChange, onSave, saving, fieldErrors = {}, onClea
         label="Use SSL/TLS" description="Enable for port 465. Use STARTTLS for port 587." />
 
       {/* Test email */}
-      <div className="flex items-center justify-between rounded-xl border border-zinc-800 bg-zinc-900/40 px-4 py-3">
+      <div className="flex items-center justify-between admin-surface-card px-4 py-3">
         <div>
-          <p className="text-sm font-medium text-zinc-200">Send Test Email</p>
-          <p className="mt-0.5 text-xs text-zinc-500">Verify your SMTP config by sending a test message.</p>
+          <p className="text-sm font-medium admin-shell-text">Send Test Email</p>
+          <p className="mt-0.5 text-xs admin-surface-muted">Verify your SMTP config by sending a test message.</p>
         </div>
         <button
           type="button"
           onClick={sendTestEmail}
           disabled={testing}
-          className="cursor-pointer inline-flex items-center gap-2 rounded-xl border border-zinc-700 px-4 py-2 text-xs font-semibold text-zinc-300 hover:border-indigo-500/40 hover:text-indigo-400 disabled:opacity-50 transition-colors"
+          className="cursor-pointer inline-flex items-center gap-2 rounded-xl border admin-shell-border px-4 py-2 text-xs font-semibold admin-surface-body hover:border-indigo-500/40 hover:text-indigo-400 disabled:opacity-50 transition-colors"
         >
           {testing
             ? <span className="size-3 animate-spin rounded-full border-2 border-zinc-500/30 border-t-zinc-400" />
@@ -311,7 +315,7 @@ function LanguageSection({ data, onChange, onSave, saving }) {
   const DATE_FMTS = ["MM/DD/YYYY","DD/MM/YYYY","YYYY-MM-DD"];
   return (
     <div className="space-y-5">
-      <SectionHeader icon={Globe} title="Language & Locale" description="Default language, timezone, and date format." />
+      <AdminSectionHeader icon={Globe} title="Language & Locale" description="Default language, timezone, and date format." />
       <div className="grid gap-4 sm:grid-cols-2">
         <Field label="Default Language">
           <select value={data.defaultLanguage ?? "en"} onChange={(e) => onChange("defaultLanguage", e.target.value)}
@@ -390,7 +394,7 @@ function GatewayLogo({ gateway }) {
   if (!gateway.logo || imgError) {
     if (gateway.icon) {
       return (
-        <div className="flex size-8 items-center justify-center rounded-lg border border-zinc-700 bg-zinc-800 text-xl">
+        <div className="admin-gateway-card-logo-fallback">
           {gateway.icon}
         </div>
       );
@@ -461,7 +465,7 @@ function PaymentSection({ data, onChange, onSave, saving, fieldErrors = {}, onCl
 
   return (
     <div className="space-y-5">
-      <SectionHeader icon={CreditCard} title="Payment Settings"
+      <AdminSectionHeader icon={CreditCard} title="Payment Settings"
         description="Configure payment gateways for subscription billing and restaurant payments." />
 
       {/* No tab bar needed — single tab, just show content directly */}
@@ -469,7 +473,7 @@ function PaymentSection({ data, onChange, onSave, saving, fieldErrors = {}, onCl
       {/* Payment Settings content */}
       <div className="space-y-4">
           {/* Status bar */}
-          <div className="flex items-center gap-2 rounded-xl border border-zinc-800 bg-zinc-900/40 px-4 py-2.5">
+          <div className="flex items-center gap-2 admin-surface-card px-4 py-2.5">
             <CheckCircle2 className="size-4 text-sa-accent" />
             <span className="text-xs text-zinc-400">
               {enabledCount > 0
@@ -484,24 +488,25 @@ function PaymentSection({ data, onChange, onSave, saving, fieldErrors = {}, onCl
               const isEnabled = Boolean(gateways[g.id]?.enabled);
               const isActive = activeGw === g.id;
               return (
-                <button key={g.id} type="button"
+                <button
+                  key={g.id}
+                  type="button"
                   onClick={() => { setActiveGw(g.id); setTestResult(null); }}
-                  className={`cursor-pointer relative rounded-xl border p-3 text-center transition-all ${
-                    isActive
-                      ? "border-sa-primary-50 bg-sa-primary-10 ring-1 ring-sa-primary-25"
-                      : "border-zinc-800 bg-zinc-950/40 hover:border-zinc-700"
-                  }`}>
+                  className={`admin-gateway-card cursor-pointer relative ${
+                    isActive ? "admin-gateway-card--active" : ""
+                  }`}
+                >
                   {isEnabled && (
-                    <span className="absolute right-2 top-2 size-2 rounded-full bg-sa-primary" />
+                    <span className="absolute right-2 top-2 size-2 rounded-full bg-sa-primary ring-2 ring-[var(--admin-surface)]" />
                   )}
-                  <div className="flex h-8 items-center justify-center mb-1.5">
+                  <div className="admin-gateway-card-logo">
                     <GatewayLogo gateway={g} />
                   </div>
-                  <p className={`text-xs font-semibold ${isActive ? "text-sa-primary" : "text-zinc-300"}`}>
+                  <p className={`text-xs font-semibold ${isActive ? "text-sa-primary" : "admin-surface-body"}`}>
                     {g.label}
                   </p>
                   {g.popular && (
-                    <span className="mt-1 inline-block rounded-full bg-amber-500/20 px-1.5 py-0.5 text-[10px] font-semibold text-amber-400">
+                    <span className="mt-1 inline-block rounded-full bg-amber-500/15 px-1.5 py-0.5 text-[10px] font-semibold text-amber-700">
                       Popular
                     </span>
                   )}
@@ -511,12 +516,12 @@ function PaymentSection({ data, onChange, onSave, saving, fieldErrors = {}, onCl
           </div>
 
           {/* Gateway config form */}
-          <div className="rounded-xl border border-zinc-800 bg-zinc-950/40 p-4">
+          <div className="rounded-xl admin-surface-card p-4">
             {/* Header */}
             <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
               <div>
-                <p className="font-semibold text-zinc-100">{gwInfo?.label}</p>
-                <p className="text-xs text-zinc-500">{gwInfo?.desc}</p>
+                <p className="font-semibold admin-shell-text">{gwInfo?.label}</p>
+                <p className="text-xs admin-surface-muted">{gwInfo?.desc}</p>
               </div>
               <div className="flex items-center gap-3">
                 {!isOffline && gw.enabled && (
@@ -527,7 +532,7 @@ function PaymentSection({ data, onChange, onSave, saving, fieldErrors = {}, onCl
                   </span>
                 )}
                 <label className="flex cursor-pointer items-center gap-2">
-                  <span className="text-sm text-zinc-400">Enable</span>
+                  <span className="text-sm admin-surface-muted">Enable</span>
                   <button type="button" role="switch" aria-checked={Boolean(gw.enabled)}
                     onClick={() => updateGw({ enabled: !gw.enabled })}
                     className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${gw.enabled ? "bg-sa-primary" : "bg-zinc-700"}`}>
@@ -540,16 +545,16 @@ function PaymentSection({ data, onChange, onSave, saving, fieldErrors = {}, onCl
             {!gw.enabled ? (
               <div className="flex flex-col items-center gap-2 py-6 text-center">
                 <Lock className="size-8 text-zinc-700" />
-                <p className="text-sm text-zinc-500">Enable {gwInfo?.label} to configure credentials</p>
+                <p className="text-sm admin-surface-muted">Enable {gwInfo?.label} to configure credentials</p>
               </div>
             ) : (
               <div className="space-y-4">
                 {/* Test/Live toggle */}
                 {!isOffline && (
-                  <div className="flex items-center justify-between rounded-xl border border-zinc-800 bg-zinc-900/40 px-4 py-3">
+                  <div className="flex items-center justify-between admin-surface-card px-4 py-3">
                     <div>
-                      <p className="text-sm font-medium text-zinc-200">Environment</p>
-                      <p className="text-xs text-zinc-500">{gw.testMode ? "Test mode — no real charges" : "Live mode — real payments"}</p>
+                      <p className="text-sm font-medium admin-shell-text">Environment</p>
+                      <p className="text-xs admin-surface-muted">{gw.testMode ? "Test mode — no real charges" : "Live mode — real payments"}</p>
                     </div>
                     <div className="flex items-center gap-2">
                       <span className={`text-xs font-semibold ${gw.testMode ? "text-amber-400" : "text-zinc-500"}`}>TEST</span>
@@ -590,9 +595,9 @@ function PaymentSection({ data, onChange, onSave, saving, fieldErrors = {}, onCl
                     <div className="flex gap-2">
                       <input readOnly
                         value={typeof window !== "undefined" ? `${window.location.origin}/api/webhooks/${activeGw}` : `/api/webhooks/${activeGw}`}
-                        className={`${inputCls} font-mono text-xs text-zinc-500`} />
+                        className={`${inputCls} font-mono text-xs admin-surface-muted`} />
                       <button type="button" onClick={() => copyWebhookUrl(activeGw)}
-                        className="flex shrink-0 items-center gap-1.5 rounded-xl border border-zinc-700 px-3 py-2 text-xs font-semibold text-zinc-300 hover-border-sa-primary-40 hover-sa-primary transition-colors">
+                        className="flex shrink-0 items-center gap-1.5 rounded-xl border admin-shell-border px-3 py-2 text-xs font-semibold admin-surface-body hover-border-sa-primary-40 hover-sa-primary transition-colors">
                         <Copy className="size-3.5" /> Copy
                       </button>
                     </div>
@@ -618,7 +623,7 @@ function PaymentSection({ data, onChange, onSave, saving, fieldErrors = {}, onCl
           <div className="flex items-center justify-between gap-3">
             <button type="button" onClick={testConnection}
               disabled={testing || !gw.enabled || isOffline}
-              className="inline-flex items-center gap-2 rounded-xl border border-zinc-700 px-4 py-2 text-sm font-medium text-zinc-300 hover:border-zinc-500 hover:text-zinc-100 disabled:cursor-not-allowed disabled:opacity-40 transition-colors">
+              className="inline-flex items-center gap-2 rounded-xl border admin-shell-border px-4 py-2 text-sm font-medium admin-surface-body hover:border-zinc-500 hover:admin-shell-text disabled:cursor-not-allowed disabled:opacity-40 transition-colors">
               {testing ? <Loader2 className={saSpinnerCls} /> : <Zap className="size-4" />}
               {testing ? "Testing…" : "Test Connection"}
             </button>
@@ -626,7 +631,7 @@ function PaymentSection({ data, onChange, onSave, saving, fieldErrors = {}, onCl
           </div>
 
           {/* GST / Billing settings */}
-          <div className="border-t border-zinc-800 pt-5">
+          <div className="border-t admin-shell-border pt-5">
             <p className="mb-4 text-xs font-semibold uppercase tracking-wider text-zinc-500">Billing & Tax Settings</p>
             <div className="grid gap-4 sm:grid-cols-2">
               <Field label="Default Currency">
@@ -685,19 +690,27 @@ function ThemeSection({ data, onChange, onSave, saving, fieldErrors = {}, onClea
   const primary = data.primaryColor ?? SUPER_ADMIN_PRIMARY;
   const accent = data.accentColor ?? SUPER_ADMIN_ACCENT;
 
-  useEffect(() => {
+  const pushPreview = (patch) => {
     dispatchSuperAdminThemePreview({
       primaryColor: primary,
       accentColor: accent,
       darkMode: data.darkMode,
+      ...patch,
     });
-  }, [primary, accent, data.darkMode]);
+  };
 
-  useEffect(() => () => clearSuperAdminThemePreview(), []);
+  useEffect(
+    () => () => {
+      clearSuperAdminThemePreview();
+      const stored = readStoredSuperAdminTheme();
+      if (stored) applySuperAdminDocumentTheme(stored);
+    },
+    []
+  );
 
   return (
     <div className="space-y-5">
-      <SectionHeader
+      <AdminSectionHeader
         icon={Palette}
         title="Theme"
         description="Primary Color drives the Super Admin panel — sidebar, buttons, loaders. Accent is for success states (paid, active, online)."
@@ -705,39 +718,59 @@ function ThemeSection({ data, onChange, onSave, saving, fieldErrors = {}, onClea
       <div className="grid gap-4 sm:grid-cols-2">
         <Field label="Primary Color (Super Admin brand)" error={fieldErrors.primaryColor}>
           <div className="flex items-center gap-3">
-            <input type="color" value={primary} onChange={(e) => onChange("primaryColor", e.target.value)}
-              className="cursor-pointer size-10 shrink-0 rounded-lg border border-zinc-700 bg-transparent p-0.5" />
+            <input
+              type="color"
+              value={primary}
+              onChange={(e) => {
+                const v = e.target.value;
+                onChange("primaryColor", v);
+                pushPreview({ primaryColor: v });
+              }}
+              className="cursor-pointer size-10 shrink-0 rounded-lg border admin-shell-border bg-transparent p-0.5"
+            />
             <input
               value={primary}
               onChange={(e) => {
-                onChange("primaryColor", e.target.value);
+                const v = e.target.value;
+                onChange("primaryColor", v);
                 onClearError?.("primaryColor");
+                pushPreview({ primaryColor: v });
               }}
               placeholder={SUPER_ADMIN_PRIMARY}
               className={`${inputCls} font-mono`}
             />
           </div>
-          <p className="mt-1 text-xs text-zinc-600">Default: {SUPER_ADMIN_PRIMARY} — sidebar, buttons, focus rings</p>
+          <p className="mt-1 text-xs admin-surface-faint">Default: {SUPER_ADMIN_PRIMARY} — sidebar, buttons, focus rings</p>
         </Field>
         <Field label="Accent Color (success / status)" error={fieldErrors.accentColor}>
           <div className="flex items-center gap-3">
-            <input type="color" value={accent} onChange={(e) => onChange("accentColor", e.target.value)}
-              className="cursor-pointer size-10 shrink-0 rounded-lg border border-zinc-700 bg-transparent p-0.5" />
+            <input
+              type="color"
+              value={accent}
+              onChange={(e) => {
+                const v = e.target.value;
+                onChange("accentColor", v);
+                pushPreview({ accentColor: v });
+              }}
+              className="cursor-pointer size-10 shrink-0 rounded-lg border admin-shell-border bg-transparent p-0.5"
+            />
             <input
               value={accent}
               onChange={(e) => {
-                onChange("accentColor", e.target.value);
+                const v = e.target.value;
+                onChange("accentColor", v);
                 onClearError?.("accentColor");
+                pushPreview({ accentColor: v });
               }}
               placeholder={SUPER_ADMIN_ACCENT}
               className={`${inputCls} font-mono`}
             />
           </div>
-          <p className="mt-1 text-xs text-zinc-600">Default: {SUPER_ADMIN_ACCENT} — paid, active tenant, online</p>
+          <p className="mt-1 text-xs admin-surface-faint">Default: {SUPER_ADMIN_ACCENT} — paid, active tenant, online</p>
         </Field>
       </div>
 
-      <div className="rounded-2xl border border-zinc-800 bg-zinc-950/50 p-4">
+      <div className="admin-surface-card p-4">
         <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-zinc-500">Live preview</p>
         <div className="flex flex-wrap items-center gap-3">
           <button type="button" className="sa-btn-primary rounded-xl px-4 py-2 text-sm font-semibold">
@@ -752,8 +785,15 @@ function ThemeSection({ data, onChange, onSave, saving, fieldErrors = {}, onClea
         </div>
       </div>
 
-      <Toggle checked={!!data.darkMode} onChange={(v) => onChange("darkMode", v)}
-        label="Dark Mode" description="Use dark theme across the platform." />
+      <Toggle
+        checked={!!data.darkMode}
+        onChange={(v) => {
+          onChange("darkMode", v);
+          pushPreview({ darkMode: v });
+        }}
+        label="Dark Mode"
+        description="Use dark theme across the platform."
+      />
       <SaveButton saving={saving} onClick={onSave} />
     </div>
   );
@@ -768,13 +808,13 @@ function NotificationsSection({ data, onChange, onSave, saving }) {
   ];
   return (
     <div className="space-y-5">
-      <SectionHeader icon={Bell} title="Notifications" description="Email alerts and push notification settings." />
+      <AdminSectionHeader icon={Bell} title="Notifications" description="Email alerts and push notification settings." />
       <div className="space-y-2">
         {alerts.map(({ key, label, desc }) => (
           <Toggle key={key} checked={!!data[key]} onChange={(v) => onChange(key, v)} label={label} description={desc} />
         ))}
       </div>
-      <div className="border-t border-zinc-800 pt-4">
+      <div className="border-t admin-shell-border pt-4">
         <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-zinc-500">Push Notifications (Web Push)</p>
         <Toggle checked={!!data.pushEnabled} onChange={(v) => onChange("pushEnabled", v)}
           label="Enable Push Notifications" description="Send browser push notifications to admins." />
@@ -810,7 +850,7 @@ function CurrenciesSection({ data, onChange, onSave, saving }) {
 
   return (
     <div className="space-y-5">
-      <SectionHeader icon={DollarSign} title="Currencies" description="Default currency and supported currencies." />
+      <AdminSectionHeader icon={DollarSign} title="Currencies" description="Default currency and supported currencies." />
       <Field label="Default Currency">
         <select value={data.default ?? "USD"} onChange={(e) => onChange("default", e.target.value)}
           className={`cursor-pointer ${inputCls}`}>
@@ -827,7 +867,7 @@ function CurrenciesSection({ data, onChange, onSave, saving }) {
                 className={`cursor-pointer rounded-xl border px-3 py-1.5 text-xs font-semibold transition-all ${
                   active
                     ? "border-sa-primary-40 bg-sa-primary-15 text-sa-primary-muted"
-                    : "border-zinc-700 bg-zinc-900/40 text-zinc-500 hover:border-zinc-500 hover:text-zinc-300"
+                    : "admin-shell-border admin-surface-card text-zinc-500 hover:border-zinc-500 hover:admin-surface-body"
                 }`}>
                 {c}
               </button>
@@ -846,7 +886,7 @@ function CurrenciesSection({ data, onChange, onSave, saving }) {
 function SmsSection({ data, onChange, onSave, saving, fieldErrors = {}, onClearError }) {
   return (
     <div className="space-y-5">
-      <SectionHeader icon={Smartphone} title="SMS Settings" description="Configure SMS provider for OTPs and alerts." />
+      <AdminSectionHeader icon={Smartphone} title="SMS Settings" description="Configure SMS provider for OTPs and alerts." />
       <Toggle
         checked={!!data.enabled}
         onChange={(v) => onChange("enabled", v)}
@@ -914,7 +954,7 @@ function SmsSection({ data, onChange, onSave, saving, fieldErrors = {}, onClearE
 function SecuritySection({ data, onChange, onSave, saving, fieldErrors = {}, onClearError }) {
   return (
     <div className="space-y-5">
-      <SectionHeader icon={Shield} title="Security" description="Password policy, login limits, and 2FA." />
+      <AdminSectionHeader icon={Shield} title="Security" description="Password policy, login limits, and 2FA." />
 
       <div className="grid gap-4 sm:grid-cols-2">
         <Field label="Minimum Password Length" error={fieldErrors.minPasswordLength}>
@@ -973,7 +1013,7 @@ function SecuritySection({ data, onChange, onSave, saving, fieldErrors = {}, onC
         </div>
       </div>
 
-      <div className="space-y-2 border-t border-zinc-800 pt-4">
+      <div className="space-y-2 border-t admin-shell-border pt-4">
         <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-zinc-500">Password Policy</p>
         <Toggle
           checked={!!data.requireSpecialChars}
@@ -989,7 +1029,7 @@ function SecuritySection({ data, onChange, onSave, saving, fieldErrors = {}, onC
         />
       </div>
 
-      <div className="space-y-2 border-t border-zinc-800 pt-4">
+      <div className="space-y-2 border-t admin-shell-border pt-4">
         <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-zinc-500">Two-Factor Authentication</p>
         <Toggle
           checked={!!data.enable2FA}
@@ -1040,13 +1080,13 @@ function BackupSection({ data, onChange, onSave, saving, showToast }) {
 
   return (
     <div className="space-y-5">
-      <SectionHeader icon={Database} title="Backup & Restore" description="Manual and scheduled database backups." />
+      <AdminSectionHeader icon={Database} title="Backup & Restore" description="Manual and scheduled database backups." />
 
       {/* Manual backup */}
-      <div className="flex items-center justify-between rounded-xl border border-zinc-800 bg-zinc-900/40 px-4 py-3">
+      <div className="flex items-center justify-between admin-surface-card px-4 py-3">
         <div>
-          <p className="text-sm font-medium text-zinc-200">Manual Backup</p>
-          <p className="mt-0.5 text-xs text-zinc-500">
+          <p className="text-sm font-medium admin-shell-text">Manual Backup</p>
+          <p className="mt-0.5 text-xs admin-surface-muted">
             {data.lastBackupAt
               ? `Last backup: ${new Date(data.lastBackupAt).toLocaleString()}`
               : "No backup taken yet."}
@@ -1056,10 +1096,10 @@ function BackupSection({ data, onChange, onSave, saving, showToast }) {
           type="button"
           onClick={triggerBackup}
           disabled={triggering}
-          className="cursor-pointer inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2 text-xs font-semibold text-white hover:bg-indigo-500 disabled:opacity-50 transition-colors"
+          className={`cursor-pointer ${saBtnPrimarySmCls} disabled:opacity-50`}
         >
           {triggering
-            ? <span className="size-3 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+            ? <span className="size-3 animate-spin rounded-full border-2 border-zinc-950/30 border-t-zinc-950" />
             : <Database className="size-3.5" />}
           {triggering ? "Running…" : "Run Backup"}
         </button>
@@ -1098,12 +1138,12 @@ function BackupSection({ data, onChange, onSave, saving, showToast }) {
       </div>
 
       {/* Backup history */}
-      <div className="border-t border-zinc-800 pt-4">
+      <div className="border-t admin-shell-border pt-4">
         <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-zinc-500">Recent Backups</p>
         {loadingBackups ? (
           <SuperAdminPageSkeleton rows={3} rowClassName="h-10" />
         ) : backups.length === 0 ? (
-          <p className="rounded-xl border border-dashed border-zinc-800 py-6 text-center text-xs text-zinc-600">
+          <p className="rounded-xl border border-dashed admin-shell-border py-6 text-center text-xs admin-surface-faint">
             No backups yet.
           </p>
         ) : (
@@ -1111,20 +1151,20 @@ function BackupSection({ data, onChange, onSave, saving, showToast }) {
             {backups.map((b) => (
               <div
                 key={b.id}
-                className="flex items-center justify-between rounded-xl border border-zinc-800 bg-zinc-900/40 px-4 py-2.5"
+                className="flex items-center justify-between admin-surface-card px-4 py-2.5"
               >
                 <div className="flex items-center gap-3">
                   <span className={`size-2 rounded-full ${b.status === "completed" ? "bg-emerald-400" : "bg-amber-400"}`} />
                   <div>
-                    <p className="text-xs font-medium text-zinc-200">
+                    <p className="text-xs font-medium admin-shell-text">
                       {b.type === "manual" ? "Manual" : "Auto"} backup
                     </p>
-                    <p className="text-[10px] text-zinc-600">
+                    <p className="text-[10px] admin-surface-faint">
                       {new Date(b.createdAt).toLocaleString()}
                     </p>
                   </div>
                 </div>
-                <span className="rounded-lg bg-zinc-800 px-2 py-0.5 text-[10px] font-medium text-zinc-400 capitalize">
+                <span className={`rounded-lg px-2 py-0.5 text-[10px] font-medium capitalize ${adminSurface.muted} bg-[var(--admin-hover-strong)]`}>
                   {b.status}
                 </span>
               </div>
@@ -1144,7 +1184,7 @@ function BackupSection({ data, onChange, onSave, saving, showToast }) {
 function IntegrationsSection({ data, onChange, onSave, saving, fieldErrors = {}, onClearError }) {
   return (
     <div className="space-y-5">
-      <SectionHeader icon={Webhook} title="Integrations" description="Analytics, pixels, webhooks, and payment gateways." />
+      <AdminSectionHeader icon={Webhook} title="Integrations" description="Analytics, pixels, webhooks, and payment gateways." />
 
       <div className="space-y-4">
         <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500">Analytics & Tracking</p>
@@ -1168,7 +1208,7 @@ function IntegrationsSection({ data, onChange, onSave, saving, fieldErrors = {},
         </div>
       </div>
 
-      <div className="space-y-4 border-t border-zinc-800 pt-4">
+      <div className="space-y-4 border-t admin-shell-border pt-4">
         <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500">Webhook</p>
         <Field label="Webhook URL" hint="POST events will be sent here." error={fieldErrors.webhookUrl}>
           <input
@@ -1193,10 +1233,10 @@ function IntegrationsSection({ data, onChange, onSave, saving, fieldErrors = {},
         </Field>
       </div>
 
-      <div className="rounded-xl border border-zinc-800 bg-zinc-900/40 px-4 py-3">
-        <p className="text-sm font-medium text-zinc-200">💡 Razorpay & Stripe</p>
-        <p className="mt-0.5 text-xs text-zinc-500">
-          Razorpay and Stripe keys are now managed in the <strong className="text-zinc-300">Payment Settings</strong> tab above.
+      <div className="admin-surface-card px-4 py-3">
+        <p className="text-sm font-medium admin-shell-text">💡 Razorpay & Stripe</p>
+        <p className="mt-0.5 text-xs admin-surface-muted">
+          Razorpay and Stripe keys are now managed in the <strong className="admin-surface-body">Payment Settings</strong> tab above.
         </p>
       </div>
 
@@ -1234,7 +1274,7 @@ function AdvancedSection({ data, onChange, onSave, saving, showToast }) {
 
   return (
     <div className="space-y-5">
-      <SectionHeader icon={ToggleLeft} title="Advanced" description="Maintenance mode, cache, billing, and feature flags." />
+      <AdminSectionHeader icon={ToggleLeft} title="Advanced" description="Maintenance mode, cache, billing, and feature flags." />
 
       {/* Billing */}
       <div className="grid gap-4 sm:grid-cols-2">
@@ -1256,7 +1296,7 @@ function AdvancedSection({ data, onChange, onSave, saving, showToast }) {
       />
 
       {/* System */}
-      <div className="space-y-2 border-t border-zinc-800 pt-4">
+      <div className="space-y-2 border-t admin-shell-border pt-4">
         <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-zinc-500">System</p>
         <Toggle
           checked={!!data.maintenanceMode}
@@ -1273,16 +1313,16 @@ function AdvancedSection({ data, onChange, onSave, saving, showToast }) {
       </div>
 
       {/* Cache */}
-      <div className="flex items-center justify-between rounded-xl border border-zinc-800 bg-zinc-900/40 px-4 py-3">
+      <div className="flex items-center justify-between admin-surface-card px-4 py-3">
         <div>
-          <p className="text-sm font-medium text-zinc-200">Clear Cache</p>
-          <p className="mt-0.5 text-xs text-zinc-500">Revalidate landing and key super-admin pages cache.</p>
+          <p className="text-sm font-medium admin-shell-text">Clear Cache</p>
+          <p className="mt-0.5 text-xs admin-surface-muted">Revalidate landing and key super-admin pages cache.</p>
         </div>
         <button
           type="button"
           onClick={clearCache}
           disabled={clearing}
-          className="cursor-pointer inline-flex items-center gap-2 rounded-xl border border-zinc-700 px-4 py-2 text-xs font-semibold text-zinc-300 hover:border-zinc-500 hover:text-zinc-100 disabled:opacity-50 transition-colors"
+          className="cursor-pointer inline-flex items-center gap-2 rounded-xl border admin-shell-border px-4 py-2 text-xs font-semibold admin-surface-body hover:border-zinc-500 hover:admin-shell-text disabled:opacity-50 transition-colors"
         >
           {clearing
             ? <span className="size-3 animate-spin rounded-full border-2 border-zinc-500/30 border-t-zinc-400" />
@@ -1292,7 +1332,7 @@ function AdvancedSection({ data, onChange, onSave, saving, showToast }) {
       </div>
 
       {/* Feature flags */}
-      <div className="space-y-2 border-t border-zinc-800 pt-4">
+      <div className="space-y-2 border-t admin-shell-border pt-4">
         <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-zinc-500">Feature Flags</p>
         {features.map(({ key, label, desc }) => (
           <Toggle
@@ -1350,7 +1390,16 @@ export default function SuperAdminSettingsPage() {
       try {
         const res  = await fetch("/api/super-admin/settings");
         const data = await res.json();
-        if (data.success) setSettings(data.settings);
+        if (data.success) {
+          const apiTheme = resolveSuperAdminTheme(data.settings?.theme ?? {});
+          const stored = readStoredSuperAdminTheme();
+          const displayTheme = stored
+            ? resolveSuperAdminTheme(mergeLiveAdminTheme(apiTheme, stored))
+            : apiTheme;
+          const merged = { ...data.settings, theme: displayTheme };
+          if (stored) updateSuperAdminThemeCache(displayTheme);
+          setSettings(merged);
+        }
         else {
           const message = data.error ?? "Failed to load.";
           setLoadError(message);
@@ -1364,6 +1413,46 @@ export default function SuperAdminSettingsPage() {
       finally { setFetching(false); }
     })();
   }, [showToast]);
+
+  /** Keep Theme tab darkMode in sync with header toggle (live stored theme). */
+  useEffect(() => {
+    const applyLiveTheme = (event) => {
+      const live = event?.detail ?? readStoredSuperAdminTheme();
+      if (!live) return;
+      setSettings((prev) => {
+        if (!prev?.theme) return prev;
+        return {
+          ...prev,
+          theme: {
+            ...prev.theme,
+            primaryColor: live.primaryColor,
+            accentColor: live.accentColor,
+            darkMode: live.darkMode,
+          },
+        };
+      });
+    };
+    window.addEventListener("super-admin-theme-updated", applyLiveTheme);
+    return () => window.removeEventListener("super-admin-theme-updated", applyLiveTheme);
+  }, []);
+
+  useEffect(() => {
+    if (activeTab !== "theme") return;
+    const live = readStoredSuperAdminTheme();
+    if (!live) return;
+    setSettings((prev) => {
+      if (!prev?.theme) return prev;
+      return {
+        ...prev,
+        theme: {
+          ...prev.theme,
+          primaryColor: live.primaryColor,
+          accentColor: live.accentColor,
+          darkMode: live.darkMode,
+        },
+      };
+    });
+  }, [activeTab]);
 
   const handleChange = useCallback((key, value) => {
     setSettings((prev) => ({
@@ -1406,6 +1495,11 @@ export default function SuperAdminSettingsPage() {
   }, [activeTab, settings, showToast]);
 
   const switchTab = (id) => {
+    if (activeTab === "theme" && id !== "theme") {
+      clearSuperAdminThemePreview();
+      const stored = readStoredSuperAdminTheme();
+      if (stored) applySuperAdminDocumentTheme(stored);
+    }
     setActiveTab(id);
     setSectionErrors({});
     panelRef.current?.scrollTo({ top: 0, behavior: "smooth" });
@@ -1421,42 +1515,43 @@ export default function SuperAdminSettingsPage() {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-start gap-3">
-        <span className="mt-1 flex size-10 shrink-0 items-center justify-center rounded-xl bg-zinc-800 text-zinc-400 ring-1 ring-zinc-700">
+        <span className={`mt-1 ${saIconBadgeCls}`}>
           <Settings className="size-5" />
         </span>
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-zinc-50">Settings</h1>
-          <p className="mt-1 text-sm text-zinc-500">Centralized platform configuration.</p>
+          <h1 className="admin-page-title text-2xl font-semibold tracking-tight">Settings</h1>
+          <p className="admin-page-desc mt-1 text-sm">Centralized platform configuration.</p>
         </div>
       </div>
 
       {loadError && (
-        <div className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">
+        <div className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-400">
           {loadError}
         </div>
       )}
 
-      <div className="flex flex-col gap-4 lg:flex-row lg:gap-6">
-        {/* Tab list */}
-        <nav className="flex gap-1 overflow-x-auto pb-1 lg:flex-col lg:w-44 lg:shrink-0 lg:pb-0">
-          {TABS.map(({ id, label, Icon }) => {
-            const active = id === activeTab;
-            return (
-              <button key={id} type="button" onClick={() => switchTab(id)}
-                className={`cursor-pointer flex shrink-0 items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm font-medium transition-all whitespace-nowrap lg:w-full ${
-                  active
-                    ? "bg-zinc-800 text-zinc-100 ring-1 ring-zinc-700"
-                    : "text-zinc-500 hover:bg-zinc-900 hover:text-zinc-300"
-                }`}>
-                <Icon className={`size-4 shrink-0 ${active ? "text-sa-primary" : ""}`} />
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:gap-6">
+        <AdminSideNav className="w-full lg:w-52">
+          <p className={`px-2 pb-2 pt-1 text-xs font-semibold uppercase tracking-wide ${adminSurface.muted}`}>
+            Settings Menu
+          </p>
+          <AdminSideNavList className="lg:gap-0.5">
+            {TABS.map(({ id, label, Icon }) => (
+              <AdminSideNavItem
+                key={id}
+                active={id === activeTab}
+                activeClassName={id === activeTab ? saSideNavActiveCls : ""}
+                onClick={() => switchTab(id)}
+                icon={Icon}
+              >
                 {label}
-              </button>
-            );
-          })}
-        </nav>
+              </AdminSideNavItem>
+            ))}
+          </AdminSideNavList>
+        </AdminSideNav>
 
         {/* Panel */}
-        <div ref={panelRef} className="min-w-0 flex-1 rounded-2xl border border-zinc-800 bg-zinc-900/60 p-5 sm:p-6">
+        <div ref={panelRef} className="min-w-0 flex-1 admin-surface-card p-5 sm:p-6">
           {fetching ? (
             <SuperAdminPageSkeleton rows={4} />
           ) : !settings ? null : (

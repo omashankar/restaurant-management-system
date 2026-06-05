@@ -1,5 +1,6 @@
 "use client";
 
+import { adminPortalScope } from "@/config/adminSurfaceClasses";
 import { useModuleData } from "@/context/ModuleDataContext";
 import { getCategoryBadge } from "@/lib/tableCategoryColors";
 import { Check, Users, X } from "lucide-react";
@@ -29,27 +30,27 @@ export default function TablePickerModal({ open, selectedTableId, onSelect, onCl
   };
 
   return (
-    <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
+    <div className={`${adminPortalScope} fixed inset-0 z-[200] flex items-center justify-center p-4`}>
       <button type="button" aria-label="Close"
         className="cursor-pointer absolute inset-0 bg-black/70 backdrop-blur-sm"
         onClick={onClose} />
 
-      <div className="relative z-10 flex w-full max-w-2xl flex-col rounded-2xl border border-zinc-800 bg-zinc-900 shadow-2xl shadow-black/60 max-h-[85vh]">
+      <div className="relative z-10 flex w-full max-w-2xl flex-col rounded-2xl border admin-shell-border bg-zinc-900 shadow-2xl shadow-black/60 max-h-[85vh]">
 
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-zinc-800 px-5 py-4">
+        <div className="flex items-center justify-between border-b admin-shell-border px-5 py-4">
           <div>
             <h2 className="text-base font-bold text-zinc-50">Select Table</h2>
-            <p className="mt-0.5 text-xs text-zinc-500">Choose an area then pick an available table</p>
+            <p className="mt-0.5 text-xs admin-surface-muted">Choose an area then pick an available table</p>
           </div>
           <button type="button" onClick={onClose}
-            className="cursor-pointer rounded-lg p-2 text-zinc-500 hover:bg-zinc-800 hover:text-zinc-200">
+            className="cursor-pointer rounded-lg p-2 admin-surface-muted hover:bg-[var(--admin-hover)] hover:admin-shell-text">
             <X className="size-5" />
           </button>
         </div>
 
         {/* Area tabs */}
-        <div className="flex gap-2 overflow-x-auto border-b border-zinc-800 px-5 py-3 [scrollbar-width:none]">
+        <div className="flex gap-2 overflow-x-auto border-b admin-shell-border px-5 py-3 [scrollbar-width:none]">
           {areas.map((area) => {
             const isActive = currentArea === area.id;
             const freeCount = floorTables.filter(
@@ -60,8 +61,8 @@ export default function TablePickerModal({ open, selectedTableId, onSelect, onCl
                 onClick={() => setActiveArea(area.id)}
                 className={`cursor-pointer flex shrink-0 items-center gap-2 rounded-xl border px-4 py-2 text-sm font-semibold transition-all ${
                   isActive
-                    ? "border-zinc-600 bg-zinc-800 text-zinc-100"
-                    : "border-zinc-800 bg-zinc-900/50 text-zinc-400 hover:border-zinc-700 hover:text-zinc-200"
+                    ? "border-zinc-600 bg-zinc-800 admin-shell-text"
+                    : "admin-shell-border bg-zinc-900/50 admin-surface-muted hover:border-zinc-700 hover:admin-shell-text"
                 }`}>
                 {area.name}
                 <span className={`rounded-full px-1.5 py-0.5 text-[10px] font-bold ring-1 ${getCategoryBadge(area.color)}`}>
@@ -75,7 +76,7 @@ export default function TablePickerModal({ open, selectedTableId, onSelect, onCl
         {/* Tables grid */}
         <div className="flex-1 overflow-y-auto p-5">
           {tablesInArea.length === 0 ? (
-            <p className="py-10 text-center text-sm text-zinc-600">No tables in this area.</p>
+            <p className="py-10 text-center text-sm admin-surface-faint">No tables in this area.</p>
           ) : (
             <div className="grid grid-cols-3 gap-3 sm:grid-cols-4">
               {tablesInArea.map((table) => {
@@ -87,20 +88,20 @@ export default function TablePickerModal({ open, selectedTableId, onSelect, onCl
                     onClick={() => handleSelect(table)}
                     className={`relative flex flex-col items-start rounded-2xl border p-4 text-left transition-all duration-200 ${
                       isBlocked
-                        ? "cursor-not-allowed border-zinc-800/50 bg-zinc-900/20 opacity-40"
+                        ? "cursor-not-allowed admin-shell-border/50 bg-zinc-900/20 opacity-40"
                         : isSelected
                         ? "cursor-pointer border-ra-primary-60 bg-ra-primary-10 ring-1 ring-ra-primary-25 hover:-translate-y-0.5"
-                        : "cursor-pointer border-zinc-800 bg-zinc-900/60 hover:-translate-y-0.5 hover:border-zinc-600 hover:shadow-lg"
+                        : "cursor-pointer admin-shell-border admin-surface-card hover:-translate-y-0.5 hover:border-zinc-600 hover:shadow-lg"
                     }`}>
                     {isSelected && (
                       <span className="absolute right-2.5 top-2.5 flex size-5 items-center justify-center rounded-full bg-ra-primary text-zinc-950">
                         <Check className="size-3.5" strokeWidth={3} />
                       </span>
                     )}
-                    <p className={`text-base font-bold ${isSelected ? "text-ra-primary" : isBlocked ? "text-zinc-600" : "text-zinc-100"}`}>
+                    <p className={`text-base font-bold ${isSelected ? "text-ra-primary" : isBlocked ? "admin-surface-faint" : "admin-shell-text"}`}>
                       {table.tableNumber}
                     </p>
-                    <div className="mt-1.5 flex items-center gap-1 text-xs text-zinc-500">
+                    <div className="mt-1.5 flex items-center gap-1 text-xs admin-surface-muted">
                       <Users className="size-3" />{table.capacity} persons
                     </div>
                     <span className={`mt-2 rounded-full px-2 py-0.5 text-[10px] font-semibold ${
@@ -118,12 +119,12 @@ export default function TablePickerModal({ open, selectedTableId, onSelect, onCl
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-between border-t border-zinc-800 px-5 py-3">
-          <p className="text-xs text-zinc-600">
+        <div className="flex items-center justify-between border-t admin-shell-border px-5 py-3">
+          <p className="text-xs admin-surface-faint">
             {selectedTableId ? "Table selected — click Confirm" : "No table selected"}
           </p>
           <button type="button" onClick={onClose}
-            className="cursor-pointer rounded-xl border border-zinc-700 px-4 py-2 text-sm font-medium text-zinc-300 hover:border-zinc-500">
+            className="cursor-pointer rounded-xl border admin-shell-border px-4 py-2 text-sm font-medium admin-surface-body hover:border-zinc-500">
             {selectedTableId ? "Confirm" : "Cancel"}
           </button>
         </div>

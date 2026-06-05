@@ -1,19 +1,35 @@
 "use client";
 
 import SuperAdminPreloader from "@/components/super-admin/SuperAdminPreloader";
-import { saSpinnerCls } from "@/config/superAdminTheme";
+import DataTableShell from "@/components/ui/DataTableShell";
+import {
+  SUPPORT_PRIORITIES,
+  SUPPORT_STATUSES,
+  SUPPORT_STAT_ITEMS,
+  adminFilterSelectCls,
+  adminTableActionBtnCls,
+  buildTicketStats,
+  saTicketTableGridCls,
+  supportTicketDrawerOverlayCls,
+  ticketPrioritySelectCls,
+  ticketStatusSelectCls,
+} from "@/config/supportTicketConfig";
+import { saInputCls, saSpinnerCls } from "@/config/superAdminTheme";
+import PaginationBar from "@/components/ui/PaginationBar";
 import { Loader2, RefreshCcw, X } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
-const PRIORITIES = ["low", "medium", "high", "urgent"];
-const STATUSES = ["open", "in_progress", "resolved", "closed"];
+const TICKETS_PAGE_SIZE = 15;
 
 export default function SuperAdminSupportTicketsPage() {
   const [tickets, setTickets] = useState([]);
+  const [statsTickets, setStatsTickets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [priorityFilter, setPriorityFilter] = useState("all");
+  const [page, setPage] = useState(1);
+  const [pagination, setPagination] = useState({ total: 0, pages: 1 });
   const [toast, setToast] = useState(null);
   const [selectedTicketId, setSelectedTicketId] = useState("");
   const [selectedTicket, setSelectedTicket] = useState(null);
@@ -26,23 +42,36 @@ export default function SuperAdminSupportTicketsPage() {
     setTimeout(() => setToast(null), 2200);
   }
 
+  useEffect(() => {
+    setPage(1);
+  }, [statusFilter, priorityFilter]);
+
   async function loadTickets() {
     setLoading(true);
     setLoadError("");
     try {
-      const params = new URLSearchParams();
+      const params = new URLSearchParams({
+        page: String(page),
+        limit: String(TICKETS_PAGE_SIZE),
+      });
       if (statusFilter !== "all") params.set("status", statusFilter);
       if (priorityFilter !== "all") params.set("priority", priorityFilter);
-      const res = await fetch(`/api/super-admin/support-tickets?${params.toString()}`, {
-        cache: "no-store",
-      });
-      const data = await res.json();
-      if (data.success) setTickets(data.tickets || []);
+      const [listRes, statsRes] = await Promise.all([
+        fetch(`/api/super-admin/support-tickets?${params.toString()}`, { cache: "no-store" }),
+        fetch("/api/super-admin/support-tickets?stats=1", { cache: "no-store" }),
+      ]);
+      const data = await listRes.json();
+      const statsData = await statsRes.json();
+      if (data.success) {
+        setTickets(data.tickets || []);
+        if (data.pagination) setPagination(data.pagination);
+      }
       else {
         const message = data.error || "Failed to load tickets.";
         setLoadError(message);
         showToast("error", message);
       }
+      if (statsData.success) setStatsTickets(statsData.tickets || []);
     } catch {
       const message = "Network error.";
       setLoadError(message);
@@ -55,9 +84,13 @@ export default function SuperAdminSupportTicketsPage() {
   useEffect(() => {
     loadTickets();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [statusFilter, priorityFilter]);
+  }, [statusFilter, priorityFilter, page]);
 
   async function updateTicket(ticketId, payload) {
+    const mergeTicket = (prev) =>
+      prev.map((t) => (String(t._id) === ticketId ? { ...t, ...payload } : t));
+    setTickets(mergeTicket);
+    setStatsTickets(mergeTicket);
     try {
       const res = await fetch(`/api/super-admin/support-tickets/${ticketId}`, {
         method: "PATCH",
@@ -67,15 +100,18 @@ export default function SuperAdminSupportTicketsPage() {
       const data = await res.json();
       if (!data.success) {
         showToast("error", data.error || "Update failed.");
+        loadTickets();
         return;
       }
       showToast("success", "Ticket updated.");
-      setTickets((prev) =>
-        prev.map((t) => (String(t._id) === ticketId ? { ...t, ...data.ticket } : t))
-      );
+      const applyServer = (prev) =>
+        prev.map((t) => (String(t._id) === ticketId ? { ...t, ...data.ticket } : t));
+      setTickets(applyServer);
+      setStatsTickets(applyServer);
       if (selectedTicketId === ticketId) setSelectedTicket(data.ticket);
     } catch {
       showToast("error", "Network error.");
+      loadTickets();
     }
   }
 
@@ -112,9 +148,10 @@ export default function SuperAdminSupportTicketsPage() {
         return;
       }
       setSelectedTicket(data.ticket);
-      setTickets((prev) =>
-        prev.map((t) => (String(t._id) === String(data.ticket._id) ? { ...t, ...data.ticket } : t))
-      );
+      const applyServer = (prev) =>
+        prev.map((t) => (String(t._id) === String(data.ticket._id) ? { ...t, ...data.ticket } : t));
+      setTickets(applyServer);
+      setStatsTickets(applyServer);
       setNote("");
       showToast("success", "Note added.");
     } catch {
@@ -124,126 +161,163 @@ export default function SuperAdminSupportTicketsPage() {
     }
   }
 
+  const stats = useMemo(() => buildTicketStats(statsTickets), [statsTickets]);
+
   return (
     <div className="space-y-5">
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight text-zinc-50">Support Tickets</h1>
-        <p className="mt-1 text-sm text-zinc-500">Platform-wide tenant support queue.</p>
+        <h1 className="admin-page-title text-2xl font-semibold tracking-tight">Support Tickets</h1>
+        <p className="admin-page-desc mt-1 text-sm">Platform-wide tenant support queue.</p>
       </div>
 
       {loadError && (
-        <div className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">
+        <div className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-400">
           {loadError}
         </div>
       )}
 
-      <div className="flex flex-wrap items-center gap-2 rounded-xl border border-zinc-800 bg-zinc-900/40 p-3">
-        <select
-          value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value)}
-          className="rounded-lg border border-zinc-700 bg-zinc-950 px-2.5 py-1.5 text-xs text-zinc-200"
-        >
-          <option value="all">status: all</option>
-          {STATUSES.map((s) => (
-            <option key={s} value={s}>
-              {s}
-            </option>
-          ))}
-        </select>
-        <select
-          value={priorityFilter}
-          onChange={(e) => setPriorityFilter(e.target.value)}
-          className="rounded-lg border border-zinc-700 bg-zinc-950 px-2.5 py-1.5 text-xs text-zinc-200"
-        >
-          <option value="all">priority: all</option>
-          {PRIORITIES.map((p) => (
-            <option key={p} value={p}>
-              {p}
-            </option>
-          ))}
-        </select>
-        <button
-          type="button"
-          onClick={loadTickets}
-          className="cursor-pointer inline-flex items-center gap-1 rounded-lg border border-zinc-700 px-2.5 py-1.5 text-xs text-zinc-300 hover:border-zinc-500"
-        >
-          <RefreshCcw className="size-3.5" />
-          Refresh
-        </button>
+      <div className="grid gap-3 sm:grid-cols-5">
+        {SUPPORT_STAT_ITEMS.map(({ key, label, field, valueCls }) => (
+          <div key={key} className="admin-surface-card px-3 py-2.5">
+            <p className={`text-lg font-semibold tabular-nums ${valueCls}`}>{stats[field]}</p>
+            <p className="text-xs uppercase tracking-wider admin-surface-muted">{label}</p>
+          </div>
+        ))}
       </div>
 
-      <div className="overflow-hidden rounded-2xl border border-zinc-800">
-        <div className="grid grid-cols-[130px_1fr_140px_110px_120px_80px] gap-2 border-b border-zinc-800 bg-zinc-950/70 px-4 py-2 text-xs uppercase tracking-wide text-zinc-500">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between admin-surface-card p-3">
+        <p className="text-xs font-semibold uppercase tracking-wide admin-surface-muted">Filters</p>
+        <div className="flex flex-wrap items-center gap-2">
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            className={`${adminFilterSelectCls} focus-sa-primary min-w-[8.5rem]`}
+          >
+            <option value="all">Status: all</option>
+            {SUPPORT_STATUSES.map((s) => (
+              <option key={s} value={s}>
+                {s.replace(/_/g, " ")}
+              </option>
+            ))}
+          </select>
+          <select
+            value={priorityFilter}
+            onChange={(e) => setPriorityFilter(e.target.value)}
+            className={`${adminFilterSelectCls} focus-sa-primary min-w-[8.5rem]`}
+          >
+            <option value="all">Priority: all</option>
+            {SUPPORT_PRIORITIES.map((p) => (
+              <option key={p} value={p}>
+                {p}
+              </option>
+            ))}
+          </select>
+          <button
+            type="button"
+            onClick={loadTickets}
+            disabled={loading}
+            className="cursor-pointer inline-flex items-center gap-1 rounded-lg border admin-shell-border px-2.5 py-1.5 text-xs admin-surface-body transition-colors hover:bg-[var(--admin-hover)] disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            <RefreshCcw className={`size-3.5 ${loading ? saSpinnerCls : ""}`} />
+            Refresh
+          </button>
+        </div>
+      </div>
+
+      <DataTableShell>
+        <div className="min-w-[52rem]">
+        <div className={`${saTicketTableGridCls} admin-table-list-header px-4 py-2.5 text-xs uppercase tracking-wide admin-surface-muted`}>
           <span>Ticket</span>
           <span>Subject</span>
           <span>Restaurant</span>
-          <span>Priority</span>
-          <span>Status</span>
-          <span>Action</span>
+          <span className="text-center">Priority</span>
+          <span className="text-center">Status</span>
+          <span className="text-center">Action</span>
         </div>
 
         {loading ? (
           <SuperAdminPreloader compact message="Loading tickets…" />
         ) : tickets.length === 0 ? (
-          <div className="px-4 py-4 text-sm text-zinc-500">No tickets found.</div>
+          <div className="px-4 py-4 text-sm admin-surface-muted">No tickets found.</div>
         ) : (
-          <div className="divide-y divide-zinc-800">
+          <div className="admin-table-body">
             {tickets.map((ticket) => (
               <div
                 key={String(ticket._id)}
-                className="grid grid-cols-[130px_1fr_140px_110px_120px_80px] gap-2 px-4 py-3 text-sm text-zinc-200"
+                className={`${saTicketTableGridCls} px-4 py-3 text-sm admin-shell-text transition-colors hover:bg-[var(--admin-hover)]`}
               >
-                <div>
+                <div className="min-w-0">
                   <p className="font-medium">{ticket.ticketCode}</p>
-                  <p className="text-xs text-zinc-500">
+                  <p className="text-xs admin-surface-muted">
                     {ticket.createdAt ? new Date(ticket.createdAt).toLocaleDateString() : "—"}
                   </p>
                 </div>
-                <div>
+                <div className="min-w-0">
                   <p className="font-medium">{ticket.subject}</p>
-                  <p className="mt-0.5 line-clamp-2 text-xs text-zinc-400">{ticket.message}</p>
+                  <p className="mt-0.5 line-clamp-2 text-xs admin-surface-muted">{ticket.message}</p>
                 </div>
-                <p className="truncate text-xs text-zinc-300">{ticket.restaurantName || "Unknown"}</p>
-                <select
-                  value={ticket.priority}
-                  onChange={(e) => updateTicket(String(ticket._id), { priority: e.target.value })}
-                  className="h-8 rounded-md border border-zinc-700 bg-zinc-900 px-2 text-xs text-zinc-200"
-                >
-                  {PRIORITIES.map((item) => (
-                    <option key={item} value={item}>
-                      {item}
-                    </option>
-                  ))}
-                </select>
-                <select
-                  value={ticket.status}
-                  onChange={(e) => updateTicket(String(ticket._id), { status: e.target.value })}
-                  className="h-8 rounded-md border border-zinc-700 bg-zinc-900 px-2 text-xs text-zinc-200"
-                >
-                  {STATUSES.map((item) => (
-                    <option key={item} value={item}>
-                      {item}
-                    </option>
-                  ))}
-                </select>
-                <button
-                  type="button"
-                  onClick={() => openTicket(String(ticket._id))}
-                  className="h-8 rounded-md border border-zinc-700 bg-zinc-900 px-2 text-xs text-zinc-200"
-                >
-                  View
-                </button>
+                <p className="truncate text-xs admin-surface-body">{ticket.restaurantName || "Unknown"}</p>
+                <div className="flex justify-center">
+                  <select
+                    value={ticket.priority}
+                    onChange={(e) => updateTicket(String(ticket._id), { priority: e.target.value })}
+                    className={ticketPrioritySelectCls(ticket.priority)}
+                    aria-label={`Priority for ${ticket.ticketCode}`}
+                  >
+                    {SUPPORT_PRIORITIES.map((item) => (
+                      <option key={item} value={item}>
+                        {item}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="flex justify-center">
+                  <select
+                    value={ticket.status}
+                    onChange={(e) => updateTicket(String(ticket._id), { status: e.target.value })}
+                    className={ticketStatusSelectCls(ticket.status, "super-admin")}
+                    aria-label={`Status for ${ticket.ticketCode}`}
+                  >
+                    {SUPPORT_STATUSES.map((item) => (
+                      <option key={item} value={item}>
+                        {item.replace(/_/g, " ")}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="flex justify-center">
+                  <button
+                    type="button"
+                    onClick={() => openTicket(String(ticket._id))}
+                    className={adminTableActionBtnCls}
+                  >
+                    View
+                  </button>
+                </div>
               </div>
             ))}
           </div>
         )}
-      </div>
+        </div>
+        {!loading && tickets.length > 0 && (
+          <div className="px-4 pb-4">
+            <PaginationBar
+              page={page}
+              totalPages={pagination.pages}
+              total={pagination.total}
+              pageSize={TICKETS_PAGE_SIZE}
+              onPageChange={setPage}
+              hideWhenSinglePage
+            />
+          </div>
+        )}
+      </DataTableShell>
 
       {selectedTicketId ? (
-        <div className="fixed inset-0 z-[120] flex justify-end bg-black/50 p-0">
-          <div className="relative h-full w-full max-w-xl overflow-y-auto border-l border-zinc-800 bg-zinc-950 p-4">
-            <div className="sticky top-0 z-10 mb-4 flex items-center justify-between border-b border-zinc-800 bg-zinc-950/95 pb-3 pt-1 backdrop-blur">
-              <h3 className="text-base font-semibold text-zinc-100">Support ticket</h3>
+        <div className={supportTicketDrawerOverlayCls}>
+          <div className="relative h-full w-full max-w-xl overflow-y-auto border-l admin-shell-border admin-surface-card-solid p-4">
+            <div className="sticky top-0 z-10 mb-4 flex items-center justify-between admin-surface-divider-b bg-[var(--admin-surface)] pb-3 pt-1 backdrop-blur">
+              <h3 className="text-base font-semibold admin-shell-text">Support ticket</h3>
               <button
                 type="button"
                 onClick={() => {
@@ -251,49 +325,49 @@ export default function SuperAdminSupportTicketsPage() {
                   setSelectedTicket(null);
                   setNote("");
                 }}
-                className="cursor-pointer relative z-20 rounded-lg border border-zinc-700 p-1.5 text-zinc-300 hover:border-zinc-500"
+                className="cursor-pointer relative z-20 rounded-lg border admin-shell-border p-1.5 admin-surface-body hover:border-zinc-500"
               >
                 <X className="size-4" />
               </button>
             </div>
             {loadingDetail ? (
-              <div className="flex items-center gap-2 text-sm text-zinc-500">
+              <div className="flex items-center gap-2 text-sm admin-surface-muted">
                 <Loader2 className={saSpinnerCls} />
                 Loading ticket...
               </div>
             ) : !selectedTicket ? (
-              <p className="text-sm text-zinc-500">Ticket not available.</p>
+              <p className="text-sm admin-surface-muted">Ticket not available.</p>
             ) : (
               <div className="space-y-4">
-                <div className="rounded-xl border border-zinc-800 bg-zinc-900/40 p-3">
-                  <p className="text-sm font-semibold text-zinc-100">
+                <div className="admin-surface-card p-3">
+                  <p className="text-sm font-semibold admin-shell-text">
                     {selectedTicket.ticketCode} · {selectedTicket.subject}
                   </p>
-                  <p className="mt-1 text-xs text-zinc-400">
+                  <p className="mt-1 text-xs admin-surface-muted">
                     {selectedTicket.restaurantName || "Unknown Restaurant"}
                   </p>
-                  <p className="mt-2 text-sm text-zinc-300">{selectedTicket.message}</p>
+                  <p className="mt-2 text-sm admin-surface-body">{selectedTicket.message}</p>
                 </div>
                 <div className="space-y-2">
-                  <p className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Timeline</p>
+                  <p className="text-xs font-semibold uppercase tracking-wide admin-surface-muted">Timeline</p>
                   <div className="space-y-2">
                     {(selectedTicket.updates || []).slice().reverse().map((u, idx) => (
-                      <div key={`${u.at}-${idx}`} className="rounded-lg border border-zinc-800 bg-zinc-900/30 p-2.5">
-                        <p className="text-xs text-zinc-400">
+                      <div key={`${u.at}-${idx}`} className="rounded-lg border admin-shell-border admin-surface-card p-2.5">
+                        <p className="text-xs admin-surface-muted">
                           {u.at ? new Date(u.at).toLocaleString() : "—"} · {u.role || "user"}
                         </p>
-                        <p className="mt-0.5 text-sm text-zinc-200">{u.note}</p>
+                        <p className="mt-0.5 text-sm admin-shell-text">{u.note}</p>
                       </div>
                     ))}
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <label className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Add internal note</label>
+                  <label className="text-xs font-semibold uppercase tracking-wide admin-surface-muted">Add internal note</label>
                   <textarea
                     rows={3}
                     value={note}
                     onChange={(e) => setNote(e.target.value)}
-                    className="w-full rounded-xl border border-zinc-800 bg-zinc-950/80 px-3 py-2.5 text-sm text-zinc-100 outline-none transition-colors focus-sa-primary"
+                    className={`${saInputCls} resize-none`}
                     placeholder="Add investigation notes or resolution detail..."
                   />
                   <button
@@ -315,8 +389,8 @@ export default function SuperAdminSupportTicketsPage() {
         <div
           className={`fixed bottom-5 right-5 z-50 rounded-xl border px-4 py-2 text-sm ${
             toast.type === "success"
-              ? "border-sa-accent-30 bg-zinc-900 text-sa-accent-muted"
-              : "border-red-500/30 bg-zinc-900 text-red-300"
+              ? "border-sa-accent-30 admin-surface-card text-sa-accent-muted"
+              : "border-red-500/30 admin-surface-card text-red-400"
           }`}
         >
           {toast.message}
