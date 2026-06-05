@@ -3,9 +3,7 @@ import "./globals.css";
 import Providers from "./providers";
 import PlatformScripts from "@/components/PlatformScripts";
 import PlatformThemeStyles from "@/components/PlatformThemeStyles";
-import AdminColorModeBootstrap from "@/components/AdminColorModeBootstrap";
-import RestaurantThemeBootstrap from "@/components/RestaurantThemeBootstrap";
-import SuperAdminThemeBootstrap from "@/components/SuperAdminThemeBootstrap";
+import AdminThemeBootstrap from "@/components/AdminThemeBootstrap";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -54,10 +52,10 @@ export default function RootLayout({ children }) {
       className={`${geistSans.variable} ${geistMono.variable} ${poppins.variable} ${inter.variable} h-full`}
       suppressHydrationWarning
     >
+      <head>
+        <AdminThemeBootstrap />
+      </head>
       <body className="min-h-full" suppressHydrationWarning>
-        <AdminColorModeBootstrap />
-        <RestaurantThemeBootstrap />
-        <SuperAdminThemeBootstrap />
         <PlatformThemeStyles />
         <PlatformScripts />
         <Providers>{children}</Providers>

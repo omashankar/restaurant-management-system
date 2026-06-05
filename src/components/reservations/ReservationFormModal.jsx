@@ -161,7 +161,7 @@ function CustomerSearchField({ onSelect, initialName = "", initialPhone = "" }) 
       {showDrop && query.trim() && (
         <div className="rounded-xl border admin-shell-border bg-zinc-900 shadow-xl shadow-black/40 overflow-hidden">
           {results.length > 0 && (
-            <ul className="divide-y admin-shell-divider max-h-48 overflow-y-auto">
+            <ul className="admin-table-body max-h-48 overflow-y-auto">
               {results.map((c) => (
                 <li key={c.id}>
                   <button type="button" onClick={() => handleSelect(c)}
@@ -455,7 +455,7 @@ export default function ReservationFormModal({ open, onClose, editing, tableOpti
                 setSaveError("");
               }}
               aria-invalid={fieldErrors.date ? true : undefined}
-              className={`mt-1 w-full rounded-xl border admin-surface-card px-3 py-2.5 text-sm admin-shell-text outline-none focus-ra-primary [color-scheme:dark] ${
+              className={`mt-1 w-full rounded-xl border admin-surface-card px-3 py-2.5 text-sm admin-shell-text outline-none focus-ra-primary ${
                 fieldErrors.date ? "border-red-500/50" : "border-zinc-700"
               }`}
             />

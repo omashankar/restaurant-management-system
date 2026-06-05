@@ -66,7 +66,7 @@ export default function PaymentTransactionsSection({ showToast }) {
           <p className="text-xs admin-surface-muted">Total Revenue</p>
           <p className="mt-1 text-xl font-bold tabular-nums text-ra-primary">₹{summary.totalAmount.toLocaleString()}</p>
         </div>
-        <div className="rounded-xl border admin-shell-border bg-zinc-950/40 px-4 py-3">
+        <div className="rounded-xl border admin-shell-border bg-[var(--admin-hover)] px-4 py-3">
           <p className="text-xs admin-surface-muted">Paid Transactions</p>
           <p className="mt-1 text-xl font-bold tabular-nums admin-shell-text">{summary.paidCount}</p>
         </div>
@@ -74,7 +74,7 @@ export default function PaymentTransactionsSection({ showToast }) {
 
       <div className="mb-4 flex flex-wrap gap-3">
         <select value={status} onChange={(e) => setStatus(e.target.value)}
-          className="cursor-pointer rounded-xl border admin-shell-border bg-zinc-950/80 px-3 py-2 text-sm admin-shell-text outline-none focus-ra-primary">
+          className="cursor-pointer rounded-xl border admin-shell-border bg-[var(--admin-control)] px-3 py-2 text-sm admin-shell-text outline-none focus-ra-primary">
           <option value="all">All Statuses</option>
           <option value="paid">Paid</option>
           <option value="pending">Pending</option>
@@ -82,16 +82,16 @@ export default function PaymentTransactionsSection({ showToast }) {
           <option value="refunded">Refunded</option>
         </select>
         <select value={method} onChange={(e) => setMethod(e.target.value)}
-          className="cursor-pointer rounded-xl border admin-shell-border bg-zinc-950/80 px-3 py-2 text-sm admin-shell-text outline-none focus-ra-primary">
+          className="cursor-pointer rounded-xl border admin-shell-border bg-[var(--admin-control)] px-3 py-2 text-sm admin-shell-text outline-none focus-ra-primary">
           <option value="all">All Methods</option>
           {Object.entries(PAYMENT_METHOD_LABELS).map(([k, v]) => (
             <option key={k} value={k}>{v}</option>
           ))}
         </select>
         <input type="date" value={from} onChange={(e) => setFrom(e.target.value)}
-          className="rounded-xl border admin-shell-border bg-zinc-950/80 px-3 py-2 text-sm admin-shell-text outline-none focus-ra-primary" />
+          className="rounded-xl border admin-shell-border bg-[var(--admin-control)] px-3 py-2 text-sm admin-shell-text outline-none focus-ra-primary" />
         <input type="date" value={to} onChange={(e) => setTo(e.target.value)}
-          className="rounded-xl border admin-shell-border bg-zinc-950/80 px-3 py-2 text-sm admin-shell-text outline-none focus-ra-primary" />
+          className="rounded-xl border admin-shell-border bg-[var(--admin-control)] px-3 py-2 text-sm admin-shell-text outline-none focus-ra-primary" />
       </div>
 
       {loading ? (
@@ -110,7 +110,7 @@ export default function PaymentTransactionsSection({ showToast }) {
           <div className="overflow-x-auto">
             <table className="min-w-full text-left text-sm">
               <thead>
-                <tr className="border-b admin-shell-border bg-zinc-950/60 text-xs font-semibold uppercase tracking-wider admin-surface-muted">
+                <tr className="admin-table-head-row text-xs font-semibold uppercase tracking-wider admin-surface-muted">
                   <th className="px-4 py-3">Txn ID</th>
                   <th className="px-4 py-3">Order</th>
                   <th className="hidden px-4 py-3 md:table-cell">Customer</th>
@@ -120,7 +120,7 @@ export default function PaymentTransactionsSection({ showToast }) {
                   <th className="hidden px-4 py-3 md:table-cell">Date</th>
                 </tr>
               </thead>
-              <tbody className="divide-y admin-shell-divider">
+              <tbody>
                 {transactions.map((t) => (
                   <tr key={t.id} className="transition-colors hover:bg-[var(--admin-hover)]">
                     <td className="px-4 py-3 font-mono text-xs admin-surface-muted">{t.transactionId.slice(-8)}</td>
@@ -142,7 +142,7 @@ export default function PaymentTransactionsSection({ showToast }) {
             </table>
           </div>
           {pagination.pages > 1 && (
-            <div className="flex items-center justify-between border-t admin-shell-border px-4 py-3">
+            <div className="flex items-center justify-between admin-surface-divider-t px-4 py-3">
               <p className="text-xs admin-surface-faint">{pagination.total} total · page {pagination.page} of {pagination.pages}</p>
               <div className="flex gap-1">
                 <button type="button" onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page <= 1}

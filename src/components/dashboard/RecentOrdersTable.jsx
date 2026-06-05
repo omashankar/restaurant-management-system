@@ -1,4 +1,4 @@
-import { adminShell, adminSurface } from "@/config/adminSurfaceClasses";
+import { adminSurface } from "@/config/adminSurfaceClasses";
 import { formatAdminMoney } from "@/lib/adminCurrency";
 import Link from "next/link";
 import { Bike, ConciergeBell, Store } from "lucide-react";
@@ -33,8 +33,8 @@ const paymentMethodLabel = {
 
 export default function RecentOrdersTable({ orders = [], currency = "INR" }) {
   return (
-    <div className="rms-dashboard-card rms-dashboard-card--lg flex h-full min-h-0 w-full flex-col admin-surface-table-shell shadow-lg">
-      <div className={`flex shrink-0 items-center justify-between gap-4 border-b ${adminShell.borderB} px-5 py-4`}>
+    <div className="rms-dashboard-card rms-dashboard-card--lg flex h-full min-h-0 w-full flex-col admin-surface-table-shell">
+      <div className="admin-table-list-header flex shrink-0 items-center justify-between gap-4 px-5 py-4">
         <div>
           <h3 className="admin-surface-title text-sm font-semibold">Recent Orders</h3>
           <p className="admin-surface-subheading">Latest transactions across all channels</p>
@@ -62,7 +62,7 @@ export default function RecentOrdersTable({ orders = [], currency = "INR" }) {
                 <th className="admin-table-th admin-table-th--right px-5 py-3">Time</th>
               </tr>
             </thead>
-            <tbody className={`divide-y ${adminShell.divider}`}>
+            <tbody>
               {orders.map((o) => {
                 const TypeIcon = typeIcon[o.type ?? o.orderType] ?? Store;
                 const amount = o.amount ?? o.total ?? 0;

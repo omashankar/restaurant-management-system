@@ -61,7 +61,9 @@ const emptyForm = {
   phone: "", address: "", plan: "free", status: "active",
 };
 
-const inputCls = "admin-surface-input focus-ra-primary w-full px-3 py-2.5 text-sm outline-none focus-sa-primary placeholder:admin-surface-faint transition-colors";
+const inputCls = "admin-surface-input focus-sa-primary w-full px-3 py-2.5 text-sm outline-none placeholder:admin-surface-faint transition-colors";
+const filterSelectCls =
+  "cursor-pointer w-auto min-w-[9.5rem] shrink-0 rounded-xl border admin-shell-border bg-[var(--admin-control)] px-3 py-2.5 text-sm admin-shell-text outline-none focus-sa-primary";
 const fieldErrorCls = "mt-1 text-xs text-red-400";
 
 const EMPTY_CREATE_FIELD_ERRORS = {
@@ -153,7 +155,7 @@ function PreviewModal({ restaurant, onClose }) {
           </div>
         </div>
 
-        <div className="border-t admin-shell-border" />
+        <div className="admin-surface-divider-t" />
 
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
           {[
@@ -512,7 +514,7 @@ export default function RestaurantsPage() {
 
       {/* Stats */}
       {loadError && (
-        <div className="rounded-xl border border-red-500/25 bg-red-500/10 px-4 py-3 text-sm text-red-300">
+        <div className="rounded-xl border border-red-500/25 bg-red-500/10 px-4 py-3 text-sm text-red-400">
           {loadError}
         </div>
       )}
@@ -531,30 +533,32 @@ export default function RestaurantsPage() {
       </div>
 
       {/* Search + Filters */}
-      <div className="flex flex-wrap items-center gap-3">
+      <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
         <SearchField
-          className="min-w-[200px] max-w-sm flex-1"
+          className="min-w-[200px] max-w-md flex-1"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Search name, email, phone…"
           clearable
           inputClassName="focus-sa-primary"
         />
-        <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}
-          className="cursor-pointer rounded-xl border admin-shell-border admin-surface-input px-3 py-2.5 text-sm admin-shell-text outline-none focus-sa-primary">
-          <option value="all">All statuses</option>
-          {STATUSES.map((s) => <option key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1)}</option>)}
-        </select>
-        <select value={planFilter} onChange={(e) => setPlanFilter(e.target.value)}
-          className="cursor-pointer rounded-xl border admin-shell-border admin-surface-input px-3 py-2.5 text-sm admin-shell-text outline-none focus-sa-primary">
-          <option value="all">All plans</option>
-          {PLANS.map((p) => <option key={p} value={p}>{p.charAt(0).toUpperCase() + p.slice(1)}</option>)}
-        </select>
-        <select value={ownerStatusFilter} onChange={(e) => { setOwnerStatusFilter(e.target.value); setPage(1); }}
-          className="cursor-pointer rounded-xl border admin-shell-border admin-surface-input px-3 py-2.5 text-sm admin-shell-text outline-none focus-sa-primary">
-          <option value="all">All owner statuses</option>
-          {OWNER_STATUSES.map((s) => <option key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1)}</option>)}
-        </select>
+        <div className="flex flex-wrap items-center gap-2">
+          <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}
+            className={filterSelectCls}>
+            <option value="all">All statuses</option>
+            {STATUSES.map((s) => <option key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1)}</option>)}
+          </select>
+          <select value={planFilter} onChange={(e) => setPlanFilter(e.target.value)}
+            className={filterSelectCls}>
+            <option value="all">All plans</option>
+            {PLANS.map((p) => <option key={p} value={p}>{p.charAt(0).toUpperCase() + p.slice(1)}</option>)}
+          </select>
+          <select value={ownerStatusFilter} onChange={(e) => { setOwnerStatusFilter(e.target.value); setPage(1); }}
+            className={filterSelectCls}>
+            <option value="all">All owner statuses</option>
+            {OWNER_STATUSES.map((s) => <option key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1)}</option>)}
+          </select>
+        </div>
       </div>
 
       {/* Table */}
@@ -687,7 +691,7 @@ export default function RestaurantsPage() {
             </AdminTable>
 
           {/* Pagination */}
-          <div className="flex items-center justify-between border-t admin-shell-border px-4 py-3">
+          <div className="flex items-center justify-between admin-surface-divider-t px-4 py-3">
             <p className="text-xs admin-surface-faint">
               {totalCount} restaurant{totalCount !== 1 ? "s" : ""}
               {totalPages > 1 && " · page " + page + " of " + totalPages}

@@ -111,7 +111,7 @@ export default function WebsiteLayoutTab({
         <button
           type="button"
           onClick={() => setView("header")}
-          className="flex cursor-pointer items-center gap-3 rounded-xl border admin-shell-border bg-zinc-950/40 px-4 py-4 text-left transition-colors hover:border-ra-primary-40 hover:bg-[var(--admin-hover)]/60"
+          className="flex cursor-pointer items-center gap-3 rounded-xl border border-[var(--admin-border-subtle)] bg-[var(--admin-surface)] px-4 py-4 text-left transition-colors hover:border-ra-primary-40 hover:bg-[var(--admin-hover)]"
         >
           <span className="flex size-10 items-center justify-center rounded-lg bg-ra-primary-15 text-ra-primary">
             <Pencil className="size-4" />
@@ -125,7 +125,7 @@ export default function WebsiteLayoutTab({
         <button
           type="button"
           onClick={() => setView("footer")}
-          className="flex cursor-pointer items-center gap-3 rounded-xl border admin-shell-border bg-zinc-950/40 px-4 py-4 text-left transition-colors hover:border-ra-primary-40 hover:bg-[var(--admin-hover)]/60"
+          className="flex cursor-pointer items-center gap-3 rounded-xl border border-[var(--admin-border-subtle)] bg-[var(--admin-surface)] px-4 py-4 text-left transition-colors hover:border-ra-primary-40 hover:bg-[var(--admin-hover)]"
         >
           <span className="flex size-10 items-center justify-center rounded-lg bg-ra-primary-15 text-ra-primary">
             <Pencil className="size-4" />

@@ -168,7 +168,7 @@ export default function LogsPage() {
       </div>
 
       {loadError && (
-        <div className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">
+        <div className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-400">
           {loadError}
         </div>
       )}
@@ -229,14 +229,14 @@ export default function LogsPage() {
       ) : (
         <div className="overflow-hidden admin-surface-card">
           {/* Table header */}
-          <div className="admin-table-list-header hidden border-b admin-shell-border px-4 py-2.5 text-xs font-semibold uppercase tracking-wider admin-surface-muted sm:grid sm:grid-cols-[1fr_140px_140px_100px]">
+          <div className="admin-table-list-header hidden px-4 py-2.5 text-xs font-semibold uppercase tracking-wider admin-surface-muted sm:grid sm:grid-cols-[1fr_140px_140px_100px]">
             <span>Action</span>
             <span>Actor</span>
             <span>Target</span>
             <span className="text-right">Time</span>
           </div>
 
-          <div className="divide-y admin-shell-divider">
+          <div className="admin-table-body">
             {logs.map((log) => {
               const cs = categoryStyle(log.category);
               return (
@@ -296,7 +296,7 @@ export default function LogsPage() {
           </div>
 
           {/* Pagination */}
-          <div className="flex items-center justify-between border-t admin-shell-border px-4 py-3">
+          <div className="flex items-center justify-between admin-surface-divider-t px-4 py-3">
             <p className="text-xs admin-surface-faint">
               {pagination.total.toLocaleString()} log{pagination.total !== 1 ? "s" : ""}
               {pagination.pages > 1 && ` · page ${pagination.page} of ${pagination.pages}`}

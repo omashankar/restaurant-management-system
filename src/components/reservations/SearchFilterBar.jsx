@@ -35,7 +35,7 @@ export default function SearchFilterBar({
             type="date"
             value={dateFilter}
             onChange={(e) => onDateChange(e.target.value)}
-            className="rounded-lg bg-transparent py-1.5 pr-2 text-sm admin-shell-text outline-none [color-scheme:dark]"
+            className="rounded-lg bg-transparent py-1.5 pr-2 text-sm admin-shell-text outline-none"
             aria-label="Filter by date"
           />
           <button type="button" onClick={() => onDateChange("")}
@@ -68,16 +68,16 @@ export default function SearchFilterBar({
         )}
 
         {/* View toggle */}
-        <div className="flex rounded-xl border admin-shell-border p-0.5">
+        <div className="admin-surface-segment-track inline-flex p-0.5">
           <button type="button" onClick={() => onViewModeChange("table")}
-            className={`cursor-pointer flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-semibold transition-all duration-200 ${
-              viewMode === "table" ? "bg-ra-primary text-zinc-950 shadow-md" : "admin-surface-muted hover:admin-surface-body"
+            className={`cursor-pointer flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-semibold transition-colors ${
+              viewMode === "table" ? "bg-ra-primary text-zinc-950" : "admin-surface-muted hover:bg-[var(--admin-hover)] hover:admin-surface-body"
             }`} aria-pressed={viewMode === "table"}>
             <List className="size-3.5" aria-hidden /> List
           </button>
           <button type="button" onClick={() => onViewModeChange("calendar")}
-            className={`cursor-pointer flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-semibold transition-all duration-200 ${
-              viewMode === "calendar" ? "bg-ra-primary text-zinc-950 shadow-md" : "admin-surface-muted hover:admin-surface-body"
+            className={`cursor-pointer flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-semibold transition-colors ${
+              viewMode === "calendar" ? "bg-ra-primary text-zinc-950" : "admin-surface-muted hover:bg-[var(--admin-hover)] hover:admin-surface-body"
             }`} aria-pressed={viewMode === "calendar"}>
             <LayoutGrid className="size-3.5" aria-hidden /> By date
           </button>

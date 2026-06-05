@@ -746,7 +746,7 @@ export default function SettingsPage() {
             <SettingsFormSection title="Access Control"
               description="Set feature access by role. Changes apply to new sessions; existing sessions may need re-login.">
               <div className="overflow-x-auto rounded-xl border admin-shell-border">
-                <table className="min-w-full divide-y admin-shell-divider text-sm">
+                <table className="admin-table min-w-full text-sm">
                   <thead className="admin-table-head text-xs uppercase tracking-wide text-zinc-500">
                     <tr>
                       <th className="px-4 py-3 text-left">Feature</th>
@@ -756,7 +756,7 @@ export default function SettingsPage() {
                       <th className="px-4 py-3 text-center">Chef</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-zinc-900/70">
+                  <tbody>
                     {ACCESS_CONTROL_FEATURES.map((feature) => {
                       const row = settings.accessControl?.[feature.key] ?? {};
                       return (
@@ -866,7 +866,7 @@ export default function SettingsPage() {
 
       {toast && (
         <div className={`fixed bottom-5 right-5 z-50 flex items-center gap-2 rounded-xl border px-4 py-2 text-sm shadow-2xl shadow-black/40 ${
-          toast.type === "success" ? "border-ra-primary-30 admin-surface-card text-ra-primary-muted" : "border-red-500/30 admin-surface-card text-red-300"
+          toast.type === "success" ? "border-ra-primary-30 admin-surface-card text-ra-primary-muted" : "border-red-500/30 admin-surface-card text-red-400"
         }`}>
           {toast.type === "success" ? <CheckCircle2 className="size-4" /> : <XCircle className="size-4" />}
           {toast.message}

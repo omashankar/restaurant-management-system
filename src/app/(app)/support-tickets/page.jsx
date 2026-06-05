@@ -6,17 +6,29 @@ import {
   EMPTY_SUPPORT_TICKET_ERRORS,
   getSupportTicketFieldErrors,
 } from "@/lib/formValidation";
+import {
+  SUPPORT_PRIORITIES,
+  SUPPORT_STATUSES,
+  SUPPORT_STAT_ITEMS_RA,
+  adminFilterSelectCls,
+  adminTableActionBtnCls,
+  buildTicketStats,
+  supportTicketDrawerOverlayCls,
+  supportTicketRowCardCls,
+  ticketPriorityBadgeCls,
+  ticketPrioritySelectCls,
+  ticketStatusBadgeCls,
+  ticketStatusSelectCls,
+} from "@/config/supportTicketConfig";
 import { raInputCls } from "@/config/restaurantAdminTheme";
 import { useEffect, useMemo, useState } from "react";
-
-const PRIORITIES = ["low", "medium", "high", "urgent"];
-const STATUSES = ["open", "in_progress", "resolved", "closed"];
 
 const inputCls = raInputCls;
 
 export default function SupportTicketsPage() {
   const { user } = useUser();
   const [tickets, setTickets] = useState([]);
+  const [statsTickets, setStatsTickets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(null);
   const [saving, setSaving] = useState(false);
@@ -47,14 +59,19 @@ export default function SupportTicketsPage() {
     try {
       const params = new URLSearchParams();
       if (statusFilter !== "all") params.set("status", statusFilter);
-      const res = await fetch(`/api/support/tickets?${params.toString()}`, { cache: "no-store" });
-      const data = await res.json();
+      const [listRes, statsRes] = await Promise.all([
+        fetch(`/api/support/tickets?${params.toString()}`, { cache: "no-store" }),
+        fetch("/api/support/tickets?limit=100", { cache: "no-store" }),
+      ]);
+      const data = await listRes.json();
+      const statsData = await statsRes.json();
       if (data.success) setTickets(data.tickets || []);
       else {
         const msg = data.error || "Failed to load tickets.";
         setLoadError(msg);
         showToast("error", msg);
       }
+      if (statsData.success) setStatsTickets(statsData.tickets || []);
     } catch {
       const msg = "Could not load support tickets.";
       setLoadError(msg);
@@ -100,6 +117,10 @@ export default function SupportTicketsPage() {
   }
 
   async function quickUpdate(ticketId, payload) {
+    const mergeTicket = (prev) =>
+      prev.map((t) => (String(t._id) === ticketId ? { ...t, ...payload } : t));
+    setTickets(mergeTicket);
+    setStatsTickets(mergeTicket);
     try {
       const res = await fetch(`/api/support/tickets/${ticketId}`, {
         method: "PATCH",
@@ -109,13 +130,18 @@ export default function SupportTicketsPage() {
       const data = await res.json();
       if (!data.success) {
         showToast("error", data.error || "Failed to update ticket.");
+        loadTickets();
         return;
       }
       showToast("success", "Ticket updated.");
-      setTickets((prev) => prev.map((t) => (String(t._id) === ticketId ? data.ticket : t)));
+      const applyServer = (prev) =>
+        prev.map((t) => (String(t._id) === ticketId ? { ...t, ...data.ticket } : t));
+      setTickets(applyServer);
+      setStatsTickets(applyServer);
       if (selectedTicketId === ticketId) setSelectedTicket(data.ticket);
     } catch {
       showToast("error", "Network error.");
+      loadTickets();
     }
   }
 
@@ -152,9 +178,10 @@ export default function SupportTicketsPage() {
         return;
       }
       setSelectedTicket(data.ticket);
-      setTickets((prev) =>
-        prev.map((t) => (String(t._id) === String(data.ticket._id) ? data.ticket : t))
-      );
+      const applyServer = (prev) =>
+        prev.map((t) => (String(t._id) === String(data.ticket._id) ? { ...t, ...data.ticket } : t));
+      setTickets(applyServer);
+      setStatsTickets(applyServer);
       setNote("");
       showToast("success", "Note added.");
     } catch {
@@ -164,13 +191,7 @@ export default function SupportTicketsPage() {
     }
   }
 
-  const stats = useMemo(() => {
-    const out = { total: tickets.length, open: 0, in_progress: 0, resolved: 0, closed: 0 };
-    for (const t of tickets) {
-      if (out[t.status] != null) out[t.status] += 1;
-    }
-    return out;
-  }, [tickets]);
+  const stats = useMemo(() => buildTicketStats(statsTickets), [statsTickets]);
 
   return (
     <div className="space-y-6">
@@ -188,16 +209,10 @@ export default function SupportTicketsPage() {
       )}
 
       <div className="grid gap-3 sm:grid-cols-5">
-        {[
-          ["total", stats.total],
-          ["open", stats.open],
-          ["in progress", stats.in_progress],
-          ["resolved", stats.resolved],
-          ["closed", stats.closed],
-        ].map(([label, value]) => (
-          <div key={label} className="admin-surface-card px-3 py-2.5">
-            <p className="text-lg font-semibold admin-shell-text">{value}</p>
-            <p className="text-xs uppercase tracking-wider text-zinc-500">{label}</p>
+        {SUPPORT_STAT_ITEMS_RA.map(({ key, label, field, valueCls }) => (
+          <div key={key} className="admin-surface-card px-3 py-2.5">
+            <p className={`text-lg font-semibold tabular-nums ${valueCls}`}>{stats[field]}</p>
+            <p className="text-xs uppercase tracking-wider admin-surface-muted">{label}</p>
           </div>
         ))}
       </div>
@@ -209,7 +224,7 @@ export default function SupportTicketsPage() {
         </div>
         <div className="grid gap-4 md:grid-cols-2">
           <div>
-            <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-zinc-500">Subject</label>
+            <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide admin-surface-muted">Subject</label>
             <input
               value={form.subject}
               onChange={(e) => {
@@ -225,13 +240,13 @@ export default function SupportTicketsPage() {
             )}
           </div>
           <div>
-            <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-zinc-500">Priority</label>
+            <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide admin-surface-muted">Priority</label>
             <select
               value={form.priority}
               onChange={(e) => setForm((p) => ({ ...p, priority: e.target.value }))}
-              className={inputCls}
+              className={`${inputCls} focus-ra-primary`}
             >
-              {PRIORITIES.map((item) => (
+              {SUPPORT_PRIORITIES.map((item) => (
                 <option key={item} value={item}>
                   {item}
                 </option>
@@ -240,7 +255,7 @@ export default function SupportTicketsPage() {
           </div>
         </div>
         <div>
-          <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-zinc-500">Message</label>
+          <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide admin-surface-muted">Message</label>
           <textarea
             rows={4}
             value={form.message}
@@ -273,21 +288,22 @@ export default function SupportTicketsPage() {
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="rounded-lg border admin-shell-border admin-surface-input px-2.5 py-1.5 text-xs admin-shell-text"
+              className={`${adminFilterSelectCls} focus-ra-primary min-w-[8rem]`}
             >
-              <option value="all">all</option>
-              {STATUSES.map((s) => (
+              <option value="all">Status: all</option>
+              {SUPPORT_STATUSES.map((s) => (
                 <option key={s} value={s}>
-                  {s}
+                  {s.replace(/_/g, " ")}
                 </option>
               ))}
             </select>
             <button
               type="button"
               onClick={loadTickets}
-              className="cursor-pointer inline-flex items-center gap-1 rounded-lg border admin-shell-border px-2.5 py-1.5 text-xs admin-surface-body hover:border-zinc-500"
+              disabled={loading}
+              className="cursor-pointer inline-flex items-center gap-1 rounded-lg border admin-shell-border px-2.5 py-1.5 text-xs admin-surface-body transition-colors hover:bg-[var(--admin-hover)] disabled:cursor-not-allowed disabled:opacity-50"
             >
-              <RefreshCcw className="size-3.5" />
+              <RefreshCcw className={`size-3.5 ${loading ? "animate-spin" : ""}`} />
               Refresh
             </button>
           </div>
@@ -303,7 +319,7 @@ export default function SupportTicketsPage() {
         ) : (
           <div className="space-y-2">
             {tickets.map((ticket) => (
-              <div key={String(ticket._id)} className="rounded-xl admin-surface-card p-3">
+              <div key={String(ticket._id)} className={supportTicketRowCardCls}>
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <p className="text-sm font-semibold admin-shell-text">
                     {ticket.ticketCode} · {ticket.subject}
@@ -314,44 +330,49 @@ export default function SupportTicketsPage() {
                 </div>
                 <p className="mt-1 text-sm admin-surface-body">{ticket.message}</p>
                 <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
-                  <span className="rounded-full border admin-shell-border px-2 py-1 admin-surface-body">
-                    priority: {ticket.priority}
-                  </span>
-                  <span className="rounded-full border admin-shell-border px-2 py-1 admin-surface-body">
-                    status: {ticket.status}
-                  </span>
                   {canModerate ? (
                     <>
                       <select
-                        value={ticket.status}
-                        onChange={(e) => quickUpdate(String(ticket._id), { status: e.target.value })}
-                        className="rounded-lg border admin-shell-border admin-surface-input px-2 py-1 text-xs admin-shell-text"
-                      >
-                        {STATUSES.map((s) => (
-                          <option key={s} value={s}>
-                            {s}
-                          </option>
-                        ))}
-                      </select>
-                      <select
                         value={ticket.priority}
                         onChange={(e) => quickUpdate(String(ticket._id), { priority: e.target.value })}
-                        className="rounded-lg border admin-shell-border admin-surface-input px-2 py-1 text-xs admin-shell-text"
+                        className={ticketPrioritySelectCls(ticket.priority)}
+                        aria-label={`Priority for ${ticket.ticketCode}`}
                       >
-                        {PRIORITIES.map((p) => (
+                        {SUPPORT_PRIORITIES.map((p) => (
                           <option key={p} value={p}>
                             {p}
                           </option>
                         ))}
                       </select>
+                      <select
+                        value={ticket.status}
+                        onChange={(e) => quickUpdate(String(ticket._id), { status: e.target.value })}
+                        className={ticketStatusSelectCls(ticket.status, "restaurant")}
+                        aria-label={`Status for ${ticket.ticketCode}`}
+                      >
+                        {SUPPORT_STATUSES.map((s) => (
+                          <option key={s} value={s}>
+                            {s.replace(/_/g, " ")}
+                          </option>
+                        ))}
+                      </select>
                     </>
-                  ) : null}
+                  ) : (
+                    <>
+                      <span className={ticketPriorityBadgeCls(ticket.priority)}>
+                        {ticket.priority}
+                      </span>
+                      <span className={ticketStatusBadgeCls(ticket.status, "restaurant")}>
+                        {String(ticket.status ?? "").replace(/_/g, " ")}
+                      </span>
+                    </>
+                  )}
                   <button
                     type="button"
                     onClick={() => openTicket(String(ticket._id))}
-                    className="cursor-pointer rounded-lg border admin-shell-border px-2 py-1 text-xs admin-surface-body hover:border-zinc-500"
+                    className={adminTableActionBtnCls}
                   >
-                    View details
+                    View
                   </button>
                 </div>
               </div>
@@ -361,9 +382,9 @@ export default function SupportTicketsPage() {
       </div>
 
       {selectedTicketId ? (
-        <div className="fixed inset-0 z-[120] flex justify-end bg-black/50 p-0">
+        <div className={supportTicketDrawerOverlayCls}>
           <div className="relative h-full w-full max-w-xl overflow-y-auto border-l admin-shell-border admin-surface-card-solid p-4">
-            <div className="sticky top-0 z-10 mb-4 flex items-center justify-between border-b admin-shell-border admin-surface-card pb-3 pt-1 backdrop-blur">
+            <div className="sticky top-0 z-10 mb-4 flex items-center justify-between admin-surface-divider-b bg-[var(--admin-surface)] pb-3 pt-1 backdrop-blur">
               <h3 className="text-base font-semibold admin-shell-text">Ticket details</h3>
               <button
                 type="button"
@@ -393,11 +414,11 @@ export default function SupportTicketsPage() {
                   <p className="mt-1 text-sm admin-surface-body">{selectedTicket.message}</p>
                 </div>
                 <div className="space-y-2">
-                  <p className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Timeline</p>
+                  <p className="text-xs font-semibold uppercase tracking-wide admin-surface-muted">Timeline</p>
                   <div className="space-y-2">
                     {(selectedTicket.updates || []).slice().reverse().map((u, idx) => (
                       <div key={`${u.at}-${idx}`} className="rounded-lg border admin-shell-border admin-surface-card p-2.5">
-                        <p className="text-xs text-zinc-400">
+                        <p className="text-xs admin-surface-muted">
                           {u.at ? new Date(u.at).toLocaleString() : "—"} · {u.role || "user"}
                         </p>
                         <p className="mt-0.5 text-sm admin-shell-text">{u.note}</p>
@@ -406,7 +427,7 @@ export default function SupportTicketsPage() {
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <label className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Add note</label>
+                  <label className="text-xs font-semibold uppercase tracking-wide admin-surface-muted">Add note</label>
                   <textarea
                     rows={3}
                     value={note}
@@ -434,7 +455,7 @@ export default function SupportTicketsPage() {
           className={`fixed bottom-5 right-5 z-50 rounded-xl border px-4 py-2 text-sm ${
             toast.type === "success"
               ? "border-ra-primary-30 admin-surface-card text-ra-primary-muted"
-              : "border-red-500/30 admin-surface-card text-red-300"
+              : "border-red-500/30 admin-surface-card text-red-400"
           }`}
         >
           {toast.message}

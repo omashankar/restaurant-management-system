@@ -59,7 +59,7 @@ function warmThemeFromStorage() {
   }
 }
 
-if (typeof window !== "undefined") {
+if (typeof window !== "undefined" && window.location.pathname.startsWith("/super-admin")) {
   warmThemeFromStorage();
 }
 
@@ -67,7 +67,12 @@ if (typeof window !== "undefined") {
 export function updateSuperAdminThemeCache(theme) {
   const resolved = resolveSuperAdminTheme(theme);
   writeStoredSuperAdminTheme(resolved);
-  applySuperAdminDocumentTheme(resolved);
+  if (
+    typeof window === "undefined" ||
+    window.location.pathname.startsWith("/super-admin")
+  ) {
+    applySuperAdminDocumentTheme(resolved);
+  }
   _cache = mergeConfig({
     ...(_cache ?? {}),
     theme: {
@@ -101,6 +106,10 @@ export function usePlatformConfig() {
     let mounted = true;
 
     async function load() {
+      const isSuperAdminRoute =
+        typeof window !== "undefined" &&
+        window.location.pathname.startsWith("/super-admin");
+
       const stored = readStoredSuperAdminTheme();
       if (stored && !_cache) {
         const seeded = mergeConfig({
@@ -112,7 +121,7 @@ export function usePlatformConfig() {
         });
         _cache = seeded;
         _cacheTime = Date.now();
-        applySuperAdminDocumentTheme(stored);
+        if (isSuperAdminRoute) applySuperAdminDocumentTheme(stored);
         if (mounted) {
           setConfig(seeded);
           setLoading(false);
@@ -140,7 +149,7 @@ export function usePlatformConfig() {
         _cache = withLiveTheme;
         _cacheTime = Date.now();
         writeStoredSuperAdminTheme(mergedTheme);
-        applySuperAdminDocumentTheme(mergedTheme);
+        if (isSuperAdminRoute) applySuperAdminDocumentTheme(mergedTheme);
         setConfig(withLiveTheme);
       } catch {
         if (mounted) setConfig(_cache ?? DEFAULT_CONFIG);

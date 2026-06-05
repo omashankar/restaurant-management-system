@@ -178,7 +178,7 @@ export default function PaymentsPage() {
       </div>
 
       {loadError && (
-        <div className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">
+        <div className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-400">
           {loadError}
         </div>
       )}
@@ -286,7 +286,7 @@ export default function PaymentsPage() {
 
           {/* Pagination */}
           {pagination.pages > 1 && (
-            <div className="flex items-center justify-between border-t admin-shell-border px-4 py-3">
+            <div className="flex items-center justify-between admin-surface-divider-t px-4 py-3">
               <p className="text-xs admin-surface-faint">
                 {pagination.total} total · page {pagination.page} of {pagination.pages}
               </p>
@@ -374,7 +374,7 @@ export default function PaymentsPage() {
                 ))}
               </AdminTableBody>
             </AdminTable>
-          <div className="border-t admin-shell-border px-4 py-2.5 text-xs admin-surface-faint">
+          <div className="admin-surface-divider-t px-4 py-2.5 text-xs admin-surface-faint">
             {invoiceRows.length} subscription invoice{invoiceRows.length !== 1 ? "s" : ""}
           </div>
         </DataTableShell>

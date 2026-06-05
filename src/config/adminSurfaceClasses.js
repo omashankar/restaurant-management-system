@@ -26,6 +26,7 @@ export const adminShell = {
     "admin-shell-control inline-flex items-center justify-center rounded-xl border admin-shell-border transition-colors",
   controlHover: "hover:admin-shell-hover",
   divider: "admin-shell-divider",
+  tableBody: "admin-table-body",
   dropdown: "rounded-xl border admin-shell-border admin-shell-elevated p-1.5 shadow-lg admin-shell-dropdown-shadow",
   pageContent: "admin-page-content",
 };

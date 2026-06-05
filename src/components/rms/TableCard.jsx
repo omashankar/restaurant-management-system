@@ -40,7 +40,7 @@ export default function TableCard({
       className={`relative w-full rounded-2xl border p-4 text-left transition-all duration-200 ${
         selected
           ? "border-ra-primary-60 bg-ra-primary-10 shadow-lg shadow-ra-primary-soft"
-          : "admin-shell-border admin-surface-card hover:border-zinc-600 hover:shadow-md"
+          : "admin-shell-border admin-surface-card hover:border-ra-primary-30"
       } ${className}`}
     >
       <span

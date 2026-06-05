@@ -175,10 +175,10 @@ export default function SuperAdminProfilePage() {
 
       {toast ? (
         <div
-          className={`fixed bottom-5 right-5 z-50 flex items-center gap-2.5 rounded-xl border px-4 py-3 text-sm font-medium shadow-2xl shadow-black/40 transition-all ${
+          className={`fixed bottom-5 right-5 z-50 flex items-center gap-2.5 rounded-xl border px-4 py-3 text-sm font-medium admin-surface-card-solid transition-all ${
             toast.type === "success"
               ? "border-sa-accent-30 admin-surface-card text-sa-accent-muted"
-              : "border-red-500/30 admin-surface-card text-red-300"
+              : "border-red-500/30 admin-surface-card text-red-400"
           }`}
         >
           {toast.type === "success"

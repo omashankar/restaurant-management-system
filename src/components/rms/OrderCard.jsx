@@ -9,7 +9,7 @@ export default function OrderCard({ order, onAction, className = "" }) {
   const badge = statusStyles[order.status] ?? statusStyles.completed;
   return (
     <div
-      className={`admin-surface-card p-4 shadow-md shadow-black/15 transition-all duration-200 hover:border-zinc-700 hover:shadow-lg ${className}`}
+      className={`admin-surface-card p-4 transition-colors hover:border-ra-primary-30 ${className}`}
     >
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div>

@@ -68,13 +68,13 @@ export default function MenuCard({
     <article
       className={[
         "group relative flex flex-col overflow-hidden rounded-2xl",
-        "border admin-shell-border/80 border-l-[3px]", accentBorder,
-        "bg-zinc-900 shadow-md shadow-black/30",
-        "transition-all duration-200",
+        "border admin-shell-border border-l-[3px]", accentBorder,
+        "admin-surface-card bg-[var(--admin-surface)]",
+        "transition-colors duration-200",
         isDisabled
           ? "opacity-50 grayscale-[40%] cursor-not-allowed"
-          : "hover:-translate-y-0.5 hover:border-zinc-700 hover:shadow-lg hover:shadow-black/40 cursor-pointer",
-        isPopping ? "ring-2 ring-ra-primary-40 ring-offset-1 ring-offset-zinc-950" : "",
+          : "hover:border-ra-primary-30 cursor-pointer",
+        isPopping ? "ring-2 ring-ra-primary-40 ring-offset-1 ring-offset-[var(--admin-bg)]" : "",
         isMenu && item.status === "inactive" ? "opacity-60 grayscale-[25%]" : "",
       ].filter(Boolean).join(" ")}
       onClick={isPOS && !isDisabled ? () => onAdd(item) : undefined}

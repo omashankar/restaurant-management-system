@@ -1,8 +1,8 @@
 const styles = {
-  pending:   "bg-amber-500/15 text-amber-300 ring-amber-500/30",
+  pending:   "bg-amber-500/15 text-amber-600 ring-amber-500/25",
   confirmed: "ra-status-badge",
-  cancelled: "bg-red-500/20 text-red-400 ring-red-500/40",
-  completed: "bg-sky-500/15 text-sky-300 ring-sky-500/30",
+  cancelled: "bg-red-500/15 text-red-500 ring-red-500/30",
+  completed: "bg-sky-500/15 text-sky-600 ring-sky-500/25",
 };
 
 export default function StatusBadge({ status }) {

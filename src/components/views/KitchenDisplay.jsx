@@ -251,7 +251,7 @@ export default function KitchenDisplay() {
   return (
     <div className="kitchen-display space-y-6">
       {(fetchError || actionError) && (
-        <div className="rounded-xl border border-red-500/25 bg-red-500/10 px-4 py-3 text-sm text-red-300">
+        <div className="rounded-xl border border-red-500/25 bg-red-500/10 px-4 py-3 text-sm text-red-400">
           {fetchError || actionError}
         </div>
       )}

@@ -55,7 +55,7 @@ export default function ChefDashboard({ tickets: initialTickets = [], topItems =
               return (
                 <article key={ticket.id}
                   className={`admin-surface-card border-l-4 ${tone.border}`}>
-                  <div className="flex items-start justify-between gap-2 border-b admin-shell-border/80 p-4">
+                  <div className="flex items-start justify-between gap-2 admin-surface-divider-b p-4">
                     <div>
                       <p className="font-mono text-sm text-ra-primary/90">{ticket.orderId ?? ticket.id}</p>
                       <p className="mt-1 text-lg font-semibold admin-shell-text">
@@ -79,7 +79,7 @@ export default function ChefDashboard({ tickets: initialTickets = [], topItems =
                       </li>
                     ))}
                   </ul>
-                  <div className="flex gap-2 border-t admin-shell-border/80 p-4">
+                  <div className="flex gap-2 admin-surface-divider-t p-4">
                     {ticket.status === "new" && (
                       <button type="button" onClick={() => updateStatus(ticket.id, "preparing")}
                         className="cursor-pointer flex flex-1 items-center justify-center gap-2 rounded-xl bg-sky-500/20 px-3 py-2.5 text-sm font-semibold text-sky-200 ring-1 ring-sky-500/30 hover:bg-sky-500/30">

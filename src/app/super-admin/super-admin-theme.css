@@ -114,8 +114,15 @@
   background-color: rgb(24 24 27 / 0.4);
 }
 :is(.super-admin-panel, :root[data-super-admin-theme]) .focus-sa-primary:focus {
-  border-color: color-mix(in srgb, var(--sa-primary) 50%, transparent);
+  border-color: color-mix(in srgb, var(--sa-primary) 55%, var(--admin-border, transparent));
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--sa-primary) 22%, transparent);
   outline: none;
+}
+
+html[data-admin-mode="dark"]
+  :is(.super-admin-panel, :root[data-super-admin-theme])
+  .focus-sa-primary:focus {
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--sa-primary) 32%, transparent);
 }
 :is(.super-admin-panel, :root[data-super-admin-theme]) .focus-within-sa-primary:focus-within {
   border-color: color-mix(in srgb, var(--sa-primary) 40%, transparent);
@@ -143,7 +150,7 @@
   box-shadow: 0 10px 15px -3px color-mix(in srgb, var(--sa-primary) 18%, transparent);
 }
 :is(.super-admin-panel, :root[data-super-admin-theme]) .sa-preloader-spin {
-  border-color: rgb(63 63 70);
+  animation: admin-preloader-spin 0.9s linear infinite;
   border-top-color: var(--sa-primary);
 }
 

@@ -31,7 +31,7 @@ export default function PaymentMethodsSection({ data, onChange, onSave }) {
           <select
             value={data.defaultMethod ?? "cod"}
             onChange={(e) => onChange({ ...data, defaultMethod: e.target.value })}
-            className="w-full cursor-pointer rounded-xl border admin-shell-border bg-zinc-950/80 px-3 py-2.5 text-sm admin-shell-text outline-none transition-colors focus-ra-primary"
+            className="w-full cursor-pointer rounded-xl border admin-shell-border bg-[var(--admin-control)] px-3 py-2.5 text-sm admin-shell-text outline-none transition-colors focus-ra-primary"
           >
             {PAYMENT_METHOD_KEYS.filter((k) => data[k]).map((k) => (
               <option key={k} value={k}>{PAYMENT_METHOD_LABELS[k]}</option>

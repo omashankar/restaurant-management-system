@@ -2,6 +2,7 @@
 
 html[data-admin-mode="dark"],
 :root:not([data-admin-mode]) {
+  color-scheme: dark;
   --admin-bg: #09090b;
   --admin-surface: #141416;
   --admin-surface-soft: #1a1a1e;
@@ -20,11 +21,10 @@ html[data-admin-mode="dark"],
   --admin-shadow: 0 4px 24px rgb(0 0 0 / 0.4);
   --admin-popover-shadow: 0 8px 32px rgb(0 0 0 / 0.45), 0 0 0 1px rgb(255 255 255 / 0.06);
   --admin-popover-ring: rgb(255 255 255 / 0.08);
-  --admin-header-shadow: 0 1px 0 var(--admin-border);
   --admin-sidebar-shadow: none;
   --admin-border-subtle: var(--admin-border);
   --admin-hover-strong: var(--admin-hover);
-  --admin-input-focus-ring: rgb(16 185 129 / 0.35);
+  --admin-input-focus-ring: color-mix(in srgb, var(--ra-primary, var(--sa-primary, #10b981)) 32%, transparent);
   --admin-scrollbar-thumb: #3f3f46;
   --admin-chart-grid: #27272a;
   --admin-chart-tick: #71717a;
@@ -35,6 +35,7 @@ html[data-admin-mode="dark"],
 }
 
 html[data-admin-mode="light"] {
+  color-scheme: light;
   /* Unified light palette — canvas + white elevated surfaces */
   --admin-bg: #f8fafc;
   --admin-surface: #ffffff;
@@ -64,9 +65,8 @@ html[data-admin-mode="light"] {
     0 0 0 1px var(--admin-popover-ring),
     0 8px 24px rgb(15 23 42 / 0.08),
     0 2px 6px rgb(15 23 42 / 0.04);
-  --admin-header-shadow: 0 1px 0 var(--admin-border-subtle);
   --admin-sidebar-shadow: 1px 0 0 var(--admin-border-subtle);
-  --admin-input-focus-ring: rgb(16 185 129 / 0.22);
+  --admin-input-focus-ring: color-mix(in srgb, var(--ra-primary, var(--sa-primary, #10b981)) 22%, transparent);
   --admin-link: #047857;
   --admin-skeleton: #f3f4f6;
   --admin-scrollbar-thumb: #d1d5db;
@@ -91,7 +91,7 @@ html[data-admin-mode="light"] {
 .admin-shell-header {
   background-color: var(--admin-elevated);
   color: var(--admin-text);
-  box-shadow: var(--admin-header-shadow);
+  box-shadow: none;
 }
 
 html[data-admin-mode="light"] .admin-shell-sidebar {
@@ -110,6 +110,13 @@ html[data-admin-mode="light"] .admin-shell-sidebar {
 }
 
 :is(.restaurant-admin-panel, .super-admin-panel, .admin-portal-scope) .admin-surface-divider-t {
+  border-top-width: 1px;
+  border-top-style: solid;
+  border-top-color: var(--admin-border-subtle);
+}
+
+/* Div/list table bodies — subtle row separators (replaces divide-y) */
+:is(.restaurant-admin-panel, .super-admin-panel, .admin-portal-scope) .admin-table-body > :not([hidden]) + :not([hidden]) {
   border-top-width: 1px;
   border-top-style: solid;
   border-top-color: var(--admin-border-subtle);
@@ -143,11 +150,14 @@ html[data-admin-mode="light"] .admin-shell-dropdown-shadow {
   --tw-shadow-color: rgb(15 23 42 / 0.08);
 }
 
-/* Row/list dividers only — do not set background (breaks tbody when used with divide-y) */
+/* Row/list dividers — explicit border-top-color beats Tailwind divide-y default (white in dark) */
 :is(.restaurant-admin-panel, .super-admin-panel, .admin-portal-scope)
   .divide-y.admin-shell-divider
   > :not([hidden])
   ~ :not([hidden]) {
+  border-top-style: solid;
+  border-top-width: 1px;
+  border-top-color: var(--admin-border-subtle);
   border-color: var(--admin-border-subtle);
 }
 
@@ -155,6 +165,9 @@ html[data-admin-mode="light"] .admin-shell-dropdown-shadow {
   .divide-x.admin-shell-divider
   > :not([hidden])
   ~ :not([hidden]) {
+  border-left-style: solid;
+  border-left-width: 1px;
+  border-left-color: var(--admin-border-subtle);
   border-color: var(--admin-border-subtle);
 }
 
@@ -335,7 +348,7 @@ html[data-admin-mode="light"]
   border-radius: var(--admin-radius-card);
   border: 1px solid var(--admin-border-subtle);
   background-color: var(--admin-surface);
-  box-shadow: var(--admin-shadow);
+  box-shadow: none;
   color: var(--admin-text-secondary);
 }
 
@@ -353,7 +366,7 @@ html[data-admin-mode="dark"] {
   border-radius: var(--admin-radius-card);
   border: 1px solid var(--admin-border-subtle);
   background-color: var(--admin-surface);
-  box-shadow: var(--admin-shadow);
+  box-shadow: none;
 }
 
 /* Table embedded inside an existing card (no double border) */
@@ -363,6 +376,16 @@ html[data-admin-mode="dark"] {
   border: none;
   box-shadow: none;
   border-radius: 0;
+}
+
+:is(.restaurant-admin-panel, .super-admin-panel, .admin-portal-scope) .admin-inline-select {
+  width: auto;
+  min-width: 6.5rem;
+  max-width: 100%;
+  flex-shrink: 0;
+  appearance: auto;
+  color: var(--admin-text);
+  background-color: var(--admin-control);
 }
 
 :is(.restaurant-admin-panel, .super-admin-panel, .admin-portal-scope) .admin-surface-input {
@@ -577,14 +600,34 @@ html[data-admin-mode="light"]
   box-shadow: inset 0 0 0 1px var(--admin-border-subtle);
 }
 
-html[data-admin-mode="light"]
-  :is(.restaurant-admin-panel, .super-admin-panel, .admin-portal-scope)
-  .admin-surface-input:focus,
-html[data-admin-mode="light"]
-  :is(.restaurant-admin-panel, .super-admin-panel, .admin-portal-scope)
-  .admin-surface-search:focus {
-  border-color: #10b981;
+:is(.restaurant-admin-panel, :root[data-restaurant-admin-theme]) :is(.admin-surface-input, .admin-surface-search):focus {
+  border-color: color-mix(in srgb, var(--ra-primary) 55%, var(--admin-border));
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--ra-primary) 24%, transparent);
+  outline: none;
+}
+
+html[data-admin-mode="dark"]
+  :is(.restaurant-admin-panel, :root[data-restaurant-admin-theme])
+  :is(.admin-surface-input, .admin-surface-search):focus {
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--ra-primary) 32%, transparent);
+}
+
+:is(.super-admin-panel, :root[data-super-admin-theme]) :is(.admin-surface-input, .admin-surface-search):focus {
+  border-color: color-mix(in srgb, var(--sa-primary) 55%, var(--admin-border));
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--sa-primary) 24%, transparent);
+  outline: none;
+}
+
+html[data-admin-mode="dark"]
+  :is(.super-admin-panel, :root[data-super-admin-theme])
+  :is(.admin-surface-input, .admin-surface-search):focus {
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--sa-primary) 32%, transparent);
+}
+
+.admin-portal-scope :is(.admin-surface-input, .admin-surface-search):focus {
+  border-color: color-mix(in srgb, var(--ra-primary, var(--sa-primary, #10b981)) 55%, var(--admin-border));
   box-shadow: 0 0 0 3px var(--admin-input-focus-ring);
+  outline: none;
 }
 
 :is(.restaurant-admin-panel, .super-admin-panel, .admin-portal-scope) .admin-surface-tooltip {
@@ -930,7 +973,7 @@ html[data-admin-mode="light"]
   :is(.admin-surface-card, .admin-surface-card-solid, .admin-surface-table-shell) {
   border-color: var(--admin-border-subtle);
   background-color: #ffffff;
-  box-shadow: var(--admin-shadow);
+  box-shadow: none;
 }
 
 html[data-admin-mode="light"]
@@ -942,6 +985,51 @@ html[data-admin-mode="light"]
 .admin-preloader-overlay {
   background-color: color-mix(in srgb, var(--admin-bg) 95%, transparent);
   color: var(--admin-text);
+  backdrop-filter: blur(2px);
+}
+
+/* Preloader ring — explicit spin + contrasting top border (track on 3 sides only) */
+@keyframes admin-preloader-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.admin-preloader-spin {
+  animation: admin-preloader-spin 0.9s linear infinite;
+  border-radius: 9999px;
+  border-style: solid;
+  border-width: 2px;
+  border-top-color: var(--admin-text-muted);
+  border-right-color: var(--admin-border);
+  border-bottom-color: var(--admin-border);
+  border-left-color: var(--admin-border);
+}
+
+html[data-admin-mode="dark"] .admin-preloader-spin {
+  border-right-color: rgb(63 63 70);
+  border-bottom-color: rgb(63 63 70);
+  border-left-color: rgb(63 63 70);
+}
+
+:is(.restaurant-admin-panel, :root[data-restaurant-admin-theme]) .admin-preloader-spin {
+  border-top-color: var(--ra-primary);
+}
+
+:is(.super-admin-panel, :root[data-super-admin-theme]) .admin-preloader-spin {
+  border-top-color: var(--sa-primary);
+}
+
+.admin-portal-scope .admin-preloader-spin {
+  border-top-color: var(--platform-primary);
+}
+
+html[data-admin-mode="light"]
+  :is(.restaurant-admin-panel, .super-admin-panel, .admin-portal-scope)
+  :is(.ra-preloader-box, .sa-preloader-box, .auth-preloader-box) {
+  box-shadow:
+    0 1px 2px rgb(15 23 42 / 0.04),
+    0 8px 20px rgb(15 23 42 / 0.06);
 }
 
 /* ── Page titles (all admin routes) ── */
@@ -1043,6 +1131,56 @@ html[data-admin-mode="light"] :is(.restaurant-admin-panel, .super-admin-panel) .
 
 :is(.restaurant-admin-panel, .super-admin-panel) .admin-page-content tbody tr:last-child td {
   border-bottom: none;
+}
+
+/* DataTableShell + AdminTable — same row borders inside table shell */
+:is(.restaurant-admin-panel, .super-admin-panel, .admin-portal-scope)
+  .admin-surface-table-shell
+  .admin-table
+  tbody
+  td {
+  color: var(--admin-text-secondary);
+  background-color: var(--admin-surface);
+  border-bottom: 1px solid var(--admin-border-subtle);
+  vertical-align: middle;
+}
+
+:is(.restaurant-admin-panel, .super-admin-panel, .admin-portal-scope)
+  .admin-surface-table-shell
+  .admin-table
+  tbody
+  tr {
+  background-color: var(--admin-surface);
+  transition: background-color 0.12s ease;
+}
+
+:is(.restaurant-admin-panel, .super-admin-panel, .admin-portal-scope)
+  .admin-surface-table-shell
+  .admin-table
+  tbody
+  tr:hover,
+:is(.restaurant-admin-panel, .super-admin-panel, .admin-portal-scope)
+  .admin-surface-table-shell
+  .admin-table
+  tbody
+  tr:hover
+  td {
+  background-color: var(--admin-hover);
+}
+
+:is(.restaurant-admin-panel, .super-admin-panel, .admin-portal-scope)
+  .admin-surface-table-shell
+  .admin-table
+  tbody
+  tr:last-child
+  td {
+  border-bottom: none;
+}
+
+:is(.restaurant-admin-panel, .super-admin-panel, .admin-portal-scope)
+  .admin-surface-table-shell
+  .admin-table-list-header {
+  border-bottom: 1px solid var(--admin-border-subtle);
 }
 
 /* ── Sidebar navigation ── */
@@ -1507,6 +1645,29 @@ html[data-admin-mode="light"] .admin-portal-scope button.absolute.inset-0[class*
   background-color: var(--admin-overlay) !important;
 }
 
+/* Plan / pricing cards (Super Admin) */
+.super-admin-panel .sa-pricing-divider {
+  height: 1px;
+  border: 0;
+  background: color-mix(in srgb, var(--admin-border) 55%, transparent);
+}
+
+.super-admin-panel .sa-pricing-divider--free {
+  background: color-mix(in srgb, #71717a 22%, transparent);
+}
+
+.super-admin-panel .sa-pricing-divider--starter {
+  background: color-mix(in srgb, #0ea5e9 22%, transparent);
+}
+
+.super-admin-panel .sa-pricing-divider--pro {
+  background: color-mix(in srgb, #6366f1 22%, transparent);
+}
+
+.super-admin-panel .sa-pricing-divider--enterprise {
+  background: color-mix(in srgb, #f59e0b 22%, transparent);
+}
+
 /* Plan / pricing cards (Super Admin) — light surfaces */
 html[data-admin-mode="light"] .super-admin-panel .sa-pricing-card,
 html[data-admin-mode="light"]
@@ -1516,8 +1677,8 @@ html[data-admin-mode="light"]
   --tw-gradient-to: #f8fafc var(--tw-gradient-to-position);
   --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
   background-color: #ffffff !important;
-  border-color: var(--admin-border) !important;
-  box-shadow: var(--admin-shadow);
+  border-color: var(--admin-border-subtle) !important;
+  box-shadow: none;
   color: var(--admin-text-secondary);
 }
 
@@ -1948,10 +2109,15 @@ html[data-admin-mode="light"]
 }
 
 /* Dashboard RMS cards */
+html[data-admin-mode="light"] :is(.restaurant-admin-panel, .super-admin-panel) .rms-dashboard-card,
+:is(.restaurant-admin-panel, .super-admin-panel) .rms-dashboard-card {
+  box-shadow: none;
+}
+
 html[data-admin-mode="light"] :is(.restaurant-admin-panel, .super-admin-panel) .rms-dashboard-card {
   background-color: var(--admin-surface);
   border-color: var(--admin-border-subtle);
-  box-shadow: var(--admin-shadow);
+  box-shadow: none;
   color: var(--admin-text-secondary);
 }
 
@@ -1962,6 +2128,14 @@ html[data-admin-mode="light"] :is(.restaurant-admin-panel, .super-admin-panel) .
 /* Customer-site editor inside admin */
 html[data-admin-mode="light"] .restaurant-admin-panel [class*="customer-site"] :is(.text-zinc-400, .text-zinc-500) {
   color: var(--admin-text-muted) !important;
+}
+
+/* Customer Site CMS — nested inputs use control surface, not card white */
+:is(.restaurant-admin-panel, .super-admin-panel)
+  :is([class*="customer-site"], .admin-page-content)
+  :is(.admin-surface-input, input.admin-surface-input, textarea.admin-surface-input) {
+  background-color: var(--admin-control);
+  border-color: var(--admin-border-subtle);
 }
 
 /* Icon picker & tinted wells */

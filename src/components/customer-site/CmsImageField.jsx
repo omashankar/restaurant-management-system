@@ -68,7 +68,7 @@ export default function CmsImageField({
       {hint && <p className="text-[11px] text-zinc-600">{hint}</p>}
 
       <div className="rounded-xl admin-surface-card p-3 space-y-3">
-        <div className="overflow-hidden rounded-lg border admin-shell-border bg-zinc-900">
+        <div className="overflow-hidden rounded-lg border border-[var(--admin-border-subtle)] bg-[var(--admin-control)]">
           {previewSrc ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={previewSrc} alt="" className={previewClassName} />
@@ -84,7 +84,7 @@ export default function CmsImageField({
             type="button"
             disabled={disabled || busy}
             onClick={() => fileRef.current?.click()}
-            className="inline-flex cursor-pointer items-center gap-2 rounded-lg border admin-shell-border bg-zinc-900 px-3 py-2 text-xs font-medium admin-shell-text hover:border-ra-primary-40 disabled:opacity-50"
+            className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-[var(--admin-border-subtle)] bg-[var(--admin-control)] px-3 py-2 text-xs font-medium admin-shell-text transition-colors hover:border-ra-primary-40 hover:bg-[var(--admin-hover)] disabled:opacity-50"
           >
             {busy ? (
               <Loader2 className="size-3.5 animate-spin text-ra-primary" />
@@ -98,7 +98,7 @@ export default function CmsImageField({
               type="button"
               disabled={disabled || busy}
               onClick={() => onChange("")}
-              className="inline-flex items-center gap-1.5 rounded-lg border admin-shell-border px-3 py-2 text-xs text-zinc-400 hover:border-red-500/40 hover:text-red-400 disabled:opacity-50"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--admin-border-subtle)] bg-[var(--admin-surface)] px-3 py-2 text-xs admin-surface-muted transition-colors hover:border-red-500/40 hover:bg-red-500/5 hover:text-red-500 disabled:opacity-50"
             >
               <Trash2 className="size-3.5" /> Remove
             </button>

@@ -104,7 +104,7 @@ export default function Navbar() {
             logout();
             router.push("/login");
           }}
-          className="inline-flex items-center gap-2 rounded-xl border admin-shell-border px-3 py-2 text-sm font-medium admin-surface-body transition-all duration-200 hover:border-red-500/40 hover:bg-red-500/10 hover:text-red-300"
+          className="inline-flex items-center gap-2 rounded-xl border admin-shell-border px-3 py-2 text-sm font-medium admin-surface-body transition-all duration-200 hover:border-red-500/40 hover:bg-red-500/10 hover:text-red-400"
         >
           <LogOut className="size-4" />
           <span className="hidden sm:inline">Logout</span>

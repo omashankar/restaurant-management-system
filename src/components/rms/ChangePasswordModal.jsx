@@ -127,7 +127,7 @@ export default function ChangePasswordModal({ open, onClose, variant = "emerald"
             className={`flex items-center gap-2.5 rounded-xl border px-3 py-2 text-sm font-medium ${
               toast.type === "success"
                 ? "border-ra-primary-30 bg-ra-primary-10 text-ra-primary-muted"
-                : "border-red-500/30 bg-red-500/10 text-red-300"
+                : "border-red-500/30 bg-red-500/10 text-red-400"
             }`}
           >
             {toast.type === "success" ? (

@@ -65,7 +65,7 @@ export function AdminTableThActions({ label = "Actions" }) {
 }
 
 export function AdminTableBody({ children, className = "" }) {
-  return <tbody className={`divide-y admin-shell-divider ${className}`}>{children}</tbody>;
+  return <tbody className={className}>{children}</tbody>;
 }
 
 export function AdminTableRow({ children, className = "" }) {

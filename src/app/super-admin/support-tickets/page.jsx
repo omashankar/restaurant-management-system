@@ -1,15 +1,26 @@
 "use client";
 
 import SuperAdminPreloader from "@/components/super-admin/SuperAdminPreloader";
-import { saSpinnerCls } from "@/config/superAdminTheme";
+import DataTableShell from "@/components/ui/DataTableShell";
+import {
+  SUPPORT_PRIORITIES,
+  SUPPORT_STATUSES,
+  SUPPORT_STAT_ITEMS,
+  adminFilterSelectCls,
+  adminTableActionBtnCls,
+  buildTicketStats,
+  saTicketTableGridCls,
+  supportTicketDrawerOverlayCls,
+  ticketPrioritySelectCls,
+  ticketStatusSelectCls,
+} from "@/config/supportTicketConfig";
+import { saInputCls, saSpinnerCls } from "@/config/superAdminTheme";
 import { Loader2, RefreshCcw, X } from "lucide-react";
-import { useEffect, useState } from "react";
-
-const PRIORITIES = ["low", "medium", "high", "urgent"];
-const STATUSES = ["open", "in_progress", "resolved", "closed"];
+import { useEffect, useMemo, useState } from "react";
 
 export default function SuperAdminSupportTicketsPage() {
   const [tickets, setTickets] = useState([]);
+  const [statsTickets, setStatsTickets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -33,16 +44,19 @@ export default function SuperAdminSupportTicketsPage() {
       const params = new URLSearchParams();
       if (statusFilter !== "all") params.set("status", statusFilter);
       if (priorityFilter !== "all") params.set("priority", priorityFilter);
-      const res = await fetch(`/api/super-admin/support-tickets?${params.toString()}`, {
-        cache: "no-store",
-      });
-      const data = await res.json();
+      const [listRes, statsRes] = await Promise.all([
+        fetch(`/api/super-admin/support-tickets?${params.toString()}`, { cache: "no-store" }),
+        fetch("/api/super-admin/support-tickets?limit=200", { cache: "no-store" }),
+      ]);
+      const data = await listRes.json();
+      const statsData = await statsRes.json();
       if (data.success) setTickets(data.tickets || []);
       else {
         const message = data.error || "Failed to load tickets.";
         setLoadError(message);
         showToast("error", message);
       }
+      if (statsData.success) setStatsTickets(statsData.tickets || []);
     } catch {
       const message = "Network error.";
       setLoadError(message);
@@ -58,6 +72,10 @@ export default function SuperAdminSupportTicketsPage() {
   }, [statusFilter, priorityFilter]);
 
   async function updateTicket(ticketId, payload) {
+    const mergeTicket = (prev) =>
+      prev.map((t) => (String(t._id) === ticketId ? { ...t, ...payload } : t));
+    setTickets(mergeTicket);
+    setStatsTickets(mergeTicket);
     try {
       const res = await fetch(`/api/super-admin/support-tickets/${ticketId}`, {
         method: "PATCH",
@@ -67,15 +85,18 @@ export default function SuperAdminSupportTicketsPage() {
       const data = await res.json();
       if (!data.success) {
         showToast("error", data.error || "Update failed.");
+        loadTickets();
         return;
       }
       showToast("success", "Ticket updated.");
-      setTickets((prev) =>
-        prev.map((t) => (String(t._id) === ticketId ? { ...t, ...data.ticket } : t))
-      );
+      const applyServer = (prev) =>
+        prev.map((t) => (String(t._id) === ticketId ? { ...t, ...data.ticket } : t));
+      setTickets(applyServer);
+      setStatsTickets(applyServer);
       if (selectedTicketId === ticketId) setSelectedTicket(data.ticket);
     } catch {
       showToast("error", "Network error.");
+      loadTickets();
     }
   }
 
@@ -112,9 +133,10 @@ export default function SuperAdminSupportTicketsPage() {
         return;
       }
       setSelectedTicket(data.ticket);
-      setTickets((prev) =>
-        prev.map((t) => (String(t._id) === String(data.ticket._id) ? { ...t, ...data.ticket } : t))
-      );
+      const applyServer = (prev) =>
+        prev.map((t) => (String(t._id) === String(data.ticket._id) ? { ...t, ...data.ticket } : t));
+      setTickets(applyServer);
+      setStatsTickets(applyServer);
       setNote("");
       showToast("success", "Note added.");
     } catch {
@@ -124,6 +146,8 @@ export default function SuperAdminSupportTicketsPage() {
     }
   }
 
+  const stats = useMemo(() => buildTicketStats(statsTickets), [statsTickets]);
+
   return (
     <div className="space-y-5">
       <div>
@@ -132,54 +156,68 @@ export default function SuperAdminSupportTicketsPage() {
       </div>
 
       {loadError && (
-        <div className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">
+        <div className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-400">
           {loadError}
         </div>
       )}
 
-      <div className="flex flex-wrap items-center gap-2 admin-surface-card p-3">
-        <select
-          value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value)}
-          className="rounded-lg border admin-shell-border admin-surface-input px-2.5 py-1.5 text-xs admin-shell-text"
-        >
-          <option value="all">status: all</option>
-          {STATUSES.map((s) => (
-            <option key={s} value={s}>
-              {s}
-            </option>
-          ))}
-        </select>
-        <select
-          value={priorityFilter}
-          onChange={(e) => setPriorityFilter(e.target.value)}
-          className="rounded-lg border admin-shell-border admin-surface-input px-2.5 py-1.5 text-xs admin-shell-text"
-        >
-          <option value="all">priority: all</option>
-          {PRIORITIES.map((p) => (
-            <option key={p} value={p}>
-              {p}
-            </option>
-          ))}
-        </select>
-        <button
-          type="button"
-          onClick={loadTickets}
-          className="cursor-pointer inline-flex items-center gap-1 rounded-lg border admin-shell-border px-2.5 py-1.5 text-xs admin-surface-body hover:border-zinc-500"
-        >
-          <RefreshCcw className="size-3.5" />
-          Refresh
-        </button>
+      <div className="grid gap-3 sm:grid-cols-5">
+        {SUPPORT_STAT_ITEMS.map(({ key, label, field, valueCls }) => (
+          <div key={key} className="admin-surface-card px-3 py-2.5">
+            <p className={`text-lg font-semibold tabular-nums ${valueCls}`}>{stats[field]}</p>
+            <p className="text-xs uppercase tracking-wider admin-surface-muted">{label}</p>
+          </div>
+        ))}
       </div>
 
-      <div className="overflow-hidden rounded-2xl border admin-shell-border">
-        <div className="grid grid-cols-[130px_1fr_140px_110px_120px_80px] gap-2 border-b admin-shell-border admin-table-head px-4 py-2 text-xs uppercase tracking-wide text-zinc-500">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between admin-surface-card p-3">
+        <p className="text-xs font-semibold uppercase tracking-wide admin-surface-muted">Filters</p>
+        <div className="flex flex-wrap items-center gap-2">
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            className={`${adminFilterSelectCls} focus-sa-primary min-w-[8.5rem]`}
+          >
+            <option value="all">Status: all</option>
+            {SUPPORT_STATUSES.map((s) => (
+              <option key={s} value={s}>
+                {s.replace(/_/g, " ")}
+              </option>
+            ))}
+          </select>
+          <select
+            value={priorityFilter}
+            onChange={(e) => setPriorityFilter(e.target.value)}
+            className={`${adminFilterSelectCls} focus-sa-primary min-w-[8.5rem]`}
+          >
+            <option value="all">Priority: all</option>
+            {SUPPORT_PRIORITIES.map((p) => (
+              <option key={p} value={p}>
+                {p}
+              </option>
+            ))}
+          </select>
+          <button
+            type="button"
+            onClick={loadTickets}
+            disabled={loading}
+            className="cursor-pointer inline-flex items-center gap-1 rounded-lg border admin-shell-border px-2.5 py-1.5 text-xs admin-surface-body transition-colors hover:bg-[var(--admin-hover)] disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            <RefreshCcw className={`size-3.5 ${loading ? saSpinnerCls : ""}`} />
+            Refresh
+          </button>
+        </div>
+      </div>
+
+      <DataTableShell>
+        <div className="min-w-[52rem]">
+        <div className={`${saTicketTableGridCls} admin-table-list-header px-4 py-2.5 text-xs uppercase tracking-wide admin-surface-muted`}>
           <span>Ticket</span>
           <span>Subject</span>
           <span>Restaurant</span>
-          <span>Priority</span>
-          <span>Status</span>
-          <span>Action</span>
+          <span className="text-center">Priority</span>
+          <span className="text-center">Status</span>
+          <span className="text-center">Action</span>
         </div>
 
         {loading ? (
@@ -187,62 +225,71 @@ export default function SuperAdminSupportTicketsPage() {
         ) : tickets.length === 0 ? (
           <div className="px-4 py-4 text-sm admin-surface-muted">No tickets found.</div>
         ) : (
-          <div className="divide-y admin-shell-divider">
+          <div className="admin-table-body">
             {tickets.map((ticket) => (
               <div
                 key={String(ticket._id)}
-                className="grid grid-cols-[130px_1fr_140px_110px_120px_80px] gap-2 px-4 py-3 text-sm admin-shell-text"
+                className={`${saTicketTableGridCls} px-4 py-3 text-sm admin-shell-text transition-colors hover:bg-[var(--admin-hover)]`}
               >
-                <div>
+                <div className="min-w-0">
                   <p className="font-medium">{ticket.ticketCode}</p>
                   <p className="text-xs admin-surface-muted">
                     {ticket.createdAt ? new Date(ticket.createdAt).toLocaleDateString() : "—"}
                   </p>
                 </div>
-                <div>
+                <div className="min-w-0">
                   <p className="font-medium">{ticket.subject}</p>
-                  <p className="mt-0.5 line-clamp-2 text-xs text-zinc-400">{ticket.message}</p>
+                  <p className="mt-0.5 line-clamp-2 text-xs admin-surface-muted">{ticket.message}</p>
                 </div>
                 <p className="truncate text-xs admin-surface-body">{ticket.restaurantName || "Unknown"}</p>
-                <select
-                  value={ticket.priority}
-                  onChange={(e) => updateTicket(String(ticket._id), { priority: e.target.value })}
-                  className="h-8 rounded-md border admin-shell-border admin-surface-input px-2 text-xs admin-shell-text"
-                >
-                  {PRIORITIES.map((item) => (
-                    <option key={item} value={item}>
-                      {item}
-                    </option>
-                  ))}
-                </select>
-                <select
-                  value={ticket.status}
-                  onChange={(e) => updateTicket(String(ticket._id), { status: e.target.value })}
-                  className="h-8 rounded-md border admin-shell-border admin-surface-input px-2 text-xs admin-shell-text"
-                >
-                  {STATUSES.map((item) => (
-                    <option key={item} value={item}>
-                      {item}
-                    </option>
-                  ))}
-                </select>
-                <button
-                  type="button"
-                  onClick={() => openTicket(String(ticket._id))}
-                  className="h-8 rounded-md border admin-shell-border admin-surface-input px-2 text-xs admin-shell-text"
-                >
-                  View
-                </button>
+                <div className="flex justify-center">
+                  <select
+                    value={ticket.priority}
+                    onChange={(e) => updateTicket(String(ticket._id), { priority: e.target.value })}
+                    className={ticketPrioritySelectCls(ticket.priority)}
+                    aria-label={`Priority for ${ticket.ticketCode}`}
+                  >
+                    {SUPPORT_PRIORITIES.map((item) => (
+                      <option key={item} value={item}>
+                        {item}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="flex justify-center">
+                  <select
+                    value={ticket.status}
+                    onChange={(e) => updateTicket(String(ticket._id), { status: e.target.value })}
+                    className={ticketStatusSelectCls(ticket.status, "super-admin")}
+                    aria-label={`Status for ${ticket.ticketCode}`}
+                  >
+                    {SUPPORT_STATUSES.map((item) => (
+                      <option key={item} value={item}>
+                        {item.replace(/_/g, " ")}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="flex justify-center">
+                  <button
+                    type="button"
+                    onClick={() => openTicket(String(ticket._id))}
+                    className={adminTableActionBtnCls}
+                  >
+                    View
+                  </button>
+                </div>
               </div>
             ))}
           </div>
         )}
-      </div>
+        </div>
+      </DataTableShell>
 
       {selectedTicketId ? (
-        <div className="fixed inset-0 z-[120] flex justify-end bg-black/50 p-0">
+        <div className={supportTicketDrawerOverlayCls}>
           <div className="relative h-full w-full max-w-xl overflow-y-auto border-l admin-shell-border admin-surface-card-solid p-4">
-            <div className="sticky top-0 z-10 mb-4 flex items-center justify-between border-b admin-shell-border admin-surface-card pb-3 pt-1 backdrop-blur">
+            <div className="sticky top-0 z-10 mb-4 flex items-center justify-between admin-surface-divider-b bg-[var(--admin-surface)] pb-3 pt-1 backdrop-blur">
               <h3 className="text-base font-semibold admin-shell-text">Support ticket</h3>
               <button
                 type="button"
@@ -269,17 +316,17 @@ export default function SuperAdminSupportTicketsPage() {
                   <p className="text-sm font-semibold admin-shell-text">
                     {selectedTicket.ticketCode} · {selectedTicket.subject}
                   </p>
-                  <p className="mt-1 text-xs text-zinc-400">
+                  <p className="mt-1 text-xs admin-surface-muted">
                     {selectedTicket.restaurantName || "Unknown Restaurant"}
                   </p>
                   <p className="mt-2 text-sm admin-surface-body">{selectedTicket.message}</p>
                 </div>
                 <div className="space-y-2">
-                  <p className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Timeline</p>
+                  <p className="text-xs font-semibold uppercase tracking-wide admin-surface-muted">Timeline</p>
                   <div className="space-y-2">
                     {(selectedTicket.updates || []).slice().reverse().map((u, idx) => (
                       <div key={`${u.at}-${idx}`} className="rounded-lg border admin-shell-border admin-surface-card p-2.5">
-                        <p className="text-xs text-zinc-400">
+                        <p className="text-xs admin-surface-muted">
                           {u.at ? new Date(u.at).toLocaleString() : "—"} · {u.role || "user"}
                         </p>
                         <p className="mt-0.5 text-sm admin-shell-text">{u.note}</p>
@@ -288,12 +335,12 @@ export default function SuperAdminSupportTicketsPage() {
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <label className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Add internal note</label>
+                  <label className="text-xs font-semibold uppercase tracking-wide admin-surface-muted">Add internal note</label>
                   <textarea
                     rows={3}
                     value={note}
                     onChange={(e) => setNote(e.target.value)}
-                    className="w-full admin-surface-card px-3 py-2.5 text-sm admin-shell-text outline-none transition-colors focus-sa-primary"
+                    className={`${saInputCls} resize-none`}
                     placeholder="Add investigation notes or resolution detail..."
                   />
                   <button
@@ -316,7 +363,7 @@ export default function SuperAdminSupportTicketsPage() {
           className={`fixed bottom-5 right-5 z-50 rounded-xl border px-4 py-2 text-sm ${
             toast.type === "success"
               ? "border-sa-accent-30 admin-surface-card text-sa-accent-muted"
-              : "border-red-500/30 admin-surface-card text-red-300"
+              : "border-red-500/30 admin-surface-card text-red-400"
           }`}
         >
           {toast.message}

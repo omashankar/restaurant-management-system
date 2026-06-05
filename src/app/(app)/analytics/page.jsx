@@ -42,7 +42,7 @@ function KpiCard({ title, value, subtitle, icon: Icon, color = "emerald" }) {
   };
   const c = colors[color] ?? colors.emerald;
   return (
-    <div className="admin-surface-card p-5 shadow-sm">
+    <div className="admin-surface-card p-5">
       <div className="flex items-start justify-between gap-3">
         <div>
           <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500">{title}</p>
@@ -154,7 +154,7 @@ export default function AnalyticsPage() {
       </div>
 
       {fetchError ? (
-        <div className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">
+        <div className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-400">
           {fetchError}
         </div>
       ) : null}
@@ -170,7 +170,7 @@ export default function AnalyticsPage() {
 
       {topItems.length > 0 && (
         <div className="admin-surface-card overflow-hidden">
-          <div className="flex items-center gap-2 border-b admin-shell-border px-5 py-4">
+          <div className="flex items-center gap-2 admin-surface-divider-b px-5 py-4">
             <Trophy className="size-4 text-amber-400" />
             <p className="text-sm font-semibold admin-shell-text">Top Items by Revenue</p>
           </div>

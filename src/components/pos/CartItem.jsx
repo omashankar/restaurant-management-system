@@ -23,7 +23,7 @@ export default function CartItem({
         <button
           type="button"
           onClick={() => onRemove(line.id)}
-          className="cursor-pointer rounded-md p-1.5 admin-surface-muted transition-colors hover:bg-red-500/15 hover:text-red-300"
+          className="cursor-pointer rounded-md p-1.5 admin-surface-muted transition-colors hover:bg-red-500/15 hover:text-red-400"
           aria-label={`Remove ${line.name}`}
         >
           <Trash2 className="size-4" />

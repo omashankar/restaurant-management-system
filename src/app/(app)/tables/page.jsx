@@ -176,7 +176,7 @@ export default function TablesModulePage() {
   return (
     <div className="space-y-6">
       {fetchError && (
-        <div className="rounded-xl border border-red-500/25 bg-red-500/10 px-4 py-3 text-sm text-red-300">
+        <div className="rounded-xl border border-red-500/25 bg-red-500/10 px-4 py-3 text-sm text-red-400">
           {fetchError}
         </div>
       )}
@@ -254,7 +254,7 @@ export default function TablesModulePage() {
               const badgeClass = cat ? getCategoryBadge(cat.color) : "bg-zinc-500/15 text-zinc-400 ring-zinc-500/25";
               return (
                 <div key={t.id}
-                  className="group relative admin-surface-card p-4 shadow-sm transition-all duration-200 hover:border-ra-primary-30 hover:shadow-lg hover:shadow-ra-primary-soft">
+                  className="group relative admin-surface-card p-4 transition-colors hover:border-ra-primary-30">
                   <div className="flex items-start justify-between gap-2">
                     <div>
                       <p className="admin-surface-title text-lg font-semibold">{t.tableNumber}</p>
@@ -284,7 +284,7 @@ export default function TablesModulePage() {
                       </span>
                     </div>
                   )}
-                  <div className="mt-4 flex flex-col gap-1 border-t admin-shell-border pt-3">
+                  <div className="mt-4 flex flex-col gap-1 admin-surface-divider-t pt-3">
                     {st === "available" && (
                       <Link
                         href={`/pos?tableId=${encodeURIComponent(t.id)}`}

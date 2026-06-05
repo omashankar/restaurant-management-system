@@ -272,7 +272,7 @@ export default function BillingPage() {
       </div>
 
       {loadError && (
-        <div className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">
+        <div className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-400">
           {loadError}
         </div>
       )}
@@ -365,7 +365,7 @@ export default function BillingPage() {
 
           {activeTab === "subscriptions" && (
           <div className="admin-surface-card">
-            <div className="flex items-center justify-between border-b admin-shell-border px-5 py-4">
+            <div className="flex items-center justify-between admin-surface-divider-b px-5 py-4">
               <div>
                 <h2 className="text-sm font-semibold admin-shell-text">Subscriptions</h2>
                 <p className="mt-0.5 text-xs admin-surface-muted">Track plan assignments, expiry, and status per restaurant.</p>
@@ -477,7 +477,7 @@ export default function BillingPage() {
                 </AdminTable>
               </DataTableShell>
             )}
-            <div className="border-t admin-shell-border px-4 py-2.5 text-xs admin-surface-faint">
+            <div className="admin-surface-divider-t px-4 py-2.5 text-xs admin-surface-faint">
               {subs.length} subscription{subs.length !== 1 ? "s" : ""}
             </div>
           </div>

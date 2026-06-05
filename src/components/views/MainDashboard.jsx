@@ -57,7 +57,7 @@ export default function MainDashboard() {
       </div>
 
       {dashboard.error && (
-        <p className="rounded-xl border border-red-500/25 bg-red-500/10 px-4 py-3 text-sm text-red-300">
+        <p className="rounded-xl border border-red-500/25 bg-red-500/10 px-4 py-3 text-sm text-red-400">
           {dashboard.error}
         </p>
       )}

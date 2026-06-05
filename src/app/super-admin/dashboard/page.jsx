@@ -106,7 +106,7 @@ function SuperAdminDashboard() {
 
       {/* Stat cards */}
       {loadError && (
-        <div className="rounded-xl border border-red-500/25 bg-red-500/10 px-4 py-3 text-sm text-red-300">
+        <div className="rounded-xl border border-red-500/25 bg-red-500/10 px-4 py-3 text-sm text-red-400">
           {loadError}
         </div>
       )}
@@ -133,7 +133,7 @@ function SuperAdminDashboard() {
       <div className="grid gap-6 lg:grid-cols-3">
         {/* Recent Admins */}
         <div className="lg:col-span-2 admin-surface-card">
-          <div className="flex items-center justify-between border-b admin-shell-border px-5 py-4">
+          <div className="flex items-center justify-between admin-surface-divider-b px-5 py-4">
             <div>
               <h2 className="text-sm font-semibold admin-shell-text">Recent Restaurant Admins</h2>
               <p className="mt-0.5 text-xs admin-surface-muted">Latest registered admin accounts</p>
@@ -153,9 +153,12 @@ function SuperAdminDashboard() {
               <p className="text-sm admin-surface-faint">No restaurant admins yet.</p>
             </div>
           ) : (
-            <div className="divide-y admin-shell-divider">
-              {recentUsers.map((u) => (
-                <div key={u.id} className="flex items-center justify-between gap-3 px-5 py-3 hover:bg-[var(--admin-hover)] transition-colors">
+            <div>
+              {recentUsers.map((u, idx) => (
+                <div
+                  key={u.id}
+                  className={`flex items-center justify-between gap-3 px-5 py-3 transition-colors hover:bg-[var(--admin-hover)]${idx > 0 ? " admin-surface-divider-t" : ""}`}
+                >
                   <div className="flex items-center gap-3 min-w-0">
                     <span className="flex size-8 shrink-0 items-center justify-center rounded-full admin-rank-badge text-xs font-bold admin-surface-body ring-1 ring-zinc-700">
                       {u.name?.[0]?.toUpperCase()}
@@ -189,7 +192,7 @@ function SuperAdminDashboard() {
                 { href: "/super-admin/settings",     label: "Settings",       desc: "Configure system",       icon: Settings, color: "text-zinc-400",    bg: "bg-zinc-500/10"    },
               ].map(({ href, label, desc, icon: Icon, color, bg }) => (
                 <Link key={href} href={href}
-                  className="cursor-pointer flex items-center gap-3 rounded-xl border admin-shell-border p-3 transition-all hover:border-zinc-700 hover:admin-shell-hover">
+                  className="cursor-pointer flex items-center gap-3 rounded-xl border admin-shell-border p-3 transition-colors hover:border-sa-primary-40 hover:admin-shell-hover">
                   <span className={`flex size-9 shrink-0 items-center justify-center rounded-lg ${bg}`}>
                     <Icon className={`size-4 ${color}`} />
                   </span>

@@ -1,4 +1,4 @@
-import { applyAdminColorMode, clearAdminColorMode } from "@/lib/adminColorMode";
+import { applyAdminColorMode, reapplyPortalAdminColorMode } from "@/lib/adminColorMode";
 import { resolveSuperAdminTheme } from "@/lib/superAdminThemeRuntime";
 
 export const SUPER_ADMIN_THEME_STORAGE_KEY = "rms-super-admin-theme";
@@ -54,7 +54,7 @@ export function clearSuperAdminDocumentTheme() {
   for (const key of ["--sa-primary", "--sa-accent", "--platform-primary", "--platform-accent"]) {
     document.documentElement.style.removeProperty(key);
   }
-  clearAdminColorMode();
+  reapplyPortalAdminColorMode();
 }
 
 /** Inline script — runs synchronously in layout before React hydration. */

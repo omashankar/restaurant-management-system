@@ -19,7 +19,7 @@ export default function CmsSaveActions({
         type="button"
         disabled={!!saving}
         onClick={onSaveDraft}
-        className="inline-flex items-center gap-2 rounded-xl border border-zinc-600 bg-zinc-800/80 px-4 py-2.5 text-sm font-semibold admin-shell-text hover:border-zinc-500 hover:bg-[var(--admin-hover)] disabled:opacity-50 transition-colors"
+        className="inline-flex items-center gap-2 rounded-xl border border-[var(--admin-border-subtle)] bg-[var(--admin-control)] px-4 py-2.5 text-sm font-semibold admin-shell-text transition-colors hover:bg-[var(--admin-hover)] disabled:opacity-50"
       >
         {draftBusy ? <Loader2 className="size-4 animate-spin" /> : <Save className="size-4" />}
         {draftLabel}

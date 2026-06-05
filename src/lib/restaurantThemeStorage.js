@@ -1,5 +1,5 @@
 import { EMPTY_SETTINGS } from "@/config/settingsConfig";
-import { applyAdminColorMode, clearAdminColorMode } from "@/lib/adminColorMode";
+import { applyAdminColorMode, reapplyPortalAdminColorMode } from "@/lib/adminColorMode";
 import { resolveRestaurantAdminTheme } from "@/lib/restaurantAdminThemeRuntime";
 
 export const RESTAURANT_ADMIN_THEME_STORAGE_KEY = "rms-restaurant-admin-theme";
@@ -56,7 +56,7 @@ export function clearRestaurantDocumentTheme() {
   for (const key of ["--ra-primary", "--ra-accent"]) {
     document.documentElement.style.removeProperty(key);
   }
-  clearAdminColorMode();
+  reapplyPortalAdminColorMode();
 }
 
 /** Inline script — runs synchronously in layout before React hydration. */

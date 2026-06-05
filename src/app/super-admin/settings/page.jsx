@@ -57,7 +57,7 @@ function Field({ label, hint, error, required, children }) {
 
 function Toggle({ checked, onChange, label, description }) {
   return (
-    <label className="cursor-pointer flex items-start justify-between gap-4 admin-surface-card px-4 py-3 hover:border-zinc-700 transition-colors">
+    <label className="cursor-pointer flex items-start justify-between gap-4 admin-surface-card px-4 py-3 hover:border-[var(--admin-border)] transition-colors">
       <div className="min-w-0">
         <p className="text-sm font-medium admin-shell-text">{label}</p>
         {description && <p className="mt-0.5 text-xs admin-surface-muted">{description}</p>}
@@ -1525,7 +1525,7 @@ export default function SuperAdminSettingsPage() {
       </div>
 
       {loadError && (
-        <div className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">
+        <div className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-400">
           {loadError}
         </div>
       )}

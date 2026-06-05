@@ -112,7 +112,7 @@ export default function CustomerSiteSidebar({
 
                 active
                   ? raSideNavActiveCls
-                  : "border admin-shell-border admin-surface-body hover:bg-[var(--admin-hover)]"
+                  : "border border-[var(--admin-border-subtle)] admin-surface-body hover:bg-[var(--admin-hover)]"
 
               }`}
 
@@ -146,7 +146,7 @@ export default function CustomerSiteSidebar({
 
           {CUSTOMER_SITE_NAV_GROUPS.map((group, gi) => (
 
-            <div key={group.id} className={gi > 0 ? "mt-4 border-t admin-shell-border pt-3" : ""}>
+            <div key={group.id} className={gi > 0 ? "mt-4 admin-surface-divider-t pt-3" : ""}>
 
               <p className="px-2 pb-1.5 text-[10px] font-bold uppercase tracking-wider text-zinc-600">
 

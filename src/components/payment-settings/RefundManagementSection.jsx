@@ -99,25 +99,25 @@ export default function RefundManagementSection({ showToast }) {
 
       {/* New refund form */}
       {showForm && (
-        <div className="mb-5 rounded-xl border admin-shell-border bg-zinc-950/60 p-4 space-y-3">
+        <div className="mb-5 rounded-xl border admin-shell-border bg-[var(--admin-hover)] p-4 space-y-3">
           <p className="text-sm font-semibold admin-shell-text">Create Refund Request</p>
           <div className="grid gap-3 sm:grid-cols-2">
             <div>
               <label className="mb-1 block text-xs admin-surface-muted">Order ID</label>
               <input value={form.orderId} onChange={(e) => setForm((f) => ({ ...f, orderId: e.target.value }))}
                 placeholder="ORD-C-…"
-                className="w-full rounded-xl border admin-shell-border bg-zinc-950/80 px-3 py-2.5 text-sm admin-shell-text outline-none focus-ra-primary" />
+                className="w-full rounded-xl border admin-shell-border bg-[var(--admin-control)] px-3 py-2.5 text-sm admin-shell-text outline-none focus-ra-primary" />
             </div>
             <div>
               <label className="mb-1 block text-xs admin-surface-muted">Refund Amount</label>
               <input type="number" value={form.refundAmount} onChange={(e) => setForm((f) => ({ ...f, refundAmount: e.target.value }))}
                 placeholder="0.00"
-                className="w-full rounded-xl border admin-shell-border bg-zinc-950/80 px-3 py-2.5 text-sm admin-shell-text outline-none focus-ra-primary" />
+                className="w-full rounded-xl border admin-shell-border bg-[var(--admin-control)] px-3 py-2.5 text-sm admin-shell-text outline-none focus-ra-primary" />
             </div>
             <div>
               <label className="mb-1 block text-xs admin-surface-muted">Type</label>
               <select value={form.type} onChange={(e) => setForm((f) => ({ ...f, type: e.target.value }))}
-                className="w-full cursor-pointer rounded-xl border admin-shell-border bg-zinc-950/80 px-3 py-2.5 text-sm admin-shell-text outline-none focus-ra-primary">
+                className="w-full cursor-pointer rounded-xl border admin-shell-border bg-[var(--admin-control)] px-3 py-2.5 text-sm admin-shell-text outline-none focus-ra-primary">
                 <option value="full">Full Refund</option>
                 <option value="partial">Partial Refund</option>
               </select>
@@ -126,7 +126,7 @@ export default function RefundManagementSection({ showToast }) {
               <label className="mb-1 block text-xs admin-surface-muted">Reason</label>
               <input value={form.reason} onChange={(e) => setForm((f) => ({ ...f, reason: e.target.value }))}
                 placeholder="Reason for refund"
-                className="w-full rounded-xl border admin-shell-border bg-zinc-950/80 px-3 py-2.5 text-sm admin-shell-text outline-none focus-ra-primary" />
+                className="w-full rounded-xl border admin-shell-border bg-[var(--admin-control)] px-3 py-2.5 text-sm admin-shell-text outline-none focus-ra-primary" />
             </div>
           </div>
           <div className="flex gap-2 justify-end">
@@ -146,7 +146,7 @@ export default function RefundManagementSection({ showToast }) {
       {/* Filter */}
       <div className="mb-4">
         <select value={statusFilter} onChange={(e) => setStatus(e.target.value)}
-          className="cursor-pointer rounded-xl border admin-shell-border bg-zinc-950/80 px-3 py-2 text-sm admin-shell-text outline-none focus-ra-primary">
+          className="cursor-pointer rounded-xl border admin-shell-border bg-[var(--admin-control)] px-3 py-2 text-sm admin-shell-text outline-none focus-ra-primary">
           <option value="all">All Statuses</option>
           <option value="pending">Pending</option>
           <option value="approved">Approved</option>
@@ -179,7 +179,7 @@ export default function RefundManagementSection({ showToast }) {
                   <th className="px-4 py-3">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y admin-shell-divider">
+              <tbody>
                 {requests.map((r) => (
                   <tr key={r.id} className="transition-colors hover:bg-[var(--admin-hover)]">
                     <td className="px-4 py-3 font-mono text-xs admin-surface-muted">{r.refundId}</td>
@@ -216,7 +216,7 @@ export default function RefundManagementSection({ showToast }) {
             </table>
           </div>
           {pagination.pages > 1 && (
-            <div className="flex items-center justify-between border-t admin-shell-border px-4 py-3">
+            <div className="flex items-center justify-between admin-surface-divider-t px-4 py-3">
               <p className="text-xs admin-surface-faint">{pagination.total} total</p>
               <div className="flex gap-1">
                 <button type="button" onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page <= 1}

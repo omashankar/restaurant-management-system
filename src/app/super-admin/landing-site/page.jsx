@@ -41,7 +41,7 @@ function Field({ label, required, error, hint, children }) {
 /* ── Toggle switch ── */
 function Toggle({ checked, onChange, label, description }) {
   return (
-    <label className="cursor-pointer flex items-center justify-between gap-4 admin-surface-card px-4 py-3 hover:border-zinc-700 transition-colors">
+    <label className="cursor-pointer flex items-center justify-between gap-4 admin-surface-card px-4 py-3 hover:border-[var(--admin-border)] transition-colors">
       <div>
         <p className="text-sm font-medium admin-shell-text">{label}</p>
         {description && <p className="mt-0.5 text-xs admin-surface-muted">{description}</p>}
@@ -367,7 +367,7 @@ function ArrayPanel({ items, fields, onSave, saving, icon: Icon, title, descript
           </div>
         )}
         {items.map((item, i) => (
-          <div key={item.id ?? i} className="flex items-center gap-3 admin-surface-card px-4 py-3 hover:border-zinc-700 transition-colors">
+          <div key={item.id ?? i} className="flex items-center gap-3 admin-surface-card px-4 py-3 hover:border-[var(--admin-border)] transition-colors">
             <div className="min-w-0 flex-1">{renderCard(item)}</div>
             <div className="flex shrink-0 items-center gap-1">
               <button type="button" onClick={() => openEdit(i)}
@@ -1185,7 +1185,7 @@ export default function LandingSitePage() {
       </div>
 
       {loadError && (
-        <div className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">
+        <div className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-400">
           {loadError}
         </div>
       )}

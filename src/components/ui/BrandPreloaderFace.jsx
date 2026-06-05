@@ -22,12 +22,12 @@ export function BrandPreloaderFace({
     : isAuth
       ? "auth-preloader-box"
       : "ra-preloader-box";
-  const preloaderSpin = isSuperAdmin
-    ? "sa-preloader-spin"
+  const preloaderSpin = "admin-preloader-spin";
+  const spinnerCls = isSuperAdmin
+    ? `${saSpinnerCls} animate-spin`
     : isAuth
-      ? "auth-preloader-spin"
-      : "ra-preloader-spin";
-  const spinnerCls = isSuperAdmin ? saSpinnerCls : isAuth ? "auth-spinner size-4 animate-spin" : raSpinnerCls;
+      ? "auth-spinner size-4 animate-spin"
+      : `${raSpinnerCls} animate-spin`;
   const brandIconCls = isSuperAdmin ? "text-sa-primary" : isAuth ? "auth-link" : "text-ra-primary";
 
   const defaultTitle = isSuperAdmin
@@ -41,8 +41,8 @@ export function BrandPreloaderFace({
 
   if (compact) {
     return (
-      <div className="flex items-center justify-center gap-2 py-12 text-sm admin-surface-muted">
-        <Loader2 className={isSuperAdmin || isAuth || isRestaurantAdmin ? spinnerCls : "size-4 animate-spin text-zinc-400"} />
+      <div className="flex items-center justify-center gap-2 py-12 text-sm admin-shell-muted">
+        <Loader2 className={isSuperAdmin || isAuth || isRestaurantAdmin ? spinnerCls : "size-4 animate-spin admin-shell-muted"} />
         <span>{subtitle ?? defaultSubtitle}</span>
       </div>
     );
@@ -56,12 +56,12 @@ export function BrandPreloaderFace({
           {isSuperAdmin ? (
             <Shield className={`size-6 ${brandIconCls}`} />
           ) : (
-            <div className={`size-7 animate-spin rounded-full border-2 ${preloaderSpin}`} />
+            <div className={`size-7 ${preloaderSpin}`} />
           )}
         </div>
         {isSuperAdmin ? (
-          <div className="absolute -bottom-1 -right-1 flex size-6 items-center justify-center rounded-full border border-zinc-900 bg-zinc-950">
-            <div className={`size-4 animate-spin rounded-full border-2 ${preloaderSpin}`} />
+          <div className="absolute -bottom-1 -right-1 flex size-6 items-center justify-center rounded-full border admin-shell-border admin-shell-elevated shadow-sm">
+            <div className={`size-4 ${preloaderSpin}`} />
           </div>
         ) : null}
       </div>
@@ -70,7 +70,7 @@ export function BrandPreloaderFace({
         <p className="text-sm font-semibold tracking-wide admin-shell-text">
           {title ?? defaultTitle}
         </p>
-        <p className="mt-1 text-xs text-zinc-400">{subtitle ?? defaultSubtitle}</p>
+        <p className="mt-1 text-xs admin-shell-muted">{subtitle ?? defaultSubtitle}</p>
       </div>
     </div>
   );

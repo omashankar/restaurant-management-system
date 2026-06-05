@@ -27,18 +27,24 @@ export default function ReservationCalendarView({ rows, onView, onEdit, onDelete
 
   if (groups.length === 0) return null;
 
+  function gridCls(count) {
+    if (count <= 1) return "grid max-w-lg grid-cols-1 gap-4";
+    if (count === 2) return "grid grid-cols-1 gap-4 sm:grid-cols-2";
+    return "grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3";
+  }
+
   return (
     <div className="space-y-8">
       {groups.map(({ date, items }) => (
         <section key={date}>
-          <h3 className="sticky top-0 z-10 mb-4 inline-flex rounded-lg border admin-shell-border bg-[var(--admin-surface)] px-3 py-1.5 text-sm font-semibold text-ra-primary ring-1 ring-ra-primary-25 shadow-sm backdrop-blur-sm">
+          <h3 className="sticky top-0 z-10 mb-4 inline-flex rounded-lg border border-ra-primary-25 bg-[var(--admin-surface)] px-3 py-1.5 text-sm font-semibold text-ra-primary backdrop-blur-sm">
             {formatReservationDate(date)}
           </h3>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className={gridCls(items.length)}>
             {items.map((r) => (
               <div
                 key={r.id}
-                className="group admin-surface-card p-4 transition-all duration-300 hover:-translate-y-0.5 hover:border-[color-mix(in_srgb,var(--ra-primary)_35%,var(--admin-border))] hover:shadow-md"
+                className="group rounded-2xl border admin-shell-border bg-[var(--admin-surface)] p-4 transition-colors hover:border-ra-primary-40 hover:bg-[var(--admin-hover)]"
               >
                 <div className="flex items-start justify-between gap-2">
                   <div>
@@ -68,7 +74,7 @@ export default function ReservationCalendarView({ rows, onView, onEdit, onDelete
                     {r.notes}
                   </p>
                 ) : null}
-                <div className="mt-4 flex gap-1 border-t admin-shell-border/80 pt-3">
+                <div className="mt-4 flex gap-1 admin-surface-divider-t pt-3">
                   <button
                     type="button"
                     onClick={() => onView(r)}

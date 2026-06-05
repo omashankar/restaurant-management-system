@@ -78,20 +78,20 @@ export default function PayoutRequestsSection({ settlement, showToast }) {
 
       {/* Request form */}
       {showForm && (
-        <div className="mb-5 rounded-xl border admin-shell-border bg-zinc-950/60 p-4 space-y-3">
+        <div className="mb-5 rounded-xl border admin-shell-border bg-[var(--admin-hover)] p-4 space-y-3">
           <p className="text-sm font-semibold admin-shell-text">New Payout Request</p>
           <div className="grid gap-3 sm:grid-cols-2">
             <div>
               <label className="mb-1 block text-xs admin-surface-muted">Amount (₹)</label>
               <input type="number" value={amount} onChange={(e) => setAmount(e.target.value)}
                 placeholder={`Min ₹${settlement?.minWithdrawalAmount ?? 100}`}
-                className="w-full rounded-xl border admin-shell-border bg-zinc-950/80 px-3 py-2.5 text-sm admin-shell-text outline-none focus-ra-primary" />
+                className="w-full rounded-xl border admin-shell-border bg-[var(--admin-control)] px-3 py-2.5 text-sm admin-shell-text outline-none focus-ra-primary" />
             </div>
             <div>
               <label className="mb-1 block text-xs admin-surface-muted">Note (optional)</label>
               <input value={note} onChange={(e) => setNote(e.target.value)}
                 placeholder="Any note for admin"
-                className="w-full rounded-xl border admin-shell-border bg-zinc-950/80 px-3 py-2.5 text-sm admin-shell-text outline-none focus-ra-primary" />
+                className="w-full rounded-xl border admin-shell-border bg-[var(--admin-control)] px-3 py-2.5 text-sm admin-shell-text outline-none focus-ra-primary" />
             </div>
           </div>
           <div className="flex gap-2 justify-end">
@@ -132,7 +132,7 @@ export default function PayoutRequestsSection({ settlement, showToast }) {
                   <th className="px-4 py-3">Date</th>
                 </tr>
               </thead>
-              <tbody className="divide-y admin-shell-divider">
+              <tbody>
                 {requests.map((r) => (
                   <tr key={r.id} className="transition-colors hover:bg-[var(--admin-hover)]">
                     <td className="px-4 py-3 font-mono text-xs admin-surface-muted">{r.requestId}</td>
@@ -153,7 +153,7 @@ export default function PayoutRequestsSection({ settlement, showToast }) {
             </table>
           </div>
           {pagination.pages > 1 && (
-            <div className="flex items-center justify-between border-t admin-shell-border px-4 py-3">
+            <div className="flex items-center justify-between admin-surface-divider-t px-4 py-3">
               <p className="text-xs admin-surface-faint">{pagination.total} total</p>
               <div className="flex gap-1">
                 <button type="button" onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page <= 1}

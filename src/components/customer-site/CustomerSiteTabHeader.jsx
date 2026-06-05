@@ -4,7 +4,7 @@ export default function CustomerSiteTabHeader({ tab, badge }) {
   if (!tab) return null;
   const Icon = tab.icon;
   return (
-    <div className="mb-6 border-b admin-shell-border pb-5">
+    <div className="mb-6 admin-surface-divider-b pb-5">
       <div className="flex flex-wrap items-start gap-3">
         <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-ra-primary-15 text-ra-primary ring-1 ring-ra-primary-25">
           <Icon className="size-5" />

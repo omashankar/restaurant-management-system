@@ -131,7 +131,7 @@ export default function CustomerSearch({ onCustomerSelect }) {
       {query.trim() && !showAddForm && (
         <div className="rounded-xl border admin-shell-border bg-zinc-900 shadow-xl shadow-black/30">
           {results.length > 0 ? (
-            <ul className="divide-y admin-shell-divider">
+            <ul className="admin-table-body">
               {results.map((c) => (
                 <li key={c.id}>
                   <button

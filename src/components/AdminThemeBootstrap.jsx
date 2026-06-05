@@ -1,7 +1,7 @@
 import { adminThemeBootstrapScript } from "@/lib/adminThemeBootstrap";
 
-/** Blocking restore of light/dark before hydration (all admin shells). */
-export default function AdminColorModeBootstrap() {
+/** Earliest restore — portal theme + light/dark before hydration (prevents loader flash). */
+export default function AdminThemeBootstrap() {
   return (
     <script
       dangerouslySetInnerHTML={{ __html: adminThemeBootstrapScript() }}

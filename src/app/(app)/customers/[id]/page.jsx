@@ -169,7 +169,7 @@ export default function CustomerDetailPage() {
                 <th className="px-4 py-3 text-right">Total</th>
               </tr>
             </thead>
-            <tbody className="divide-y admin-shell-divider">
+            <tbody>
               {customer.orderHistory?.length ? (
                 customer.orderHistory.map((o) => (
                   <tr

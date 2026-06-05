@@ -167,7 +167,7 @@ export default function OrderSummary({
                         <span className={`mt-0.5 rounded px-1 py-0.5 text-[8px] font-semibold leading-none ${
                           isBlocked ? "bg-red-500/10 text-red-500"
                           : isSelected ? "bg-ra-primary/20 text-ra-primary"
-                          : "bg-ra-primary-10 text-ra-accent"
+                          : "bg-ra-primary-10 text-ra-primary"
                         }`}>
                           {isBlocked ? table.status : isSelected ? "✓" : "Free"}
                         </span>
@@ -256,7 +256,7 @@ export default function OrderSummary({
 
         {/* ── Customer search (dine-in / takeaway only) ── */}
         {orderType !== "delivery" && (
-          <div className="border-b admin-shell-border p-3">
+          <div className="admin-surface-divider-b p-3">
             <div className="mb-1.5 flex items-center justify-between">
               <p className="text-[10px] font-semibold uppercase tracking-wider admin-surface-muted">Customer *</p>
               {orderType === "dine-in" && !selectedTableId && (
@@ -305,7 +305,7 @@ export default function OrderSummary({
         </div>
 
         {/* ── Totals + actions ── */}
-        <div className="border-t admin-shell-border p-3 space-y-3">
+        <div className="admin-surface-divider-t p-3 space-y-3">
 
           {/* Order note */}
           {cart.length > 0 && (
@@ -339,7 +339,7 @@ export default function OrderSummary({
                 <span className="admin-shell-text">{currency} {serviceCharge.toFixed(2)}</span>
               </div>
             )}
-            <div className="flex justify-between border-t admin-shell-border pt-1.5 text-sm font-semibold admin-shell-text">
+            <div className="flex justify-between admin-surface-divider-t pt-1.5 text-sm font-semibold admin-shell-text">
               <span>Total</span>
               <span>{currency} {total.toFixed(2)}</span>
             </div>

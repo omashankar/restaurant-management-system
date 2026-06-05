@@ -44,10 +44,24 @@ export function clearAdminColorMode() {
   }
 }
 
-/** Runs before React — restores light/dark from unified key or portal theme storage. */
-export function adminColorModeBootstrapScript() {
-  const modeKey = ADMIN_COLOR_MODE_STORAGE_KEY;
-  const saKey = "rms-super-admin-theme";
-  const raKey = "rms-restaurant-admin-theme";
-  return `(function(){try{var d=document.documentElement;var p=location.pathname||"";var sa=p.indexOf("/super-admin")===0;var mode=localStorage.getItem(${JSON.stringify(modeKey)});if(mode!=="light"&&mode!=="dark"){var key=sa?${JSON.stringify(saKey)}:${JSON.stringify(raKey)};var r=localStorage.getItem(key);if(r){var t=JSON.parse(r);mode=t.darkMode===false?"light":"dark";}else{mode="dark";}}d.dataset.adminMode=mode;}catch(e){}})();`;
+/** Re-apply light/dark for the active portal after clearing portal-specific branding. */
+export function reapplyPortalAdminColorMode() {
+  if (typeof document === "undefined" || typeof window === "undefined") return;
+  const sa = window.location.pathname.startsWith("/super-admin");
+  const themeKey = sa ? "rms-super-admin-theme" : "rms-restaurant-admin-theme";
+  try {
+    const raw = localStorage.getItem(themeKey);
+    if (raw) {
+      const t = JSON.parse(raw);
+      const mode = t?.darkMode === false ? "light" : "dark";
+      document.documentElement.dataset.adminMode = mode;
+      writeStoredAdminColorMode(mode);
+      return mode;
+    }
+  } catch {
+    /* ignore */
+  }
+  const fallback = readStoredAdminColorMode() ?? "dark";
+  document.documentElement.dataset.adminMode = fallback;
+  return fallback;
 }

@@ -22,8 +22,13 @@ import {
   getCustomerSiteTab,
 } from "@/config/customerSiteTabs";
 import {
+  CMS_EDITOR_GROUP,
+  CMS_EDITOR_GROUP_FLAT,
+  CMS_EDITOR_INPUT,
   CMS_EDITOR_SECTION,
   CMS_EDITOR_SECTION_TIGHT,
+  CMS_EDITOR_TEXTAREA,
+  CMS_EDITOR_TOGGLE_ROW,
   CMS_MEDIA_FORM_ROW,
 } from "@/config/customerSiteEditorClasses";
 import {
@@ -58,9 +63,8 @@ function emptyBanner(id) {
   };
 }
 
-const inputCls =
-  "w-full rounded-xl border admin-shell-border admin-surface-card px-3 py-2.5 text-sm admin-shell-text outline-none focus-ra-primary placeholder:admin-surface-faint transition-colors";
-const textareaCls = inputCls + " resize-none";
+const inputCls = CMS_EDITOR_INPUT;
+const textareaCls = CMS_EDITOR_TEXTAREA;
 
 function Field({ label, hint, children, className = "" }) {
   return (
@@ -92,7 +96,7 @@ function ensureAboutStats(list) {
 
 function ToggleRow({ label, hint, enabled, onToggle }) {
   return (
-    <div className="flex items-center justify-between rounded-xl admin-surface-card px-4 py-3">
+    <div className={CMS_EDITOR_TOGGLE_ROW}>
       <div>
         <p className="text-sm font-medium admin-shell-text">{label}</p>
         {hint && <p className="text-xs admin-surface-muted">{hint}</p>}
@@ -423,7 +427,7 @@ export default function CustomerSitePage() {
               type="button"
               disabled={!!saving}
               onClick={resetActiveTab}
-              className="inline-flex items-center gap-2 rounded-xl border admin-shell-border px-4 py-2.5 text-sm font-medium admin-surface-body hover:border-zinc-500 hover:admin-shell-text disabled:opacity-50"
+              className="inline-flex items-center gap-2 rounded-xl border border-[var(--admin-border-subtle)] bg-[var(--admin-surface)] px-4 py-2.5 text-sm font-medium admin-surface-body transition-colors hover:bg-[var(--admin-hover)] disabled:opacity-50"
             >
               <RotateCcw className="size-4" /> Reset changes
             </button>
@@ -448,7 +452,7 @@ export default function CustomerSitePage() {
               href={siteUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 rounded-xl border admin-shell-border px-4 py-2.5 text-sm font-medium admin-surface-body hover-border-ra-primary-40 hover-ra-primary transition-colors"
+              className="inline-flex items-center gap-2 rounded-xl border border-[var(--admin-border-subtle)] bg-[var(--admin-surface)] px-4 py-2.5 text-sm font-medium admin-surface-body transition-colors hover:border-ra-primary-40 hover:text-ra-primary"
             >
               <ExternalLink className="size-4" /> Visit website
             </a>
@@ -673,7 +677,7 @@ export default function CustomerSitePage() {
               />
               {hero.quickPillsEnabled !== false &&
                 (hero.quickPills ?? []).map((pill, i) => (
-                  <div key={i} className="grid gap-2 sm:grid-cols-2 rounded-xl border admin-shell-border/80 p-3">
+                  <div key={i} className={`grid gap-2 sm:grid-cols-2 ${CMS_EDITOR_GROUP_FLAT}`}>
                     <Field label={`Tag ${i + 1} label`}>
                       <input
                         value={pill.label}
@@ -767,7 +771,7 @@ export default function CustomerSitePage() {
               <p className="text-xs admin-surface-muted">Three small images below the main hero</p>
               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-3">
               {ensureHeroThumbnails(hero.thumbnails).map((thumb, i) => (
-                <div key={i} className="space-y-2 rounded-xl border admin-shell-border p-3">
+                <div key={i} className={`space-y-2 ${CMS_EDITOR_GROUP_FLAT}`}>
                   <Field label={`Small image ${i + 1} label`}>
                     <input
                       value={thumb.label}
@@ -1125,7 +1129,7 @@ export default function CustomerSitePage() {
                   type="button"
                   disabled={banners.length >= 8}
                   onClick={() => setBanners((p) => [...p, emptyBanner(Date.now())])}
-                  className="inline-flex items-center gap-2 rounded-xl border admin-shell-border px-4 py-2 text-sm admin-surface-body hover-border-ra-primary-40 disabled:opacity-40"
+                  className="inline-flex items-center gap-2 rounded-xl border border-[var(--admin-border-subtle)] bg-[var(--admin-surface)] px-4 py-2 text-sm admin-surface-body transition-colors hover:border-ra-primary-40 disabled:opacity-40"
                 >
                   <Plus className="size-4" /> Add slide
                 </button>
@@ -1215,7 +1219,7 @@ export default function CustomerSitePage() {
               <p className="text-[11px] text-zinc-600">Three boxes — also appear under the home hero.</p>
               <div className="grid gap-2 sm:grid-cols-3">
                 {ensureAboutStats(about.stats).map((stat, i) => (
-                  <div key={i} className="space-y-1.5 rounded-xl border admin-shell-border p-3">
+                  <div key={i} className={`space-y-1.5 ${CMS_EDITOR_GROUP_FLAT}`}>
                     <input
                       value={stat.value}
                       onChange={(e) =>

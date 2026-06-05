@@ -257,7 +257,7 @@ export default function WhatsAppPage() {
         {guideOpen && (
           <ol className="mt-4 space-y-3">
             {SETUP_STEPS.map(({ step, title, detail }) => (
-              <li key={step} className="flex gap-3 rounded-xl border admin-shell-border bg-[var(--admin-surface)] px-4 py-3 shadow-sm">
+              <li key={step} className="flex gap-3 rounded-xl border admin-shell-border bg-[var(--admin-surface)] px-4 py-3">
                 <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-ra-primary-15 text-xs font-bold text-ra-primary ring-1 ring-ra-primary-25">
                   {step}
                 </span>

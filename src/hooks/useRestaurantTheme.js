@@ -35,7 +35,10 @@ function warmCacheFromStorage() {
   return _cache;
 }
 
-if (typeof window !== "undefined") {
+if (
+  typeof window !== "undefined" &&
+  !window.location.pathname.startsWith("/super-admin")
+) {
   warmCacheFromStorage();
 }
 
@@ -45,7 +48,12 @@ export function updateRestaurantThemeCache(theme) {
   _cache = next;
   _cacheTime = Date.now();
   writeStoredRestaurantTheme(next);
-  applyRestaurantDocumentTheme(next);
+  if (
+    typeof window === "undefined" ||
+    !window.location.pathname.startsWith("/super-admin")
+  ) {
+    applyRestaurantDocumentTheme(next);
+  }
   if (typeof window !== "undefined") {
     window.dispatchEvent(
       new CustomEvent("restaurant-theme-updated", { detail: next })
@@ -84,7 +92,12 @@ export function useRestaurantTheme() {
       if (stored && !_cache) {
         _cache = stored;
         _cacheTime = Date.now();
-        applyRestaurantDocumentTheme(stored);
+        if (
+          typeof window === "undefined" ||
+          !window.location.pathname.startsWith("/super-admin")
+        ) {
+          applyRestaurantDocumentTheme(stored);
+        }
         if (mounted) {
           setTheme(stored);
           setLoading(false);
@@ -127,7 +140,12 @@ export function useRestaurantTheme() {
         _cache = next;
         _cacheTime = Date.now();
         writeStoredRestaurantTheme(next);
-        applyRestaurantDocumentTheme(next);
+        if (
+          typeof window === "undefined" ||
+          !window.location.pathname.startsWith("/super-admin")
+        ) {
+          applyRestaurantDocumentTheme(next);
+        }
         setTheme(next);
       } catch {
         if (mounted) setTheme(localTheme);

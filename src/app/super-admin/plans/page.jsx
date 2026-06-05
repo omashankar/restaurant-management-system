@@ -31,12 +31,13 @@ const PRICING_PLANS = [
     recommended: false,
     accent: {
       gradient: "sa-pricing-card sa-pricing-card--free",
-      border:   "border-zinc-700",
-      ring:     "ring-zinc-700/50",
+      border:   "border-zinc-500/25",
+      ring:     "ring-zinc-500/15",
       badge:    "bg-[var(--admin-hover-strong)] admin-surface-muted",
       btn:      "admin-surface-btn-ghost",
       price:    "admin-shell-text",
       dot:      "bg-zinc-500",
+      divider:  "sa-pricing-divider--free",
     },
     features: [
       { label: "1 Restaurant",         included: true  },
@@ -61,6 +62,7 @@ const PRICING_PLANS = [
       btn:      "border border-sky-500/50 text-sky-700 hover:bg-sky-500/10 hover:border-sky-500",
       price:    "text-sky-700",
       dot:      "bg-sky-500",
+      divider:  "sa-pricing-divider--starter",
     },
     features: [
       { label: "1 Restaurant",         included: true  },
@@ -82,9 +84,10 @@ const PRICING_PLANS = [
       border:   "border-indigo-500/60",
       ring:     "ring-indigo-500/30",
       badge:    "bg-indigo-500/20 text-indigo-400",
-      btn:      "sa-btn-primary text-zinc-950 hover:brightness-110 shadow-sa-primary-glow",
+      btn:      "sa-btn-primary text-zinc-950 hover:brightness-110",
       price:    "text-indigo-700",
       dot:      "bg-indigo-500",
+      divider:  "sa-pricing-divider--pro",
     },
     features: [
       { label: "3 Restaurants",        included: true  },
@@ -109,6 +112,7 @@ const PRICING_PLANS = [
       btn:      "border border-amber-500/50 text-amber-800 hover:bg-amber-500/10 hover:border-amber-500",
       price:    "text-amber-800",
       dot:      "bg-amber-500",
+      divider:  "sa-pricing-divider--enterprise",
     },
     features: [
       { label: "Unlimited Restaurants",  included: true },
@@ -131,12 +135,12 @@ function PricingCard({ plan, onAssign, pricingView }) {
   const subscribers = plan?.subscribers ?? 0;
 
   return (
-    <div className={`relative flex flex-col rounded-2xl border p-6 ring-1 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg ${accent.gradient} ${accent.border} ${accent.ring}`}>
+    <div className={`relative flex flex-col rounded-2xl border p-6 ring-1 transition-all duration-300 hover:-translate-y-0.5 ${accent.gradient} ${accent.border} ${accent.ring}`}>
 
       {/* Recommended badge */}
       {plan.recommended && (
         <div className="absolute -top-3.5 left-1/2 -translate-x-1/2">
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-indigo-500 px-3 py-1 text-[11px] font-bold text-white shadow-lg shadow-indigo-500/30">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-sa-primary px-3 py-1 text-[11px] font-bold text-zinc-950">
             <Sparkles className="size-3" />
             Recommended
           </span>
@@ -173,7 +177,7 @@ function PricingCard({ plan, onAssign, pricingView }) {
       </div>
 
       {/* Divider */}
-      <div className="my-5 h-px admin-surface-segment-track" />
+      <div className={`my-5 sa-pricing-divider ${accent.divider ?? ""}`} />
 
       {/* Feature list */}
       <ul className="flex-1 space-y-2.5">
@@ -211,12 +215,47 @@ function PricingCard({ plan, onAssign, pricingView }) {
    MANAGEMENT CARD (DB plans)
 ───────────────────────────────────────── */
 const PLAN_COLORS = {
-  free:       { bg: "bg-zinc-500/10",  border: "border-zinc-700",      badge: "bg-zinc-500/15 text-zinc-400 ring-zinc-500/25",      icon: "text-zinc-400"   },
-  starter:    { bg: "bg-sky-500/5",    border: "border-sky-500/20",    badge: "bg-sky-500/15 text-sky-400 ring-sky-500/25",          icon: "text-sky-400"    },
-  pro:        { bg: "bg-indigo-500/5", border: "border-indigo-500/20", badge: "bg-indigo-500/15 text-indigo-400 ring-indigo-500/25", icon: "text-indigo-400" },
-  enterprise: { bg: "bg-amber-500/5",  border: "border-amber-500/20",  badge: "bg-amber-500/15 text-amber-400 ring-amber-500/25",    icon: "text-amber-400"  },
+  free: {
+    bg: "bg-zinc-500/10",
+    border: "border-zinc-500/20",
+    divider: "border-zinc-500/15",
+    btnBorder: "border-zinc-500/25 hover:border-zinc-500/40",
+    badge: "bg-zinc-500/15 text-zinc-500 ring-zinc-500/20",
+    icon: "text-zinc-600",
+  },
+  starter: {
+    bg: "bg-sky-500/5",
+    border: "border-sky-500/20",
+    divider: "border-sky-500/20",
+    btnBorder: "border-sky-500/30 hover:border-sky-500/50",
+    badge: "bg-sky-500/15 text-sky-600 ring-sky-500/20",
+    icon: "text-sky-600",
+  },
+  pro: {
+    bg: "bg-indigo-500/5",
+    border: "border-indigo-500/20",
+    divider: "border-indigo-500/20",
+    btnBorder: "border-indigo-500/30 hover:border-indigo-500/50",
+    badge: "bg-indigo-500/15 text-indigo-600 ring-indigo-500/20",
+    icon: "text-indigo-600",
+  },
+  enterprise: {
+    bg: "bg-amber-500/5",
+    border: "border-amber-500/20",
+    divider: "border-amber-500/20",
+    btnBorder: "border-amber-500/30 hover:border-amber-500/50",
+    badge: "bg-amber-500/15 text-amber-700 ring-amber-500/20",
+    icon: "text-amber-700",
+  },
 };
-const DEFAULT_COLOR = { bg: "bg-sa-primary-5", border: "border-sa-primary-20", badge: "bg-sa-primary-15 text-sa-primary ring-sa-primary-25", icon: "text-sa-primary" };
+const DEFAULT_COLOR = {
+  bg: "bg-sa-primary-5",
+  border: "border-sa-primary-20",
+  divider: "border-sa-primary-20",
+  btnBorder: "border-sa-primary-30 hover:border-sa-primary-40",
+  badge: "bg-sa-primary-15 text-sa-primary ring-sa-primary-25",
+  icon: "text-sa-primary",
+};
 const BILLING_CYCLES = ["monthly", "yearly"];
 const emptyForm = { name: "", monthlyPrice: "", yearlyPrice: "", billingCycle: "monthly", description: "", features: "", limits: { staff: "", tables: "", menuItems: "", orders: "" } };
 const emptyAssignForm = { restaurantId: "", planSlug: "", startDate: "", endDate: "", trialDays: "0" };
@@ -459,7 +498,7 @@ export default function PlansPage() {
           PRICING TABLE
       ══════════════════════════════════════════ */}
       {loadError && (
-        <div className="rounded-xl border border-red-500/25 bg-red-500/10 px-4 py-3 text-sm text-red-300">
+        <div className="rounded-xl border border-red-500/25 bg-red-500/10 px-4 py-3 text-sm text-red-400">
           {loadError}
         </div>
       )}
@@ -535,7 +574,7 @@ export default function PlansPage() {
             {plans.map((p) => {
               const c = PLAN_COLORS[p.slug] ?? DEFAULT_COLOR;
               return (
-                <div key={p.id} className={`relative flex flex-col rounded-2xl border p-5 ${c.bg} ${c.border} transition-all hover:shadow-lg hover:shadow-black/20`}>
+                <div key={p.id} className={`relative flex flex-col rounded-2xl border p-5 ${c.bg} ${c.border} transition-colors`}>
                   <div className="flex items-center justify-between gap-2">
                     <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-bold capitalize ring-1 ${c.badge}`}>
                       {p.name}
@@ -562,7 +601,7 @@ export default function PlansPage() {
                   {p.description && <p className="mt-1.5 text-xs admin-surface-muted">{p.description}</p>}
                   <ul className="mt-3 flex-1 space-y-1">
                     {(p.features ?? []).slice(0, 4).map((f) => (
-                      <li key={f} className="flex items-center gap-1.5 text-xs text-zinc-400">
+                      <li key={f} className="flex items-center gap-1.5 text-xs admin-surface-muted">
                         <Check className="size-3 shrink-0 text-sa-accent" /> {f}
                       </li>
                     ))}
@@ -574,17 +613,17 @@ export default function PlansPage() {
                     <Users className="size-3" />
                     {p.subscribers} restaurant{p.subscribers !== 1 ? "s" : ""}
                   </div>
-                  <div className="mt-3 flex gap-1.5 border-t admin-shell-border/60 pt-3">
+                  <div className={`mt-3 flex gap-1.5 border-t pt-3 ${c.divider}`}>
                     <button type="button" onClick={() => openAssign(p.slug)}
-                      className="cursor-pointer flex flex-1 items-center justify-center gap-1 rounded-lg border admin-shell-border py-1.5 text-xs font-medium admin-surface-body hover-border-sa-primary-40 hover-sa-primary transition-colors">
+                      className={`cursor-pointer flex flex-1 items-center justify-center gap-1 rounded-lg border bg-[var(--admin-surface)] py-1.5 text-xs font-medium admin-surface-body transition-colors hover:bg-[var(--admin-hover)] ${c.btnBorder}`}>
                       Assign
                     </button>
                     <button type="button" onClick={() => openEdit(p)}
-                      className="cursor-pointer flex items-center justify-center rounded-lg border admin-shell-border p-1.5 text-zinc-400 hover:border-zinc-500 hover:admin-shell-text transition-colors">
+                      className={`cursor-pointer flex items-center justify-center rounded-lg border bg-[var(--admin-surface)] p-1.5 admin-surface-muted transition-colors hover:bg-[var(--admin-hover)] hover:admin-shell-text ${c.btnBorder}`}>
                       <Pencil className="size-3.5" />
                     </button>
                     <button type="button" onClick={() => setDeleteTarget(p)}
-                      className="cursor-pointer flex items-center justify-center rounded-lg border admin-shell-border p-1.5 text-zinc-400 hover:border-red-500/40 hover:text-red-400 transition-colors">
+                      className={`cursor-pointer flex items-center justify-center rounded-lg border bg-[var(--admin-surface)] p-1.5 admin-surface-muted transition-colors hover:border-red-500/40 hover:bg-red-500/5 hover:text-red-500 ${c.btnBorder}`}>
                       <Trash2 className="size-3.5" />
                     </button>
                   </div>

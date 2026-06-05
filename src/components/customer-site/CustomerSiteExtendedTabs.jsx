@@ -1,12 +1,18 @@
 "use client";
 
 import CmsSaveActions from "@/components/customer-site/CmsSaveActions";
-import { CMS_EDITOR_SECTION, CMS_EDITOR_SECTION_TIGHT } from "@/config/customerSiteEditorClasses";
+import {
+  CMS_EDITOR_GROUP,
+  CMS_EDITOR_GROUP_FLAT,
+  CMS_EDITOR_INPUT,
+  CMS_EDITOR_SECTION,
+  CMS_EDITOR_SECTION_TIGHT,
+  CMS_EDITOR_TEXTAREA,
+} from "@/config/customerSiteEditorClasses";
 import { DEFAULTS } from "@/lib/restaurantCmsDefaults";
 
-const inputCls =
-  "admin-surface-input focus-ra-primary w-full px-3 py-2.5 text-sm outline-none focus-ra-primary placeholder:admin-surface-faint";
-const textareaCls = inputCls + " resize-none";
+const inputCls = CMS_EDITOR_INPUT;
+const textareaCls = CMS_EDITOR_TEXTAREA;
 
 function Field({ label, hint, children, className = "" }) {
   return (
@@ -21,7 +27,7 @@ function Field({ label, hint, children, className = "" }) {
 function HeaderBlock({ title, headers, onChange, showAction = false }) {
   const h = headers ?? {};
   return (
-    <div className="rounded-xl border admin-shell-border/80 p-3 space-y-2">
+    <div className={CMS_EDITOR_GROUP}>
       <p className="text-xs font-semibold admin-surface-body">{title}</p>
       <input
         value={h.badge ?? ""}
@@ -71,7 +77,7 @@ export function HomeSectionsTab({ home, setHome, saving, onSaveDraft, onPublish 
         <p className="text-xs font-medium text-zinc-400">Order type cards (do not change IDs)</p>
         <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
         {(home.orderTypes ?? []).map((t, i) => (
-          <div key={t.id} className="rounded-xl border admin-shell-border p-3 space-y-2">
+          <div key={t.id} className={CMS_EDITOR_GROUP_FLAT}>
             <p className="text-[11px] font-semibold text-zinc-500 uppercase">{t.id}</p>
             <input
               value={t.title}
@@ -109,7 +115,7 @@ export function HomeSectionsTab({ home, setHome, saving, onSaveDraft, onPublish 
       <HeaderBlock title="How it works" headers={home.sectionHeaders?.steps} onChange={(v) => setHeader("steps", v)} />
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
         {(home.steps ?? []).map((step, i) => (
-          <div key={step.n} className="rounded-xl border admin-shell-border p-3 space-y-2">
+          <div key={step.n} className={CMS_EDITOR_GROUP_FLAT}>
             <p className="text-xs admin-surface-muted">Step {step.n}</p>
             <input
               value={step.title}
@@ -141,7 +147,7 @@ export function HomeSectionsTab({ home, setHome, saving, onSaveDraft, onPublish 
       <HeaderBlock title="Reviews" headers={home.sectionHeaders?.reviews} onChange={(v) => setHeader("reviews", v)} />
       <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
         {(home.reviews ?? []).map((r, i) => (
-          <div key={i} className="rounded-xl border admin-shell-border p-3 space-y-2">
+          <div key={i} className={CMS_EDITOR_GROUP_FLAT}>
             <input
               value={r.name}
               onChange={(e) =>
@@ -248,11 +254,11 @@ export function AboutExtrasFields({ about, setAbout }) {
   const setFh = (val) => setAbout((p) => ({ ...p, featuresHeader: val }));
 
   return (
-    <div className="space-y-4 border-t admin-shell-border pt-5 mt-5">
+    <div className="space-y-4 admin-surface-divider-t pt-5 mt-5">
       <p className="text-xs font-semibold uppercase tracking-wide text-zinc-500">About page — extra sections</p>
       <HeaderBlock title="Features block" headers={about.featuresHeader} onChange={setFh} />
       {(about.features ?? DEFAULTS.about.features).map((f, i) => (
-        <div key={i} className="rounded-xl border admin-shell-border p-3 space-y-2">
+        <div key={i} className={CMS_EDITOR_GROUP_FLAT}>
           <input
             value={f.title}
             onChange={(e) =>

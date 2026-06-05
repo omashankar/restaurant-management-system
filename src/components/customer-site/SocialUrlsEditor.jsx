@@ -13,7 +13,7 @@ const SOCIAL_FIELDS = [
 
 export default function SocialUrlsEditor({ social, setSocial, saving, onSaveDraft, onPublish }) {
   return (
-    <div className="space-y-4 rounded-xl border admin-shell-border bg-zinc-950/30 p-4">
+    <div className="space-y-4 rounded-xl border border-[var(--admin-border-subtle)] bg-[var(--admin-surface-soft)] p-4">
       <div>
         <p className="text-sm font-semibold admin-shell-text">Social media links</p>
         <p className="mt-1 text-xs admin-surface-muted">

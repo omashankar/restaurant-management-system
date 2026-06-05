@@ -202,7 +202,7 @@ export default function ProfilePage() {
           className={`fixed bottom-5 right-5 z-50 flex items-center gap-2.5 rounded-xl border px-4 py-3 text-sm font-medium shadow-2xl shadow-black/40 transition-all ${
             toast.type === "success"
               ? "border-ra-primary-30 admin-surface-card text-ra-primary-muted"
-              : "border-red-500/30 admin-surface-card text-red-300"
+              : "border-red-500/30 admin-surface-card text-red-400"
           }`}
         >
           {toast.type === "success"

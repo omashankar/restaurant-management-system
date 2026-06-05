@@ -110,7 +110,7 @@ function OrderCard({ order, currency, onStatusChange, onMarkPaid, canEdit }) {
   const timeStr = order.time ?? placedAt.label;
 
   return (
-    <div className={`rounded-2xl border admin-surface-card shadow-sm transition-all duration-200 hover:shadow-md ${st.border}`}>
+    <div className={`rounded-2xl border admin-surface-card transition-colors ${st.border}`}>
       <div className="p-4">
         <div className="flex items-start justify-between gap-2">
           <div className="flex items-center gap-2">
@@ -160,7 +160,7 @@ function OrderCard({ order, currency, onStatusChange, onMarkPaid, canEdit }) {
       </div>
 
       {expanded && (
-        <div className="border-t admin-shell-border px-4 py-3 space-y-2">
+        <div className="admin-surface-divider-t px-4 py-3 space-y-2">
           {order.createdAt && placedAt.full !== "—" && (
             <p className="text-[11px] admin-surface-faint">
               Placed: <span className="text-zinc-400">{placedAt.full}</span>
@@ -185,7 +185,7 @@ function OrderCard({ order, currency, onStatusChange, onMarkPaid, canEdit }) {
             </div>
           )}
           {(order.subtotal != null || order.taxAmount > 0 || order.serviceCharge > 0) && (
-            <div className="space-y-0.5 border-t admin-shell-border pt-2 text-[11px] admin-surface-faint">
+            <div className="space-y-0.5 admin-surface-divider-t pt-2 text-[11px] admin-surface-faint">
               {order.subtotal != null && (
                 <div className="flex justify-between">
                   <span>Subtotal</span>
@@ -207,7 +207,7 @@ function OrderCard({ order, currency, onStatusChange, onMarkPaid, canEdit }) {
             </div>
           )}
           {order.notes && (
-            <p className="text-xs text-amber-400/80 border-t admin-shell-border pt-2">Note: {order.notes}</p>
+            <p className="text-xs text-amber-400/80 admin-surface-divider-t pt-2">Note: {order.notes}</p>
           )}
           {canEdit && paymentStatus !== "paid" && (
             <button
@@ -359,7 +359,7 @@ function CreateOrderModal({ open, onClose, onCreated, currency = "INR" }) {
       <div className="relative z-10 flex w-full max-w-2xl flex-col rounded-2xl border admin-shell-border admin-surface-card-solid shadow-2xl max-h-[90vh]">
 
         {/* Header */}
-        <div className="flex items-center justify-between border-b admin-shell-border px-5 py-4">
+        <div className="flex items-center justify-between admin-surface-divider-b px-5 py-4">
           <h2 className="text-base font-bold text-zinc-50">New Order</h2>
           <button type="button" onClick={onClose} className="cursor-pointer rounded-lg p-2 text-zinc-500 hover:bg-[var(--admin-hover)] hover:admin-shell-text">
             <X className="size-5" />
@@ -369,7 +369,7 @@ function CreateOrderModal({ open, onClose, onCreated, currency = "INR" }) {
         <div className="flex flex-1 overflow-hidden">
           {/* Left — menu */}
           <div className="flex flex-1 flex-col border-r admin-shell-border overflow-hidden">
-            <div className="p-3 border-b admin-shell-border">
+            <div className="p-3 admin-surface-divider-b">
               <SearchField
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
@@ -522,7 +522,7 @@ function CreateOrderModal({ open, onClose, onCreated, currency = "INR" }) {
             </div>
 
             {/* Footer */}
-            <div className="border-t admin-shell-border p-3 space-y-2">
+            <div className="admin-surface-divider-t p-3 space-y-2">
               {error && <p className="text-xs text-red-400">{error}</p>}
               <div className="space-y-0.5 text-xs admin-surface-muted">
                 <div className="flex justify-between">
@@ -704,7 +704,7 @@ export default function OrdersPage() {
     <>
       <div className="space-y-6">
         {fetchError && (
-          <div className="rounded-xl border border-red-500/25 bg-red-500/10 px-4 py-3 text-sm text-red-300">
+          <div className="rounded-xl border border-red-500/25 bg-red-500/10 px-4 py-3 text-sm text-red-400">
             {fetchError}
           </div>
         )}
