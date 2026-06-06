@@ -10,12 +10,15 @@ import {
   adminTableActionBtnCls,
   buildTicketStats,
   saTicketTableGridCls,
-  supportTicketDrawerOverlayCls,
+  supportTicketDrawerPanelCls,
+  supportTicketRowCardCls,
+  supportTicketStatsGridCls,
   ticketPrioritySelectCls,
   ticketStatusSelectCls,
 } from "@/config/supportTicketConfig";
 import { saInputCls, saSpinnerCls } from "@/config/superAdminTheme";
 import PaginationBar from "@/components/ui/PaginationBar";
+import PageDrawer from "@/components/ui/PageDrawer";
 import { Loader2, RefreshCcw, X } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 
@@ -164,9 +167,9 @@ export default function SuperAdminSupportTicketsPage() {
   const stats = useMemo(() => buildTicketStats(statsTickets), [statsTickets]);
 
   return (
-    <div className="space-y-5">
-      <div>
-        <h1 className="admin-page-title text-2xl font-semibold tracking-tight">Support Tickets</h1>
+    <div className="min-w-0 w-full max-w-full space-y-5 overflow-x-hidden">
+      <div className="min-w-0">
+        <h1 className="admin-page-title break-words text-2xl font-semibold tracking-tight">Support Tickets</h1>
         <p className="admin-page-desc mt-1 text-sm">Platform-wide tenant support queue.</p>
       </div>
 
@@ -176,22 +179,22 @@ export default function SuperAdminSupportTicketsPage() {
         </div>
       )}
 
-      <div className="grid gap-3 sm:grid-cols-5">
+      <div className={supportTicketStatsGridCls}>
         {SUPPORT_STAT_ITEMS.map(({ key, label, field, valueCls }) => (
-          <div key={key} className="admin-surface-card px-3 py-2.5">
+          <div key={key} className="min-w-0 admin-surface-card px-3 py-2.5">
             <p className={`text-lg font-semibold tabular-nums ${valueCls}`}>{stats[field]}</p>
             <p className="text-xs uppercase tracking-wider admin-surface-muted">{label}</p>
           </div>
         ))}
       </div>
 
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between admin-surface-card p-3">
+      <div className="flex flex-col gap-3 admin-surface-card p-3 sm:flex-row sm:items-center sm:justify-between sm:p-4">
         <p className="text-xs font-semibold uppercase tracking-wide admin-surface-muted">Filters</p>
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:flex-wrap sm:items-center">
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className={`${adminFilterSelectCls} focus-sa-primary min-w-[8.5rem]`}
+            className={`${adminFilterSelectCls} focus-sa-primary w-full sm:min-w-[8.5rem] sm:w-auto`}
           >
             <option value="all">Status: all</option>
             {SUPPORT_STATUSES.map((s) => (
@@ -203,7 +206,7 @@ export default function SuperAdminSupportTicketsPage() {
           <select
             value={priorityFilter}
             onChange={(e) => setPriorityFilter(e.target.value)}
-            className={`${adminFilterSelectCls} focus-sa-primary min-w-[8.5rem]`}
+            className={`${adminFilterSelectCls} focus-sa-primary w-full sm:min-w-[8.5rem] sm:w-auto`}
           >
             <option value="all">Priority: all</option>
             {SUPPORT_PRIORITIES.map((p) => (
@@ -216,7 +219,7 @@ export default function SuperAdminSupportTicketsPage() {
             type="button"
             onClick={loadTickets}
             disabled={loading}
-            className="cursor-pointer inline-flex items-center gap-1 rounded-lg border admin-shell-border px-2.5 py-1.5 text-xs admin-surface-body transition-colors hover:bg-[var(--admin-hover)] disabled:cursor-not-allowed disabled:opacity-50"
+            className="inline-flex w-full cursor-pointer items-center justify-center gap-1 rounded-lg border admin-shell-border px-2.5 py-2 text-xs admin-surface-body transition-colors hover:bg-[var(--admin-hover)] disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
           >
             <RefreshCcw className={`size-3.5 ${loading ? saSpinnerCls : ""}`} />
             Refresh
@@ -225,7 +228,68 @@ export default function SuperAdminSupportTicketsPage() {
       </div>
 
       <DataTableShell>
-        <div className="min-w-[52rem]">
+        {loading ? (
+          <SuperAdminPreloader compact message="Loading tickets…" />
+        ) : tickets.length === 0 ? (
+          <div className="px-4 py-4 text-sm admin-surface-muted">No tickets found.</div>
+        ) : (
+          <>
+            <div className="space-y-2 p-3 lg:hidden">
+              {tickets.map((ticket) => (
+                <div key={String(ticket._id)} className={`${supportTicketRowCardCls} min-w-0 space-y-3`}>
+                  <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                    <div className="min-w-0">
+                      <p className="break-all font-medium admin-shell-text">{ticket.ticketCode}</p>
+                      <p className="text-xs admin-surface-muted">
+                        {ticket.createdAt ? new Date(ticket.createdAt).toLocaleDateString() : "—"}
+                      </p>
+                    </div>
+                    <p className="min-w-0 break-words text-xs admin-surface-body">
+                      {ticket.restaurantName || "Unknown"}
+                    </p>
+                  </div>
+                  <div className="min-w-0">
+                    <p className="break-words font-medium admin-shell-text">{ticket.subject}</p>
+                    <p className="mt-0.5 line-clamp-3 text-xs admin-surface-muted">{ticket.message}</p>
+                  </div>
+                  <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
+                    <select
+                      value={ticket.priority}
+                      onChange={(e) => updateTicket(String(ticket._id), { priority: e.target.value })}
+                      className={`${ticketPrioritySelectCls(ticket.priority)} w-full sm:w-[7.25rem]`}
+                      aria-label={`Priority for ${ticket.ticketCode}`}
+                    >
+                      {SUPPORT_PRIORITIES.map((item) => (
+                        <option key={item} value={item}>
+                          {item}
+                        </option>
+                      ))}
+                    </select>
+                    <select
+                      value={ticket.status}
+                      onChange={(e) => updateTicket(String(ticket._id), { status: e.target.value })}
+                      className={`${ticketStatusSelectCls(ticket.status, "super-admin")} w-full sm:w-[7.25rem]`}
+                      aria-label={`Status for ${ticket.ticketCode}`}
+                    >
+                      {SUPPORT_STATUSES.map((item) => (
+                        <option key={item} value={item}>
+                          {item.replace(/_/g, " ")}
+                        </option>
+                      ))}
+                    </select>
+                    <button
+                      type="button"
+                      onClick={() => openTicket(String(ticket._id))}
+                      className={`${adminTableActionBtnCls} w-full sm:w-auto`}
+                    >
+                      View
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="hidden min-w-0 lg:block">
         <div className={`${saTicketTableGridCls} admin-table-list-header px-4 py-2.5 text-xs uppercase tracking-wide admin-surface-muted`}>
           <span>Ticket</span>
           <span>Subject</span>
@@ -235,11 +299,6 @@ export default function SuperAdminSupportTicketsPage() {
           <span className="text-center">Action</span>
         </div>
 
-        {loading ? (
-          <SuperAdminPreloader compact message="Loading tickets…" />
-        ) : tickets.length === 0 ? (
-          <div className="px-4 py-4 text-sm admin-surface-muted">No tickets found.</div>
-        ) : (
           <div className="admin-table-body">
             {tickets.map((ticket) => (
               <div
@@ -253,10 +312,10 @@ export default function SuperAdminSupportTicketsPage() {
                   </p>
                 </div>
                 <div className="min-w-0">
-                  <p className="font-medium">{ticket.subject}</p>
+                  <p className="truncate font-medium">{ticket.subject}</p>
                   <p className="mt-0.5 line-clamp-2 text-xs admin-surface-muted">{ticket.message}</p>
                 </div>
-                <p className="truncate text-xs admin-surface-body">{ticket.restaurantName || "Unknown"}</p>
+                <p className="min-w-0 truncate text-xs admin-surface-body">{ticket.restaurantName || "Unknown"}</p>
                 <div className="flex justify-center">
                   <select
                     value={ticket.priority}
@@ -297,10 +356,11 @@ export default function SuperAdminSupportTicketsPage() {
               </div>
             ))}
           </div>
+            </div>
+          </>
         )}
-        </div>
         {!loading && tickets.length > 0 && (
-          <div className="px-4 pb-4">
+          <div className="min-w-0 px-4 pb-4">
             <PaginationBar
               page={page}
               totalPages={pagination.pages}
@@ -313,11 +373,15 @@ export default function SuperAdminSupportTicketsPage() {
         )}
       </DataTableShell>
 
-      {selectedTicketId ? (
-        <div className={supportTicketDrawerOverlayCls}>
-          <div className="relative h-full w-full max-w-xl overflow-y-auto border-l admin-shell-border admin-surface-card-solid p-4">
-            <div className="sticky top-0 z-10 mb-4 flex items-center justify-between admin-surface-divider-b bg-[var(--admin-surface)] pb-3 pt-1 backdrop-blur">
-              <h3 className="text-base font-semibold admin-shell-text">Support ticket</h3>
+      <PageDrawer
+        open={Boolean(selectedTicketId)}
+        panelClassName={supportTicketDrawerPanelCls}
+        ariaLabel="Support ticket details"
+      >
+            <div className="sticky top-0 z-10 mb-4 flex min-w-0 items-start justify-between gap-3 admin-surface-divider-b bg-[var(--admin-surface)] pb-3 pt-1 backdrop-blur sm:items-center">
+              <h3 className="min-w-0 break-words text-base font-semibold admin-shell-text sm:truncate">
+                {selectedTicket?.ticketCode ? `${selectedTicket.ticketCode}` : "Support ticket"}
+              </h3>
               <button
                 type="button"
                 onClick={() => {
@@ -340,13 +404,13 @@ export default function SuperAdminSupportTicketsPage() {
             ) : (
               <div className="space-y-4">
                 <div className="admin-surface-card p-3">
-                  <p className="text-sm font-semibold admin-shell-text">
+                  <p className="break-words text-sm font-semibold admin-shell-text">
                     {selectedTicket.ticketCode} · {selectedTicket.subject}
                   </p>
                   <p className="mt-1 text-xs admin-surface-muted">
                     {selectedTicket.restaurantName || "Unknown Restaurant"}
                   </p>
-                  <p className="mt-2 text-sm admin-surface-body">{selectedTicket.message}</p>
+                  <p className="mt-2 break-words text-sm admin-surface-body">{selectedTicket.message}</p>
                 </div>
                 <div className="space-y-2">
                   <p className="text-xs font-semibold uppercase tracking-wide admin-surface-muted">Timeline</p>
@@ -356,7 +420,7 @@ export default function SuperAdminSupportTicketsPage() {
                         <p className="text-xs admin-surface-muted">
                           {u.at ? new Date(u.at).toLocaleString() : "—"} · {u.role || "user"}
                         </p>
-                        <p className="mt-0.5 text-sm admin-shell-text">{u.note}</p>
+                        <p className="mt-0.5 break-words text-sm admin-shell-text">{u.note}</p>
                       </div>
                     ))}
                   </div>
@@ -374,20 +438,18 @@ export default function SuperAdminSupportTicketsPage() {
                     type="button"
                     onClick={addNote}
                     disabled={savingNote || !note.trim()}
-                    className="cursor-pointer rounded-lg border border-sa-primary-40 bg-sa-primary-15 px-3 py-1.5 text-xs font-medium text-sa-primary-muted disabled:opacity-40"
+                    className="inline-flex w-full cursor-pointer items-center justify-center rounded-lg border border-sa-primary-40 bg-sa-primary-15 px-3 py-2 text-xs font-medium text-sa-primary-muted disabled:opacity-40 sm:w-auto"
                   >
                     {savingNote ? "Saving..." : "Save note"}
                   </button>
                 </div>
               </div>
             )}
-          </div>
-        </div>
-      ) : null}
+          </PageDrawer>
 
       {toast ? (
         <div
-          className={`fixed bottom-5 right-5 z-50 rounded-xl border px-4 py-2 text-sm ${
+          className={`fixed bottom-4 left-4 right-4 z-50 rounded-xl border px-4 py-2 text-sm sm:bottom-5 sm:left-auto sm:right-5 sm:max-w-sm ${
             toast.type === "success"
               ? "border-sa-accent-30 admin-surface-card text-sa-accent-muted"
               : "border-red-500/30 admin-surface-card text-red-400"

@@ -218,14 +218,14 @@ export default function ReservationsPage() {
 
   if (!hydrated || loading) {
     return (
-      <div className="space-y-6">
+      <div className="min-w-0 w-full max-w-full space-y-6 overflow-x-hidden">
         <ReservationTableSkeleton />
       </div>
     );
   }
 
   return (
-    <div className="space-y-8">
+    <div className="min-w-0 w-full max-w-full space-y-6 overflow-x-hidden">
       {limited ? (
             <RoleCard
               variant="limited"
@@ -234,12 +234,12 @@ export default function ReservationsPage() {
             />
           ) : null}
 
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-            <div className="flex items-start gap-3">
+          <div className="flex min-w-0 flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+            <div className="flex min-w-0 items-start gap-3">
               <span className="mt-1 flex size-11 shrink-0 items-center justify-center rounded-2xl bg-ra-primary-15 text-ra-primary ring-1 ring-ra-primary-25">
                 <CalendarClock className="size-5" aria-hidden />
               </span>
-              <div>
+              <div className="min-w-0">
                 <h1 className="admin-page-title text-2xl font-semibold tracking-tight md:text-3xl">
                   Reservations
                 </h1>
@@ -251,7 +251,7 @@ export default function ReservationsPage() {
             <button
               type="button"
               onClick={openAdd}
-              className="cursor-pointer inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-ra-primary px-5 py-2.5 text-sm font-bold text-zinc-950 shadow-ra-primary-glow transition-all duration-200 hover:brightness-110 hover:shadow-ra-primary-soft active:scale-[0.98]"
+              className="inline-flex w-full shrink-0 cursor-pointer items-center justify-center gap-2 rounded-xl bg-ra-primary px-5 py-2.5 text-sm font-bold text-zinc-950 shadow-ra-primary-glow transition-all duration-200 hover:brightness-110 hover:shadow-ra-primary-soft active:scale-[0.98] sm:w-auto"
             >
               <Plus className="size-4" strokeWidth={2.5} />
               Add Reservation
@@ -293,7 +293,7 @@ export default function ReservationsPage() {
               }
             />
           ) : viewMode === "table" ? (
-            <div className="overflow-hidden transition-opacity duration-300">
+            <div className="min-w-0 overflow-hidden transition-opacity duration-300">
               <ReservationTable
                 rows={pageRows}
                 onView={setViewing}
@@ -312,7 +312,7 @@ export default function ReservationsPage() {
               />
             </div>
           ) : (
-            <div className="transition-opacity duration-300">
+            <div className="min-w-0 overflow-x-hidden transition-opacity duration-300">
               <ReservationCalendarView
                 rows={filteredRows}
                 onView={setViewing}

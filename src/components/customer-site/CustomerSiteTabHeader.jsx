@@ -20,7 +20,7 @@ export default function CustomerSiteTabHeader({ tab, badge }) {
           </div>
           <p className="mt-1 text-sm admin-surface-muted">{tab.description}</p>
           {tab.pages?.length > 0 && (
-            <p className="mt-2 text-xs admin-surface-faint">
+            <p className="mt-2 break-words text-xs admin-surface-faint">
               <span className="font-medium text-zinc-500">Shows on: </span>
               {tab.pages.join(" · ")}
             </p>

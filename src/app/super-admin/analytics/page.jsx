@@ -31,11 +31,11 @@ const STATUS_COLOR = {
 ───────────────────────────────────────── */
 function StatCard({ label, value, sub, icon: Icon, color, bg, border }) {
   return (
-    <div className={`rounded-2xl border p-5 ${bg} ${border}`}>
+    <div className={`min-w-0 rounded-2xl border p-4 sm:p-5 ${bg} ${border}`}>
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500">{label}</p>
-          <p className={`mt-2 text-3xl font-bold tabular-nums ${color}`}>{value}</p>
+          <p className={`mt-2 break-words text-2xl font-bold tabular-nums sm:text-3xl ${color}`}>{value}</p>
           {sub && <p className="mt-1 text-xs admin-surface-faint">{sub}</p>}
         </div>
         <span className={`flex size-11 shrink-0 items-center justify-center rounded-xl ${bg}`}>
@@ -52,11 +52,12 @@ function StatCard({ label, value, sub, icon: Icon, color, bg, border }) {
 function BarChart({ data, valueKey = "value", labelKey = "label", color = "bg-sa-primary", height = 160, prefix = "" }) {
   const max = Math.max(...data.map((d) => d[valueKey] ?? 0), 1);
   return (
-    <div className="flex items-end gap-1" style={{ height }}>
+    <div className="w-full min-w-0 overflow-x-auto pb-1 [-webkit-overflow-scrolling:touch]">
+      <div className="flex min-w-[22rem] items-end gap-0.5 sm:min-w-0 sm:gap-1" style={{ height }}>
       {data.map((d, i) => {
         const pct = Math.max(2, ((d[valueKey] ?? 0) / max) * 100);
         return (
-          <div key={i} className="group relative flex flex-1 flex-col items-center gap-1">
+          <div key={i} className="group relative flex min-w-[1.75rem] flex-1 flex-col items-center gap-1 sm:min-w-0">
             {/* Tooltip */}
             <div className="pointer-events-none absolute -top-8 left-1/2 z-10 hidden -translate-x-1/2 whitespace-nowrap rounded-lg admin-chart-tooltip px-2 py-1 text-[10px] font-semibold admin-shell-text shadow-lg group-hover:flex">
               {prefix}{(d[valueKey] ?? 0).toLocaleString()}
@@ -74,6 +75,7 @@ function BarChart({ data, valueKey = "value", labelKey = "label", color = "bg-sa
           </div>
         );
       })}
+    </div>
     </div>
   );
 }
@@ -173,16 +175,16 @@ export default function SuperAdminAnalyticsPage() {
   const ov = data?.overview ?? {};
 
   return (
-    <div className="space-y-6">
+    <div className="min-w-0 w-full max-w-full space-y-6 overflow-x-hidden">
 
       {/* ── Header ── */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div className="flex items-start gap-3">
-          <span className={`mt-1 ${saIconBadgeCls}`}>
+      <div className="flex min-w-0 flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div className="flex min-w-0 items-start gap-3">
+          <span className={`mt-1 shrink-0 ${saIconBadgeCls}`}>
             <BarChart3 className="size-5" />
           </span>
-          <div>
-            <h1 className="admin-page-title text-2xl font-semibold tracking-tight">Analytics</h1>
+          <div className="min-w-0">
+            <h1 className="admin-page-title break-words text-2xl font-semibold tracking-tight">Analytics</h1>
             <p className="admin-page-desc mt-1 text-sm">Platform-wide performance and growth metrics.</p>
           </div>
         </div>
@@ -190,7 +192,7 @@ export default function SuperAdminAnalyticsPage() {
           type="button"
           onClick={fetchAnalytics}
           disabled={loading}
-          className="cursor-pointer flex items-center gap-1.5 rounded-xl border admin-shell-border px-3 py-2.5 text-sm font-medium text-zinc-400 hover:border-zinc-500 hover:admin-shell-text disabled:opacity-50 transition-colors"
+          className="inline-flex w-full cursor-pointer items-center justify-center gap-1.5 rounded-xl border admin-shell-border px-3 py-2.5 text-sm font-medium text-zinc-400 transition-colors hover:border-zinc-500 hover:admin-shell-text disabled:opacity-50 sm:w-auto"
         >
           <RefreshCw className={`size-4 ${loading ? saSpinnerCls : ""}`} />
           Refresh
@@ -201,7 +203,7 @@ export default function SuperAdminAnalyticsPage() {
       {loading && !data && (
         <div className="space-y-4">
           <SuperAdminPageSkeleton cards={4} cardClassName="h-28" rows={0} />
-          <div className="grid gap-4 lg:grid-cols-2">
+          <div className="grid min-w-0 grid-cols-1 gap-4 lg:grid-cols-2">
             <div className="h-56 animate-pulse rounded-2xl border border-sa-primary-10 admin-surface-card" />
             <div className="h-56 animate-pulse rounded-2xl border border-sa-primary-10 admin-surface-card" />
           </div>
@@ -216,7 +218,7 @@ export default function SuperAdminAnalyticsPage() {
             </div>
           ) : null}
           {/* ── Overview stat cards ── */}
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid min-w-0 grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <StatCard
               label="Total Restaurants" value={ov.totalRestaurants ?? 0}
               sub={`${ov.activeRestaurants ?? 0} active`}
@@ -240,13 +242,13 @@ export default function SuperAdminAnalyticsPage() {
           </div>
 
           {/* ── Revenue chart + Restaurant growth ── */}
-          <div className="grid gap-4 lg:grid-cols-2">
+          <div className="grid min-w-0 gap-4 lg:grid-cols-2">
 
             {/* Revenue by month */}
-            <div className="admin-surface-card p-5">
-              <div className="mb-5 flex items-center gap-2">
-                <TrendingUp className="size-4 text-sa-primary" />
-                <h2 className="text-sm font-semibold admin-shell-text">Revenue — Last 12 Months</h2>
+            <div className="min-w-0 admin-surface-card p-4 sm:p-5">
+              <div className="mb-5 flex min-w-0 items-start gap-2 sm:items-center">
+                <TrendingUp className="size-4 shrink-0 text-sa-primary" />
+                <h2 className="min-w-0 break-words text-sm font-semibold admin-shell-text">Revenue — Last 12 Months</h2>
               </div>
               {(data.revenueByMonth ?? []).length === 0 ? (
                 <div className="flex h-40 items-center justify-center">
@@ -265,10 +267,10 @@ export default function SuperAdminAnalyticsPage() {
             </div>
 
             {/* Restaurant growth */}
-            <div className="admin-surface-card p-5">
-              <div className="mb-5 flex items-center gap-2">
-                <Activity className="size-4 text-indigo-400" />
-                <h2 className="text-sm font-semibold admin-shell-text">Restaurant Growth — Last 12 Months</h2>
+            <div className="min-w-0 admin-surface-card p-4 sm:p-5">
+              <div className="mb-5 flex min-w-0 items-start gap-2 sm:items-center">
+                <Activity className="size-4 shrink-0 text-indigo-400" />
+                <h2 className="min-w-0 break-words text-sm font-semibold admin-shell-text">Restaurant Growth — Last 12 Months</h2>
               </div>
               {(data.restaurantGrowth ?? []).length === 0 ? (
                 <div className="flex h-40 items-center justify-center">
@@ -287,22 +289,22 @@ export default function SuperAdminAnalyticsPage() {
           </div>
 
           {/* ── Plan distribution + Payment status + Top restaurants ── */}
-          <div className="grid gap-4 lg:grid-cols-3">
+          <div className="grid min-w-0 gap-4 lg:grid-cols-3">
 
             {/* Plan distribution */}
-            <div className="admin-surface-card p-5">
+            <div className="min-w-0 admin-surface-card p-4 sm:p-5">
               <h2 className="mb-4 text-sm font-semibold admin-shell-text">Plan Distribution</h2>
-              <div className="flex items-center gap-5">
+              <div className="flex flex-col items-center gap-4 sm:flex-row sm:items-center sm:gap-5">
                 <DonutChart segments={planSegments} size={100} />
-                <div className="flex-1 space-y-2">
+                <div className="w-full min-w-0 flex-1 space-y-2">
                   {(data.planBreakdown ?? []).map((p, planIdx) => {
                     const total = (data.planBreakdown ?? []).reduce((s, x) => s + x.count, 0) || 1;
                     const pct   = Math.round((p.count / total) * 100);
                     const c     = PLAN_COLOR[p.plan] ?? PLAN_COLOR.free;
                     return (
                       <div key={`plan-dist-${p.plan}-${planIdx}`}>
-                        <div className="flex items-center justify-between mb-1">
-                          <span className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-semibold capitalize ring-1 ${c.badge}`}>
+                        <div className="mb-1 flex min-w-0 flex-wrap items-center justify-between gap-1">
+                          <span className={`inline-flex max-w-full truncate rounded-full px-2 py-0.5 text-[10px] font-semibold capitalize ring-1 ${c.badge}`}>
                             {p.plan}
                           </span>
                           <span className="text-[10px] admin-surface-faint">{p.count} · {pct}%</span>
@@ -321,21 +323,21 @@ export default function SuperAdminAnalyticsPage() {
             </div>
 
             {/* Payment status */}
-            <div className="admin-surface-card p-5">
+            <div className="min-w-0 admin-surface-card p-4 sm:p-5">
               <h2 className="mb-4 text-sm font-semibold admin-shell-text">Payment Status</h2>
-              <div className="flex items-center gap-5">
+              <div className="flex flex-col items-center gap-4 sm:flex-row sm:items-center sm:gap-5">
                 <DonutChart segments={statusSegments} size={100} />
-                <div className="flex-1 space-y-2.5">
+                <div className="w-full min-w-0 flex-1 space-y-2.5">
                   {(data.paymentStatus ?? []).map((p) => {
                     const total = (data.paymentStatus ?? []).reduce((s, x) => s + x.count, 0) || 1;
                     const pct   = Math.round((p.count / total) * 100);
                     return (
-                      <div key={p.status} className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <span className={`size-2 rounded-full ${STATUS_COLOR[p.status] ?? "bg-zinc-500"}`} />
-                          <span className="text-xs capitalize text-zinc-400">{p.status}</span>
+                      <div key={p.status} className="flex min-w-0 items-center justify-between gap-2">
+                        <div className="flex min-w-0 items-center gap-2">
+                          <span className={`size-2 shrink-0 rounded-full ${STATUS_COLOR[p.status] ?? "bg-zinc-500"}`} />
+                          <span className="truncate text-xs capitalize text-zinc-400">{p.status}</span>
                         </div>
-                        <span className="text-xs font-semibold tabular-nums admin-surface-body">
+                        <span className="shrink-0 text-xs font-semibold tabular-nums admin-surface-body">
                           {p.count} <span className="font-normal text-zinc-600">({pct}%)</span>
                         </span>
                       </div>
@@ -349,7 +351,7 @@ export default function SuperAdminAnalyticsPage() {
             </div>
 
             {/* Top restaurants */}
-            <div className="admin-surface-card p-5">
+            <div className="min-w-0 admin-surface-card p-4 sm:p-5">
               <h2 className="mb-4 text-sm font-semibold admin-shell-text">Top Restaurants by Revenue</h2>
               {(data.topRestaurants ?? []).length === 0 ? (
                 <p className="text-xs admin-surface-faint">No revenue data yet.</p>
@@ -361,7 +363,7 @@ export default function SuperAdminAnalyticsPage() {
                         {i + 1}
                       </span>
                       <div className="min-w-0 flex-1">
-                        <p className="truncate text-xs font-medium admin-shell-text">{r.restaurantName}</p>
+                        <p className="break-words text-xs font-medium admin-shell-text">{r.restaurantName}</p>
                         <p className="text-[10px] admin-surface-faint">{r.txCount} transaction{r.txCount !== 1 ? "s" : ""}</p>
                       </div>
                       <span className="shrink-0 text-xs font-semibold tabular-nums text-sa-accent">
@@ -375,10 +377,10 @@ export default function SuperAdminAnalyticsPage() {
           </div>
 
           {/* ── Quick summary row ── */}
-          <div className="grid gap-3 sm:grid-cols-3">
-            <div className="admin-surface-card px-5 py-4">
-              <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500">Avg Revenue / Restaurant</p>
-              <p className="mt-2 text-2xl font-bold tabular-nums admin-shell-text">
+          <div className="grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-3">
+            <div className="min-w-0 admin-surface-card px-4 py-4 sm:px-5">
+              <p className="break-words text-xs font-semibold uppercase tracking-wider text-zinc-500">Avg Revenue / Restaurant</p>
+              <p className="mt-2 break-words text-xl font-bold tabular-nums admin-shell-text sm:text-2xl">
                 {formatMoney(
                   ov.totalRestaurants
                     ? Math.round((ov.totalRevenue ?? 0) / ov.totalRestaurants)
@@ -386,18 +388,18 @@ export default function SuperAdminAnalyticsPage() {
                 )}
               </p>
             </div>
-            <div className="admin-surface-card px-5 py-4">
-              <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500">Active Rate</p>
-              <p className="mt-2 text-2xl font-bold tabular-nums admin-shell-text">
+            <div className="min-w-0 admin-surface-card px-4 py-4 sm:px-5">
+              <p className="break-words text-xs font-semibold uppercase tracking-wider text-zinc-500">Active Rate</p>
+              <p className="mt-2 text-xl font-bold tabular-nums admin-shell-text sm:text-2xl">
                 {ov.totalRestaurants
                   ? Math.round(((ov.activeRestaurants ?? 0) / ov.totalRestaurants) * 100)
                   : 0}%
               </p>
               <p className="mt-1 text-xs admin-surface-faint">of restaurants are active</p>
             </div>
-            <div className="admin-surface-card px-5 py-4">
-              <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500">Inactive Restaurants</p>
-              <p className="mt-2 text-2xl font-bold tabular-nums text-red-400">
+            <div className="min-w-0 admin-surface-card px-4 py-4 sm:px-5">
+              <p className="break-words text-xs font-semibold uppercase tracking-wider text-zinc-500">Inactive Restaurants</p>
+              <p className="mt-2 text-xl font-bold tabular-nums text-red-400 sm:text-2xl">
                 {ov.inactiveRestaurants ?? 0}
               </p>
               <p className="mt-1 text-xs admin-surface-faint">need attention</p>

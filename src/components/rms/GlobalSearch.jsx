@@ -1,10 +1,12 @@
 "use client";
 
-import { adminSurface } from "@/config/adminSurfaceClasses";
+import { adminHeaderDropdownPortal, adminSurface } from "@/config/adminSurfaceClasses";
 import { useModuleData } from "@/context/ModuleDataContext";
+import { useAnchoredPortalPosition } from "@/hooks/useAnchoredPortalPosition";
 import { Search, X } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 
 const CATEGORIES = {
   order:    { label: "Order",    color: "text-indigo-400",  bg: "bg-indigo-500/10"  },
@@ -25,6 +27,8 @@ export default function GlobalSearch() {
   const [open, setOpen]     = useState(false);
   const inputRef            = useRef(null);
   const containerRef        = useRef(null);
+  const showResults = open && query.trim().length >= 2;
+  const resultsPosition = useAnchoredPortalPosition(showResults, containerRef);
 
   useEffect(() => {
     const t = setTimeout(() => setDebouncedQuery(query.trim()), DEBOUNCE_MS);
@@ -165,47 +169,64 @@ export default function GlobalSearch() {
         ) : null}
       </div>
 
-      {/* Results dropdown */}
-      {open && query.trim().length >= 2 && (
-        <div className={`absolute right-0 top-full z-50 mt-2 w-80 ${adminSurface.dropdown}`}>
-          {debouncedQuery !== query.trim() ? (
-            <div className={`px-4 py-6 text-center text-sm ${adminSurface.muted}`}>Searching…</div>
-          ) : results.length === 0 ? (
-            <div className={`px-4 py-6 text-center text-sm ${adminSurface.faint}`}>
-              No results for &ldquo;{debouncedQuery}&rdquo;
-            </div>
-          ) : (
-            <ul className="py-1.5">
-              {results.map((r) => {
-                const cat = CATEGORIES[r.type] ?? CATEGORIES.menu;
-                return (
-                  <li key={`${r.type}-${r.id}`}>
-                    <Link
-                      href={r.href}
-                      onClick={() => { setOpen(false); setQuery(""); setDebouncedQuery(""); }}
-                      className={`flex items-center gap-3 px-3 py-2.5 ${adminSurface.rowHover}`}
-                    >
-                      <span className={`flex size-7 shrink-0 items-center justify-center rounded-lg text-[10px] font-bold ${cat.bg} ${cat.color}`}>
-                        {cat.label[0]}
-                      </span>
-                      <div className="min-w-0 flex-1">
-                        <p className={`truncate text-sm font-medium ${adminSurface.title}`}>{r.title}</p>
-                        <p className={`truncate text-xs ${adminSurface.muted}`}>{r.sub}</p>
-                      </div>
-                      <span className={`shrink-0 rounded-full px-1.5 py-0.5 text-[9px] font-semibold ${cat.bg} ${cat.color}`}>
-                        {cat.label}
-                      </span>
-                    </Link>
-                  </li>
-                );
-              })}
-            </ul>
-          )}
-          <div className={`border-t admin-shell-border px-3 py-2 text-[10px] ${adminSurface.faint}`}>
-            {results.length} result{results.length !== 1 ? "s" : ""} · Press Esc to close
-          </div>
-        </div>
-      )}
+      {/* Results dropdown — portaled so it is not clipped by main scroll area */}
+      {showResults && resultsPosition && typeof document !== "undefined"
+        ? createPortal(
+            <div
+              data-admin-header-dropdown=""
+              className={adminHeaderDropdownPortal}
+              style={{ top: resultsPosition.top, right: resultsPosition.right }}
+            >
+              <div className={`w-[min(20rem,calc(100vw-2rem))] ${adminSurface.dropdown}`}>
+              {debouncedQuery !== query.trim() ? (
+                <div className={`px-4 py-6 text-center text-sm ${adminSurface.muted}`}>Searching…</div>
+              ) : results.length === 0 ? (
+                <div className={`px-4 py-6 text-center text-sm ${adminSurface.faint}`}>
+                  No results for &ldquo;{debouncedQuery}&rdquo;
+                </div>
+              ) : (
+                <ul className="py-1.5">
+                  {results.map((r) => {
+                    const cat = CATEGORIES[r.type] ?? CATEGORIES.menu;
+                    return (
+                      <li key={`${r.type}-${r.id}`}>
+                        <Link
+                          href={r.href}
+                          onClick={() => {
+                            setOpen(false);
+                            setQuery("");
+                            setDebouncedQuery("");
+                          }}
+                          className={`flex items-center gap-3 px-3 py-2.5 ${adminSurface.rowHover}`}
+                        >
+                          <span
+                            className={`flex size-7 shrink-0 items-center justify-center rounded-lg text-[10px] font-bold ${cat.bg} ${cat.color}`}
+                          >
+                            {cat.label[0]}
+                          </span>
+                          <div className="min-w-0 flex-1">
+                            <p className={`truncate text-sm font-medium ${adminSurface.title}`}>{r.title}</p>
+                            <p className={`truncate text-xs ${adminSurface.muted}`}>{r.sub}</p>
+                          </div>
+                          <span
+                            className={`shrink-0 rounded-full px-1.5 py-0.5 text-[9px] font-semibold ${cat.bg} ${cat.color}`}
+                          >
+                            {cat.label}
+                          </span>
+                        </Link>
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
+              <div className={`border-t admin-shell-border px-3 py-2 text-[10px] ${adminSurface.faint}`}>
+                {results.length} result{results.length !== 1 ? "s" : ""} · Press Esc to close
+              </div>
+              </div>
+            </div>,
+            document.body
+          )
+        : null}
     </div>
   );
 }

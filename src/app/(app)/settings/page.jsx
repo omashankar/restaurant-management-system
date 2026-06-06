@@ -83,16 +83,16 @@ function RestaurantThemeSection({ data, onChange, onSave, saving, canSave, field
       title="Theme"
       description="Primary Color drives your admin panel — sidebar, buttons, loaders. Accent is for success states (paid, active, online)."
     >
-      <div className="mb-4 flex items-center gap-2 text-sm font-medium admin-surface-body">
-        <Palette className="size-4 text-ra-primary" />
+      <div className="mb-4 flex min-w-0 items-center gap-2 text-sm font-medium admin-surface-body">
+        <Palette className="size-4 shrink-0 text-ra-primary" />
         Brand colors
       </div>
       <div className="grid gap-4 sm:grid-cols-2">
-        <div>
+        <div className="min-w-0">
           <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-zinc-500">
             Primary Color
           </label>
-          <div className="flex items-center gap-3">
+          <div className="flex min-w-0 items-center gap-3">
             <input
               type="color"
               value={primary}
@@ -112,7 +112,7 @@ function RestaurantThemeSection({ data, onChange, onSave, saving, canSave, field
                 pushPreview({ primaryColor: v });
               }}
               placeholder={RESTAURANT_ADMIN_PRIMARY}
-              className="w-full admin-surface-card px-3 py-2.5 font-mono text-sm admin-shell-text outline-none focus-ra-primary"
+              className="min-w-0 flex-1 rounded-xl border admin-shell-border admin-surface-card px-3 py-2.5 font-mono text-sm admin-shell-text outline-none focus-ra-primary"
             />
           </div>
           {fieldErrors.primaryColor ? (
@@ -121,11 +121,11 @@ function RestaurantThemeSection({ data, onChange, onSave, saving, canSave, field
             <p className="mt-1 text-xs admin-surface-faint">Default: {RESTAURANT_ADMIN_PRIMARY}</p>
           )}
         </div>
-        <div>
+        <div className="min-w-0">
           <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-zinc-500">
             Accent Color
           </label>
-          <div className="flex items-center gap-3">
+          <div className="flex min-w-0 items-center gap-3">
             <input
               type="color"
               value={accent}
@@ -145,7 +145,7 @@ function RestaurantThemeSection({ data, onChange, onSave, saving, canSave, field
                 pushPreview({ accentColor: v });
               }}
               placeholder={RESTAURANT_ADMIN_ACCENT}
-              className="w-full admin-surface-card px-3 py-2.5 font-mono text-sm admin-shell-text outline-none focus-ra-primary"
+              className="min-w-0 flex-1 rounded-xl border admin-shell-border admin-surface-card px-3 py-2.5 font-mono text-sm admin-shell-text outline-none focus-ra-primary"
             />
           </div>
           {fieldErrors.accentColor ? (
@@ -183,12 +183,12 @@ function RestaurantThemeSection({ data, onChange, onSave, saving, canSave, field
         />
       </div>
 
-      <div className={`mt-6 flex justify-end border-t pt-4 ${adminShell.borderT}`}>
+      <div className={`mt-6 flex justify-stretch border-t pt-4 sm:justify-end ${adminShell.borderT}`}>
         <button
           type="button"
           onClick={onSave}
           disabled={saving || !canSave}
-          className={`${raBtnPrimarySmCls} px-5 py-2.5 disabled:cursor-not-allowed disabled:opacity-50`}
+          className={`${raBtnPrimarySmCls} w-full px-5 py-2.5 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto`}
         >
           {saving ? (
             <>
@@ -514,9 +514,9 @@ export default function SettingsPage() {
   const isPayTab = PAYMENT_TABS.includes(activeTab);
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="admin-page-title text-2xl font-semibold tracking-tight">Settings</h1>
+    <div className="min-w-0 w-full max-w-full space-y-6 overflow-x-hidden">
+      <div className="min-w-0">
+        <h1 className="admin-page-title text-xl font-semibold tracking-tight sm:text-2xl">Settings</h1>
         <p className="admin-page-desc mt-1 text-sm">Configure restaurant preferences, POS behavior, and notifications.</p>
       </div>
 
@@ -526,28 +526,28 @@ export default function SettingsPage() {
         </div>
       )}
 
-      <div className="grid gap-5 lg:grid-cols-[240px_1fr]">
+      <div className="grid min-w-0 gap-5 lg:grid-cols-[minmax(0,240px)_minmax(0,1fr)]">
         <SettingsSidebar tabs={sidebarTabs} activeTab={activeTab} onTabChange={handleTabChange} />
 
-        <div className="space-y-4">
+        <div className="min-w-0 space-y-4">
 
           {/* ── GENERAL (with Notifications merged) ── */}
           {activeTab === "general" && (
             <div className="space-y-5">
 
               {/* Customer Site URL card */}
-              <div className={`flex items-start gap-3 rounded-xl border px-4 py-3.5 ${
+              <div className={`flex min-w-0 items-start gap-3 rounded-xl border px-4 py-3.5 ${
                 restaurantSlug
                   ? "border-ra-primary-25 bg-ra-primary-10"
                   : "border-amber-500/25 bg-amber-500/8"
               }`}>
-                <span className="mt-0.5 text-xl">{restaurantSlug ? "🔗" : "⚠️"}</span>
+                <span className="mt-0.5 shrink-0 text-xl">{restaurantSlug ? "🔗" : "⚠️"}</span>
                 <div className="min-w-0 flex-1">
                   <p className={`text-sm font-semibold ${restaurantSlug ? "text-ra-primary-muted" : "text-amber-300"}`}>
                     {restaurantSlug ? "Customer Site URL" : "Customer URL Set Nahi Hai"}
                   </p>
                   {restaurantSlug ? (
-                    <p className="mt-0.5 truncate font-mono text-xs text-ra-primary/80">
+                    <p className="mt-0.5 break-all font-mono text-xs text-ra-primary/80 sm:truncate">
                       {typeof window !== "undefined" ? window.location.origin : ""}/r/{restaurantSlug}/home
                     </p>
                   ) : (
@@ -647,9 +647,9 @@ export default function SettingsPage() {
             ) : (
               <div className="space-y-5">
                 {/* ── Info card — auto-detection notice ── */}
-                <div className="flex items-start gap-3 rounded-xl border border-ra-primary-25 bg-ra-primary-10 px-4 py-3.5">
-                  <span className="mt-0.5 text-lg">⚡</span>
-                  <div>
+                <div className="flex min-w-0 items-start gap-3 rounded-xl border border-ra-primary-25 bg-ra-primary-10 px-4 py-3.5">
+                  <span className="mt-0.5 shrink-0 text-lg">⚡</span>
+                  <div className="min-w-0 flex-1">
                     <p className="text-sm font-semibold text-ra-primary-muted">Payment Methods — Auto Detected</p>
                     <p className="mt-0.5 text-xs text-ra-primary/80">
                       Payment methods are automatically enabled based on your gateway configuration.
@@ -733,7 +733,7 @@ export default function SettingsPage() {
                   placeholder={`Default: ${settings.email.smtpUser || "SMTP username"}`}
                   value={smtpTestRecipient} onChange={setSmtpTestRecipient} />
                 <button type="button" onClick={sendTenantSmtpTest} disabled={testingSmtp}
-                  className="inline-flex cursor-pointer items-center gap-2 rounded-xl border border-ra-primary-40 bg-ra-primary-15 px-4 py-2.5 text-sm font-medium text-ra-primary-muted transition-colors hover-bg-ra-primary-15 disabled:cursor-not-allowed disabled:opacity-50">
+                  className="inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl border border-ra-primary-40 bg-ra-primary-15 px-4 py-2.5 text-sm font-medium text-ra-primary-muted transition-colors hover-bg-ra-primary-15 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto">
                   {testingSmtp ? <Loader2 className="size-4 animate-spin" /> : <Mail className="size-4" />}
                   {testingSmtp ? "Sending…" : "Send test email"}
                 </button>
@@ -746,7 +746,7 @@ export default function SettingsPage() {
             <SettingsFormSection title="Access Control"
               description="Set feature access by role. Changes apply to new sessions; existing sessions may need re-login.">
               <div className="overflow-x-auto rounded-xl border admin-shell-border">
-                <table className="admin-table min-w-full text-sm">
+                <table className="admin-table min-w-[640px] w-full text-sm">
                   <thead className="admin-table-head text-xs uppercase tracking-wide text-zinc-500">
                     <tr>
                       <th className="px-4 py-3 text-left">Feature</th>
@@ -784,11 +784,11 @@ export default function SettingsPage() {
             <SettingsFormSection title="Opening Hours" description="Set your weekly operating schedule.">
               <div className="space-y-3">
                 {settings.openingHours.map((row, index) => (
-                  <div key={row.day} className="grid gap-3 rounded-xl admin-surface-card p-3 md:grid-cols-[120px_1fr_1fr_auto]">
+                  <div key={row.day} className="grid grid-cols-1 gap-3 rounded-xl admin-surface-card p-3 sm:grid-cols-2 lg:grid-cols-[minmax(0,120px)_1fr_1fr_auto]">
                     <div className="flex items-center text-sm font-medium admin-shell-text">{row.day}</div>
                     <TimePicker label="Open" value={row.openTime} disabled={row.closed} onChange={(v) => updateDay(index, { openTime: v })} />
                     <TimePicker label="Close" value={row.closeTime} disabled={row.closed} onChange={(v) => updateDay(index, { closeTime: v })} />
-                    <div className="flex items-end">
+                    <div className="flex items-end sm:col-span-2 lg:col-span-1">
                       <ToggleSwitch label="Closed" checked={row.closed} onChange={(v) => updateDay(index, { closed: v })} />
                     </div>
                   </div>
@@ -853,9 +853,9 @@ export default function SettingsPage() {
 
           {/* Save button — hide on theme tab (has its own Save Theme) and payment tabs */}
           {!isPayTab && activeTab !== "theme" && (
-            <div className="flex items-center justify-end gap-2 admin-surface-card px-4 py-3">
+            <div className="flex items-stretch justify-end gap-2 admin-surface-card px-4 py-3 sm:items-center">
               <button type="button" onClick={saveChanges} disabled={!hasChanges || isSaving}
-                className="cursor-pointer inline-flex items-center gap-2 rounded-xl bg-ra-primary px-4 py-2 text-sm font-semibold text-zinc-950 transition-colors hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-45">
+                className="cursor-pointer inline-flex w-full items-center justify-center gap-2 rounded-xl bg-ra-primary px-4 py-2 text-sm font-semibold text-zinc-950 transition-colors hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-45 sm:w-auto">
                 {isSaving ? <Loader2 className="size-4 animate-spin" /> : null}
                 {isSaving ? "Saving..." : "Save Changes"}
               </button>
@@ -865,7 +865,7 @@ export default function SettingsPage() {
       </div>
 
       {toast && (
-        <div className={`fixed bottom-5 right-5 z-50 flex items-center gap-2 rounded-xl border px-4 py-2 text-sm shadow-2xl shadow-black/40 ${
+        <div className={`fixed inset-x-4 bottom-4 z-50 flex items-center gap-2 rounded-xl border px-4 py-2 text-sm shadow-2xl shadow-black/40 sm:inset-x-auto sm:right-5 sm:bottom-5 ${
           toast.type === "success" ? "border-ra-primary-30 admin-surface-card text-ra-primary-muted" : "border-red-500/30 admin-surface-card text-red-400"
         }`}>
           {toast.type === "success" ? <CheckCircle2 className="size-4" /> : <XCircle className="size-4" />}

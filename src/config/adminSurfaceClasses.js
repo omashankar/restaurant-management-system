@@ -3,6 +3,22 @@
 /** Portaled overlays (Modal, ConfirmDialog, POS pickers) */
 export const adminPortalScope = "admin-portal-scope";
 
+/** Portaled header menus — solid surface + above POS sticky bars */
+export const adminHeaderDropdownPortal =
+  "admin-portal-scope admin-header-dropdown-portal fixed z-[200]";
+
+/** Mobile sidebar drawer — above header + header dropdowns, below modals (z-[300]+) */
+export const adminMobileOverlay =
+  "admin-mobile-overlay fixed inset-0 z-[250] transition-opacity duration-200 md:hidden";
+
+/** Page side/bottom drawers (ticket detail, etc.) — above header + nav, below modals (z-[300]+) */
+export const adminPageDrawerOverlay =
+  "admin-portal-scope fixed inset-0 z-[280] flex items-end justify-center bg-[var(--admin-overlay)] sm:items-stretch sm:justify-end";
+
+/** Modals / confirm dialogs — above page drawers, below toast banners (z-[320]+) */
+export const adminModalOverlay =
+  "admin-portal-scope fixed inset-0 z-[300] flex min-w-0 items-end justify-center overflow-hidden sm:items-center sm:p-4 md:p-6";
+
 export const adminShell = {
   page: "admin-shell-bg",
   layout: "admin-shell-bg h-screen overflow-hidden",
@@ -10,13 +26,15 @@ export const adminShell = {
   sidebar:
     "admin-shell-sidebar relative flex h-full shrink-0 flex-col border-r admin-shell-border transition-[width] duration-300 ease-out",
   header:
-    "admin-shell-header sticky top-0 z-50 flex h-16 items-center justify-between gap-4 border-b admin-shell-border px-4 backdrop-blur-md",
+    "admin-shell-header sticky top-0 z-[100] flex h-16 items-center justify-between gap-4 overflow-visible border-b admin-shell-border px-4 backdrop-blur-md isolation-isolate",
   headerCompact:
-    "admin-shell-header flex h-14 items-center justify-between border-b admin-shell-border px-4 backdrop-blur-md",
+    "admin-shell-header sticky top-0 z-[100] flex h-14 items-center justify-between overflow-visible border-b admin-shell-border px-4 backdrop-blur-md isolation-isolate",
   headerDesktop:
-    "admin-shell-header hidden h-16 items-center justify-between gap-4 border-b admin-shell-border px-4 backdrop-blur-md md:flex",
+    "admin-shell-header sticky top-0 z-[100] hidden h-16 items-center justify-between gap-4 overflow-visible border-b admin-shell-border px-4 backdrop-blur-md isolation-isolate md:flex",
   borderB: "border-b admin-shell-border",
   borderT: "border-t admin-shell-border",
+  border: "border admin-shell-border",
+  ringSubtle: "ring-1 ring-[var(--admin-border-subtle)]",
   dividerB: "admin-surface-divider-b",
   dividerT: "admin-surface-divider-t",
   borderR: "border-r admin-shell-border",

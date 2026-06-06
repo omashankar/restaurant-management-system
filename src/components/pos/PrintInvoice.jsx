@@ -21,6 +21,7 @@ export default function PrintInvoice({
   currency = "INR",
   restaurantName = "Restaurant",
   paperSize = "80mm",
+  className = "",
 }) {
   function handlePrint() {
     printInvoiceInBrowser(
@@ -46,7 +47,7 @@ export default function PrintInvoice({
     <button
       type="button"
       onClick={handlePrint}
-      className="cursor-pointer inline-flex items-center gap-2 rounded-xl border admin-shell-border px-4 py-2 text-sm font-semibold admin-shell-text transition-colors hover-border-ra-primary-40 hover:text-ra-primary-muted"
+      className={`inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl border admin-shell-border px-4 py-2 text-sm font-semibold admin-shell-text transition-colors hover-border-ra-primary-40 hover:text-ra-primary-muted sm:w-auto ${className}`}
     >
       <Printer className="size-4" />
       Print Bill

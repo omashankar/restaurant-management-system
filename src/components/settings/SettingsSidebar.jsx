@@ -6,7 +6,7 @@ import { raSideNavActiveCls } from "@/config/restaurantAdminTheme";
 
 export default function SettingsSidebar({ tabs, activeTab, onTabChange }) {
   return (
-    <AdminSideNav className="w-full md:sticky md:top-24 md:max-h-[calc(100vh-7rem)] md:overflow-y-auto">
+    <AdminSideNav className="min-w-0 w-full md:sticky md:top-24 md:max-h-[calc(100vh-7rem)] md:overflow-y-auto">
       <p className={`px-2 pb-2 pt-1 text-xs font-semibold uppercase tracking-wide ${adminSurface.muted}`}>
         Settings Menu
       </p>

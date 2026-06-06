@@ -14,7 +14,9 @@ import {
 } from "@/lib/formValidation";
 import SearchField from "@/components/ui/SearchField";
 import PaginationBar from "@/components/ui/PaginationBar";
+import { adminModalOverlay } from "@/config/adminSurfaceClasses";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { createPortal } from "react-dom";
 import { useLiveRefresh } from "@/hooks/useLiveRefresh";
 
 const ORDERS_PAGE_SIZE = 12;
@@ -113,14 +115,14 @@ function OrderCard({ order, currency, onStatusChange, onMarkPaid, canEdit }) {
   const timeStr = order.time ?? placedAt.label;
 
   return (
-    <div className={`rounded-2xl border admin-surface-card transition-colors ${st.border}`}>
+    <div className={`min-w-0 rounded-2xl border admin-surface-card transition-colors ${st.border}`}>
       <div className="p-4">
-        <div className="flex items-start justify-between gap-2">
-          <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-start justify-between gap-2">
+          <div className="flex min-w-0 items-center gap-2">
             <span className={`flex size-8 shrink-0 items-center justify-center rounded-lg ${tp.bg}`}>
               <TypeIcon className={`size-4 ${tp.color}`} />
             </span>
-            <div>
+            <div className="min-w-0">
               <p className="font-mono text-sm font-semibold text-ra-primary">
                 {order.orderId ?? order.id?.slice(-8).toUpperCase()}
               </p>
@@ -134,12 +136,12 @@ function OrderCard({ order, currency, onStatusChange, onMarkPaid, canEdit }) {
           </span>
         </div>
 
-        <div className="mt-3 flex items-center justify-between">
-          <p className="text-sm admin-surface-muted">{order.customer}</p>
-          <p className="text-base font-bold admin-shell-text">{formatAdminMoney(orderTotal, currency)}</p>
+        <div className="mt-3 flex flex-wrap items-start justify-between gap-x-3 gap-y-1">
+          <p className="min-w-0 flex-1 break-words text-sm admin-surface-muted">{order.customer}</p>
+          <p className="shrink-0 text-base font-bold tabular-nums admin-shell-text">{formatAdminMoney(orderTotal, currency)}</p>
         </div>
 
-        <div className="mt-2 flex items-center justify-between gap-2">
+        <div className="mt-2 flex flex-wrap items-center gap-2">
           <span className="rounded-full border admin-shell-border px-2 py-0.5 text-[11px] admin-surface-body">
             {PAYMENT_METHOD_LABEL[paymentMethod] ?? paymentMethod}
           </span>
@@ -148,7 +150,7 @@ function OrderCard({ order, currency, onStatusChange, onMarkPaid, canEdit }) {
           </span>
         </div>
 
-        <div className="mt-2 flex items-center justify-between">
+        <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
           <span
             className="inline-flex items-center gap-1 text-xs admin-surface-faint"
             title={order.createdAt ? placedAt.full : undefined}
@@ -174,14 +176,14 @@ function OrderCard({ order, currency, onStatusChange, onMarkPaid, canEdit }) {
             <div className="space-y-1">
               {order.items.map((item, i) => (
                 <div key={i} className="text-xs">
-                  <div className="flex items-center justify-between">
-                    <span className="text-zinc-400">{item.qty}× {item.name}</span>
-                    <span className="text-zinc-500">
+                  <div className="flex items-start justify-between gap-2">
+                    <span className="min-w-0 flex-1 break-words text-zinc-400">{item.qty}× {item.name}</span>
+                    <span className="shrink-0 tabular-nums text-zinc-500">
                       {formatAdminMoney((item.price ?? 0) * (item.qty ?? 1), currency)}
                     </span>
                   </div>
                   {item.note?.trim() && (
-                    <p className="mt-0.5 pl-3 text-[10px] text-amber-400/90">↳ {item.note}</p>
+                    <p className="mt-0.5 break-words pl-3 text-[10px] text-amber-400/90">↳ {item.note}</p>
                   )}
                 </div>
               ))}
@@ -210,7 +212,7 @@ function OrderCard({ order, currency, onStatusChange, onMarkPaid, canEdit }) {
             </div>
           )}
           {order.notes && (
-            <p className="text-xs text-amber-400/80 admin-surface-divider-t pt-2">Note: {order.notes}</p>
+            <p className="break-words text-xs text-amber-400/80 admin-surface-divider-t pt-2">Note: {order.notes}</p>
           )}
           {canEdit && paymentStatus !== "paid" && (
             <button
@@ -386,24 +388,33 @@ function CreateOrderModal({ open, onClose, onCreated, currency = "INR" }) {
     finally { setSaving(false); }
   };
 
-  if (!open) return null;
+  useEffect(() => {
+    if (!open) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [open]);
 
-  return (
-    <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
+  if (!open || typeof document === "undefined") return null;
+
+  return createPortal(
+    <div className={`${adminModalOverlay} p-0 sm:p-4`}>
       <button type="button" className="cursor-pointer absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative z-10 flex w-full max-w-2xl flex-col rounded-2xl border admin-shell-border admin-surface-card-solid shadow-2xl max-h-[90vh]">
+      <div className="relative z-10 flex max-h-[95vh] w-full flex-col rounded-t-2xl border admin-shell-border admin-surface-card-solid shadow-2xl sm:max-h-[90vh] sm:max-w-3xl sm:rounded-2xl">
 
         {/* Header */}
-        <div className="flex items-center justify-between admin-surface-divider-b px-5 py-4">
+        <div className="flex items-center justify-between admin-surface-divider-b px-4 py-4 sm:px-5">
           <h2 className="text-base font-bold text-zinc-50">New Order</h2>
           <button type="button" onClick={onClose} className="cursor-pointer rounded-lg p-2 text-zinc-500 hover:bg-[var(--admin-hover)] hover:admin-shell-text">
             <X className="size-5" />
           </button>
         </div>
 
-        <div className="flex flex-1 overflow-hidden">
+        <div className="flex flex-1 flex-col overflow-hidden lg:flex-row">
           {/* Left — menu */}
-          <div className="flex flex-1 flex-col border-r admin-shell-border overflow-hidden">
+          <div className="flex max-h-[38vh] flex-1 flex-col overflow-hidden border-b admin-shell-border lg:max-h-none lg:border-b-0 lg:border-r">
             <div className="p-3 admin-surface-divider-b">
               <SearchField
                 value={search}
@@ -415,12 +426,12 @@ function CreateOrderModal({ open, onClose, onCreated, currency = "INR" }) {
             <div className="flex-1 overflow-y-auto p-3 space-y-1.5">
               {filteredMenu.map((item) => (
                 <button key={item.id} type="button" onClick={() => addItem(item)}
-                  className="cursor-pointer flex w-full items-center justify-between rounded-xl admin-surface-card px-3 py-2.5 text-left hover:border-ra-primary-30 hover:bg-ra-primary-5 transition-all">
-                  <div>
-                    <p className="text-sm font-medium admin-shell-text">{item.name}</p>
-                    <p className="text-xs admin-surface-muted">{item.categoryName}</p>
+                  className="cursor-pointer flex w-full items-start justify-between gap-2 rounded-xl admin-surface-card px-3 py-2.5 text-left hover:border-ra-primary-30 hover:bg-ra-primary-5 transition-all">
+                  <div className="min-w-0 flex-1">
+                    <p className="break-words text-sm font-medium admin-shell-text">{item.name}</p>
+                    <p className="truncate text-xs admin-surface-muted">{item.categoryName}</p>
                   </div>
-                  <span className="text-sm font-bold text-ra-primary">
+                  <span className="shrink-0 text-sm font-bold tabular-nums text-ra-primary">
                     {formatAdminMoney(item.price, currency)}
                   </span>
                 </button>
@@ -430,7 +441,7 @@ function CreateOrderModal({ open, onClose, onCreated, currency = "INR" }) {
           </div>
 
           {/* Right — order details */}
-          <div className="flex w-64 flex-col overflow-hidden">
+          <div className="flex w-full shrink-0 flex-col overflow-hidden lg:w-72">
             <div className="flex-1 overflow-y-auto p-3 space-y-3">
               {/* Order type */}
               <div>
@@ -551,9 +562,9 @@ function CreateOrderModal({ open, onClose, onCreated, currency = "INR" }) {
                 ) : (
                   <div className="space-y-1.5">
                     {cart.map((line) => (
-                      <div key={line.id} className="flex items-center justify-between rounded-lg admin-surface-segment-track px-2.5 py-2 text-xs">
-                        <span className="admin-surface-body">{line.qty}× {line.name}</span>
-                        <div className="flex items-center gap-2">
+                      <div key={line.id} className="flex items-start justify-between gap-2 rounded-lg admin-surface-segment-track px-2.5 py-2 text-xs">
+                        <span className="min-w-0 flex-1 break-words admin-surface-body">{line.qty}× {line.name}</span>
+                        <div className="flex shrink-0 items-center gap-2">
                           <span className="text-ra-primary">
                             {formatAdminMoney(line.price * line.qty, currency)}
                           </span>
@@ -588,7 +599,7 @@ function CreateOrderModal({ open, onClose, onCreated, currency = "INR" }) {
                   <span className="text-ra-primary">{formatAdminMoney(total, currency)}</span>
                 </div>
               </div>
-              <div className="flex gap-1">
+              <div className="grid grid-cols-2 gap-1 sm:flex sm:flex-wrap">
                 {["cashCounter", "upi", "card", "cod"].map((m) => (
                   <button
                     key={m}
@@ -598,7 +609,7 @@ function CreateOrderModal({ open, onClose, onCreated, currency = "INR" }) {
                       if (m === "cod") setPaymentStatus("pending");
                       else setPaymentStatus("paid");
                     }}
-                    className={`cursor-pointer flex-1 rounded-lg py-1 text-[10px] font-semibold ${
+                    className={`cursor-pointer rounded-lg py-2 text-[10px] font-semibold sm:flex-1 sm:py-1 ${
                       paymentMethod === m
                         ? "bg-ra-primary/20 text-ra-primary-muted"
                         : "text-zinc-600 hover:text-zinc-400"
@@ -623,7 +634,8 @@ function CreateOrderModal({ open, onClose, onCreated, currency = "INR" }) {
           </div>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
 
@@ -739,12 +751,12 @@ export default function OrdersPage() {
 
   if (loading) {
     return (
-      <div className="space-y-6">
+      <div className="min-w-0 w-full max-w-full space-y-6 overflow-x-hidden">
         <div className="h-8 w-32 animate-pulse rounded-lg admin-progress-track" />
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
+        <div className="grid min-w-0 grid-cols-2 gap-2 sm:grid-cols-5 sm:gap-3">
           {Array.from({ length: 5 }).map((_, i) => <div key={i} className="h-16 animate-pulse admin-surface-card" />)}
         </div>
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <div className="grid min-w-0 grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
           {Array.from({ length: 8 }).map((_, i) => <div key={i} className="h-32 animate-pulse admin-surface-card" />)}
         </div>
       </div>
@@ -753,19 +765,19 @@ export default function OrdersPage() {
 
   return (
     <>
-      <div className="space-y-6">
+      <div className="min-w-0 w-full max-w-full space-y-6 overflow-x-hidden">
         {fetchError && (
           <div className="rounded-xl border border-red-500/25 bg-red-500/10 px-4 py-3 text-sm text-red-400">
             {fetchError}
           </div>
         )}
         {/* Header */}
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-          <div className="flex items-start gap-3">
-            <span className={`mt-1 ${raIconBadgeCls}`}>
+        <div className="flex min-w-0 flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+          <div className="flex min-w-0 items-start gap-3">
+            <span className={`mt-1 shrink-0 ${raIconBadgeCls}`}>
               <UtensilsCrossed className="size-5" />
             </span>
-            <div>
+            <div className="min-w-0">
               <h1 className="admin-page-title text-2xl font-semibold tracking-tight">Orders</h1>
               <p className="admin-page-desc mt-1 text-sm">
                 {totalOrders} total ·{" "}
@@ -779,19 +791,29 @@ export default function OrdersPage() {
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-2">
-            <button type="button" onClick={() => fetchOrders()}
-              className="cursor-pointer flex items-center gap-1.5 rounded-xl border admin-shell-border px-3 py-2 text-xs font-medium text-zinc-400 hover:border-zinc-500 hover:admin-shell-text transition-colors">
+          <div className="flex w-full min-w-0 flex-col gap-2 sm:w-auto sm:flex-row sm:flex-wrap sm:items-center">
+            <button
+              type="button"
+              onClick={() => fetchOrders()}
+              className="inline-flex w-full cursor-pointer items-center justify-center gap-1.5 rounded-xl border admin-shell-border px-3 py-2 text-xs font-medium text-zinc-400 transition-colors hover:border-zinc-500 hover:admin-shell-text sm:w-auto"
+            >
               <RefreshCw className="size-3.5" />
+              <span className="sm:hidden">Refresh</span>
             </button>
-            <button type="button" onClick={() => setSortNew((v) => !v)}
-              className="cursor-pointer inline-flex items-center gap-2 admin-surface-card px-4 py-2 text-xs font-medium text-zinc-400 hover:border-zinc-600 hover:admin-shell-text transition-colors">
+            <button
+              type="button"
+              onClick={() => setSortNew((v) => !v)}
+              className="inline-flex w-full cursor-pointer items-center justify-center gap-2 admin-surface-card px-4 py-2 text-xs font-medium text-zinc-400 transition-colors hover:border-zinc-600 hover:admin-shell-text sm:w-auto"
+            >
               <Clock className="size-3.5" />
               {sortNew ? "Newest first" : "Oldest first"}
             </button>
             {canEdit && (
-              <button type="button" onClick={() => setCreateOpen(true)}
-                className="cursor-pointer inline-flex items-center gap-2 rounded-xl bg-ra-primary px-4 py-2 text-sm font-bold text-zinc-950 shadow-ra-primary-glow hover:brightness-110 active:scale-[0.98]">
+              <button
+                type="button"
+                onClick={() => setCreateOpen(true)}
+                className="inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-ra-primary px-4 py-2 text-sm font-bold text-zinc-950 shadow-ra-primary-glow hover:brightness-110 active:scale-[0.98] sm:w-auto"
+              >
                 <Plus className="size-4" /> New Order
               </button>
             )}
@@ -799,7 +821,7 @@ export default function OrdersPage() {
         </div>
 
         {/* Summary strip */}
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
+        <div className="grid min-w-0 grid-cols-2 gap-2 sm:grid-cols-5 sm:gap-3">
           {[
             { key: "new",       label: "New",       color: "text-amber-400",   bg: "bg-amber-500/10",   border: "border-amber-500/20"   },
             { key: "preparing", label: "Preparing", color: "text-sky-400",     bg: "bg-sky-500/10",     border: "border-sky-500/20"     },
@@ -807,18 +829,21 @@ export default function OrdersPage() {
             { key: "completed", label: "Completed", color: "text-zinc-400",    bg: "bg-zinc-500/10",    border: "border-zinc-700"       },
             { key: "cancelled", label: "Cancelled", color: "text-red-400",     bg: "bg-red-500/10",     border: "border-red-500/20"     },
           ].map(({ key, label, color, bg, border }) => (
-            <button key={key} type="button"
+            <button
+              key={key}
+              type="button"
               onClick={() => setFilter(filter === key ? "all" : key)}
-              className={`cursor-pointer rounded-2xl border p-3 text-left transition-all hover:-translate-y-0.5 ${bg} ${border} ${filter === key ? "ring-1 ring-current" : ""}`}>
-              <p className={`text-xl font-bold ${color}`}>{summary[key]}</p>
-              <p className="mt-0.5 text-xs admin-surface-muted">{label}</p>
+              className={`min-w-0 cursor-pointer rounded-2xl border p-2.5 text-left transition-all hover:-translate-y-0.5 sm:p-3 ${bg} ${border} ${filter === key ? "ring-1 ring-current" : ""}`}
+            >
+              <p className={`text-lg font-bold tabular-nums sm:text-xl ${color}`}>{summary[key]}</p>
+              <p className="mt-0.5 text-[11px] admin-surface-muted sm:text-xs">{label}</p>
             </button>
           ))}
         </div>
 
         {/* Search */}
         <SearchField
-          className="max-w-xs"
+          className="w-full max-w-none sm:max-w-xs"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Search order, customer, table…"
@@ -827,19 +852,22 @@ export default function OrdersPage() {
 
         {/* Grid */}
         {orders.length === 0 ? (
-          <div className="flex flex-col items-center justify-center gap-3 admin-surface-card py-20 text-center">
+          <div className="flex flex-col items-center justify-center gap-3 admin-surface-card px-4 py-16 text-center sm:py-20">
             <UtensilsCrossed className="size-10 text-zinc-700" />
             <p className="text-sm admin-surface-muted">No orders found.</p>
             {canEdit && (
-              <button type="button" onClick={() => setCreateOpen(true)}
-                className="cursor-pointer rounded-xl bg-ra-primary px-4 py-2 text-sm font-bold text-zinc-950 hover:brightness-110">
+              <button
+                type="button"
+                onClick={() => setCreateOpen(true)}
+                className="inline-flex w-full cursor-pointer items-center justify-center rounded-xl bg-ra-primary px-4 py-2 text-sm font-bold text-zinc-950 hover:brightness-110 sm:w-auto"
+              >
                 Create First Order
               </button>
             )}
           </div>
         ) : (
           <>
-            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            <div className="grid min-w-0 grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
               {orders.map((o) => (
                 <OrderCard
                   key={o.id}
@@ -851,14 +879,16 @@ export default function OrdersPage() {
                 />
               ))}
             </div>
-            <PaginationBar
-              page={page}
-              totalPages={pagination.pages}
-              total={pagination.total}
-              pageSize={ORDERS_PAGE_SIZE}
-              onPageChange={setPage}
-              hideWhenSinglePage
-            />
+            <div className="min-w-0">
+              <PaginationBar
+                page={page}
+                totalPages={pagination.pages}
+                total={pagination.total}
+                pageSize={ORDERS_PAGE_SIZE}
+                onPageChange={setPage}
+                hideWhenSinglePage
+              />
+            </div>
           </>
         )}
       </div>

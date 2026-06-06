@@ -1,6 +1,6 @@
 "use client";
 
-import { adminPortalScope, adminShell, adminSurface } from "@/config/adminSurfaceClasses";
+import { adminModalOverlay, adminShell, adminSurface } from "@/config/adminSurfaceClasses";
 import { X } from "lucide-react";
 import { useEffect } from "react";
 import { createPortal } from "react-dom";
@@ -21,7 +21,7 @@ export default function Modal({ open, title, onClose, children, footer }) {
 
   return createPortal(
     <div
-      className={`${adminPortalScope} fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6`}
+      className={adminModalOverlay}
       role="dialog"
       aria-modal="true"
       aria-labelledby={titleId}
@@ -33,28 +33,35 @@ export default function Modal({ open, title, onClose, children, footer }) {
         aria-label="Close dialog"
       />
       <div
-        className={`relative z-10 flex max-h-[min(90vh,720px)] w-full max-w-lg flex-col ${adminSurface.cardSolid} shadow-2xl duration-200`}
+        className={`relative z-10 flex max-h-[min(92dvh,720px)] w-full min-w-0 max-w-lg flex-col rounded-t-2xl shadow-2xl duration-200 sm:rounded-2xl ${adminSurface.cardSolid}`}
+        style={{ paddingBottom: "max(0rem, env(safe-area-inset-bottom))" }}
       >
-        <div className={`flex shrink-0 items-start justify-between gap-4 border-b ${adminShell.borderB} px-5 py-4`}>
+        <div className="flex shrink-0 flex-col items-center pt-2 sm:hidden">
+          <span className="h-1 w-10 rounded-full bg-zinc-600" aria-hidden />
+        </div>
+
+        <div
+          className={`flex shrink-0 items-start justify-between gap-3 border-b ${adminShell.borderB} px-4 py-3 sm:items-center sm:px-5 sm:py-4`}
+        >
           {title ? (
-            <h2 id={titleId} className="text-lg font-semibold tracking-tight">
+            <h2 id={titleId} className="min-w-0 flex-1 break-words text-base font-semibold tracking-tight sm:text-lg">
               {title}
             </h2>
           ) : (
-            <span />
+            <span className="min-w-0 flex-1" />
           )}
           <button
             type="button"
             onClick={onClose}
-            className={`cursor-pointer rounded-lg p-1.5 ${adminSurface.muted} transition-colors hover:bg-[var(--admin-hover)] hover:text-[var(--admin-text)]`}
+            className={`cursor-pointer shrink-0 rounded-lg p-1.5 ${adminSurface.muted} transition-colors hover:bg-[var(--admin-hover)] hover:text-[var(--admin-text)]`}
             aria-label="Close"
           >
             <X className="size-5" />
           </button>
         </div>
-        <div className="min-h-0 flex-1 overflow-y-auto px-5 py-4">{children}</div>
+        <div className="min-h-0 min-w-0 flex-1 overflow-y-auto overscroll-contain px-4 py-4 sm:px-5">{children}</div>
         {footer ? (
-          <div className={`shrink-0 border-t ${adminShell.borderT} px-5 py-4`}>{footer}</div>
+          <div className={`shrink-0 border-t ${adminShell.borderT} px-4 py-3 sm:px-5 sm:py-4`}>{footer}</div>
         ) : null}
       </div>
     </div>,

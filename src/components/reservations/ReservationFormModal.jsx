@@ -122,10 +122,13 @@ function CustomerSearchField({ onSelect, initialName = "", initialPhone = "" }) 
   /* ── Selected state ── */
   if (selected) {
     return (
-      <div className="flex items-center justify-between gap-3 rounded-xl border border-ra-primary-30 bg-ra-primary-5 px-3 py-2.5">
-        <div>
-          <p className="text-sm font-semibold text-ra-primary-muted">{selected.name}</p>
-          <p className="text-xs admin-surface-muted">{selected.phone}{selected.email ? ` · ${selected.email}` : ""}</p>
+      <div className="flex items-start justify-between gap-3 rounded-xl border border-ra-primary-30 bg-ra-primary-5 px-3 py-2.5">
+        <div className="min-w-0">
+          <p className="break-words text-sm font-semibold text-ra-primary-muted">{selected.name}</p>
+          <p className="break-all text-xs admin-surface-muted">
+            {selected.phone}
+            {selected.email ? ` · ${selected.email}` : ""}
+          </p>
         </div>
         <button type="button" onClick={handleClear}
           className="cursor-pointer rounded-lg p-1 admin-surface-muted hover:admin-shell-text" aria-label="Clear">
@@ -212,14 +215,14 @@ function CustomerSearchField({ onSelect, initialName = "", initialPhone = "" }) 
           <input type="email" value={newForm.email} onChange={(e) => setNewForm((f) => ({ ...f, email: e.target.value }))}
             placeholder="Email (optional)"
             className="admin-surface-input focus-ra-primary px-3 py-2 placeholder:admin-surface-faint" />
-          <div className="flex gap-2 pt-1">
+          <div className="flex flex-col gap-2 pt-1 sm:flex-row">
             <button type="button" onClick={handleAdd}
               disabled={!newForm.name.trim() || !newForm.phone.trim()}
               className="cursor-pointer flex-1 rounded-xl bg-ra-primary py-2 text-sm font-semibold text-zinc-950 hover:brightness-110 disabled:opacity-40">
               Save & Select
             </button>
             <button type="button" onClick={() => setShowAdd(false)}
-              className="cursor-pointer rounded-xl border admin-shell-border px-3 py-2 text-sm admin-surface-muted hover:admin-shell-text">
+              className="cursor-pointer rounded-xl border admin-shell-border px-3 py-2 text-sm admin-surface-muted hover:admin-shell-text sm:shrink-0">
               Cancel
             </button>
           </div>
@@ -358,13 +361,19 @@ export default function ReservationFormModal({ open, onClose, editing, tableOpti
       onClose={onClose}
       title={editing ? "Edit reservation" : "Add reservation"}
       footer={
-        <div className="flex flex-wrap justify-end gap-2">
-          <button type="button" onClick={onClose}
-            className="cursor-pointer rounded-xl border admin-shell-border px-4 py-2 text-sm font-medium admin-surface-body hover:border-zinc-500">
+        <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+          <button
+            type="button"
+            onClick={onClose}
+            className="w-full cursor-pointer rounded-xl border admin-shell-border px-4 py-2 text-sm font-medium admin-surface-body hover:border-zinc-500 sm:w-auto"
+          >
             Cancel
           </button>
-          <button type="button" onClick={submit}
-            className="cursor-pointer rounded-xl bg-ra-primary px-4 py-2 text-sm font-semibold text-zinc-950 hover:brightness-110">
+          <button
+            type="button"
+            onClick={submit}
+            className="w-full cursor-pointer rounded-xl bg-ra-primary px-4 py-2 text-sm font-semibold text-zinc-950 hover:brightness-110 sm:w-auto"
+          >
             Save
           </button>
         </div>

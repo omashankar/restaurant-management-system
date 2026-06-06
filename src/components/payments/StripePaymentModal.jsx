@@ -3,8 +3,10 @@
 import { loadStripe } from "@stripe/stripe-js";
 import { Elements, PaymentElement, useElements, useStripe } from "@stripe/react-stripe-js";
 import { Loader2, X } from "lucide-react";
+import { adminModalOverlay } from "@/config/adminSurfaceClasses";
 import { useRestaurantTheme } from "@/hooks/useRestaurantTheme";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { createPortal } from "react-dom";
 
 function PaymentForm({
   clientSecret,
@@ -99,18 +101,27 @@ export default function StripePaymentModal({
   const [formError, setFormError] = useState("");
   const colorPrimary = theme.primaryColor;
 
-  if (!open || !clientSecret || !publishableKey || !stripePromise) {
+  useEffect(() => {
+    if (!open) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [open]);
+
+  if (!open || !clientSecret || !publishableKey || !stripePromise || typeof document === "undefined") {
     return null;
   }
 
-  return (
+  return createPortal(
     <div
-      className="fixed inset-0 z-[200] flex items-center justify-center bg-black/60 p-4 backdrop-blur-[2px]"
+      className={`${adminModalOverlay} !items-center bg-black/60 backdrop-blur-[2px]`}
       role="dialog"
       aria-modal="true"
       aria-labelledby="stripe-pay-title"
     >
-      <div className="relative max-h-[90vh] w-full max-w-md overflow-y-auto rounded-2xl border border-zinc-200 bg-white p-6 shadow-xl">
+      <div className="relative z-10 max-h-[90vh] w-full max-w-md overflow-y-auto rounded-2xl border border-zinc-200 bg-white p-6 shadow-xl">
         <button
           type="button"
           onClick={onClose}
@@ -148,6 +159,7 @@ export default function StripePaymentModal({
           </Elements>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

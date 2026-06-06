@@ -50,15 +50,16 @@ export default function PaymentTransactionsSection({ showToast }) {
   useEffect(() => { setPage(1); }, [status, method, from, to]);
 
   return (
-    <section className="admin-surface-card p-5 sm:p-6">
-      <div className="mb-5 flex items-center justify-between">
-        <div>
+    <section className="min-w-0 admin-surface-card p-4 sm:p-6">
+      <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div className="min-w-0">
           <h2 className="text-lg font-semibold admin-shell-text">Transaction History</h2>
           <p className="mt-1 text-sm admin-surface-muted">Subscription payments and online order transactions for your restaurant.</p>
         </div>
         <button type="button" onClick={fetchData}
-          className="cursor-pointer flex items-center gap-1.5 rounded-xl border admin-shell-border px-3 py-2 text-sm admin-surface-muted hover:border-zinc-500 hover:admin-shell-text transition-colors">
+          className="inline-flex w-full shrink-0 cursor-pointer items-center justify-center gap-1.5 rounded-xl border admin-shell-border px-3 py-2 text-sm admin-surface-muted transition-colors hover:border-zinc-500 hover:admin-shell-text sm:w-auto">
           <RefreshCw className={`size-4 ${loading ? "animate-spin" : ""}`} />
+          Refresh
         </button>
       </div>
 
@@ -73,9 +74,9 @@ export default function PaymentTransactionsSection({ showToast }) {
         </div>
       </div>
 
-      <div className="mb-4 flex flex-wrap gap-3">
+      <div className="mb-4 grid grid-cols-1 gap-2 sm:flex sm:flex-wrap sm:gap-3">
         <select value={status} onChange={(e) => setStatus(e.target.value)}
-          className="cursor-pointer rounded-xl border admin-shell-border bg-[var(--admin-control)] px-3 py-2 text-sm admin-shell-text outline-none focus-ra-primary">
+          className="w-full cursor-pointer rounded-xl border admin-shell-border bg-[var(--admin-control)] px-3 py-2 text-sm admin-shell-text outline-none focus-ra-primary sm:w-auto">
           <option value="all">All Statuses</option>
           <option value="paid">Paid</option>
           <option value="pending">Pending</option>
@@ -83,16 +84,16 @@ export default function PaymentTransactionsSection({ showToast }) {
           <option value="refunded">Refunded</option>
         </select>
         <select value={method} onChange={(e) => setMethod(e.target.value)}
-          className="cursor-pointer rounded-xl border admin-shell-border bg-[var(--admin-control)] px-3 py-2 text-sm admin-shell-text outline-none focus-ra-primary">
+          className="w-full cursor-pointer rounded-xl border admin-shell-border bg-[var(--admin-control)] px-3 py-2 text-sm admin-shell-text outline-none focus-ra-primary sm:w-auto">
           <option value="all">All Methods</option>
           {Object.entries(PAYMENT_METHOD_LABELS).map(([k, v]) => (
             <option key={k} value={k}>{v}</option>
           ))}
         </select>
         <input type="date" value={from} onChange={(e) => setFrom(e.target.value)}
-          className="rounded-xl border admin-shell-border bg-[var(--admin-control)] px-3 py-2 text-sm admin-shell-text outline-none focus-ra-primary" />
+          className="w-full rounded-xl border admin-shell-border bg-[var(--admin-control)] px-3 py-2 text-sm admin-shell-text outline-none focus-ra-primary sm:w-auto" />
         <input type="date" value={to} onChange={(e) => setTo(e.target.value)}
-          className="rounded-xl border admin-shell-border bg-[var(--admin-control)] px-3 py-2 text-sm admin-shell-text outline-none focus-ra-primary" />
+          className="w-full rounded-xl border admin-shell-border bg-[var(--admin-control)] px-3 py-2 text-sm admin-shell-text outline-none focus-ra-primary sm:w-auto" />
       </div>
 
       {loading ? (
@@ -107,7 +108,44 @@ export default function PaymentTransactionsSection({ showToast }) {
           <p className="text-sm admin-surface-muted">No transactions found.</p>
         </div>
       ) : (
-        <div className="overflow-hidden rounded-2xl border admin-shell-border">
+        <>
+          <div className="space-y-2 md:hidden">
+            {transactions.map((t) => (
+              <div key={t.id} className="rounded-xl border admin-shell-border bg-[var(--admin-surface-soft)] p-3">
+                <div className="flex flex-wrap items-start justify-between gap-2">
+                  <div className="min-w-0">
+                    <p className="font-mono text-xs admin-surface-muted">…{t.transactionId.slice(-8)}</p>
+                    <p className="mt-0.5 text-xs admin-surface-muted">Order: {t.orderId}</p>
+                  </div>
+                  <span className={`inline-flex shrink-0 rounded-full px-2.5 py-0.5 text-xs font-semibold capitalize ${STATUS_BADGE[t.status] ?? STATUS_BADGE.pending}`}>
+                    {t.status}
+                  </span>
+                </div>
+                <div className="mt-2 flex flex-wrap items-center justify-between gap-2 text-sm">
+                  <span className="capitalize admin-surface-muted">{PAYMENT_METHOD_LABELS[t.paymentMethod] ?? t.paymentMethod}</span>
+                  <span className="font-semibold tabular-nums admin-shell-text">₹{t.amount.toLocaleString()}</span>
+                </div>
+                {t.customerName ? (
+                  <p className="mt-1 truncate text-xs admin-surface-body">{t.customerName}</p>
+                ) : null}
+                <p className="mt-1 text-xs admin-surface-faint">
+                  {t.createdAt ? new Date(t.createdAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }) : "—"}
+                </p>
+              </div>
+            ))}
+            <div className="pt-2">
+              <PaginationBar
+                page={page}
+                totalPages={pagination.pages}
+                total={pagination.total}
+                pageSize={20}
+                onPageChange={setPage}
+                hideWhenSinglePage
+              />
+            </div>
+          </div>
+
+          <div className="hidden overflow-hidden rounded-2xl border admin-shell-border md:block">
           <div className="overflow-x-auto">
             <table className="min-w-full text-left text-sm">
               <thead>
@@ -153,6 +191,7 @@ export default function PaymentTransactionsSection({ showToast }) {
             />
           </div>
         </div>
+        </>
       )}
     </section>
   );

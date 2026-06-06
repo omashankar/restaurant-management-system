@@ -188,35 +188,47 @@ export default function StaffModulePage() {
 
   if (loading) {
     return (
-      <div className="space-y-6">
+      <div className="min-w-0 w-full max-w-full space-y-6 overflow-x-hidden">
         <div className="h-8 w-28 animate-pulse rounded-lg admin-progress-track" />
         <TableSkeleton rows={8} cols={5} />
       </div>
     );
   }
 
+  const roleBadgeCls = (role) =>
+    role === "manager"
+      ? "bg-indigo-500/15 text-indigo-300 ring-indigo-500/25"
+      : role === "chef"
+        ? "bg-amber-500/15 text-amber-300 ring-amber-500/25"
+        : "bg-sky-500/15 text-sky-300 ring-sky-500/25";
+
+  const statusBadgeCls = (status) =>
+    status === "active"
+      ? "bg-ra-primary-15 text-ra-primary-muted ring-ra-primary-25"
+      : "bg-amber-500/15 text-amber-200 ring-amber-500/25";
+
   return (
-    <div className="space-y-6">
+    <div className="min-w-0 w-full max-w-full space-y-6 overflow-x-hidden">
 
       {/* Header */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div className="flex items-start gap-3">
-          <span className={`mt-1 ${raIconBadgeCls}`}>
+      <div className="flex min-w-0 flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div className="flex min-w-0 items-start gap-3">
+          <span className={`mt-1 shrink-0 ${raIconBadgeCls}`}>
             <Users className="size-5" />
           </span>
-          <div>
+          <div className="min-w-0">
             <h1 className="admin-page-title text-2xl font-semibold tracking-tight">Staff</h1>
             <p className="admin-page-desc mt-1 text-sm">Team roster · {total} member{total !== 1 ? "s" : ""}</p>
           </div>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex w-full min-w-0 flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">
           <button type="button" onClick={fetchStaff}
-            className="cursor-pointer flex items-center gap-1.5 rounded-xl border admin-shell-border px-3 py-2 text-xs font-medium text-zinc-400 hover:border-zinc-500 hover:admin-shell-text transition-colors">
+            className="inline-flex w-full cursor-pointer items-center justify-center gap-1.5 rounded-xl border admin-shell-border px-3 py-2 text-xs font-medium text-zinc-400 transition-colors hover:border-zinc-500 hover:admin-shell-text sm:w-auto">
             <RefreshCw className="size-3.5" /> Refresh
           </button>
           {isAdmin && (
             <button type="button" onClick={openCreate}
-              className="cursor-pointer inline-flex items-center gap-2 rounded-xl bg-ra-primary px-4 py-2.5 text-sm font-semibold text-zinc-950 hover:brightness-110">
+              className="inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-ra-primary px-4 py-2.5 text-sm font-semibold text-zinc-950 hover:brightness-110 sm:w-auto">
               <Plus className="size-4" /> Add Staff
             </button>
           )}
@@ -236,7 +248,7 @@ export default function StaffModulePage() {
         searchPlaceholder="Search name, email, phone…"
         filterSlot={
           <select value={roleFilter} onChange={(e) => setRoleFilter(e.target.value)}
-            className="cursor-pointer admin-surface-card px-3 py-2 text-sm admin-shell-text">
+            className="w-full cursor-pointer admin-surface-card px-3 py-2 text-sm admin-shell-text sm:w-auto">
             <option value="all">All roles</option>
             {STAFF_ROLES.map((r) => <option key={r} value={r}>{ROLE_LABEL[r]}</option>)}
           </select>
@@ -256,6 +268,53 @@ export default function StaffModulePage() {
           )}
         />
       ) : (
+        <div className="min-w-0 overflow-hidden admin-surface-card">
+          <div className="space-y-2 p-3 md:hidden">
+            {pageRows.map((row) => (
+              <div
+                key={row.id}
+                className="rounded-xl border admin-shell-border bg-[var(--admin-surface-soft)] p-3"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex min-w-0 items-start gap-3">
+                    <span className="flex size-8 shrink-0 items-center justify-center rounded-full admin-rank-badge text-xs font-bold admin-surface-body ring-1 ring-zinc-700">
+                      {row.name?.[0]?.toUpperCase()}
+                    </span>
+                    <div className="min-w-0">
+                      <p className="break-words font-medium admin-shell-text">{row.name}</p>
+                      <div className="mt-2 flex flex-wrap items-center gap-2">
+                        <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold capitalize ring-1 ${roleBadgeCls(row.role)}`}>
+                          {ROLE_LABEL[row.role] ?? row.role}
+                        </span>
+                        <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold capitalize ring-1 ${statusBadgeCls(row.status)}`}>
+                          {row.status?.replace("-", " ")}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                  {isAdmin && (
+                    <div className="flex shrink-0 items-center gap-1">
+                      <AdminTableIconButton onClick={() => openEdit(row)} aria-label="Edit">
+                        <Pencil className="size-4" />
+                      </AdminTableIconButton>
+                      <AdminTableIconButton variant="danger" onClick={() => setDeleteTarget(row)} aria-label="Delete">
+                        <Trash2 className="size-4" />
+                      </AdminTableIconButton>
+                    </div>
+                  )}
+                </div>
+                <div className="mt-3 space-y-1 text-xs admin-surface-muted">
+                  <p className="break-all">{row.email}</p>
+                  <p className="tabular-nums">{row.phone || "—"}</p>
+                </div>
+              </div>
+            ))}
+            <div className="px-1 pb-1">
+              <PaginationBar page={page} totalPages={totalPages} total={total} pageSize={pageSize} onPageChange={setPage} hideWhenSinglePage />
+            </div>
+          </div>
+
+          <div className="hidden md:block">
         <DataTableShell>
           <AdminTable>
             <AdminTableHead>
@@ -272,30 +331,22 @@ export default function StaffModulePage() {
               {pageRows.map((row) => (
                 <AdminTableRow key={row.id}>
                   <AdminTableTd>
-                    <div className="flex items-center gap-3">
+                    <div className="flex min-w-0 items-center gap-3">
                       <span className="flex size-8 shrink-0 items-center justify-center rounded-full admin-rank-badge text-xs font-bold admin-surface-body ring-1 ring-zinc-700">
                         {row.name?.[0]?.toUpperCase()}
                       </span>
-                      <span className="font-medium admin-shell-text">{row.name}</span>
+                      <span className="truncate font-medium admin-shell-text">{row.name}</span>
                     </div>
                   </AdminTableTd>
                   <AdminTableTd>
-                    <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold capitalize ring-1 ${
-                      row.role === "manager" ? "bg-indigo-500/15 text-indigo-300 ring-indigo-500/25"
-                      : row.role === "chef"  ? "bg-amber-500/15 text-amber-300 ring-amber-500/25"
-                      :                        "bg-sky-500/15 text-sky-300 ring-sky-500/25"
-                    }`}>
+                    <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold capitalize ring-1 ${roleBadgeCls(row.role)}`}>
                       {ROLE_LABEL[row.role] ?? row.role}
                     </span>
                   </AdminTableTd>
-                  <AdminTableTd hidden="md" className="admin-surface-muted">{row.email}</AdminTableTd>
+                  <AdminTableTd hidden="md" className="break-all admin-surface-muted">{row.email}</AdminTableTd>
                   <AdminTableTd hidden="md" className="tabular-nums admin-surface-muted">{row.phone || "—"}</AdminTableTd>
                   <AdminTableTd>
-                    <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold capitalize ring-1 ${
-                      row.status === "active"
-                        ? "bg-ra-primary-15 text-ra-primary-muted ring-ra-primary-25"
-                        : "bg-amber-500/15 text-amber-200 ring-amber-500/25"
-                    }`}>
+                    <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold capitalize ring-1 ${statusBadgeCls(row.status)}`}>
                       {row.status?.replace("-", " ")}
                     </span>
                   </AdminTableTd>
@@ -317,6 +368,8 @@ export default function StaffModulePage() {
             <PaginationBar page={page} totalPages={totalPages} total={total} pageSize={pageSize} onPageChange={setPage} hideWhenSinglePage />
           </div>
         </DataTableShell>
+          </div>
+        </div>
       )}
 
       {/* Add/Edit Modal */}
@@ -325,13 +378,13 @@ export default function StaffModulePage() {
         onClose={() => setModalOpen(false)}
         title={editingId ? "Edit Staff Member" : "Add Staff Member"}
         footer={
-          <div className="flex justify-end gap-2">
+          <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
             <button type="button" onClick={() => setModalOpen(false)}
-              className="cursor-pointer rounded-xl border admin-shell-border px-4 py-2 text-sm admin-surface-body hover:border-zinc-500">
+              className="inline-flex w-full cursor-pointer items-center justify-center rounded-xl border admin-shell-border px-4 py-2 text-sm admin-surface-body hover:border-zinc-500 sm:w-auto">
               Cancel
             </button>
             <button type="button" onClick={saveStaff} disabled={saving}
-              className="cursor-pointer rounded-xl bg-ra-primary px-4 py-2 text-sm font-semibold text-zinc-950 hover:brightness-110 disabled:opacity-50">
+              className="inline-flex w-full cursor-pointer items-center justify-center rounded-xl bg-ra-primary px-4 py-2 text-sm font-semibold text-zinc-950 hover:brightness-110 disabled:opacity-50 sm:w-auto">
               {saving ? "Saving…" : "Save"}
             </button>
           </div>
@@ -341,7 +394,7 @@ export default function StaffModulePage() {
           {formError && (
             <p className="rounded-xl border border-red-500/20 bg-red-500/10 px-3 py-2 text-xs text-red-400">{formError}</p>
           )}
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
               <label className="text-xs font-medium admin-surface-muted">Full Name *</label>
               <input

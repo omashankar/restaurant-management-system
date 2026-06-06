@@ -34,22 +34,22 @@ export default function ReservationCalendarView({ rows, onView, onEdit, onDelete
   }
 
   return (
-    <div className="space-y-8">
+    <div className="min-w-0 space-y-8 overflow-x-hidden">
       {groups.map(({ date, items }) => (
-        <section key={date}>
-          <h3 className="sticky top-0 z-10 mb-4 inline-flex rounded-lg border border-ra-primary-25 bg-[var(--admin-surface)] px-3 py-1.5 text-sm font-semibold text-ra-primary backdrop-blur-sm">
+        <section key={date} className="min-w-0">
+          <h3 className="sticky top-0 z-10 mb-4 inline-flex max-w-full rounded-lg border border-ra-primary-25 bg-[var(--admin-surface)] px-3 py-1.5 text-sm font-semibold text-ra-primary backdrop-blur-sm">
             {formatReservationDate(date)}
           </h3>
-          <div className={gridCls(items.length)}>
+          <div className={`min-w-0 ${gridCls(items.length)}`}>
             {items.map((r) => (
               <div
                 key={r.id}
-                className="group rounded-2xl border admin-shell-border bg-[var(--admin-surface)] p-4 transition-colors hover:border-ra-primary-40 hover:bg-[var(--admin-hover)]"
+                className="min-w-0 rounded-2xl border admin-shell-border bg-[var(--admin-surface)] p-4 transition-colors hover:border-ra-primary-40 hover:bg-[var(--admin-hover)]"
               >
                 <div className="flex items-start justify-between gap-2">
-                  <div>
-                    <p className="font-semibold admin-shell-text">{r.customerName}</p>
-                    <p className="text-xs admin-surface-muted">{r.phone}</p>
+                  <div className="min-w-0 flex-1">
+                    <p className="break-words font-semibold admin-shell-text">{r.customerName}</p>
+                    <p className="break-all text-xs admin-surface-muted">{r.phone}</p>
                   </div>
                   <StatusBadge status={r.status} />
                 </div>

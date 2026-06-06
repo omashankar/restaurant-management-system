@@ -62,7 +62,7 @@ export default function CmsNavItemsEditor({
                   className={layoutInputCls}
                 />
               )}
-              <p className="text-[10px] font-mono text-zinc-600">
+              <p className="break-all text-[10px] font-mono text-zinc-600">
                 {mode === "url" ? `[Link]: ${item.url || "—"}` : `[Route]: ${item.path || "—"}`}
               </p>
             </div>

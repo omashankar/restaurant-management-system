@@ -13,7 +13,8 @@ import {
   adminFilterSelectCls,
   adminTableActionBtnCls,
   buildTicketStats,
-  supportTicketDrawerOverlayCls,
+  supportTicketDrawerPanelCls,
+  supportTicketStatsGridCls,
   supportTicketRowCardCls,
   ticketPriorityBadgeCls,
   ticketPrioritySelectCls,
@@ -22,6 +23,7 @@ import {
 } from "@/config/supportTicketConfig";
 import { raInputCls } from "@/config/restaurantAdminTheme";
 import PaginationBar from "@/components/ui/PaginationBar";
+import PageDrawer from "@/components/ui/PageDrawer";
 import { useEffect, useMemo, useState } from "react";
 
 const TICKETS_PAGE_SIZE = 10;
@@ -209,8 +211,8 @@ export default function SupportTicketsPage() {
   const stats = useMemo(() => buildTicketStats(statsTickets), [statsTickets]);
 
   return (
-    <div className="space-y-6">
-      <div>
+    <div className="min-w-0 w-full max-w-full space-y-6 overflow-x-hidden">
+      <div className="min-w-0">
         <h1 className="admin-page-title text-2xl font-semibold tracking-tight">Support Tickets</h1>
         <p className="admin-page-desc mt-1 text-sm">
           Raise issues for platform support and track progress.
@@ -223,7 +225,7 @@ export default function SupportTicketsPage() {
         </div>
       )}
 
-      <div className="grid gap-3 sm:grid-cols-5">
+      <div className={supportTicketStatsGridCls}>
         {SUPPORT_STAT_ITEMS_RA.map(({ key, label, field, valueCls }) => (
           <div key={key} className="admin-surface-card px-3 py-2.5">
             <p className={`text-lg font-semibold tabular-nums ${valueCls}`}>{stats[field]}</p>
@@ -232,7 +234,7 @@ export default function SupportTicketsPage() {
         ))}
       </div>
 
-      <form onSubmit={createTicket} className="space-y-4 admin-surface-card p-4">
+      <form onSubmit={createTicket} className="space-y-4 admin-surface-card p-4 sm:p-5">
         <div className="flex items-center gap-2 admin-shell-text">
           <MessageSquarePlus className="size-4 text-ra-primary" />
           <h2 className="text-sm font-semibold">Create New Ticket</h2>
@@ -289,21 +291,21 @@ export default function SupportTicketsPage() {
         <button
           type="submit"
           disabled={saving}
-          className="cursor-pointer inline-flex items-center gap-2 rounded-xl bg-ra-primary px-4 py-2 text-sm font-semibold text-zinc-950 hover:brightness-110 disabled:opacity-50"
+          className="inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-ra-primary px-4 py-2.5 text-sm font-semibold text-zinc-950 hover:brightness-110 disabled:opacity-50 sm:w-auto"
         >
           {saving ? <Loader2 className="size-4 animate-spin" /> : null}
           {saving ? "Creating..." : "Create Ticket"}
         </button>
       </form>
 
-      <div className="space-y-3 admin-surface-card p-4">
-        <div className="flex flex-wrap items-center justify-between gap-3">
+      <div className="space-y-3 admin-surface-card p-4 sm:p-5">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <h2 className="text-sm font-semibold admin-shell-text">Tickets</h2>
-          <div className="flex items-center gap-2">
+          <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className={`${adminFilterSelectCls} focus-ra-primary min-w-[8rem]`}
+              className={`${adminFilterSelectCls} focus-ra-primary w-full sm:min-w-[8rem] sm:w-auto`}
             >
               <option value="all">Status: all</option>
               {SUPPORT_STATUSES.map((s) => (
@@ -316,7 +318,7 @@ export default function SupportTicketsPage() {
               type="button"
               onClick={loadTickets}
               disabled={loading}
-              className="cursor-pointer inline-flex items-center gap-1 rounded-lg border admin-shell-border px-2.5 py-1.5 text-xs admin-surface-body transition-colors hover:bg-[var(--admin-hover)] disabled:cursor-not-allowed disabled:opacity-50"
+              className="inline-flex w-full cursor-pointer items-center justify-center gap-1 rounded-lg border admin-shell-border px-2.5 py-2 text-xs admin-surface-body transition-colors hover:bg-[var(--admin-hover)] disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
             >
               <RefreshCcw className={`size-3.5 ${loading ? "animate-spin" : ""}`} />
               Refresh
@@ -335,15 +337,15 @@ export default function SupportTicketsPage() {
           <div className="space-y-2">
             {tickets.map((ticket) => (
               <div key={String(ticket._id)} className={supportTicketRowCardCls}>
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <p className="text-sm font-semibold admin-shell-text">
+                <div className="flex flex-col gap-1 sm:flex-row sm:flex-wrap sm:items-start sm:justify-between sm:gap-2">
+                  <p className="min-w-0 break-words text-sm font-semibold admin-shell-text">
                     {ticket.ticketCode} · {ticket.subject}
                   </p>
-                  <p className="text-xs admin-surface-muted">
+                  <p className="shrink-0 text-xs admin-surface-muted">
                     {ticket.createdAt ? new Date(ticket.createdAt).toLocaleString() : "—"}
                   </p>
                 </div>
-                <p className="mt-1 text-sm admin-surface-body">{ticket.message}</p>
+                <p className="mt-1 break-words text-sm admin-surface-body">{ticket.message}</p>
                 <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
                   {canModerate ? (
                     <>
@@ -406,11 +408,13 @@ export default function SupportTicketsPage() {
         )}
       </div>
 
-      {selectedTicketId ? (
-        <div className={supportTicketDrawerOverlayCls}>
-          <div className="relative h-full w-full max-w-xl overflow-y-auto border-l admin-shell-border admin-surface-card-solid p-4">
-            <div className="sticky top-0 z-10 mb-4 flex items-center justify-between admin-surface-divider-b bg-[var(--admin-surface)] pb-3 pt-1 backdrop-blur">
-              <h3 className="text-base font-semibold admin-shell-text">Ticket details</h3>
+      <PageDrawer
+        open={Boolean(selectedTicketId)}
+        panelClassName={supportTicketDrawerPanelCls}
+        ariaLabel="Support ticket details"
+      >
+            <div className="sticky top-0 z-10 mb-4 flex min-w-0 items-center justify-between gap-3 admin-surface-divider-b bg-[var(--admin-surface)] pb-3 pt-1 backdrop-blur">
+              <h3 className="min-w-0 truncate text-base font-semibold admin-shell-text">Ticket details</h3>
               <button
                 type="button"
                 onClick={() => {
@@ -433,10 +437,10 @@ export default function SupportTicketsPage() {
             ) : (
               <div className="space-y-4">
                 <div className="admin-surface-card p-3">
-                  <p className="text-sm font-semibold admin-shell-text">
+                  <p className="break-words text-sm font-semibold admin-shell-text">
                     {selectedTicket.ticketCode} · {selectedTicket.subject}
                   </p>
-                  <p className="mt-1 text-sm admin-surface-body">{selectedTicket.message}</p>
+                  <p className="mt-1 break-words text-sm admin-surface-body">{selectedTicket.message}</p>
                 </div>
                 <div className="space-y-2">
                   <p className="text-xs font-semibold uppercase tracking-wide admin-surface-muted">Timeline</p>
@@ -464,20 +468,18 @@ export default function SupportTicketsPage() {
                     type="button"
                     onClick={addNote}
                     disabled={savingNote || !note.trim()}
-                    className="cursor-pointer rounded-lg border border-ra-primary-40 bg-ra-primary-15 px-3 py-1.5 text-xs font-medium text-ra-primary-muted disabled:opacity-40"
+                    className="inline-flex w-full cursor-pointer items-center justify-center rounded-lg border border-ra-primary-40 bg-ra-primary-15 px-3 py-2 text-xs font-medium text-ra-primary-muted disabled:opacity-40 sm:w-auto"
                   >
                     {savingNote ? "Saving..." : "Save note"}
                   </button>
                 </div>
               </div>
             )}
-          </div>
-        </div>
-      ) : null}
+          </PageDrawer>
 
       {toast ? (
         <div
-          className={`fixed bottom-5 right-5 z-50 rounded-xl border px-4 py-2 text-sm ${
+          className={`fixed bottom-4 left-4 right-4 z-50 rounded-xl border px-4 py-2 text-sm sm:bottom-5 sm:left-auto sm:right-5 sm:max-w-sm ${
             toast.type === "success"
               ? "border-ra-primary-30 admin-surface-card text-ra-primary-muted"
               : "border-red-500/30 admin-surface-card text-red-400"

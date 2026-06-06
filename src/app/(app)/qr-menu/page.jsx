@@ -59,8 +59,8 @@ function RealQrCode({ value, size = 220, restaurantName = "", canvasId = "qr-pre
     <canvas
       ref={canvasRef}
       id={canvasId}
-      className="rounded-xl"
-      style={{ imageRendering: "pixelated" }}
+      className="mx-auto max-w-full rounded-xl"
+      style={{ imageRendering: "pixelated", maxWidth: size, height: "auto" }}
     />
   );
 }
@@ -366,14 +366,14 @@ export default function QrMenuPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="min-w-0 w-full max-w-full space-y-6 overflow-x-hidden">
       {/* Header */}
-      <div className="flex items-start gap-3">
-        <span className={`mt-1 ${raIconBadgeCls}`}>
+      <div className="flex min-w-0 items-start gap-3">
+        <span className={`mt-1 shrink-0 ${raIconBadgeCls}`}>
           <Table2 className="size-5" />
         </span>
-        <div>
-          <h1 className="admin-page-title text-2xl font-semibold tracking-tight">QR Menu System</h1>
+        <div className="min-w-0">
+          <h1 className="admin-page-title text-xl font-semibold tracking-tight sm:text-2xl">QR Menu System</h1>
           <p className="admin-page-desc mt-1 text-sm">
             Generate real scannable QR codes. Customers scan → menu opens → order placed.
           </p>
@@ -388,19 +388,19 @@ export default function QrMenuPage() {
 
       {/* Slug info banner */}
       {restaurantSlug ? (
-        <div className="flex items-center gap-3 rounded-xl border border-ra-primary-25 bg-ra-primary-10 px-4 py-3">
-          <span className="text-lg">🔗</span>
-          <div className="min-w-0">
+        <div className="flex min-w-0 items-start gap-3 rounded-xl border border-ra-primary-25 bg-ra-primary-10 px-4 py-3 sm:items-center">
+          <span className="shrink-0 text-lg">🔗</span>
+          <div className="min-w-0 flex-1">
             <p className="text-sm font-semibold text-ra-primary-muted">Multi-Restaurant URL Active</p>
-            <p className="mt-0.5 truncate text-xs text-ra-primary/80">
+            <p className="mt-0.5 break-all text-xs text-ra-primary/80 sm:truncate">
               Customer site: <span className="font-mono">{baseUrl}/r/{restaurantSlug}/</span>
             </p>
           </div>
         </div>
       ) : (
-        <div className="flex items-center gap-3 rounded-xl border border-amber-500/25 bg-amber-500/10 px-4 py-3">
-          <span className="text-lg">⚠️</span>
-          <div>
+        <div className="flex min-w-0 items-start gap-3 rounded-xl border border-amber-500/25 bg-amber-500/10 px-4 py-3 sm:items-center">
+          <span className="shrink-0 text-lg">⚠️</span>
+          <div className="min-w-0 flex-1">
             <p className="text-sm font-semibold text-amber-300">Restaurant Slug Set Nahi Hai</p>
             <p className="mt-0.5 text-xs text-amber-400/80">
               Super Admin → Restaurants mein apna slug set karo taaki unique customer URL mile.
@@ -409,14 +409,14 @@ export default function QrMenuPage() {
         </div>
       )}
 
-      <div className="grid gap-6 lg:grid-cols-[1fr_300px]">
+      <div className="grid min-w-0 gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(260px,320px)]">
         {/* Left: Config */}
-        <div className="space-y-5">
+        <div className="min-w-0 space-y-5 order-2 lg:order-1">
 
           {/* QR Type */}
-          <section className="admin-surface-card p-5">
+          <section className="admin-surface-card p-4 sm:p-5">
             <h2 className="mb-4 text-base font-semibold admin-shell-text">QR Code Type</h2>
-            <div className="grid gap-3 sm:grid-cols-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
               {QR_TYPES.map((type) => (
                 <button key={type.id} type="button"
                   onClick={() => setQrType(type.id)}
@@ -436,16 +436,16 @@ export default function QrMenuPage() {
           </section>
 
           {/* Restaurant name */}
-          <section className="admin-surface-card p-5">
+          <section className="admin-surface-card p-4 sm:p-5">
             <h2 className="mb-3 text-base font-semibold admin-shell-text">Label on QR</h2>
             <input value={restaurantName} onChange={(e) => setRestaurantName(e.target.value)}
               placeholder="Restaurant name shown below QR"
-              className="w-full admin-surface-card px-3 py-2.5 text-sm admin-shell-text outline-none focus-ra-primary" />
+              className="w-full rounded-xl border admin-shell-border admin-surface-card px-3 py-2.5 text-sm admin-shell-text outline-none focus-ra-primary" />
           </section>
 
           {/* Table config */}
           {qrType === "table" && (
-            <section className="admin-surface-card p-5">
+            <section className="admin-surface-card p-4 sm:p-5">
               <h2 className="mb-4 text-base font-semibold admin-shell-text">Table Configuration</h2>
               <div className="grid gap-4 sm:grid-cols-2">
                 <div>
@@ -456,17 +456,17 @@ export default function QrMenuPage() {
                     <select
                       value={tableNumber}
                       onChange={(e) => setTableNumber(e.target.value)}
-                      className="cursor-pointer w-full admin-surface-card px-3 py-2.5 text-sm admin-shell-text outline-none focus-ra-primary"
+                      className="cursor-pointer w-full rounded-xl border admin-shell-border admin-surface-card px-3 py-2.5 text-sm admin-shell-text outline-none focus-ra-primary"
                     >
-                      {tableNumbers.map((tn) => (
-                        <option key={tn} value={tn}>{tn}</option>
+                      {tableNumbers.map((tn, index) => (
+                        <option key={`${tn}-${index}`} value={tn}>{tn}</option>
                       ))}
                     </select>
                   ) : (
                     <input type="text" value={tableNumber}
                       onChange={(e) => setTableNumber(e.target.value)}
                       placeholder="e.g. T01"
-                      className="w-full admin-surface-card px-3 py-2.5 text-sm admin-shell-text outline-none focus-ra-primary" />
+                      className="w-full rounded-xl border admin-shell-border admin-surface-card px-3 py-2.5 text-sm admin-shell-text outline-none focus-ra-primary" />
                   )}
                 </div>
                 {floorTables.length === 0 ? (
@@ -477,7 +477,7 @@ export default function QrMenuPage() {
                   <input type="number" value={tableCount}
                     onChange={(e) => setTableCount(Math.max(1, Math.min(50, Number(e.target.value))))}
                     min="1" max="50"
-                    className="w-full admin-surface-card px-3 py-2.5 text-sm admin-shell-text outline-none focus-ra-primary" />
+                    className="w-full rounded-xl border admin-shell-border admin-surface-card px-3 py-2.5 text-sm admin-shell-text outline-none focus-ra-primary" />
                 </div>
                 ) : (
                 <div className="flex items-end">
@@ -493,9 +493,9 @@ export default function QrMenuPage() {
                 <p className="mb-2 text-xs font-semibold uppercase tracking-wider admin-surface-muted">
                   Select Table to Preview
                 </p>
-                <div className="grid grid-cols-5 gap-1.5 sm:grid-cols-8">
-                  {tableNumbers.slice(0, 40).map((tn) => (
-                    <button key={tn} type="button"
+                <div className="grid grid-cols-3 gap-1.5 sm:grid-cols-4 sm:gap-2 md:grid-cols-6 lg:grid-cols-8">
+                  {tableNumbers.slice(0, 40).map((tn, index) => (
+                    <button key={`${tn}-${index}`} type="button"
                       onClick={() => setTableNumber(tn)}
                       className={`admin-table-pick-btn cursor-pointer flex flex-col items-center justify-center gap-0.5 rounded-xl border py-2 text-xs font-semibold transition-all ${
                         tableNumber === tn
@@ -510,14 +510,14 @@ export default function QrMenuPage() {
               </div>
 
               {/* Bulk print */}
-              <div className="mt-4 flex items-center justify-between rounded-xl admin-surface-card px-4 py-3">
-                <div>
+              <div className="mt-4 flex flex-col gap-3 rounded-xl admin-surface-card px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+                <div className="min-w-0">
                   <p className="text-sm font-medium admin-shell-text">Print All {tableNumbers.length} Tables</p>
                   <p className="text-xs admin-surface-muted">Print all table QR codes in one go (4 per row)</p>
                 </div>
                 <button type="button" onClick={printAllTables}
                   disabled={printingAll}
-                  className={`cursor-pointer ${raBtnPrimarySmCls} disabled:opacity-50`}>
+                  className={`cursor-pointer w-full shrink-0 sm:w-auto ${raBtnPrimarySmCls} disabled:opacity-50`}>
                   <Printer className="size-4" />
                   {printingAll ? "Preparing…" : "Print All"}
                 </button>
@@ -526,10 +526,10 @@ export default function QrMenuPage() {
           )}
 
           {/* QR URL */}
-          <section className="admin-surface-card p-5">
+          <section className="admin-surface-card p-4 sm:p-5">
             <h2 className="mb-3 text-base font-semibold admin-shell-text">QR URL</h2>
-            <div className="flex items-center gap-2 admin-surface-card px-3 py-2.5">
-              <span className="flex-1 truncate font-mono text-xs text-zinc-400">{getQrValue()}</span>
+            <div className="flex min-w-0 items-center gap-2 rounded-xl border admin-shell-border admin-surface-card px-3 py-2.5">
+              <span className="min-w-0 flex-1 break-all font-mono text-[11px] text-zinc-400 sm:truncate sm:text-xs">{getQrValue()}</span>
               <button type="button"
                 onClick={copyUrl}
                 className="cursor-pointer shrink-0 text-xs admin-surface-muted hover:admin-surface-body transition-colors">
@@ -550,14 +550,13 @@ export default function QrMenuPage() {
           </section>
         </div>
 
-        {/* Right: QR Preview */}
-        <div className="space-y-4">
-          <section className="admin-surface-card p-5">
+        {/* Right: QR Preview — first on mobile so staff see QR without long scroll */}
+        <div className="min-w-0 space-y-4 order-1 lg:order-2 lg:sticky lg:top-4 lg:self-start">
+          <section className="admin-surface-card p-4 sm:p-5">
             <h2 className="mb-4 text-base font-semibold admin-shell-text">Live Preview</h2>
 
             <div className="flex flex-col items-center gap-4">
-              {/* Real QR */}
-              <div className="rounded-2xl border-2 border-zinc-200 bg-white p-4 shadow-lg">
+              <div className="w-full max-w-[252px] rounded-2xl border-2 border-zinc-200 bg-white p-3 shadow-lg sm:p-4">
                 {baseUrl ? (
                   <RealQrCode
                     value={getQrValue()}
@@ -566,7 +565,7 @@ export default function QrMenuPage() {
                     canvasId={qrCanvasId}
                   />
                 ) : (
-                  <div className="flex size-[220px] items-center justify-center">
+                  <div className="flex aspect-square w-full max-w-[220px] items-center justify-center">
                     <RefreshCw className="size-6 animate-spin text-zinc-400" />
                   </div>
                 )}
@@ -584,7 +583,7 @@ export default function QrMenuPage() {
             </div>
 
             {/* Action buttons */}
-            <div className="mt-5 grid gap-2">
+            <div className="mt-5 grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-1">
               <button type="button" onClick={downloadQr}
                 className={`cursor-pointer flex w-full items-center justify-center gap-2 ${raBtnPrimaryCls}`}>
                 <Download className="size-4" />
@@ -592,7 +591,7 @@ export default function QrMenuPage() {
               </button>
               <button type="button" onClick={printQr}
                 disabled={printingSingle}
-                className="cursor-pointer flex items-center justify-center gap-2 rounded-xl border admin-shell-border py-2.5 text-sm font-medium admin-surface-body hover:border-zinc-500 hover:admin-shell-text transition-colors">
+                className="cursor-pointer flex w-full items-center justify-center gap-2 rounded-xl border admin-shell-border py-2.5 text-sm font-medium admin-surface-body transition-colors hover:border-zinc-500 hover:admin-shell-text disabled:opacity-50">
                 <Printer className="size-4" />
                 {printingSingle ? "Preparing print…" : "Print QR"}
               </button>

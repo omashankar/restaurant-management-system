@@ -1,11 +1,14 @@
 "use client";
 
-import CategoryTabs from "@/components/pos/CategoryTabs";
 import MenuCard from "@/components/menu/MenuCard";
 import OrderSummary from "@/components/pos/OrderSummary";
+import PosCheckoutDrawer from "@/components/pos/PosCheckoutDrawer";
+import PosMenuFilters from "@/components/pos/PosMenuFilters";
+import PosMobileSetupCard, { PosMobileCartBar } from "@/components/pos/PosMobileCartBar";
+import PosOrderTypeBar from "@/components/pos/PosOrderTypeBar";
+import PosPageHeader, { PosFlowSteps } from "@/components/pos/PosPageHeader";
 import PrintInvoice from "@/components/pos/PrintInvoice";
 import { triggerPosAutoPrint } from "@/lib/posPrint";
-import ListToolbar from "@/components/ui/ListToolbar";
 import Modal from "@/components/ui/Modal";
 import { useMenuFilter } from "@/hooks/useMenuFilter";
 import { useModuleData } from "@/context/ModuleDataContext";
@@ -14,7 +17,7 @@ import {
   getPosOrderFieldErrors,
 } from "@/lib/formValidation";
 import { resolveCustomerByPhone } from "@/lib/posCustomer";
-import ItemTypeChipIcon, { FastFilterChipIcon } from "@/components/menu/ItemTypeChipIcon";
+import { getPosPaymentDefaults, resolvePosPaymentStatus } from "@/lib/posPayment";
 import { useCallback, useEffect, useMemo, useRef, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 
@@ -116,24 +119,15 @@ function PosPageContent() {
     return value;
   }, [subtotal, taxAmount, serviceCharge, roundOffTotal]);
 
-  const addItem = (item) => {
-    setCart((prev) => {
-      const idx = prev.findIndex((l) => l.id === item.id);
-      if (idx === -1) return [...prev, { ...item, qty: 1, note: "" }];
-      const next = [...prev];
-      next[idx] = { ...next[idx], qty: next[idx].qty + 1 };
-      return next;
-    });
-    setLastAddedId(item.id);
-    setTimeout(() => setLastAddedId(""), 300);
-  };
-
-  const incrementQty = (id) => setCart((p) => p.map((l) => l.id === id ? { ...l, qty: l.qty + 1 } : l));
-  const decrementQty = (id) => setCart((p) => p.map((l) => l.id === id ? { ...l, qty: Math.max(1, l.qty - 1) } : l).filter((l) => l.qty > 0));
-  const removeLine   = (id) => setCart((p) => p.filter((l) => l.id !== id));
-  const setLineQty   = (id, v) => setCart((p) => p.map((l) => l.id === id ? { ...l, qty: Math.max(1, parseInt(v, 10) || 1) } : l));
-
   const [fieldErrors, setFieldErrors] = useState(EMPTY_POS_ORDER_ERRORS);
+  const [isPlacing, setIsPlacing] = useState(false);
+  const [placeError, setPlaceError] = useState("");
+  const [note, setNote] = useState("");
+  const [paymentMethod, setPaymentMethod] = useState(() => getPosPaymentDefaults("dine-in").paymentMethod);
+  const [paymentStatus, setPaymentStatus] = useState(() => getPosPaymentDefaults("dine-in").paymentStatus);
+  const [checkoutOpen, setCheckoutOpen] = useState(false);
+  const [setupOpen, setSetupOpen] = useState(true);
+  const [tablePickerRequest, setTablePickerRequest] = useState(0);
 
   const posOrderValidation = useMemo(
     () =>
@@ -146,20 +140,68 @@ function PosPageContent() {
     [orderType, selectedTableId, selectedCustomer, delivery]
   );
 
-  const canPlaceOrder = cart.length > 0 && posOrderValidation.valid;
+  const setupReady = posOrderValidation.valid;
+  const canPlaceOrder = cart.length > 0 && setupReady;
+  const cartItemCount = useMemo(() => cart.reduce((sum, line) => sum + line.qty, 0), [cart]);
 
-  const [isPlacing, setIsPlacing] = useState(false);
-  const [placeError, setPlaceError] = useState("");
-  const [note, setNote] = useState("");
-  const [paymentMethod, setPaymentMethod] = useState("cashCounter");
-  const [paymentStatus, setPaymentStatus] = useState("paid");
+  const openSetup = useCallback(() => {
+    setSetupOpen(true);
+    requestAnimationFrame(() => {
+      document.getElementById("pos-setup")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+    if (orderType === "dine-in" && !selectedTableId) {
+      setTablePickerRequest((n) => n + 1);
+    }
+  }, [orderType, selectedTableId]);
+
+  const addItem = (item) => {
+    setCart((prev) => {
+      const idx = prev.findIndex((l) => l.id === item.id);
+      if (idx === -1) return [...prev, { ...item, qty: 1, note: "" }];
+      const next = [...prev];
+      next[idx] = { ...next[idx], qty: next[idx].qty + 1 };
+      return next;
+    });
+    setLastAddedId(item.id);
+    setTimeout(() => setLastAddedId(""), 300);
+
+    const setup = getPosOrderFieldErrors({
+      orderType,
+      selectedTableId,
+      selectedCustomer,
+      delivery,
+    });
+    if (
+      !setup.valid &&
+      typeof window !== "undefined" &&
+      window.matchMedia("(max-width: 1279px)").matches
+    ) {
+      setSetupOpen(true);
+      if (orderType === "dine-in" && !selectedTableId) {
+        setTablePickerRequest((n) => n + 1);
+      }
+      setTimeout(() => {
+        document.getElementById("pos-setup")?.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, 80);
+    }
+  };
+
+  const incrementQty = (id) => setCart((p) => p.map((l) => l.id === id ? { ...l, qty: l.qty + 1 } : l));
+  const decrementQty = (id) => setCart((p) => p.map((l) => l.id === id ? { ...l, qty: Math.max(1, l.qty - 1) } : l).filter((l) => l.qty > 0));
+  const removeLine   = (id) => setCart((p) => p.filter((l) => l.id !== id));
+  const setLineQty   = (id, v) => setCart((p) => p.map((l) => l.id === id ? { ...l, qty: Math.max(1, parseInt(v, 10) || 1) } : l));
+
+  const handlePaymentMethodChange = useCallback(
+    (method) => {
+      setPaymentMethod(method);
+      setPaymentStatus(resolvePosPaymentStatus(method, orderType));
+    },
+    [orderType]
+  );
 
   useEffect(() => {
-    if (paymentMethod === "cod") setPaymentStatus("pending");
-    else if (paymentStatus === "pending" && paymentMethod !== "cod") {
-      setPaymentStatus("paid");
-    }
-  }, [paymentMethod]);
+    if (setupReady && cartItemCount > 0) setSetupOpen(false);
+  }, [setupReady, cartItemCount]);
 
   const clearFieldError = useCallback((key) => {
     setFieldErrors((prev) => (prev[key] ? { ...prev, [key]: "" } : prev));
@@ -170,7 +212,11 @@ function PosPageContent() {
     setSelectedTableId("");
     setFieldErrors(EMPTY_POS_ORDER_ERRORS);
     setPlaceError("");
+    setSetupOpen(true);
     if (type === "delivery") setSelectedCustomer(null);
+    const payment = getPosPaymentDefaults(type);
+    setPaymentMethod(payment.paymentMethod);
+    setPaymentStatus(payment.paymentStatus);
   }, []);
 
   const setLineNote = (id, noteText) =>
@@ -190,6 +236,10 @@ function PosPageContent() {
     setFieldErrors(validation.errors);
     if (!validation.valid) {
       setPlaceError(validation.message ?? "Please fix the highlighted fields.");
+      if (typeof window !== "undefined" && window.matchMedia("(max-width: 1279px)").matches) {
+        setCheckoutOpen(false);
+        openSetup();
+      }
       return;
     }
     if (isPlacing) return;
@@ -349,6 +399,7 @@ function PosPageContent() {
       }
 
       setSuccessOpen(true);
+      setCheckoutOpen(false);
       setLastOrder({
         orderId,
         orderType,
@@ -391,8 +442,9 @@ function PosPageContent() {
       setDelivery({ name: "", phone: "", address: "" });
       setSelectedCustomer(null);
       setFieldErrors(EMPTY_POS_ORDER_ERRORS);
-      setPaymentMethod("cashCounter");
-      setPaymentStatus("paid");
+      const payment = getPosPaymentDefaults(orderType);
+      setPaymentMethod(payment.paymentMethod);
+      setPaymentStatus(payment.paymentStatus);
     } catch {
       setPlaceError("Network error. Please try again.");
     } finally {
@@ -400,7 +452,7 @@ function PosPageContent() {
     }
   }, [canPlaceOrder, isPlacing, cart, orderType, selectedTableId, selectedCustomer, delivery, total, subtotal,
       taxAmount, taxPercent, serviceCharge, serviceChargePercent, currency, note, paymentMethod, paymentStatus,
-      customerRows, floorTables, setOrderRows, setKitchenQueue, setCustomerRows, setFloorTables, printers, restaurantName]);
+      customerRows, floorTables, setOrderRows, setKitchenQueue, setCustomerRows, setFloorTables, printers, restaurantName, openSetup]);
 
   useEffect(() => {
     const h = (e) => {
@@ -416,114 +468,164 @@ function PosPageContent() {
     return () => window.removeEventListener("keydown", h);
   }, [placeOrder, handleOrderTypeChange]);
 
+  const setupSummary = useMemo(() => {
+    if (orderType === "dine-in") {
+      const table = floorTables.find((t) => t.id === selectedTableId);
+      const parts = [];
+      if (table?.tableNumber) parts.push(`Table ${table.tableNumber}`);
+      if (selectedCustomer?.name) parts.push(selectedCustomer.name);
+      return parts.length ? parts.join(" · ") : "Select table & customer";
+    }
+    if (orderType === "takeaway") {
+      return selectedCustomer?.name ?? "Add customer";
+    }
+    if (delivery.name?.trim() || delivery.phone?.trim()) {
+      return [delivery.name?.trim(), delivery.phone?.trim()].filter(Boolean).join(" · ");
+    }
+    return "Enter delivery details";
+  }, [orderType, floorTables, selectedTableId, selectedCustomer, delivery]);
+
+  const orderSummaryProps = {
+    cart,
+    subtotal,
+    taxAmount,
+    taxPercent,
+    serviceCharge,
+    serviceChargePercent,
+    total,
+    currency,
+    canPlaceOrder: canPlaceOrder && !isPlacing,
+    onPlaceOrder: placeOrder,
+    onClearCart: () => setCart([]),
+    onInc: incrementQty,
+    onDec: decrementQty,
+    onRemove: removeLine,
+    onSetQuantity: setLineQty,
+    onSetLineNote: setLineNote,
+    orderType,
+    onOrderTypeChange: handleOrderTypeChange,
+    paymentMethod,
+    onPaymentMethodChange: handlePaymentMethodChange,
+    paymentStatus,
+    onPaymentStatusChange: setPaymentStatus,
+    selectedTableId,
+    onTableSelect: setSelectedTableId,
+    delivery,
+    onDeliveryChange: (f, v) => setDelivery((p) => ({ ...p, [f]: v })),
+    onCustomerSelect: setSelectedCustomer,
+    selectedCustomer,
+    isPlacing,
+    note,
+    onNoteChange: setNote,
+    fieldErrors,
+    onClearFieldError: clearFieldError,
+    hideOrderTypes: true,
+  };
+
   return (
-    <div className="space-y-4">
-      <div>
-        <h1 className="admin-page-title text-2xl font-semibold tracking-tight">POS</h1>
-        <p className="admin-page-desc mt-1 text-sm">1 Dine-In · 2 Takeaway · 3 Delivery · / Search · Ctrl+Enter Place</p>
+    <div className={`min-w-0 w-full max-w-full space-y-4 overflow-x-hidden ${cartItemCount > 0 ? "pb-24 xl:pb-0" : ""}`}>
+      <div className="sticky top-0 z-20 -mx-4 min-w-0 max-w-[100vw] space-y-3 overflow-x-hidden border-b admin-shell-border bg-[var(--admin-bg)]/95 px-4 pb-3 backdrop-blur-md sm:-mx-6 sm:max-w-none sm:px-6 xl:static xl:z-auto xl:mx-0 xl:border-0 xl:bg-transparent xl:px-0 xl:pb-0 xl:backdrop-blur-none">
+        <PosPageHeader
+          cartItemCount={cartItemCount}
+          total={total}
+          currency={currency}
+          setupReady={setupReady}
+          onClearCart={() => setCart([])}
+        />
+
+        <PosFlowSteps setupReady={setupReady} cartItemCount={cartItemCount} />
+
+        <PosOrderTypeBar
+          className="xl:hidden"
+          orderType={orderType}
+          onOrderTypeChange={handleOrderTypeChange}
+          onTableSelect={setSelectedTableId}
+          onClearFieldError={clearFieldError}
+        />
+
+        <PosMobileSetupCard
+          summary={setupSummary}
+          ready={setupReady}
+          open={setupOpen}
+          onOpenChange={setSetupOpen}
+        >
+          <OrderSummary {...orderSummaryProps} section="setup" layout="embedded" tablePickerRequest={tablePickerRequest} />
+        </PosMobileSetupCard>
       </div>
 
-      <div className="grid gap-6 xl:grid-cols-10">
-        {/* ── Menu panel ── */}
-        <section className="space-y-4 xl:col-span-7">
-          <CategoryTabs categories={posCategories} activeCategory={activeCategory} onChange={setActiveCategory} />
-          {/* Item type filters with signs */}
-          <div className="flex flex-wrap items-center gap-2">
-            {["all", "veg", "non-veg", "egg", "drink", "halal", "other"].filter((t) =>
-              t === "all" || availableItemTypes.includes(t)
-            ).map((t) => {
-              const active = activeItemType === t;
-              const LABELS = { all: "All Types", veg: "Veg", "non-veg": "Non-Veg", egg: "Egg", drink: "Drink", halal: "Halal", other: "Other" };
-              return (
-                <button
-                  key={t}
-                  type="button"
-                  onClick={() => setActiveItemType(t)}
-                  className={`cursor-pointer inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold transition-all duration-150 ${
-                    active
-                      ? "bg-ra-primary/20 text-ra-primary ring-1 ring-ra-primary-25"
-                      : "border admin-shell-border bg-[var(--admin-surface)] text-[var(--admin-text-muted)] hover:bg-[var(--admin-hover)] hover:text-[var(--admin-text)]"
-                  }`}
-                  aria-pressed={active}
-                >
-                  {t !== "all" && <ItemTypeChipIcon type={t} />}
-                  {LABELS[t]}
-                </button>
-              );
-            })}
-            {/* Fast toggle */}
-            <button
-              type="button"
-              onClick={() => setFastOnly((v) => !v)}
-              className={`cursor-pointer inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold transition-all duration-150 ${
-                fastOnly
-                  ? "bg-amber-500/20 text-amber-300 ring-1 ring-amber-500/30"
-                  : "admin-surface-card admin-surface-muted ring-1 admin-shell-border hover:admin-shell-text"
-              }`}
-              aria-pressed={fastOnly}
-            >
-              <FastFilterChipIcon />
-              Fast (&lt;10 min)
-            </button>
-          </div>
-          <ListToolbar
+      {placeError && (
+        <div className="rounded-xl border border-red-500/25 bg-red-500/10 px-3 py-2 text-xs text-red-400 xl:hidden">
+          {placeError}
+        </div>
+      )}
+
+      <div className="grid min-w-0 w-full max-w-full gap-6 xl:grid-cols-10">
+        <section className="min-w-0 space-y-4 xl:col-span-7">
+          <PosMenuFilters
+            categories={posCategories}
+            activeCategory={activeCategory}
+            onCategoryChange={setActiveCategory}
+            availableItemTypes={availableItemTypes}
+            activeItemType={activeItemType}
+            onItemTypeChange={setActiveItemType}
+            fastOnly={fastOnly}
+            onFastOnlyChange={setFastOnly}
             search={search}
             onSearchChange={setSearch}
-            searchPlaceholder="Search menu (/)"
-            endSlot={<span className="rounded-lg border admin-shell-border px-2.5 py-1 text-xs text-zinc-400">{filteredItems.length} items</span>}
+            itemCount={filteredItems.length}
           />
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {filteredItems.map((item) => (
               <MenuCard
                 key={item.id}
                 variant="pos"
                 item={item}
+                currency={currency}
                 onAdd={addItem}
                 isPopping={lastAddedId === item.id}
               />
             ))}
             {filteredItems.length === 0 && (
-              <p className="col-span-full py-12 text-center text-sm admin-surface-faint">No items match the current filters.</p>
+              <p className="col-span-full py-12 text-center text-sm admin-surface-faint">
+                No items match the current filters.
+              </p>
             )}
           </div>
         </section>
 
-        {/* ── Order summary (contains order type + table + customer) ── */}
-        <section className="xl:col-span-3">
+        <section id="pos-order-summary" className="hidden min-w-0 scroll-mt-4 xl:col-span-3 xl:block">
           {placeError && (
             <div className="mb-3 rounded-xl border border-red-500/25 bg-red-500/10 px-3 py-2 text-xs text-red-400">
               {placeError}
             </div>
           )}
-          <OrderSummary
-            cart={cart}
-            subtotal={subtotal}
-            taxAmount={taxAmount} taxPercent={taxPercent}
-            serviceCharge={serviceCharge} serviceChargePercent={serviceChargePercent}
-            total={total}
-            currency={currency}
-            canPlaceOrder={canPlaceOrder && !isPlacing}
-            onPlaceOrder={placeOrder}
-            onClearCart={() => setCart([])}
-            onInc={incrementQty} onDec={decrementQty}
-            onRemove={removeLine} onSetQuantity={setLineQty} onSetLineNote={setLineNote}
-            orderType={orderType} onOrderTypeChange={handleOrderTypeChange}
-            paymentMethod={paymentMethod}
-            onPaymentMethodChange={setPaymentMethod}
-            paymentStatus={paymentStatus}
-            onPaymentStatusChange={setPaymentStatus}
-            selectedTableId={selectedTableId} onTableSelect={setSelectedTableId}
-            delivery={delivery} onDeliveryChange={(f, v) => setDelivery((p) => ({ ...p, [f]: v }))}
-            onCustomerSelect={setSelectedCustomer}
-            selectedCustomer={selectedCustomer}
-            isPlacing={isPlacing}
-            note={note}
-            onNoteChange={setNote}
-            fieldErrors={fieldErrors}
-            onClearFieldError={clearFieldError}
-          />
+          <OrderSummary {...orderSummaryProps} section="all" layout="sidebar" hideOrderTypes={false} />
         </section>
       </div>
+
+      <PosMobileCartBar
+        itemCount={cartItemCount}
+        total={total}
+        currency={currency}
+        setupReady={setupReady}
+        onOpenSetup={openSetup}
+        onOpenCheckout={() => setCheckoutOpen(true)}
+      />
+
+      <PosCheckoutDrawer
+        open={checkoutOpen}
+        onClose={() => setCheckoutOpen(false)}
+        itemCount={cartItemCount}
+        total={total}
+        currency={currency}
+      >
+        {placeError && (
+          <div className="mx-4 mt-3 rounded-xl border border-red-500/25 bg-red-500/10 px-3 py-2 text-xs text-red-400">
+            {placeError}
+          </div>
+        )}
+        <OrderSummary {...orderSummaryProps} section="checkout" layout="drawer" />
+      </PosCheckoutDrawer>
 
       {/* ── Success modal ── */}
       <Modal
@@ -531,7 +633,7 @@ function PosPageContent() {
         onClose={() => setSuccessOpen(false)}
         title="Order Placed"
         footer={
-          <div className="flex justify-between gap-2">
+          <div className="flex flex-col-reverse gap-2 sm:flex-row sm:items-center sm:justify-between">
             {lastOrder && (
               <PrintInvoice
                 orderId={lastOrder.orderId}
@@ -548,36 +650,37 @@ function PosPageContent() {
                 currency={lastOrder.currency}
                 restaurantName={restaurantName}
                 paperSize={printers.find((p) => p.printInvoice)?.paperSize ?? "80mm"}
+                className="w-full sm:w-auto"
               />
             )}
-            <button type="button" onClick={() => setSuccessOpen(false)} className="cursor-pointer rounded-xl bg-ra-primary px-4 py-2 text-sm font-semibold text-zinc-950 hover:brightness-110">
+            <button type="button" onClick={() => setSuccessOpen(false)} className="w-full cursor-pointer rounded-xl bg-ra-primary px-4 py-2 text-sm font-semibold text-zinc-950 hover:brightness-110 sm:w-auto">
               New Order
             </button>
           </div>
         }
       >
-        <div className="space-y-3">
+        <div className="min-w-0 space-y-3">
           {lastOrder?.customer && (
             <div className="rounded-xl border border-ra-primary-25 bg-ra-primary-5 px-3 py-2">
               <p className="text-[10px] admin-surface-faint">Customer</p>
-              <p className="text-sm font-semibold text-ra-primary-muted">
+              <p className="break-words text-sm font-semibold text-ra-primary-muted">
                 {lastOrder.customer}{lastOrder.phone ? ` · ${lastOrder.phone}` : ""}
               </p>
             </div>
           )}
           <p className="text-sm admin-surface-muted">Kitchen tickets dispatched:</p>
           {Object.entries(kitchenRouting).map(([k, items]) => (
-            <div key={k} className="admin-surface-card p-3">
+            <div key={k} className="min-w-0 admin-surface-card p-3">
               <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wide text-zinc-400">{KITCHEN_LABELS[k] ?? k}</p>
               <ul className="space-y-1">
                 {items.map((it, i) => (
-                  <li key={i} className="text-sm admin-surface-body">
-                    <div className="flex justify-between">
-                      <span>{it.name}</span>
-                      <span className="text-zinc-500">×{it.qty}</span>
+                  <li key={i} className="min-w-0 text-sm admin-surface-body">
+                    <div className="flex items-start justify-between gap-2">
+                      <span className="min-w-0 flex-1 break-words">{it.name}</span>
+                      <span className="shrink-0 tabular-nums text-zinc-500">×{it.qty}</span>
                     </div>
                     {it.note && (
-                      <p className="mt-0.5 text-[11px] text-amber-400/90">↳ {it.note}</p>
+                      <p className="mt-0.5 break-words text-[11px] text-amber-400/90">↳ {it.note}</p>
                     )}
                   </li>
                 ))}
@@ -594,7 +697,7 @@ export default function PosPage() {
   return (
     <Suspense
       fallback={
-        <div className="flex min-h-[50vh] items-center justify-center text-sm admin-surface-muted">
+        <div className="flex min-h-[50vh] min-w-0 w-full max-w-full items-center justify-center overflow-x-hidden text-sm admin-surface-muted">
           Loading POS…
         </div>
       }

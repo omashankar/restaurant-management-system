@@ -13,6 +13,7 @@ import {
   Receipt,
   Settings,
   Shield,
+  X,
 } from "lucide-react";
 import { adminShell, adminSurface } from "@/config/adminSurfaceClasses";
 import Link from "next/link";
@@ -34,7 +35,7 @@ const NAV = [
   { href: "/super-admin/settings",      label: "Settings",      Icon: Settings        },
 ];
 
-export default function SuperAdminSidebar() {
+export default function SuperAdminSidebar({ mobile = false, onNavigate, onClose }) {
   const pathname = usePathname();
 
   /* ── Persistent collapsed state ── */
@@ -46,6 +47,8 @@ export default function SuperAdminSidebar() {
     } catch { return false; }
   });
 
+  const showCollapsed = mobile ? false : collapsed;
+
   useEffect(() => {
     try { localStorage.setItem(STORAGE_KEY, String(collapsed)); }
     catch { /* ignore */ }
@@ -54,9 +57,11 @@ export default function SuperAdminSidebar() {
   const isActive = (href) => pathname === href || pathname.startsWith(href + "/");
 
   return (
-    <aside className={`${adminShell.sidebar} ${
-      collapsed ? "w-[72px]" : "w-60"
-    }`}>
+    <aside
+      className={`${adminShell.sidebar} h-full min-h-0 ${
+        mobile ? "w-full" : showCollapsed ? "w-[72px]" : "w-60"
+      }`}
+    >
 
       {/* ── Logo ── */}
       <div className={`flex h-16 items-center justify-between gap-2 ${adminShell.borderB} px-3`}>
@@ -64,18 +69,32 @@ export default function SuperAdminSidebar() {
           <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-sa-primary-15 text-sa-primary ring-1 ring-sa-primary-25">
             <Shield className="size-5" />
           </span>
-          {!collapsed && (
+          {!showCollapsed && (
             <div className="min-w-0">
               <p className={`truncate text-sm font-bold tracking-tight ${adminSurface.title}`}>Super Admin</p>
               <p className={`truncate text-[10px] ${adminSurface.muted}`}>RMS Control Panel</p>
             </div>
           )}
         </div>
-        <button type="button" onClick={() => setCollapsed((v) => !v)}
-          className={adminSurface.sidebarToggle}
-          aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}>
-          {collapsed ? <ChevronRight className="size-4" /> : <ChevronLeft className="size-4" />}
-        </button>
+        {onClose ? (
+          <button
+            type="button"
+            onClick={onClose}
+            className={`${adminSurface.btnIcon} shrink-0`}
+            aria-label="Close menu"
+          >
+            <X className="size-4" aria-hidden />
+          </button>
+        ) : !mobile ? (
+          <button
+            type="button"
+            onClick={() => setCollapsed((v) => !v)}
+            className={adminSurface.sidebarToggle}
+            aria-label={showCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+          >
+            {showCollapsed ? <ChevronRight className="size-4" /> : <ChevronLeft className="size-4" />}
+          </button>
+        ) : null}
       </div>
 
       {/* ── Nav items ── */}
@@ -84,9 +103,10 @@ export default function SuperAdminSidebar() {
           const active = isActive(href);
           return (
             <Link key={href} href={href}
-              title={collapsed ? label : undefined}
+              onClick={() => onNavigate?.()}
+              title={showCollapsed ? label : undefined}
               className={`relative group flex rounded-xl text-sm font-medium transition-all duration-200 ${
-                collapsed
+                showCollapsed
                   ? "size-11 items-center justify-center p-0"
                   : "w-full items-center gap-3 px-3 py-2.5"
               } ${
@@ -98,8 +118,8 @@ export default function SuperAdminSidebar() {
                 <span className="absolute inset-y-1 left-0 w-0.5 rounded-r sa-nav-active-bar" aria-hidden />
               )}
               <Icon className={`size-[18px] shrink-0 transition-transform duration-200 group-hover:scale-110 ${active ? "text-sa-primary" : ""}`} aria-hidden />
-              {!collapsed && <span className="truncate">{label}</span>}
-              {collapsed && <span className="sr-only">{label}</span>}
+              {!showCollapsed && <span className="truncate">{label}</span>}
+              {showCollapsed && <span className="sr-only">{label}</span>}
             </Link>
           );
         })}
@@ -108,10 +128,10 @@ export default function SuperAdminSidebar() {
       {/* ── Footer ── */}
       <div className="border-t admin-shell-border p-2">
         <p
-          className={`text-center text-xs admin-surface-muted ${collapsed ? "px-0" : "px-2"}`}
-          title={collapsed ? "RMS © 2026" : undefined}
+          className={`text-center text-xs admin-surface-muted ${showCollapsed ? "px-0" : "px-2"}`}
+          title={showCollapsed ? "RMS © 2026" : undefined}
         >
-          {collapsed ? "©" : "RMS © 2026"}
+          {showCollapsed ? "©" : "RMS © 2026"}
         </p>
       </div>
     </aside>

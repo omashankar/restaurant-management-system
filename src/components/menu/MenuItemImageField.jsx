@@ -75,12 +75,12 @@ export default function MenuItemImageField({
           )}
         </div>
 
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-2 sm:flex-nowrap">
           <button
             type="button"
             disabled={disabled || busy}
             onClick={() => fileRef.current?.click()}
-            className="inline-flex cursor-pointer items-center gap-2 rounded-lg border admin-shell-border bg-zinc-900 px-3 py-2 text-xs font-medium admin-shell-text hover:border-ra-primary-40 disabled:opacity-50"
+            className="inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-lg border admin-shell-border bg-zinc-900 px-3 py-2 text-xs font-medium admin-shell-text hover:border-ra-primary-40 disabled:opacity-50 sm:w-auto"
           >
             {busy ? (
               <Loader2 className="size-3.5 animate-spin text-ra-primary" />
@@ -94,7 +94,7 @@ export default function MenuItemImageField({
               type="button"
               disabled={disabled || busy}
               onClick={() => onChange("")}
-              className="inline-flex cursor-pointer items-center gap-1.5 rounded-lg border admin-shell-border px-3 py-2 text-xs text-zinc-400 hover:border-red-500/40 hover:text-red-400 disabled:opacity-50"
+              className="inline-flex w-full cursor-pointer items-center justify-center gap-1.5 rounded-lg border admin-shell-border px-3 py-2 text-xs text-zinc-400 hover:border-red-500/40 hover:text-red-400 disabled:opacity-50 sm:w-auto"
             >
               <Trash2 className="size-3.5" /> Remove
             </button>

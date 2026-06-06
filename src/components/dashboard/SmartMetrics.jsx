@@ -11,7 +11,7 @@ export default function SmartMetrics({
   tableList     = [],
 }) {
   return (
-    <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+    <div className="grid min-w-0 grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
       {/* Peak Hours */}
       <div className="admin-surface-card p-4">
         <div className="flex items-center gap-2">
@@ -20,7 +20,7 @@ export default function SmartMetrics({
           </span>
           <p className={`text-xs font-semibold uppercase tracking-wide ${adminSurface.muted}`}>Peak Hours</p>
         </div>
-        <p className="mt-3 admin-surface-title text-lg font-semibold">{peakHour}</p>
+        <p className="mt-3 break-words admin-surface-title text-lg font-semibold">{peakHour}</p>
         <p className="mt-2 admin-surface-subheading">Based on order history</p>
       </div>
 
@@ -32,7 +32,7 @@ export default function SmartMetrics({
           </span>
           <p className={`text-xs font-semibold uppercase tracking-wide ${adminSurface.muted}`}>Best Category</p>
         </div>
-        <p className="mt-3 admin-surface-title text-lg font-semibold">{bestCategory}</p>
+        <p className="mt-3 break-words admin-surface-title text-lg font-semibold">{bestCategory}</p>
         <p className="mt-2 admin-surface-subheading">Top performing category</p>
       </div>
 

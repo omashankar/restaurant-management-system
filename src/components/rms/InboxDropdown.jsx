@@ -1,8 +1,10 @@
 "use client";
 
-import { adminSurface } from "@/config/adminSurfaceClasses";
+import { adminHeaderDropdownPortal, adminSurface } from "@/config/adminSurfaceClasses";
+import { useAnchoredPortalPosition } from "@/hooks/useAnchoredPortalPosition";
 import { Loader2 } from "lucide-react";
 import Link from "next/link";
+import { createPortal } from "react-dom";
 
 export default function InboxDropdown({
   open,
@@ -15,7 +17,10 @@ export default function InboxDropdown({
   onClose,
   embedded = false,
   accent = "emerald",
+  anchorRef,
 }) {
+  const position = useAnchoredPortalPosition(open && !embedded, anchorRef);
+
   if (!open && !embedded) return null;
   if (embedded && !open) return null;
 
@@ -109,10 +114,17 @@ export default function InboxDropdown({
 
   if (embedded) return panel;
 
-  return (
-    <div className="absolute right-0 top-full z-[70] mt-2">
+  if (typeof document === "undefined" || !position) return null;
+
+  return createPortal(
+    <div
+      data-admin-header-dropdown=""
+      className={adminHeaderDropdownPortal}
+      style={{ top: position.top, right: position.right }}
+    >
       {panel}
-    </div>
+    </div>,
+    document.body
   );
 }
 

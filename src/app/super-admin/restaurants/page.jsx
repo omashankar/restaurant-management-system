@@ -64,7 +64,7 @@ const emptyForm = {
 
 const inputCls = "admin-surface-input focus-sa-primary w-full px-3 py-2.5 text-sm outline-none placeholder:admin-surface-faint transition-colors";
 const filterSelectCls =
-  "cursor-pointer w-auto min-w-[9.5rem] shrink-0 rounded-xl border admin-shell-border bg-[var(--admin-control)] px-3 py-2.5 text-sm admin-shell-text outline-none focus-sa-primary";
+  "cursor-pointer w-full min-w-0 rounded-xl border admin-shell-border bg-[var(--admin-control)] px-3 py-2.5 text-sm admin-shell-text outline-none focus-sa-primary sm:w-auto sm:min-w-[9.5rem] sm:shrink-0";
 const fieldErrorCls = "mt-1 text-xs text-red-400";
 
 const EMPTY_CREATE_FIELD_ERRORS = {
@@ -125,22 +125,22 @@ function PreviewModal({ restaurant, onClose }) {
   return (
     <Modal open={!!restaurant} onClose={onClose} title="Restaurant Details"
       footer={
-        <div className="flex justify-end">
+        <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
           <button type="button" onClick={onClose}
-            className="cursor-pointer rounded-xl border admin-shell-border px-4 py-2 text-sm admin-surface-body hover:border-zinc-500 transition-colors">
+            className="w-full cursor-pointer rounded-xl border admin-shell-border px-4 py-2 text-sm admin-surface-body transition-colors hover:border-zinc-500 sm:w-auto">
             Close
           </button>
         </div>
       }>
-      <div className="space-y-5">
+      <div className="min-w-0 space-y-5">
         {/* Avatar + name */}
-        <div className="flex items-center gap-4">
-          <span className="flex size-14 shrink-0 items-center justify-center rounded-2xl bg-sa-accent-10 text-2xl font-bold text-sa-accent ring-1 ring-sa-accent-25">
+        <div className="flex min-w-0 items-start gap-4">
+          <span className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-sa-accent-10 text-xl font-bold text-sa-accent ring-1 ring-sa-accent-25 sm:size-14 sm:text-2xl">
             {restaurant.name?.[0]?.toUpperCase()}
           </span>
-          <div>
-            <h3 className="admin-surface-title text-lg font-semibold">{restaurant.name}</h3>
-            <div className="mt-1 flex items-center gap-2">
+          <div className="min-w-0 flex-1">
+            <h3 className="admin-surface-title break-words text-lg font-semibold">{restaurant.name}</h3>
+            <div className="mt-1 flex flex-wrap items-center gap-2">
               <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-semibold capitalize ring-1 ${PLAN_BADGE[restaurant.plan] ?? PLAN_BADGE.free}`}>
                 <span className={`size-1.5 rounded-full ${PLAN_DOT[restaurant.plan] ?? "bg-zinc-500"}`} />
                 {restaurant.plan}
@@ -191,15 +191,40 @@ function PreviewModal({ restaurant, onClose }) {
           {restaurant.address && (
             <div className="sm:col-span-2 flex items-start gap-3 rounded-xl border admin-shell-border admin-surface-card px-3 py-2.5">
               <MapPin className="mt-0.5 size-4 shrink-0 text-zinc-500" />
-              <div>
+              <div className="min-w-0">
                 <p className="text-[10px] font-semibold uppercase tracking-wider text-zinc-600">Address</p>
-                <p className="mt-0.5 text-sm admin-shell-text">{restaurant.address}</p>
+                <p className="mt-0.5 break-words text-sm admin-shell-text">{restaurant.address}</p>
               </div>
             </div>
           )}
         </div>
       </div>
     </Modal>
+  );
+}
+
+function RestaurantRowActions({ r, onPreview, onEdit, onDelete, onToggleOwner, ownerTogglingId }) {
+  return (
+    <>
+      <AdminTableIconButton variant="sky" onClick={() => onPreview(r)} title="View details" aria-label="View details">
+        <Eye className="size-4" />
+      </AdminTableIconButton>
+      <AdminTableIconButton onClick={() => onEdit(r)} title="Edit restaurant" aria-label="Edit restaurant">
+        <Pencil className="size-4" />
+      </AdminTableIconButton>
+      <AdminTableIconButton variant="danger" onClick={() => onDelete(r)} title="Delete restaurant" aria-label="Delete restaurant">
+        <Trash2 className="size-4" />
+      </AdminTableIconButton>
+      <AdminTableIconButton
+        onClick={() => onToggleOwner(r)}
+        disabled={ownerTogglingId === r.id}
+        title={r.ownerStatus === "blocked" ? "Unblock owner admin" : "Block owner admin"}
+        aria-label={r.ownerStatus === "blocked" ? "Unblock owner admin" : "Block owner admin"}
+        className={r.ownerStatus === "blocked" ? "hover:text-sa-primary" : "hover:text-amber-500"}
+      >
+        {r.ownerStatus === "blocked" ? <ShieldCheck className="size-4" /> : <ShieldOff className="size-4" />}
+      </AdminTableIconButton>
+    </>
   );
 }
 
@@ -488,26 +513,27 @@ export default function RestaurantsPage() {
   const stats = listStats;
 
   return (
-    <div className="space-y-6">
+    <div className="min-w-0 w-full max-w-full space-y-6 overflow-x-hidden">
 
       {/* Header */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div className="flex items-start gap-3">
-          <span className={`mt-1 ${saIconBadgeCls}`}>
+      <div className="flex min-w-0 flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div className="flex min-w-0 items-start gap-3">
+          <span className={`mt-1 shrink-0 ${saIconBadgeCls}`}>
             <Building2 className="size-5" />
           </span>
-          <div>
-            <h1 className="text-2xl font-semibold tracking-tight text-zinc-50">Restaurants</h1>
+          <div className="min-w-0">
+            <h1 className="break-words text-2xl font-semibold tracking-tight text-zinc-50">Restaurants</h1>
             <p className="mt-1 text-sm admin-surface-muted">Manage all registered tenants and their admin accounts.</p>
           </div>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">
           <button type="button" onClick={fetchRestaurants}
-            className="cursor-pointer flex items-center gap-1.5 rounded-xl border admin-shell-border px-3 py-2.5 text-sm font-medium text-zinc-400 hover:border-zinc-500 hover:admin-shell-text transition-colors">
+            className="cursor-pointer flex w-full items-center justify-center gap-1.5 rounded-xl border admin-shell-border px-3 py-2.5 text-sm font-medium text-zinc-400 transition-colors hover:border-zinc-500 hover:admin-shell-text sm:w-auto">
             <RefreshCw className={"size-4 " + (loading ? saSpinnerCls : "")} />
+            <span className="sm:hidden">Refresh</span>
           </button>
           <button type="button" onClick={openCreateModal}
-            className="cursor-pointer inline-flex items-center gap-2 rounded-xl bg-sa-primary px-4 py-2.5 text-sm font-semibold text-zinc-950 hover:brightness-110 transition-colors">
+            className="cursor-pointer inline-flex w-full items-center justify-center gap-2 rounded-xl bg-sa-primary px-4 py-2.5 text-sm font-semibold text-zinc-950 transition-colors hover:brightness-110 sm:w-auto">
             <Plus className="size-4" /> Add Restaurant
           </button>
         </div>
@@ -519,14 +545,14 @@ export default function RestaurantsPage() {
           {loadError}
         </div>
       )}
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+      <div className="grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
         {[
           { label: "Total",     value: stats.total,     color: "admin-shell-text"    },
           { label: "Active",    value: stats.active,    color: "text-sa-accent" },
           { label: "Inactive",  value: stats.inactive,  color: "text-zinc-500"    },
           { label: "Suspended", value: stats.suspended, color: "text-red-400"     },
         ].map(({ label, value, color }) => (
-          <div key={label} className="admin-surface-card px-4 py-3">
+          <div key={label} className="min-w-0 admin-surface-card px-4 py-3">
             <p className={"text-xl font-bold " + color}>{value}</p>
             <p className="mt-0.5 admin-surface-faint">{label}</p>
           </div>
@@ -534,16 +560,16 @@ export default function RestaurantsPage() {
       </div>
 
       {/* Search + Filters */}
-      <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+      <div className="flex min-w-0 flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
         <SearchField
-          className="min-w-[200px] max-w-md flex-1"
+          className="min-w-0 w-full max-w-none flex-1 lg:max-w-md"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Search name, email, phone…"
           clearable
           inputClassName="focus-sa-primary"
         />
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="grid w-full grid-cols-1 gap-2 sm:flex sm:w-auto sm:flex-wrap sm:items-center">
           <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}
             className={filterSelectCls}>
             <option value="all">All statuses</option>
@@ -576,6 +602,95 @@ export default function RestaurantsPage() {
         </div>
       ) : (
         <DataTableShell>
+          <div className="space-y-2 p-3 md:hidden">
+            {restaurants.map((r) => (
+              <div
+                key={r.id}
+                className={`rounded-xl border admin-shell-border bg-[var(--admin-surface-soft)] p-3 ${r.status !== "active" ? "opacity-70" : ""}`}
+              >
+                <div className="flex items-start gap-3">
+                  <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-sa-accent-10 text-sm font-bold text-sa-accent ring-1 ring-sa-accent-25">
+                    {r.name?.[0]?.toUpperCase()}
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <p className="break-words font-semibold admin-shell-text">{r.name}</p>
+                    {r.slug ? (
+                      <a
+                        href={`/r/${r.slug}/home`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="break-all text-xs text-sa-primary hover-sa-primary hover:underline"
+                      >
+                        /r/{r.slug}
+                      </a>
+                    ) : (
+                      <p className="truncate text-xs admin-surface-faint">{r.ownerEmail}</p>
+                    )}
+                  </div>
+                </div>
+
+                <div className="mt-3 flex items-start gap-2">
+                  <Crown className="mt-0.5 size-3 shrink-0 text-amber-500/60" />
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm admin-shell-text">{r.ownerName}</p>
+                    <p className="truncate text-xs admin-surface-faint">{r.ownerEmail}</p>
+                    <span className={`mt-1 inline-flex rounded-full px-2 py-0.5 text-[10px] font-semibold ring-1 ${
+                      r.ownerStatus === "active"
+                        ? "sa-status-badge"
+                        : r.ownerStatus === "blocked"
+                          ? "bg-red-500/15 text-red-400 ring-red-500/25"
+                          : "bg-zinc-500/15 text-zinc-400 ring-zinc-500/25"
+                    }`}>
+                      {r.ownerStatus}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="mt-3 flex flex-wrap items-center gap-2">
+                  <span className={"inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-semibold capitalize ring-1 " + (PLAN_BADGE[r.plan] ?? PLAN_BADGE.free)}>
+                    <span className={"size-1.5 rounded-full " + (PLAN_DOT[r.plan] ?? "bg-zinc-500")} />
+                    {r.plan}
+                  </span>
+                  <span className="text-[10px] admin-surface-faint">
+                    A:{r.roleCounts?.admin ?? 0} · M:{r.roleCounts?.manager ?? 0} · W:{r.roleCounts?.waiter ?? 0} · C:{r.roleCounts?.chef ?? 0}
+                  </span>
+                </div>
+
+                {r.phone !== "—" && (
+                  <p className="mt-2 text-xs text-zinc-400">{r.phone}</p>
+                )}
+
+                <div className="mt-3 flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2">
+                    <ToggleSwitch
+                      checked={r.status === "active"}
+                      onChange={() => toggleStatus(r)}
+                      disabled={togglingId === r.id}
+                    />
+                    <span className={"text-xs font-medium " + (r.status === "active" ? "text-sa-accent" : "text-zinc-500")}>
+                      {r.status === "active" ? "Active" : r.status.charAt(0).toUpperCase() + r.status.slice(1)}
+                    </span>
+                  </div>
+                  <span className="shrink-0 text-[10px] admin-surface-faint">
+                    {r.createdAt ? new Date(r.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "—"}
+                  </span>
+                </div>
+
+                <div className="mt-3 flex flex-wrap items-center gap-1 border-t admin-shell-border pt-3">
+                  <RestaurantRowActions
+                    r={r}
+                    onPreview={setPreviewTarget}
+                    onEdit={openEdit}
+                    onDelete={setDeleteTarget}
+                    onToggleOwner={toggleOwnerStatus}
+                    ownerTogglingId={ownerTogglingId}
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="hidden md:block">
             <AdminTable>
               <AdminTableHead>
                 <AdminTableHeadRow>
@@ -667,29 +782,20 @@ export default function RestaurantsPage() {
                     </AdminTableTd>
 
                     <AdminTableActionsCell>
-                        <AdminTableIconButton variant="sky" onClick={() => setPreviewTarget(r)} title="View details" aria-label="View details">
-                          <Eye className="size-4" />
-                        </AdminTableIconButton>
-                        <AdminTableIconButton onClick={() => openEdit(r)} title="Edit restaurant" aria-label="Edit restaurant">
-                          <Pencil className="size-4" />
-                        </AdminTableIconButton>
-                        <AdminTableIconButton variant="danger" onClick={() => setDeleteTarget(r)} title="Delete restaurant" aria-label="Delete restaurant">
-                          <Trash2 className="size-4" />
-                        </AdminTableIconButton>
-                        <AdminTableIconButton
-                          onClick={() => toggleOwnerStatus(r)}
-                          disabled={ownerTogglingId === r.id}
-                          title={r.ownerStatus === "blocked" ? "Unblock owner admin" : "Block owner admin"}
-                          aria-label={r.ownerStatus === "blocked" ? "Unblock owner admin" : "Block owner admin"}
-                          className={r.ownerStatus === "blocked" ? "hover:text-sa-primary" : "hover:text-amber-500"}
-                        >
-                          {r.ownerStatus === "blocked" ? <ShieldCheck className="size-4" /> : <ShieldOff className="size-4" />}
-                        </AdminTableIconButton>
+                        <RestaurantRowActions
+                          r={r}
+                          onPreview={setPreviewTarget}
+                          onEdit={openEdit}
+                          onDelete={setDeleteTarget}
+                          onToggleOwner={toggleOwnerStatus}
+                          ownerTogglingId={ownerTogglingId}
+                        />
                     </AdminTableActionsCell>
                   </AdminTableRow>
                 ))}
               </AdminTableBody>
             </AdminTable>
+          </div>
 
           <div className="px-4 pb-4">
             <PaginationBar
@@ -707,13 +813,13 @@ export default function RestaurantsPage() {
       {/* ── CREATE MODAL ── */}
       <Modal open={createOpen} onClose={() => setCreateOpen(false)} title="Add Restaurant"
         footer={
-          <div className="flex justify-end gap-2">
+          <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
             <button type="button" onClick={() => setCreateOpen(false)}
-              className="cursor-pointer rounded-xl border admin-shell-border px-4 py-2 text-sm admin-surface-body hover:border-zinc-500 transition-colors">
+              className="w-full cursor-pointer rounded-xl border admin-shell-border px-4 py-2 text-sm admin-surface-body transition-colors hover:border-zinc-500 sm:w-auto">
               Cancel
             </button>
             <button type="button" onClick={handleCreate} disabled={creating}
-              className="cursor-pointer rounded-xl bg-sa-primary px-4 py-2 text-sm font-semibold text-zinc-950 hover:brightness-110 disabled:opacity-40 transition-colors">
+              className="w-full cursor-pointer rounded-xl bg-sa-primary px-4 py-2 text-sm font-semibold text-zinc-950 transition-colors hover:brightness-110 disabled:opacity-40 sm:w-auto">
               {creating ? "Creating…" : "Create Restaurant"}
             </button>
           </div>
@@ -749,8 +855,8 @@ export default function RestaurantsPage() {
             </div>
             <div className="sm:col-span-2">
               <Field label="URL Slug (Customer Site Address)" required>
-                <div className="flex items-center gap-0 overflow-hidden rounded-xl border admin-shell-border admin-surface-input focus-within-sa-primary">
-                  <span className="shrink-0 border-r admin-shell-border bg-[var(--admin-hover-strong)] px-3 py-2.5 admin-surface-faint whitespace-nowrap">
+                <div className="flex flex-col overflow-hidden rounded-xl border admin-shell-border admin-surface-input focus-within-sa-primary sm:flex-row sm:items-center">
+                  <span className="shrink-0 border-b admin-shell-border bg-[var(--admin-hover-strong)] px-3 py-2 text-[10px] admin-surface-faint sm:border-b-0 sm:border-r sm:py-2.5 sm:text-xs">
                     yoursite.com/r/
                   </span>
                   <input
@@ -871,13 +977,13 @@ export default function RestaurantsPage() {
       <Modal open={!!editTarget} onClose={() => setEditTarget(null)}
         title={editTarget ? "Edit — " + editTarget.name : "Edit Restaurant"}
         footer={
-          <div className="flex justify-end gap-2">
+          <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
             <button type="button" onClick={() => setEditTarget(null)}
-              className="cursor-pointer rounded-xl border admin-shell-border px-4 py-2 text-sm admin-surface-body hover:border-zinc-500 transition-colors">
+              className="w-full cursor-pointer rounded-xl border admin-shell-border px-4 py-2 text-sm admin-surface-body transition-colors hover:border-zinc-500 sm:w-auto">
               Cancel
             </button>
             <button type="button" onClick={handleEdit} disabled={saving}
-              className="cursor-pointer rounded-xl bg-sa-primary px-4 py-2 text-sm font-semibold text-zinc-950 hover:brightness-110 disabled:opacity-40 transition-colors">
+              className="w-full cursor-pointer rounded-xl bg-sa-primary px-4 py-2 text-sm font-semibold text-zinc-950 transition-colors hover:brightness-110 disabled:opacity-40 sm:w-auto">
               {saving ? "Saving…" : "Save Changes"}
             </button>
           </div>
@@ -905,8 +1011,8 @@ export default function RestaurantsPage() {
             </div>
             <div className="sm:col-span-2">
               <Field label="URL Slug (Customer Site Address)" required>
-                <div className="flex items-center gap-0 overflow-hidden rounded-xl border admin-shell-border admin-surface-input focus-within-sa-primary">
-                  <span className="shrink-0 border-r admin-shell-border bg-[var(--admin-hover-strong)] px-3 py-2.5 admin-surface-faint whitespace-nowrap">
+                <div className="flex flex-col overflow-hidden rounded-xl border admin-shell-border admin-surface-input focus-within-sa-primary sm:flex-row sm:items-center">
+                  <span className="shrink-0 border-b admin-shell-border bg-[var(--admin-hover-strong)] px-3 py-2 text-[10px] admin-surface-faint sm:border-b-0 sm:border-r sm:py-2.5 sm:text-xs">
                     yoursite.com/r/
                   </span>
                   <input
@@ -965,9 +1071,9 @@ export default function RestaurantsPage() {
             </div>
           </div>
           {editTarget && (
-            <div className="rounded-xl border admin-shell-border admin-surface-card px-4 py-3 admin-surface-faint">
+            <div className="min-w-0 rounded-xl border admin-shell-border admin-surface-card px-4 py-3 admin-surface-faint">
               Owner: <span className="admin-surface-body">{editTarget.ownerName}</span>
-              {" · "}<span className="text-zinc-400">{editTarget.ownerEmail}</span>
+              {" · "}<span className="break-all text-zinc-400">{editTarget.ownerEmail}</span>
             </div>
           )}
         </div>

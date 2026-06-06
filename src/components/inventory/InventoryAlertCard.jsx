@@ -34,18 +34,18 @@ export default function InventoryAlertCard({ item, onOpen }) {
         </span>
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
-            <p className="font-medium admin-shell-text">{item.name}</p>
+            <p className="min-w-0 break-words font-medium admin-shell-text">{item.name}</p>
             <InventoryStatusBadge status={status} />
           </div>
           <p className="mt-1 text-xs admin-surface-muted">{item.category}</p>
-          <div className="mt-3 flex items-end justify-between gap-2">
+          <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
             <div>
               <p className="text-2xl font-semibold text-zinc-50 tabular-nums">
                 {item.quantity}
               </p>
               <p className="text-xs admin-surface-muted">{item.unit} on hand</p>
             </div>
-            <p className="text-xs admin-surface-muted">
+            <p className="text-xs admin-surface-muted sm:text-right">
               Reorder at{" "}
               <span className="admin-surface-body">{item.reorderLevel}</span>
             </p>

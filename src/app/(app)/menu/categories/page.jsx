@@ -123,23 +123,46 @@ export default function CategoriesPage() {
     finally { setDeleting(false); }
   };
 
-  if (loading) return <div className="space-y-6"><div className="h-8 w-56 animate-pulse rounded-lg admin-progress-track" /><TableSkeleton rows={6} cols={4} /></div>;
+  if (loading) {
+    return (
+      <div className="min-w-0 w-full max-w-full space-y-6 overflow-x-hidden">
+        <div className="h-8 w-56 animate-pulse rounded-lg admin-progress-track" />
+        <TableSkeleton rows={6} cols={4} />
+      </div>
+    );
+  }
 
   return (
-    <div className="space-y-6">
+    <div className="min-w-0 w-full max-w-full space-y-6 overflow-x-hidden">
       {fetchError && (
         <div className="rounded-xl border border-red-500/25 bg-red-500/10 px-4 py-3 text-sm text-red-400">
           {fetchError}
         </div>
       )}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div className="flex items-start gap-3">
-          <span className={`mt-1 ${raIconBadgeCls}`}><FolderTree className="size-5" /></span>
-          <div><h1 className="admin-page-title text-2xl font-semibold tracking-tight">Categories</h1><p className="admin-page-desc mt-1 text-sm">Group menu items for POS and printing.</p></div>
+      <div className="flex min-w-0 flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div className="flex min-w-0 items-start gap-3">
+          <span className={`mt-1 shrink-0 ${raIconBadgeCls}`}><FolderTree className="size-5" /></span>
+          <div className="min-w-0">
+            <h1 className="admin-page-title text-2xl font-semibold tracking-tight">Categories</h1>
+            <p className="admin-page-desc mt-1 text-sm">Group menu items for POS and printing.</p>
+          </div>
         </div>
-        <div className="flex items-center gap-2">
-          <button type="button" onClick={fetchCategories} className="cursor-pointer flex items-center gap-1.5 rounded-xl border admin-shell-border px-3 py-2.5 text-sm font-medium text-zinc-400 hover:border-zinc-500 hover:admin-shell-text transition-colors"><RefreshCw className="size-4" /></button>
-          <button type="button" onClick={openCreate} className="cursor-pointer inline-flex items-center gap-2 rounded-xl bg-ra-primary px-4 py-2.5 text-sm font-semibold text-zinc-950 hover:brightness-110"><Plus className="size-4" /> Add Category</button>
+        <div className="flex w-full min-w-0 flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">
+          <button
+            type="button"
+            onClick={fetchCategories}
+            className="inline-flex w-full cursor-pointer items-center justify-center gap-1.5 rounded-xl border admin-shell-border px-3 py-2.5 text-sm font-medium text-zinc-400 transition-colors hover:border-zinc-500 hover:admin-shell-text sm:w-auto"
+          >
+            <RefreshCw className="size-4" />
+            <span className="sm:hidden">Refresh</span>
+          </button>
+          <button
+            type="button"
+            onClick={openCreate}
+            className="inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-ra-primary px-4 py-2.5 text-sm font-semibold text-zinc-950 hover:brightness-110 sm:w-auto"
+          >
+            <Plus className="size-4" /> Add Category
+          </button>
         </div>
       </div>
 
@@ -149,49 +172,122 @@ export default function CategoriesPage() {
         <EmptyState title="No categories" description="Create categories like Starters, Main Course, Drinks."
           action={<button type="button" onClick={openCreate} className="cursor-pointer rounded-xl bg-ra-primary px-4 py-2 text-sm font-semibold text-zinc-950 hover:brightness-110">Add Category</button>} />
       ) : (
-        <DataTableShell>
-          <AdminTable>
-            <AdminTableHead>
-              <AdminTableHeadRow>
-                <AdminTableTh>Category</AdminTableTh>
-                <AdminTableTh>Description</AdminTableTh>
-                <AdminTableTh>Items</AdminTableTh>
-                <AdminTableThActions />
-              </AdminTableHeadRow>
-            </AdminTableHead>
-            <AdminTableBody>
-              {pageRows.map((row) => (
-                <AdminTableRow key={row.id}>
-                  <AdminTableTd className="font-medium admin-shell-text">{row.name}</AdminTableTd>
-                  <AdminTableTd className="text-xs admin-surface-muted">{row.description || "—"}</AdminTableTd>
-                  <AdminTableTd>
-                    <span className="inline-flex rounded-full bg-[var(--admin-hover-strong)] px-2.5 py-0.5 text-xs font-semibold admin-surface-body">
-                      {row.itemCount ?? 0}
-                    </span>
-                  </AdminTableTd>
-                  <AdminTableActionsCell>
+        <div className="min-w-0 overflow-hidden admin-surface-card">
+          <div className="space-y-2 p-3 md:hidden">
+            {pageRows.map((row) => (
+              <div
+                key={row.id}
+                className="rounded-xl border admin-shell-border bg-[var(--admin-surface-soft)] p-3"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0 flex-1">
+                    <p className="break-words font-medium admin-shell-text">{row.name}</p>
+                    {row.description ? (
+                      <p className="mt-1 line-clamp-2 text-xs admin-surface-muted">{row.description}</p>
+                    ) : (
+                      <p className="mt-1 text-xs admin-surface-faint">No description</p>
+                    )}
+                  </div>
+                  <div className="flex shrink-0 items-center gap-1">
                     <AdminTableIconButton onClick={() => openEdit(row)} aria-label="Edit">
                       <Pencil className="size-4" />
                     </AdminTableIconButton>
                     <AdminTableIconButton variant="danger" onClick={() => setDeleteTarget(row)} aria-label="Delete">
                       <Trash2 className="size-4" />
                     </AdminTableIconButton>
-                  </AdminTableActionsCell>
-                </AdminTableRow>
-              ))}
-            </AdminTableBody>
-          </AdminTable>
-          <div className="px-4 pb-4">
-            <PaginationBar page={page} totalPages={totalPages} total={total} pageSize={pageSize} onPageChange={setPage} hideWhenSinglePage />
+                  </div>
+                </div>
+                <div className="mt-3">
+                  <span className="inline-flex rounded-full bg-[var(--admin-hover-strong)] px-2.5 py-0.5 text-xs font-semibold tabular-nums admin-surface-body">
+                    {row.itemCount ?? 0} item{(row.itemCount ?? 0) === 1 ? "" : "s"}
+                  </span>
+                </div>
+              </div>
+            ))}
+            <div className="px-1 pb-1">
+              <PaginationBar
+                page={page}
+                totalPages={totalPages}
+                total={total}
+                pageSize={pageSize}
+                onPageChange={setPage}
+                hideWhenSinglePage
+              />
+            </div>
           </div>
-        </DataTableShell>
+
+          <div className="hidden md:block">
+            <DataTableShell>
+              <AdminTable>
+                <AdminTableHead>
+                  <AdminTableHeadRow>
+                    <AdminTableTh>Category</AdminTableTh>
+                    <AdminTableTh>Description</AdminTableTh>
+                    <AdminTableTh>Items</AdminTableTh>
+                    <AdminTableThActions />
+                  </AdminTableHeadRow>
+                </AdminTableHead>
+                <AdminTableBody>
+                  {pageRows.map((row) => (
+                    <AdminTableRow key={row.id}>
+                      <AdminTableTd className="max-w-[10rem] font-medium admin-shell-text sm:max-w-none">
+                        <span className="block truncate">{row.name}</span>
+                      </AdminTableTd>
+                      <AdminTableTd className="max-w-[14rem] text-xs admin-surface-muted sm:max-w-none">
+                        <span className="line-clamp-2">{row.description || "—"}</span>
+                      </AdminTableTd>
+                      <AdminTableTd>
+                        <span className="inline-flex rounded-full bg-[var(--admin-hover-strong)] px-2.5 py-0.5 text-xs font-semibold tabular-nums admin-surface-body">
+                          {row.itemCount ?? 0}
+                        </span>
+                      </AdminTableTd>
+                      <AdminTableActionsCell>
+                        <AdminTableIconButton onClick={() => openEdit(row)} aria-label="Edit">
+                          <Pencil className="size-4" />
+                        </AdminTableIconButton>
+                        <AdminTableIconButton variant="danger" onClick={() => setDeleteTarget(row)} aria-label="Delete">
+                          <Trash2 className="size-4" />
+                        </AdminTableIconButton>
+                      </AdminTableActionsCell>
+                    </AdminTableRow>
+                  ))}
+                </AdminTableBody>
+              </AdminTable>
+              <div className="px-4 pb-4">
+                <PaginationBar
+                  page={page}
+                  totalPages={totalPages}
+                  total={total}
+                  pageSize={pageSize}
+                  onPageChange={setPage}
+                  hideWhenSinglePage
+                />
+              </div>
+            </DataTableShell>
+          </div>
+        </div>
       )}
 
       <Modal open={modalOpen} onClose={() => setModalOpen(false)} title={editingId ? "Edit Category" : "Add Category"}
-        footer={<div className="flex justify-end gap-2">
-          <button type="button" onClick={() => setModalOpen(false)} className="cursor-pointer rounded-xl border admin-shell-border px-4 py-2 text-sm admin-surface-body hover:border-zinc-500">Cancel</button>
-          <button type="button" onClick={save} disabled={saving} className="cursor-pointer rounded-xl bg-ra-primary px-4 py-2 text-sm font-semibold text-zinc-950 hover:brightness-110 disabled:opacity-40">{saving ? "Saving…" : "Save"}</button>
-        </div>}>
+        footer={
+          <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+            <button
+              type="button"
+              onClick={() => setModalOpen(false)}
+              className="w-full cursor-pointer rounded-xl border admin-shell-border px-4 py-2 text-sm admin-surface-body hover:border-zinc-500 sm:w-auto"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={save}
+              disabled={saving}
+              className="w-full cursor-pointer rounded-xl bg-ra-primary px-4 py-2 text-sm font-semibold text-zinc-950 hover:brightness-110 disabled:opacity-40 sm:w-auto"
+            >
+              {saving ? "Saving…" : "Save"}
+            </button>
+          </div>
+        }>
         <div className="space-y-4">
           {formError && <p className="rounded-xl border border-red-500/20 bg-red-500/10 px-3 py-2 text-xs text-red-400">{formError}</p>}
           <div>

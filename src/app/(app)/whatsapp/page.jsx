@@ -73,10 +73,10 @@ const SETUP_STEPS = [
 
 function Toggle({ checked, onChange, label, hint }) {
   return (
-    <label className="flex cursor-pointer items-start justify-between gap-4 rounded-xl admin-surface-card px-4 py-3">
-      <span>
+    <label className="flex cursor-pointer items-start justify-between gap-3 rounded-xl border admin-shell-border admin-surface-card px-3 py-3 sm:gap-4 sm:px-4">
+      <span className="min-w-0 flex-1">
         <span className="block text-sm font-medium admin-shell-text">{label}</span>
-        {hint && <span className="mt-0.5 block text-xs admin-surface-muted">{hint}</span>}
+        {hint && <span className="mt-0.5 block text-xs leading-snug admin-surface-muted">{hint}</span>}
       </span>
       <button type="button" role="switch" aria-checked={checked} onClick={() => onChange(!checked)}
         className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors ${checked ? "bg-ra-primary" : "bg-zinc-700"}`}>
@@ -198,17 +198,17 @@ export default function WhatsAppPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="min-w-0 w-full max-w-full space-y-6 overflow-x-hidden">
       {/* Header */}
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <h1 className="admin-page-title text-2xl font-semibold tracking-tight">WhatsApp Automation</h1>
+      <div className="flex min-w-0 flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div className="min-w-0">
+          <h1 className="admin-page-title text-xl font-semibold tracking-tight sm:text-2xl">WhatsApp Automation</h1>
           <p className="admin-page-desc mt-1 text-sm">
             Send real WhatsApp messages via Meta Business API for orders, payments, and alerts.
           </p>
         </div>
         <button type="button" onClick={saveSettings} disabled={saving}
-          className="cursor-pointer inline-flex items-center gap-2 rounded-xl bg-ra-primary px-4 py-2 text-sm font-semibold text-zinc-950 hover:brightness-110 disabled:opacity-50 transition-colors">
+          className="cursor-pointer inline-flex w-full shrink-0 items-center justify-center gap-2 rounded-xl bg-ra-primary px-4 py-2 text-sm font-semibold text-zinc-950 transition-colors hover:brightness-110 disabled:opacity-50 sm:w-auto">
           {saving ? <Loader2 className="size-4 animate-spin" /> : <Save className="size-4" />}
           {saving ? "Saving…" : "Save Settings"}
         </button>
@@ -216,7 +216,7 @@ export default function WhatsAppPage() {
 
       {/* Load error */}
       {loadError && (
-        <div className="flex items-center gap-2 rounded-xl border border-red-500/25 bg-red-500/10 px-4 py-3 text-sm text-red-400">
+        <div className="flex min-w-0 items-start gap-2 rounded-xl border border-red-500/25 bg-red-500/10 px-4 py-3 text-sm text-red-400">
           <XCircle className="size-4 shrink-0" />
           {loadError}
         </div>
@@ -235,13 +235,13 @@ export default function WhatsAppPage() {
       )}
 
       {/* Step-by-step setup guide */}
-      <section className="rounded-2xl border border-ra-primary-20 bg-ra-primary-5 p-5">
+      <section className="rounded-2xl border border-ra-primary-20 bg-ra-primary-5 p-4 sm:p-5">
         <button
           type="button"
           onClick={() => setGuideOpen((v) => !v)}
-          className="cursor-pointer flex w-full items-start justify-between gap-3 text-left"
+          className="cursor-pointer flex w-full min-w-0 items-start justify-between gap-3 text-left"
         >
-          <div>
+          <div className="min-w-0 flex-1">
             <h2 className="text-base font-semibold text-ra-primary-muted">
               WhatsApp Setup Guide — Step by Step
             </h2>
@@ -284,7 +284,7 @@ export default function WhatsAppPage() {
       </section>
 
       {/* Enable + Credentials */}
-      <section className="admin-surface-card p-5 space-y-4">
+      <section className="admin-surface-card space-y-4 p-4 sm:p-5">
         <Toggle
           label="Enable WhatsApp Automation"
           hint="Send automated messages to customers and staff via Meta WhatsApp Business API"
@@ -351,26 +351,26 @@ export default function WhatsAppPage() {
       {enabled && (
         <>
           {/* Templates */}
-          <div className="grid gap-5 lg:grid-cols-[260px_1fr]">
+          <div className="grid min-w-0 gap-5 lg:grid-cols-[minmax(0,260px)_minmax(0,1fr)]">
             {/* Template list */}
-            <section className="admin-surface-card p-4">
+            <section className="admin-surface-card min-w-0 p-4">
               <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-zinc-500">Message Templates</p>
-              <div className="space-y-1">
+              <div className="flex gap-2 overflow-x-auto pb-1 lg:flex-col lg:gap-1 lg:overflow-visible lg:pb-0">
                 {TEMPLATES.map((tp) => {
                   const cfg = templates[tp.id] ?? { enabled: true };
                   return (
                     <button key={tp.id} type="button" onClick={() => setActiveTemplate(tp.id)}
-                      className={`cursor-pointer w-full rounded-xl px-3 py-2.5 text-left transition-all ${
+                      className={`cursor-pointer min-w-[11rem] shrink-0 rounded-xl px-3 py-2.5 text-left transition-all lg:min-w-0 lg:w-full ${
                         activeTemplate === tp.id
                           ? "bg-ra-primary-15 text-ra-primary ring-1 ring-ra-primary-25"
                           : "text-zinc-400 hover:admin-shell-hover hover:admin-shell-text"
                       }`}>
-                      <div className="flex items-center justify-between gap-2">
-                        <span className="text-sm">
+                      <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between sm:gap-2">
+                        <span className="min-w-0 truncate text-sm">
                           <span className="mr-1.5">{tp.emoji}</span>
                           {tp.event}
                         </span>
-                        <span className={`text-xs px-1.5 py-0.5 rounded-full ${
+                        <span className={`shrink-0 self-start rounded-full px-1.5 py-0.5 text-xs sm:self-auto ${
                           tp.audience === "Customer" ? "bg-blue-500/15 text-blue-400" : "bg-amber-500/15 text-amber-400"
                         }`}>{tp.audience}</span>
                       </div>
@@ -386,19 +386,21 @@ export default function WhatsAppPage() {
 
             {/* Template editor */}
             {active && (
-              <section className="admin-surface-card p-5">
-                <div className="mb-4 flex items-center justify-between gap-4">
-                  <div>
+              <section className="admin-surface-card min-w-0 p-4 sm:p-5">
+                <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
+                  <div className="min-w-0">
                     <h2 className="text-base font-semibold admin-shell-text">
                       {active.emoji} {active.event}
                     </h2>
                     <p className="text-xs admin-surface-muted">Sent to: {active.audience}</p>
                   </div>
-                  <Toggle
-                    label="Enable"
-                    checked={Boolean(activeConfig.enabled)}
-                    onChange={(v) => updateTemplate(active.id, { enabled: v })}
-                  />
+                  <div className="w-full shrink-0 sm:w-auto">
+                    <Toggle
+                      label="Enable"
+                      checked={Boolean(activeConfig.enabled)}
+                      onChange={(v) => updateTemplate(active.id, { enabled: v })}
+                    />
+                  </div>
                 </div>
 
                 <div>
@@ -409,7 +411,7 @@ export default function WhatsAppPage() {
                     rows={5}
                     value={activeConfig.message ?? ""}
                     onChange={(e) => updateTemplate(active.id, { message: e.target.value })}
-                    className="w-full resize-none admin-surface-card px-3 py-2.5 text-sm admin-shell-text outline-none focus-ra-primary"
+                    className="w-full resize-none rounded-xl border admin-shell-border admin-surface-card px-3 py-2.5 text-sm admin-shell-text outline-none focus-ra-primary"
                   />
                 </div>
 
@@ -430,7 +432,7 @@ export default function WhatsAppPage() {
                 {/* Preview */}
                 <div className="mt-4 rounded-xl admin-surface-card p-4">
                   <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-zinc-500">Preview</p>
-                  <div className="rounded-xl bg-[#dcf8c6] p-3 text-sm text-zinc-900 max-w-xs whitespace-pre-wrap">
+                  <div className="max-w-full rounded-xl bg-[#dcf8c6] p-3 text-sm text-zinc-900 whitespace-pre-wrap break-words sm:max-w-xs">
                     {(activeConfig.message ?? "")
                       .replace("{customer_name}", "Rahul")
                       .replace("{order_id}", "ORD-C-001")
@@ -446,24 +448,24 @@ export default function WhatsAppPage() {
           </div>
 
           {/* Test message */}
-          <section className="admin-surface-card p-5">
+          <section className="admin-surface-card p-4 sm:p-5">
             <h2 className="mb-1 text-base font-semibold admin-shell-text">Send Real Test Message</h2>
             <p className="mb-4 text-xs admin-surface-muted">
               Sends an actual WhatsApp message using your saved credentials. Phone must be registered on WhatsApp.
             </p>
-            <div className="flex flex-wrap items-start gap-3">
+            <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-start">
               <PhoneInput
                 id="whatsapp-test-phone"
                 value={testPhone}
                 onChange={setTestPhone}
                 placeholder="9876543210"
                 error={testPhoneError}
-                wrapperClassName="min-w-[200px] flex-1 admin-shell-border admin-surface-card"
-                className="min-w-[200px] flex-1"
+                wrapperClassName="w-full min-w-0 admin-shell-border admin-surface-card sm:min-w-[200px] sm:flex-1"
+                className="w-full"
               />
               <button type="button" onClick={sendTest}
                 disabled={sending || testPhone.length < 10}
-                className="cursor-pointer inline-flex items-center gap-2 rounded-xl bg-ra-primary px-4 py-2 text-sm font-semibold text-zinc-950 hover:brightness-110 disabled:opacity-50 transition-colors shrink-0">
+                className="cursor-pointer inline-flex w-full shrink-0 items-center justify-center gap-2 rounded-xl bg-ra-primary px-4 py-2 text-sm font-semibold text-zinc-950 transition-colors hover:brightness-110 disabled:opacity-50 sm:w-auto">
                 {sending ? <Loader2 className="size-4 animate-spin" /> : <Send className="size-4" />}
                 {sending ? "Sending…" : "Send Test"}
               </button>
@@ -486,10 +488,10 @@ export default function WhatsAppPage() {
 
       {/* Info when disabled */}
       {!enabled && (
-        <section className="admin-surface-card p-5">
-          <div className="flex items-start gap-4">
-            <MessageCircle className="size-8 text-ra-primary shrink-0 mt-1" />
-            <div>
+        <section className="admin-surface-card p-4 sm:p-5">
+          <div className="flex min-w-0 items-start gap-4">
+            <MessageCircle className="mt-1 size-8 shrink-0 text-ra-primary" />
+            <div className="min-w-0 flex-1">
               <h2 className="text-base font-semibold admin-shell-text">WhatsApp Business API</h2>
               <p className="admin-page-desc mt-1 text-sm">
                 Enable to send real WhatsApp messages automatically when orders are placed, prepared, or delivered.

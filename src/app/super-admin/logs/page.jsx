@@ -141,19 +141,21 @@ export default function LogsPage() {
   const totalCount = Object.values(categoryCounts).reduce((s, v) => s + v, 0);
 
   return (
-    <div className="space-y-6">
+    <div className="min-w-0 w-full max-w-full space-y-6 overflow-x-hidden">
 
       {/* ── Header ── */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div className="flex items-start gap-3">
-          <span className={`mt-1 ${saIconBadgeCls}`}>
+      <div className="flex min-w-0 flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div className="flex min-w-0 items-start gap-3">
+          <span className={`mt-1 shrink-0 ${saIconBadgeCls}`}>
             <ClipboardList className="size-5" />
           </span>
-          <div>
-            <h1 className="admin-page-title text-2xl font-semibold tracking-tight">Audit Logs</h1>
+          <div className="min-w-0">
+            <h1 className="admin-page-title break-words text-2xl font-semibold tracking-tight">Audit Logs</h1>
             <p className="admin-page-desc mt-1 text-sm">
               System activity and admin action history.
-              <span className="ml-2 tabular-nums text-zinc-600">{pagination.total.toLocaleString()} entries</span>
+              <span className="mt-1 block tabular-nums text-zinc-600 sm:ml-2 sm:mt-0 sm:inline">
+                {pagination.total.toLocaleString()} entries
+              </span>
             </p>
           </div>
         </div>
@@ -161,7 +163,7 @@ export default function LogsPage() {
           type="button"
           onClick={fetchLogs}
           disabled={loading}
-          className="cursor-pointer flex items-center gap-1.5 rounded-xl border admin-shell-border px-3 py-2.5 text-sm font-medium text-zinc-400 hover:border-zinc-500 hover:admin-shell-text disabled:opacity-50 transition-colors"
+          className="inline-flex w-full cursor-pointer items-center justify-center gap-1.5 rounded-xl border admin-shell-border px-3 py-2.5 text-sm font-medium text-zinc-400 transition-colors hover:border-zinc-500 hover:admin-shell-text disabled:opacity-50 sm:w-auto"
         >
           <RefreshCw className={`size-4 ${loading ? saSpinnerCls : ""}`} />
           Refresh
@@ -175,7 +177,7 @@ export default function LogsPage() {
       )}
 
       {/* ── Category filter tabs ── */}
-      <div className="flex flex-wrap gap-1.5">
+      <div className="flex min-w-0 gap-1.5 overflow-x-auto pb-1 [-webkit-overflow-scrolling:touch] sm:flex-wrap sm:overflow-visible sm:pb-0">
         {CATEGORIES.map(({ id, label, Icon, color }) => {
           const count  = id === "all" ? totalCount : (categoryCounts[id] ?? 0);
           const active = id === category;
@@ -184,7 +186,7 @@ export default function LogsPage() {
               key={id}
               type="button"
               onClick={() => setCategory(id)}
-              className={`cursor-pointer flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-xs font-medium transition-all ${
+              className={`shrink-0 cursor-pointer flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-xs font-medium transition-all ${
                 active
                   ? "border-zinc-600 admin-surface-segment-btn-active admin-shell-text"
                   : "admin-shell-border admin-surface-card text-zinc-500 hover:admin-surface-body"
@@ -206,7 +208,7 @@ export default function LogsPage() {
 
       {/* ── Search ── */}
       <SearchField
-        className="max-w-sm"
+        className="min-w-0 w-full max-w-none sm:max-w-sm"
         value={search}
         onChange={(e) => setSearch(e.target.value)}
         placeholder="Search action, actor, target…"
@@ -228,9 +230,9 @@ export default function LogsPage() {
           </p>
         </div>
       ) : (
-        <div className="overflow-hidden admin-surface-card">
+        <div className="min-w-0 overflow-hidden admin-surface-card">
           {/* Table header */}
-          <div className="admin-table-list-header hidden px-4 py-2.5 text-xs font-semibold uppercase tracking-wider admin-surface-muted sm:grid sm:grid-cols-[1fr_140px_140px_100px]">
+          <div className="admin-table-list-header hidden px-4 py-2.5 text-xs font-semibold uppercase tracking-wider admin-surface-muted md:grid md:grid-cols-[1fr_140px_140px_100px]">
             <span>Action</span>
             <span>Actor</span>
             <span>Target</span>
@@ -243,47 +245,52 @@ export default function LogsPage() {
               return (
                 <div
                   key={log.id}
-                  className="flex flex-col gap-1.5 px-4 py-3 transition-colors hover:admin-shell-hover sm:grid sm:grid-cols-[1fr_140px_140px_100px] sm:items-center sm:gap-3"
+                  className="flex flex-col gap-2 border-b admin-shell-border px-4 py-3 transition-colors last:border-b-0 hover:admin-shell-hover md:grid md:grid-cols-[1fr_140px_140px_100px] md:items-center md:gap-3 md:border-b-0"
                 >
                   {/* Action */}
-                  <div className="flex items-center gap-2.5 min-w-0">
+                  <div className="flex min-w-0 items-start gap-2.5">
                     <span className={`flex size-7 shrink-0 items-center justify-center rounded-lg ring-1 ${cs.bg} ${cs.ring}`}>
                       <span className={`size-2 rounded-full ${cs.dot}`} />
                     </span>
-                    <div className="min-w-0">
-                      <p className="truncate text-sm font-medium admin-shell-text">
+                    <div className="min-w-0 flex-1">
+                      <p className="break-words text-sm font-medium admin-shell-text md:truncate">
                         {actionLabel(log.action)}
                       </p>
-                      <div className="flex items-center gap-2 mt-0.5">
+                      <div className="mt-0.5 flex flex-wrap items-center gap-2">
                         <span className={`inline-flex rounded-full px-1.5 py-0.5 text-[9px] font-semibold capitalize ring-1 ${cs.bg} ${cs.text} ${cs.ring}`}>
                           {log.category}
                         </span>
                         {log.ip && log.ip !== "unknown" && (
-                          <span className="text-[10px] text-zinc-700">{log.ip}</span>
+                          <span className="break-all text-[10px] text-zinc-700">{log.ip}</span>
                         )}
                       </div>
                     </div>
                   </div>
 
                   {/* Actor */}
-                  <div className="flex items-center gap-2 min-w-0 sm:justify-start">
+                  <div className="flex min-w-0 items-center gap-2 md:justify-start">
+                    <span className="w-12 shrink-0 text-[10px] font-semibold uppercase tracking-wider text-zinc-600 md:hidden">Actor</span>
                     <span className="flex size-6 shrink-0 items-center justify-center rounded-full admin-rank-badge text-[10px] font-bold text-zinc-400">
                       {log.actorName?.[0]?.toUpperCase() ?? "S"}
                     </span>
-                    <span className="truncate text-xs text-zinc-400">{log.actorName}</span>
+                    <span className="min-w-0 truncate text-xs text-zinc-400">{log.actorName}</span>
                   </div>
 
                   {/* Target */}
-                  <div className="min-w-0">
-                    {log.targetName ? (
-                      <span className="truncate text-xs admin-surface-muted">{log.targetName}</span>
-                    ) : (
-                      <span className="text-xs text-zinc-700">—</span>
-                    )}
+                  <div className="flex min-w-0 items-center gap-2">
+                    <span className="w-12 shrink-0 text-[10px] font-semibold uppercase tracking-wider text-zinc-600 md:hidden">Target</span>
+                    <div className="min-w-0 flex-1">
+                      {log.targetName ? (
+                        <span className="block truncate text-xs admin-surface-muted">{log.targetName}</span>
+                      ) : (
+                        <span className="text-xs text-zinc-700">—</span>
+                      )}
+                    </div>
                   </div>
 
                   {/* Time */}
-                  <div className="sm:text-right">
+                  <div className="flex min-w-0 items-center gap-2 md:block md:text-right">
+                    <span className="w-12 shrink-0 text-[10px] font-semibold uppercase tracking-wider text-zinc-600 md:hidden">Time</span>
                     <span
                       className="text-xs admin-surface-faint"
                       title={log.createdAt ? new Date(log.createdAt).toLocaleString() : ""}
@@ -296,7 +303,7 @@ export default function LogsPage() {
             })}
           </div>
 
-          <div className="px-4 pb-4">
+          <div className="min-w-0 px-4 pb-4">
             <PaginationBar
               page={page}
               totalPages={pagination.pages}

@@ -86,7 +86,7 @@ export default function CustomerSiteSidebar({
 
       <nav
 
-        className="flex gap-1.5 overflow-x-auto pb-1 lg:hidden [scrollbar-width:none]"
+        className="-mx-1 flex min-w-0 gap-1.5 overflow-x-auto px-1 pb-1 lg:hidden [scrollbar-width:none]"
 
         aria-label="Customer site sections"
 
@@ -134,7 +134,7 @@ export default function CustomerSiteSidebar({
 
 
 
-      <aside className="hidden lg:block lg:w-56 lg:shrink-0">
+      <aside className="hidden min-w-0 lg:block lg:w-56 lg:shrink-0">
 
         <div className="sticky top-24 max-h-[calc(100vh-6rem)] overflow-y-auto rounded-2xl admin-surface-card p-3 [scrollbar-width:thin]">
 

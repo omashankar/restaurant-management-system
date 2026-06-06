@@ -60,7 +60,12 @@ export const adminTableSelectCls =
 const TABLE_SELECT_BASE =
   "admin-inline-select h-8 w-[7.25rem] shrink-0 cursor-pointer rounded-lg px-2 text-center text-xs font-semibold capitalize outline-none ring-1 transition-colors";
 
-export const supportTicketDrawerOverlayCls = "fixed inset-0 z-[120] flex justify-end bg-[var(--admin-overlay)] p-0";
+export { adminPageDrawerOverlay as supportTicketDrawerOverlayCls } from "@/config/adminSurfaceClasses";
+
+export const supportTicketDrawerPanelCls =
+  "relative flex w-full max-h-[min(92dvh,100dvh)] flex-col overflow-y-auto rounded-t-2xl border admin-shell-border admin-surface-card-solid p-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:h-full sm:max-h-none sm:max-w-xl sm:rounded-none sm:border-l sm:border-t-0 sm:pb-4";
+
+export const supportTicketStatsGridCls = "grid min-w-0 grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5";
 
 export const SUPPORT_STAT_ITEMS = [
   { key: "total", label: "Total", field: "total", valueCls: "admin-shell-text" },

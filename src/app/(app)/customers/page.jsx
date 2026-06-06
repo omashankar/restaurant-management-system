@@ -222,15 +222,15 @@ export default function CustomersModulePage() {
 
   if (!hydrated || loading) {
     return (
-      <div className="space-y-6">
-        <div className="h-8 w-40 rounded-lg admin-progress-track animate-pulse" />
+      <div className="min-w-0 w-full max-w-full space-y-6 overflow-x-hidden">
+        <div className="h-8 w-40 animate-pulse rounded-lg admin-progress-track" />
         <TableSkeleton rows={8} cols={6} />
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
+    <div className="min-w-0 w-full max-w-full space-y-6 overflow-x-hidden">
       {limited ? (
         <RoleCard
           variant="limited"
@@ -239,8 +239,8 @@ export default function CustomersModulePage() {
         />
       ) : null}
 
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div>
+      <div className="flex min-w-0 flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div className="min-w-0">
           <h1 className="admin-page-title text-2xl font-semibold tracking-tight">
             Customers
           </h1>
@@ -251,7 +251,7 @@ export default function CustomersModulePage() {
         <button
           type="button"
           onClick={openCreate}
-          className="cursor-pointer inline-flex items-center gap-2 rounded-xl bg-ra-primary px-4 py-2.5 text-sm font-semibold text-zinc-950 hover:brightness-110"
+          className="inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-ra-primary px-4 py-2.5 text-sm font-semibold text-zinc-950 hover:brightness-110 sm:w-auto"
         >
           <Plus className="size-4" />
           Add customer
@@ -272,7 +272,7 @@ export default function CustomersModulePage() {
           <select
             value={visitFilter}
             onChange={(e) => setVisitFilter(e.target.value)}
-            className="admin-surface-card px-3 py-2 text-sm admin-shell-text"
+            className="w-full admin-surface-card px-3 py-2 text-sm admin-shell-text sm:w-auto"
           >
             <option value="all">All visits</option>
             <option value="1-5">1–5 visits</option>
@@ -297,6 +297,65 @@ export default function CustomersModulePage() {
           }
         />
       ) : (
+        <div className="min-w-0 overflow-hidden admin-surface-card">
+          <div className="space-y-2 p-3 md:hidden">
+            {pageRows.map((row) => (
+              <div
+                key={row.id}
+                className="rounded-xl border admin-shell-border bg-[var(--admin-surface-soft)] p-3"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0 flex-1">
+                    <p className="break-words font-medium admin-shell-text">{row.name}</p>
+                    <p className="mt-1 tabular-nums text-xs admin-surface-muted">{row.phone}</p>
+                    {row.email ? (
+                      <p className="mt-0.5 break-all text-xs admin-surface-muted">{row.email}</p>
+                    ) : null}
+                  </div>
+                  <div className="flex shrink-0 items-center gap-1">
+                    <Link
+                      href={`/customers/${row.id}`}
+                      className="admin-table-icon-btn rounded-lg p-2 admin-surface-muted transition-colors hover:bg-[var(--admin-hover)] hover:text-sky-600"
+                      aria-label="View"
+                    >
+                      <Eye className="size-4" />
+                    </Link>
+                    <AdminTableIconButton onClick={() => openEdit(row)} aria-label="Edit">
+                      <Pencil className="size-4" />
+                    </AdminTableIconButton>
+                    <AdminTableIconButton
+                      variant="danger"
+                      onClick={() => setDeleteTarget(row)}
+                      disabled={!canDelete}
+                      aria-label="Delete"
+                    >
+                      <Trash2 className="size-4" />
+                    </AdminTableIconButton>
+                  </div>
+                </div>
+                <div className="mt-3 flex flex-wrap items-center gap-3 text-xs admin-surface-muted">
+                  <span>
+                    Visits: <span className="font-semibold tabular-nums admin-surface-body">{row.visits}</span>
+                  </span>
+                  <span>
+                    Last: <span className="admin-surface-body">{row.lastVisit}</span>
+                  </span>
+                </div>
+              </div>
+            ))}
+            <div className="px-1 pb-1">
+              <PaginationBar
+                page={page}
+                totalPages={totalPages}
+                total={total}
+                pageSize={pageSize}
+                onPageChange={setPage}
+                hideWhenSinglePage
+              />
+            </div>
+          </div>
+
+          <div className="hidden md:block">
         <DataTableShell>
           <AdminTable>
             <AdminTableHead>
@@ -311,7 +370,9 @@ export default function CustomersModulePage() {
             <AdminTableBody>
               {pageRows.map((row) => (
                 <AdminTableRow key={row.id}>
-                  <AdminTableTd className="font-medium admin-shell-text">{row.name}</AdminTableTd>
+                  <AdminTableTd className="max-w-[10rem] font-medium admin-shell-text sm:max-w-none">
+                    <span className="block truncate">{row.name}</span>
+                  </AdminTableTd>
                   <AdminTableTd className="tabular-nums admin-surface-muted">{row.phone}</AdminTableTd>
                   <AdminTableTd className="tabular-nums admin-surface-body">{row.visits}</AdminTableTd>
                   <AdminTableTd className="admin-surface-muted">{row.lastVisit}</AdminTableTd>
@@ -350,6 +411,8 @@ export default function CustomersModulePage() {
             />
           </div>
         </DataTableShell>
+          </div>
+        </div>
       )}
 
       <Modal
@@ -357,18 +420,18 @@ export default function CustomersModulePage() {
         onClose={() => setModalOpen(false)}
         title={editingId ? "Edit customer" : "Add customer"}
         footer={
-          <div className="flex justify-end gap-2">
+          <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
             <button
               type="button"
               onClick={() => setModalOpen(false)}
-              className="cursor-pointer rounded-xl border admin-shell-border px-4 py-2 text-sm admin-surface-body"
+              className="inline-flex w-full cursor-pointer items-center justify-center rounded-xl border admin-shell-border px-4 py-2 text-sm admin-surface-body sm:w-auto"
             >
               Cancel
             </button>
             <button
               type="button"
               onClick={saveCustomer}
-              className="cursor-pointer rounded-xl bg-ra-primary px-4 py-2 text-sm font-semibold text-zinc-950 hover:brightness-110"
+              className="inline-flex w-full cursor-pointer items-center justify-center rounded-xl bg-ra-primary px-4 py-2 text-sm font-semibold text-zinc-950 hover:brightness-110 sm:w-auto"
             >
               Save
             </button>

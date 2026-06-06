@@ -94,7 +94,7 @@ export default function GatewaySettingsSection({ data, onChange, onSave, showToa
       </div>
 
       {/* Gateway selector — card grid */}
-      <div className="mb-5 grid grid-cols-3 gap-2 sm:grid-cols-5">
+      <div className="mb-5 grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-5">
         {GATEWAYS.map((g) => {
           const isEnabled = Boolean(data[g.id]?.enabled);
           const isActive  = activeGw === g.id;
@@ -118,6 +118,7 @@ export default function GatewaySettingsSection({ data, onChange, onSave, showToa
                     width={64}
                     height={32}
                     className="max-h-8 w-auto object-contain"
+                    style={{ width: "auto", height: "auto", maxHeight: "2rem" }}
                     onError={(e) => { e.currentTarget.style.display = "none"; e.currentTarget.nextSibling.style.display = "flex"; }}
                   />
                 ) : (
@@ -140,14 +141,14 @@ export default function GatewaySettingsSection({ data, onChange, onSave, showToa
       {/* Active gateway form */}
       <div className="rounded-xl border admin-shell-border admin-surface-card p-4">
         {/* Gateway header */}
-        <div className="mb-4 flex items-center justify-between gap-3">
-          <div>
+        <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="min-w-0">
             <p className="font-semibold admin-shell-text">
               {activeInfo?.icon} {activeInfo?.label}
             </p>
             <p className="text-xs admin-surface-muted">{activeInfo?.desc}</p>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex shrink-0 flex-wrap items-center gap-3">
             {/* Test mode badge */}
             {!isCustom && gw.enabled && (
               <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${

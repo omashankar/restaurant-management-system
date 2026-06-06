@@ -39,6 +39,7 @@ export function chartLabelFromDate(dateStr, mode = "short") {
 
 export function dailyRevenueToChartPoints(dailyRevenue = [], labelMode = "short") {
   return dailyRevenue.map((d) => ({
+    key: d.date ?? d.label,
     label: chartLabelFromDate(d.date, labelMode),
     sales: d.revenue ?? 0,
     orders: d.orders ?? 0,
@@ -59,7 +60,7 @@ export function groupDailyByMonth(dailyRevenue = []) {
     .sort((a, b) => a.month.localeCompare(b.month))
     .map((m) => {
       const label = new Date(`${m.month}-01T12:00:00`).toLocaleDateString("en-US", { month: "short" });
-      return { label, month: label, sales: m.sales, orders: m.orders };
+      return { key: m.month, label, month: label, sales: m.sales, orders: m.orders };
     });
 }
 
@@ -72,6 +73,7 @@ export function buildSalesChartData({ todayKpis, weekDaily, monthDaily }) {
       ? dailyRevenueToChartPoints(todayFromWeek, "short")
       : [
           {
+            key: todayStr,
             label: "Today",
             sales: todayKpis?.totalRevenue ?? 0,
             orders: todayKpis?.totalOrders ?? 0,

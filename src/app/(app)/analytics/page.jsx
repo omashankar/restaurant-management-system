@@ -34,12 +34,12 @@ function KpiCard({ title, value, subtitle, icon: Icon, color = "emerald" }) {
   };
   const c = colors[color] ?? colors.emerald;
   return (
-    <div className="admin-surface-card p-5">
-      <div className="flex items-start justify-between gap-3">
-        <div>
+    <div className="admin-surface-card p-4 sm:p-5">
+      <div className="flex min-w-0 items-start justify-between gap-3">
+        <div className="min-w-0 flex-1">
           <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500">{title}</p>
-          <p className={`mt-2 text-2xl font-bold ${c.val}`}>{value}</p>
-          {subtitle && <p className="mt-1 text-xs admin-surface-faint">{subtitle}</p>}
+          <p className={`mt-2 break-words text-xl font-bold sm:text-2xl ${c.val}`}>{value}</p>
+          {subtitle && <p className="mt-1 text-xs leading-snug admin-surface-faint">{subtitle}</p>}
         </div>
         <span className={`flex size-10 shrink-0 items-center justify-center rounded-xl ring-1 ${c.bg} ${c.ring}`}>
           <Icon className={`size-5 ${c.icon}`} />
@@ -86,14 +86,14 @@ export default function AnalyticsPage() {
   /* ── Skeleton ── */
   if (loading) {
     return (
-      <div className="space-y-6">
+      <div className="min-w-0 w-full max-w-full space-y-6 overflow-x-hidden">
         <div className="h-8 w-40 animate-pulse rounded-lg admin-progress-track" />
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <div className="grid min-w-0 gap-4 sm:grid-cols-2 xl:grid-cols-4">
           {Array.from({ length: 4 }).map((_, i) => (
             <div key={i} className="h-28 animate-pulse admin-surface-card" />
           ))}
         </div>
-        <div className="grid gap-6 lg:grid-cols-2">
+        <div className="grid min-w-0 gap-6 lg:grid-cols-2">
           {Array.from({ length: 4 }).map((_, i) => (
             <div key={i} className="h-64 animate-pulse admin-surface-card" />
           ))}
@@ -115,23 +115,23 @@ export default function AnalyticsPage() {
   }));
 
   return (
-    <div className="space-y-6">
+    <div className="min-w-0 w-full max-w-full space-y-6 overflow-x-hidden">
 
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div className="flex items-start gap-3">
-          <span className={`mt-1 ${raIconBadgeCls}`}>
+      <div className="flex min-w-0 flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div className="flex min-w-0 items-start gap-3">
+          <span className={`mt-1 shrink-0 ${raIconBadgeCls}`}>
             <BarChart3 className="size-5" />
           </span>
-          <div>
+          <div className="min-w-0">
             <h1 className="admin-page-title text-2xl font-semibold tracking-tight">Analytics</h1>
             <p className="admin-page-desc mt-1 text-sm">Revenue, orders, and performance insights.</p>
           </div>
         </div>
-        <div className="flex items-center gap-2">
-          <div className="flex rounded-xl border admin-shell-border p-0.5">
+        <div className="flex w-full min-w-0 flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">
+          <div className="flex min-w-0 overflow-x-auto rounded-xl border admin-shell-border p-0.5 [scrollbar-width:none]">
             {RANGES.map((r) => (
               <button key={r.value} type="button" onClick={() => setRange(r.value)}
-                className={`cursor-pointer rounded-lg px-3 py-1.5 text-xs font-semibold transition-all ${
+                className={`shrink-0 cursor-pointer whitespace-nowrap rounded-lg px-3 py-1.5 text-xs font-semibold transition-all ${
                   range === r.value ? "bg-ra-primary text-zinc-950" : "text-zinc-500 hover:admin-surface-body"
                 }`}>
                 {r.label}
@@ -139,8 +139,9 @@ export default function AnalyticsPage() {
             ))}
           </div>
           <button type="button" onClick={fetchAnalytics}
-            className="cursor-pointer flex items-center gap-1.5 rounded-xl border admin-shell-border px-3 py-2 text-xs font-medium text-zinc-400 hover:border-zinc-500 hover:admin-shell-text transition-colors">
+            className="inline-flex w-full cursor-pointer items-center justify-center gap-1.5 rounded-xl border admin-shell-border px-3 py-2 text-xs font-medium text-zinc-400 transition-colors hover:border-zinc-500 hover:admin-shell-text sm:w-auto">
             <RefreshCw className="size-3.5" />
+            Refresh
           </button>
         </div>
       </div>
@@ -151,7 +152,7 @@ export default function AnalyticsPage() {
         </div>
       ) : null}
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid min-w-0 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <KpiCard title="Total Revenue"   value={fmt(kpis.totalRevenue ?? 0)}  subtitle={`Last ${range} days · non-cancelled`} icon={DollarSign}  color="emerald" />
         <KpiCard title="Total Orders"    value={kpis.totalOrders?.toLocaleString() ?? 0}          subtitle={`Last ${range} days`} icon={ShoppingBag} color="indigo"  />
         <KpiCard title="Avg Order Value" value={fmt(kpis.avgOrderValue ?? 0)}   subtitle="Per order (non-cancelled)"      icon={TrendingUp}  color="amber"   />

@@ -12,6 +12,7 @@ import { useModuleData } from "@/context/ModuleDataContext";
 import { useToast } from "@/hooks/useToast";
 import SearchField from "@/components/ui/SearchField";
 import PaginationBar from "@/components/ui/PaginationBar";
+import DataTableShell from "@/components/ui/DataTableShell";
 import { usePaginatedList } from "@/hooks/usePaginatedList";
 import {
   AdminTable,
@@ -214,7 +215,7 @@ export default function MenuItemsPage() {
 
   if (loading) {
     return (
-      <div className="space-y-8">
+      <div className="min-w-0 w-full max-w-full space-y-8 overflow-x-hidden">
         <div className="h-10 w-64 animate-pulse rounded-lg admin-progress-track" />
         <GridSkeleton />
       </div>
@@ -222,53 +223,54 @@ export default function MenuItemsPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="min-w-0 w-full max-w-full space-y-6 overflow-x-hidden">
       {fetchError && (
         <div className="rounded-xl border border-red-500/25 bg-red-500/10 px-4 py-3 text-sm text-red-400">
           {fetchError}
         </div>
       )}
       {/* Header */}
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-        <div className="flex items-start gap-3">
-          <span className={`mt-1 ${raIconBadgeCls}`}>
+      <div className="flex min-w-0 flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div className="flex min-w-0 items-start gap-3">
+          <span className={`mt-1 shrink-0 ${raIconBadgeCls}`}>
             <UtensilsCrossed className="size-5" />
           </span>
-          <div>
+          <div className="min-w-0">
             <h1 className="admin-page-title text-2xl font-semibold tracking-tight md:text-3xl">Menu Items</h1>
             <p className="admin-page-desc mt-1 text-sm">Full catalog · filter, search, and update.</p>
           </div>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex w-full min-w-0 flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">
           <button type="button" onClick={fetchAll}
-            className="cursor-pointer flex items-center gap-1.5 rounded-xl border admin-shell-border px-3 py-2.5 text-sm font-medium text-zinc-400 hover:border-zinc-500 hover:admin-shell-text transition-colors">
+            className="inline-flex w-full cursor-pointer items-center justify-center gap-1.5 rounded-xl border admin-shell-border px-3 py-2.5 text-sm font-medium text-zinc-400 transition-colors hover:border-zinc-500 hover:admin-shell-text sm:w-auto">
             <RefreshCw className="size-4" />
+            <span className="sm:hidden">Refresh</span>
           </button>
           <button type="button" onClick={openCreate}
-            className="cursor-pointer inline-flex items-center gap-2 rounded-xl bg-ra-primary px-5 py-2.5 text-sm font-bold text-zinc-950 shadow-ra-primary-glow hover:brightness-110 active:scale-[0.98]">
+            className="inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-ra-primary px-5 py-2.5 text-sm font-bold text-zinc-950 shadow-ra-primary-glow hover:brightness-110 active:scale-[0.98] sm:w-auto">
             <Plus className="size-4" strokeWidth={2.5} /> Add Item
           </button>
         </div>
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid min-w-0 grid-cols-3 gap-2 sm:gap-3">
         {[
           { label: "Total",    value: stats.total,    color: "admin-shell-text",    bg: "admin-surface-card",   border: "admin-shell-border"       },
           { label: "Active",   value: stats.active,   color: "text-ra-primary", bg: "bg-ra-primary-5", border: "border-ra-primary-20" },
           { label: "Inactive", value: stats.inactive, color: "text-zinc-500",    bg: "admin-surface-card",   border: "admin-shell-border"       },
         ].map(({ label, value, color, bg, border }) => (
-          <div key={label} className={`rounded-2xl border px-4 py-3 ${bg} ${border}`}>
-            <p className={`text-xl font-bold ${color}`}>{value}</p>
-            <p className="mt-0.5 text-xs admin-surface-muted">{label}</p>
+          <div key={label} className={`min-w-0 rounded-2xl border px-3 py-2.5 sm:px-4 sm:py-3 ${bg} ${border}`}>
+            <p className={`text-lg font-bold tabular-nums sm:text-xl ${color}`}>{value}</p>
+            <p className="mt-0.5 text-[11px] admin-surface-muted sm:text-xs">{label}</p>
           </div>
         ))}
       </div>
 
       {/* Category tabs + search + view toggle */}
-      <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
+      <div className="flex min-w-0 flex-col gap-3 lg:flex-row lg:items-center">
         {/* Category pills */}
-        <div className="flex-1 overflow-x-auto bg-transparent pb-1 [scrollbar-width:none]">
+        <div className="min-w-0 flex-1 overflow-x-auto bg-transparent pb-1 [scrollbar-width:none]">
           <div className="flex min-w-max gap-2 bg-transparent">
             {[{ id: "all", name: "All" }, ...categoriesWithItems].map((cat) => (
               <button key={cat.id} type="button" onClick={() => setActiveCategory(cat.id)}
@@ -283,23 +285,23 @@ export default function MenuItemsPage() {
           </div>
         </div>
 
-        <div className="flex items-center gap-2 shrink-0">
+        <div className="flex min-w-0 w-full shrink-0 flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">
           {/* Search */}
           <SearchField
-            className="w-48 shrink-0"
+            className="w-full sm:w-48"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search…"
             inputClassName="focus-ra-primary"
           />
           {/* View toggle */}
-          <div className="flex rounded-xl border admin-shell-border p-0.5">
+          <div className="flex w-full rounded-xl border admin-shell-border p-0.5 sm:w-auto">
             <button type="button" onClick={() => setViewMode("grid")}
-              className={`cursor-pointer flex items-center gap-1 rounded-lg px-3 py-1.5 text-xs font-semibold transition-all ${viewMode === "grid" ? "bg-ra-primary text-zinc-950" : "text-zinc-500 hover:admin-surface-body"}`}>
+              className={`flex flex-1 cursor-pointer items-center justify-center gap-1 rounded-lg px-3 py-1.5 text-xs font-semibold transition-all sm:flex-none ${viewMode === "grid" ? "bg-ra-primary text-zinc-950" : "text-zinc-500 hover:admin-surface-body"}`}>
               <LayoutGrid className="size-3.5" />
             </button>
             <button type="button" onClick={() => setViewMode("list")}
-              className={`cursor-pointer flex items-center gap-1 rounded-lg px-3 py-1.5 text-xs font-semibold transition-all ${viewMode === "list" ? "bg-ra-primary text-zinc-950" : "text-zinc-500 hover:admin-surface-body"}`}>
+              className={`flex flex-1 cursor-pointer items-center justify-center gap-1 rounded-lg px-3 py-1.5 text-xs font-semibold transition-all sm:flex-none ${viewMode === "list" ? "bg-ra-primary text-zinc-950" : "text-zinc-500 hover:admin-surface-body"}`}>
               <List className="size-3.5" />
             </button>
           </div>
@@ -315,7 +317,7 @@ export default function MenuItemsPage() {
         />
       ) : viewMode === "grid" ? (
         <>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          <div className="grid min-w-0 grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {pageRows.map((item) => (
               <MenuCard key={item.id} variant="menu" item={item} onEdit={openEdit} onDelete={setDeleteTarget} />
             ))}
@@ -331,56 +333,113 @@ export default function MenuItemsPage() {
         </>
       ) : (
         /* List view */
-        <div className="overflow-hidden admin-surface-card">
-          <AdminTable>
-            <AdminTableHead>
-              <AdminTableHeadRow>
-                <AdminTableTh>Name</AdminTableTh>
-                <AdminTableTh>Category</AdminTableTh>
-                <AdminTableTh>Price</AdminTableTh>
-                <AdminTableTh>Status</AdminTableTh>
-                <AdminTableThActions />
-              </AdminTableHeadRow>
-            </AdminTableHead>
-            <AdminTableBody>
-              {pageRows.map((item) => (
-                <AdminTableRow key={item.id}>
-                  <AdminTableTd className="font-medium admin-shell-text">
-                    <span className="inline-flex items-center gap-1.5">
-                      <AdminFoodTypeIndicator type={item.itemType} size={13} />
-                      {item.name}
-                    </span>
-                  </AdminTableTd>
-                  <AdminTableTd className="admin-surface-muted">{item.categoryName}</AdminTableTd>
-                  <AdminTableTd className="font-semibold text-ra-primary">${Number(item.price).toFixed(2)}</AdminTableTd>
-                  <AdminTableTd>
-                    <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold ring-1 ${
-                      item.status === "active"
-                        ? "bg-ra-primary-15 text-ra-primary-muted ring-ra-primary-25"
-                        : "bg-zinc-500/15 text-zinc-400 ring-zinc-500/25"
-                    }`}>{item.status}</span>
-                  </AdminTableTd>
-                  <AdminTableActionsCell>
+        <div className="min-w-0 overflow-hidden admin-surface-card">
+          <div className="space-y-2 p-3 md:hidden">
+            {pageRows.map((item) => (
+              <div
+                key={item.id}
+                className="rounded-xl border admin-shell-border bg-[var(--admin-surface-soft)] p-3"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0 flex-1">
+                    <p className="flex items-start gap-1.5 break-words font-medium admin-shell-text">
+                      <span className="mt-0.5 shrink-0">
+                        <AdminFoodTypeIndicator type={item.itemType} size={13} />
+                      </span>
+                      <span>{item.name}</span>
+                    </p>
+                    <p className="mt-1 text-xs admin-surface-muted">{item.categoryName}</p>
+                  </div>
+                  <div className="flex shrink-0 items-center gap-1">
                     <AdminTableIconButton onClick={() => openEdit(item)} aria-label="Edit">
                       <Pencil className="size-4" />
                     </AdminTableIconButton>
                     <AdminTableIconButton variant="danger" onClick={() => setDeleteTarget(item)} aria-label="Delete">
                       <Trash2 className="size-4" />
                     </AdminTableIconButton>
-                  </AdminTableActionsCell>
-                </AdminTableRow>
-              ))}
-            </AdminTableBody>
-          </AdminTable>
-          <div className="px-4 pb-4">
-            <PaginationBar
-              page={page}
-              totalPages={totalPages}
-              total={total}
-              pageSize={pageSize}
-              onPageChange={setPage}
-              hideWhenSinglePage
-            />
+                  </div>
+                </div>
+                <div className="mt-3 flex flex-wrap items-center gap-2">
+                  <span className="font-semibold tabular-nums text-ra-primary">
+                    ${Number(item.price).toFixed(2)}
+                  </span>
+                  <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold capitalize ring-1 ${
+                    item.status === "active"
+                      ? "bg-ra-primary-15 text-ra-primary-muted ring-ra-primary-25"
+                      : "bg-zinc-500/15 text-zinc-400 ring-zinc-500/25"
+                  }`}>
+                    {item.status}
+                  </span>
+                </div>
+              </div>
+            ))}
+            <div className="px-1 pb-1">
+              <PaginationBar
+                page={page}
+                totalPages={totalPages}
+                total={total}
+                pageSize={pageSize}
+                onPageChange={setPage}
+                hideWhenSinglePage
+              />
+            </div>
+          </div>
+
+          <div className="hidden md:block">
+            <DataTableShell>
+              <AdminTable>
+                <AdminTableHead>
+                  <AdminTableHeadRow>
+                    <AdminTableTh>Name</AdminTableTh>
+                    <AdminTableTh>Category</AdminTableTh>
+                    <AdminTableTh>Price</AdminTableTh>
+                    <AdminTableTh>Status</AdminTableTh>
+                    <AdminTableThActions />
+                  </AdminTableHeadRow>
+                </AdminTableHead>
+                <AdminTableBody>
+                  {pageRows.map((item) => (
+                    <AdminTableRow key={item.id}>
+                      <AdminTableTd className="max-w-[12rem] font-medium admin-shell-text sm:max-w-none">
+                        <span className="inline-flex min-w-0 items-center gap-1.5">
+                          <span className="shrink-0">
+                            <AdminFoodTypeIndicator type={item.itemType} size={13} />
+                          </span>
+                          <span className="truncate">{item.name}</span>
+                        </span>
+                      </AdminTableTd>
+                      <AdminTableTd className="admin-surface-muted">{item.categoryName}</AdminTableTd>
+                      <AdminTableTd className="font-semibold tabular-nums text-ra-primary">${Number(item.price).toFixed(2)}</AdminTableTd>
+                      <AdminTableTd>
+                        <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold ring-1 ${
+                          item.status === "active"
+                            ? "bg-ra-primary-15 text-ra-primary-muted ring-ra-primary-25"
+                            : "bg-zinc-500/15 text-zinc-400 ring-zinc-500/25"
+                        }`}>{item.status}</span>
+                      </AdminTableTd>
+                      <AdminTableActionsCell>
+                        <AdminTableIconButton onClick={() => openEdit(item)} aria-label="Edit">
+                          <Pencil className="size-4" />
+                        </AdminTableIconButton>
+                        <AdminTableIconButton variant="danger" onClick={() => setDeleteTarget(item)} aria-label="Delete">
+                          <Trash2 className="size-4" />
+                        </AdminTableIconButton>
+                      </AdminTableActionsCell>
+                    </AdminTableRow>
+                  ))}
+                </AdminTableBody>
+              </AdminTable>
+              <div className="px-4 pb-4">
+                <PaginationBar
+                  page={page}
+                  totalPages={totalPages}
+                  total={total}
+                  pageSize={pageSize}
+                  onPageChange={setPage}
+                  hideWhenSinglePage
+                />
+              </div>
+            </DataTableShell>
           </div>
         </div>
       )}
@@ -389,13 +448,13 @@ export default function MenuItemsPage() {
       <Modal open={modalOpen} onClose={() => setModalOpen(false)}
         title={editingId ? "Edit Menu Item" : "Add Menu Item"}
         footer={
-          <div className="flex justify-end gap-2">
+          <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
             <button type="button" onClick={() => setModalOpen(false)}
-              className="cursor-pointer rounded-xl border admin-shell-border px-4 py-2 text-sm admin-surface-body hover:border-zinc-500">
+              className="w-full cursor-pointer rounded-xl border admin-shell-border px-4 py-2 text-sm admin-surface-body hover:border-zinc-500 sm:w-auto">
               Cancel
             </button>
             <button type="button" onClick={save} disabled={saving}
-              className="cursor-pointer rounded-xl bg-ra-primary px-4 py-2 text-sm font-semibold text-zinc-950 hover:brightness-110 disabled:opacity-40">
+              className="w-full cursor-pointer rounded-xl bg-ra-primary px-4 py-2 text-sm font-semibold text-zinc-950 hover:brightness-110 disabled:opacity-40 sm:w-auto">
               {saving ? "Saving…" : "Save"}
             </button>
           </div>

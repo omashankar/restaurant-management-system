@@ -135,7 +135,7 @@ function PricingCard({ plan, onAssign, pricingView }) {
   const subscribers = plan?.subscribers ?? 0;
 
   return (
-    <div className={`relative flex flex-col rounded-2xl border p-6 ring-1 transition-all duration-300 hover:-translate-y-0.5 ${accent.gradient} ${accent.border} ${accent.ring}`}>
+    <div className={`relative flex min-w-0 flex-col rounded-2xl border p-5 ring-1 transition-all duration-300 sm:p-6 ${plan.recommended ? "pt-8 sm:pt-6" : ""} hover:-translate-y-0.5 ${accent.gradient} ${accent.border} ${accent.ring}`}>
 
       {/* Recommended badge */}
       {plan.recommended && (
@@ -148,10 +148,10 @@ function PricingCard({ plan, onAssign, pricingView }) {
       )}
 
       {/* Plan name + badge */}
-      <div className="flex items-center justify-between gap-2">
-          <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-sm font-bold ${accent.badge}`}>
-          <span className={`size-1.5 rounded-full ${accent.dot}`} />
-          {plan.name}
+      <div className="flex min-w-0 items-center justify-between gap-2">
+          <span className={`inline-flex min-w-0 max-w-full items-center gap-1.5 rounded-full px-3 py-1 text-sm font-bold ${accent.badge}`}>
+          <span className={`size-1.5 shrink-0 rounded-full ${accent.dot}`} />
+          <span className="truncate">{plan.name}</span>
         </span>
         {subscribers > 0 && (
           <span className="flex items-center gap-1 text-[10px] admin-surface-faint">
@@ -163,7 +163,7 @@ function PricingCard({ plan, onAssign, pricingView }) {
       {/* Price */}
       <div className="mt-5">
         <div className="flex items-end gap-1">
-          <span className={`text-4xl font-extrabold tabular-nums tracking-tight ${accent.price}`}>
+          <span className={`text-3xl font-extrabold tabular-nums tracking-tight sm:text-4xl ${accent.price}`}>
             {(() => {
               const value = pricingView === "yearly" ? Number(plan.yearlyPrice ?? 0) : Number(plan.monthlyPrice ?? 0);
               return value === 0 ? "Free" : `₹${value}`;
@@ -173,7 +173,7 @@ function PricingCard({ plan, onAssign, pricingView }) {
             <span className="mb-1 text-sm admin-surface-muted">/{pricingView === "yearly" ? "year" : "month"}</span>
           )}
         </div>
-        <p className="mt-1.5 text-sm admin-surface-muted leading-relaxed">{plan.description}</p>
+        <p className="mt-1.5 break-words text-sm leading-relaxed admin-surface-muted">{plan.description}</p>
       </div>
 
       {/* Divider */}
@@ -192,7 +192,7 @@ function PricingCard({ plan, onAssign, pricingView }) {
                 <X className="size-3 admin-surface-faint" strokeWidth={3} />
               </span>
             )}
-            <span className={`text-sm ${f.included ? "admin-surface-body" : "admin-surface-faint line-through"}`}>
+            <span className={`break-words text-sm ${f.included ? "admin-surface-body" : "admin-surface-faint line-through"}`}>
               {f.label}
             </span>
           </li>
@@ -445,52 +445,57 @@ export default function PlansPage() {
   });
 
   return (
-    <div className="space-y-10">
+    <div className="min-w-0 w-full max-w-full space-y-6 overflow-x-hidden sm:space-y-10">
 
       {/* ── Page header ── */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div className="flex items-start gap-3">
-          <span className={`mt-1 ${saIconBadgeCls}`}>
+      <div className="flex min-w-0 flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div className="flex min-w-0 items-start gap-3">
+          <span className={`mt-1 shrink-0 ${saIconBadgeCls}`}>
             <CreditCard className="size-5" />
           </span>
-          <div>
-            <h1 className="admin-page-title text-2xl font-semibold tracking-tight">Plans & Pricing</h1>
+          <div className="min-w-0">
+            <h1 className="admin-page-title break-words text-2xl font-semibold tracking-tight">Plans & Pricing</h1>
             <p className="admin-page-desc mt-1 text-sm">
               Define subscription tiers for your SaaS. Assign plans to restaurants.
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={() => setActiveTab("preview")}
-            className={`cursor-pointer rounded-xl px-3 py-2 text-sm font-medium transition-colors ${
-              activeTab === "preview"
-                ? "bg-[var(--admin-hover-strong)] admin-shell-text"
-                : "admin-surface-muted hover:bg-[var(--admin-hover)] hover:admin-surface-body"
-            }`}
-          >
-            Pricing Preview
-          </button>
-          <button
-            type="button"
-            onClick={() => setActiveTab("manage")}
-            className={`cursor-pointer rounded-xl px-3 py-2 text-sm font-medium transition-colors ${
-              activeTab === "manage"
-                ? "bg-[var(--admin-hover-strong)] admin-shell-text"
-                : "admin-surface-muted hover:bg-[var(--admin-hover)] hover:admin-surface-body"
-            }`}
-          >
-            Manage Plans
-          </button>
-          <button type="button" onClick={fetchPlans}
-            className="cursor-pointer flex items-center gap-1.5 rounded-xl border admin-shell-border px-3 py-2.5 text-sm font-medium text-zinc-400 hover:border-zinc-500 hover:admin-shell-text transition-colors">
-            <RefreshCw className={`size-4 ${loading ? saSpinnerCls : ""}`} />
-          </button>
-          <button type="button" onClick={openCreate}
-            className="cursor-pointer inline-flex items-center gap-2 rounded-xl bg-sa-primary px-4 py-2.5 text-sm font-semibold text-zinc-950 hover:brightness-110 transition-colors">
-            <Plus className="size-4" /> New Plan
-          </button>
+        <div className="flex w-full min-w-0 flex-col items-stretch gap-2 sm:w-auto sm:flex-row sm:flex-wrap sm:items-center sm:justify-end">
+          <div className="grid w-full grid-cols-2 gap-1 sm:flex sm:w-auto sm:gap-2">
+            <button
+              type="button"
+              onClick={() => setActiveTab("preview")}
+              className={`cursor-pointer rounded-xl px-2 py-2 text-center text-xs font-medium transition-colors sm:px-3 sm:text-sm ${
+                activeTab === "preview"
+                  ? "bg-[var(--admin-hover-strong)] admin-shell-text"
+                  : "admin-surface-muted hover:bg-[var(--admin-hover)] hover:admin-surface-body"
+              }`}
+            >
+              Pricing Preview
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab("manage")}
+              className={`cursor-pointer rounded-xl px-2 py-2 text-center text-xs font-medium transition-colors sm:px-3 sm:text-sm ${
+                activeTab === "manage"
+                  ? "bg-[var(--admin-hover-strong)] admin-shell-text"
+                  : "admin-surface-muted hover:bg-[var(--admin-hover)] hover:admin-surface-body"
+              }`}
+            >
+              Manage Plans
+            </button>
+          </div>
+          <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">
+            <button type="button" onClick={fetchPlans}
+              className="cursor-pointer flex w-full items-center justify-center gap-1.5 rounded-xl border admin-shell-border px-3 py-2.5 text-sm font-medium text-zinc-400 transition-colors hover:border-zinc-500 hover:admin-shell-text sm:w-auto">
+              <RefreshCw className={`size-4 ${loading ? saSpinnerCls : ""}`} />
+              <span className="sm:hidden">Refresh</span>
+            </button>
+            <button type="button" onClick={openCreate}
+              className="cursor-pointer inline-flex w-full items-center justify-center gap-2 rounded-xl bg-sa-primary px-4 py-2.5 text-sm font-semibold text-zinc-950 transition-colors hover:brightness-110 sm:w-auto">
+              <Plus className="size-4" /> New Plan
+            </button>
+          </div>
         </div>
       </div>
 
@@ -503,18 +508,18 @@ export default function PlansPage() {
         </div>
       )}
       {activeTab === "preview" && (
-      <section>
-        <div className="mb-8 text-center">
-          <h2 className="admin-surface-heading text-xl font-bold tracking-tight">Choose the right plan</h2>
+      <section className="min-w-0">
+        <div className="mb-6 px-1 text-center sm:mb-8">
+          <h2 className="admin-surface-heading text-lg font-bold tracking-tight sm:text-xl">Choose the right plan</h2>
           <p className="mt-2 text-sm admin-surface-muted">
             Live preview based on your database plans.
           </p>
           <div className="mt-4 flex justify-center">
-            <div className="admin-surface-segment-track inline-flex rounded-xl border p-1">
+            <div className="admin-surface-segment-track inline-flex w-full max-w-xs rounded-xl border p-1 sm:w-auto sm:max-w-none">
               <button
                 type="button"
                 onClick={() => setPricingView("monthly")}
-                className={`cursor-pointer rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors ${
+                className={`flex-1 cursor-pointer rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors sm:flex-none ${
                   pricingView === "monthly" ? "bg-sa-primary text-zinc-950" : "admin-surface-muted hover:bg-[var(--admin-hover)]"
                 }`}
               >
@@ -523,7 +528,7 @@ export default function PlansPage() {
               <button
                 type="button"
                 onClick={() => setPricingView("yearly")}
-                className={`cursor-pointer rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors ${
+                className={`flex-1 cursor-pointer rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors sm:flex-none ${
                   pricingView === "yearly" ? "bg-sa-primary text-zinc-950" : "admin-surface-muted hover:bg-[var(--admin-hover)]"
                 }`}
               >
@@ -533,7 +538,7 @@ export default function PlansPage() {
           </div>
         </div>
 
-        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid min-w-0 grid-cols-1 gap-5 pt-2 sm:grid-cols-2 lg:grid-cols-4">
           {previewPlans.map((plan) => (
             <PricingCard
               key={plan.id}
@@ -550,12 +555,10 @@ export default function PlansPage() {
           DB PLAN MANAGEMENT (CRUD)
       ══════════════════════════════════════════ */}
       {activeTab === "manage" && (
-      <section>
-        <div className="mb-5 flex items-center justify-between">
-          <div>
-            <h2 className="text-base font-semibold admin-shell-text">Manage Plans</h2>
-            <p className="mt-0.5 text-xs admin-surface-muted">Create, edit, or delete plans stored in the database.</p>
-          </div>
+      <section className="min-w-0">
+        <div className="mb-5 min-w-0">
+          <h2 className="text-base font-semibold admin-shell-text">Manage Plans</h2>
+          <p className="mt-0.5 text-xs admin-surface-muted">Create, edit, or delete plans stored in the database.</p>
         </div>
 
         {loading ? (
@@ -570,13 +573,13 @@ export default function PlansPage() {
             </button>
           </div>
         ) : (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid min-w-0 grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {plans.map((p) => {
               const c = PLAN_COLORS[p.slug] ?? DEFAULT_COLOR;
               return (
-                <div key={p.id} className={`relative flex flex-col rounded-2xl border p-5 ${c.bg} ${c.border} transition-colors`}>
-                  <div className="flex items-center justify-between gap-2">
-                    <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-bold capitalize ring-1 ${c.badge}`}>
+                <div key={p.id} className={`relative flex min-w-0 flex-col rounded-2xl border p-5 ${c.bg} ${c.border} transition-colors`}>
+                  <div className="flex min-w-0 items-center justify-between gap-2">
+                    <span className={`inline-flex min-w-0 max-w-full truncate rounded-full px-2.5 py-0.5 text-xs font-bold capitalize ring-1 ${c.badge}`}>
                       {p.name}
                     </span>
                     {!p.isActive && (
@@ -598,11 +601,12 @@ export default function PlansPage() {
                       <span className="ml-1 text-xs admin-surface-muted">/{pricingView}</span>
                     )}
                   </div>
-                  {p.description && <p className="mt-1.5 text-xs admin-surface-muted">{p.description}</p>}
+                  {p.description && <p className="mt-1.5 break-words text-xs admin-surface-muted">{p.description}</p>}
                   <ul className="mt-3 flex-1 space-y-1">
                     {(p.features ?? []).slice(0, 4).map((f) => (
-                      <li key={f} className="flex items-center gap-1.5 text-xs admin-surface-muted">
-                        <Check className="size-3 shrink-0 text-sa-accent" /> {f}
+                      <li key={f} className="flex items-start gap-1.5 text-xs admin-surface-muted">
+                        <Check className="mt-0.5 size-3 shrink-0 text-sa-accent" />
+                        <span className="min-w-0 break-words">{f}</span>
                       </li>
                     ))}
                     {(p.features ?? []).length > 4 && (
@@ -639,13 +643,13 @@ export default function PlansPage() {
       <Modal open={modalOpen} onClose={() => setModalOpen(false)}
         title={editingId ? "Edit Plan" : "Create Plan"}
         footer={
-          <div className="flex justify-end gap-2">
+          <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
             <button type="button" onClick={() => setModalOpen(false)}
-              className="cursor-pointer rounded-xl border admin-shell-border px-4 py-2 text-sm admin-surface-body hover:border-zinc-500">
+              className="w-full cursor-pointer rounded-xl border admin-shell-border px-4 py-2 text-sm admin-surface-body transition-colors hover:border-zinc-500 sm:w-auto">
               Cancel
             </button>
             <button type="button" onClick={save} disabled={saving}
-              className="cursor-pointer rounded-xl bg-sa-primary px-4 py-2 text-sm font-semibold text-zinc-950 hover:brightness-110 disabled:opacity-40">
+              className="w-full cursor-pointer rounded-xl bg-sa-primary px-4 py-2 text-sm font-semibold text-zinc-950 transition-colors hover:brightness-110 disabled:opacity-40 sm:w-auto">
               {saving ? "Saving…" : "Save Plan"}
             </button>
           </div>
@@ -773,13 +777,13 @@ export default function PlansPage() {
       {/* ── Assign Plan Modal ── */}
       <Modal open={assignOpen} onClose={() => setAssignOpen(false)} title="Assign Plan to Restaurant"
         footer={
-          <div className="flex justify-end gap-2">
+          <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
             <button type="button" onClick={() => setAssignOpen(false)}
-              className="cursor-pointer rounded-xl border admin-shell-border px-4 py-2 text-sm admin-surface-body hover:border-zinc-500">
+              className="w-full cursor-pointer rounded-xl border admin-shell-border px-4 py-2 text-sm admin-surface-body transition-colors hover:border-zinc-500 sm:w-auto">
               Cancel
             </button>
             <button type="button" onClick={assignPlan} disabled={assigning}
-              className="cursor-pointer rounded-xl bg-sa-primary px-4 py-2 text-sm font-semibold text-zinc-950 hover:brightness-110 disabled:opacity-40">
+              className="w-full cursor-pointer rounded-xl bg-sa-primary px-4 py-2 text-sm font-semibold text-zinc-950 transition-colors hover:brightness-110 disabled:opacity-40 sm:w-auto">
               {assigning ? "Assigning…" : "Assign Plan"}
             </button>
           </div>

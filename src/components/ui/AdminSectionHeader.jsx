@@ -23,9 +23,9 @@ export default function AdminSectionHeader({
         <Icon className="size-4" aria-hidden />
       </span>
       <div className="min-w-0">
-        <h2 className={`text-base font-semibold ${adminSurface.title}`}>{title}</h2>
+        <h2 className={`break-words text-base font-semibold ${adminSurface.title}`}>{title}</h2>
         {description ? (
-          <p className={`mt-0.5 text-xs ${adminSurface.muted}`}>{description}</p>
+          <p className={`mt-0.5 break-words text-xs ${adminSurface.muted}`}>{description}</p>
         ) : null}
       </div>
     </div>

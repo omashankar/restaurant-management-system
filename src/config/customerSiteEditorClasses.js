@@ -18,18 +18,18 @@ export const CMS_EDITOR_TEXTAREA = CMS_EDITOR_INPUT + " resize-none";
 
 /** Promo / media row: image left, fields right on large screens */
 export const CMS_MEDIA_FORM_ROW =
-  "rounded-xl border border-[var(--admin-border-subtle)] bg-[var(--admin-surface-soft)] p-4 space-y-4 lg:grid lg:grid-cols-[minmax(260px,380px)_1fr] lg:gap-6 lg:items-start lg:space-y-0";
+  "min-w-0 rounded-xl border border-[var(--admin-border-subtle)] bg-[var(--admin-surface-soft)] p-3 space-y-4 sm:p-4 lg:grid lg:grid-cols-[minmax(0,380px)_minmax(0,1fr)] lg:gap-6 lg:items-start lg:space-y-0";
 
 /** Toggle / control row */
 export const CMS_EDITOR_TOGGLE_ROW =
-  "flex items-center justify-between rounded-xl border border-[var(--admin-border-subtle)] bg-[var(--admin-surface)] px-4 py-3";
+  "flex items-center justify-between gap-3 rounded-xl border border-[var(--admin-border-subtle)] bg-[var(--admin-surface)] px-3 py-3 sm:px-4";
 
 /** Panel section with header divider */
 export const CMS_EDITOR_PANEL =
-  "rounded-xl border border-[var(--admin-border-subtle)] bg-[var(--admin-surface-soft)] overflow-hidden";
+  "rounded-xl border border-[var(--admin-border-subtle)] bg-[var(--admin-surface-soft)] overflow-hidden min-w-0";
 
 export const CMS_EDITOR_PANEL_HEAD =
-  "flex items-center justify-between gap-3 admin-surface-divider-b px-4 py-3";
+  "flex flex-col gap-3 admin-surface-divider-b px-4 py-3 sm:flex-row sm:items-center sm:justify-between";
 
 /** Inline control chip (color row, checkbox row) */
 export const CMS_EDITOR_CONTROL_ROW =

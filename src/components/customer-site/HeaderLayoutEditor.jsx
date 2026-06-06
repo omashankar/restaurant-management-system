@@ -32,15 +32,15 @@ export default function HeaderLayoutEditor({
 
   return (
     <div className="space-y-5">
-      <div className="flex items-center justify-between gap-3 admin-surface-divider-b pb-4">
-        <div>
+      <div className="flex flex-col gap-3 admin-surface-divider-b pb-4 sm:flex-row sm:items-start sm:justify-between">
+        <div className="min-w-0">
           <h3 className="admin-surface-title text-lg font-semibold">Edit Header</h3>
           <p className="text-sm admin-surface-muted">Navbar, top bar, colors, and menu links</p>
         </div>
         <button
           type="button"
           onClick={onBack}
-          className="inline-flex items-center gap-2 rounded-xl border border-[var(--admin-border-subtle)] bg-[var(--admin-surface)] px-3 py-2 text-sm admin-surface-body transition-colors hover:border-ra-primary-40 hover:bg-[var(--admin-hover)]"
+          className="inline-flex w-full shrink-0 items-center justify-center gap-2 rounded-xl border border-[var(--admin-border-subtle)] bg-[var(--admin-surface)] px-3 py-2 text-sm admin-surface-body transition-colors hover:border-ra-primary-40 hover:bg-[var(--admin-hover)] sm:w-auto"
         >
           <ArrowLeft className="size-4" /> Back
         </button>
