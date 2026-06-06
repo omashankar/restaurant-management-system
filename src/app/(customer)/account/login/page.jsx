@@ -52,24 +52,24 @@ function CustomerLoginContent() {
   };
 
   return (
-    <div className="flex min-h-[80vh] items-center justify-center px-4 py-12">
+    <div className="flex min-h-[80vh] min-h-[100dvh] w-full min-w-0 items-center justify-center overflow-x-hidden px-4 py-8 sm:py-12">
       <motion.div
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4 }}
-        className="w-full max-w-md"
+        className="min-w-0 w-full max-w-md"
       >
         {/* Card */}
         <div className="overflow-hidden rounded-3xl border border-customer-border bg-white shadow-2xl shadow-[var(--customer-primary-shadow)]/8">
           <div className="h-1.5 w-full gradient-primary" />
 
-          <div className="p-8">
+          <div className="p-5 sm:p-8">
             {/* Logo */}
             <div className="mb-6 flex flex-col items-center text-center">
               <motion.div whileHover={{ scale: 1.05 }} className="mb-4">
                 <RestaurantLogo size="lg" mode="light" imageOnly className="mx-auto" />
               </motion.div>
-              <h1 className="font-poppins text-2xl font-bold text-customer-text">Welcome Back</h1>
+              <h1 className="font-poppins break-words text-xl font-bold text-customer-text sm:text-2xl">Welcome Back</h1>
               <p className="mt-1 text-sm text-customer-muted">Login with your mobile number to continue</p>
             </div>
 
@@ -139,7 +139,7 @@ function CustomerLoginContent() {
             </div>
 
             {/* Trust badges */}
-            <div className="mt-4 flex items-center justify-center gap-6 text-xs text-customer-muted">
+            <div className="mt-4 flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-xs text-customer-muted sm:gap-6">
               <span className="flex items-center gap-1">🔒 Encrypted</span>
               <span className="flex items-center gap-1">⚡ Instant</span>
               <span className="flex items-center gap-1">✅ Verified</span>

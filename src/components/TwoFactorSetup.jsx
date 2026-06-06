@@ -60,14 +60,14 @@ export default function TwoFactorSetup() {
   };
 
   return (
-    <div className="admin-surface-card p-6">
-      <div className="mb-4 flex items-center gap-3">
-        <span className="sa-icon-badge flex size-9 items-center justify-center rounded-xl">
+    <div className="admin-surface-card p-4 sm:p-6">
+      <div className="mb-4 flex min-w-0 items-start gap-3 sm:items-center">
+        <span className="sa-icon-badge flex size-9 shrink-0 items-center justify-center rounded-xl">
           <Shield className="size-4" />
         </span>
-        <div>
-          <h2 className="admin-surface-title text-sm font-semibold">Two-factor authentication</h2>
-          <p className="text-xs admin-surface-muted">
+        <div className="min-w-0">
+          <h2 className="admin-surface-title break-words text-sm font-semibold">Two-factor authentication</h2>
+          <p className="break-words text-xs admin-surface-muted">
             Required when platform 2FA is enabled. Use Google Authenticator or similar.
           </p>
         </div>
@@ -78,7 +78,7 @@ export default function TwoFactorSetup() {
           type="button"
           onClick={startSetup}
           disabled={loading}
-          className={`cursor-pointer ${saBtnPrimarySmCls} disabled:opacity-50`}
+          className={`cursor-pointer w-full sm:w-auto ${saBtnPrimarySmCls} disabled:opacity-50`}
         >
           {loading ? <Loader2 className="inline size-4 animate-spin" /> : "Set up authenticator"}
         </button>
@@ -88,7 +88,7 @@ export default function TwoFactorSetup() {
         <div className="space-y-4">
           {qr ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={qr} alt="QR code for authenticator" className="mx-auto size-44 rounded-lg bg-white p-2" />
+            <img src={qr} alt="QR code for authenticator" className="mx-auto size-44 max-w-full rounded-lg bg-white p-2" />
           ) : null}
           {secret ? (
             <p className="break-all text-center text-xs admin-surface-muted">

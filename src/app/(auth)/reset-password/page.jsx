@@ -64,20 +64,20 @@ function ResetPasswordForm() {
   };
 
   return (
-    <div className="w-full max-w-md">
-      <div className="mb-8 text-center">
+    <div className="min-w-0 w-full max-w-md">
+      <div className="mb-6 text-center sm:mb-8">
         <span className={authLogoBadgeCls}>
           <UtensilsCrossed className="size-7" aria-hidden />
         </span>
-        <h1 className="mt-4 text-2xl font-semibold tracking-tight text-zinc-50">
+        <h1 className="mt-4 break-words text-xl font-semibold tracking-tight text-zinc-50 sm:text-2xl">
           Set new password
         </h1>
-        <p className="mt-1 text-sm text-zinc-500">
+        <p className="mt-1 break-words text-sm text-zinc-500">
           Enter your new password below.
         </p>
       </div>
 
-      <div className="rounded-2xl border border-zinc-800 bg-zinc-900/80 p-6 shadow-2xl shadow-black/40 backdrop-blur-sm">
+      <div className="min-w-0 rounded-2xl border border-zinc-800 bg-zinc-900/80 p-4 shadow-2xl shadow-black/40 backdrop-blur-sm sm:p-6">
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="text-xs font-medium uppercase tracking-wider text-zinc-500">
@@ -161,7 +161,7 @@ export default function ResetPasswordPage() {
   return (
     <Suspense
       fallback={
-        <div className="flex min-h-[40vh] w-full max-w-md items-center justify-center">
+        <div className="flex min-h-[40vh] w-full min-w-0 max-w-md items-center justify-center px-4">
           <Loader2 className={authSpinnerCls} aria-hidden />
         </div>
       }
