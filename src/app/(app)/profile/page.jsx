@@ -55,14 +55,14 @@ function Field({ label, icon: Icon, type = "text", value, onChange, readOnly, pl
 // ── section card ──────────────────────────────────────────────────────────────
 function Section({ title, description, icon: Icon, children }) {
   return (
-    <div className="admin-surface-card p-6">
-      <div className="mb-5 flex items-center gap-3">
-        <span className="flex size-9 items-center justify-center rounded-xl bg-ra-primary-15 text-ra-primary ring-1 ring-ra-primary-20">
+    <div className="admin-surface-card p-4 sm:p-6">
+      <div className="mb-5 flex min-w-0 items-start gap-3 sm:items-center">
+        <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-ra-primary-15 text-ra-primary ring-1 ring-ra-primary-20">
           <Icon className="size-4" aria-hidden />
         </span>
-        <div>
-          <h2 className="text-sm font-semibold admin-shell-text">{title}</h2>
-          {description && <p className="text-xs admin-surface-muted">{description}</p>}
+        <div className="min-w-0">
+          <h2 className="break-words text-sm font-semibold admin-shell-text">{title}</h2>
+          {description && <p className="break-words text-xs admin-surface-muted">{description}</p>}
         </div>
       </div>
       {children}
@@ -91,16 +91,17 @@ export default function ProfilePage() {
   };
 
   return (
+    <div className="min-w-0 w-full max-w-full overflow-x-hidden">
     <div className="mx-auto max-w-2xl space-y-6">
 
       {/* ── Header ── */}
-      <div>
-        <h1 className="admin-page-title text-2xl font-semibold tracking-tight">My Profile</h1>
-        <p className="admin-page-desc mt-1 text-sm">Manage your personal details and security.</p>
+      <div className="min-w-0">
+        <h1 className="admin-page-title break-words text-2xl font-semibold tracking-tight">My Profile</h1>
+        <p className="admin-page-desc mt-1 break-words text-sm">Manage your personal details and security.</p>
       </div>
 
       {/* ── Avatar card ── */}
-      <div className="flex items-center gap-5 admin-surface-card p-5">
+      <div className="flex flex-col items-start gap-4 admin-surface-card p-4 sm:flex-row sm:items-center sm:gap-5 sm:p-5">
         <div className="relative shrink-0">
           {avatarSrc ? (
             <Image src={avatarSrc} alt="" width={80} height={80} className="size-20 rounded-full object-cover ring-2 ring-ra-primary-40" unoptimized />
@@ -126,9 +127,9 @@ export default function ProfilePage() {
             onChange={handleAvatarChange}
           />
         </div>
-        <div className="min-w-0">
-          <p className="truncate text-lg font-semibold admin-shell-text">{user?.name}</p>
-          <p className="text-sm admin-surface-muted">{user?.email}</p>
+        <div className="min-w-0 flex-1">
+          <p className="break-words text-lg font-semibold admin-shell-text">{user?.name}</p>
+          <p className="break-all text-sm admin-surface-muted">{user?.email}</p>
           <span className="mt-1.5 inline-flex items-center gap-1.5 rounded-full bg-ra-primary-15 px-2.5 py-0.5 text-xs font-semibold text-ra-primary ring-1 ring-ra-primary-25">
             <Shield className="size-3" aria-hidden />
             {roleLabel(user?.role)}
@@ -174,12 +175,12 @@ export default function ProfilePage() {
           />
         </div>
 
-        <div className="mt-5 flex items-center justify-end gap-2">
+        <div className="mt-5 flex flex-col-reverse gap-2 sm:flex-row sm:items-center sm:justify-end sm:gap-2">
           {formDirty && (
             <button
               type="button"
               onClick={resetForm}
-              className="cursor-pointer rounded-xl border admin-shell-border px-4 py-2 text-sm font-medium admin-surface-body transition-colors hover:border-zinc-500 hover:admin-shell-text"
+              className="cursor-pointer w-full rounded-xl border admin-shell-border px-4 py-2 text-sm font-medium admin-surface-body transition-colors hover:border-zinc-500 hover:admin-shell-text sm:w-auto"
             >
               Cancel
             </button>
@@ -188,7 +189,7 @@ export default function ProfilePage() {
             type="button"
             onClick={saveProfile}
             disabled={saving || !formDirty}
-            className="cursor-pointer inline-flex items-center gap-2 rounded-xl bg-ra-primary px-5 py-2 text-sm font-semibold text-zinc-950 transition-all hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-40"
+            className="cursor-pointer inline-flex w-full items-center justify-center gap-2 rounded-xl bg-ra-primary px-5 py-2 text-sm font-semibold text-zinc-950 transition-all hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-40 sm:w-auto"
           >
             {saving ? <Loader2 className="size-4 animate-spin" /> : null}
             {saving ? "Saving…" : "Save Changes"}
@@ -199,7 +200,7 @@ export default function ProfilePage() {
       {/* ── Toast ── */}
       {toast && (
         <div
-          className={`fixed bottom-5 right-5 z-50 flex items-center gap-2.5 rounded-xl border px-4 py-3 text-sm font-medium shadow-2xl shadow-black/40 transition-all ${
+          className={`fixed bottom-4 left-4 right-4 z-[320] flex items-center gap-2.5 rounded-xl border px-4 py-3 text-sm font-medium shadow-2xl shadow-black/40 transition-all sm:bottom-5 sm:left-auto sm:right-5 sm:max-w-sm ${
             toast.type === "success"
               ? "border-ra-primary-30 admin-surface-card text-ra-primary-muted"
               : "border-red-500/30 admin-surface-card text-red-400"
@@ -211,6 +212,7 @@ export default function ProfilePage() {
           {toast.msg}
         </div>
       )}
+    </div>
     </div>
   );
 }

@@ -137,16 +137,16 @@ export default function SignupPage() {
   };
 
   return (
-    <div className="w-full max-w-md">
-      <div className="mb-8 text-center">
+    <div className="min-w-0 w-full max-w-md">
+      <div className="mb-6 text-center sm:mb-8">
         <span className={authLogoBadgeCls}>
           <UtensilsCrossed className="size-7" aria-hidden />
         </span>
-        <h1 className="mt-4 text-2xl font-semibold tracking-tight text-zinc-50">Create account</h1>
+        <h1 className="mt-4 break-words text-xl font-semibold tracking-tight text-zinc-50 sm:text-2xl">Create account</h1>
         <p className="mt-1 text-sm text-zinc-500">Restaurant Management System</p>
       </div>
 
-      <div className="rounded-2xl border border-zinc-800 bg-zinc-900/80 p-6 shadow-2xl shadow-black/40 backdrop-blur-sm">
+      <div className="min-w-0 rounded-2xl border border-zinc-800 bg-zinc-900/80 p-4 shadow-2xl shadow-black/40 backdrop-blur-sm sm:p-6">
         <form onSubmit={onSubmit} className="space-y-4" noValidate>
           <div>
             <label htmlFor="restaurantName" className="text-xs font-medium uppercase tracking-wider text-zinc-500">
@@ -168,8 +168,9 @@ export default function SignupPage() {
               Customer Site URL <span className="text-red-400">*</span>
             </label>
             <div className={authInputGroupCls}>
-              <span className="shrink-0 border-r border-zinc-700 bg-zinc-800/80 px-3 py-3 text-xs text-zinc-500 whitespace-nowrap">
-                yoursite.com/r/
+              <span className="flex shrink-0 items-center border-r border-zinc-700 bg-zinc-800/80 px-2.5 py-3 text-[11px] leading-none text-zinc-500 sm:px-3 sm:text-xs">
+                <span className="hidden sm:inline">yoursite.com/r/</span>
+                <span className="sm:hidden">/r/</span>
               </span>
               <input
                 id="slug"
@@ -180,11 +181,11 @@ export default function SignupPage() {
                   clearFieldError("slug");
                 }}
                 placeholder="the-grand-kitchen"
-                className="w-full bg-transparent px-3 py-3 text-sm text-zinc-100 outline-none placeholder:text-zinc-600"
+                className="min-w-0 flex-1 bg-transparent px-3 py-3 text-sm text-zinc-100 outline-none placeholder:text-zinc-600"
                 aria-invalid={fieldErrors.slug ? true : undefined}
               />
             </div>
-            <p className="mt-1 text-[11px] text-zinc-600">
+            <p className="mt-1 break-words text-[11px] text-zinc-600">
               Yahi URL customers use karenge. Sirf lowercase letters, numbers aur hyphens.
             </p>
             <FieldError message={fieldErrors.slug} />

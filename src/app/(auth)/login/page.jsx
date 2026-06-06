@@ -204,19 +204,19 @@ function LoginContent() {
   };
 
   return (
-    <div className="w-full max-w-4xl">
-      <div className="mb-8 text-center">
+    <div className="min-w-0 w-full max-w-4xl">
+      <div className="mb-6 text-center sm:mb-8">
         <span className={authLogoBadgeCls}>
           <UtensilsCrossed className="size-7" aria-hidden />
         </span>
-        <h1 className="mt-4 text-2xl font-semibold tracking-tight text-zinc-50">
+        <h1 className="mt-4 break-words text-xl font-semibold tracking-tight text-zinc-50 sm:text-2xl">
           Restaurant Management System
         </h1>
         <p className="mt-1 text-sm text-zinc-500">Sign in to your workspace</p>
       </div>
 
-      <div className="grid gap-5 lg:grid-cols-2">
-        <div className="rounded-2xl border border-zinc-800 bg-zinc-900/80 p-6 shadow-2xl shadow-black/40 backdrop-blur-sm">
+      <div className="grid min-w-0 gap-5 lg:grid-cols-2">
+        <div className="min-w-0 rounded-2xl border border-zinc-800 bg-zinc-900/80 p-4 shadow-2xl shadow-black/40 backdrop-blur-sm sm:p-6">
           <form onSubmit={onSubmit} className="space-y-4" noValidate>
             <div>
               <label htmlFor="email" className="text-xs font-medium uppercase tracking-wider text-zinc-500">
@@ -328,7 +328,7 @@ function LoginContent() {
             )}
 
             {!needs2FA && (
-              <div className="flex items-center justify-between gap-3">
+              <div className="flex flex-col items-start gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
                 <label htmlFor="rememberMe" className="inline-flex cursor-pointer items-center gap-2 text-xs text-zinc-400">
                   <input
                     id="rememberMe"
@@ -364,8 +364,8 @@ function LoginContent() {
           </p>
         </div>
 
-        <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-5 backdrop-blur-sm">
-          <div className="mb-4 flex items-center justify-between">
+        <div className="min-w-0 rounded-2xl border border-zinc-800 bg-zinc-900/60 p-4 backdrop-blur-sm sm:p-5">
+          <div className="mb-4 flex min-w-0 flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <h2 className="text-sm font-semibold text-zinc-100">Demo Credentials</h2>
             <span className={authBadgeCls}>
               Demo Mode
@@ -380,15 +380,15 @@ function LoginContent() {
                 onClick={() => fillDemo(u)}
                 className={`w-full cursor-pointer rounded-xl border border-zinc-800 bg-zinc-950/50 p-3 text-left ring-1 transition-all duration-200 hover:bg-zinc-800/60 ${u.accent}`}
               >
-                <div className="flex items-center justify-between gap-3">
-                  <div className="flex items-center gap-3">
-                    <span className="flex size-9 items-center justify-center rounded-xl bg-zinc-800 text-lg ring-1 ring-zinc-700">
+                <div className="flex min-w-0 items-center justify-between gap-2 sm:gap-3">
+                  <div className="flex min-w-0 items-center gap-2 sm:gap-3">
+                    <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-zinc-800 text-lg ring-1 ring-zinc-700">
                       {u.icon}
                     </span>
-                    <div>
+                    <div className="min-w-0">
                       <p className="text-sm font-semibold text-zinc-100">{u.role}</p>
-                      <p className="text-xs text-zinc-500">{u.email}</p>
-                      <p className="text-xs text-zinc-600">Password: {u.password}</p>
+                      <p className="break-all text-xs text-zinc-500">{u.email}</p>
+                      <p className="break-all text-xs text-zinc-600">Password: {u.password}</p>
                     </div>
                   </div>
                   <span

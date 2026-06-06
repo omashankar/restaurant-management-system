@@ -20,20 +20,20 @@ export default function ForgotPasswordPage() {
   const [devResetLink, setDevResetLink] = useState("");
 
   return (
-    <div className="w-full max-w-md">
-      <div className="mb-8 text-center">
+    <div className="min-w-0 w-full max-w-md">
+      <div className="mb-6 text-center sm:mb-8">
         <span className={authLogoBadgeCls}>
           <UtensilsCrossed className="size-7" aria-hidden />
         </span>
-        <h1 className="mt-4 text-2xl font-semibold tracking-tight text-zinc-50">
+        <h1 className="mt-4 break-words text-xl font-semibold tracking-tight text-zinc-50 sm:text-2xl">
           Reset password
         </h1>
-        <p className="mt-1 text-sm text-zinc-500">
+        <p className="mt-1 break-words text-sm text-zinc-500">
           Enter your email and we will send reset instructions.
         </p>
       </div>
 
-      <div className="rounded-2xl border border-zinc-800 bg-zinc-900/80 p-6 shadow-2xl shadow-black/40 backdrop-blur-sm">
+      <div className="min-w-0 rounded-2xl border border-zinc-800 bg-zinc-900/80 p-4 shadow-2xl shadow-black/40 backdrop-blur-sm sm:p-6">
         {submitted ? (
           <div className="space-y-4 text-center">
             <p className={`${authSuccessBoxCls} text-sm`}>

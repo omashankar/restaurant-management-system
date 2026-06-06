@@ -25,7 +25,7 @@ export const authInputWithIconCls =
   "auth-input w-full rounded-xl border border-zinc-700 bg-zinc-950/80 py-3 pl-10 pr-4 text-sm text-zinc-100 outline-none transition-all placeholder:text-zinc-600";
 
 export const authInputGroupCls =
-  "auth-input-group mt-1.5 flex items-center overflow-hidden rounded-xl border border-zinc-700 bg-zinc-950/80";
+  "auth-input-group mt-1.5 flex items-stretch overflow-hidden rounded-xl border border-zinc-700 bg-zinc-950/80";
 
 export const authInputWithIconPwCls =
   "auth-input w-full rounded-xl border border-zinc-700 bg-zinc-950/80 py-3 pl-10 pr-10 text-sm text-zinc-100 outline-none transition-all placeholder:text-zinc-600";
