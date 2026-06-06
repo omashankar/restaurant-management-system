@@ -57,10 +57,10 @@ function Field({ label, hint, error, required, children }) {
 
 function Toggle({ checked, onChange, label, description }) {
   return (
-    <label className="cursor-pointer flex items-start justify-between gap-4 admin-surface-card px-4 py-3 hover:border-[var(--admin-border)] transition-colors">
-      <div className="min-w-0">
-        <p className="text-sm font-medium admin-shell-text">{label}</p>
-        {description && <p className="mt-0.5 text-xs admin-surface-muted">{description}</p>}
+    <label className="cursor-pointer flex min-w-0 items-start justify-between gap-4 admin-surface-card px-4 py-3 transition-colors hover:border-[var(--admin-border)]">
+      <div className="min-w-0 flex-1">
+        <p className="break-words text-sm font-medium admin-shell-text">{label}</p>
+        {description && <p className="mt-0.5 break-words text-xs admin-surface-muted">{description}</p>}
       </div>
       <button type="button" role="switch" aria-checked={checked} onClick={() => onChange(!checked)}
         className={`cursor-pointer relative mt-0.5 inline-flex h-5 w-9 shrink-0 items-center rounded-full transition-colors ${checked ? "bg-sa-primary" : "bg-[var(--admin-border)]"}`}>
@@ -72,9 +72,9 @@ function Toggle({ checked, onChange, label, description }) {
 
 function SaveButton({ saving, onClick }) {
   return (
-    <div className="flex justify-end pt-2">
+    <div className="flex justify-stretch pt-2 sm:justify-end">
       <button type="button" onClick={onClick} disabled={saving}
-        className={`cursor-pointer ${saBtnPrimaryCls} disabled:opacity-50`}>
+        className={`inline-flex w-full cursor-pointer items-center justify-center gap-2 sm:w-auto ${saBtnPrimaryCls} disabled:opacity-50`}>
         {saving ? <span className="size-3.5 animate-spin rounded-full border-2 border-zinc-950/30 border-t-zinc-950" /> : <Save className="size-4" />}
         {saving ? "Saving…" : "Save Changes"}
       </button>
@@ -286,16 +286,16 @@ function EmailSection({ data, onChange, onSave, saving, fieldErrors = {}, onClea
         label="Use SSL/TLS" description="Enable for port 465. Use STARTTLS for port 587." />
 
       {/* Test email */}
-      <div className="flex items-center justify-between admin-surface-card px-4 py-3">
-        <div>
+      <div className="flex flex-col gap-3 admin-surface-card px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="min-w-0">
           <p className="text-sm font-medium admin-shell-text">Send Test Email</p>
-          <p className="mt-0.5 text-xs admin-surface-muted">Verify your SMTP config by sending a test message.</p>
+          <p className="mt-0.5 break-words text-xs admin-surface-muted">Verify your SMTP config by sending a test message.</p>
         </div>
         <button
           type="button"
           onClick={sendTestEmail}
           disabled={testing}
-          className="cursor-pointer inline-flex items-center gap-2 rounded-xl border admin-shell-border px-4 py-2 text-xs font-semibold admin-surface-body hover:border-indigo-500/40 hover:text-indigo-400 disabled:opacity-50 transition-colors"
+          className="inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl border admin-shell-border px-4 py-2 text-xs font-semibold admin-surface-body transition-colors hover:border-indigo-500/40 hover:text-indigo-400 disabled:opacity-50 sm:w-auto"
         >
           {testing
             ? <span className="size-3 animate-spin rounded-full border-2 border-zinc-500/30 border-t-zinc-400" />
@@ -473,9 +473,9 @@ function PaymentSection({ data, onChange, onSave, saving, fieldErrors = {}, onCl
       {/* Payment Settings content */}
       <div className="space-y-4">
           {/* Status bar */}
-          <div className="flex items-center gap-2 admin-surface-card px-4 py-2.5">
-            <CheckCircle2 className="size-4 text-sa-accent" />
-            <span className="text-xs text-zinc-400">
+          <div className="flex min-w-0 items-start gap-2 admin-surface-card px-4 py-2.5">
+            <CheckCircle2 className="mt-0.5 size-4 shrink-0 text-sa-accent" />
+            <span className="min-w-0 break-words text-xs text-zinc-400">
               {enabledCount > 0
                 ? <><span className="font-semibold text-sa-accent">{enabledCount} gateway{enabledCount > 1 ? "s" : ""} active</span> — {PLATFORM_GATEWAYS.filter((g) => gateways[g.id]?.enabled).map((g) => g.label).join(", ")}</>
                 : <span className="text-zinc-500">No gateways configured yet</span>}
@@ -483,7 +483,7 @@ function PaymentSection({ data, onChange, onSave, saving, fieldErrors = {}, onCl
           </div>
 
           {/* Gateway selector */}
-          <div className="mb-5 grid grid-cols-3 gap-2 sm:grid-cols-5">
+          <div className="mb-5 grid min-w-0 grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
             {PLATFORM_GATEWAYS.map((g) => {
               const isEnabled = Boolean(gateways[g.id]?.enabled);
               const isActive = activeGw === g.id;
@@ -518,12 +518,12 @@ function PaymentSection({ data, onChange, onSave, saving, fieldErrors = {}, onCl
           {/* Gateway config form */}
           <div className="rounded-xl admin-surface-card p-4">
             {/* Header */}
-            <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-              <div>
-                <p className="font-semibold admin-shell-text">{gwInfo?.label}</p>
-                <p className="text-xs admin-surface-muted">{gwInfo?.desc}</p>
+            <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
+              <div className="min-w-0">
+                <p className="break-words font-semibold admin-shell-text">{gwInfo?.label}</p>
+                <p className="break-words text-xs admin-surface-muted">{gwInfo?.desc}</p>
               </div>
-              <div className="flex items-center gap-3">
+              <div className="flex w-full flex-wrap items-center gap-3 sm:w-auto">
                 {!isOffline && gw.enabled && (
                   <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${
                     gw.testMode ? "bg-amber-500/15 text-amber-400" : "bg-sa-accent-15 text-sa-accent"
@@ -551,12 +551,12 @@ function PaymentSection({ data, onChange, onSave, saving, fieldErrors = {}, onCl
               <div className="space-y-4">
                 {/* Test/Live toggle */}
                 {!isOffline && (
-                  <div className="flex items-center justify-between admin-surface-card px-4 py-3">
-                    <div>
+                  <div className="flex flex-col gap-3 admin-surface-card px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="min-w-0">
                       <p className="text-sm font-medium admin-shell-text">Environment</p>
-                      <p className="text-xs admin-surface-muted">{gw.testMode ? "Test mode — no real charges" : "Live mode — real payments"}</p>
+                      <p className="break-words text-xs admin-surface-muted">{gw.testMode ? "Test mode — no real charges" : "Live mode — real payments"}</p>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex shrink-0 items-center justify-center gap-2 sm:justify-end">
                       <span className={`text-xs font-semibold ${gw.testMode ? "text-amber-400" : "text-zinc-500"}`}>TEST</span>
                       <button type="button" role="switch" aria-checked={!gw.testMode}
                         onClick={() => updateGw({ testMode: !gw.testMode })}
@@ -592,12 +592,12 @@ function PaymentSection({ data, onChange, onSave, saving, fieldErrors = {}, onCl
                 {!isOffline && ["razorpay","stripe"].includes(activeGw) && (
                   <div>
                     <label className={labelCls}>Webhook URL <span className="text-zinc-600">(copy to gateway dashboard)</span></label>
-                    <div className="flex gap-2">
+                    <div className="flex flex-col gap-2 sm:flex-row">
                       <input readOnly
                         value={typeof window !== "undefined" ? `${window.location.origin}/api/webhooks/${activeGw}` : `/api/webhooks/${activeGw}`}
-                        className={`${inputCls} font-mono text-xs admin-surface-muted`} />
+                        className={`${inputCls} min-w-0 font-mono text-xs admin-surface-muted sm:flex-1`} />
                       <button type="button" onClick={() => copyWebhookUrl(activeGw)}
-                        className="flex shrink-0 items-center gap-1.5 rounded-xl border admin-shell-border px-3 py-2 text-xs font-semibold admin-surface-body hover-border-sa-primary-40 hover-sa-primary transition-colors">
+                        className="inline-flex w-full shrink-0 items-center justify-center gap-1.5 rounded-xl border admin-shell-border px-3 py-2 text-xs font-semibold admin-surface-body transition-colors hover-border-sa-primary-40 hover-sa-primary sm:w-auto">
                         <Copy className="size-3.5" /> Copy
                       </button>
                     </div>
@@ -606,13 +606,13 @@ function PaymentSection({ data, onChange, onSave, saving, fieldErrors = {}, onCl
 
                 {/* Test result */}
                 {testResult && (
-                  <div className={`flex items-center gap-2 rounded-xl border px-4 py-3 text-sm ${
+                  <div className={`flex min-w-0 items-start gap-2 rounded-xl border px-4 py-3 text-sm ${
                     testResult.success
                       ? "border-sa-primary-25 bg-sa-primary-10 text-sa-primary"
                       : "border-red-500/25 bg-red-500/10 text-red-400"
                   }`}>
                     {testResult.success ? <CheckCircle2 className="size-4 shrink-0" /> : <XCircle className="size-4 shrink-0" />}
-                    {testResult.message}
+                    <span className="min-w-0 break-words">{testResult.message}</span>
                   </div>
                 )}
               </div>
@@ -620,10 +620,10 @@ function PaymentSection({ data, onChange, onSave, saving, fieldErrors = {}, onCl
           </div>
 
           {/* Actions */}
-          <div className="flex items-center justify-between gap-3">
+          <div className="flex flex-col-reverse gap-2 sm:flex-row sm:items-center sm:justify-between">
             <button type="button" onClick={testConnection}
               disabled={testing || !gw.enabled || isOffline}
-              className="inline-flex items-center gap-2 rounded-xl border admin-shell-border px-4 py-2 text-sm font-medium admin-surface-body hover:border-zinc-500 hover:admin-shell-text disabled:cursor-not-allowed disabled:opacity-40 transition-colors">
+              className="inline-flex w-full items-center justify-center gap-2 rounded-xl border admin-shell-border px-4 py-2 text-sm font-medium admin-surface-body transition-colors hover:border-zinc-500 hover:admin-shell-text disabled:cursor-not-allowed disabled:opacity-40 sm:w-auto">
               {testing ? <Loader2 className={saSpinnerCls} /> : <Zap className="size-4" />}
               {testing ? "Testing…" : "Test Connection"}
             </button>
@@ -717,7 +717,7 @@ function ThemeSection({ data, onChange, onSave, saving, fieldErrors = {}, onClea
       />
       <div className="grid gap-4 sm:grid-cols-2">
         <Field label="Primary Color (Super Admin brand)" error={fieldErrors.primaryColor}>
-          <div className="flex items-center gap-3">
+          <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-center">
             <input
               type="color"
               value={primary}
@@ -726,7 +726,7 @@ function ThemeSection({ data, onChange, onSave, saving, fieldErrors = {}, onClea
                 onChange("primaryColor", v);
                 pushPreview({ primaryColor: v });
               }}
-              className="cursor-pointer size-10 shrink-0 rounded-lg border admin-shell-border bg-transparent p-0.5"
+              className="size-10 shrink-0 cursor-pointer self-start rounded-lg border admin-shell-border bg-transparent p-0.5"
             />
             <input
               value={primary}
@@ -737,13 +737,13 @@ function ThemeSection({ data, onChange, onSave, saving, fieldErrors = {}, onClea
                 pushPreview({ primaryColor: v });
               }}
               placeholder={SUPER_ADMIN_PRIMARY}
-              className={`${inputCls} font-mono`}
+              className={`${inputCls} min-w-0 font-mono`}
             />
           </div>
           <p className="mt-1 text-xs admin-surface-faint">Default: {SUPER_ADMIN_PRIMARY} — sidebar, buttons, focus rings</p>
         </Field>
         <Field label="Accent Color (success / status)" error={fieldErrors.accentColor}>
-          <div className="flex items-center gap-3">
+          <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-center">
             <input
               type="color"
               value={accent}
@@ -752,7 +752,7 @@ function ThemeSection({ data, onChange, onSave, saving, fieldErrors = {}, onClea
                 onChange("accentColor", v);
                 pushPreview({ accentColor: v });
               }}
-              className="cursor-pointer size-10 shrink-0 rounded-lg border admin-shell-border bg-transparent p-0.5"
+              className="size-10 shrink-0 cursor-pointer self-start rounded-lg border admin-shell-border bg-transparent p-0.5"
             />
             <input
               value={accent}
@@ -763,7 +763,7 @@ function ThemeSection({ data, onChange, onSave, saving, fieldErrors = {}, onClea
                 pushPreview({ accentColor: v });
               }}
               placeholder={SUPER_ADMIN_ACCENT}
-              className={`${inputCls} font-mono`}
+              className={`${inputCls} min-w-0 font-mono`}
             />
           </div>
           <p className="mt-1 text-xs admin-surface-faint">Default: {SUPER_ADMIN_ACCENT} — paid, active tenant, online</p>
@@ -1083,10 +1083,10 @@ function BackupSection({ data, onChange, onSave, saving, showToast }) {
       <AdminSectionHeader icon={Database} title="Backup & Restore" description="Manual and scheduled database backups." />
 
       {/* Manual backup */}
-      <div className="flex items-center justify-between admin-surface-card px-4 py-3">
-        <div>
+      <div className="flex flex-col gap-3 admin-surface-card px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="min-w-0">
           <p className="text-sm font-medium admin-shell-text">Manual Backup</p>
-          <p className="mt-0.5 text-xs admin-surface-muted">
+          <p className="mt-0.5 break-words text-xs admin-surface-muted">
             {data.lastBackupAt
               ? `Last backup: ${new Date(data.lastBackupAt).toLocaleString()}`
               : "No backup taken yet."}
@@ -1096,7 +1096,7 @@ function BackupSection({ data, onChange, onSave, saving, showToast }) {
           type="button"
           onClick={triggerBackup}
           disabled={triggering}
-          className={`cursor-pointer ${saBtnPrimarySmCls} disabled:opacity-50`}
+          className={`inline-flex w-full cursor-pointer items-center justify-center gap-2 sm:w-auto ${saBtnPrimarySmCls} disabled:opacity-50`}
         >
           {triggering
             ? <span className="size-3 animate-spin rounded-full border-2 border-zinc-950/30 border-t-zinc-950" />
@@ -1151,11 +1151,11 @@ function BackupSection({ data, onChange, onSave, saving, showToast }) {
             {backups.map((b) => (
               <div
                 key={b.id}
-                className="flex items-center justify-between admin-surface-card px-4 py-2.5"
+                className="flex flex-col gap-2 admin-surface-card px-4 py-2.5 sm:flex-row sm:items-center sm:justify-between"
               >
-                <div className="flex items-center gap-3">
-                  <span className={`size-2 rounded-full ${b.status === "completed" ? "bg-emerald-400" : "bg-amber-400"}`} />
-                  <div>
+                <div className="flex min-w-0 items-center gap-3">
+                  <span className={`size-2 shrink-0 rounded-full ${b.status === "completed" ? "bg-emerald-400" : "bg-amber-400"}`} />
+                  <div className="min-w-0">
                     <p className="text-xs font-medium admin-shell-text">
                       {b.type === "manual" ? "Manual" : "Auto"} backup
                     </p>
@@ -1164,7 +1164,7 @@ function BackupSection({ data, onChange, onSave, saving, showToast }) {
                     </p>
                   </div>
                 </div>
-                <span className={`rounded-lg px-2 py-0.5 text-[10px] font-medium capitalize ${adminSurface.muted} bg-[var(--admin-hover-strong)]`}>
+                <span className={`self-start rounded-lg px-2 py-0.5 text-[10px] font-medium capitalize sm:self-auto ${adminSurface.muted} bg-[var(--admin-hover-strong)]`}>
                   {b.status}
                 </span>
               </div>
@@ -1313,16 +1313,16 @@ function AdvancedSection({ data, onChange, onSave, saving, showToast }) {
       </div>
 
       {/* Cache */}
-      <div className="flex items-center justify-between admin-surface-card px-4 py-3">
-        <div>
+      <div className="flex flex-col gap-3 admin-surface-card px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="min-w-0">
           <p className="text-sm font-medium admin-shell-text">Clear Cache</p>
-          <p className="mt-0.5 text-xs admin-surface-muted">Revalidate landing and key super-admin pages cache.</p>
+          <p className="mt-0.5 break-words text-xs admin-surface-muted">Revalidate landing and key super-admin pages cache.</p>
         </div>
         <button
           type="button"
           onClick={clearCache}
           disabled={clearing}
-          className="cursor-pointer inline-flex items-center gap-2 rounded-xl border admin-shell-border px-4 py-2 text-xs font-semibold admin-surface-body hover:border-zinc-500 hover:admin-shell-text disabled:opacity-50 transition-colors"
+          className="inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl border admin-shell-border px-4 py-2 text-xs font-semibold admin-surface-body transition-colors hover:border-zinc-500 hover:admin-shell-text disabled:opacity-50 sm:w-auto"
         >
           {clearing
             ? <span className="size-3 animate-spin rounded-full border-2 border-zinc-500/30 border-t-zinc-400" />
@@ -1512,14 +1512,14 @@ export default function SuperAdminSettingsPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="min-w-0 w-full max-w-full space-y-6 overflow-x-hidden">
       {/* Header */}
-      <div className="flex items-start gap-3">
-        <span className={`mt-1 ${saIconBadgeCls}`}>
+      <div className="flex min-w-0 items-start gap-3">
+        <span className={`mt-1 shrink-0 ${saIconBadgeCls}`}>
           <Settings className="size-5" />
         </span>
-        <div>
-          <h1 className="admin-page-title text-2xl font-semibold tracking-tight">Settings</h1>
+        <div className="min-w-0">
+          <h1 className="admin-page-title break-words text-2xl font-semibold tracking-tight">Settings</h1>
           <p className="admin-page-desc mt-1 text-sm">Centralized platform configuration.</p>
         </div>
       </div>
@@ -1530,8 +1530,8 @@ export default function SuperAdminSettingsPage() {
         </div>
       )}
 
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:gap-6">
-        <AdminSideNav className="w-full lg:w-52">
+      <div className="flex min-w-0 flex-col gap-4 lg:flex-row lg:items-start lg:gap-6">
+        <AdminSideNav className="min-w-0 w-full lg:w-52">
           <p className={`px-2 pb-2 pt-1 text-xs font-semibold uppercase tracking-wide ${adminSurface.muted}`}>
             Settings Menu
           </p>
@@ -1551,7 +1551,7 @@ export default function SuperAdminSettingsPage() {
         </AdminSideNav>
 
         {/* Panel */}
-        <div ref={panelRef} className="min-w-0 flex-1 admin-surface-card p-5 sm:p-6">
+        <div ref={panelRef} className="min-w-0 flex-1 admin-surface-card p-4 sm:p-6">
           {fetching ? (
             <SuperAdminPageSkeleton rows={4} />
           ) : !settings ? null : (

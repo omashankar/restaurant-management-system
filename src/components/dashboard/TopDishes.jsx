@@ -28,17 +28,17 @@ export default function TopDishes({ items = [], currency = "INR" }) {
               const barW = Math.round((count / maxOrders) * 100);
               return (
                 <div key={dish.name ?? i} className="space-y-1">
-                  <div className="flex items-center justify-between gap-2">
-                    <div className="flex min-w-0 items-center gap-2">
+                  <div className="flex items-start justify-between gap-2 sm:items-center">
+                    <div className="flex min-w-0 flex-1 items-center gap-2">
                       <span className={`w-5 shrink-0 text-xs font-bold tabular-nums ${rankColors[i] ?? rankColors[4]}`}>
                         #{i + 1}
                       </span>
-                      <span className="truncate text-sm font-medium admin-shell-text">{dish.name}</span>
+                      <span className="break-words text-sm font-medium admin-shell-text">{dish.name}</span>
                     </div>
-                    <div className="flex shrink-0 items-center gap-3 text-xs tabular-nums">
-                      <span className="text-zinc-400">{count} orders</span>
+                    <div className="flex shrink-0 flex-col items-end gap-0.5 text-xs tabular-nums sm:flex-row sm:items-center sm:gap-3">
+                      <span className="whitespace-nowrap text-zinc-400">{count} orders</span>
                       {dish.revenue != null && (
-                        <span className="font-semibold text-ra-primary">
+                        <span className="whitespace-nowrap font-semibold text-ra-primary">
                           {formatAdminMoney(dish.revenue, currency)}
                         </span>
                       )}

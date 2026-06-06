@@ -5,8 +5,8 @@ import { raToggleOnCls } from "@/config/restaurantAdminTheme";
 
 export default function ToggleSwitch({ checked, onChange, label, hint }) {
   return (
-    <label className={`flex items-start justify-between gap-4 rounded-xl border px-4 py-3 ${adminSurface.card}`}>
-      <span className="min-w-0">
+    <label className={`flex items-start justify-between gap-3 rounded-xl border admin-shell-border px-3 py-3 sm:gap-4 sm:px-4 ${adminSurface.card}`}>
+      <span className="min-w-0 flex-1">
         <span className={`block text-sm font-medium ${adminSurface.title}`}>{label}</span>
         {hint ? <span className={`mt-0.5 block text-xs ${adminSurface.muted}`}>{hint}</span> : null}
       </span>

@@ -113,7 +113,7 @@ export default function LayoutWrapper({ children }) {
 
   return (
     <div
-      className={`restaurant-admin-panel ${adminShell.layout}`}
+      className={`restaurant-admin-panel ${adminShell.layout} min-w-0 max-w-[100vw] overflow-x-hidden`}
       onTouchStart={onTouchStart}
       onTouchEnd={onTouchEnd}
     >
@@ -128,20 +128,23 @@ export default function LayoutWrapper({ children }) {
           <Sidebar
             collapsed={false}
             allowCollapse={false}
+            fullWidth
             onNavigate={closeSidebar}
+            onClose={closeSidebar}
           />
         </MobileDrawer>
 
         <div
-          className="flex min-w-0 flex-1 flex-col transition-[margin] duration-300 ease-out"
+          className="flex min-w-0 max-w-full flex-1 flex-col transition-[margin] duration-300 ease-out"
           style={{ marginLeft: contentOffset }}
         >
           <TopNavbar
             showMobileMenu={!mdUp}
+            isSidebarOpen={isSidebarOpen}
             onOpenSidebar={openSidebar}
             onToggleSidebar={toggleSidebar}
           />
-          <main className={`${adminShell.pageContent} flex-1 overflow-y-auto overflow-x-hidden p-4 sm:p-6`}>
+          <main className={`${adminShell.pageContent} relative z-0 flex-1 overflow-y-auto overflow-x-hidden p-4 sm:p-6`}>
             {children}
           </main>
         </div>

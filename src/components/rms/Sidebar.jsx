@@ -11,6 +11,7 @@ import {
   ChevronDown,
   ChevronLeft,
   ChevronRight,
+  X,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -22,6 +23,8 @@ export default function Sidebar({
   onCollapsedChange,
   onNavigate,
   allowCollapse = true,
+  fullWidth = false,
+  onClose,
 }) {
   const { user } = useApp();
   const { name: brandName, tagline: brandTagline, logoUrl: brandLogoUrl } =
@@ -118,19 +121,28 @@ export default function Sidebar({
 
   return (
     <aside
-      className={`${adminShell.sidebar} ${
-        collapsed ? "w-[72px]" : "w-64"
+      className={`${adminShell.sidebar} h-full min-h-0 ${
+        fullWidth ? "w-full" : collapsed ? "w-[72px]" : "w-64"
       }`}
     >
-      <div className={`flex h-16 items-center justify-between gap-2 ${adminShell.borderB} px-3`}>
+      <div className={`flex h-16 shrink-0 items-center justify-between gap-2 ${adminShell.borderB} px-3`}>
         <SidebarBrand
-          collapsed={collapsed}
+          collapsed={collapsed && !fullWidth}
           name={brandName}
           tagline={brandTagline}
           logoUrl={brandLogoUrl}
         />
 
-        {allowCollapse ? (
+        {onClose ? (
+          <button
+            type="button"
+            onClick={onClose}
+            className={`${adminSurface.btnIcon} shrink-0`}
+            aria-label="Close menu"
+          >
+            <X className="size-4" aria-hidden />
+          </button>
+        ) : allowCollapse ? (
           <button
             type="button"
             onClick={() => {

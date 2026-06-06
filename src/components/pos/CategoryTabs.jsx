@@ -2,7 +2,7 @@
 
 export default function CategoryTabs({ categories, activeCategory, onChange }) {
   return (
-    <div className="overflow-x-auto bg-transparent pb-1 [scrollbar-width:thin] [&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-[var(--admin-scrollbar-thumb)]">
+    <div className="min-w-0 overflow-x-auto bg-transparent pb-1 [scrollbar-width:thin] [&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-[var(--admin-scrollbar-thumb)]">
       <div className="flex min-w-max gap-2 bg-transparent">
         {categories.map((category) => {
           const active = activeCategory === category.name;

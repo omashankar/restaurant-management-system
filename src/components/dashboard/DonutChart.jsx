@@ -71,7 +71,7 @@ export default function DonutChart({ channels = DEFAULT_CHANNELS }) {
           </div>
         </div>
 
-        <div className="space-y-3">
+        <div className="w-full min-w-0 space-y-3 sm:w-auto">
           {items.map((c) => (
             <div key={c.id} className="flex items-center gap-3">
               <span className="size-3 shrink-0 rounded-full" style={{ backgroundColor: c.color }} />

@@ -39,6 +39,14 @@ const STATUS_ICON = {
 
 const STATUSES = ["paid", "pending", "failed", "refunded"];
 
+const filterSelectCls =
+  "cursor-pointer w-full min-w-0 rounded-xl border admin-shell-border bg-[var(--admin-control)] px-3 py-2.5 text-sm admin-shell-text outline-none focus-sa-primary sm:w-auto sm:min-w-[9.5rem] sm:shrink-0";
+
+function formatPaymentDate(value) {
+  if (!value) return "—";
+  return new Date(value).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+}
+
 export default function PaymentsPage() {
   const [activeTab, setActiveTab] = useState("overview");
   const [payments, setPayments]   = useState([]);
@@ -119,16 +127,16 @@ export default function PaymentsPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="min-w-0 w-full max-w-full space-y-6 overflow-x-hidden">
 
       {/* Header */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div className="flex items-start gap-3">
-          <span className={`mt-1 ${saIconBadgeCls}`}>
+      <div className="flex min-w-0 flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div className="flex min-w-0 items-start gap-3">
+          <span className={`mt-1 shrink-0 ${saIconBadgeCls}`}>
             <DollarSign className="size-5" />
           </span>
-          <div>
-            <h1 className="admin-page-title text-2xl font-semibold tracking-tight">Subscription Payments</h1>
+          <div className="min-w-0">
+            <h1 className="admin-page-title break-words text-2xl font-semibold tracking-tight">Subscription Payments</h1>
             <p className="admin-page-desc mt-1 text-sm">
               Money received when restaurants pay for a plan.{" "}
               <Link href="/super-admin/billing" className="text-indigo-400 hover:text-indigo-300 underline-offset-2 hover:underline">
@@ -137,42 +145,47 @@ export default function PaymentsPage() {
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex w-full min-w-0 flex-col items-stretch gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:justify-end">
+          <div className="grid w-full grid-cols-3 gap-1 sm:flex sm:w-auto sm:gap-2">
+            <button
+              type="button"
+              onClick={() => setActiveTab("overview")}
+              className={`cursor-pointer rounded-xl px-2 py-2 text-center text-xs font-medium transition-colors sm:px-3 sm:text-sm ${
+                activeTab === "overview"
+                  ? "admin-surface-segment-btn-active admin-shell-text"
+                  : "admin-surface-segment-btn hover:admin-surface-body"
+              }`}
+            >
+              Overview
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab("transactions")}
+              className={`cursor-pointer rounded-xl px-2 py-2 text-center text-xs font-medium transition-colors sm:px-3 sm:text-sm ${
+                activeTab === "transactions"
+                  ? "admin-surface-segment-btn-active admin-shell-text"
+                  : "admin-surface-segment-btn hover:admin-surface-body"
+              }`}
+            >
+              Transactions
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab("invoices")}
+              className={`cursor-pointer rounded-xl px-2 py-2 text-center text-xs font-medium transition-colors sm:px-3 sm:text-sm ${
+                activeTab === "invoices"
+                  ? "admin-surface-segment-btn-active admin-shell-text"
+                  : "admin-surface-segment-btn hover:admin-surface-body"
+              }`}
+            >
+              Invoices
+            </button>
+          </div>
           <button
             type="button"
-            onClick={() => setActiveTab("overview")}
-            className={`cursor-pointer rounded-xl px-3 py-2 text-sm font-medium transition-colors ${
-              activeTab === "overview"
-                ? "admin-surface-segment-btn-active admin-shell-text"
-                : "admin-surface-segment-btn hover:admin-surface-body"
-            }`}
+            onClick={fetchPayments}
+            className="cursor-pointer inline-flex w-full shrink-0 items-center justify-center gap-1.5 rounded-xl border admin-shell-border px-3 py-2.5 text-sm font-medium text-zinc-400 transition-colors hover:border-zinc-500 hover:admin-shell-text sm:w-auto"
           >
-            Overview
-          </button>
-          <button
-            type="button"
-            onClick={() => setActiveTab("transactions")}
-            className={`cursor-pointer rounded-xl px-3 py-2 text-sm font-medium transition-colors ${
-              activeTab === "transactions"
-                ? "admin-surface-segment-btn-active admin-shell-text"
-                : "admin-surface-segment-btn hover:admin-surface-body"
-            }`}
-          >
-            Transactions
-          </button>
-          <button
-            type="button"
-            onClick={() => setActiveTab("invoices")}
-            className={`cursor-pointer rounded-xl px-3 py-2 text-sm font-medium transition-colors ${
-              activeTab === "invoices"
-                ? "admin-surface-segment-btn-active admin-shell-text"
-                : "admin-surface-segment-btn hover:admin-surface-body"
-            }`}
-          >
-            Invoices
-          </button>
-          <button type="button" onClick={fetchPayments}
-            className="cursor-pointer flex items-center gap-1.5 rounded-xl border admin-shell-border px-3 py-2.5 text-sm font-medium text-zinc-400 hover:border-zinc-500 hover:admin-shell-text transition-colors">
             <RefreshCw className={`size-4 ${loading ? saSpinnerCls : ""}`} /> Refresh
           </button>
         </div>
@@ -186,20 +199,20 @@ export default function PaymentsPage() {
 
       {/* Summary cards */}
       {activeTab === "overview" && (
-      <div className="grid gap-3 sm:grid-cols-3">
-        <div className="rounded-2xl border border-sa-accent-20 bg-sa-accent-5 px-5 py-4">
+      <div className="grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-3">
+        <div className="min-w-0 rounded-2xl border border-sa-accent-20 bg-sa-accent-5 px-5 py-4">
           <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500">Total Revenue</p>
           <p className="mt-2 text-3xl font-bold tabular-nums text-sa-accent">
             {formatSaMoney(summary.totalRevenue)}
           </p>
           <p className="mt-1 text-xs admin-surface-faint">{summary.paidCount} paid transactions</p>
         </div>
-        <div className="admin-surface-card px-5 py-4">
+        <div className="min-w-0 admin-surface-card px-5 py-4">
           <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500">Total Transactions</p>
           <p className="mt-2 text-3xl font-bold tabular-nums admin-shell-text">{pagination.total}</p>
           <p className="mt-1 text-xs admin-surface-faint">All statuses</p>
         </div>
-        <div className="rounded-2xl border border-amber-500/20 bg-amber-500/5 px-5 py-4">
+        <div className="min-w-0 rounded-2xl border border-amber-500/20 bg-amber-500/5 px-5 py-4">
           <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500">Showing</p>
           <p className="mt-2 text-3xl font-bold tabular-nums text-amber-400">{payments.length}</p>
           <p className="mt-1 text-xs admin-surface-faint">Page {pagination.page} of {pagination.pages}</p>
@@ -210,16 +223,19 @@ export default function PaymentsPage() {
       {/* Filters */}
       {activeTab === "transactions" && (
       <>
-      <div className="flex flex-wrap items-center gap-3">
+      <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
         <SearchField
-          className="min-w-[200px] max-w-sm flex-1"
+          className="min-w-0 w-full max-w-none sm:max-w-sm sm:flex-1"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Search restaurant, email, invoice…"
           inputClassName="focus-sa-primary"
         />
-        <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}
-          className="cursor-pointer admin-surface-card px-3 py-2.5 text-sm admin-shell-text outline-none focus-sa-primary">
+        <select
+          value={statusFilter}
+          onChange={(e) => setStatusFilter(e.target.value)}
+          className={filterSelectCls}
+        >
           <option value="all">All statuses</option>
           {STATUSES.map((s) => <option key={s} value={s} className="capitalize">{s}</option>)}
         </select>
@@ -236,16 +252,48 @@ export default function PaymentsPage() {
         </div>
       ) : (
         <DataTableShell>
+          <div className="space-y-2 p-3 md:hidden">
+            {payments.map((p) => (
+              <div
+                key={p.id}
+                className="rounded-xl border admin-shell-border bg-[var(--admin-surface-soft)] p-3"
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0 flex-1">
+                    <p className="break-all font-mono text-xs admin-surface-muted">{p.invoiceId}</p>
+                    <p className="mt-1 break-words font-medium admin-shell-text">{p.restaurantName}</p>
+                    <p className="truncate text-xs admin-surface-muted">{p.adminEmail}</p>
+                  </div>
+                  <p className="shrink-0 text-right font-semibold tabular-nums admin-shell-text">
+                    {formatSaMoney(p.amount, p.currency)}
+                  </p>
+                </div>
+                <div className="mt-3 flex flex-wrap items-center gap-2">
+                  <span className="inline-flex rounded-full bg-[var(--admin-hover-strong)] px-2.5 py-0.5 text-xs font-semibold capitalize admin-surface-body">
+                    {p.plan}
+                  </span>
+                  <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-semibold capitalize ring-1 ${STATUS_BADGE[p.status] ?? STATUS_BADGE.pending}`}>
+                    {STATUS_ICON[p.status]}
+                    {p.status}
+                  </span>
+                  <span className="text-xs capitalize admin-surface-muted">{p.method}</span>
+                </div>
+                <p className="mt-2 text-[10px] admin-surface-faint">{formatPaymentDate(p.createdAt)}</p>
+              </div>
+            ))}
+          </div>
+
+          <div className="hidden md:block">
             <AdminTable>
               <AdminTableHead>
                 <AdminTableHeadRow>
                   <AdminTableTh>Invoice</AdminTableTh>
                   <AdminTableTh>Restaurant</AdminTableTh>
-                  <AdminTableTh hidden="md">Plan</AdminTableTh>
+                  <AdminTableTh>Plan</AdminTableTh>
                   <AdminTableTh>Amount</AdminTableTh>
                   <AdminTableTh>Status</AdminTableTh>
-                  <AdminTableTh hidden="lg">Method</AdminTableTh>
-                  <AdminTableTh hidden="md">Date</AdminTableTh>
+                  <AdminTableTh>Method</AdminTableTh>
+                  <AdminTableTh>Date</AdminTableTh>
                 </AdminTableHeadRow>
               </AdminTableHead>
               <AdminTableBody>
@@ -258,7 +306,7 @@ export default function PaymentsPage() {
                       <p className="font-medium admin-shell-text">{p.restaurantName}</p>
                       <p className="text-xs admin-surface-muted">{p.adminEmail}</p>
                     </AdminTableTd>
-                    <AdminTableTd hidden="md">
+                    <AdminTableTd>
                       <span className="inline-flex rounded-full bg-[var(--admin-hover-strong)] px-2.5 py-0.5 text-xs font-semibold capitalize admin-surface-body">
                         {p.plan}
                       </span>
@@ -274,16 +322,17 @@ export default function PaymentsPage() {
                         {p.status}
                       </span>
                     </AdminTableTd>
-                    <AdminTableTd hidden="lg">
+                    <AdminTableTd>
                       <span className="text-xs capitalize admin-surface-muted">{p.method}</span>
                     </AdminTableTd>
-                    <AdminTableTd hidden="md" className="text-xs admin-surface-faint">
-                      {p.createdAt ? new Date(p.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "—"}
+                    <AdminTableTd className="text-xs admin-surface-faint">
+                      {formatPaymentDate(p.createdAt)}
                     </AdminTableTd>
                   </AdminTableRow>
                 ))}
               </AdminTableBody>
             </AdminTable>
+          </div>
 
           <div className="px-4 pb-4">
             <PaginationBar
@@ -312,14 +361,52 @@ export default function PaymentsPage() {
         </div>
       ) : (
         <DataTableShell>
+          <div className="space-y-2 p-3 md:hidden">
+            {invoiceRows.map((p) => (
+              <div
+                key={p.id}
+                className="rounded-xl border admin-shell-border bg-[var(--admin-surface-soft)] p-3"
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0 flex-1">
+                    <p className="break-all font-mono text-xs text-zinc-400">{p.invoiceId}</p>
+                    <p className="mt-1 break-words font-medium admin-shell-text">{p.restaurantName}</p>
+                    <p className="truncate text-xs admin-surface-muted">{p.adminEmail}</p>
+                  </div>
+                  <p className="shrink-0 text-right font-semibold tabular-nums admin-shell-text">
+                    {formatSaMoney(p.amount, p.currency)}
+                  </p>
+                </div>
+                <div className="mt-3 flex flex-wrap items-center gap-2">
+                  <span className="inline-flex rounded-full bg-[var(--admin-hover-strong)] px-2.5 py-0.5 text-xs font-semibold capitalize admin-surface-body">
+                    {p.planName || p.plan} {p.billingCycle ? `(${p.billingCycle})` : ""}
+                  </span>
+                  <span className="text-[10px] admin-surface-faint">
+                    Paid {formatPaymentDate(p.paidAt || p.createdAt)}
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  disabled={downloadingId === p.id}
+                  onClick={() => downloadReceipt(p)}
+                  className="mt-3 flex w-full cursor-pointer items-center justify-center gap-1.5 rounded-lg border admin-shell-border px-2.5 py-2 text-xs font-medium admin-surface-body transition-colors hover:border-zinc-500 hover:admin-shell-text disabled:opacity-50"
+                >
+                  <Download className="size-3.5" />
+                  {downloadingId === p.id ? "Downloading..." : "Download Receipt"}
+                </button>
+              </div>
+            ))}
+          </div>
+
+          <div className="hidden md:block">
             <AdminTable>
               <AdminTableHead>
                 <AdminTableHeadRow>
                   <AdminTableTh>Invoice</AdminTableTh>
                   <AdminTableTh>Restaurant</AdminTableTh>
-                  <AdminTableTh hidden="md">Plan</AdminTableTh>
+                  <AdminTableTh>Plan</AdminTableTh>
                   <AdminTableTh>Amount</AdminTableTh>
-                  <AdminTableTh hidden="md">Paid On</AdminTableTh>
+                  <AdminTableTh>Paid On</AdminTableTh>
                   <AdminTableTh align="right">Receipt</AdminTableTh>
                 </AdminTableHeadRow>
               </AdminTableHead>
@@ -333,7 +420,7 @@ export default function PaymentsPage() {
                       <p className="font-medium admin-shell-text">{p.restaurantName}</p>
                       <p className="text-xs admin-surface-muted">{p.adminEmail}</p>
                     </AdminTableTd>
-                    <AdminTableTd hidden="md">
+                    <AdminTableTd>
                       <span className="inline-flex rounded-full bg-[var(--admin-hover-strong)] px-2.5 py-0.5 text-xs font-semibold capitalize admin-surface-body">
                         {p.planName || p.plan} {p.billingCycle ? `(${p.billingCycle})` : ""}
                       </span>
@@ -343,12 +430,8 @@ export default function PaymentsPage() {
                         {formatSaMoney(p.amount, p.currency)}
                       </p>
                     </AdminTableTd>
-                    <AdminTableTd hidden="md" className="text-xs admin-surface-faint">
-                      {p.paidAt
-                        ? new Date(p.paidAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
-                        : (p.createdAt
-                          ? new Date(p.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
-                          : "—")}
+                    <AdminTableTd className="text-xs admin-surface-faint">
+                      {formatPaymentDate(p.paidAt || p.createdAt)}
                     </AdminTableTd>
                     <AdminTableTd align="right">
                       <button
@@ -365,6 +448,8 @@ export default function PaymentsPage() {
                 ))}
               </AdminTableBody>
             </AdminTable>
+          </div>
+
           <div className="px-4 pb-4">
             <PaginationBar
               page={page}

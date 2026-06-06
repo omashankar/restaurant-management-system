@@ -45,7 +45,7 @@ export default function TablesModulePage() {
   const [deleting, setDeleting] = useState(false);
   const { showToast, ToastUI } = useToast();
 
-  /* â”€â”€ Fetch tables + areas â”€â”€ */
+  /* ── Fetch tables + areas ── */
   const fetchAll = useCallback(async (silent = false) => {
     if (!silent) {
       setLoading(true);
@@ -162,9 +162,9 @@ export default function TablesModulePage() {
 
   if (loading) {
     return (
-      <div className="space-y-6">
+      <div className="min-w-0 w-full max-w-full space-y-6 overflow-x-hidden">
         <div className="h-8 w-32 animate-pulse rounded-lg admin-progress-track" />
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid min-w-0 gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {Array.from({ length: 8 }).map((_, i) => (
             <div key={i} className="h-32 animate-pulse admin-surface-card" />
           ))}
@@ -174,35 +174,36 @@ export default function TablesModulePage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="min-w-0 w-full max-w-full space-y-6 overflow-x-hidden">
       {fetchError && (
         <div className="rounded-xl border border-red-500/25 bg-red-500/10 px-4 py-3 text-sm text-red-400">
           {fetchError}
         </div>
       )}
       {/* Header */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div className="flex items-start gap-3">
-          <span className={`mt-1 ${raIconBadgeCls}`}>
+      <div className="flex min-w-0 flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div className="flex min-w-0 items-start gap-3">
+          <span className={`mt-1 shrink-0 ${raIconBadgeCls}`}>
             <Table2 className="size-5" />
           </span>
-          <div>
+          <div className="min-w-0">
             <h1 className="admin-page-title text-2xl font-semibold tracking-tight">Tables</h1>
             <p className="admin-page-desc mt-1 text-sm">Floor layout · {total} table{total !== 1 ? "s" : ""}</p>
           </div>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex w-full min-w-0 flex-col gap-2 sm:w-auto sm:flex-row sm:flex-wrap sm:items-center">
           <Link href="/tables/areas"
-            className="cursor-pointer inline-flex items-center gap-2 rounded-xl border admin-shell-border px-4 py-2.5 text-sm font-medium admin-surface-body hover:border-zinc-500 hover:admin-shell-text">
+            className="inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl border admin-shell-border px-4 py-2.5 text-sm font-medium admin-surface-body hover:border-zinc-500 hover:admin-shell-text sm:w-auto">
             <LayoutGrid className="size-4" /> Manage Areas
           </Link>
           <button type="button" onClick={fetchAll}
-            className="cursor-pointer flex items-center gap-1.5 rounded-xl border admin-shell-border px-3 py-2.5 text-sm font-medium text-zinc-400 hover:border-zinc-500 hover:admin-shell-text transition-colors">
+            className="inline-flex w-full cursor-pointer items-center justify-center gap-1.5 rounded-xl border admin-shell-border px-3 py-2.5 text-sm font-medium text-zinc-400 transition-colors hover:border-zinc-500 hover:admin-shell-text sm:w-auto">
             <RefreshCw className="size-4" />
+            <span className="sm:hidden">Refresh</span>
           </button>
           {isAdmin && (
             <button type="button" onClick={openCreate}
-              className="cursor-pointer inline-flex items-center gap-2 rounded-xl bg-ra-primary px-4 py-2.5 text-sm font-semibold text-zinc-950 hover:brightness-110">
+              className="inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-ra-primary px-4 py-2.5 text-sm font-semibold text-zinc-950 hover:brightness-110 sm:w-auto">
               <Plus className="size-4" /> Add Table
             </button>
           )}
@@ -215,15 +216,15 @@ export default function TablesModulePage() {
         onSearchChange={setSearch}
         searchPlaceholder="Search table number…"
         filterSlot={
-          <div className="flex flex-wrap gap-2">
+          <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:flex-wrap">
             <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}
-              className="cursor-pointer admin-surface-card px-3 py-2 text-sm admin-shell-text">
+              className="w-full cursor-pointer admin-surface-card px-3 py-2 text-sm admin-shell-text sm:w-auto">
               <option value="all">All statuses</option>
               <option value="available">Available</option>
               <option value="occupied">Occupied</option>
             </select>
             <select value={categoryFilter} onChange={(e) => setCategoryFilter(e.target.value)}
-              className="cursor-pointer admin-surface-card px-3 py-2 text-sm admin-shell-text">
+              className="w-full cursor-pointer admin-surface-card px-3 py-2 text-sm admin-shell-text sm:w-auto">
               <option value="all">All areas</option>
               {areas.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}
             </select>
@@ -247,18 +248,18 @@ export default function TablesModulePage() {
         />
       ) : (
         <>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid min-w-0 grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {pageRows.map((t) => {
               const st  = t.status === "reserved" ? "occupied" : t.status;
               const cat = areas.find((a) => a.id === t.categoryId);
               const badgeClass = cat ? getCategoryBadge(cat.color) : "bg-zinc-500/15 text-zinc-400 ring-zinc-500/25";
               return (
                 <div key={t.id}
-                  className="group relative admin-surface-card p-4 transition-colors hover:border-ra-primary-30">
+                  className="group relative min-w-0 admin-surface-card p-4 transition-colors hover:border-ra-primary-30">
                   <div className="flex items-start justify-between gap-2">
-                    <div>
-                      <p className="admin-surface-title text-lg font-semibold">{t.tableNumber}</p>
-                      {t.zone && <p className="admin-surface-faint text-xs">{t.zone}</p>}
+                    <div className="min-w-0">
+                      <p className="break-words admin-surface-title text-lg font-semibold">{t.tableNumber}</p>
+                      {t.zone && <p className="break-words admin-surface-faint text-xs">{t.zone}</p>}
                     </div>
                     <span className={`shrink-0 rounded-full px-2.5 py-0.5 text-xs font-semibold capitalize ring-1 ${
                       st === "available"
@@ -322,13 +323,13 @@ export default function TablesModulePage() {
       <Modal open={modalOpen} onClose={() => setModalOpen(false)}
         title={editingId ? "Edit Table" : "Add Table"}
         footer={
-          <div className="flex justify-end gap-2">
+          <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
             <button type="button" onClick={() => setModalOpen(false)}
-              className="cursor-pointer rounded-xl border admin-shell-border px-4 py-2 text-sm admin-surface-body hover:border-zinc-500">
+              className="w-full cursor-pointer rounded-xl border admin-shell-border px-4 py-2 text-sm admin-surface-body hover:border-zinc-500 sm:w-auto">
               Cancel
             </button>
             <button type="button" onClick={saveTable} disabled={saving}
-              className="cursor-pointer rounded-xl bg-ra-primary px-4 py-2 text-sm font-semibold text-zinc-950 hover:brightness-110 disabled:opacity-40">
+              className="w-full cursor-pointer rounded-xl bg-ra-primary px-4 py-2 text-sm font-semibold text-zinc-950 hover:brightness-110 disabled:opacity-40 sm:w-auto">
               {saving ? "Saving…" : "Save"}
             </button>
           </div>

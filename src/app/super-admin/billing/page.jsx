@@ -65,6 +65,9 @@ const PLAN_BAR = {
 
 const inputCls = saInputCls;
 
+const filterSelectCls =
+  "cursor-pointer w-full min-w-0 rounded-xl border admin-shell-border bg-[var(--admin-control)] px-3 py-2 text-xs admin-shell-text outline-none focus-sa-primary sm:w-auto sm:min-w-[9.5rem] sm:shrink-0";
+
 function FieldError({ message }) {
   if (!message) return null;
   return <p className="mt-1 text-xs text-red-400">{message}</p>;
@@ -234,16 +237,16 @@ export default function BillingPage() {
     : 1;
 
   return (
-    <div className="space-y-6">
+    <div className="min-w-0 w-full max-w-full space-y-6 overflow-x-hidden">
 
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div className="flex items-start gap-3">
-          <span className={`mt-1 ${saIconBadgeCls}`}>
+      <div className="flex min-w-0 flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div className="flex min-w-0 items-start gap-3">
+          <span className={`mt-1 shrink-0 ${saIconBadgeCls}`}>
             <Receipt className="size-5" />
           </span>
-          <div>
-            <h1 className="admin-page-title text-2xl font-semibold tracking-tight">Billing</h1>
-            <p className="admin-page-desc mt-1 text-sm">
+          <div className="min-w-0">
+            <h1 className="admin-page-title break-words text-2xl font-semibold tracking-tight">Billing</h1>
+            <p className="admin-page-desc mt-1 break-words text-sm">
               Manage which plan each restaurant is on (active, trial, expired).{" "}
               <Link href="/super-admin/payments" className="text-sa-primary hover:text-sa-primary-muted underline-offset-2 hover:underline">
                 View payment history →
@@ -251,11 +254,12 @@ export default function BillingPage() {
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex w-full min-w-0 flex-col items-stretch gap-2 sm:w-auto sm:flex-row sm:flex-wrap sm:items-center">
+          <div className="grid w-full grid-cols-2 gap-1 sm:flex sm:w-auto sm:gap-2">
           <button
             type="button"
             onClick={() => setActiveTab("overview")}
-            className={`cursor-pointer rounded-xl px-3 py-2 text-sm font-medium transition-colors ${
+            className={`cursor-pointer rounded-xl px-2 py-2 text-center text-xs font-medium transition-colors sm:px-3 sm:text-sm ${
               activeTab === "overview"
                 ? "admin-surface-segment-btn-active admin-shell-text"
                 : "admin-surface-segment-btn hover:admin-surface-body"
@@ -266,7 +270,7 @@ export default function BillingPage() {
           <button
             type="button"
             onClick={() => setActiveTab("subscriptions")}
-            className={`cursor-pointer rounded-xl px-3 py-2 text-sm font-medium transition-colors ${
+            className={`cursor-pointer rounded-xl px-2 py-2 text-center text-xs font-medium transition-colors sm:px-3 sm:text-sm ${
               activeTab === "subscriptions"
                 ? "admin-surface-segment-btn-active admin-shell-text"
                 : "admin-surface-segment-btn hover:admin-surface-body"
@@ -274,13 +278,15 @@ export default function BillingPage() {
           >
             Subscriptions
           </button>
+          </div>
           <button type="button" onClick={fetchAll}
-            className="cursor-pointer flex items-center gap-1.5 rounded-xl border admin-shell-border px-3 py-2.5 text-sm font-medium text-zinc-400 hover:border-zinc-500 hover:admin-shell-text transition-colors">
+            className="inline-flex w-full cursor-pointer items-center justify-center gap-1.5 rounded-xl border admin-shell-border px-3 py-2.5 text-sm font-medium text-zinc-400 transition-colors hover:border-zinc-500 hover:admin-shell-text sm:w-auto">
             <RefreshCw className={"size-4 " + (loading ? saSpinnerCls : "")} />
+            Refresh
           </button>
           <button type="button"
             onClick={() => openAssignModal()}
-            className="cursor-pointer inline-flex items-center gap-2 rounded-xl bg-sa-primary px-4 py-2.5 text-sm font-semibold text-zinc-950 hover:brightness-110 transition-colors">
+            className="inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-sa-primary px-4 py-2.5 text-sm font-semibold text-zinc-950 transition-colors hover:brightness-110 sm:w-auto">
             <Plus className="size-4" /> Assign Plan
           </button>
         </div>
@@ -298,18 +304,18 @@ export default function BillingPage() {
         <>
           {activeTab === "overview" && (
           <>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid min-w-0 grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {[
               { label: "Total Revenue",        value: formatSaMoney(billing?.overview?.totalRevenue ?? 0), icon: DollarSign,    color: "text-sa-accent", bg: "bg-sa-accent-5",  border: "border-sa-accent-20" },
               { label: "Active Subscriptions", value: stats.active,   icon: CheckCircle2, color: "text-sky-400",     bg: "bg-sky-500/5",      border: "border-sky-500/20"     },
               { label: "On Trial",             value: stats.trial,    icon: Calendar,     color: "text-indigo-400",  bg: "bg-indigo-500/5",   border: "border-indigo-500/20"  },
               { label: "Expired",              value: stats.expired,  icon: AlertTriangle,color: "text-red-400",     bg: "bg-red-500/5",      border: "border-red-500/20"     },
             ].map(({ label, value, icon: Icon, color, bg, border }) => (
-              <div key={label} className={"rounded-2xl border p-5 " + bg + " " + border}>
+              <div key={label} className={"min-w-0 rounded-2xl border p-4 sm:p-5 " + bg + " " + border}>
                 <div className="flex items-start justify-between gap-3">
-                  <div>
+                  <div className="min-w-0">
                     <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500">{label}</p>
-                    <p className={"mt-2 text-3xl font-bold tabular-nums " + color}>{value}</p>
+                    <p className={"mt-2 break-words text-2xl font-bold tabular-nums sm:text-3xl " + color}>{value}</p>
                   </div>
                   <span className={"flex size-10 shrink-0 items-center justify-center rounded-xl " + bg}>
                     <Icon className={"size-5 " + color} />
@@ -319,8 +325,8 @@ export default function BillingPage() {
             ))}
           </div>
 
-          <div className="grid gap-6 lg:grid-cols-3">
-            <div className="lg:col-span-2 admin-surface-card p-5">
+          <div className="grid min-w-0 gap-6 lg:grid-cols-3">
+            <div className="min-w-0 lg:col-span-2 admin-surface-card p-4 sm:p-5">
               <div className="flex items-center gap-2 mb-5">
                 <TrendingUp className="size-4 text-sa-accent" />
                 <h2 className="text-sm font-semibold admin-shell-text">Revenue — Last 6 Months</h2>
@@ -330,9 +336,9 @@ export default function BillingPage() {
                   <p className="text-sm admin-surface-faint">No revenue data yet.</p>
                 </div>
               ) : (
-                <div className="flex items-end gap-1.5 h-40">
+                <div className="flex h-40 min-w-0 items-end gap-1 overflow-x-auto pb-1 sm:gap-1.5 sm:overflow-visible">
                   {billing.revenueByMonth.map((m) => (
-                    <div key={m.label} className="group flex flex-1 flex-col items-center gap-1">
+                    <div key={m.label} className="group flex min-w-[2.75rem] flex-1 flex-col items-center gap-1 sm:min-w-0">
                       <div className="relative flex flex-1 w-full flex-col justify-end">
                         <div className="absolute -top-7 left-1/2 -translate-x-1/2 hidden group-hover:flex whitespace-nowrap rounded-lg admin-chart-tooltip px-2 py-1 text-[10px] font-semibold admin-shell-text shadow-lg z-10">
                           {formatSaMoney(m.revenue)}
@@ -347,7 +353,7 @@ export default function BillingPage() {
               )}
             </div>
 
-            <div className="admin-surface-card p-5">
+            <div className="min-w-0 admin-surface-card p-4 sm:p-5">
               <h2 className="mb-4 text-sm font-semibold admin-shell-text">Plan Distribution</h2>
               {!billing?.planBreakdown?.length ? (
                 <p className="text-sm admin-surface-faint">No data.</p>
@@ -358,8 +364,8 @@ export default function BillingPage() {
                     const pct   = Math.round((p.count / total) * 100);
                     return (
                       <div key={`plan-dist-${p.plan}-${planIdx}`}>
-                        <div className="flex items-center justify-between mb-1.5">
-                          <span className={"inline-flex rounded-full px-2 py-0.5 text-xs font-semibold capitalize ring-1 " + (PLAN_BADGE[p.plan] ?? PLAN_BADGE.free)}>
+                        <div className="mb-1.5 flex min-w-0 flex-wrap items-center justify-between gap-1">
+                          <span className={"inline-flex max-w-full truncate rounded-full px-2 py-0.5 text-xs font-semibold capitalize ring-1 " + (PLAN_BADGE[p.plan] ?? PLAN_BADGE.free)}>
                             {p.plan}
                           </span>
                           <span className="text-xs admin-surface-muted">{p.count} · {pct}%</span>
@@ -379,14 +385,14 @@ export default function BillingPage() {
           )}
 
           {activeTab === "subscriptions" && (
-          <div className="admin-surface-card">
-            <div className="flex items-center justify-between admin-surface-divider-b px-5 py-4">
-              <div>
+          <div className="min-w-0 admin-surface-card">
+            <div className="flex flex-col gap-3 admin-surface-divider-b px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-5">
+              <div className="min-w-0">
                 <h2 className="text-sm font-semibold admin-shell-text">Subscriptions</h2>
                 <p className="mt-0.5 text-xs admin-surface-muted">Track plan assignments, expiry, and status per restaurant.</p>
               </div>
               <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}
-                className="cursor-pointer admin-surface-card px-3 py-2 text-xs admin-shell-text outline-none focus-sa-primary">
+                className={filterSelectCls}>
                 <option value="all">All statuses</option>
                 {["active","trial","expired","cancelled"].map((s) => (
                   <option key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1)}</option>
@@ -404,6 +410,82 @@ export default function BillingPage() {
                 </button>
               </div>
             ) : (
+              <>
+                <div className="space-y-2 p-3 md:hidden">
+                  {subs.map((s) => {
+                    const StatusIcon = STATUS_ICON[s.status] ?? CheckCircle2;
+                    const isExpiring = s.daysLeft != null && s.daysLeft <= 7 && s.status === "active";
+                    return (
+                      <div
+                        key={s.id}
+                        className={`rounded-xl border admin-shell-border bg-[var(--admin-surface-soft)] p-3 ${s.status === "cancelled" ? "opacity-50" : ""}`}
+                      >
+                        <div className="flex items-start gap-3">
+                          <span className="flex size-8 shrink-0 items-center justify-center rounded-lg admin-rank-badge text-xs font-bold admin-surface-body">
+                            {s.restaurantName?.[0]?.toUpperCase()}
+                          </span>
+                          <div className="min-w-0 flex-1">
+                            <p className="break-words font-medium admin-shell-text">{s.restaurantName}</p>
+                            <p className="truncate text-xs admin-surface-muted">{s.restaurantEmail}</p>
+                          </div>
+                        </div>
+                        <div className="mt-3 flex flex-wrap items-center gap-2">
+                          <span className={"inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold capitalize ring-1 " + (PLAN_BADGE[s.planSlug] ?? PLAN_BADGE.free)}>
+                            {s.planName}
+                          </span>
+                          <span className={"inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-semibold capitalize ring-1 " + (STATUS_BADGE[s.status] ?? STATUS_BADGE.cancelled)}>
+                            <StatusIcon className="size-3" />
+                            {s.status}
+                          </span>
+                        </div>
+                        {s.price > 0 && (
+                          <p className="mt-2 text-[10px] admin-surface-faint">{formatSaMoney(s.price)}/{s.billingCycle}</p>
+                        )}
+                        <div className="mt-2 grid grid-cols-2 gap-2 text-xs">
+                          <div>
+                            <p className="admin-surface-faint">Start</p>
+                            <p className="admin-surface-muted">
+                              {s.startDate ? new Date(s.startDate).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "—"}
+                            </p>
+                          </div>
+                          <div>
+                            <p className="admin-surface-faint">Expires</p>
+                            <p className={isExpiring ? "font-semibold text-amber-400" : "admin-surface-muted"}>
+                              {s.endDate ? new Date(s.endDate).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "—"}
+                            </p>
+                          </div>
+                        </div>
+                        {s.daysLeft != null && (
+                          <p className={"mt-2 text-xs font-semibold tabular-nums " + (s.daysLeft === 0 ? "text-red-400" : s.daysLeft <= 7 ? "text-amber-400" : "text-zinc-400")}>
+                            {s.daysLeft === 0 ? "Expires today" : `${s.daysLeft} days left`}
+                          </p>
+                        )}
+                        <div className="mt-3 flex flex-wrap items-center gap-1 border-t admin-shell-border pt-3">
+                          <AdminTableIconButton
+                            onClick={() => { setRenewTarget(s); setRenewDays("30"); }}
+                            title="Renew / extend"
+                            aria-label="Renew / extend"
+                            className="hover:text-sa-primary"
+                          >
+                            <RotateCcw className="size-4" />
+                          </AdminTableIconButton>
+                          {s.status !== "cancelled" && (
+                            <AdminTableIconButton
+                              variant="danger"
+                              onClick={() => setCancelTarget(s)}
+                              title="Cancel subscription"
+                              aria-label="Cancel subscription"
+                            >
+                              <Ban className="size-4" />
+                            </AdminTableIconButton>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                <div className="hidden md:block">
               <DataTableShell>
                 <AdminTable>
                   <AdminTableHead>
@@ -491,8 +573,10 @@ export default function BillingPage() {
                   </AdminTableBody>
                 </AdminTable>
               </DataTableShell>
+                </div>
+              </>
             )}
-            <div className="px-4 pb-4">
+            <div className="min-w-0 px-4 pb-4">
               <PaginationBar
                 page={subsPage}
                 totalPages={subsPagination.pages}
@@ -509,13 +593,13 @@ export default function BillingPage() {
 
       <Modal open={assignOpen} onClose={() => setAssignOpen(false)} title="Assign Plan to Restaurant"
         footer={
-          <div className="flex justify-end gap-2">
+          <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
             <button type="button" onClick={() => setAssignOpen(false)}
-              className="cursor-pointer rounded-xl border admin-shell-border px-4 py-2 text-sm admin-surface-body hover:border-zinc-500 transition-colors">
+              className="inline-flex w-full cursor-pointer items-center justify-center rounded-xl border admin-shell-border px-4 py-2 text-sm admin-surface-body transition-colors hover:border-zinc-500 sm:w-auto">
               Cancel
             </button>
             <button type="button" onClick={handleAssign} disabled={assigning}
-              className="cursor-pointer rounded-xl bg-sa-primary px-4 py-2 text-sm font-semibold text-zinc-950 hover:brightness-110 disabled:opacity-40 transition-colors">
+              className="inline-flex w-full cursor-pointer items-center justify-center rounded-xl bg-sa-primary px-4 py-2 text-sm font-semibold text-zinc-950 transition-colors hover:brightness-110 disabled:opacity-40 sm:w-auto">
               {assigning ? "Assigning…" : "Assign Plan"}
             </button>
           </div>
@@ -624,21 +708,21 @@ export default function BillingPage() {
 
       <Modal open={!!renewTarget} onClose={() => setRenewTarget(null)} title="Renew Subscription"
         footer={
-          <div className="flex justify-end gap-2">
+          <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
             <button type="button" onClick={() => setRenewTarget(null)}
-              className="cursor-pointer rounded-xl border admin-shell-border px-4 py-2 text-sm admin-surface-body hover:border-zinc-500 transition-colors">
+              className="inline-flex w-full cursor-pointer items-center justify-center rounded-xl border admin-shell-border px-4 py-2 text-sm admin-surface-body transition-colors hover:border-zinc-500 sm:w-auto">
               Cancel
             </button>
             <button type="button" onClick={handleRenew} disabled={renewing}
-              className="cursor-pointer rounded-xl bg-sa-primary px-4 py-2 text-sm font-semibold text-zinc-950 hover:brightness-110 disabled:opacity-40 transition-colors">
+              className="inline-flex w-full cursor-pointer items-center justify-center rounded-xl bg-sa-primary px-4 py-2 text-sm font-semibold text-zinc-950 transition-colors hover:brightness-110 disabled:opacity-40 sm:w-auto">
               {renewing ? "Renewing…" : "Renew"}
             </button>
           </div>
         }>
         {renewTarget && (
           <div className="space-y-4">
-            <div className="rounded-xl admin-surface-card px-4 py-3 text-sm admin-surface-muted">
-              <span className="font-medium admin-shell-text">{renewTarget.restaurantName}</span>
+            <div className="min-w-0 rounded-xl admin-surface-card px-4 py-3 text-sm admin-surface-muted">
+              <span className="break-words font-medium admin-shell-text">{renewTarget.restaurantName}</span>
               {" · "}
               <span className={"inline-flex rounded-full px-2 py-0.5 text-xs font-semibold capitalize ring-1 " + (PLAN_BADGE[renewTarget.planSlug] ?? PLAN_BADGE.free)}>
                 {renewTarget.planName}

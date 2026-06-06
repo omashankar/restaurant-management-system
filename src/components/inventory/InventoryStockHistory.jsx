@@ -38,8 +38,8 @@ export default function InventoryStockHistory({ historyEntries, items }) {
   const chartRows = sortedItems.slice(0, 8);
 
   return (
-    <div className="grid gap-6 lg:grid-cols-2">
-      <div className="rounded-2xl border admin-shell-border bg-zinc-900/40 p-5">
+      <div className="grid min-w-0 gap-6 lg:grid-cols-2">
+      <div className="min-w-0 rounded-2xl border admin-shell-border bg-zinc-900/40 p-4 sm:p-5">
         <h3 className="admin-surface-title text-sm font-semibold">
           Recent adjustments
         </h3>
@@ -71,10 +71,10 @@ export default function InventoryStockHistory({ historyEntries, items }) {
                     )}
                   </span>
                   <div className="min-w-0 flex-1">
-                    <p className="text-sm font-medium admin-shell-text">
+                    <p className="break-words text-sm font-medium admin-shell-text">
                       {entry.itemName}
                     </p>
-                    <p className="text-xs admin-surface-muted">{entry.message}</p>
+                    <p className="break-words text-xs admin-surface-muted">{entry.message}</p>
                     <p className="mt-1 text-xs tabular-nums admin-surface-muted">
                       {up ? "+" : ""}
                       {entry.delta} · {formatShortDate(entry.createdAt)}
@@ -98,7 +98,7 @@ export default function InventoryStockHistory({ historyEntries, items }) {
         )}
       </div>
 
-      <div className="rounded-2xl border admin-shell-border bg-zinc-900/40 p-5">
+      <div className="min-w-0 rounded-2xl border admin-shell-border bg-zinc-900/40 p-4 sm:p-5">
         <h3 className="admin-surface-title text-sm font-semibold">Stock levels</h3>
         <p className="mt-0.5 text-xs admin-surface-muted">
           Relative on-hand quantity (top items)
@@ -121,7 +121,7 @@ export default function InventoryStockHistory({ historyEntries, items }) {
               return (
                 <div key={item.id}>
                   <div className="mb-1 flex justify-between gap-2 text-xs">
-                    <span className="truncate font-medium admin-shell-text">
+                    <span className="min-w-0 flex-1 break-words font-medium admin-shell-text">
                       {item.name}
                     </span>
                     <span className="shrink-0 tabular-nums admin-surface-muted">

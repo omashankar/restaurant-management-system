@@ -9,6 +9,7 @@
 
 import { ITEM_TYPE_META } from "@/types/menu";
 import AdminFoodTypeIndicator from "@/components/menu/AdminFoodTypeIndicator";
+import { formatAdminMoney } from "@/lib/adminCurrency";
 import { Clock, Pencil, Plus, Trash2, Zap } from "lucide-react";
 import { useState } from "react";
 
@@ -43,6 +44,7 @@ const STOCK_META = {
 export default function MenuCard({
   item,
   variant = "pos",   // "pos" | "menu"
+  currency = "INR",
   // POS props
   onAdd,
   isPopping = false,
@@ -67,7 +69,7 @@ export default function MenuCard({
   return (
     <article
       className={[
-        "group relative flex flex-col overflow-hidden rounded-2xl",
+        "group relative flex min-w-0 flex-col overflow-hidden rounded-2xl",
         "border admin-shell-border border-l-[3px]", accentBorder,
         "admin-surface-card bg-[var(--admin-surface)]",
         "transition-colors duration-200",
@@ -119,7 +121,7 @@ export default function MenuCard({
 
         {/* bottom: price overlay */}
         <span className="menu-card-image-badge menu-card-image-price absolute bottom-2 right-2 rounded-lg px-2.5 py-1 text-sm font-bold tabular-nums text-ra-primary">
-          ${Number(item.price).toFixed(2)}
+          {isPOS ? formatAdminMoney(item.price, currency, { decimals: 2 }) : `$${Number(item.price).toFixed(2)}`}
         </span>
 
         {/* POS: fast item glow */}

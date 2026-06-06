@@ -11,9 +11,9 @@ export default function SalesComparison({
   const max    = Math.max(...monthly.map((m) => m.sales ?? 0), 1);
 
   return (
-    <div className="rms-dashboard-card rms-dashboard-card--md flex h-full min-h-0 w-full flex-col rms-dashboard-card admin-surface-card p-5">
+    <div className={`rms-dashboard-card rms-dashboard-card--md flex h-full min-h-0 w-full min-w-0 flex-col rms-dashboard-card admin-surface-card p-5`}>
       <div className="flex shrink-0 flex-wrap items-start justify-between gap-3">
-        <div>
+        <div className="min-w-0">
           <h3 className="admin-surface-title text-sm font-semibold">Revenue Breakdown</h3>
           <p className="admin-surface-subheading">Current vs previous period</p>
         </div>

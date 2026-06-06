@@ -76,10 +76,10 @@ export default function CustomerSearch({ onCustomerSelect }) {
 
   if (selected) {
     return (
-      <div className="flex items-center justify-between gap-3 rounded-xl border border-ra-primary-30 bg-ra-primary-5 px-3 py-2.5">
-        <div>
-          <p className="text-sm font-semibold text-ra-primary-muted">{selected.name}</p>
-          <p className="text-xs admin-surface-muted">
+      <div className="flex min-w-0 items-center justify-between gap-2 rounded-xl border border-ra-primary-30 bg-ra-primary-5 px-3 py-2.5 sm:gap-3">
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-sm font-semibold text-ra-primary-muted">{selected.name}</p>
+          <p className="truncate text-xs admin-surface-muted">
             {selected.phone}
             {selected.email ? ` · ${selected.email}` : ""}
           </p>

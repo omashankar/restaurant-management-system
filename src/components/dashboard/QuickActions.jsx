@@ -64,7 +64,7 @@ export default function QuickActions() {
         <p className="mt-0.5 admin-surface-subheading">Shortcuts for common tasks</p>
       </div>
       <div className="rms-dashboard-card__body rms-dashboard-card__body--y mt-4 min-h-0 flex-1 pr-1">
-      <div className="grid grid-cols-2 gap-2">
+      <div className="grid min-w-0 grid-cols-2 gap-2">
         {visible.map(({ href, label, sub, Icon, accent }) => {
           const a = accentMap[accent];
           return (

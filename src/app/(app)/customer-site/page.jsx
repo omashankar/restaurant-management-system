@@ -97,11 +97,11 @@ function ensureAboutStats(list) {
 function ToggleRow({ label, hint, enabled, onToggle }) {
   return (
     <div className={CMS_EDITOR_TOGGLE_ROW}>
-      <div>
+      <div className="min-w-0 flex-1">
         <p className="text-sm font-medium admin-shell-text">{label}</p>
-        {hint && <p className="text-xs admin-surface-muted">{hint}</p>}
+        {hint && <p className="text-xs leading-snug admin-surface-muted">{hint}</p>}
       </div>
-      <button type="button" onClick={onToggle} className="text-ra-primary">
+      <button type="button" onClick={onToggle} className="shrink-0 text-ra-primary">
         {enabled ? <ToggleRight className="size-8" /> : <ToggleLeft className="size-8 text-zinc-600" />}
       </button>
     </div>
@@ -408,26 +408,26 @@ export default function CustomerSitePage() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div className="flex items-start gap-3">
-          <span className={`mt-1 ${raIconBadgeCls}`}>
+    <div className="min-w-0 w-full max-w-full space-y-6 overflow-x-hidden">
+      <div className="flex min-w-0 flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div className="flex min-w-0 items-start gap-3">
+          <span className={`mt-1 shrink-0 ${raIconBadgeCls}`}>
             <Globe className="size-5" />
           </span>
-          <div>
+          <div className="min-w-0">
             <h1 className="admin-page-title text-2xl font-semibold tracking-tight">Customer Site</h1>
             <p className="admin-page-desc mt-1 text-sm">
               Edit your public ordering website section by section — draft & publish.
             </p>
           </div>
         </div>
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex w-full min-w-0 flex-col gap-2 sm:w-auto sm:flex-row sm:flex-wrap sm:items-center">
           {activeTab !== "overview" && (
             <button
               type="button"
               disabled={!!saving}
               onClick={resetActiveTab}
-              className="inline-flex items-center gap-2 rounded-xl border border-[var(--admin-border-subtle)] bg-[var(--admin-surface)] px-4 py-2.5 text-sm font-medium admin-surface-body transition-colors hover:bg-[var(--admin-hover)] disabled:opacity-50"
+              className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-[var(--admin-border-subtle)] bg-[var(--admin-surface)] px-4 py-2.5 text-sm font-medium admin-surface-body transition-colors hover:bg-[var(--admin-hover)] disabled:opacity-50 sm:w-auto"
             >
               <RotateCcw className="size-4" /> Reset changes
             </button>
@@ -437,7 +437,7 @@ export default function CustomerSitePage() {
               type="button"
               disabled={!!saving}
               onClick={publishAllDrafts}
-              className="inline-flex items-center gap-2 rounded-xl bg-amber-500/90 px-4 py-2.5 text-sm font-semibold text-zinc-950 hover:bg-amber-400 disabled:opacity-50"
+              className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-amber-500/90 px-4 py-2.5 text-sm font-semibold text-zinc-950 hover:bg-amber-400 disabled:opacity-50 sm:w-auto"
             >
               {saving === "publish-all" ? (
                 <Loader2 className="size-4 animate-spin" />
@@ -452,7 +452,7 @@ export default function CustomerSitePage() {
               href={siteUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 rounded-xl border border-[var(--admin-border-subtle)] bg-[var(--admin-surface)] px-4 py-2.5 text-sm font-medium admin-surface-body transition-colors hover:border-ra-primary-40 hover:text-ra-primary"
+              className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-[var(--admin-border-subtle)] bg-[var(--admin-surface)] px-4 py-2.5 text-sm font-medium admin-surface-body transition-colors hover:border-ra-primary-40 hover:text-ra-primary sm:w-auto"
             >
               <ExternalLink className="size-4" /> Visit website
             </a>
@@ -486,7 +486,7 @@ export default function CustomerSitePage() {
         </div>
       )}
 
-      <div className="flex flex-col gap-4 lg:flex-row lg:gap-5">
+      <div className="grid min-w-0 gap-4 lg:grid-cols-[minmax(0,224px)_minmax(0,1fr)] lg:gap-5">
         <CustomerSiteSidebar
           activeTab={activeTab}
           onTabChange={switchTab}
@@ -495,7 +495,7 @@ export default function CustomerSitePage() {
 
         <div
           ref={panelRef}
-          className="min-w-0 flex-1 admin-surface-card p-5 sm:p-6"
+          className="min-w-0 flex-1 admin-surface-card p-4 sm:p-6"
         >
           <CustomerSiteTabHeader tab={activeTabMeta} />
 
@@ -877,32 +877,32 @@ export default function CustomerSitePage() {
               </Field>
               <div className="grid gap-3 sm:grid-cols-2">
                 <Field label="Background color">
-                  <div className="flex items-center gap-2">
+                  <div className="flex min-w-0 items-center gap-2">
                     <input
                       type="color"
                       value={announcement.bgColor}
                       onChange={(e) => setAnnouncement((p) => ({ ...p, bgColor: e.target.value }))}
-                      className="h-10 w-12 cursor-pointer rounded-lg border admin-shell-border bg-transparent p-1"
+                      className="h-10 w-12 shrink-0 cursor-pointer rounded-lg border admin-shell-border bg-transparent p-1"
                     />
                     <input
                       value={announcement.bgColor}
                       onChange={(e) => setAnnouncement((p) => ({ ...p, bgColor: e.target.value }))}
-                      className={inputCls}
+                      className={`${inputCls} min-w-0`}
                     />
                   </div>
                 </Field>
                 <Field label="Text color">
-                  <div className="flex items-center gap-2">
+                  <div className="flex min-w-0 items-center gap-2">
                     <input
                       type="color"
                       value={announcement.textColor}
                       onChange={(e) => setAnnouncement((p) => ({ ...p, textColor: e.target.value }))}
-                      className="h-10 w-12 cursor-pointer rounded-lg border admin-shell-border bg-transparent p-1"
+                      className="h-10 w-12 shrink-0 cursor-pointer rounded-lg border admin-shell-border bg-transparent p-1"
                     />
                     <input
                       value={announcement.textColor}
                       onChange={(e) => setAnnouncement((p) => ({ ...p, textColor: e.target.value }))}
-                      className={inputCls}
+                      className={`${inputCls} min-w-0`}
                     />
                   </div>
                 </Field>
@@ -964,7 +964,7 @@ export default function CustomerSitePage() {
                   className={CMS_MEDIA_FORM_ROW}
                 >
                   <div className="min-w-0 space-y-3">
-                    <div className="flex items-center justify-between gap-2">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
                       <span className="text-xs font-semibold admin-surface-body">Slide {index + 1}</span>
                       <div className="flex items-center gap-2">
                         <button
@@ -1124,12 +1124,12 @@ export default function CustomerSitePage() {
                   </div>
                 </div>
               ))}
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
                 <button
                   type="button"
                   disabled={banners.length >= 8}
                   onClick={() => setBanners((p) => [...p, emptyBanner(Date.now())])}
-                  className="inline-flex items-center gap-2 rounded-xl border border-[var(--admin-border-subtle)] bg-[var(--admin-surface)] px-4 py-2 text-sm admin-surface-body transition-colors hover:border-ra-primary-40 disabled:opacity-40"
+                  className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-[var(--admin-border-subtle)] bg-[var(--admin-surface)] px-4 py-2 text-sm admin-surface-body transition-colors hover:border-ra-primary-40 disabled:opacity-40 sm:w-auto"
                 >
                   <Plus className="size-4" /> Add slide
                 </button>
@@ -1194,7 +1194,7 @@ export default function CustomerSitePage() {
                 />
                 <div className="min-w-0 space-y-3">
                   <p className="text-xs admin-surface-muted">Three smaller images beside / below the main photo</p>
-                  <div className="grid gap-3 sm:grid-cols-3">
+                  <div className="grid gap-3 grid-cols-1 sm:grid-cols-3">
                     {ensureAboutSideImages(about.sideImages).map((img, i) => (
                       <CmsImageField
                         key={i}

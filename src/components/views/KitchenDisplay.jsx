@@ -85,18 +85,18 @@ function TicketCard({ ticket, col, onAction, updating }) {
   const items = ticket.items ?? [];
 
   return (
-    <article className={`kitchen-ticket-card rounded-2xl border-l-4 admin-surface-card shadow-md shadow-black/20 ${col.borderLeft} transition-all duration-200`}>
+    <article className={`kitchen-ticket-card min-w-0 rounded-2xl border-l-4 admin-surface-card shadow-md shadow-black/20 ${col.borderLeft} transition-all duration-200`}>
       {/* Header */}
-      <div className={`flex items-start justify-between gap-2 p-4 ${adminShell.dividerB}`}>
-        <div className="space-y-1">
-          <div className="flex items-center gap-2">
+      <div className={`flex flex-wrap items-start justify-between gap-2 p-4 ${adminShell.dividerB}`}>
+        <div className="min-w-0 flex-1 space-y-1">
+          <div className="flex flex-wrap items-center gap-2">
             <p className="font-mono text-sm font-semibold text-ra-primary">
               {ticket.orderId ?? ticket.id?.slice(-8).toUpperCase()}
             </p>
             <ElapsedBadge createdAt={ticket.createdAt} elapsedMin={ticket.elapsedMin} />
           </div>
-          <p className="text-base font-bold admin-shell-text">{headline}</p>
-          <div className="flex items-center gap-2">
+          <p className="break-words text-base font-bold admin-shell-text">{headline}</p>
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
             <TypePill type={orderType} />
             <span className="admin-surface-faint">·</span>
             <span className="text-xs admin-surface-faint">{placedAt}</span>
@@ -114,20 +114,20 @@ function TicketCard({ ticket, col, onAction, updating }) {
         ) : (
           items.map((it, idx) => (
             <li key={idx} className="kitchen-item-row rounded-lg px-3 py-2 text-sm">
-              <div className="flex items-center gap-2">
+              <div className="flex items-start gap-2">
                 <span className="kitchen-qty-badge flex size-5 shrink-0 items-center justify-center rounded-md text-xs font-bold">
                   {it.qty}
                 </span>
-                <span className="font-medium admin-shell-text">{it.name}</span>
+                <span className="min-w-0 break-words font-medium admin-shell-text">{it.name}</span>
               </div>
               {it.note?.trim() && (
-                <p className="mt-1 pl-7 text-xs font-medium text-amber-400">{it.note.trim()}</p>
+                <p className="mt-1 break-words pl-7 text-xs font-medium text-amber-400">{it.note.trim()}</p>
               )}
             </li>
           ))
         )}
         {ticket.notes?.trim() && (
-          <li className="rounded-lg border border-amber-500/20 bg-amber-500/5 px-3 py-2 text-xs text-amber-400">
+          <li className="break-words rounded-lg border border-amber-500/20 bg-amber-500/5 px-3 py-2 text-xs text-amber-400">
             <span className="font-semibold text-amber-300/90">Order note:</span> {ticket.notes.trim()}
           </li>
         )}
@@ -232,9 +232,9 @@ export default function KitchenDisplay() {
 
   if (loading) {
     return (
-      <div className="space-y-6">
+      <div className="min-w-0 w-full max-w-full space-y-6 overflow-x-hidden">
         <div className="h-8 w-48 animate-pulse rounded-lg bg-zinc-800" />
-        <div className="grid gap-6 lg:grid-cols-3">
+        <div className="grid min-w-0 gap-6 lg:grid-cols-3">
           {Array.from({ length: 3 }).map((_, i) => (
             <div key={i} className="space-y-3">
               <div className="h-10 animate-pulse rounded-xl bg-zinc-800" />
@@ -249,7 +249,7 @@ export default function KitchenDisplay() {
   }
 
   return (
-    <div className="kitchen-display space-y-6">
+    <div className="kitchen-display min-w-0 w-full max-w-full space-y-6 overflow-x-hidden">
       {(fetchError || actionError) && (
         <div className="rounded-xl border border-red-500/25 bg-red-500/10 px-4 py-3 text-sm text-red-400">
           {fetchError || actionError}
@@ -257,12 +257,12 @@ export default function KitchenDisplay() {
       )}
 
       {/* Header */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div className="flex items-start gap-3">
+      <div className="flex min-w-0 flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div className="flex min-w-0 items-start gap-3">
           <span className="mt-1 flex size-10 shrink-0 items-center justify-center rounded-xl bg-ra-primary-15 text-ra-primary ring-1 ring-ra-primary-25">
             <ChefHat className="size-5" />
           </span>
-          <div>
+          <div className="min-w-0">
             <h1 className="admin-page-title text-2xl font-semibold tracking-tight">Kitchen Display</h1>
             <p className="mt-1 text-sm admin-surface-muted">
               <span className="inline-flex items-center gap-1.5">
@@ -276,26 +276,29 @@ export default function KitchenDisplay() {
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex w-full min-w-0 flex-col gap-2 sm:w-auto sm:flex-row sm:items-center sm:gap-3">
           {/* Live counts */}
-          <div className="flex items-center gap-3 admin-surface-card px-4 py-2 text-xs">
+          <div className="grid w-full grid-cols-3 gap-2 admin-surface-card px-3 py-2 text-xs sm:flex sm:w-auto sm:items-center sm:gap-3 sm:px-4">
             {COLUMNS.map((col) => (
-              <span key={col.key} className="flex items-center gap-1.5">
-                <span className={`size-2 rounded-full ${col.dot}`} />
-                <span className={`font-bold ${col.accent}`}>{colCount(col.key)}</span>
-                <span className="admin-surface-faint">{col.label}</span>
+              <span key={col.key} className="flex min-w-0 items-center justify-center gap-1.5 sm:justify-start">
+                <span className={`size-2 shrink-0 rounded-full ${col.dot}`} />
+                <span className={`font-bold tabular-nums ${col.accent}`}>{colCount(col.key)}</span>
+                <span className="truncate admin-surface-faint">{col.label}</span>
               </span>
             ))}
           </div>
-          <button type="button" onClick={() => fetchOrders()}
-            className="cursor-pointer flex items-center gap-1.5 admin-surface-card px-3 py-2 text-xs font-medium admin-surface-muted hover:border-zinc-600 hover:admin-surface-body transition-colors">
+          <button
+            type="button"
+            onClick={() => fetchOrders()}
+            className="inline-flex w-full cursor-pointer items-center justify-center gap-1.5 admin-surface-card px-3 py-2 text-xs font-medium admin-surface-muted transition-colors hover:border-zinc-600 hover:admin-surface-body sm:w-auto"
+          >
             <RefreshCw className="size-3.5" /> Refresh
           </button>
         </div>
       </div>
 
       {/* Timer legend */}
-      <div className="flex flex-wrap items-center gap-4 text-xs admin-surface-muted">
+      <div className="flex min-w-0 flex-wrap items-center gap-x-4 gap-y-2 text-xs admin-surface-muted">
         <span className="flex items-center gap-1.5">
           <Clock className="size-3.5 admin-surface-faint" />
           Timer: <span className="admin-surface-muted">normal</span>
@@ -308,7 +311,7 @@ export default function KitchenDisplay() {
 
       {/* Empty state */}
       {active.length === 0 && (
-        <div className="flex flex-col items-center justify-center gap-4 rounded-2xl border border-dashed admin-shell-border py-24 text-center">
+        <div className="flex flex-col items-center justify-center gap-4 rounded-2xl border border-dashed admin-shell-border px-4 py-16 text-center sm:py-24">
           <ChefHat className="size-12 text-zinc-700" />
           <div>
             <p className="text-base font-semibold admin-surface-muted">Kitchen is clear</p>
@@ -319,11 +322,11 @@ export default function KitchenDisplay() {
 
       {/* 3-column Kanban board */}
       {active.length > 0 && (
-        <div className="grid gap-6 lg:grid-cols-3">
+        <div className="grid min-w-0 grid-cols-1 gap-6 lg:grid-cols-3">
           {COLUMNS.map((col) => {
             const colTickets = active.filter((o) => o.status === col.key);
             return (
-              <div key={col.key} className="space-y-3">
+              <div key={col.key} className="min-w-0 space-y-3">
                 {/* Column header */}
                 <div className={`flex items-center justify-between rounded-xl border px-4 py-2.5 ${col.headerBg}`}>
                   <div className="flex items-center gap-2">
@@ -342,7 +345,7 @@ export default function KitchenDisplay() {
                     <p className="text-xs text-zinc-700">No {col.label.toLowerCase()} orders</p>
                   </div>
                 ) : (
-                  <div className="max-h-[calc(100vh-14rem)] space-y-3 overflow-y-auto pr-1 [scrollbar-width:thin]">
+                  <div className="space-y-3 lg:max-h-[calc(100vh-14rem)] lg:overflow-y-auto lg:pr-1 lg:[scrollbar-width:thin]">
                     {colTickets.map((ticket) => (
                       <TicketCard
                         key={ticket.id}

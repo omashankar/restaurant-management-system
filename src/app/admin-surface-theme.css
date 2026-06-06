@@ -265,6 +265,25 @@ html[data-admin-mode="light"]
   color: var(--admin-text-muted);
 }
 
+/* AdminTable responsive columns — th must respect Tailwind hidden (td already does) */
+:is(.restaurant-admin-panel, .super-admin-panel, .admin-portal-scope) th.admin-table-th.hidden {
+  display: none;
+}
+
+@media (min-width: 768px) {
+  :is(.restaurant-admin-panel, .super-admin-panel, .admin-portal-scope)
+    th.admin-table-th.hidden.md\:table-cell {
+    display: table-cell;
+  }
+}
+
+@media (min-width: 1024px) {
+  :is(.restaurant-admin-panel, .super-admin-panel, .admin-portal-scope)
+    th.admin-table-th.hidden.lg\:table-cell {
+    display: table-cell;
+  }
+}
+
 .admin-table-head,
 .admin-table-list-header {
   background-color: var(--admin-table-header-bg);
@@ -407,7 +426,6 @@ html[data-admin-mode="dark"] {
 /* Search fields — room for leading icon (never overlap placeholder) */
 :is(.restaurant-admin-panel, .super-admin-panel, .admin-portal-scope) .admin-search-wrap {
   position: relative;
-  display: block;
 }
 
 :is(.restaurant-admin-panel, .super-admin-panel, .admin-portal-scope) .admin-search-wrap .admin-search-icon {
@@ -548,12 +566,22 @@ html[data-admin-mode="light"]
   color: var(--admin-text);
 }
 
-:is(.restaurant-admin-panel, .super-admin-panel, .admin-portal-scope) :is(.admin-surface-popover, .admin-surface-dropdown) {
+:is(.restaurant-admin-panel, .super-admin-panel, .admin-portal-scope) :is(.admin-surface-popover, .admin-surface-dropdown),
+.admin-portal-scope.admin-surface-dropdown,
+.admin-portal-scope.admin-surface-popover {
   border-radius: 1rem;
   border: 1px solid var(--admin-border);
   background-color: var(--admin-popover);
   color: var(--admin-text);
   box-shadow: var(--admin-popover-shadow);
+}
+
+.admin-header-dropdown-portal {
+  z-index: 200;
+}
+
+.admin-mobile-overlay {
+  z-index: 250;
 }
 
 /* Menu rows inside dropdowns */
@@ -955,7 +983,9 @@ html[data-admin-mode="light"] .admin-mobile-overlay {
 
 html[data-admin-mode="light"]
   :is(.restaurant-admin-panel, .super-admin-panel)
-  :is(.admin-surface-dropdown, .admin-surface-popover, .admin-portal-scope > .relative.z-10) {
+  :is(.admin-surface-dropdown, .admin-surface-popover, .admin-portal-scope > .relative.z-10),
+html[data-admin-mode="light"] .admin-portal-scope.admin-surface-dropdown,
+html[data-admin-mode="light"] .admin-portal-scope.admin-surface-popover {
   border-color: var(--admin-border);
   background-color: var(--admin-popover);
   box-shadow: var(--admin-popover-shadow);

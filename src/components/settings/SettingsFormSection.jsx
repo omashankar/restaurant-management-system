@@ -4,7 +4,7 @@ import { adminSurface } from "@/config/adminSurfaceClasses";
 
 export default function SettingsFormSection({ title, description, children }) {
   return (
-    <section className={`${adminSurface.cardSolid} p-5 sm:p-6`}>
+    <section className={`${adminSurface.cardSolid} p-4 sm:p-6`}>
       <div className="mb-5">
         <h2 className={`text-lg font-semibold ${adminSurface.title}`}>{title}</h2>
         {description ? (

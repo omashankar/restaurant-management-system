@@ -13,9 +13,9 @@ import {
 
 function ChartCard({ title, children, className = "" }) {
   return (
-    <div className={`${adminSurface.card} p-5 shadow-sm ${className}`}>
+    <div className={`min-w-0 ${adminSurface.card} p-4 shadow-sm sm:p-5 ${className}`}>
       <p className={`mb-4 text-sm font-semibold ${adminSurface.title}`}>{title}</p>
-      {children}
+      <div className="min-w-0">{children}</div>
     </div>
   );
 }
@@ -50,7 +50,7 @@ export default function TenantAnalyticsCharts({ chartData, topItems, orderTypes,
 
   return (
     <>
-      <div className="grid gap-6 lg:grid-cols-2">
+      <div className="grid min-w-0 gap-6 lg:grid-cols-2">
         <ChartCard title="Daily Revenue">
           {chartData.length === 0 ? (
             <div className={`flex h-48 items-center justify-center text-sm ${adminSurface.faint}`}>
@@ -58,7 +58,7 @@ export default function TenantAnalyticsCharts({ chartData, topItems, orderTypes,
             </div>
           ) : (
             <ResponsiveContainer width="100%" height={220}>
-              <LineChart data={chartData} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
+              <LineChart data={chartData} margin={{ top: 5, right: 4, left: -8, bottom: 5 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke={chart.grid} />
                 <XAxis dataKey="label" tick={tick} tickLine={false} axisLine={false} />
                 <YAxis tick={tick} tickLine={false} axisLine={false} tickFormatter={fmtAxis} />
@@ -76,7 +76,7 @@ export default function TenantAnalyticsCharts({ chartData, topItems, orderTypes,
             </div>
           ) : (
             <ResponsiveContainer width="100%" height={220}>
-              <BarChart data={chartData} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
+              <BarChart data={chartData} margin={{ top: 5, right: 4, left: -8, bottom: 5 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke={chart.grid} />
                 <XAxis dataKey="label" tick={tick} tickLine={false} axisLine={false} />
                 <YAxis tick={tick} tickLine={false} axisLine={false} allowDecimals={false} />
@@ -88,7 +88,7 @@ export default function TenantAnalyticsCharts({ chartData, topItems, orderTypes,
         </ChartCard>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-2">
+      <div className="grid min-w-0 gap-6 lg:grid-cols-2">
         <ChartCard title="Top Selling Items">
           {topItems.length === 0 ? (
             <div className={`flex h-48 items-center justify-center text-sm ${adminSurface.faint}`}>
@@ -96,10 +96,10 @@ export default function TenantAnalyticsCharts({ chartData, topItems, orderTypes,
             </div>
           ) : (
             <ResponsiveContainer width="100%" height={Math.max(220, topItems.length * 36)}>
-              <BarChart data={topItems} layout="vertical" margin={{ top: 0, right: 10, left: 0, bottom: 0 }}>
+              <BarChart data={topItems} layout="vertical" margin={{ top: 0, right: 4, left: -4, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke={chart.grid} horizontal={false} />
                 <XAxis type="number" tick={tick} tickLine={false} axisLine={false} allowDecimals={false} />
-                <YAxis type="category" dataKey="name" tick={tickCat} tickLine={false} axisLine={false} width={120} />
+                <YAxis type="category" dataKey="name" tick={tickCat} tickLine={false} axisLine={false} width={88} />
                 <Tooltip content={<CustomTooltip />} />
                 <Bar dataKey="qty" name="Qty sold" fill={primary} radius={[0, 4, 4, 0]} />
               </BarChart>

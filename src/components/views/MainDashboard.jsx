@@ -25,9 +25,9 @@ export default function MainDashboard() {
   }
 
   return (
-    <div className="space-y-8">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-        <div>
+    <div className="min-w-0 w-full max-w-full space-y-6 overflow-x-hidden sm:space-y-8">
+      <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+        <div className="min-w-0">
           <h1 className={adminSurface.heading}>
             {role === "admin" ? "Command center" : "Shift overview"}
           </h1>
@@ -49,7 +49,7 @@ export default function MainDashboard() {
         <button
           type="button"
           onClick={dashboard.refresh}
-          className={`${adminSurface.btnGhost} hover-border-ra-primary-40`}
+          className={`inline-flex w-full items-center justify-center gap-2 sm:w-auto ${adminSurface.btnGhost} hover-border-ra-primary-40`}
         >
           <RefreshCw className="size-4" />
           Refresh
@@ -72,7 +72,7 @@ export default function MainDashboard() {
       />
 
       <Can permission="view_sales">
-        <div className="grid items-stretch gap-6 xl:grid-cols-3">
+        <div className="grid min-w-0 items-stretch gap-6 xl:grid-cols-3">
           <div className="flex min-h-0 xl:col-span-2">
             <SalesChart data={dashboard.salesChartData} />
           </div>
@@ -89,7 +89,7 @@ export default function MainDashboard() {
       </Can>
 
       <Can permission="view_analytics">
-        <div className="grid items-stretch gap-6 lg:grid-cols-2">
+        <div className="grid min-w-0 items-stretch gap-6 lg:grid-cols-2">
           <div className="flex min-h-0">
             <SalesComparison
               currency={dashboard.currency}
@@ -105,7 +105,7 @@ export default function MainDashboard() {
       </Can>
 
       <Can permission="view_orders">
-        <div className="grid items-stretch gap-6 xl:grid-cols-5">
+        <div className="grid min-w-0 items-stretch gap-6 xl:grid-cols-5">
           <div className="flex min-h-0 xl:col-span-2">
             <TopDishes items={dashboard.topItems} currency={dashboard.currency} />
           </div>

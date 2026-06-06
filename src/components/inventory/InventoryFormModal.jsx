@@ -44,18 +44,18 @@ export default function InventoryFormModal({
       title={title}
       onClose={onClose}
       footer={
-        <div className="flex justify-end gap-2">
+        <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
           <button
             type="button"
             onClick={onClose}
-            className="cursor-pointer rounded-xl border admin-shell-border px-4 py-2 text-sm font-medium admin-shell-text transition-colors hover:bg-[var(--admin-hover)]"
+            className="inline-flex w-full cursor-pointer items-center justify-center rounded-xl border admin-shell-border px-4 py-2 text-sm font-medium admin-shell-text transition-colors hover:bg-[var(--admin-hover)] sm:w-auto"
           >
             Cancel
           </button>
           <button
             type="button"
             onClick={onSubmit}
-            className="cursor-pointer rounded-xl bg-ra-primary px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-ra-primary"
+            className="inline-flex w-full cursor-pointer items-center justify-center rounded-xl bg-ra-primary px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-ra-primary sm:w-auto"
           >
             Save
           </button>
@@ -91,7 +91,7 @@ export default function InventoryFormModal({
             ))}
           </datalist>
         </div>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <div>
             <label className="mb-1 block text-xs font-medium admin-surface-muted">
               Quantity

@@ -44,16 +44,16 @@ export function LayoutColorRow({ label, value, onChange }) {
 
 export function LayoutToggle({ label, hint, enabled, onToggle }) {
   return (
-    <label className={`cursor-pointer ${CMS_EDITOR_CONTROL_ROW}`}>
-      <div>
-        <p className="text-sm font-medium admin-shell-text">{label}</p>
-        {hint && <p className="text-xs admin-surface-muted">{hint}</p>}
-      </div>
+    <label className={`flex cursor-pointer items-start justify-between gap-3 ${CMS_EDITOR_CONTROL_ROW}`}>
+      <span className="min-w-0 flex-1">
+        <span className="block text-sm font-medium admin-shell-text">{label}</span>
+        {hint && <span className="mt-0.5 block text-xs leading-snug admin-surface-muted">{hint}</span>}
+      </span>
       <input
         type="checkbox"
         checked={enabled}
         onChange={onToggle}
-        className="size-4 rounded border-[var(--admin-border)] accent-ra-primary"
+        className="mt-0.5 size-4 shrink-0 rounded border-[var(--admin-border)] accent-ra-primary"
       />
     </label>
   );
@@ -63,7 +63,7 @@ export function LayoutSection({ title, subtitle, enabled, onToggle, children }) 
   return (
     <div className={CMS_EDITOR_PANEL}>
       <div className={CMS_EDITOR_PANEL_HEAD}>
-        <div>
+        <div className="min-w-0 flex-1">
           <p className="admin-surface-title text-sm font-semibold">{title}</p>
           {subtitle && <p className="text-xs admin-surface-muted">{subtitle}</p>}
         </div>
@@ -72,7 +72,7 @@ export function LayoutSection({ title, subtitle, enabled, onToggle, children }) 
             type="checkbox"
             checked={enabled}
             onChange={onToggle}
-            className="size-4 rounded border-[var(--admin-border)] accent-ra-primary"
+            className="size-4 shrink-0 self-start rounded border-[var(--admin-border)] accent-ra-primary sm:self-center"
           />
         )}
       </div>

@@ -41,10 +41,10 @@ function Field({ label, required, error, hint, children }) {
 /* ── Toggle switch ── */
 function Toggle({ checked, onChange, label, description }) {
   return (
-    <label className="cursor-pointer flex items-center justify-between gap-4 admin-surface-card px-4 py-3 hover:border-[var(--admin-border)] transition-colors">
-      <div>
-        <p className="text-sm font-medium admin-shell-text">{label}</p>
-        {description && <p className="mt-0.5 text-xs admin-surface-muted">{description}</p>}
+    <label className="cursor-pointer flex min-w-0 items-center justify-between gap-4 admin-surface-card px-4 py-3 transition-colors hover:border-[var(--admin-border)]">
+      <div className="min-w-0 flex-1">
+        <p className="break-words text-sm font-medium admin-shell-text">{label}</p>
+        {description && <p className="mt-0.5 break-words text-xs admin-surface-muted">{description}</p>}
       </div>
       <button type="button" role="switch" aria-checked={checked} onClick={() => onChange(!checked)}
         className={`cursor-pointer relative inline-flex h-5 w-9 shrink-0 items-center rounded-full transition-colors ${checked ? "bg-sa-primary" : "bg-zinc-700"}`}>
@@ -57,9 +57,9 @@ function Toggle({ checked, onChange, label, description }) {
 /* ── Save button ── */
 function SaveBtn({ saving, onClick }) {
   return (
-    <div className="flex justify-end pt-2">
+    <div className="flex justify-stretch pt-2 sm:justify-end">
       <button type="button" onClick={onClick} disabled={saving}
-        className={`cursor-pointer ${saBtnPrimaryCls} disabled:opacity-50`}>
+        className={`inline-flex w-full cursor-pointer items-center justify-center gap-2 sm:w-auto ${saBtnPrimaryCls} disabled:opacity-50`}>
         {saving
           ? <span className="size-3.5 animate-spin rounded-full border-2 border-zinc-950/30 border-t-zinc-950" />
           : <Save className="size-4" />}
@@ -186,12 +186,12 @@ function NavbarPanel({ data, onChange, onSave, saving, fieldErrors = {}, onClear
             <div key={i} className="grid gap-2 admin-surface-card p-3 sm:grid-cols-3">
               <input value={l.label ?? ""} onChange={e => updateLink(i, "label", e.target.value)} placeholder="Label" className={ic} />
               <input value={l.href ?? ""} onChange={e => updateLink(i, "href", e.target.value)} placeholder="#features or /page" className={ic} />
-              <div className="flex items-center gap-2">
-                <label className="flex items-center gap-2 text-xs text-zinc-400">
+              <div className="flex flex-wrap items-center gap-2">
+                <label className="flex min-w-0 flex-1 items-center gap-2 text-xs text-zinc-400">
                   <input type="checkbox" checked={!!l.external} onChange={e => updateLink(i, "external", e.target.checked)} />
                   External
                 </label>
-                <button type="button" onClick={() => removeLink(i)} className="cursor-pointer ml-auto rounded-lg p-2 text-zinc-600 hover:bg-red-500/15 hover:text-red-400 transition-colors">
+                <button type="button" onClick={() => removeLink(i)} className="cursor-pointer ml-auto shrink-0 rounded-lg p-2 text-zinc-600 transition-colors hover:bg-red-500/15 hover:text-red-400">
                   <Trash2 className="size-4" />
                 </button>
               </div>
@@ -288,8 +288,8 @@ function HeroPanel({ data, onChange, onSave, saving, fieldErrors = {}, onClearEr
               {data.badge}
             </span>
           )}
-          {data.headline && <h3 className="mt-3 text-xl font-bold admin-shell-text">{data.headline}</h3>}
-          {data.subheadline && <p className="mt-2 text-sm admin-surface-muted">{data.subheadline}</p>}
+          {data.headline && <h3 className="mt-3 break-words text-lg font-bold admin-shell-text sm:text-xl">{data.headline}</h3>}
+          {data.subheadline && <p className="mt-2 break-words text-sm admin-surface-muted">{data.subheadline}</p>}
           <div className="mt-4 flex flex-wrap gap-2">
             {data.ctaPrimary && <span className="rounded-xl bg-sa-primary px-4 py-2 text-xs font-semibold text-zinc-950">{data.ctaPrimary}</span>}
             {data.ctaSecondary && <span className="rounded-xl border border-zinc-600 px-4 py-2 text-xs font-semibold admin-surface-body">{data.ctaSecondary}</span>}
@@ -367,9 +367,9 @@ function ArrayPanel({ items, fields, onSave, saving, icon: Icon, title, descript
           </div>
         )}
         {items.map((item, i) => (
-          <div key={item.id ?? i} className="flex items-center gap-3 admin-surface-card px-4 py-3 hover:border-[var(--admin-border)] transition-colors">
+          <div key={item.id ?? i} className="flex min-w-0 flex-col gap-2 admin-surface-card px-4 py-3 transition-colors hover:border-[var(--admin-border)] sm:flex-row sm:items-center sm:gap-3">
             <div className="min-w-0 flex-1">{renderCard(item)}</div>
-            <div className="flex shrink-0 items-center gap-1">
+            <div className="flex shrink-0 items-center gap-1 self-end sm:self-auto">
               <button type="button" onClick={() => openEdit(i)}
                 className="cursor-pointer rounded-lg p-1.5 text-zinc-500 hover:bg-zinc-700/60 hover:admin-shell-text transition-colors">
                 <Pencil className="size-3.5" />
@@ -392,13 +392,13 @@ function ArrayPanel({ items, fields, onSave, saving, icon: Icon, title, descript
       <Modal open={editIdx !== null} onClose={() => setEditIdx(null)}
         title={editIdx === -1 ? `Add ${title.replace(/s$/, "")}` : `Edit ${title.replace(/s$/, "")}`}
         footer={
-          <div className="flex justify-end gap-2">
+          <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
             <button type="button" onClick={() => setEditIdx(null)}
-              className="cursor-pointer rounded-xl border admin-shell-border px-4 py-2 text-sm admin-surface-body hover:border-zinc-500 transition-colors">
+              className="w-full cursor-pointer rounded-xl border admin-shell-border px-4 py-2 text-sm admin-surface-body transition-colors hover:border-zinc-500 sm:w-auto">
               Cancel
             </button>
             <button type="button" disabled={itemSaving} onClick={handleSave}
-              className="cursor-pointer rounded-xl bg-sa-primary px-4 py-2 text-sm font-semibold text-zinc-950 hover:brightness-110 disabled:opacity-40 transition-colors">
+              className="w-full cursor-pointer rounded-xl bg-sa-primary px-4 py-2 text-sm font-semibold text-zinc-950 transition-colors hover:brightness-110 disabled:opacity-40 sm:w-auto">
               {itemSaving ? "Saving…" : "Save"}
             </button>
           </div>
@@ -527,13 +527,13 @@ function FooterPanel({ data, onChange, onSave, saving, fieldErrors = {}, onClear
         <p className="block text-xs font-medium text-zinc-400 mb-2">Footer Links</p>
         <div className="space-y-2">
           {links.map((l, i) => (
-            <div key={i} className="flex items-center gap-2">
+            <div key={i} className="flex flex-col gap-2 sm:flex-row sm:items-center">
               <input value={l.label ?? ""} onChange={e => updateLink(i, "label", e.target.value)}
-                placeholder="Label" className={`${ic} flex-1`} />
+                placeholder="Label" className={`${ic} min-w-0 sm:flex-1`} />
               <input value={l.href ?? ""} onChange={e => updateLink(i, "href", e.target.value)}
-                placeholder="/url or #anchor" className={`${ic} flex-1`} />
+                placeholder="/url or #anchor" className={`${ic} min-w-0 sm:flex-1`} />
               <button type="button" onClick={() => removeLink(i)}
-                className="cursor-pointer rounded-lg p-2 text-zinc-600 hover:bg-red-500/15 hover:text-red-400 transition-colors">
+                className="cursor-pointer shrink-0 self-end rounded-lg p-2 text-zinc-600 transition-colors hover:bg-red-500/15 hover:text-red-400 sm:self-auto">
                 <Trash2 className="size-4" />
               </button>
             </div>
@@ -1163,23 +1163,23 @@ export default function LandingSitePage() {
   const sectionData = content?.[activeTab] ?? {};
 
   return (
-    <div className="space-y-6">
+    <div className="min-w-0 w-full max-w-full space-y-6 overflow-x-hidden">
 
       {/* ── Page header ── */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-start gap-3">
-          <span className={`mt-1 ${saIconBadgeCls}`}>
+      <div className="flex min-w-0 flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div className="flex min-w-0 items-start gap-3">
+          <span className={`mt-1 shrink-0 ${saIconBadgeCls}`}>
             <Globe className="size-5" />
           </span>
-          <div>
-            <h1 className="admin-page-title text-2xl font-semibold tracking-tight">Landing Site</h1>
+          <div className="min-w-0">
+            <h1 className="admin-page-title break-words text-2xl font-semibold tracking-tight">Landing Site</h1>
             <p className="admin-page-desc mt-1 text-sm">
               Manage your public-facing website content. Changes go live immediately.
             </p>
           </div>
         </div>
         <Link href="/?preview=1" target="_blank"
-          className="cursor-pointer inline-flex items-center gap-1.5 rounded-xl border admin-shell-border px-3 py-2 text-xs font-medium text-zinc-400 hover:border-zinc-500 hover:admin-shell-text transition-colors">
+          className="inline-flex w-full cursor-pointer items-center justify-center gap-1.5 rounded-xl border admin-shell-border px-3 py-2.5 text-xs font-medium text-zinc-400 transition-colors hover:border-zinc-500 hover:admin-shell-text sm:w-auto">
           <Globe className="size-3.5" /> Preview Site
         </Link>
       </div>
@@ -1190,9 +1190,9 @@ export default function LandingSitePage() {
         </div>
       )}
 
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:gap-6">
+      <div className="flex min-w-0 flex-col gap-4 lg:flex-row lg:items-start lg:gap-6">
 
-        <AdminSideNav className="w-full lg:w-52">
+        <AdminSideNav className="min-w-0 w-full lg:w-52">
           <p className={`px-2 pb-2 pt-1 text-xs font-semibold uppercase tracking-wide ${adminSurface.muted}`}>
             Sections
           </p>
@@ -1212,7 +1212,7 @@ export default function LandingSitePage() {
         </AdminSideNav>
 
         {/* ── Content panel ── */}
-        <div ref={panelRef} className="min-w-0 flex-1 admin-surface-card p-5 sm:p-6">
+        <div ref={panelRef} className="min-w-0 flex-1 admin-surface-card p-4 sm:p-6">
           {fetching ? (
             <SuperAdminPageSkeleton rows={4} />
           ) : !content ? (
@@ -1236,8 +1236,8 @@ export default function LandingSitePage() {
                   description="Highlight the key capabilities of your platform."
                   renderCard={item => (
                     <>
-                      <p className="text-sm font-medium admin-shell-text">{item.title}</p>
-                      <p className="text-xs admin-surface-muted truncate">{item.description}</p>
+                      <p className="break-words text-sm font-medium admin-shell-text">{item.title}</p>
+                      <p className="break-words text-xs admin-surface-muted sm:truncate">{item.description}</p>
                     </>
                   )}
                 />
@@ -1259,8 +1259,8 @@ export default function LandingSitePage() {
                           <RoleIcon className="size-4" />
                         </span>
                         <div className="min-w-0">
-                          <p className="text-sm font-medium admin-shell-text">{item.role}</p>
-                          <p className="text-xs admin-surface-muted truncate">{item.description}</p>
+                          <p className="break-words text-sm font-medium admin-shell-text">{item.role}</p>
+                          <p className="break-words text-xs admin-surface-muted sm:truncate">{item.description}</p>
                         </div>
                       </div>
                     );
@@ -1269,23 +1269,23 @@ export default function LandingSitePage() {
               )}
               {activeTab === "pricing" && (
                 <div className="space-y-3">
-                  <div className="flex items-center justify-between gap-3 rounded-xl border border-indigo-500/30 bg-indigo-500/10 px-3 py-2">
-                    <p className="text-xs text-indigo-200">
+                  <div className="flex flex-col gap-2 rounded-xl border border-indigo-500/30 bg-indigo-500/10 px-3 py-2 sm:flex-row sm:items-center sm:justify-between">
+                    <p className="min-w-0 text-xs text-indigo-200">
                       Pricing here is synced from Plans and is read-only.
                     </p>
                     <Link
                       href="/super-admin/plans"
-                      className="cursor-pointer rounded-lg border border-indigo-400/40 px-2.5 py-1 text-xs font-semibold text-indigo-200 hover:border-indigo-300 hover:text-white"
+                      className="inline-flex w-full shrink-0 cursor-pointer items-center justify-center rounded-lg border border-indigo-400/40 px-2.5 py-1.5 text-xs font-semibold text-indigo-200 transition-colors hover:border-indigo-300 hover:text-white sm:w-auto"
                     >
                       Open Plans
                     </Link>
                   </div>
-                  <div className="flex justify-end">
-                    <div className="inline-flex rounded-xl border admin-shell-border admin-surface-segment-track p-1">
+                  <div className="flex w-full justify-stretch sm:justify-end">
+                    <div className="inline-flex w-full max-w-xs rounded-xl border admin-shell-border admin-surface-segment-track p-1 sm:w-auto sm:max-w-none">
                       <button
                         type="button"
                         onClick={() => setPricingView("monthly")}
-                        className={`cursor-pointer rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors ${
+                        className={`flex-1 cursor-pointer rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors sm:flex-none ${
                           pricingView === "monthly" ? "bg-sa-primary text-zinc-950" : "text-zinc-400 hover:bg-[var(--admin-hover)]"
                         }`}
                       >
@@ -1294,7 +1294,7 @@ export default function LandingSitePage() {
                       <button
                         type="button"
                         onClick={() => setPricingView("yearly")}
-                        className={`cursor-pointer rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors ${
+                        className={`flex-1 cursor-pointer rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors sm:flex-none ${
                           pricingView === "yearly" ? "bg-sa-primary text-zinc-950" : "text-zinc-400 hover:bg-[var(--admin-hover)]"
                         }`}
                       >
@@ -1304,9 +1304,9 @@ export default function LandingSitePage() {
                   </div>
                   <div className="space-y-2">
                     {(content.pricing ?? []).map((item) => (
-                      <div key={item.id ?? item.slug ?? item.name} className="admin-surface-card px-4 py-3">
-                        <div className="flex items-center gap-2">
-                          <p className="text-sm font-medium admin-shell-text">{item.name}</p>
+                      <div key={item.id ?? item.slug ?? item.name} className="min-w-0 admin-surface-card px-4 py-3">
+                        <div className="flex min-w-0 flex-wrap items-center gap-2">
+                          <p className="break-words text-sm font-medium admin-shell-text">{item.name}</p>
                           {item.badge && <span className="rounded-full bg-amber-500/15 px-2 py-0.5 text-[10px] font-semibold text-amber-400">{item.badge}</span>}
                           {item.highlight && <span className="rounded-full bg-indigo-500/15 px-2 py-0.5 text-[10px] font-semibold text-indigo-400">Featured</span>}
                         </div>
@@ -1319,7 +1319,7 @@ export default function LandingSitePage() {
                           )}
                           <span className="ml-1 text-zinc-500">/{pricingView === "yearly" ? "yr" : "mo"}</span>
                         </p>
-                        <p className="text-xs admin-surface-muted">{item.description}</p>
+                        <p className="break-words text-xs admin-surface-muted">{item.description}</p>
                       </div>
                     ))}
                   </div>
@@ -1336,11 +1336,11 @@ export default function LandingSitePage() {
                   description="Customer reviews shown on the landing page."
                   renderCard={item => (
                     <>
-                      <p className="text-sm font-medium admin-shell-text">
+                      <p className="break-words text-sm font-medium admin-shell-text">
                         {item.name}
                         {item.role && <span className="ml-1.5 text-xs font-normal text-zinc-500">— {item.role}</span>}
                       </p>
-                      <p className="text-xs admin-surface-muted truncate">{item.quote}</p>
+                      <p className="break-words text-xs admin-surface-muted sm:truncate">{item.quote}</p>
                     </>
                   )}
                 />

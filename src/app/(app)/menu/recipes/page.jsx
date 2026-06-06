@@ -1,5 +1,6 @@
 "use client";
 
+import { raIconBadgeCls } from "@/config/restaurantAdminTheme";
 import DataTableShell from "@/components/ui/DataTableShell";
 import {
   AdminTable,
@@ -175,43 +176,49 @@ export default function RecipesPage() {
 
   if (loading) {
     return (
-      <div className="space-y-6">
-        <div className="h-8 w-40 rounded-lg admin-progress-track animate-pulse" />
+      <div className="min-w-0 w-full max-w-full space-y-6 overflow-x-hidden">
+        <div className="h-8 w-40 animate-pulse rounded-lg admin-progress-track" />
         <TableSkeleton rows={7} cols={5} />
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
+    <div className="min-w-0 w-full max-w-full space-y-6 overflow-x-hidden">
       {fetchError && (
         <div className="rounded-xl border border-red-500/25 bg-red-500/10 px-4 py-3 text-sm text-red-400">
           {fetchError}
         </div>
       )}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <h1 className="admin-page-title text-2xl font-semibold tracking-tight">
-            Recipes
-          </h1>
-          <p className="admin-page-desc mt-1 text-sm">
-            Linked to menu items for kitchen consistency.
-          </p>
+      <div className="flex min-w-0 flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div className="flex min-w-0 items-start gap-3">
+          <span className={`mt-1 shrink-0 ${raIconBadgeCls}`}>
+            <BookOpen className="size-5" />
+          </span>
+          <div className="min-w-0">
+            <h1 className="admin-page-title text-2xl font-semibold tracking-tight">
+              Recipes
+            </h1>
+            <p className="admin-page-desc mt-1 text-sm">
+              Linked to menu items for kitchen consistency.
+            </p>
+          </div>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex w-full min-w-0 flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">
           <button
             type="button"
             onClick={fetchAll}
-            className="cursor-pointer flex items-center gap-1.5 rounded-xl border admin-shell-border px-3 py-2.5 text-sm font-medium text-zinc-400 hover:border-zinc-500 hover:admin-shell-text transition-colors"
+            className="inline-flex w-full cursor-pointer items-center justify-center gap-1.5 rounded-xl border admin-shell-border px-3 py-2.5 text-sm font-medium text-zinc-400 transition-colors hover:border-zinc-500 hover:admin-shell-text sm:w-auto"
             aria-label="Refresh"
           >
             <RefreshCw className="size-4" />
+            <span className="sm:hidden">Refresh</span>
           </button>
           <button
             type="button"
             onClick={openCreate}
             disabled={activeMenuItems.length === 0}
-            className="cursor-pointer inline-flex items-center gap-2 rounded-xl bg-ra-primary px-4 py-2.5 text-sm font-semibold text-zinc-950 hover:brightness-110 disabled:opacity-40"
+            className="inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-ra-primary px-4 py-2.5 text-sm font-semibold text-zinc-950 hover:brightness-110 disabled:opacity-40 sm:w-auto"
           >
             <Plus className="size-4" />
             Add recipe
@@ -241,45 +248,92 @@ export default function RecipesPage() {
           }
         />
       ) : (
-        <DataTableShell>
-          <AdminTable>
-            <AdminTableHead>
-              <AdminTableHeadRow>
-                <AdminTableTh>Recipe</AdminTableTh>
-                <AdminTableTh>Menu item</AdminTableTh>
-                <AdminTableTh>Ingredients</AdminTableTh>
-                <AdminTableThActions />
-              </AdminTableHeadRow>
-            </AdminTableHead>
-            <AdminTableBody>
-              {pageRows.map((row) => (
-                <AdminTableRow key={row.id}>
-                  <AdminTableTd className="font-medium admin-shell-text">{row.name}</AdminTableTd>
-                  <AdminTableTd className="admin-surface-muted">{row.menuItemName}</AdminTableTd>
-                  <AdminTableTd className="max-w-xs truncate admin-surface-muted">{row.ingredientsPreview}</AdminTableTd>
-                  <AdminTableActionsCell>
+        <div className="min-w-0 overflow-hidden admin-surface-card">
+          <div className="space-y-2 p-3 md:hidden">
+            {pageRows.map((row) => (
+              <div
+                key={row.id}
+                className="rounded-xl border admin-shell-border bg-[var(--admin-surface-soft)] p-3"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0 flex-1">
+                    <p className="break-words font-medium admin-shell-text">{row.name}</p>
+                    <p className="mt-1 text-xs admin-surface-muted">
+                      Menu item: <span className="break-words admin-surface-body">{row.menuItemName}</span>
+                    </p>
+                    {row.ingredientsPreview ? (
+                      <p className="mt-1 line-clamp-2 text-xs admin-surface-faint">{row.ingredientsPreview}</p>
+                    ) : null}
+                  </div>
+                  <div className="flex shrink-0 items-center gap-1">
                     <AdminTableIconButton variant="sky" onClick={() => setDetailRecipe(row)} aria-label="View">
                       <Eye className="size-4" />
                     </AdminTableIconButton>
                     <AdminTableIconButton onClick={() => openEdit(row)} aria-label="Edit">
                       <Pencil className="size-4" />
                     </AdminTableIconButton>
-                  </AdminTableActionsCell>
-                </AdminTableRow>
-              ))}
-            </AdminTableBody>
-          </AdminTable>
-          <div className="px-4 pb-4">
-            <PaginationBar
-              page={page}
-              totalPages={totalPages}
-              total={total}
-              pageSize={pageSize}
-              onPageChange={setPage}
-              hideWhenSinglePage
-            />
+                  </div>
+                </div>
+              </div>
+            ))}
+            <div className="px-1 pb-1">
+              <PaginationBar
+                page={page}
+                totalPages={totalPages}
+                total={total}
+                pageSize={pageSize}
+                onPageChange={setPage}
+                hideWhenSinglePage
+              />
+            </div>
           </div>
-        </DataTableShell>
+
+          <div className="hidden md:block">
+            <DataTableShell>
+              <AdminTable>
+                <AdminTableHead>
+                  <AdminTableHeadRow>
+                    <AdminTableTh>Recipe</AdminTableTh>
+                    <AdminTableTh>Menu item</AdminTableTh>
+                    <AdminTableTh>Ingredients</AdminTableTh>
+                    <AdminTableThActions />
+                  </AdminTableHeadRow>
+                </AdminTableHead>
+                <AdminTableBody>
+                  {pageRows.map((row) => (
+                    <AdminTableRow key={row.id}>
+                      <AdminTableTd className="max-w-[10rem] font-medium admin-shell-text sm:max-w-none">
+                        <span className="block truncate">{row.name}</span>
+                      </AdminTableTd>
+                      <AdminTableTd className="max-w-[10rem] admin-surface-muted sm:max-w-none">
+                        <span className="block truncate">{row.menuItemName}</span>
+                      </AdminTableTd>
+                      <AdminTableTd className="max-w-xs truncate admin-surface-muted">{row.ingredientsPreview}</AdminTableTd>
+                      <AdminTableActionsCell>
+                        <AdminTableIconButton variant="sky" onClick={() => setDetailRecipe(row)} aria-label="View">
+                          <Eye className="size-4" />
+                        </AdminTableIconButton>
+                        <AdminTableIconButton onClick={() => openEdit(row)} aria-label="Edit">
+                          <Pencil className="size-4" />
+                        </AdminTableIconButton>
+                      </AdminTableActionsCell>
+                    </AdminTableRow>
+                  ))}
+                </AdminTableBody>
+              </AdminTable>
+              <div className="px-4 pb-4">
+                <PaginationBar
+                  page={page}
+                  totalPages={totalPages}
+                  total={total}
+                  pageSize={pageSize}
+                  onPageChange={setPage}
+                  hideWhenSinglePage
+                />
+              </div>
+            </DataTableShell>
+          </div>
+        </div>
       )}
 
       <Modal
@@ -287,11 +341,11 @@ export default function RecipesPage() {
         onClose={() => setModalOpen(false)}
         title={editingId ? "Edit recipe" : "Add recipe"}
         footer={
-          <div className="flex justify-end gap-2">
+          <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
             <button
               type="button"
               onClick={() => setModalOpen(false)}
-              className="cursor-pointer rounded-xl border admin-shell-border px-4 py-2 text-sm admin-surface-body"
+              className="w-full cursor-pointer rounded-xl border admin-shell-border px-4 py-2 text-sm admin-surface-body sm:w-auto"
             >
               Cancel
             </button>
@@ -299,7 +353,7 @@ export default function RecipesPage() {
               type="button"
               onClick={saveRecipe}
               disabled={saving}
-              className="cursor-pointer rounded-xl bg-ra-primary px-4 py-2 text-sm font-semibold text-zinc-950 hover:brightness-110 disabled:opacity-50"
+              className="w-full cursor-pointer rounded-xl bg-ra-primary px-4 py-2 text-sm font-semibold text-zinc-950 hover:brightness-110 disabled:opacity-50 sm:w-auto"
             >
               {saving ? "Saving…" : "Save"}
             </button>
@@ -334,7 +388,7 @@ export default function RecipesPage() {
             </select>
           </div>
           <div>
-            <div className="flex items-center justify-between">
+            <div className="flex flex-wrap items-center justify-between gap-2">
               <label className="text-xs admin-surface-muted">Ingredients</label>
               <button
                 type="button"
@@ -373,7 +427,7 @@ export default function RecipesPage() {
               onChange={(e) =>
                 setForm((f) => ({ ...f, steps: e.target.value }))
               }
-              placeholder="Prep and plating stepsâ€¦"
+              placeholder="Prep and plating steps…"
               className="mt-1 w-full resize-none rounded-xl border admin-shell-border admin-surface-card px-3 py-2 text-sm admin-shell-text"
             />
           </div>
@@ -385,8 +439,8 @@ export default function RecipesPage() {
         onClose={() => setDetailRecipe(null)}
         title={
           detailRecipe ? (
-            <span className="flex items-center gap-2">
-              <BookOpen className="size-5 text-ra-primary" />
+            <span className="flex min-w-0 items-start gap-2 break-words">
+              <BookOpen className="mt-0.5 size-5 shrink-0 text-ra-primary" />
               {detailRecipe.name}
             </span>
           ) : null
@@ -395,15 +449,15 @@ export default function RecipesPage() {
           <button
             type="button"
             onClick={() => setDetailRecipe(null)}
-            className="cursor-pointer rounded-xl border admin-shell-border px-4 py-2 text-sm admin-surface-body"
+            className="w-full cursor-pointer rounded-xl border admin-shell-border px-4 py-2 text-sm admin-surface-body sm:ml-auto sm:w-auto"
           >
             Close
           </button>
         }
       >
         {detailRecipe ? (
-          <div className="space-y-4 text-sm">
-            <p className="text-zinc-500">
+          <div className="min-w-0 space-y-4 text-sm">
+            <p className="break-words text-zinc-500">
               Menu item:{" "}
               <span className="font-medium admin-shell-text">
                 {detailRecipe.menuItemName}
@@ -413,7 +467,7 @@ export default function RecipesPage() {
               <h4 className="text-xs font-semibold uppercase tracking-wide text-zinc-500">
                 Ingredients
               </h4>
-              <ul className="mt-2 list-inside list-disc space-y-1 admin-surface-body">
+              <ul className="mt-2 list-inside list-disc space-y-1 break-words admin-surface-body">
                 {detailRecipe.ingredients.map((ing, i) => (
                   <li key={i}>{ing}</li>
                 ))}
@@ -423,8 +477,8 @@ export default function RecipesPage() {
               <h4 className="text-xs font-semibold uppercase tracking-wide text-zinc-500">
                 Steps
               </h4>
-              <p className="mt-2 whitespace-pre-wrap leading-relaxed admin-surface-body">
-                {detailRecipe.steps || "â€”"}
+              <p className="mt-2 whitespace-pre-wrap break-words leading-relaxed admin-surface-body">
+                {detailRecipe.steps || "—"}
               </p>
             </div>
           </div>

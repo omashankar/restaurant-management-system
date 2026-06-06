@@ -11,15 +11,15 @@ const typeStyles = {
 export default function AiInsights({ insights = [] }) {
   return (
     <div className="rms-dashboard-card rms-dashboard-card--md flex flex-col rms-dashboard-card admin-surface-card p-5">
-      <div className="flex shrink-0 items-center gap-2">
-        <span className="flex size-8 items-center justify-center rounded-lg bg-violet-500/15 text-violet-400 ring-1 ring-violet-500/20">
+      <div className="flex flex-wrap items-start gap-2 sm:items-center">
+        <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-violet-500/15 text-violet-400 ring-1 ring-violet-500/20">
           <Sparkles className="size-4" />
         </span>
-        <div>
+        <div className="min-w-0 flex-1">
           <h3 className="admin-surface-title text-sm font-semibold">AI Insights</h3>
           <p className="admin-surface-subheading">Smart observations from today&apos;s data</p>
         </div>
-        <span className="ml-auto rounded-full border border-violet-500/30 bg-violet-500/10 px-2.5 py-0.5 text-[10px] font-semibold text-violet-400">
+        <span className="shrink-0 rounded-full border border-violet-500/30 bg-violet-500/10 px-2.5 py-0.5 text-[10px] font-semibold text-violet-400 sm:ml-auto">
           Live
         </span>
       </div>
@@ -28,7 +28,7 @@ export default function AiInsights({ insights = [] }) {
         <p className="mt-6 text-center text-sm admin-surface-faint">No insights yet — place some orders first.</p>
       ) : (
         <div className="rms-dashboard-card__body rms-dashboard-card__body--y mt-4 min-h-0 flex-1 pr-1">
-          <div className="grid gap-2 sm:grid-cols-2">
+          <div className="grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-2">
             {insights.map((insight, i) => {
               const Icon = iconMap[insight.icon] ?? TrendingUp;
               const s = typeStyles[insight.type] ?? typeStyles.info;

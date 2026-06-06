@@ -23,13 +23,13 @@ export default function SalesChart({ data = {} }) {
 
   return (
     <div className={`rms-dashboard-card rms-dashboard-card--lg flex h-full min-h-0 w-full flex-col p-5 ${adminSurface.card}`}>
-      <div className="flex shrink-0 flex-wrap items-start justify-between gap-3">
-        <div>
+      <div className="flex shrink-0 flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-start sm:justify-between">
+        <div className="min-w-0">
           <h3 className={`text-sm font-semibold ${adminSurface.title}`}>Sales Analytics</h3>
           <p className={`text-xs ${adminSurface.muted}`}>Revenue and order volume over time</p>
         </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <div className={adminSurface.segmentTrack}>
+        <div className="flex w-full min-w-0 flex-col gap-2 sm:w-auto sm:flex-row sm:flex-wrap sm:items-center">
+          <div className={`flex w-full ${adminSurface.segmentTrack} sm:w-auto`}>
             {["sales", "orders"].map((t) => (
               <button key={t} type="button" onClick={() => setActiveTab(t)}
                 className={`${adminSurface.segmentBtn} ${
@@ -39,7 +39,7 @@ export default function SalesChart({ data = {} }) {
               </button>
             ))}
           </div>
-          <div className={adminSurface.segmentTrack}>
+          <div className={`flex w-full ${adminSurface.segmentTrack} sm:w-auto`}>
             {FILTERS.map((f) => (
               <button key={f} type="button" onClick={() => setActiveFilter(f)}
                 className={`${adminSurface.segmentBtn} ${
@@ -58,12 +58,12 @@ export default function SalesChart({ data = {} }) {
           <p className={`text-sm ${adminSurface.faint}`}>No data for this period yet.</p>
         </div>
       ) : (
-        <div className="flex min-h-[12rem] items-end gap-1.5 sm:gap-2">
-          {chartData.map((d) => {
+        <div className="flex min-h-[12rem] items-end gap-1 overflow-x-auto pb-1 sm:gap-2 sm:overflow-visible sm:pb-0">
+          {chartData.map((d, index) => {
             const val = activeTab === "sales" ? d.sales : d.orders;
             const h   = Math.round((val / max) * 100);
             return (
-              <div key={d.label} className="group flex flex-1 flex-col items-center gap-1.5">
+              <div key={d.key ?? `${d.label}-${index}`} className="group flex min-w-[2.25rem] flex-1 flex-col items-center gap-1.5 sm:min-w-0">
                 <span className="hidden text-[10px] admin-surface-faint opacity-0 transition-opacity group-hover:opacity-100 sm:block">
                   {activeTab === "sales" ? fmt(val) : val}
                 </span>

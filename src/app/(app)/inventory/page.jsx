@@ -271,17 +271,17 @@ export default function InventoryPage() {
 
   if (!hydrated || loading) {
     return (
-      <div className="space-y-6">
-        <div className="h-8 w-40 rounded-lg admin-progress-track animate-pulse" />
+      <div className="min-w-0 w-full max-w-full space-y-6 overflow-x-hidden">
+        <div className="h-8 w-40 animate-pulse rounded-lg admin-progress-track" />
         <TableSkeleton rows={8} cols={7} />
       </div>
     );
   }
 
   return (
-    <div className="space-y-8">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div>
+    <div className="min-w-0 w-full max-w-full space-y-8 overflow-x-hidden">
+      <div className="flex min-w-0 flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div className="min-w-0">
           <h1 className="admin-page-title text-2xl font-semibold tracking-tight">
             Inventory
           </h1>
@@ -292,7 +292,7 @@ export default function InventoryPage() {
         <button
           type="button"
           onClick={openCreate}
-          className="cursor-pointer inline-flex items-center gap-2 rounded-xl bg-ra-primary px-4 py-2.5 text-sm font-semibold text-zinc-950 transition-colors hover:brightness-110"
+          className="inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-ra-primary px-4 py-2.5 text-sm font-semibold text-zinc-950 transition-colors hover:brightness-110 sm:w-auto"
         >
           <Plus className="size-4" />
           Add item
@@ -313,42 +313,42 @@ export default function InventoryPage() {
         />
       ) : null}
 
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <div className="admin-surface-card px-4 py-4 transition-colors hover:border-zinc-700">
+      <div className="grid min-w-0 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="admin-surface-card px-4 py-3 sm:py-4 transition-colors hover:border-zinc-700">
           <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">
             Total SKUs
           </p>
-          <p className="mt-2 text-3xl font-semibold tabular-nums text-zinc-50">
+          <p className="mt-2 text-2xl font-semibold tabular-nums text-zinc-50 sm:text-3xl">
             {stats.total}
           </p>
         </div>
-        <div className="admin-surface-card px-4 py-4 transition-colors hover:border-ra-primary-20">
+        <div className="admin-surface-card px-4 py-3 sm:py-4 transition-colors hover:border-ra-primary-20">
           <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">
             In stock
           </p>
-          <p className="mt-2 text-3xl font-semibold tabular-nums text-ra-primary">
+          <p className="mt-2 text-2xl font-semibold tabular-nums text-ra-primary sm:text-3xl">
             {stats.ok}
           </p>
         </div>
-        <div className="admin-surface-card px-4 py-4 transition-colors hover:border-amber-500/25">
+        <div className="admin-surface-card px-4 py-3 sm:py-4 transition-colors hover:border-amber-500/25">
           <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">
             Low stock
           </p>
-          <p className="mt-2 text-3xl font-semibold tabular-nums text-amber-400">
+          <p className="mt-2 text-2xl font-semibold tabular-nums text-amber-400 sm:text-3xl">
             {stats.low}
           </p>
         </div>
-        <div className="admin-surface-card px-4 py-4 transition-colors hover:border-red-500/25">
+        <div className="admin-surface-card px-4 py-3 sm:py-4 transition-colors hover:border-red-500/25">
           <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">
             Out of stock
           </p>
-          <p className="mt-2 text-3xl font-semibold tabular-nums text-red-400">
+          <p className="mt-2 text-2xl font-semibold tabular-nums text-red-400 sm:text-3xl">
             {stats.out}
           </p>
         </div>
       </div>
 
-      <section className="space-y-3">
+      <section className="min-w-0 space-y-3">
         <div className="flex items-center gap-2">
           <AlertTriangle className="size-4 text-amber-400" aria-hidden />
           <h2 className="text-sm font-semibold admin-shell-text">
@@ -361,7 +361,7 @@ export default function InventoryPage() {
             All items are above reorder levels.
           </div>
         ) : (
-          <div className="grid gap-3 md:grid-cols-2">
+          <div className="grid min-w-0 gap-3 md:grid-cols-2">
             {alertItems.map((item) => (
               <InventoryAlertCard
                 key={item.id}
@@ -381,7 +381,7 @@ export default function InventoryPage() {
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="admin-surface-card px-3 py-2 text-sm admin-shell-text"
+            className="w-full admin-surface-card px-3 py-2 text-sm admin-shell-text sm:w-auto"
           >
             <option value="all">All statuses</option>
             <option value="in">In stock</option>

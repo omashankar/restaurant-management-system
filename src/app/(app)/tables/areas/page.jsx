@@ -205,9 +205,9 @@ export default function TableAreasPage() {
 
   if (loading) {
     return (
-      <div className="space-y-4">
+      <div className="min-w-0 w-full max-w-full space-y-4 overflow-x-hidden">
         <div className="h-8 w-40 animate-pulse rounded-lg admin-progress-track" />
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid min-w-0 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {Array.from({ length: 6 }).map((_, i) => (
             <div key={i} className="h-28 animate-pulse admin-surface-card" />
           ))}
@@ -217,34 +217,35 @@ export default function TableAreasPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="min-w-0 w-full max-w-full space-y-6 overflow-x-hidden">
       {fetchError && (
         <div className="rounded-xl border border-red-500/25 bg-red-500/10 px-4 py-3 text-sm text-red-400">
           {fetchError}
         </div>
       )}
       {/* Header */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div className="flex items-start gap-3">
-          <span className={`mt-1 ${raIconBadgeCls}`}>
+      <div className="flex min-w-0 flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div className="flex min-w-0 items-start gap-3">
+          <span className={`mt-1 shrink-0 ${raIconBadgeCls}`}>
             <LayoutGrid className="size-5" />
           </span>
-          <div>
+          <div className="min-w-0">
             <h1 className="admin-page-title text-2xl font-semibold tracking-tight">Table Areas</h1>
             <p className="admin-page-desc mt-1 text-sm">Seating areas — assign to tables for filtering.</p>
           </div>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex w-full min-w-0 flex-col gap-2 sm:w-auto sm:flex-row sm:flex-wrap sm:items-center">
           <Link href="/tables"
-            className="cursor-pointer inline-flex items-center gap-2 rounded-xl border admin-shell-border px-4 py-2.5 text-sm font-medium admin-surface-body hover:border-zinc-500">
+            className="inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl border admin-shell-border px-4 py-2.5 text-sm font-medium admin-surface-body hover:border-zinc-500 sm:w-auto">
             <Table2 className="size-4" /> Tables
           </Link>
           <button type="button" onClick={fetchAreas}
-            className="cursor-pointer flex items-center gap-1.5 rounded-xl border admin-shell-border px-3 py-2.5 text-sm font-medium text-zinc-400 hover:border-zinc-500 hover:admin-shell-text transition-colors">
+            className="inline-flex w-full cursor-pointer items-center justify-center gap-1.5 rounded-xl border admin-shell-border px-3 py-2.5 text-sm font-medium text-zinc-400 transition-colors hover:border-zinc-500 hover:admin-shell-text sm:w-auto">
             <RefreshCw className="size-4" />
+            <span className="sm:hidden">Refresh</span>
           </button>
           <button type="button" onClick={openCreate}
-            className="cursor-pointer inline-flex items-center gap-2 rounded-xl bg-ra-primary px-4 py-2.5 text-sm font-semibold text-zinc-950 hover:brightness-110">
+            className="inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-ra-primary px-4 py-2.5 text-sm font-semibold text-zinc-950 hover:brightness-110 sm:w-auto">
             <Plus className="size-4" /> Add Area
           </button>
         </div>
@@ -257,20 +258,20 @@ export default function TableAreasPage() {
           description="Create seating areas like Indoor, Outdoor, VIP to organize your tables."
           action={
             <button type="button" onClick={openCreate}
-              className="cursor-pointer rounded-xl bg-ra-primary px-4 py-2 text-sm font-semibold text-zinc-950 hover:brightness-110">
+              className="inline-flex w-full cursor-pointer items-center justify-center rounded-xl bg-ra-primary px-4 py-2 text-sm font-semibold text-zinc-950 hover:brightness-110 sm:w-auto">
               Add Area
             </button>
           }
         />
       ) : (
         <>
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid min-w-0 grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {pageRows.map((area) => {
             const badgeClass = getCategoryBadge(area.color);
             const count = tableCounts[area.id] ?? 0;
             return (
               <div key={area.id}
-                className="admin-surface-card p-5 transition-colors hover:border-ra-primary-30">
+                className="min-w-0 admin-surface-card p-5 transition-colors hover:border-ra-primary-30">
                 {area.imageUrl ? (
                   <div className="mb-3 overflow-hidden rounded-xl admin-surface-card">
                     <Image
@@ -284,14 +285,14 @@ export default function TableAreasPage() {
                 ) : null}
                 <div className="flex items-start gap-3">
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold ring-1 ${badgeClass}`}>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className={`inline-flex max-w-full break-words rounded-full px-2.5 py-0.5 text-xs font-semibold ring-1 ${badgeClass}`}>
                         {area.name}
                       </span>
                       <span className="text-xs admin-surface-faint">{count} table{count !== 1 ? "s" : ""}</span>
                     </div>
                     {area.description && (
-                      <p className="mt-2 text-xs leading-relaxed text-zinc-500">{area.description}</p>
+                      <p className="mt-2 break-words text-xs leading-relaxed text-zinc-500">{area.description}</p>
                     )}
                   </div>
                 </div>
@@ -309,6 +310,7 @@ export default function TableAreasPage() {
             );
           })}
         </div>
+        <div className="min-w-0">
         <PaginationBar
           page={page}
           totalPages={totalPages}
@@ -317,6 +319,7 @@ export default function TableAreasPage() {
           onPageChange={setPage}
           hideWhenSinglePage
         />
+        </div>
         </>
       )}
 
@@ -324,13 +327,13 @@ export default function TableAreasPage() {
       <Modal open={modalOpen} onClose={() => setModalOpen(false)}
         title={editingId ? "Edit Area" : "Add Area"}
         footer={
-          <div className="flex justify-end gap-2">
+          <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
             <button type="button" onClick={() => setModalOpen(false)}
-              className="cursor-pointer rounded-xl border border-[var(--admin-border-subtle)] bg-[var(--admin-surface)] px-4 py-2 text-sm admin-surface-body transition-colors hover:bg-[var(--admin-hover)]">
+              className="w-full cursor-pointer rounded-xl border border-[var(--admin-border-subtle)] bg-[var(--admin-surface)] px-4 py-2 text-sm admin-surface-body transition-colors hover:bg-[var(--admin-hover)] sm:w-auto">
               Cancel
             </button>
             <button type="button" onClick={save} disabled={saving || imagePhase}
-              className="cursor-pointer rounded-xl bg-ra-primary px-4 py-2 text-sm font-semibold text-zinc-950 hover:brightness-110 disabled:opacity-40">
+              className="w-full cursor-pointer rounded-xl bg-ra-primary px-4 py-2 text-sm font-semibold text-zinc-950 hover:brightness-110 disabled:opacity-40 sm:w-auto">
               {imagePhase === "compressing"
                 ? "Compressing image…"
                 : imagePhase === "uploading"
@@ -341,7 +344,7 @@ export default function TableAreasPage() {
             </button>
           </div>
         }>
-        <div className="space-y-4">
+        <div className="min-w-0 space-y-4">
           {formError && <p className="rounded-xl border border-red-500/20 bg-red-500/10 px-3 py-2 text-xs text-red-400">{formError}</p>}
           <div>
             <label className="text-xs font-medium admin-surface-muted">Area Name *</label>
@@ -366,7 +369,7 @@ export default function TableAreasPage() {
           <div>
             <label className="text-xs font-medium admin-surface-muted">Area Image (JPG, PNG)</label>
             <div className="mt-2 space-y-3">
-              <label className={`flex cursor-pointer items-center justify-center gap-2 ${raDashedBoxCls} px-4 py-3 text-sm transition-colors hover:border-ra-primary-40 hover:text-ra-primary`}>
+              <label className={`flex cursor-pointer flex-wrap items-center justify-center gap-2 text-center ${raDashedBoxCls} px-4 py-3 text-sm transition-colors hover:border-ra-primary-40 hover:text-ra-primary`}>
                 <ImagePlus className="size-4" />
                 <span>{imageFile ? "Change selected image" : "Choose image"}</span>
                 <input
@@ -385,14 +388,14 @@ export default function TableAreasPage() {
                     alt="Area preview"
                     className="h-36 w-full object-cover"
                   />
-                  <div className="flex items-center justify-between admin-surface-divider-t px-3 py-2">
+                  <div className="flex flex-col gap-2 admin-surface-divider-t px-3 py-2 sm:flex-row sm:items-center sm:justify-between">
                     <p className="text-xs admin-surface-muted">
                       {imageFile ? "New image selected (preview)" : "Current saved image"}
                     </p>
                     <button
                       type="button"
                       onClick={clearImage}
-                      className="inline-flex cursor-pointer items-center gap-1 rounded-lg border border-[var(--admin-border-subtle)] bg-[var(--admin-surface)] px-2.5 py-1 text-xs admin-surface-body transition-colors hover:border-red-500/40 hover:bg-red-500/5 hover:text-red-500"
+                      className="inline-flex w-full cursor-pointer items-center justify-center gap-1 rounded-lg border border-[var(--admin-border-subtle)] bg-[var(--admin-surface)] px-2.5 py-1 text-xs admin-surface-body transition-colors hover:border-red-500/40 hover:bg-red-500/5 hover:text-red-500 sm:w-auto"
                     >
                       <X className="size-3.5" />
                       Delete image
@@ -406,10 +409,10 @@ export default function TableAreasPage() {
           </div>
           <div>
             <label className="text-xs font-medium admin-surface-muted">Color</label>
-            <div className="mt-2 flex flex-wrap gap-2">
+            <div className="mt-2 grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
               {CATEGORY_COLORS.map((c) => (
                 <button key={c.id} type="button" onClick={() => set("color", c.id)}
-                  className={`cursor-pointer flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors ${
+                  className={`cursor-pointer flex items-center justify-center gap-1.5 rounded-lg border px-3 py-2 text-xs font-medium transition-colors sm:justify-start sm:py-1.5 ${
                     form.color === c.id
                       ? getCategoryActive(c.id)
                       : `border-[var(--admin-border-subtle)] admin-surface-muted ${getCategoryHover(c.id)}`
@@ -423,7 +426,7 @@ export default function TableAreasPage() {
           {form.name && (
             <div className="rounded-xl admin-surface-card px-4 py-3">
               <p className="mb-2 text-xs admin-surface-faint">Preview</p>
-              <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold ring-1 ${getCategoryBadge(form.color)}`}>
+              <span className={`inline-flex max-w-full break-words rounded-full px-2.5 py-0.5 text-xs font-semibold ring-1 ${getCategoryBadge(form.color)}`}>
                 {form.name}
               </span>
             </div>
