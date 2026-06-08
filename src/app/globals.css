@@ -1459,6 +1459,27 @@ body {
   animation: pulse-glow 2s ease-in-out infinite;
 }
 
+@keyframes landing-marquee {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+
+.landing-marquee-track {
+  animation: landing-marquee 28s linear infinite;
+  will-change: transform;
+  backface-visibility: hidden;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .landing-marquee-track {
+    animation: none;
+  }
+}
+
 /* Dark mode customer */
 .customer-theme.customer-dark {
   background: var(--customer-bg);

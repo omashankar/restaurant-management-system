@@ -346,6 +346,121 @@ export async function testEmailConnection() {
   }
 }
 
+/** Whether platform/tenant/env SMTP can send outbound mail. */
+export async function canSendOutboundEmail(db, restaurantId = null) {
+  try {
+    await resolveMailSendingContext(db, restaurantId);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function buildContactReplyHtml({ toName, body, originalSubject, originalMessage, originalFrom }) {
+  const safeName = String(toName ?? "there").replace(/</g, "&lt;");
+  const safeBody = String(body ?? "").replace(/</g, "&lt;").replace(/\n/g, "<br/>");
+  const safeOrig = String(originalMessage ?? "").replace(/</g, "&lt;").replace(/\n/g, "<br/>");
+  return `
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"/></head>
+<body style="margin:0;padding:0;background:#f8fafc;font-family:'Segoe UI',Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0">
+    <tr>
+      <td align="center" style="padding:32px 16px;">
+        <table width="560" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:12px;border:1px solid #e2e8f0;overflow:hidden;">
+          <tr>
+            <td style="background:#4f46e5;padding:20px 28px;">
+              <p style="margin:0;font-size:18px;font-weight:700;color:#ffffff;">Restaurant OS Support</p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:28px;">
+              <p style="margin:0 0 16px;font-size:15px;color:#0f172a;line-height:1.6;">Hi ${safeName},</p>
+              <p style="margin:0 0 24px;font-size:15px;color:#334155;line-height:1.7;">${safeBody}</p>
+              <table width="100%" cellpadding="0" cellspacing="0" style="background:#f8fafc;border-radius:8px;border:1px solid #e2e8f0;">
+                <tr>
+                  <td style="padding:16px;">
+                    <p style="margin:0 0 8px;font-size:11px;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;color:#64748b;">Your original message</p>
+                    <p style="margin:0 0 4px;font-size:13px;font-weight:600;color:#0f172a;">${String(originalSubject ?? "Inquiry").replace(/</g, "&lt;")}</p>
+                    <p style="margin:0;font-size:13px;color:#475569;line-height:1.6;">${safeOrig}</p>
+                    ${originalFrom ? `<p style="margin:8px 0 0;font-size:12px;color:#94a3b8;">From: ${String(originalFrom).replace(/</g, "&lt;")}</p>` : ""}
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
+}
+
+/** Super Admin / tenant reply to a contact inbox message. */
+export async function sendContactInquiryReply({
+  db,
+  restaurantId = null,
+  to,
+  toName,
+  subject,
+  body,
+  originalSubject,
+  originalMessage,
+}) {
+  const recipient = String(to ?? "").trim().toLowerCase();
+  const messageBody = String(body ?? "").trim();
+  if (!recipient || !messageBody) {
+    return { success: false, error: "Recipient and message are required." };
+  }
+
+  let replySubject = String(subject ?? "").trim();
+  if (!replySubject) replySubject = `Re: ${String(originalSubject ?? "Your inquiry").trim() || "Your inquiry"}`;
+  if (!/^re:/i.test(replySubject)) replySubject = `Re: ${replySubject}`;
+
+  try {
+    const { transporter, from } = await resolveMailSendingContext(db, restaurantId ?? null);
+    const text = [
+      `Hi ${toName || "there"},`,
+      "",
+      messageBody,
+      "",
+      "---",
+      "Your original message:",
+      originalSubject ? `Subject: ${originalSubject}` : "",
+      originalMessage ?? "",
+    ]
+      .filter(Boolean)
+      .join("\n");
+
+    await transporter.sendMail({
+      from,
+      to: recipient,
+      subject: replySubject.slice(0, 200),
+      text,
+      html: buildContactReplyHtml({
+        toName,
+        body: messageBody,
+        originalSubject,
+        originalMessage,
+        originalFrom: toName,
+      }),
+    });
+
+    return { success: true, subject: replySubject.slice(0, 200) };
+  } catch (err) {
+    console.error("Contact inquiry reply failed:", err?.message);
+    return {
+      success: false,
+      error:
+        err?.message?.includes("No outbound email")
+          ? "Email is not configured. Set up SMTP in Super Admin → Settings."
+          : "Failed to send reply. Check SMTP settings.",
+    };
+  }
+}
+
 /** Notify restaurant contact email when a new order is placed. */
 export async function sendNewOrderAlertEmail({ order, db, restaurantId, toEmail }) {
   const recipient = String(toEmail ?? "").trim();

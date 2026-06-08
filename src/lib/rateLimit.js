@@ -87,6 +87,8 @@ export const customerOtpRequestLimiter = rateLimit({ windowMs: 10 * 60_000, max:
 export const customerOtpVerifyLimiter = rateLimit({ windowMs: 10 * 60_000, max: IS_DEV ? 80 : 10 });
 export const staffOnboardingOtpRequestLimiter = rateLimit({ windowMs: 10 * 60_000, max: IS_DEV ? 50 : 5 });
 export const staffOnboardingOtpVerifyLimiter = rateLimit({ windowMs: 10 * 60_000, max: IS_DEV ? 80 : 10 });
+export const landingContactLimiter = rateLimit({ windowMs: 60 * 60_000, max: IS_DEV ? 30 : 5 });
+export const contactReplyLimiter = rateLimit({ windowMs: 60 * 60_000, max: IS_DEV ? 50 : 20 });
 
 /** Get client IP from Next.js request */
 export function getClientIp(request) {

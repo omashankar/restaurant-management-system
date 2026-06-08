@@ -59,6 +59,7 @@ export const DEFAULTS = {
       { label: "How It Works", href: "#how-it-works",external: false },
       { label: "Pricing",      href: "#pricing",     external: false },
       { label: "Demo",         href: "#demo",        external: false },
+      { label: "FAQ",          href: "#faq",         external: false },
       { label: "Contact",      href: "#contact",     external: false },
     ],
     ctaPrimary:   { label: "Get Started", href: "/signup" },
@@ -67,10 +68,11 @@ export const DEFAULTS = {
 
   hero: {
     badge:        "Built for modern restaurants",
-    headline:     "All-in-One Restaurant Management System",
-    subheadline:  "Manage billing, inventory, staff, and analytics from one powerful platform — built for speed, simplicity, and scale.",
+    headline:     "Run your restaurant from one smart dashboard",
+    subheadline:  "POS, kitchen, inventory, tables, staff, and reports — cut billing time by up to 60% and stop stock surprises during rush hour.",
     ctaPrimary:   "Start Free Trial",
-    ctaSecondary: "Book a Demo",
+    ctaSecondary: "See Live Demo",
+    trialNote:    "14-day free trial · No credit card required",
     imageUrl:     "",
     stats: [
       { value: "500+",   label: "Restaurants onboarded" },
@@ -191,6 +193,7 @@ export const DEFAULTS = {
     links: [
       { label: "Features",       href: "#features" },
       { label: "Pricing",        href: "#pricing"  },
+      { label: "FAQ",            href: "#faq"      },
       { label: "Privacy Policy", href: "/privacy"  },
       { label: "Terms of Use",   href: "/terms"    },
     ],
@@ -217,6 +220,9 @@ export const DEFAULTS = {
   },
 
   problemSolution: {
+    sectionEyebrow: "Why RMS",
+    sectionTitle: "From chaos to control in one platform",
+    sectionSubtext: "See what breaks without a system — and how RMS fixes it for busy teams.",
     problemEyebrow: "The Problem",
     problemTitle: "Running a restaurant is hard",
     problems: [
@@ -251,6 +257,9 @@ export const DEFAULTS = {
   },
 
   benefits: {
+    sectionEyebrow: "Why teams choose RMS",
+    sectionTitle: "Built for speed on every screen",
+    sectionSubtext: "Your staff moves fast — your software should keep up during lunch rush and late-night service.",
     deviceBadge: "Works on all devices",
     deviceTitle: "Mobile-first, desktop-ready",
     deviceDescription: "Adaptive layout for desktop, tablet, and phone — fast and clean during busy service hours.",
@@ -285,6 +294,40 @@ export const DEFAULTS = {
     primaryCtaHref: "/signup",
     secondaryCtaLabel: "View Demo",
     secondaryCtaHref: "#demo",
+  },
+
+  faq: {
+    enabled: true,
+    eyebrow: "FAQ",
+    title: "Questions before you sign up?",
+    subtext: "Quick answers about setup, pricing, and how RMS fits your team.",
+    items: [
+      {
+        id: "faq-1",
+        q: "How long does setup take?",
+        a: "Most restaurants go live in about 15 minutes — add your menu, tables, and staff roles, then start taking orders the same day.",
+      },
+      {
+        id: "faq-2",
+        q: "Is there a free trial?",
+        a: "Yes. Every plan includes a 14-day free trial. No credit card is required to create your account and explore the full platform.",
+      },
+      {
+        id: "faq-3",
+        q: "Can I use RMS on mobile and tablet?",
+        a: "Absolutely. RMS is mobile-first — waiters, managers, and kitchen staff can use phones and tablets during service, with a full desktop experience for admins.",
+      },
+      {
+        id: "faq-4",
+        q: "Do you support multiple locations?",
+        a: "Starter covers one location. Pro supports up to three outlets. Enterprise is built for chains and franchises with unlimited locations.",
+      },
+      {
+        id: "faq-5",
+        q: "What kind of support do you offer?",
+        a: "All plans include email support. Pro adds priority response times. Enterprise customers get a dedicated account manager and SLA-backed uptime.",
+      },
+    ],
   },
 };
 
@@ -360,6 +403,15 @@ const VALIDATORS = {
   cta: (d) => {
     if (!d || typeof d !== "object") return "cta must be an object.";
     return validateLandingSectionServer("cta", d);
+  },
+  faq: (d) => {
+    if (!d || typeof d !== "object") return "faq must be an object.";
+    if (d.enabled === false) return null;
+    if (!Array.isArray(d.items)) return "faq.items must be an array.";
+    for (const item of d.items) {
+      if (!item?.q?.trim() || !item?.a?.trim()) return "Each FAQ item needs a question and answer.";
+    }
+    return null;
   },
 };
 

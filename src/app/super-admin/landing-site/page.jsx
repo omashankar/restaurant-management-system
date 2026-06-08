@@ -12,7 +12,7 @@ import Modal from "@/components/ui/Modal";
 import { getIcon } from "@/lib/iconMap";
 import { useToast } from "@/hooks/useToast";
 import {
-  AlertCircle, BarChart3, CreditCard, Globe,
+  AlertCircle, BarChart3, CreditCard, Globe, HelpCircle,
   Info, LayoutTemplate, Link2, Mail, MessageSquare, Search,
   Pencil, Plus, Save, Star, Trash2, Users,
 } from "lucide-react";
@@ -77,6 +77,7 @@ const TABS = [
   { id: "roles",        label: "Roles",        Icon: Users          },
   { id: "pricing",      label: "Pricing",      Icon: CreditCard     },
   { id: "testimonials", label: "Testimonials", Icon: MessageSquare  },
+  { id: "faq",          label: "FAQ",          Icon: HelpCircle     },
   { id: "about",        label: "About",        Icon: Info           },
   { id: "contact",      label: "Contact",      Icon: Mail           },
   { id: "brands",       label: "Brands",       Icon: Star           },
@@ -88,6 +89,9 @@ const TABS = [
   { id: "footer",       label: "Footer",       Icon: Mail           },
   { id: "seo",          label: "SEO",          Icon: Search         },
 ];
+
+const toLines = (arr) => (Array.isArray(arr) ? arr.join("\n") : "");
+const fromLines = (txt) => String(txt ?? "").split("\n").map((x) => x.trim()).filter(Boolean);
 
 function NavbarPanel({ data, onChange, onSave, saving, fieldErrors = {}, onClearError }) {
   const links = Array.isArray(data.links) ? data.links : [];
@@ -278,6 +282,51 @@ function HeroPanel({ data, onChange, onSave, saving, fieldErrors = {}, onClearEr
           />
         </Field>
       </div>
+      <Field
+        label="Trial note"
+        hint="Shown under CTA buttons and on the mobile sticky bar."
+        error={fieldErrors.trialNote}
+      >
+        <input
+          value={data.trialNote ?? ""}
+          onChange={(e) => {
+            onChange("trialNote", e.target.value);
+            onClearError?.("trialNote");
+          }}
+          placeholder="14-day free trial · No credit card required"
+          maxLength={80}
+          className={ic}
+        />
+      </Field>
+      <Field
+        label="Hero stats"
+        hint="Up to 3 stats. Format per line: value|label (e.g. 500+|Restaurants onboarded)"
+        error={fieldErrors.stats}
+      >
+        <textarea
+          rows={4}
+          value={(Array.isArray(data.stats) ? data.stats : [])
+            .map((s) => `${s?.value ?? ""}|${s?.label ?? ""}`)
+            .join("\n")}
+          onChange={(e) => {
+            const existing = Array.isArray(data.stats) ? data.stats : [];
+            const parsed = fromLines(e.target.value).slice(0, 3).map((line, i) => {
+              const pipe = line.indexOf("|");
+              const value = pipe >= 0 ? line.slice(0, pipe).trim() : line.trim();
+              const label = pipe >= 0 ? line.slice(pipe + 1).trim() : "";
+              return {
+                value,
+                label,
+                ...(existing[i]?.id ? { id: existing[i].id } : {}),
+              };
+            });
+            onChange("stats", parsed);
+            onClearError?.("stats");
+          }}
+          placeholder={"500+|Restaurants onboarded\n15 min|Avg. setup time\n99.9%|Uptime SLA"}
+          className={`${ic} resize-none font-mono text-xs`}
+        />
+      </Field>
 
       {/* Live preview */}
       {(data.headline || data.badge) && (
@@ -749,9 +798,6 @@ function SeoPanel({ data, onChange, onSave, saving, fieldErrors = {}, onClearErr
   );
 }
 
-const toLines = (arr) => (Array.isArray(arr) ? arr.join("\n") : "");
-const fromLines = (txt) => String(txt ?? "").split("\n").map((x) => x.trim()).filter(Boolean);
-
 function BrandsPanel({ data, onChange, onSave, saving }) {
   return (
     <div className="space-y-5">
@@ -776,6 +822,11 @@ function ProblemSolutionPanel({ data, onChange, onSave, saving }) {
   return (
     <div className="space-y-5">
       <AdminSectionHeader icon={AlertCircle} title="Problem / Solution" description="Edit both cards shown under hero." />
+      <div className="grid gap-4 sm:grid-cols-3">
+        <Field label="Section Eyebrow"><input value={data.sectionEyebrow ?? ""} onChange={(e) => onChange("sectionEyebrow", e.target.value)} className={ic} /></Field>
+        <Field label="Section Title"><input value={data.sectionTitle ?? ""} onChange={(e) => onChange("sectionTitle", e.target.value)} className={ic} /></Field>
+        <Field label="Section Subtext"><input value={data.sectionSubtext ?? ""} onChange={(e) => onChange("sectionSubtext", e.target.value)} className={ic} /></Field>
+      </div>
       <div className="grid gap-4 sm:grid-cols-2">
         <Field label="Problem Eyebrow"><input value={data.problemEyebrow ?? ""} onChange={(e) => onChange("problemEyebrow", e.target.value)} className={ic} /></Field>
         <Field label="Problem Title"><input value={data.problemTitle ?? ""} onChange={(e) => onChange("problemTitle", e.target.value)} className={ic} /></Field>
@@ -830,6 +881,11 @@ function BenefitsPanel({ data, onChange, onSave, saving }) {
   return (
     <div className="space-y-5">
       <AdminSectionHeader icon={Users} title="Benefits Block" description="Device card + Why RMS card content." />
+      <div className="grid gap-4 sm:grid-cols-3">
+        <Field label="Section Eyebrow"><input value={data.sectionEyebrow ?? ""} onChange={(e) => onChange("sectionEyebrow", e.target.value)} className={ic} /></Field>
+        <Field label="Section Title"><input value={data.sectionTitle ?? ""} onChange={(e) => onChange("sectionTitle", e.target.value)} className={ic} /></Field>
+        <Field label="Section Subtext"><input value={data.sectionSubtext ?? ""} onChange={(e) => onChange("sectionSubtext", e.target.value)} className={ic} /></Field>
+      </div>
       <div className="grid gap-4 sm:grid-cols-2">
         <Field label="Device Badge"><input value={data.deviceBadge ?? ""} onChange={(e) => onChange("deviceBadge", e.target.value)} className={ic} /></Field>
         <Field label="Why Badge"><input value={data.whyBadge ?? ""} onChange={(e) => onChange("whyBadge", e.target.value)} className={ic} /></Field>
@@ -887,6 +943,88 @@ function DemoSectionPanel({ data, onChange, onSave, saving, fieldErrors = {}, on
             onClearError?.("subtext");
           }}
           maxLength={500}
+          className={`${ic} resize-none`}
+        />
+      </Field>
+      <SaveBtn saving={saving} onClick={onSave} />
+    </div>
+  );
+}
+
+function FaqPanel({ data, onChange, onSave, saving, fieldErrors = {}, onClearError }) {
+  const items = Array.isArray(data.items) ? data.items : [];
+  const itemsText = items.map((item) => `${item.q ?? ""}|${item.a ?? ""}`).join("\n");
+
+  return (
+    <div className="space-y-5">
+      <AdminSectionHeader icon={HelpCircle} title="FAQ Section" description="Accordion questions shown before the contact form." />
+      <Toggle
+        checked={data.enabled !== false}
+        onChange={(v) => onChange("enabled", v)}
+        label="Section enabled"
+        description="Hide the FAQ block on the public landing page."
+      />
+      <div className="grid gap-4 sm:grid-cols-3">
+        <Field label="Eyebrow" error={fieldErrors.eyebrow}>
+          <input
+            value={data.eyebrow ?? ""}
+            onChange={(e) => {
+              onChange("eyebrow", e.target.value);
+              onClearError?.("eyebrow");
+            }}
+            placeholder="FAQ"
+            maxLength={80}
+            className={ic}
+          />
+        </Field>
+        <Field label="Title" error={fieldErrors.title}>
+          <input
+            value={data.title ?? ""}
+            onChange={(e) => {
+              onChange("title", e.target.value);
+              onClearError?.("title");
+            }}
+            placeholder="Questions before you sign up?"
+            maxLength={120}
+            className={ic}
+          />
+        </Field>
+        <Field label="Subtext" error={fieldErrors.subtext}>
+          <input
+            value={data.subtext ?? ""}
+            onChange={(e) => {
+              onChange("subtext", e.target.value);
+              onClearError?.("subtext");
+            }}
+            placeholder="Quick answers about setup and pricing."
+            maxLength={500}
+            className={ic}
+          />
+        </Field>
+      </div>
+      <Field
+        label="FAQ items"
+        hint="One per line. Format: question|answer"
+        required
+      >
+        <textarea
+          rows={10}
+          value={itemsText}
+          onChange={(e) => {
+            const parsed = fromLines(e.target.value).map((line, i) => {
+              const pipe = line.indexOf("|");
+              const q = pipe >= 0 ? line.slice(0, pipe).trim() : line.trim();
+              const a = pipe >= 0 ? line.slice(pipe + 1).trim() : "";
+              const existing = items[i];
+              return {
+                id: existing?.id ?? `faq-${i + 1}`,
+                q,
+                a,
+              };
+            });
+            onChange("items", parsed);
+          }}
+          placeholder={"How long does setup take?|Most restaurants go live in about 15 minutes.\nIs there a free trial?|Yes — 14 days, no credit card required."}
           className={`${ic} resize-none`}
         />
       </Field>
@@ -1344,6 +1482,9 @@ export default function LandingSitePage() {
                     </>
                   )}
                 />
+              )}
+              {activeTab === "faq" && (
+                <FaqPanel data={sectionData} onChange={handleChange} onSave={handleSave} saving={saving} {...panelValidationProps} />
               )}
               {activeTab === "footer" && (
                 <FooterPanel data={sectionData} onChange={handleChange} onSave={handleSave} saving={saving} {...panelValidationProps} />
