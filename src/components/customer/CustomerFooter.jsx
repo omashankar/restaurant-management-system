@@ -12,8 +12,6 @@ import {
 } from "@/lib/resolveLayoutTheme";
 import RestaurantLogo from "@/components/customer/RestaurantLogo";
 import SocialMediaIcons from "@/components/customer/SocialMediaIcons";
-import { useCustomerMotion } from "@/hooks/useCustomerMotion";
-import { motion } from "framer-motion";
 import {
   ArrowRight, CalendarClock, Mail, MapPin,
   Phone,
@@ -21,14 +19,12 @@ import {
 import Link from "next/link";
 import { customerClasses } from "@/lib/customerTheme";
 import { luminance } from "@/theme/palette";
-import { useState } from "react";
 
 export default function CustomerFooter() {
   const { link } = useRestaurantSlug();
   const { info } = useRestaurantInfo();
   const { content: cms } = useRestaurantCms();
   const { isDark } = useCustomerTheme();
-  const motionFx = useCustomerMotion();
   const theme = resolveTheme(cms.theme);
   const footerCfg = theme.footer ?? {};
   const footerColors = footerCfg.colors ?? {};
@@ -38,38 +34,6 @@ export default function CustomerFooter() {
   const POLICY_PATHS = ["/privacy", "/terms", "/order/privacy", "/order/terms"];
   const policyLinks = quickLinks.filter((l) => POLICY_PATHS.includes(l.path));
   const mainQuickLinks = quickLinks.filter((l) => !POLICY_PATHS.includes(l.path));
-  const [email, setEmail] = useState("");
-  const [subscribed, setSubscribed] = useState(false);
-  const [subscribing, setSubscribing] = useState(false);
-  const [subscribeError, setSubscribeError] = useState("");
-
-  const handleSubscribe = async (e) => {
-    e.preventDefault();
-    const value = email.trim();
-    if (!value) return;
-    setSubscribing(true);
-    setSubscribeError("");
-    try {
-      const res = await fetch("/api/customer/newsletter", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: value }),
-      });
-      const data = await res.json();
-      if (!res.ok || !data.success) {
-        setSubscribeError(data.error ?? "Could not subscribe.");
-        return;
-      }
-      setSubscribed(true);
-      setEmail("");
-      setTimeout(() => setSubscribed(false), 4000);
-    } catch {
-      setSubscribeError("Network error. Please try again.");
-    } finally {
-      setSubscribing(false);
-    }
-  };
-
   const cmsBg = footerColors.background?.trim();
   const cmsFont = footerColors.font?.trim();
   const cmsFooterIsDark =
@@ -304,43 +268,6 @@ export default function CustomerFooter() {
                 Google Play
               </a>
             )}
-          </div>
-        )}
-
-        {footerCfg.showNewsletter !== false && (
-          <div className="ct-footer-panel mt-12 px-6 py-6 sm:flex sm:items-center sm:justify-between sm:gap-8">
-            <div className="mb-4 sm:mb-0">
-              <p className="ct-footer-heading font-poppins text-sm font-bold">
-                {footerCfg.newsletterTitle?.trim() || "Subscribe to our Newsletter"}
-              </p>
-              <p className="ct-footer-muted mt-1 text-xs">
-                {footerCfg.newsletterSubtitle?.trim() ||
-                  "Stay up to date with our latest offers and new dishes."}
-              </p>
-            </div>
-            <form onSubmit={handleSubscribe} className="flex w-full max-w-sm flex-col gap-2 sm:flex-row sm:items-center">
-              <input
-                id="customer-newsletter-email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder={footerCfg.newsletterPlaceholder?.trim() || "Enter your email"}
-                autoComplete="email"
-                className="ct-footer-newsletter-input flex-1 rounded-xl border px-4 py-2.5 text-sm outline-none"
-              />
-              <motion.button
-                whileHover={motionFx.hoverBtn}
-                whileTap={motionFx.tap}
-                type="submit"
-                disabled={subscribing}
-                className="ct-btn ct-btn-primary min-h-[44px] w-full shrink-0 cursor-pointer px-5 py-2.5 text-xs font-bold disabled:opacity-60 sm:w-auto"
-              >
-                {subscribing ? "…" : subscribed ? "✓ Done!" : "Subscribe"}
-              </motion.button>
-              {subscribeError && (
-                <p className={`w-full sm:col-span-2 ${customerClasses.alertError}`}>{subscribeError}</p>
-              )}
-            </form>
           </div>
         )}
 

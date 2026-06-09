@@ -29,7 +29,7 @@ export default function CustomerPrivacyPage() {
                 <li>Name, phone number, and email when you register or checkout</li>
                 <li>Delivery address for delivery orders</li>
                 <li>Order and booking history</li>
-                <li>Messages sent through our contact form</li>
+                <li>Messages you send us by phone or email</li>
               </ul>
             </section>
             <section>

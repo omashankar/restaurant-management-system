@@ -10,6 +10,7 @@ import {
   LayoutToggle,
   layoutInputCls,
 } from "@/components/customer-site/layoutEditorUi";
+import { isCmsSaving } from "@/config/customerSiteDraft";
 import { DEFAULT_HEADER_MENU } from "@/lib/layoutNavDefaults";
 import { ArrowLeft } from "lucide-react";
 
@@ -57,7 +58,7 @@ export default function HeaderLayoutEditor({
           hint="Navbar & light areas. Wide PNG/SVG recommended."
           value={header.logoUrl ?? ""}
           onChange={(v) => setHeader({ logoUrl: v })}
-          disabled={saving === "theme"}
+          disabled={isCmsSaving(saving)}
           previewClassName="ct-brand-logo ct-brand-logo--sm w-full max-w-xs bg-white rounded-lg p-3"
         />
         <CmsImageField
@@ -65,7 +66,7 @@ export default function HeaderLayoutEditor({
           hint="Footer & dark header bar — often white/light wordmark."
           value={header.logoDarkUrl ?? ""}
           onChange={(v) => setHeader({ logoDarkUrl: v })}
-          disabled={saving === "theme"}
+          disabled={isCmsSaving(saving)}
           previewClassName="ct-brand-logo ct-brand-logo--md w-full max-w-xs bg-[#111827] rounded-lg p-3"
         />
       </div>

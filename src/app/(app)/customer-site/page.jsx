@@ -15,7 +15,10 @@ import CustomerSiteSidebar from "@/components/customer-site/CustomerSiteSidebar"
 import CustomerSiteTabHeader from "@/components/customer-site/CustomerSiteTabHeader";
 import WebsiteLayoutTab from "@/components/customer-site/WebsiteLayoutTab";
 import { mergeCmsSection } from "@/lib/customerCmsMerge";
-import { publishHeadlineForSection } from "@/config/customerSiteDraft";
+import {
+  isCmsSaving,
+  publishHeadlineForSection,
+} from "@/config/customerSiteDraft";
 import {
   CUSTOMER_SITE_TABS,
   CUSTOMER_SITE_TAB_IDS,
@@ -254,6 +257,9 @@ export default function CustomerSitePage() {
     switch (section) {
       case "theme":
         setTheme(mergeCmsSection(DEFAULTS.theme, p));
+        if (activeTab === "theme" && pub.social) {
+          setSocial({ ...DEFAULTS.social, ...pub.social });
+        }
         break;
       case "hero": {
         const merged = mergeCmsSection(DEFAULTS.hero, p);
@@ -749,7 +755,7 @@ export default function CustomerSitePage() {
                     hint="Right side on desktop. Upload or paste URL."
                     value={hero.imageUrl}
                     onChange={(v) => setHero((p) => ({ ...p, imageUrl: v }))}
-                    disabled={saving === "hero"}
+                    disabled={isCmsSaving(saving)}
                     previewClassName="h-36 w-full object-cover lg:h-44"
                   />
                   <Field label="Corner badge on main image">
@@ -795,7 +801,7 @@ export default function CustomerSitePage() {
                         return { ...p, thumbnails: thumbs };
                       })
                     }
-                    disabled={saving === "hero"}
+                    disabled={isCmsSaving(saving)}
                     previewClassName="h-20 w-full object-cover"
                   />
                 </div>
@@ -1006,7 +1012,7 @@ export default function CustomerSitePage() {
                           return next;
                         })
                       }
-                      disabled={saving === "banners"}
+                      disabled={isCmsSaving(saving)}
                       previewClassName="h-36 w-full object-cover lg:h-44"
                     />
                   </div>
@@ -1189,7 +1195,7 @@ export default function CustomerSitePage() {
                   label="Main image (large)"
                   value={about.imageUrl ?? ""}
                   onChange={(v) => setAbout((p) => ({ ...p, imageUrl: v }))}
-                  disabled={saving === "about"}
+                  disabled={isCmsSaving(saving)}
                   previewClassName="h-36 w-full object-cover lg:h-44"
                 />
                 <div className="min-w-0 space-y-3">
@@ -1207,7 +1213,7 @@ export default function CustomerSitePage() {
                             return { ...p, sideImages: side };
                           })
                         }
-                        disabled={saving === "about"}
+                        disabled={isCmsSaving(saving)}
                         previewClassName="h-24 w-full object-cover"
                       />
                     ))}

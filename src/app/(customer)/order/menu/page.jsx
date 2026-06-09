@@ -1,5 +1,6 @@
 "use client";
 
+import MenuFiltersBar from "@/components/customer/MenuFiltersBar";
 import MenuItemCard from "@/components/customer/MenuItemCard";
 import { useCustomer } from "@/context/CustomerContext";
 import { useModuleData } from "@/context/ModuleDataContext";
@@ -10,13 +11,11 @@ import { DEFAULTS } from "@/lib/restaurantCmsDefaults";
 import { formatCustomerMoney } from "@/lib/customerCurrency";
 import { orderTypeChipClass } from "@/lib/customerOrderTypeStyles";
 import { customerClasses, customerInteractive, customerPage, customerType } from "@/lib/customerTheme";
-import ItemTypeChipIcon, { FastFilterChipIcon } from "@/components/menu/ItemTypeChipIcon";
-import { ITEM_TYPE_META } from "@/types/menu";
 import { motion, AnimatePresence } from "framer-motion";
 import { Bike, Clock, ConciergeBell, Plus, Search, ShoppingCart, Store, UtensilsCrossed, X } from "lucide-react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { useEffect, useMemo, useState, Suspense } from "react";
+import { useCallback, useEffect, useMemo, useState, Suspense } from "react";
 
 const TYPE_ICON  = { "dine-in": Store, takeaway: ConciergeBell, delivery: Bike };
 const TYPE_LABEL = { "dine-in": "Dine-In", takeaway: "Takeaway", delivery: "Delivery" };
@@ -59,7 +58,7 @@ function CustomerMenuPageContent() {
     }
     if (qParam) setSearch(decodeURIComponent(qParam));
     else setSearch("");
-    if (categoryParam) setActiveCategory(categoryParam);
+    setActiveCategory(categoryParam?.trim() || "all");
     setIsLoaded(true);
   }, [searchParams, setOrderType, updateCustomer]);
 
@@ -70,10 +69,36 @@ function CustomerMenuPageContent() {
     return categories.filter((c) => ids.has(c.id));
   }, [categories, activeItems]);
 
+  const itemsForTypeFilter = useMemo(() => {
+    if (activeCategory === "all") return activeItems;
+    return activeItems.filter((m) => m.categoryId === activeCategory);
+  }, [activeItems, activeCategory]);
+
   const availableTypes = useMemo(() => {
-    const types = new Set(activeItems.map((m) => m.itemType).filter(Boolean));
+    const types = new Set(itemsForTypeFilter.map((m) => m.itemType).filter(Boolean));
     return ["veg", "non-veg", "egg", "drink", "halal", "other"].filter((t) => types.has(t));
-  }, [activeItems]);
+  }, [itemsForTypeFilter]);
+
+  const hasFastItems = useMemo(
+    () => itemsForTypeFilter.some((m) => (m.prepTime ?? 99) < 10),
+    [itemsForTypeFilter]
+  );
+
+  useEffect(() => {
+    if (
+      activeCategory !== "all" &&
+      activeCategories.length > 0 &&
+      !activeCategories.some((c) => c.id === activeCategory)
+    ) {
+      setActiveCategory("all");
+    }
+    if (activeType !== "all" && !availableTypes.includes(activeType)) {
+      setActiveType("all");
+    }
+    if (fastOnly && !hasFastItems) {
+      setFastOnly(false);
+    }
+  }, [activeCategory, activeCategories, activeType, availableTypes, fastOnly, hasFastItems]);
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -93,9 +118,32 @@ function CustomerMenuPageContent() {
 
   const handleAdd = (item) => tryAddToCart(item);
 
+  const clearAllFilters = useCallback(() => {
+    setSearch("");
+    setActiveCategory("all");
+    setActiveType("all");
+    setFastOnly(false);
+  }, []);
+
   const OrderTypeIcon = orderType ? TYPE_ICON[orderType] : null;
   const cartBar    = cart.itemCount > 0;
-  const hasFilters = search || activeCategory !== "all" || activeType !== "all" || fastOnly;
+  const hasFilters =
+    Boolean(search.trim()) ||
+    activeCategory !== "all" ||
+    activeType !== "all" ||
+    fastOnly;
+
+  const heroCountText = useMemo(() => {
+    if (!hydrated || !isLoaded) return null;
+    const total = activeItems.length;
+    const count = filtered.length;
+    if (hasFilters && total > 0) {
+      return (L.showingOfLabel || "Showing {count} of {total} dishes")
+        .replace("{count}", String(count))
+        .replace("{total}", String(total));
+    }
+    return (L.allDishesLabel || "{total} dishes available").replace("{total}", String(total));
+  }, [hydrated, isLoaded, activeItems.length, filtered.length, hasFilters, L]);
 
   return (
     <div className={`ct-page-shell ${cartBar ? "pb-24 md:pb-0" : ""}`}>
@@ -135,13 +183,19 @@ function CustomerMenuPageContent() {
               <span className="gradient-text">{L.titleHighlight}</span>
             ) : null}
           </h1>
-          <p className="mt-2 text-sm text-customer-muted">
-            <span className="font-semibold text-customer-primary">{filtered.length}</span>{" "}
-            {L.subtitleSuffix?.trim() || "fresh dishes crafted with love"}
-          </p>
+          {heroCountText ? (
+            <p className="mt-2 text-sm font-medium text-customer-muted">{heroCountText}</p>
+          ) : (
+            <p className="mt-2 text-sm text-customer-muted">
+              {L.subtitleSuffix?.trim() || "Fresh dishes crafted with love"}
+            </p>
+          )}
 
           {/* Search bar */}
           <div className="mx-auto mt-6 max-w-xl">
+            <p className="mb-2 text-center text-[11px] font-medium text-customer-muted">
+              Search by dish name
+            </p>
             <div className={customerInteractive.inputWrap}>
               <Search className={`size-4 shrink-0 ${customerInteractive.inputIcon}`} aria-hidden />
               <input
@@ -174,69 +228,30 @@ function CustomerMenuPageContent() {
       {/* ══ ITEMS GRID ══ */}
       <div className="mx-auto max-w-7xl px-4 py-6 sm:px-8 sm:py-8 lg:px-8">
 
-        <div className="mb-6 space-y-3">
-          {/* Category row */}
-          <div className={`${customerInteractive.pillScroll} -mx-4 gap-2 px-4 pb-0.5 sm:mx-0 sm:px-0`}>
-            <button type="button" onClick={() => setActiveCategory("all")}
-              className={activeCategory === "all" ? customerClasses.chipActive : customerClasses.chip}>
-              {L.allCategoryLabel?.trim() || "All"}
-            </button>
-            {activeCategories.map((c) => (
-              <button key={c.id} type="button" onClick={() => setActiveCategory(c.id)}
-                className={activeCategory === c.id ? customerClasses.chipActive : customerClasses.chip}>
-                {c.name}
-              </button>
-            ))}
+        {hydrated && isLoaded && activeItems.length > 0 ? (
+          <div className="mb-6 min-w-0">
+            <MenuFiltersBar
+              labels={L}
+              activeCategory={activeCategory}
+              onCategoryChange={setActiveCategory}
+              activeCategories={activeCategories}
+              activeType={activeType}
+              onTypeChange={setActiveType}
+              availableTypes={availableTypes}
+              fastOnly={fastOnly}
+              onFastToggle={setFastOnly}
+              hasFastItems={hasFastItems}
+              sortBy={sortBy}
+              onSortChange={setSortBy}
+              hasFilters={hasFilters}
+              onClearAll={clearAllFilters}
+              filteredCount={filtered.length}
+              totalCount={activeItems.length}
+              searchQuery={search}
+              onClearSearch={() => setSearch("")}
+            />
           </div>
-          {activeCategories.length > 3 && (
-            <p className="text-center text-[11px] font-medium text-customer-muted sm:hidden">
-              Swipe for more categories →
-            </p>
-          )}
-          {/* Type + fast row */}
-          <div className="flex flex-wrap gap-2">
-            <button type="button" onClick={() => setActiveType("all")}
-              className={`shrink-0 ${activeType === "all" ? customerClasses.chipActive : customerClasses.chip}`}>
-              {L.allTypesLabel?.trim() || "All Types"}
-            </button>
-            {availableTypes.map((t) => {
-              const meta = ITEM_TYPE_META[t];
-              const isActive = activeType === t;
-              return (
-                <button key={t} type="button" onClick={() => setActiveType(isActive ? "all" : t)}
-                  className={`shrink-0 inline-flex items-center gap-1.5 ${isActive ? customerClasses.chipActive : customerClasses.chip}`}>
-                  <ItemTypeChipIcon type={t} />
-                  {meta?.label}
-                </button>
-              );
-            })}
-            <button type="button" onClick={() => setFastOnly((v) => !v)}
-              className={`shrink-0 inline-flex items-center gap-1.5 ${fastOnly ? customerClasses.chipActive : customerClasses.chip}`}>
-              <FastFilterChipIcon /> {L.fastFilterLabel?.trim() || "Fast (<10 min)"}
-            </button>
-            <select
-              value={sortBy}
-              onChange={(e) => setSortBy(e.target.value)}
-              className={`shrink-0 ${customerClasses.selectChip}`}
-              aria-label="Sort menu"
-            >
-              <option value="default">Sort: Default</option>
-              <option value="name">Name A–Z</option>
-              <option value="price-asc">Price: Low to High</option>
-              <option value="price-desc">Price: High to Low</option>
-              <option value="fast">Fastest first</option>
-            </select>
-            <AnimatePresence>
-              {hasFilters && (
-                <motion.button initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.8 }}
-                  type="button" onClick={() => { setSearch(""); setActiveCategory("all"); setActiveType("all"); setFastOnly(false); }}
-                  className={`shrink-0 inline-flex items-center gap-1 ${customerClasses.chip} !border-[color-mix(in_srgb,#ef4444_35%,var(--customer-border))] !text-[color-mix(in_srgb,#ef4444_78%,var(--customer-text))] hover:!bg-[color-mix(in_srgb,#ef4444_10%,var(--customer-card))]`}>
-                  <X className="size-3" /> {L.clearAllLabel?.trim() || "Clear All"}
-                </motion.button>
-              )}
-            </AnimatePresence>
-          </div>
-        </div>
+        ) : null}
         {!hydrated || !isLoaded ? (
           <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {Array.from({ length: 8 }).map((_, i) => <SkeletonCard key={i} />)}
@@ -268,10 +283,20 @@ function CustomerMenuPageContent() {
             <div className="flex size-20 items-center justify-center rounded-3xl bg-[var(--customer-cream)]">
               <UtensilsCrossed className="size-10 text-customer-muted" />
             </div>
-            <p className="mt-5 font-poppins text-lg font-bold text-customer-text">{L.emptyStateTitle?.trim() || "No items match your filters"}</p>
-            <p className="mt-1 text-sm text-customer-muted">{L.emptyStateSubtitle?.trim() || "Try adjusting your filters or search term."}</p>
+            <p className="mt-5 font-poppins text-lg font-bold text-customer-text">
+              {L.emptyStateTitle?.trim() || "No dishes match"}
+            </p>
+            <p className="mt-1 max-w-md text-sm text-customer-muted">
+              {L.emptyStateSubtitle?.trim() ||
+                "Nothing fits your current search or filters. Try another category or clear filters below."}
+            </p>
+            {hasFilters ? (
+              <p className="mt-3 text-xs font-medium text-customer-primary">
+                Tip: tap &quot;Clear all filters&quot; in the refine menu above.
+              </p>
+            ) : null}
             <button type="button"
-              onClick={() => { setSearch(""); setActiveCategory("all"); setActiveType("all"); setFastOnly(false); }}
+              onClick={clearAllFilters}
               className={`mt-6 ${customerClasses.btnPrimary} px-6 py-2.5 text-sm`}>
               {L.clearFiltersLabel?.trim() || "Clear Filters"}
             </button>

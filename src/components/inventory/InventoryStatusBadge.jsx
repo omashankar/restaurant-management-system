@@ -1,22 +1,18 @@
 "use client";
 
-import { computeInventoryStatus } from "@/components/inventory/inventoryUtils";
-
-const STYLES = {
-  in: "border-ra-primary-30 bg-ra-primary-10 text-ra-primary-muted",
-  low: "border-amber-500/35 bg-amber-500/10 text-amber-300",
-  out: "border-red-500/35 bg-red-500/10 text-red-400",
-};
-
-const LABELS = { in: "In stock", low: "Low stock", out: "Out of stock" };
+import {
+  computeInventoryStatus,
+  INVENTORY_STATUS_LABELS,
+  inventoryStatusBadgeCls,
+} from "@/components/inventory/inventoryUtils";
 
 export default function InventoryStatusBadge({ item, status: statusProp }) {
   const status = statusProp ?? computeInventoryStatus(item);
   return (
     <span
-      className={`inline-flex rounded-lg border px-2 py-0.5 text-xs font-medium ${STYLES[status]}`}
+      className={`inline-flex rounded-lg border px-2 py-0.5 text-xs font-semibold capitalize ${inventoryStatusBadgeCls(status)}`}
     >
-      {LABELS[status]}
+      {INVENTORY_STATUS_LABELS[status] ?? status}
     </span>
   );
 }

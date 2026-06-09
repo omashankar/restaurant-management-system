@@ -702,19 +702,21 @@ export default function CustomerHomePage() {
                   }
                 />
               </motion.div>
-              <motion.div variants={fadeUp} className={`${customerInteractive.pillScroll} sm:mx-0 ${previewCategories.length > 2 ? "mb-2" : "mb-7"}`}>
+              <motion.div variants={fadeUp} className="mb-7 flex min-w-0 flex-wrap gap-2">
                 {[{ id: "all", name: "All" }, ...previewCategories].map((c) => (
-                  <button key={c.id} type="button" onClick={() => setPreviewCategory(c.id)}
-                    className={previewCategory === c.id ? customerClasses.chipActive : customerClasses.chip}>
+                  <button
+                    key={c.id}
+                    type="button"
+                    onClick={(e) => {
+                      setPreviewCategory(c.id);
+                      e.currentTarget.blur();
+                    }}
+                    className={previewCategory === c.id ? customerClasses.chipActive : customerClasses.chip}
+                  >
                     {c.name}
                   </button>
                 ))}
               </motion.div>
-              {previewCategories.length > 2 && (
-                <p className="mb-5 text-center text-[11px] font-medium text-customer-muted lg:hidden">
-                  Swipe for more categories →
-                </p>
-              )}
               <motion.div key={previewCategory} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }} className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
                 {previewItems.map((item) => (
                   <MenuItemCard

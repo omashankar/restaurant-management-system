@@ -84,6 +84,29 @@ export default function ItemTypeChipIcon({
   return null;
 }
 
+/** Icon + label row for food-type filters (same icons as menu cards). */
+export function ItemTypeFilterLabel({
+  type,
+  allTypesLabel = "All types",
+  size = ITEM_TYPE_CHIP_ICON_SIZE,
+  className = "",
+}) {
+  if (type === "all") {
+    return <span className={className}>{allTypesLabel}</span>;
+  }
+
+  const meta = ITEM_TYPE_META[type];
+  const label = meta?.label ?? type;
+  const icon = <ItemTypeChipIcon type={type} size={size} />;
+
+  return (
+    <span className={`inline-flex min-w-0 items-center gap-1.5 ${className}`}>
+      {icon}
+      <span className="truncate">{label}</span>
+    </span>
+  );
+}
+
 /** Lightning icon for “Fast (&lt;10 min)” — matches chip icon height. */
 export function FastFilterChipIcon({
   size = ITEM_TYPE_CHIP_ICON_SIZE,
