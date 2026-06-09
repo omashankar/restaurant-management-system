@@ -1,5 +1,7 @@
 /** Platform-wide feature kill-switches (Super Admin → Advanced). */
 
+import { normalizeCustomerStorefrontPath } from "@/lib/customerStorefrontPath";
+
 const PATH_RULES = [
   { key: "featureMenuQR", paths: ["/qr-menu"] },
   {
@@ -19,7 +21,7 @@ const PATH_RULES = [
 ];
 
 export function getPlatformFeatureForPath(pathname = "") {
-  const path = String(pathname).split("?")[0];
+  const path = normalizeCustomerStorefrontPath(String(pathname).split("?")[0]);
   for (const rule of PATH_RULES) {
     const matched = rule.paths.some(
       (p) => path === p || path.startsWith(`${p}/`),

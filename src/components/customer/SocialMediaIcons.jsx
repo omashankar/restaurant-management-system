@@ -54,11 +54,10 @@ export const SOCIAL_ICONS = {
 
 const VARIANT_BTN = {
   header:
-    "flex size-8 items-center justify-center rounded-full border border-black/8 bg-black/[0.03] transition-colors hover:border-customer-primary/40 hover:bg-customer-primary/10 hover:text-customer-primary",
-  footer:
-    "ct-footer-muted flex size-9 items-center justify-center rounded-xl border border-white/10 bg-white/5 transition-all hover:border-customer-primary/50 hover:bg-customer-primary/10 hover:text-customer-primary",
+    "flex size-11 min-h-[44px] min-w-[44px] items-center justify-center rounded-full border border-[var(--customer-border)] bg-[var(--customer-primary-soft)] transition-colors hover:border-customer-primary/40 hover:bg-customer-primary/10 hover:text-customer-primary",
+  footer: "ct-footer-social-btn",
   inline:
-    "flex size-10 items-center justify-center rounded-xl border border-customer-border bg-white text-customer-text shadow-sm transition-all hover:border-customer-primary/40 hover:bg-customer-primary/10 hover:text-customer-primary",
+    "flex size-10 items-center justify-center rounded-xl border border-customer-border bg-[var(--customer-card)] text-customer-text transition-all hover:border-customer-primary/40 hover:bg-customer-primary/10 hover:text-customer-primary",
 };
 
 export function SocialIconGraphic({ id, className = iconCls }) {
@@ -83,7 +82,10 @@ export default function SocialMediaIcons({
   const btnCls = VARIANT_BTN[variant] ?? VARIANT_BTN.header;
   const Wrapper = animated ? motion.a : "a";
   const motionProps = animated
-    ? { whileHover: { y: -2, scale: 1.08 }, whileTap: { scale: 0.92 } }
+    ? {
+        whileHover: { y: -2, scale: 1.04, transition: { type: "spring", stiffness: 420, damping: 30 } },
+        whileTap: { scale: 0.96, transition: { type: "spring", stiffness: 500, damping: 32 } },
+      }
     : {};
 
   return (

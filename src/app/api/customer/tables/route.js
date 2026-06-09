@@ -20,11 +20,11 @@ export async function GET(request) {
     const tables = await db
       .collection("tables")
       .find(filter)
-      .project({ tableNumber: 1, capacity: 1, status: 1, zone: 1 })
+      .project({ tableNumber: 1, capacity: 1, status: 1, zone: 1, categoryId: 1 })
       .sort({ tableNumber: 1 })
       .limit(500)
       .toArray();
- 
+
     return Response.json({
       success: true,
       tables: tables
@@ -33,8 +33,9 @@ export async function GET(request) {
           id: String(t._id),
           tableNumber: String(t.tableNumber),
           capacity: Number(t.capacity ?? 0) || 0,
-          status: String(t.status ?? ""),
+          status: String(t.status ?? "available"),
           zone: String(t.zone ?? ""),
+          categoryId: t.categoryId ? String(t.categoryId) : "",
         })),
     });
   } catch (err) {

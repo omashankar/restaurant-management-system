@@ -79,6 +79,9 @@ export const metadata = {
 
 // Next.js 16: themeColor viewport export mein hona chahiye
 export const viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 5,
   themeColor: "#10b981",
 };
 

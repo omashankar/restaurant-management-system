@@ -65,14 +65,11 @@ export default function WebsiteLayoutTab({
 
       <div className="grid gap-4 lg:grid-cols-2">
         <LayoutColorRow
-          label="Primary color"
+          label="Brand color"
           value={theme.primaryColor}
-          onChange={(v) => set("primaryColor", v)}
-        />
-        <LayoutColorRow
-          label="Secondary color"
-          value={theme.secondaryColor}
-          onChange={(v) => set("secondaryColor", v)}
+          onChange={(v) =>
+            setTheme((p) => ({ ...p, primaryColor: v, secondaryColor: v }))
+          }
         />
         <LayoutField label="Theme font">
           <select

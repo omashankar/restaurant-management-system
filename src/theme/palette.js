@@ -1,4 +1,4 @@
-import { DEFAULT_PRIMARY, DEFAULT_SECONDARY } from "@/theme/constants";
+import { DEFAULT_PRIMARY } from "@/theme/constants";
 
 const HEX6 = /^#[0-9A-Fa-f]{6}$/;
 
@@ -21,7 +21,6 @@ export function rgbToHex(r, g, b) {
   return `#${[c(r), c(g), c(b)].map((x) => x.toString(16).padStart(2, "0")).join("")}`;
 }
 
-/** Mix two hex colors; weight 0 = a, 1 = b */
 export function mixHex(a, b, weight) {
   const w = Math.max(0, Math.min(1, weight));
   const c1 = hexToRgb(a);
@@ -41,7 +40,6 @@ export function darken(hex, amount) {
   return mixHex(hex, "#000000", Math.abs(amount));
 }
 
-/** Relative luminance 0–1 */
 export function luminance(hex) {
   const { r, g, b } = hexToRgb(hex);
   const [rs, gs, bs] = [r, g, b].map((c) => {
@@ -62,66 +60,135 @@ export function alphaHex(hex, opacity) {
 }
 
 /**
- * Full semantic palette from primary + secondary + color mode.
- * @param {string} primary
- * @param {string} secondary
- * @param {"light"|"dark"} mode
+ * Semantic palette — light is clean & airy; dark is one neutral stack with brand accents only.
  */
-export function generatePalette(
-  primary = DEFAULT_PRIMARY,
-  secondary = DEFAULT_SECONDARY,
-  mode = "light"
-) {
+/** Brand palette from a single primary color (no separate secondary accent). */
+export function generatePalette(primary = DEFAULT_PRIMARY, mode = "light") {
   const p = clampHex(primary, DEFAULT_PRIMARY);
-  const s = clampHex(secondary, DEFAULT_SECONDARY);
   const isDark = mode === "dark";
 
-  const bg = isDark ? "#0f172a" : "#ffffff";
-  const surface = isDark ? "#1e293b" : "#ffffff";
-  const cream = isDark ? mixHex(surface, p, 0.08) : mixHex("#ffffff", p, 0.04);
-  const border = isDark ? mixHex(surface, p, 0.22) : mixHex("#ffffff", p, 0.78);
-  const text = isDark ? "#f1f5f9" : "#111827";
-  const muted = isDark ? "#94a3b8" : "#6b7280";
-  const card = isDark ? "#1e293b" : "#ffffff";
+  if (!isDark) {
+    const bg = "#ffffff";
+    const sectionAlt = "#f4f4f5";
+    const card = "#ffffff";
+    const surface = card;
+    const cream = "#fafafa";
+    const elevated = "#ffffff";
+    const border = mixHex("#e4e4e7", p, 0.03);
+    const borderStrong = "#d4d4d8";
+
+    return {
+      primary: p,
+      primaryHover: darken(p, 0.08),
+      primaryActive: darken(p, 0.14),
+      primarySoft: alphaHex(p, 0.09),
+      primaryMuted: alphaHex(p, 0.16),
+      primaryBorder: alphaHex(p, 0.22),
+      primaryShadow: alphaHex(p, 0.18),
+      primaryFg: contrastText(p),
+
+      secondary: darken(p, 0.08),
+      secondaryHover: darken(p, 0.14),
+      secondarySoft: alphaHex(p, 0.09),
+
+      bg,
+      surface,
+      cream,
+      sectionAlt,
+      elevated,
+      card,
+      cardHover: "#fafafa",
+      border,
+      borderStrong,
+      text: "#1c1917",
+      muted: "#78716c",
+      ring: alphaHex(p, 0.35),
+
+      navBg: "#ffffff",
+      navText: "#292524",
+      navMuted: "#a8a29e",
+      footerBg: "#ffffff",
+      footerText: "#1c1917",
+      footerBorder: mixHex("#e4e4e7", p, 0.04),
+      footerMuted: "#78716c",
+      footerSubtle: "#a1a1aa",
+
+      sidebarBg: cream,
+      sidebarBorder: border,
+      sidebarActive: alphaHex(p, 0.1),
+      sidebarActiveText: p,
+
+      btnPrimaryBg: p,
+      btnPrimaryFg: contrastText(p),
+      btnSecondaryBg: card,
+      btnSecondaryFg: p,
+      btnSecondaryBorder: border,
+
+      mode,
+    };
+  }
+
+  const bg = "#09090b";
+  const card = "#18181b";
+  const sectionAlt = mixHex(bg, card, 0.45);
+  const surface = card;
+  const cream = mixHex(card, "#ffffff", 0.06);
+  const elevated = "#27272a";
+  const border = alphaHex("#ffffff", 0.1);
+  const borderStrong = alphaHex("#ffffff", 0.16);
+  const text = "#fafafa";
+  const muted = "#a1a1aa";
+  const footerBg = mixHex(bg, card, 0.55);
+  const footerBorder = alphaHex("#ffffff", 0.1);
+  const footerText = text;
+  const footerMuted = "rgba(255, 255, 255, 0.68)";
+  const footerSubtle = "rgba(255, 255, 255, 0.5)";
 
   return {
     primary: p,
-    primaryHover: isDark ? lighten(p, 0.1) : darken(p, 0.08),
-    primaryActive: isDark ? lighten(p, 0.16) : darken(p, 0.14),
-    primarySoft: alphaHex(p, isDark ? 0.18 : 0.1),
-    primaryMuted: alphaHex(p, isDark ? 0.28 : 0.2),
-    primaryBorder: alphaHex(p, isDark ? 0.35 : 0.28),
-    primaryShadow: alphaHex(p, isDark ? 0.35 : 0.22),
+    primaryHover: lighten(p, 0.08),
+    primaryActive: lighten(p, 0.14),
+    primarySoft: alphaHex(p, 0.12),
+    primaryMuted: alphaHex(p, 0.18),
+    primaryBorder: alphaHex(p, 0.28),
+    primaryShadow: alphaHex(p, 0.22),
     primaryFg: contrastText(p),
 
-    secondary: s,
-    secondaryHover: isDark ? lighten(s, 0.1) : darken(s, 0.08),
-    secondarySoft: alphaHex(s, isDark ? 0.15 : 0.1),
+    secondary: lighten(p, 0.08),
+    secondaryHover: lighten(p, 0.14),
+    secondarySoft: alphaHex(p, 0.1),
 
     bg,
     surface,
     cream,
+    sectionAlt,
+    elevated,
     card,
-    cardHover: isDark ? lighten(surface, 0.06) : mixHex(card, p, 0.03),
+    cardHover: mixHex(card, "#ffffff", 0.06),
     border,
-    borderStrong: isDark ? mixHex(surface, p, 0.35) : mixHex("#ffffff", p, 0.65),
+    borderStrong,
     text,
     muted,
-    ring: alphaHex(p, 0.45),
+    ring: alphaHex(p, 0.35),
 
-    navBg: isDark ? "#0f172a" : "#ffffff",
-    navText: isDark ? "#f1f5f9" : "#333333",
-    navMuted: isDark ? "#94a3b8" : "#9c9c9c",
+    navBg: bg,
+    navText: text,
+    navMuted: muted,
+    footerBg,
+    footerText,
+    footerBorder,
+    footerMuted,
+    footerSubtle,
 
-    sidebarBg: isDark ? "#1e293b" : cream,
+    sidebarBg: card,
     sidebarBorder: border,
-    sidebarActive: alphaHex(p, isDark ? 0.22 : 0.12),
-    sidebarActiveText: p,
+    sidebarActive: alphaHex(p, 0.14),
+    sidebarActiveText: lighten(p, 0.06),
 
     btnPrimaryBg: p,
     btnPrimaryFg: contrastText(p),
-    btnSecondaryBg: isDark ? surface : "#ffffff",
-    btnSecondaryFg: p,
+    btnSecondaryBg: card,
+    btnSecondaryFg: lighten(p, 0.04),
     btnSecondaryBorder: border,
 
     mode,

@@ -89,7 +89,7 @@ function CategoryCard({ cat }) {
       href={cat.href}
       className="group flex h-full w-[10.5rem] shrink-0 flex-col sm:w-[11.5rem] lg:w-full"
     >
-      <div className={`overflow-hidden p-1 ${customerInteractive.cardLiftCss}`}>
+      <div className={`overflow-hidden ${customerInteractive.cardMotion}`}>
         <div className="ct-media-zoom relative aspect-[4/5] overflow-hidden rounded-2xl bg-customer-cream">
           <SafeDishImage
             src={cat.image}
@@ -99,18 +99,15 @@ function CategoryCard({ cat }) {
           />
           <div className={customerOverlay.gradientBottom} />
           {cat.count != null && cat.count > 0 ? (
-            <span className="absolute right-2 top-2 rounded-full border border-customer-border bg-white/95 px-2.5 py-1 text-[10px] font-bold text-customer-text shadow-sm">
+            <span className="absolute right-2 top-2 rounded-full border border-customer-border bg-[var(--customer-card)]/95 px-2.5 py-1 text-[10px] font-bold text-customer-text">
               {cat.count} {cat.count === 1 ? "dish" : "dishes"}
             </span>
           ) : null}
-          <span className={`absolute bottom-2 left-2 right-2 z-[1] truncate font-poppins text-sm font-bold ${customerOverlay.title}`}>
+          <span className={`absolute bottom-2 left-2 right-2 z-[1] truncate text-sm font-bold ${customerOverlay.title}`}>
             {cat.label}
           </span>
         </div>
       </div>
-      <p className="mt-2.5 text-center text-xs font-semibold text-customer-muted transition-colors group-hover:text-customer-primary lg:hidden">
-        {cat.label}
-      </p>
     </Link>
   );
 }
@@ -171,7 +168,7 @@ export default function CategoryBrowseSection({
             onClick={() => scrollByDir(-1)}
             disabled={!canScrollLeft}
             aria-label="Scroll left"
-            className="flex size-10 items-center justify-center rounded-full border border-customer-border bg-white text-customer-muted shadow-sm transition-all hover:border-customer-primary/40 hover:text-customer-primary disabled:opacity-35"
+            className="flex size-11 min-h-[44px] min-w-[44px] items-center justify-center rounded-full border border-customer-border bg-[var(--customer-card)] text-customer-muted transition-all hover:border-customer-primary/40 hover:text-customer-primary disabled:opacity-35"
           >
             <ChevronLeft className="size-5" aria-hidden />
           </button>
@@ -180,7 +177,7 @@ export default function CategoryBrowseSection({
             onClick={() => scrollByDir(1)}
             disabled={!canScrollRight}
             aria-label="Scroll right"
-            className="flex size-10 items-center justify-center rounded-full border border-customer-border bg-white text-customer-muted shadow-sm transition-all hover:border-customer-primary/40 hover:text-customer-primary disabled:opacity-35"
+            className="flex size-11 min-h-[44px] min-w-[44px] items-center justify-center rounded-full border border-customer-border bg-[var(--customer-card)] text-customer-muted transition-all hover:border-customer-primary/40 hover:text-customer-primary disabled:opacity-35"
           >
             <ChevronRight className="size-5" aria-hidden />
           </button>
@@ -188,7 +185,7 @@ export default function CategoryBrowseSection({
       )}
       <Link
         href={link("/order/menu")}
-        className={`${customerClasses.btnPrimary} min-h-[44px] gap-2 px-6 py-3 text-sm shadow-lg`}
+        className={`${customerClasses.btnSecondary} min-h-[44px] gap-2 px-6 py-3 text-sm`}
       >
         {catH.actionLabel || "View full menu"} <ArrowRight className="size-4" aria-hidden />
       </Link>
@@ -212,7 +209,7 @@ export default function CategoryBrowseSection({
 
   return (
     <CustomerSection
-      variant="warm"
+      variant="white"
       badge={catH.badge}
       title={catH.title}
       subtitle={catH.subtitle}

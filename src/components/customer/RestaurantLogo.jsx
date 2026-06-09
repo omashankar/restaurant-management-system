@@ -62,13 +62,13 @@ export default function RestaurantLogo({
   }
 
   const boxStyles = src
-    ? "bg-white ring-1 ring-[#FFE4D6] shadow-sm"
+    ? "bg-[var(--customer-card)] ring-1 ring-[var(--customer-border)]"
     : variant === "footer"
-      ? "gradient-primary shadow-md shadow-[var(--customer-primary-shadow)]/30"
-      : "gradient-primary shadow-sm shadow-[var(--customer-primary-shadow)]/20";
+      ? "gradient-primary"
+      : "gradient-primary";
 
   return (
-    <span className="inline-flex shrink-0 items-center gap-2">
+    <span className={`inline-flex min-w-0 max-w-full items-center gap-1.5 sm:gap-2 ${className}`.trim()}>
       <span
         className={`inline-flex shrink-0 items-center justify-center rounded-xl ${boxStyles} ${iconBox.box} ${boxClassName}`}
         aria-hidden={!src && !showName}
@@ -88,7 +88,7 @@ export default function RestaurantLogo({
         )}
       </span>
       {showName && (
-        <span className="font-poppins text-lg font-bold tracking-tight text-customer-text">
+        <span className="min-w-0 truncate font-poppins text-sm font-bold tracking-tight text-customer-text sm:text-base lg:text-lg">
           {name}
         </span>
       )}

@@ -48,7 +48,7 @@ export default function CustomerMobileInput({
         />
       </div>
       {showError ? (
-        <p id={`${id}-error`} className="mt-1 text-[11px] text-red-500">
+        <p id={`${id}-error`} className={`mt-1 text-[11px] ${customerClasses.textDanger}`}>
           {error || "Enter a valid 10-digit mobile number."}
         </p>
       ) : null}

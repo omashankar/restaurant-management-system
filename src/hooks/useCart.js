@@ -23,11 +23,12 @@ export function useCart(storageScope = "default") {
   }, [lines, storageScope, hydrated]);
 
   const addItem = useCallback((item) => {
+    const addQty = Math.max(1, parseInt(item.qty, 10) || 1);
     setLines((prev) => {
       const idx = prev.findIndex((l) => l.id === item.id);
       if (idx !== -1) {
         const next = [...prev];
-        next[idx] = { ...next[idx], qty: next[idx].qty + 1 };
+        next[idx] = { ...next[idx], qty: next[idx].qty + addQty };
         return next;
       }
       return [
@@ -39,7 +40,7 @@ export function useCart(storageScope = "default") {
           image: item.image ?? null,
           itemType: item.itemType ?? null,
           prepTime: item.prepTime ?? null,
-          qty: 1,
+          qty: addQty,
         },
       ];
     });

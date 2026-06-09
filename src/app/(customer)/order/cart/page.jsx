@@ -5,6 +5,7 @@ import { useCustomer } from "@/context/CustomerContext";
 import { useRestaurantSlug } from "@/hooks/useRestaurantSlug";
 import { calcOrderTotals, useCheckoutMeta } from "@/hooks/useCheckoutMeta";
 import { formatCustomerMoney } from "@/lib/customerCurrency";
+import { orderTypeChipClass } from "@/lib/customerOrderTypeStyles";
 import { customerClasses, customerMotion, customerPage, customerType } from "@/lib/customerTheme";
 import { motion, AnimatePresence } from "framer-motion";
 import { Bike, Clock, ConciergeBell, Minus, Plus, ShoppingCart, Store, Trash2, ArrowRight } from "lucide-react";
@@ -12,8 +13,6 @@ import Link from "next/link";
 
 const TYPE_LABEL = { "dine-in": "Dine-In", takeaway: "Takeaway", delivery: "Delivery" };
 const TYPE_ICON  = { "dine-in": Store, takeaway: ConciergeBell, delivery: Bike };
-const TYPE_COLOR = { "dine-in": "text-customer-primary bg-customer-primary/10 border-customer-primary/30", takeaway: "text-amber-600 bg-amber-50 border-amber-200", delivery: "text-rose-600 bg-rose-50 border-rose-200" };
-
 export default function CartPage() {
   const { cart, orderType, setOrderTypeModalOpen } = useCustomer();
   const { link } = useRestaurantSlug();
@@ -43,7 +42,7 @@ export default function CartPage() {
           <p className={`mt-2 ${customerType.bodySm}`}>Add dishes from the menu — they&apos;ll show up here.</p>
         </motion.div>
         <motion.div whileHover={{ scale: 1.03 }} whileTap={customerMotion.tapSm}>
-          <Link href={link("/order/menu")} className={`${customerClasses.btnPrimary} gap-2 px-8 py-3.5 text-sm shadow-lg`}>
+          <Link href={link("/order/menu")} className={`${customerClasses.btnPrimary} gap-2 px-8 py-3.5 text-sm`}>
             Browse Menu <ArrowRight className="size-4" />
           </Link>
         </motion.div>
@@ -65,13 +64,13 @@ export default function CartPage() {
 
       {/* Order type */}
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.1 }}
-        className="mb-5 flex items-center justify-between ct-surface-card px-4 py-3.5 shadow-sm">
-        <div className={`flex items-center gap-2.5 rounded-full border px-3.5 py-1.5 text-sm font-semibold ${orderType ? TYPE_COLOR[orderType] : "border-customer-border text-customer-muted"}`}>
+        className="mb-5 flex items-center justify-between ct-surface-card px-4 py-3.5">
+        <div className={`flex items-center gap-2.5 rounded-full border px-3.5 py-1.5 text-sm font-semibold ${orderType ? orderTypeChipClass(orderType) : "border-customer-border text-customer-muted"}`}>
           {TypeIcon && <TypeIcon className="size-4 shrink-0" />}
           {orderType ? TYPE_LABEL[orderType] : "No order type"}
         </div>
         <motion.button whileTap={{ scale: 0.97 }} type="button" onClick={() => setOrderTypeModalOpen(true)}
-          className="rounded-full border border-customer-border bg-white px-3.5 py-1.5 text-xs font-semibold text-customer-muted transition-colors hover:border-customer-primary/30 hover:text-customer-primary">
+          className="min-h-[44px] rounded-full border border-customer-border bg-[var(--customer-card)] px-4 py-2 text-xs font-semibold text-customer-muted transition-colors hover:border-customer-primary/30 hover:text-customer-primary">
           Change
         </motion.button>
       </motion.div>
@@ -83,9 +82,9 @@ export default function CartPage() {
             <motion.li key={line.id} layout
               initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: 20, height: 0 }} transition={{ delay: i * 0.05 }}
-              className="flex gap-3 ct-surface-card p-3 shadow-sm sm:p-4">
+              className="flex gap-3 ct-surface-card p-3 sm:p-4">
               <SafeDishImage src={line.image} alt={line.name}
-                className="size-18 shrink-0 self-start rounded-xl object-cover sm:size-20"
+                className="size-20 shrink-0 self-start rounded-xl object-cover"
                 iconClassName="size-8 text-customer-primary/25" />
               <div className="flex min-w-0 flex-1 flex-col gap-2.5">
                 <div className="flex items-start justify-between gap-2">
@@ -94,7 +93,7 @@ export default function CartPage() {
                     <p className="mt-0.5 text-xs font-semibold text-customer-primary">{formatCustomerMoney(line.price)} each</p>
                   </div>
                   <motion.button whileTap={{ scale: 0.85 }} type="button" onClick={() => removeItem(line.id)}
-                    className="shrink-0 rounded-xl p-2 text-customer-muted transition-colors hover:bg-red-50 hover:text-red-500">
+                    className={`flex min-h-[44px] min-w-[44px] shrink-0 items-center justify-center ${customerClasses.btnDangerGhost}`}>
                     <Trash2 className="size-4" />
                   </motion.button>
                 </div>
@@ -102,13 +101,13 @@ export default function CartPage() {
                   <div className="flex items-center gap-2">
                     <motion.button whileTap={{ scale: 0.85 }} type="button"
                       onClick={() => (line.qty === 1 ? removeItem(line.id) : setQty(line.id, line.qty - 1))}
-                      className="flex size-8 items-center justify-center rounded-full border border-customer-border bg-white text-customer-muted transition-colors hover:border-red-300 hover:bg-red-50 hover:text-red-500">
+                      className={`flex size-10 min-h-[44px] min-w-[44px] items-center justify-center rounded-full border border-customer-border bg-[var(--customer-card)] ${customerClasses.btnDangerGhost}`}>
                       <Minus className="size-3.5" />
                     </motion.button>
                     <span className="min-w-[2rem] text-center font-poppins text-sm font-black text-customer-text">{line.qty}</span>
                     <motion.button whileTap={{ scale: 0.85 }} type="button"
                       onClick={() => setQty(line.id, line.qty + 1)}
-                      className="flex size-8 items-center justify-center rounded-full border border-customer-border bg-white text-customer-muted transition-colors hover:border-customer-primary/40 hover:text-customer-primary">
+                      className="flex size-10 min-h-[44px] min-w-[44px] items-center justify-center rounded-full border border-customer-border bg-[var(--customer-card)] text-customer-muted transition-colors hover:border-customer-primary/40 hover:text-customer-primary">
                       <Plus className="size-3.5" />
                     </motion.button>
                   </div>
@@ -123,9 +122,9 @@ export default function CartPage() {
       {/* Prep time */}
       {maxPrepTime > 0 && (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-          className="mt-4 flex items-center gap-3 rounded-2xl bg-amber-50 px-4 py-3">
-          <Clock className="size-4 shrink-0 text-amber-500" />
-          <p className="text-sm text-amber-800">
+          className={`mt-4 ${customerClasses.bannerWarning}`}>
+          <Clock className="size-4 shrink-0 text-customer-primary" />
+          <p className="text-sm text-customer-text">
             <span className="font-bold">Estimated prep:</span> up to ~{maxPrepTime} min
           </p>
         </motion.div>
@@ -133,7 +132,7 @@ export default function CartPage() {
 
       {/* Summary */}
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
-        className="mt-5 ct-surface-card p-5 shadow-sm">
+        className="mt-5 ct-surface-card p-5">
         <div className="space-y-2.5 text-sm">
           <div className="flex justify-between text-customer-muted">
             <span>Subtotal</span>
@@ -158,13 +157,24 @@ export default function CartPage() {
 
       {/* Actions */}
       <div className="mt-5 space-y-3">
-        <Link href={link("/order/checkout")}
-          className="flex min-h-[52px] w-full items-center justify-between rounded-full gradient-primary px-6 py-3.5 shadow-lg shadow-[var(--customer-primary-shadow)]/25 transition-all hover:shadow-xl hover:shadow-[var(--customer-primary-shadow)]/35">
-          <span className="font-poppins text-sm font-bold text-white">Proceed to Checkout</span>
-          <span className="font-poppins text-sm font-bold text-white">{formatCustomerMoney(total)}</span>
-        </Link>
+        {orderType ? (
+          <Link href={link("/order/checkout")}
+            className={`${customerClasses.btnPrimaryLg} items-center justify-between gap-3 px-6`}>
+            <span>Proceed to Checkout</span>
+            <span className="font-poppins font-bold">{formatCustomerMoney(total)}</span>
+          </Link>
+        ) : (
+          <motion.button
+            whileTap={customerMotion.tapSm}
+            type="button"
+            onClick={() => setOrderTypeModalOpen(true)}
+            className={`${customerClasses.btnPrimaryLg} w-full items-center justify-center gap-2 px-6`}
+          >
+            Select Order Type to Continue
+          </motion.button>
+        )}
         <Link href={link("/order/menu")}
-          className="flex min-h-[44px] w-full items-center justify-center rounded-full border border-customer-border bg-white py-3 text-sm font-semibold text-customer-muted transition-colors hover:border-customer-primary/30 hover:text-customer-text">
+          className={`${customerClasses.btnOutlineDark} min-h-[44px] w-full justify-center py-3 text-sm`}>
           ← Continue Shopping
         </Link>
       </div>

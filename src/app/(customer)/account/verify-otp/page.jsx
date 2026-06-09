@@ -3,6 +3,7 @@
 import { useCustomer } from "@/context/CustomerContext";
 import { useRestaurantSlug } from "@/hooks/useRestaurantSlug";
 import RestaurantLogo from "@/components/customer/RestaurantLogo";
+import { customerClasses, customerPage } from "@/lib/customerTheme";
 import { motion } from "framer-motion";
 import { Loader2, ShieldCheck, ArrowLeft } from "lucide-react";
 import Link from "next/link";
@@ -86,16 +87,16 @@ export default function VerifyOtpPage() {
   const ss = String(cooldown % 60).padStart(2, "0");
 
   return (
-    <div className="flex min-h-[80vh] items-center justify-center px-4 py-12">
+    <div className="flex min-h-[100dvh] w-full min-w-0 items-center justify-center overflow-x-hidden px-4 py-8 sm:py-12">
       <motion.div
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4 }}
         className="w-full max-w-md"
       >
-        <div className="overflow-hidden rounded-3xl border border-customer-border bg-white shadow-2xl shadow-[var(--customer-primary-shadow)]/8">
+        <div className="ct-elevation-overlay overflow-hidden rounded-3xl border border-customer-border bg-[var(--customer-card)]">
           <div className="h-1.5 w-full gradient-primary" />
-          <div className="p-8">
+          <div className="p-5 sm:p-8">
             {/* Header */}
             <div className="mb-6 flex flex-col items-center text-center">
               <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="mb-3">
@@ -119,13 +120,13 @@ export default function VerifyOtpPage() {
             {/* Errors */}
             {error && (
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-                className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-xs text-red-700">
+                className={`mb-4 ${customerClasses.alertError}`}>
                 {error}
               </motion.div>
             )}
             {devHint && (
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-                className="mb-4 rounded-xl border border-[#F59E0B]/30 bg-[#F59E0B]/8 px-4 py-3 text-xs text-[#92400E]">
+                className={`mb-4 ${customerClasses.alertWarning}`}>
                 {devHint}
               </motion.div>
             )}
@@ -133,7 +134,7 @@ export default function VerifyOtpPage() {
             {/* OTP Input */}
             <div className="space-y-4">
               <div>
-                <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-customer-muted">
+                <label className={customerPage.label}>
                   6-Digit Code
                 </label>
                 <input
@@ -141,7 +142,7 @@ export default function VerifyOtpPage() {
                   value={otp}
                   onChange={(e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
                   onKeyDown={(e) => e.key === "Enter" && verify()}
-                  className="min-h-[56px] w-full rounded-xl border border-customer-border bg-white text-center font-poppins text-2xl font-bold tracking-[0.5em] text-customer-text outline-none transition-all placeholder:text-customer-muted focus:border-customer-primary/50 focus:ring-2 focus:ring-[var(--customer-primary)]/10"
+                  className="min-h-[56px] w-full rounded-xl border border-customer-border bg-[var(--customer-card)] text-center font-poppins text-2xl font-bold tracking-[0.5em] text-customer-text outline-none transition-all placeholder:text-customer-muted focus:border-customer-primary/50 focus:ring-2 focus:ring-[var(--customer-primary)]/10"
                   placeholder="••••••"
                   inputMode="numeric"
                   autoComplete="one-time-code"
@@ -155,7 +156,7 @@ export default function VerifyOtpPage() {
                 type="button"
                 onClick={verify}
                 disabled={loading || !phone}
-                className="flex min-h-[52px] w-full items-center justify-center gap-2 rounded-xl gradient-primary text-sm font-bold text-white shadow-lg shadow-[var(--customer-primary-shadow)]/25 disabled:opacity-60"
+                className={`${customerClasses.btnPrimaryLg} gap-2 text-sm disabled:opacity-60`}
               >
                 {loading ? <Loader2 className="size-4 animate-spin" /> : <ShieldCheck className="size-4" />}
                 {loading ? "Verifying..." : "Verify & Continue"}

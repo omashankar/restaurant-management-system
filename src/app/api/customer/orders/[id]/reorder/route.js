@@ -25,6 +25,14 @@ export async function POST(request, { params }) {
     return Response.json({ success: false, error: "Not authenticated." }, { status: 401 });
   }
 
+  let prefillOnly = false;
+  try {
+    const body = await request.json();
+    prefillOnly = Boolean(body?.prefillOnly);
+  } catch {
+    /* no body */
+  }
+
   const { id } = await params;
   let oid;
   try {
@@ -46,8 +54,20 @@ export async function POST(request, { params }) {
       return Response.json({ success: false, error: "Order not found." }, { status: 404 });
     }
 
-    const now = new Date();
     const items = Array.isArray(sourceOrder.items) ? sourceOrder.items : [];
+    if (prefillOnly) {
+      return Response.json({
+        success: true,
+        items: items.map((item) => ({
+          id: String(item.id ?? ""),
+          name: String(item.name ?? ""),
+          price: Number(item.price ?? 0),
+          qty: Number(item.qty ?? 1),
+        })),
+      });
+    }
+
+    const now = new Date();
     const subtotal = items.reduce((sum, item) => sum + Number(item.price ?? 0) * Number(item.qty ?? 0), 0);
     const tax = Number(sourceOrder.tax ?? 0);
     const deliveryCharge = Number(sourceOrder.deliveryCharge ?? 0);

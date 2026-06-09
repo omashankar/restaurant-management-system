@@ -13,6 +13,7 @@ import {
   customerInteractive,
   customerMotion,
   customerPage,
+  customerSectionBg,
   customerType,
 } from "@/lib/customerTheme";
 import { motion, AnimatePresence } from "framer-motion";
@@ -76,17 +77,17 @@ export default function ContactPage() {
 
   const inputCls = customerClasses.field;
 
-  const missingHint = "Add in Settings → Contact";
+  const missingHint = "Contact details coming soon";
   const CONTACT_INFO = [
     {
       Icon: MapPin,
       label: "Address",
       value: info.address?.trim() || missingHint,
-      color: "bg-customer-primary/10 text-customer-primary",
+      color: customerClasses.iconTintPrimary,
       href: info.googleMapsLink?.trim() || "",
     },
-    { Icon: Phone,  label: "Phone",   value: info.phone?.trim()   || missingHint, color: "bg-green-100 text-green-600" },
-    { Icon: Mail,   label: "Email",   value: info.email?.trim()   || missingHint, color: "bg-blue-100 text-blue-600" },
+    { Icon: Phone,  label: "Phone",   value: info.phone?.trim()   || missingHint, color: customerClasses.iconTintSuccess },
+    { Icon: Mail,   label: "Email",   value: info.email?.trim()   || missingHint, color: customerClasses.iconTintInfo },
   ];
 
   return (
@@ -111,14 +112,14 @@ export default function ContactPage() {
       </section>
 
       {/* ══ CONTACT INFO CARDS ══ */}
-      <section className="bg-[var(--customer-cream)] py-10">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      <section className={`${customerSectionBg.warm} ${customerClasses.sectionPad}`}>
+        <div className={customerClasses.container}>
           <div className="grid gap-5 sm:grid-cols-3">
             {CONTACT_INFO.map(({ Icon, label, value, color, href }, i) => (
               <motion.div key={label}
                 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }}
                 whileHover={customerMotion.cardHoverSm}
-                className="ct-step-card flex items-start gap-4 p-6"
+                className="ct-surface-card flex items-start gap-4 rounded-2xl p-6"
               >
                 <div className={`flex size-12 shrink-0 items-center justify-center rounded-2xl ${color}`}>
                   <Icon className="size-6" />
@@ -158,14 +159,14 @@ export default function ContactPage() {
       </section>
 
       {/* ══ FORM + HOURS ══ */}
-      <section className="bg-[var(--customer-bg)] py-14">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      <section className={`${customerSectionBg.white} ${customerClasses.sectionPad}`}>
+        <div className={customerClasses.container}>
           <div className="grid gap-10 lg:grid-cols-5">
 
             {/* Form — 3 cols */}
             <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.1 }}
               className="lg:col-span-3">
-              <div className="rounded-3xl bg-[var(--customer-cream)] p-8">
+              <div className="ct-surface-card rounded-3xl p-5 sm:p-8">
                 <h2 className="mb-6 font-poppins text-2xl font-black text-customer-text">
                   {contactCms.formTitle?.trim() || "Send a Message"}
                 </h2>
@@ -176,8 +177,8 @@ export default function ContactPage() {
                       initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}
                       className="flex flex-col items-center gap-5 py-12 text-center">
                       <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: "spring", stiffness: 200 }}
-                        className="flex size-20 items-center justify-center rounded-full bg-green-100">
-                        <CheckCircle2 className="size-10 text-green-500" />
+                        className={`flex size-20 items-center justify-center rounded-full ${customerClasses.iconRingSuccess}`}>
+                        <CheckCircle2 className="size-10" />
                       </motion.div>
                       <div>
                         <p className="font-poppins text-xl font-black text-customer-text">
@@ -189,11 +190,11 @@ export default function ContactPage() {
                       </div>
                       <div className="flex gap-3">
                         <button type="button" onClick={() => setSent(false)}
-                          className="rounded-full border border-customer-border px-6 py-2.5 text-sm font-semibold text-customer-muted hover:border-customer-primary/30">
+                          className={`${customerClasses.btnOutlineDark} px-6 py-2.5 text-sm`}>
                           Send Another
                         </button>
                         <Link href={link("/home")}
-                          className="rounded-full gradient-primary px-6 py-2.5 text-sm font-bold text-white shadow-md">
+                          className={`${customerClasses.btnPrimary} px-6 py-2.5 text-sm`}>
                           Back to Home
                         </Link>
                       </div>
@@ -224,12 +225,12 @@ export default function ContactPage() {
                           className={inputCls + " resize-none"}
                         />
                         {form.message.trim() && !isValidContactMessage(form.message) ? (
-                          <p className="mt-1 text-[11px] text-red-500">Message must be at least 10 characters.</p>
+                          <p className={`mt-1 text-[11px] ${customerClasses.textDanger}`}>Message must be at least 10 characters.</p>
                         ) : null}
                       </div>
-                      <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
+                      <motion.button whileHover={customerMotion.hoverBtn} whileTap={customerMotion.tapSm}
                         type="submit" disabled={loading}
-                        className="flex cursor-pointer w-full items-center justify-center gap-2 rounded-full gradient-primary py-3.5 text-sm font-bold text-white shadow-lg shadow-[var(--customer-primary-shadow)]/25 disabled:opacity-60">
+                        className={`${customerClasses.btnPrimaryLg} gap-2 text-sm disabled:opacity-60`}>
                         {loading ? <><Loader2 className="size-4 animate-spin" /> Sending…</> : <><Send className="size-4" /> {contactCms.submitLabel?.trim() || "Send Message"}</>}
                       </motion.button>
                     </motion.form>
@@ -241,9 +242,9 @@ export default function ContactPage() {
             {/* Hours — 2 cols */}
             <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.2 }}
               className="lg:col-span-2">
-              <div className="rounded-3xl bg-[var(--customer-cream)] p-8 h-full">
-                <div className="mb-5 flex size-12 items-center justify-center rounded-2xl bg-amber-100">
-                  <Clock className="size-6 text-amber-600" />
+              <div className="h-full ct-surface-card rounded-3xl p-5 sm:p-8">
+                <div className={`mb-5 flex size-12 items-center justify-center rounded-2xl ${customerClasses.iconTintWarning}`}>
+                  <Clock className="size-6" />
                 </div>
                 <h3 className="font-poppins text-xl font-black text-customer-text">Opening Hours</h3>
                 <p className="mt-1 text-sm text-customer-muted">We&apos;re here to serve you</p>
@@ -251,12 +252,12 @@ export default function ContactPage() {
                 <div className="mt-6 space-y-3">
                   {info.openingHours?.length > 0 ? (
                     info.openingHours.map((h) => (
-                      <div key={h.day} className="flex items-center justify-between rounded-xl bg-white px-4 py-2.5 shadow-sm">
+                      <div key={h.day} className="flex flex-col gap-0.5 rounded-xl bg-[var(--customer-elevated)] px-4 py-2.5 sm:flex-row sm:items-center sm:justify-between">
                         <span className="text-sm font-semibold text-customer-text">{h.day}</span>
                         {h.closed ? (
-                          <span className="text-xs font-bold text-red-400">Closed</span>
+                          <span className={`text-xs font-bold ${customerClasses.textDanger}`}>Closed</span>
                         ) : (
-                          <span className="text-sm font-bold text-customer-text">{h.openTime} – {h.closeTime}</span>
+                          <span className="text-sm font-bold text-customer-text sm:text-right">{h.openTime} – {h.closeTime}</span>
                         )}
                       </div>
                     ))
@@ -266,18 +267,18 @@ export default function ContactPage() {
                       { day: "Saturday",  time: "10:00 AM – 11:00 PM" },
                       { day: "Sunday",    time: "10:00 AM – 09:00 PM" },
                     ].map((h) => (
-                      <div key={h.day} className="flex items-center justify-between rounded-xl bg-white px-4 py-2.5 shadow-sm">
+                      <div key={h.day} className="flex flex-col gap-0.5 rounded-xl bg-[var(--customer-elevated)] px-4 py-2.5 sm:flex-row sm:items-center sm:justify-between">
                         <span className="text-sm font-semibold text-customer-text">{h.day}</span>
-                        <span className="text-sm font-bold text-customer-text">{h.time}</span>
+                        <span className="text-sm font-bold text-customer-text sm:text-right">{h.time}</span>
                       </div>
                     ))
                   )}
                 </div>
 
                 {/* Open/Closed indicator */}
-                <div className={`mt-5 flex items-center gap-2.5 rounded-2xl px-4 py-3 ${info.isOpenToday ? "bg-green-50" : "bg-red-50"}`}>
-                  <span className={`size-2.5 rounded-full ${info.isOpenToday ? "animate-pulse bg-green-500" : "bg-red-400"}`} />
-                  <span className={`text-sm font-bold ${info.isOpenToday ? "text-green-600" : "text-red-500"}`}>
+                <div className={`mt-5 flex items-center gap-2.5 ${info.isOpenToday ? customerClasses.alertSuccess : customerClasses.alertError}`}>
+                  <span className={`size-2.5 ${info.isOpenToday ? `${customerClasses.statusDotOpen} animate-pulse` : customerClasses.statusDotClosed}`} />
+                  <span className="text-sm font-bold">
                     {info.isOpenToday ? `Open Now · ${info.todayLabel ?? ""}` : "Closed Today"}
                   </span>
                 </div>

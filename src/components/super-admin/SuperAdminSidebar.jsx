@@ -31,7 +31,7 @@ const NAV = [
   { href: "/super-admin/billing",       label: "Billing",       Icon: Receipt         },
   { href: "/super-admin/analytics",     label: "Analytics",     Icon: BarChart3       },
   { href: "/super-admin/landing-site",  label: "Landing Site",  Icon: Globe           },
-  { href: "/super-admin/contact-inbox", label: "Contact Inbox", Icon: Inbox          },
+  { href: "/super-admin/contact-inbox", label: "Contact Inbox", Icon: Inbox, badgeKey: "contact" },
   { href: "/super-admin/logs",          label: "Logs",          Icon: ClipboardList   },
   { href: "/super-admin/support-tickets", label: "Support Tickets", Icon: LifeBuoy    },
   { href: "/super-admin/settings",      label: "Settings",      Icon: Settings        },
@@ -48,8 +48,23 @@ export default function SuperAdminSidebar({ mobile = false, onNavigate, onClose 
       return raw === "true";
     } catch { return false; }
   });
+  const [contactNewCount, setContactNewCount] = useState(0);
 
   const showCollapsed = mobile ? false : collapsed;
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch("/api/super-admin/contact-messages?stats=1");
+        const data = await res.json();
+        if (!cancelled && res.ok && data?.success) {
+          setContactNewCount(Number(data.stats?.new ?? 0));
+        }
+      } catch { /* ignore */ }
+    })();
+    return () => { cancelled = true; };
+  }, [pathname]);
 
   useEffect(() => {
     try { localStorage.setItem(STORAGE_KEY, String(collapsed)); }
@@ -101,8 +116,9 @@ export default function SuperAdminSidebar({ mobile = false, onNavigate, onClose 
 
       {/* ── Nav items ── */}
       <nav className="flex-1 space-y-0.5 overflow-y-auto p-2">
-        {NAV.map(({ href, label, Icon }) => {
+        {NAV.map(({ href, label, Icon, badgeKey }) => {
           const active = isActive(href);
+          const badge = badgeKey === "contact" ? contactNewCount : 0;
           return (
             <Link key={href} href={href}
               onClick={() => onNavigate?.()}
@@ -121,6 +137,11 @@ export default function SuperAdminSidebar({ mobile = false, onNavigate, onClose 
               )}
               <Icon className={`size-[18px] shrink-0 transition-transform duration-200 group-hover:scale-110 ${active ? "text-sa-primary" : ""}`} aria-hidden />
               {!showCollapsed && <span className="truncate">{label}</span>}
+              {badge > 0 && (
+                <span className={`${showCollapsed ? "absolute -right-0.5 -top-0.5" : "ml-auto"} flex min-w-[1.25rem] items-center justify-center rounded-full bg-amber-500 px-1.5 py-0.5 text-[10px] font-bold text-white`}>
+                  {badge > 99 ? "99+" : badge}
+                </span>
+              )}
               {showCollapsed && <span className="sr-only">{label}</span>}
             </Link>
           );

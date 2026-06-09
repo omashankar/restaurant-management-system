@@ -4,13 +4,16 @@ import SafeDishImage from "@/components/customer/SafeDishImage";
 import { useCustomer } from "@/context/CustomerContext";
 import { useRestaurantSlug } from "@/hooks/useRestaurantSlug";
 import { formatCustomerMoney } from "@/lib/customerCurrency";
+import { useCustomerMotion } from "@/hooks/useCustomerMotion";
 import { motion, AnimatePresence } from "framer-motion";
 import { Minus, Plus, ShoppingCart, Trash2, X, ArrowRight, ShoppingBag } from "lucide-react";
 import Link from "next/link";
+import { customerClasses } from "@/lib/customerTheme";
 
 export default function CartDrawer() {
   const { cart, cartOpen, setCartOpen } = useCustomer();
   const { link } = useRestaurantSlug();
+  const motionFx = useCustomerMotion();
   const { lines, removeItem, setQty, subtotal, itemCount } = cart;
 
   return (
@@ -33,12 +36,12 @@ export default function CartDrawer() {
             animate={{ x: 0 }}
             exit={{ x: "100%" }}
             transition={{ type: "spring", stiffness: 300, damping: 30 }}
-            className="fixed right-0 top-0 z-50 flex h-full w-full max-w-[min(100vw,24rem)] flex-col bg-[var(--customer-card)] shadow-2xl"
+            className="ct-elevation-overlay fixed right-0 top-0 z-50 flex h-full w-full max-w-[min(100vw,24rem)] flex-col bg-[var(--customer-card)]"
           >
             {/* Header */}
             <div className="flex items-center justify-between border-b border-customer-border px-5 py-4">
               <div className="flex items-center gap-2.5">
-                <div className="flex size-9 items-center justify-center rounded-xl gradient-primary shadow-md">
+                <div className="flex size-9 items-center justify-center rounded-xl gradient-primary">
                   <ShoppingCart className="size-4 text-white" />
                 </div>
                 <div>
@@ -47,10 +50,10 @@ export default function CartDrawer() {
                 </div>
               </div>
               <motion.button
-                whileTap={{ scale: 0.9 }}
+                whileTap={motionFx.tapSm}
                 type="button"
                 onClick={() => setCartOpen(false)}
-                className="flex size-9 cursor-pointer items-center justify-center rounded-xl border border-customer-border text-customer-muted transition-colors hover:bg-customer-cream hover:text-customer-text"
+                className="ct-hover-surface flex size-11 min-h-[44px] min-w-[44px] cursor-pointer items-center justify-center rounded-xl border border-customer-border text-customer-muted hover:text-customer-text"
               >
                 <X className="size-5" />
               </motion.button>
@@ -72,11 +75,11 @@ export default function CartDrawer() {
                       <p className="font-poppins text-base font-bold text-customer-text">Cart is Empty</p>
                       <p className="mt-1 max-w-[200px] text-xs text-customer-muted">Add delicious dishes from our menu</p>
                     </div>
-                    <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
+                    <motion.div whileHover={motionFx.hoverBtn} whileTap={motionFx.tapSm}>
                       <Link
                         href={link("/order/menu")}
                         onClick={() => setCartOpen(false)}
-                        className="inline-flex items-center gap-2 rounded-xl gradient-primary px-6 py-2.5 text-sm font-bold text-white shadow-md shadow-[var(--customer-primary-shadow)]/20"
+                        className={`${customerClasses.btnPrimary} gap-2 px-6 py-2.5 text-sm`}
                       >
                         Browse Menu <ArrowRight className="size-4" />
                       </Link>
@@ -104,10 +107,10 @@ export default function CartDrawer() {
                           <div className="flex items-start justify-between gap-2">
                             <p className="text-sm font-semibold leading-snug text-customer-text">{line.name}</p>
                             <motion.button
-                              whileTap={{ scale: 0.85 }}
+                              whileTap={motionFx.tapSm}
                               type="button"
                               onClick={() => removeItem(line.id)}
-                              className="shrink-0 rounded-lg p-1.5 text-customer-muted transition-colors hover:bg-red-50 hover:text-red-500"
+                              className={`flex min-h-[44px] min-w-[44px] shrink-0 items-center justify-center ${customerClasses.btnDangerGhost}`}
                             >
                               <Trash2 className="size-3.5" />
                             </motion.button>
@@ -115,19 +118,19 @@ export default function CartDrawer() {
                           <p className="text-xs font-bold text-customer-primary">{formatCustomerMoney(line.price * line.qty)}</p>
                           <div className="flex items-center gap-2">
                             <motion.button
-                              whileTap={{ scale: 0.85 }}
+                              whileTap={motionFx.tapSm}
                               type="button"
                               onClick={() => (line.qty === 1 ? removeItem(line.id) : setQty(line.id, line.qty - 1))}
-                              className="flex size-7 items-center justify-center rounded-lg border border-customer-border bg-white text-customer-muted transition-colors hover:border-red-300 hover:bg-red-50 hover:text-red-500"
+                              className={`flex size-10 min-h-[44px] min-w-[44px] items-center justify-center rounded-lg border border-customer-border bg-[var(--customer-card)] ${customerClasses.btnDangerGhost}`}
                             >
                               <Minus className="size-3" />
                             </motion.button>
                             <span className="min-w-[1.5rem] text-center text-sm font-bold text-customer-text">{line.qty}</span>
                             <motion.button
-                              whileTap={{ scale: 0.85 }}
+                              whileTap={motionFx.tapSm}
                               type="button"
                               onClick={() => setQty(line.id, line.qty + 1)}
-                              className="flex size-7 items-center justify-center rounded-lg border border-customer-border bg-white text-customer-muted transition-colors hover:border-customer-primary/40 hover:bg-customer-cream hover:text-customer-primary"
+                              className="flex size-10 min-h-[44px] min-w-[44px] items-center justify-center rounded-lg border border-customer-border bg-[var(--customer-card)] text-customer-muted transition-colors hover:border-customer-primary/40 hover:bg-customer-cream hover:text-customer-primary"
                             >
                               <Plus className="size-3" />
                             </motion.button>
@@ -155,14 +158,14 @@ export default function CartDrawer() {
                   {cart.maxPrepTime > 0 && (
                     <p className="text-xs text-customer-muted">⏱ Est. prep: ~{cart.maxPrepTime} min</p>
                   )}
-                  <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                  <motion.div whileHover={motionFx.hoverBtn} whileTap={motionFx.tap}>
                     <Link
                       href={link("/order/cart")}
                       onClick={() => setCartOpen(false)}
-                      className="flex w-full items-center justify-between rounded-xl gradient-primary px-5 py-3.5 shadow-lg shadow-[var(--customer-primary-shadow)]/25 transition-all hover:shadow-xl hover:shadow-[var(--customer-primary-shadow)]/35"
+                      className={`${customerClasses.btnPrimaryLg} items-center justify-between gap-3 px-5`}
                     >
-                      <span className="text-sm font-bold text-white">View Cart & Checkout</span>
-                      <span className="font-poppins text-sm font-bold text-white">{formatCustomerMoney(subtotal)}</span>
+                      <span>View Cart & Checkout</span>
+                      <span className="font-poppins font-bold">{formatCustomerMoney(subtotal)}</span>
                     </Link>
                   </motion.div>
                 </motion.div>

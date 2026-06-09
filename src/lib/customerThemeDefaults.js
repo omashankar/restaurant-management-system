@@ -9,7 +9,7 @@ import {
 
 export const DEFAULT_CUSTOMER_THEME = {
   primaryColor: "#FF6B35",
-  secondaryColor: "#FF9F1C",
+  secondaryColor: "#FF6B35",
   fontFamily: "Inter, system-ui, sans-serif",
   colorMode: "light",
   faviconUrl: "",

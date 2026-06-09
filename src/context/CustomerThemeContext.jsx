@@ -1,6 +1,7 @@
 "use client";
 
 import { useRestaurantCms } from "@/hooks/useRestaurantCms";
+import { useRestaurantInfo } from "@/hooks/useRestaurantInfo";
 import { useRestaurantSlug } from "@/hooks/useRestaurantSlug";
 import {
   buildThemeCssVars,
@@ -16,7 +17,7 @@ import {
 } from "@/theme/storage";
 import { generatePalette } from "@/theme/palette";
 import { clampHex } from "@/theme/palette";
-import { DEFAULT_PRIMARY, DEFAULT_SECONDARY } from "@/theme/constants";
+import { DEFAULT_PRIMARY } from "@/theme/constants";
 import {
   createContext,
   useCallback,
@@ -30,6 +31,7 @@ const CustomerThemeContext = createContext(null);
 
 export function CustomerThemeProvider({ children }) {
   const { content, loading: cmsLoading } = useRestaurantCms();
+  const { info } = useRestaurantInfo();
   const { slug } = useRestaurantSlug();
   const cmsTheme = content?.theme;
 
@@ -47,12 +49,11 @@ export function CustomerThemeProvider({ children }) {
   }, [slug, cmsTheme?.colorMode]);
 
   const effectiveTheme = useMemo(() => {
-    if (cmsTheme?.primaryColor || cmsTheme?.secondaryColor) return cmsTheme;
+    if (cmsTheme?.primaryColor) return cmsTheme;
     if (!bootCache) return cmsTheme;
     return {
       ...cmsTheme,
       primaryColor: bootCache.primaryColor,
-      secondaryColor: bootCache.secondaryColor,
       fontFamily: bootCache.fontFamily ?? cmsTheme?.fontFamily,
     };
   }, [cmsTheme, bootCache]);
@@ -84,11 +85,10 @@ export function CustomerThemeProvider({ children }) {
   const resolved = useMemo(() => resolveThemeInput(effectiveTheme), [effectiveTheme]);
 
   const primary = clampHex(resolved.primaryColor, DEFAULT_PRIMARY);
-  const secondary = clampHex(resolved.secondaryColor, DEFAULT_SECONDARY);
 
   const palette = useMemo(
-    () => generatePalette(primary, secondary, mode),
-    [primary, secondary, mode]
+    () => generatePalette(primary, mode),
+    [primary, mode]
   );
 
   const cssVars = useMemo(
@@ -97,6 +97,22 @@ export function CustomerThemeProvider({ children }) {
   );
 
   const className = themeRootClassName(mode);
+
+  useEffect(() => {
+    const name = info?.name?.trim() || "Restaurant";
+    const description =
+      content?.about?.description?.trim()?.slice(0, 160)
+      || content?.hero?.subheadline?.trim()?.slice(0, 160)
+      || `Order online, book a table, and explore the menu at ${name}.`;
+    document.title = `${name} · Order Online`;
+    let meta = document.querySelector('meta[name="description"]');
+    if (!meta) {
+      meta = document.createElement("meta");
+      meta.name = "description";
+      document.head.appendChild(meta);
+    }
+    meta.content = description;
+  }, [info?.name, content?.about?.description, content?.hero?.subheadline]);
 
   useEffect(() => {
     const url = cmsTheme?.faviconUrl?.trim();
@@ -112,6 +128,11 @@ export function CustomerThemeProvider({ children }) {
 
   useEffect(() => {
     document.documentElement.style.colorScheme = mode;
+    if (mode === "dark") {
+      document.documentElement.dataset.customerDark = "true";
+    } else {
+      delete document.documentElement.dataset.customerDark;
+    }
   }, [mode]);
 
   const value = useMemo(
@@ -120,7 +141,6 @@ export function CustomerThemeProvider({ children }) {
       setMode,
       toggleMode,
       primary,
-      secondary,
       palette,
       cssVars,
       className,
@@ -128,13 +148,13 @@ export function CustomerThemeProvider({ children }) {
       hydrated,
       isDark: mode === "dark",
     }),
-    [mode, setMode, toggleMode, primary, secondary, palette, cssVars, className, resolved, hydrated]
+    [mode, setMode, toggleMode, primary, palette, cssVars, className, resolved, hydrated]
   );
 
   return (
     <CustomerThemeContext.Provider value={value}>
       <div
-        className={`${className} customer-theme-root`}
+        className={`${className} customer-theme-root min-h-screen min-h-[100dvh]`}
         style={cssVars}
         data-theme={mode}
         suppressHydrationWarning

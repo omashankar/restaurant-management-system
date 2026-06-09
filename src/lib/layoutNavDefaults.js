@@ -13,14 +13,14 @@ export const DEFAULT_FOOTER_QUICK_LINKS = [
   { id: "booking", label: "Book a Table", path: "/order/table-booking", enabled: true },
   { id: "about", label: "About Us", path: "/order/about", enabled: true },
   { id: "contact", label: "Contact", path: "/order/contact", enabled: true },
-  { id: "privacy", label: "Privacy Policy", path: "/privacy", enabled: true },
-  { id: "terms", label: "Terms & Conditions", path: "/terms", enabled: true },
+  { id: "privacy", label: "Privacy Policy", path: "/order/privacy", enabled: true },
+  { id: "terms", label: "Terms & Conditions", path: "/order/terms", enabled: true },
 ];
 
 export const DEFAULT_FOOTER_ACCOUNT_LINKS = [
-  { id: "profile", label: "Profile", path: "/account/dashboard", enabled: true },
-  { id: "orders", label: "My Orders", path: "/account/dashboard", enabled: true },
-  { id: "reservations", label: "Reservations", path: "/order/table-booking", enabled: true },
+  { id: "profile", label: "Profile", path: "/account/dashboard?tab=profile", enabled: true },
+  { id: "orders", label: "My Orders", path: "/account/dashboard?tab=orders", enabled: true },
+  { id: "reservations", label: "Reservations", path: "/account/dashboard?tab=bookings", enabled: true },
 ];
 
 export const DEFAULT_FOOTER_SOCIAL_LINKS = [
