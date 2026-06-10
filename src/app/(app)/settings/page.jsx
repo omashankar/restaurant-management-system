@@ -34,7 +34,7 @@ import {
   validateRestaurantSettingsPatch,
   validateRestaurantTheme,
 } from "@/lib/restaurantSettingsValidation";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Palette } from "lucide-react";
 import { adminShell, adminSurface } from "@/config/adminSurfaceClasses";
 import {
@@ -218,6 +218,7 @@ export default function SettingsPage() {
   const [toast, setToast] = useState(null);
   const [restaurantSlug, setRestaurantSlug] = useState(null);
   const [fieldErrors, setFieldErrors] = useState({});
+  const panelRef = useRef(null);
 
   // Payment settings state (separate API)
   const [paySettings, setPaySettings] = useState(EMPTY_PAYMENT_SETTINGS);
@@ -238,6 +239,9 @@ export default function SettingsPage() {
       if (stored) applyRestaurantDocumentTheme(stored);
     }
     setActiveTab(id);
+    requestAnimationFrame(() => {
+      panelRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
   };
 
   useEffect(() => {
@@ -526,10 +530,10 @@ export default function SettingsPage() {
         </div>
       )}
 
-      <div className="grid min-w-0 gap-5 lg:grid-cols-[minmax(0,240px)_minmax(0,1fr)]">
+      <div className="grid min-w-0 gap-5 lg:grid-cols-[minmax(0,240px)_minmax(0,1fr)] lg:items-start">
         <SettingsSidebar tabs={sidebarTabs} activeTab={activeTab} onTabChange={handleTabChange} />
 
-        <div className="min-w-0 space-y-4">
+        <div ref={panelRef} className="min-w-0 scroll-mt-24 space-y-4">
 
           {/* ── GENERAL (with Notifications merged) ── */}
           {activeTab === "general" && (

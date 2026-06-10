@@ -44,7 +44,7 @@ export const raTabActiveCls =
 
 /** Settings side nav — light pill + brand icon (matches Super Admin sections nav) */
 export const raSideNavActiveCls =
-  "admin-side-nav-active-pill text-zinc-900 font-semibold";
+  "admin-side-nav-active-pill font-semibold";
 
 export const raTabActiveIconCls = "text-ra-primary";
 

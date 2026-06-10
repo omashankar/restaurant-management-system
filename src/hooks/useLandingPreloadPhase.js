@@ -80,7 +80,8 @@ export function useLandingPreloadPhase() {
   }, [shellReady, phase]);
 
   useEffect(() => {
-    if (phase === "hidden") {
+    // Unlock scroll as soon as fade starts (same as CustomerShellGate) — not only after fade ends.
+    if (phase === "fading" || phase === "hidden") {
       releaseLandingPreloadPending();
       return undefined;
     }
