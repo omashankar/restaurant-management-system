@@ -32,7 +32,7 @@ export const POST = withTenant(["admin"], async ({ db, restaurantId }, request) 
     return Response.json({ success: false, error: "Invalid token. Please re-enter and save." }, { status: 400 });
   }
 
-  const message = `✅ Test message from your Restaurant Management System!\n\nWhatsApp automation is working correctly. 🎉`;
+  const message = `✅ Test message from BhojDesk!\n\nWhatsApp automation is working correctly. 🎉`;
 
   const result = await sendWhatsAppMessage({ to: phone, message, db, restaurantId });
 

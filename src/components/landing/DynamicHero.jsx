@@ -14,7 +14,7 @@ function splitHeadline(text = "") {
 export default function DynamicHero({ hero = {}, spotlight = null, currencyCode = "INR" }) {
   const {
     badge = "Built for modern restaurants",
-    headline = "All-in-One Restaurant Management System",
+    headline = "BhojDesk Restaurant Management System",
     subheadline = "Manage billing, inventory, staff, and analytics from one powerful platform.",
     ctaPrimary = "Start Free Trial",
     ctaSecondary = "Book a Demo",
@@ -122,7 +122,7 @@ export default function DynamicHero({ hero = {}, spotlight = null, currencyCode 
             <span className="size-2 shrink-0 rounded-full bg-amber-400 sm:size-2.5" />
             <span className="size-2 shrink-0 rounded-full bg-emerald-400 sm:size-2.5" />
             <span className="ml-1 min-w-0 truncate text-[9px] font-medium text-slate-400 sm:ml-2 sm:text-[10px]">
-              app.restaurantos.com/dashboard
+              app.bhojdesk.com/dashboard
             </span>
           </div>
           <div className="rounded-xl border border-slate-200/80 bg-white/95 p-3 backdrop-blur-xl sm:rounded-2xl sm:p-5">

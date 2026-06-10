@@ -1,3 +1,4 @@
+import { platformEmailSubject } from "@/config/bhojdeskBrand";
 import { getPlatformSettings } from "@/lib/platformSettings";
 import { sendPlatformAlert } from "@/lib/platformAlerts";
 import { getPlatformCurrency } from "@/lib/platformCurrency";
@@ -73,7 +74,7 @@ export async function runPlatformAutoBilling(db) {
 
   if (updated > 0) {
     await sendPlatformAlert(db, "weeklyReport", {
-      subject: `[RMS] Auto-billing: ${updated} subscription(s) expired`,
+      subject: platformEmailSubject(`Auto-billing: ${updated} subscription(s) expired`),
       text: `${updated} subscription(s) were marked expired. ${soon.length} renewal invoice(s) pending.`,
     }).catch(() => {});
   }

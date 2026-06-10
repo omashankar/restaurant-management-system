@@ -1,6 +1,8 @@
 "use client";
 
-import { Menu, UtensilsCrossed, X } from "lucide-react";
+import LandingBrandLogo from "@/components/landing/LandingBrandLogo";
+import { BHOJDESK_BRAND, BHOJDESK_LOGOS } from "@/config/bhojdeskBrand";
+import { Menu, X } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { NAV_LINKS } from "./data";
@@ -17,7 +19,7 @@ function scrollToSection(id, closeMobile) {
 
 export default function LandingNavbar({ navbar = {} }) {
   const {
-    logo = { text: "Restaurant OS" },
+    logo = { text: BHOJDESK_BRAND.name, iconUrl: BHOJDESK_LOGOS.horizontalLight },
     links = NAV_LINKS.map((l) => ({ label: l.label, href: l.href })),
     ctaPrimary = { label: "Get Started", href: "/signup" },
     ctaSecondary = { label: "Login", href: "/login" },
@@ -108,13 +110,15 @@ export default function LandingNavbar({ navbar = {} }) {
         <button
           type="button"
           onClick={() => handleNav("#home")}
-          className="cursor-pointer inline-flex min-w-0 max-w-[calc(100%-3rem)] items-center gap-2.5 sm:max-w-none"
+          className="landing-brand-slot landing-brand-slot--nav cursor-pointer inline-flex min-w-0 max-w-[calc(100%-3rem)] shrink-0 items-center sm:max-w-none"
           aria-label="Go to top"
         >
-          <span className="inline-flex size-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-600 to-indigo-500 text-white shadow-md shadow-indigo-400/30">
-            <UtensilsCrossed className="size-4" />
-          </span>
-          <span className="truncate text-sm font-bold tracking-tight text-slate-900">{logo.text}</span>
+          <LandingBrandLogo
+            slot="nav"
+            src={logo.iconUrl || undefined}
+            alt={logo.text || BHOJDESK_BRAND.name}
+            priority
+          />
         </button>
 
         <nav

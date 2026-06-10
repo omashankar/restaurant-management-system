@@ -1,13 +1,14 @@
+import { BHOJDESK_BRAND, BHOJDESK_LOGOS } from "@/config/bhojdeskBrand";
 import clientPromise from "@/lib/mongodb";
 
 /** Defaults mirror super-admin settings API — keep in sync when adding fields. */
 export const PLATFORM_DEFAULTS = {
   app: {
-    name: "RMS Platform",
-    legalName: "",
-    logoUrl: "",
-    faviconUrl: "",
-    supportEmail: "support@rms.com",
+    name: BHOJDESK_BRAND.fullName,
+    legalName: BHOJDESK_BRAND.name,
+    logoUrl: BHOJDESK_LOGOS.horizontalDark,
+    faviconUrl: BHOJDESK_LOGOS.icon,
+    supportEmail: BHOJDESK_BRAND.supportEmail,
     contactPhone: "",
     address: "",
   },
@@ -16,7 +17,7 @@ export const PLATFORM_DEFAULTS = {
     smtpPort: 587,
     smtpUser: "",
     smtpPassword: "",
-    fromName: "RMS Platform",
+    fromName: BHOJDESK_BRAND.name,
     fromEmail: "",
     secure: false,
   },
@@ -125,7 +126,7 @@ export async function getPublicPlatformConfig(db) {
   const adv = s.advanced ?? {};
   return {
     maintenanceMode: Boolean(adv.maintenanceMode),
-    appName: s.app?.name ?? "RMS Platform",
+    appName: s.app?.name ?? BHOJDESK_BRAND.fullName,
     supportEmail: s.app?.supportEmail ?? "",
     features: {
       featureMenuQR: adv.featureMenuQR !== false,

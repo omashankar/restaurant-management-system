@@ -124,7 +124,7 @@ export const TESTIMONIALS = [
     name: "Rahul Mehta",
     role: "Operations Manager",
     quote:
-      "RMS helped us reduce billing errors and speed up service during peak hours.",
+      "BhojDesk helped us reduce billing errors and speed up service during peak hours.",
   },
   {
     name: "Nina D'Souza",

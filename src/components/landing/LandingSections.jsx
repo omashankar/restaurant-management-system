@@ -77,7 +77,7 @@ export default function LandingSections() {
             {/* Solution */}
             <article className="rounded-2xl border border-emerald-200 bg-gradient-to-br from-emerald-50 to-white p-7">
               <p className="text-xs font-semibold uppercase tracking-widest text-emerald-600">The Solution</p>
-              <h3 className="mt-2 text-xl font-bold text-slate-900">RMS handles it all</h3>
+              <h3 className="mt-2 text-xl font-bold text-slate-900">BhojDesk handles it all</h3>
               <p className="mt-3 text-sm leading-relaxed text-slate-600">
                 One platform for POS, inventory, tables, reservations, staff, and analytics —
                 so your team can focus on great food and service.
@@ -160,10 +160,10 @@ export default function LandingSections() {
             </div>
           </article>
 
-          {/* Why RMS card */}
+          {/* Why BhojDesk card */}
           <article className="rounded-2xl border border-slate-200 bg-white p-7 shadow-sm">
             <span className="inline-flex items-center gap-2 rounded-full bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-700">
-              <Star className="size-3.5" /> Why RMS
+              <Star className="size-3.5" /> Why BhojDesk
             </span>
             <h3 className="mt-4 text-xl font-bold tracking-tight text-slate-900">
               Built to save time daily

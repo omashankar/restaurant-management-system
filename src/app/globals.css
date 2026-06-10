@@ -493,6 +493,61 @@ body {
   margin-right: auto;
 }
 
+/* Landing page — header/footer logo (full lockup PNG with tagline) */
+.landing-brand-logo {
+  display: block;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  object-position: left center;
+}
+
+.landing-brand-slot {
+  overflow: hidden;
+}
+
+.landing-brand-slot--nav {
+  max-height: 3rem;
+}
+
+.landing-brand-logo--nav {
+  max-height: 2.5rem;
+  max-width: min(10rem, 40vw);
+}
+
+@media (min-width: 640px) {
+  .landing-brand-logo--nav {
+    max-height: 2.875rem;
+    max-width: min(11.5rem, 32vw);
+  }
+}
+
+@media (min-width: 1024px) {
+  .landing-brand-logo--nav {
+    max-height: 3rem;
+    max-width: min(12rem, 22vw);
+  }
+}
+
+.landing-brand-logo--footer {
+  max-height: 2.875rem;
+  max-width: min(11rem, 58vw);
+}
+
+@media (min-width: 640px) {
+  .landing-brand-logo--footer {
+    max-height: 3.25rem;
+    max-width: min(13rem, 44vw);
+  }
+}
+
+@media (min-width: 1024px) {
+  .landing-brand-logo--footer {
+    max-height: 3.5rem;
+    max-width: 14rem;
+  }
+}
+
 /* Full brand image (icon + wordmark + tagline in one file) — fixed height scales wide assets up */
 .ct-brand-logo {
   display: block;
@@ -2179,6 +2234,96 @@ body {
 .card-lift:hover {
   transform: translateY(-5px);
   box-shadow: 0 20px 40px var(--customer-primary-shadow);
+}
+
+/* Landing / marketing preloader — hide shell until client is ready */
+html.landing-preload-pending {
+  background: #f8fafc;
+}
+
+html.landing-preload-pending[data-landing-shell="dark"] {
+  background: #09090b;
+}
+
+html.landing-preload-pending body {
+  overflow: hidden;
+}
+
+html.landing-preload-pending main,
+html.landing-preload-pending [data-marketing-shell] {
+  visibility: hidden;
+}
+
+/* CSS fallback spinner before React hydrates */
+html.landing-preload-pending body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 108;
+  pointer-events: none;
+  background: inherit;
+}
+
+html.landing-preload-pending body::after {
+  content: "";
+  position: fixed;
+  left: 50%;
+  top: 50%;
+  z-index: 109;
+  width: 2.25rem;
+  height: 2.25rem;
+  margin: -1.125rem 0 0 -1.125rem;
+  border-radius: 0.75rem;
+  border: 1px solid rgb(79 70 229 / 0.25);
+  background-color: rgb(79 70 229 / 0.08);
+  box-shadow: 0 8px 16px -4px rgb(79 70 229 / 0.15);
+  pointer-events: none;
+}
+
+html.landing-preload-pending[data-landing-shell="dark"] body::after {
+  border-color: #3f3f46;
+  border-top-color: #f59e0b;
+}
+
+/* Landing / marketing preloader — light shell, BhojDesk icon */
+.landing-preloader {
+  background: #f8fafc;
+}
+
+.landing-preloader--dark {
+  background: #09090b;
+}
+
+.landing-preloader-box {
+  border: 1px solid rgb(79 70 229 / 0.28);
+  background-color: rgb(79 70 229 / 0.08);
+  box-shadow:
+    0 1px 2px rgb(15 23 42 / 0.04),
+    0 8px 20px rgb(79 70 229 / 0.12);
+}
+
+.landing-preloader-box--dark {
+  border-color: rgb(245 158 11 / 0.32);
+  background-color: rgb(245 158 11 / 0.1);
+  box-shadow: 0 10px 15px -3px rgb(245 158 11 / 0.18);
+}
+
+.landing-preloader-spin {
+  border-radius: 9999px;
+  border: 2px solid #e2e8f0;
+  border-top-color: #4f46e5;
+  animation: landing-preloader-spin 0.85s linear infinite;
+}
+
+.landing-preloader-spin--dark {
+  border-color: #3f3f46;
+  border-top-color: #f59e0b;
+}
+
+@keyframes landing-preloader-spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 /* Customer storefront preloader — opaque shell, single logo */

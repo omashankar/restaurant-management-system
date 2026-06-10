@@ -1,5 +1,9 @@
+import { BHOJDESK_BRAND } from "@/config/bhojdeskBrand";
 import nodemailer from "nodemailer";
 import { ObjectId } from "mongodb";
+
+const EMAIL_FROM_NAME = BHOJDESK_BRAND.name;
+const EMAIL_PRODUCT_NAME = BHOJDESK_BRAND.fullName;
 
 /** Custom SMTP shape (tenant / platform settings); same fields as nodemailer transport options auth. */
 export function createSmtpTransport(smtp) {
@@ -106,7 +110,7 @@ async function resolveMailSendingContext(db, restaurantId) {
     const raw = process.env.EMAIL_FROM?.trim();
     return {
       transporter: getTransporter(),
-      from: raw || `"RMS" <${process.env.EMAIL_USER}>`,
+      from: raw || `"${EMAIL_FROM_NAME}" <${process.env.EMAIL_USER}>`,
     };
   }
 
@@ -130,7 +134,7 @@ function buildVerificationHtml(name, url) {
           <tr>
             <td style="background:#10b981;padding:24px 32px;">
               <p style="margin:0;font-size:20px;font-weight:700;color:#09090b;">
-                🍽️ Restaurant Management System
+                🍽️ ${EMAIL_PRODUCT_NAME}
               </p>
             </td>
           </tr>
@@ -202,7 +206,7 @@ function buildResetPasswordHtml(name, url) {
           <tr>
             <td style="background:#10b981;padding:24px 32px;">
               <p style="margin:0;font-size:20px;font-weight:700;color:#09090b;">
-                🔐 RMS Password Reset
+                🔐 ${EMAIL_FROM_NAME} Password Reset
               </p>
             </td>
           </tr>
@@ -271,14 +275,14 @@ export async function sendVerificationEmail({
           const raw = process.env.EMAIL_FROM?.trim();
           return {
             transporter: getTransporter(),
-            from: raw || `"RMS" <${process.env.EMAIL_USER}>`,
+            from: raw || `"${EMAIL_FROM_NAME}" <${process.env.EMAIL_USER}>`,
           };
         })();
 
     await transporter.sendMail({
       from,
       to: email,
-      subject: "Verify your RMS account",
+      subject: `Verify your ${EMAIL_FROM_NAME} account`,
       text: `Hi ${name}, verify your email: ${url}`,
       html: buildVerificationHtml(name, url),
     });
@@ -314,14 +318,14 @@ export async function sendPasswordResetEmail({
           const raw = process.env.EMAIL_FROM?.trim();
           return {
             transporter: getTransporter(),
-            from: raw || `"RMS" <${process.env.EMAIL_USER}>`,
+            from: raw || `"${EMAIL_FROM_NAME}" <${process.env.EMAIL_USER}>`,
           };
         })();
 
     await transporter.sendMail({
       from,
       to: email,
-      subject: "Reset your RMS password",
+      subject: `Reset your ${EMAIL_FROM_NAME} password`,
       text: `Hi ${name || ""}, reset your password here: ${url}`,
       html: buildResetPasswordHtml(name, url),
     });
@@ -371,7 +375,7 @@ function buildContactReplyHtml({ toName, body, originalSubject, originalMessage,
         <table width="560" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:12px;border:1px solid #e2e8f0;overflow:hidden;">
           <tr>
             <td style="background:#4f46e5;padding:20px 28px;">
-              <p style="margin:0;font-size:18px;font-weight:700;color:#ffffff;">Restaurant OS Support</p>
+              <p style="margin:0;font-size:18px;font-weight:700;color:#ffffff;">${EMAIL_FROM_NAME} Support</p>
             </td>
           </tr>
           <tr>

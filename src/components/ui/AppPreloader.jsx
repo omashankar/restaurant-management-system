@@ -3,6 +3,7 @@
 import { useApp } from "@/context/AppProviders";
 import { useUser } from "@/context/AuthContext";
 import { useModuleData } from "@/context/ModuleDataContext";
+import LandingPreloader from "@/components/landing/LandingPreloader";
 import { BrandPreloaderFace } from "@/components/ui/BrandPreloaderFace";
 import { isAuthRoute } from "@/config/authTheme";
 import { usePlatformConfig } from "@/hooks/usePlatformConfig";
@@ -11,22 +12,13 @@ import "@/app/super-admin/super-admin-theme.css";
 import "@/app/(app)/restaurant-admin-theme.css";
 import "@/app/(auth)/auth-theme.css";
 import { isCustomerStorefrontPath } from "@/lib/customerStorefrontPath";
+import { isPublicMarketingShell } from "@/lib/marketingShell";
 import { usePathname } from "next/navigation";
 
 function isPublicCustomerShell(pathname = "") {
   if (!pathname) return false;
   if (pathname === "/r" || pathname.startsWith("/r/")) return true;
   return isCustomerStorefrontPath(pathname);
-}
-
-function isPublicMarketingShell(pathname = "") {
-  if (!pathname) return false;
-  return (
-    pathname === "/" ||
-    pathname === "/privacy" ||
-    pathname === "/terms" ||
-    pathname === "/maintenance"
-  );
 }
 
 export default function AppPreloader() {
@@ -39,7 +31,8 @@ export default function AppPreloader() {
   const isAuth = !isSuperAdmin && isAuthRoute(pathname);
   usePlatformConfig();
 
-  if (isCustomerShell || isPublicMarketingShell(pathname)) return null;
+  if (isCustomerShell) return null;
+  if (isPublicMarketingShell(pathname)) return <LandingPreloader />;
 
   const ready = isSuperAdmin
     ? appHydrated && moduleHydrated && authHydrated

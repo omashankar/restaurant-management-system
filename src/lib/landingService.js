@@ -36,6 +36,7 @@
  * SeoDoc     { title, description, keywords, ogImage, twitterCard, priceCurrency }
  */
 
+import { BHOJDESK_BRAND, BHOJDESK_LOGOS } from "@/config/bhojdeskBrand";
 import { validateLandingSectionServer } from "@/lib/landingValidation";
 import clientPromise from "./mongodb";
 
@@ -53,7 +54,7 @@ export const DEFAULTS = {
   version: VERSION,
 
   navbar: {
-    logo: { text: "Restaurant OS", iconUrl: "" },
+    logo: { text: BHOJDESK_BRAND.name, iconUrl: BHOJDESK_LOGOS.horizontalLight },
     links: [
       { label: "Features",     href: "#features",    external: false },
       { label: "How It Works", href: "#how-it-works",external: false },
@@ -154,14 +155,14 @@ export const DEFAULTS = {
   ],
 
   testimonials: [
-    { id: "t1", order: 1, name: "Rahul Mehta",  role: "Operations Manager", company: "",  quote: "RMS helped us reduce billing errors and speed up service during peak hours.",     avatar: "", rating: 5 },
+    { id: "t1", order: 1, name: "Rahul Mehta",  role: "Operations Manager", company: "",  quote: "BhojDesk helped us reduce billing errors and speed up service during peak hours.", avatar: "", rating: 5 },
     { id: "t2", order: 2, name: "Nina D'Souza", role: "Restaurant Owner",   company: "",  quote: "The interface is simple, and our whole team adopted it without training issues.", avatar: "", rating: 5 },
     { id: "t3", order: 3, name: "Arjun Patel",  role: "Outlet Manager",     company: "",  quote: "Inventory alerts and reporting made daily decisions much faster.",                avatar: "", rating: 5 },
   ],
 
   about: {
     headline:    "Built by people who understand restaurants",
-    description: "Restaurant OS was built to solve the real operational chaos that restaurant owners face every day — from missed orders to inventory surprises. We built one platform that handles it all.",
+    description: `${BHOJDESK_BRAND.name} was built to solve the real operational chaos that restaurant owners face every day — from missed orders to inventory surprises. We built one platform that handles it all.`,
     imageUrl:    "",
     stats: [
       { value: "500+",   label: "Restaurants onboarded" },
@@ -177,7 +178,7 @@ export const DEFAULTS = {
   },
 
   contact: {
-    email:       "support@restaurantos.com",
+    email:       BHOJDESK_BRAND.supportEmail,
     phone:       "+1 (555) 000-0000",
     address:     "123 Main Street, City, Country",
     mapUrl:      "",
@@ -185,9 +186,9 @@ export const DEFAULTS = {
   },
 
   footer: {
-    companyName: "Restaurant OS",
-    tagline:     "All-in-one restaurant management platform built for modern operations.",
-    email:       "support@restaurantos.com",
+    companyName: BHOJDESK_BRAND.name,
+    tagline:     `${BHOJDESK_BRAND.tagline} — built for modern operations.`,
+    email:       BHOJDESK_BRAND.supportEmail,
     phone:       "+1 (555) 000-0000",
     address:     "123 Main Street, City, Country",
     links: [
@@ -205,7 +206,7 @@ export const DEFAULTS = {
   },
 
   seo: {
-    title:       "Restaurant OS — All-in-One Restaurant Management System",
+    title:       BHOJDESK_BRAND.fullName,
     description: "Manage billing, inventory, staff, and analytics from one powerful platform.",
     keywords:    "restaurant management, POS, inventory, staff management, SaaS",
     ogImage:     "",
@@ -220,9 +221,9 @@ export const DEFAULTS = {
   },
 
   problemSolution: {
-    sectionEyebrow: "Why RMS",
+    sectionEyebrow: `Why ${BHOJDESK_BRAND.shortName}`,
     sectionTitle: "From chaos to control in one platform",
-    sectionSubtext: "See what breaks without a system — and how RMS fixes it for busy teams.",
+    sectionSubtext: `See what breaks without a system — and how ${BHOJDESK_BRAND.name} fixes it for busy teams.`,
     problemEyebrow: "The Problem",
     problemTitle: "Running a restaurant is hard",
     problems: [
@@ -232,7 +233,7 @@ export const DEFAULTS = {
       "No visibility into daily sales or performance trends",
     ],
     solutionEyebrow: "The Solution",
-    solutionTitle: "RMS handles it all",
+    solutionTitle: `${BHOJDESK_BRAND.name} handles it all`,
     solutionDescription: "One platform for POS, inventory, tables, reservations, staff, and analytics.",
     solutionPoints: [
       "Reduce billing time by up to 60%",
@@ -257,13 +258,13 @@ export const DEFAULTS = {
   },
 
   benefits: {
-    sectionEyebrow: "Why teams choose RMS",
+    sectionEyebrow: `Why teams choose ${BHOJDESK_BRAND.name}`,
     sectionTitle: "Built for speed on every screen",
     sectionSubtext: "Your staff moves fast — your software should keep up during lunch rush and late-night service.",
     deviceBadge: "Works on all devices",
     deviceTitle: "Mobile-first, desktop-ready",
     deviceDescription: "Adaptive layout for desktop, tablet, and phone — fast and clean during busy service hours.",
-    whyBadge: "Why RMS",
+    whyBadge: `Why ${BHOJDESK_BRAND.name}`,
     whyTitle: "Built to save time daily",
     items: [
       "Reduce billing time by up to 60%",
@@ -289,7 +290,7 @@ export const DEFAULTS = {
     eyebrow: "Get Started Today",
     title: "Start Managing Your Restaurant Smarter",
     description:
-      "Join 500+ restaurants already using RMS. Launch your modern operations stack in minutes — no credit card required.",
+      `Join 500+ restaurants already using ${BHOJDESK_BRAND.name}. Launch your modern operations stack in minutes — no credit card required.`,
     primaryCtaLabel: "Get Started Now",
     primaryCtaHref: "/signup",
     secondaryCtaLabel: "View Demo",
@@ -300,7 +301,7 @@ export const DEFAULTS = {
     enabled: true,
     eyebrow: "FAQ",
     title: "Questions before you sign up?",
-    subtext: "Quick answers about setup, pricing, and how RMS fits your team.",
+    subtext: `Quick answers about setup, pricing, and how ${BHOJDESK_BRAND.name} fits your team.`,
     items: [
       {
         id: "faq-1",
@@ -314,8 +315,8 @@ export const DEFAULTS = {
       },
       {
         id: "faq-3",
-        q: "Can I use RMS on mobile and tablet?",
-        a: "Absolutely. RMS is mobile-first — waiters, managers, and kitchen staff can use phones and tablets during service, with a full desktop experience for admins.",
+        q: `Can I use ${BHOJDESK_BRAND.name} on mobile and tablet?`,
+        a: `Absolutely. ${BHOJDESK_BRAND.name} is mobile-first — waiters, managers, and kitchen staff can use phones and tablets during service, with a full desktop experience for admins.`,
       },
       {
         id: "faq-4",

@@ -8,6 +8,8 @@
  * Slug-aware: uses x-restaurant-slug header/cookie via restaurantResolver.
  */
 
+import { BHOJDESK_LOGOS } from "@/config/bhojdeskBrand";
+import { resolveCustomerSiteName } from "@/lib/resolveBrandLogos";
 import clientPromise from "@/lib/mongodb";
 import { getRestaurantIdFromRequest } from "@/lib/restaurantResolver";
 
@@ -33,9 +35,9 @@ export async function GET(request) {
       ),
     ]);
 
-    const name    = settingsDoc?.general?.restaurantName?.trim()
-                 || restaurantDoc?.name?.trim()
-                 || "Our Restaurant";
+    const name = resolveCustomerSiteName(
+      settingsDoc?.general?.restaurantName?.trim() || restaurantDoc?.name?.trim()
+    );
 
     const address = settingsDoc?.contact?.address?.trim()
                  || restaurantDoc?.address?.trim()
@@ -50,7 +52,7 @@ export async function GET(request) {
     const logoUrl =
       restaurantDoc?.logoUrl?.trim() ||
       settingsDoc?.general?.logoUrl?.trim() ||
-      null;
+      BHOJDESK_LOGOS.horizontalLight;
     const slug    = restaurantDoc?.slug ?? null;
     const currency = settingsDoc?.general?.currency || "USD";
 
@@ -100,12 +102,12 @@ export async function GET(request) {
 
 function getDefaults() {
   return {
-    name: "Our Restaurant",
+    name: resolveCustomerSiteName(""),
     address: "",
     phone: "",
     email: "",
     googleMapsLink: "",
-    logoUrl: null,
+    logoUrl: BHOJDESK_LOGOS.horizontalLight,
     slug: null,
     currency: "USD",
     openingHours: getDefaultHours(),

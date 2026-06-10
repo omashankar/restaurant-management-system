@@ -1,8 +1,9 @@
+import { BHOJDESK_BRAND } from "@/config/bhojdeskBrand";
 import Link from "next/link";
 
 export const metadata = {
-  title: "Privacy Policy · Restaurant OS",
-  description: "Privacy policy for Restaurant OS platform.",
+  title: `Privacy Policy · ${BHOJDESK_BRAND.name}`,
+  description: `Privacy policy for ${BHOJDESK_BRAND.fullName}.`,
 };
 
 export default function PrivacyPage() {

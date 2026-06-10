@@ -96,7 +96,7 @@ function AppSection({ data, onChange, onSave, saving, fieldErrors = {}, onClearE
                 onChange("name", e.target.value);
                 onClearError?.("name");
               }}
-              placeholder="RMS Platform"
+              placeholder="BhojDesk Restaurant Management System"
               maxLength={80}
               aria-invalid={fieldErrors.name ? true : undefined}
               className={inputCls}
@@ -151,7 +151,7 @@ function AppSection({ data, onChange, onSave, saving, fieldErrors = {}, onClearE
               onChange("supportEmail", e.target.value);
               onClearError?.("supportEmail");
             }}
-            placeholder="support@rms.com"
+            placeholder="support@bhojdesk.com"
             aria-invalid={fieldErrors.supportEmail ? true : undefined}
             className={inputCls}
           />
@@ -264,7 +264,7 @@ function EmailSection({ data, onChange, onSave, saving, fieldErrors = {}, onClea
               onChange("fromName", e.target.value);
               onClearError?.("fromName");
             }}
-            placeholder="RMS Platform"
+            placeholder="BhojDesk"
             maxLength={80}
             className={inputCls}
           />

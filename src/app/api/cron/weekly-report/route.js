@@ -41,7 +41,7 @@ export async function GET(request) {
     ]);
 
     const sent = await sendPlatformAlert(db, "weeklyReport", {
-      subject: "[RMS] Weekly platform report",
+      subject: "[BhojDesk RMS] Weekly platform report",
       text: `Weekly summary (last 7 days):\n\nNew restaurants: ${restaurants}\nOrders: ${orders}\nPaid orders: ${payments}\n\nGenerated: ${new Date().toISOString()}`,
     });
 

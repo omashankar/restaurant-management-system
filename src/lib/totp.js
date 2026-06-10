@@ -60,7 +60,7 @@ export function verifyTotpCode(secret, code, step = 30, digits = 6) {
   return false;
 }
 
-export function getOtpAuthUrl({ secret, label, issuer = "RMS" }) {
+export function getOtpAuthUrl({ secret, label, issuer = "BhojDesk" }) {
   const enc = encodeURIComponent;
   return `otpauth://totp/${enc(issuer)}:${enc(label)}?secret=${secret}&issuer=${enc(issuer)}&algorithm=SHA1&digits=6&period=30`;
 }

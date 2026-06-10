@@ -4,7 +4,7 @@ import SectionTitle from "./SectionTitle";
 export default function AboutSection({ about = {} }) {
   const {
     headline = "Built by people who understand restaurants",
-    description = "Restaurant OS was built to solve the real operational chaos that restaurant owners face every day — from missed orders to inventory surprises. We built one platform that handles it all.",
+    description = "BhojDesk was built to solve the real operational chaos that restaurant owners face every day — from missed orders to inventory surprises. We built one platform that handles it all.",
     imageUrl = "",
     stats = [
       { value: "500+", label: "Restaurants onboarded" },
@@ -56,7 +56,7 @@ export default function AboutSection({ about = {} }) {
               /* eslint-disable-next-line @next/next/no-img-element */
               <img
                 src={imageUrl}
-                alt="About Restaurant OS"
+                alt="About BhojDesk"
                 className="w-full rounded-3xl border border-slate-200 object-cover shadow-xl"
               />
             ) : (

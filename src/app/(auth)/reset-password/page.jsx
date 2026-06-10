@@ -1,6 +1,7 @@
 "use client";
 
-import { Eye, EyeOff, Loader2, Lock, UtensilsCrossed } from "lucide-react";
+import BhojDeskLogo from "@/components/brand/BhojDeskLogo";
+import { Eye, EyeOff, Loader2, Lock } from "lucide-react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { passwordBasicError, passwordMatchError } from "@/lib/formValidation";
@@ -66,9 +67,7 @@ function ResetPasswordForm() {
   return (
     <div className="min-w-0 w-full max-w-md">
       <div className="mb-6 text-center sm:mb-8">
-        <span className={authLogoBadgeCls}>
-          <UtensilsCrossed className="size-7" aria-hidden />
-        </span>
+        <BhojDeskLogo variant="vertical" height={72} className="mx-auto" priority />
         <h1 className="mt-4 break-words text-xl font-semibold tracking-tight text-zinc-50 sm:text-2xl">
           Set new password
         </h1>

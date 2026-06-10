@@ -1,17 +1,21 @@
+import { BHOJDESK_BRAND } from "@/config/bhojdeskBrand";
 import Link from "next/link";
 import { getPublicPlatformConfig } from "@/lib/platformSettings";
 import { Wrench } from "lucide-react";
 
 export const metadata = {
-  title: "Maintenance · RMS",
+  title: `Maintenance · ${BHOJDESK_BRAND.shortName}`,
 };
 
 export default async function MaintenancePage() {
   const config = await getPublicPlatformConfig();
-  const appName = config.appName ?? "RMS Platform";
+  const appName = config.appName ?? BHOJDESK_BRAND.fullName;
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-zinc-950 px-6 text-center text-zinc-100">
+    <div
+      data-marketing-shell=""
+      className="flex min-h-screen flex-col items-center justify-center bg-zinc-950 px-6 text-center text-zinc-100"
+    >
       <div className="mb-6 flex size-16 items-center justify-center rounded-2xl bg-amber-500/15 text-amber-400">
         <Wrench className="size-8" aria-hidden />
       </div>

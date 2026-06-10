@@ -44,7 +44,7 @@ export async function POST(request) {
         pushBody: `Razorpay · ${gatewayOrderId}`,
         emailType: "paymentFailed",
         emailContent: {
-          subject: "[RMS] Payment failed (Razorpay)",
+          subject: "[BhojDesk RMS] Payment failed (Razorpay)",
           text: `Order: ${gatewayOrderId}`,
         },
       }).catch(() => {});

@@ -4,7 +4,9 @@ import CustomerMobileInput from "@/components/customer/CustomerMobileInput";
 import StripePaymentModal from "@/components/payments/StripePaymentModal";
 import Modal from "@/components/ui/Modal";
 import { useCustomer } from "@/context/CustomerContext";
+import { useRestaurantInfo } from "@/hooks/useRestaurantInfo";
 import { useRestaurantSlug } from "@/hooks/useRestaurantSlug";
+import { BHOJDESK_BRAND } from "@/config/bhojdeskBrand";
 import { calcOrderTotals, useCheckoutMeta } from "@/hooks/useCheckoutMeta";
 import {
   isValidGuestName,
@@ -72,6 +74,7 @@ export default function CheckoutPage() {
   } = useCustomer();
   const router = useRouter();
   const { link } = useRestaurantSlug();
+  const { info: restaurantInfo } = useRestaurantInfo();
   const [loading, setLoading] = useState(false);
   const [paying, setPaying] = useState(false);
   const [stripeCheckout, setStripeCheckout] = useState(null);
@@ -332,7 +335,7 @@ export default function CheckoutPage() {
           key: payment.checkout.key,
           amount: payment.checkout.amount,
           currency: payment.checkout.currency,
-          name: "Restaurant Management System",
+          name: restaurantInfo?.name?.trim() || BHOJDESK_BRAND.fullName,
           description: `Order ${createdOrderId}`,
           order_id: payment.checkout.orderId,
           prefill: {

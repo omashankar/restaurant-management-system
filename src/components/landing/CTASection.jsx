@@ -5,7 +5,7 @@ export default function CTASection({ cta = {} }) {
   const {
     eyebrow = "Get Started Today",
     title = "Start Managing Your Restaurant Smarter",
-    description = "Join 500+ restaurants already using RMS. Launch your modern operations stack in minutes — no credit card required.",
+    description = "Join 500+ restaurants already using BhojDesk. Launch your modern operations stack in minutes — no credit card required.",
     primaryCtaLabel = "Get Started Now",
     primaryCtaHref = "/signup",
     secondaryCtaLabel = "View Demo",

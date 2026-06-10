@@ -9,6 +9,7 @@
  *   - Falls back to static defaults if the API is unavailable
  */
 
+import { BHOJDESK_BRAND } from "@/config/bhojdeskBrand";
 import AboutSection from "@/components/landing/AboutSection";
 import BenefitsSection from "@/components/landing/BenefitsSection";
 import BrandMarquee from "@/components/landing/BrandMarquee";
@@ -132,7 +133,7 @@ const getLandingContent = unstable_cache(async function getLandingContent() {
 export async function generateMetadata() {
   const content = await getLandingContent();
   const seo = content?.seo ?? {};
-  const title = seo.title || "Restaurant OS — All-in-One Restaurant Management System";
+  const title = seo.title || BHOJDESK_BRAND.fullName;
   const description = seo.description || "Manage billing, inventory, staff, and analytics from one powerful platform.";
   const keywords = seo.keywords || "restaurant management, POS, inventory, staff management, SaaS";
 

@@ -3,14 +3,14 @@ import SectionTitle from "./SectionTitle";
 
 export default function ProblemSolutionSection({ data = {} }) {
   const {
-    sectionEyebrow = "Why RMS",
+    sectionEyebrow = "Why BhojDesk RMS",
     sectionTitle = "From chaos to control in one platform",
-    sectionSubtext = "See what breaks without a system — and how RMS fixes it for busy teams.",
+    sectionSubtext = "See what breaks without a system — and how BhojDesk fixes it for busy teams.",
     problemEyebrow = "The Problem",
     problemTitle = "Running a restaurant is hard",
     problems = [],
     solutionEyebrow = "The Solution",
-    solutionTitle = "RMS handles it all",
+    solutionTitle = "BhojDesk handles it all",
     solutionDescription = "",
     solutionPoints = [],
   } = data;

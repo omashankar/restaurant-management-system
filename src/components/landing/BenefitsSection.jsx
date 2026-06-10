@@ -1,15 +1,16 @@
+import { BHOJDESK_BRAND } from "@/config/bhojdeskBrand";
 import { CheckCircle2, Monitor, Smartphone, Star, Tablet } from "lucide-react";
 import SectionTitle from "./SectionTitle";
 
 export default function BenefitsSection({ data = {} }) {
   const {
-    sectionEyebrow = "Why teams choose RMS",
+    sectionEyebrow = `Why teams choose ${BHOJDESK_BRAND.name}`,
     sectionTitle = "Built for speed on every screen",
     sectionSubtext = "Your staff moves fast — your software should keep up during lunch rush and late-night service.",
     deviceBadge = "Works on all devices",
     deviceTitle = "Mobile-first, desktop-ready",
     deviceDescription = "Adaptive layout for desktop, tablet, and phone — fast and clean during busy service hours.",
-    whyBadge = "Why RMS",
+    whyBadge = `Why ${BHOJDESK_BRAND.name}`,
     whyTitle = "Built to save time daily",
     items = [],
   } = data;

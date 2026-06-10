@@ -1,5 +1,6 @@
 "use client";
 
+import { BHOJDESK_BRAND } from "@/config/bhojdeskBrand";
 import { Mail, MapPin, Phone, Send } from "lucide-react";
 import { useState } from "react";
 import SectionTitle from "./SectionTitle";
@@ -18,7 +19,7 @@ import SectionTitle from "./SectionTitle";
  */
 export default function ContactSection({ contact = {} }) {
   const {
-    email       = "support@restaurantos.com",
+    email       = BHOJDESK_BRAND.supportEmail,
     phone       = "+1 (555) 000-0000",
     address     = "123 Main Street, City, Country",
     mapUrl      = "",

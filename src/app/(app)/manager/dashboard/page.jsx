@@ -20,6 +20,7 @@ function ManagerDashboardData() {
       lowStockCount={dashboard.lowStockCount}
       orders={dashboard.orders}
       topItems={dashboard.topItems}
+      salesChartData={dashboard.salesChartData}
     />
   );
 }

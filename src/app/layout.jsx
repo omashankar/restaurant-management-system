@@ -13,6 +13,8 @@ import Providers from "./providers";
 import PlatformScripts from "@/components/PlatformScripts";
 import PlatformThemeStyles from "@/components/PlatformThemeStyles";
 import AdminThemeBootstrap from "@/components/AdminThemeBootstrap";
+import LandingPreloadBootstrap from "@/components/landing/LandingPreloadBootstrap";
+import { BHOJDESK_BRAND, BHOJDESK_LOGOS } from "@/config/bhojdeskBrand";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -67,13 +69,17 @@ const openSans = Open_Sans({
 });
 
 export const metadata = {
-  title: "RMS · Restaurant Management",
-  description: "Premium India-focused Restaurant POS & Food Ordering System",
+  title: BHOJDESK_BRAND.fullName,
+  description: BHOJDESK_BRAND.tagline,
   manifest: "/manifest.json",
+  icons: {
+    icon: BHOJDESK_LOGOS.icon,
+    apple: BHOJDESK_LOGOS.icon,
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
-    title: "RMS",
+    title: BHOJDESK_BRAND.shortName,
   },
 };
 
@@ -94,6 +100,8 @@ export default function RootLayout({ children }) {
     >
       <head>
         <AdminThemeBootstrap />
+        <LandingPreloadBootstrap />
+        <link rel="preload" href="/branding/bhojdesk/icon.png" as="image" />
       </head>
       <body className="min-h-full" suppressHydrationWarning>
         <PlatformThemeStyles />

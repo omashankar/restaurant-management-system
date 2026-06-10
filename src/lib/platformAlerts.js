@@ -15,7 +15,7 @@ async function getPlatformMailer(db) {
             pass: process.env.EMAIL_PASS,
           },
         }),
-        from: process.env.EMAIL_FROM || `"RMS" <${process.env.EMAIL_USER}>`,
+        from: process.env.EMAIL_FROM || `"BhojDesk" <${process.env.EMAIL_USER}>`,
       };
     }
     return null;

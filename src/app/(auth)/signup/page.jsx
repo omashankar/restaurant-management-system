@@ -16,7 +16,8 @@ import {
   DEFAULT_SIGNUP_PASSWORD_SECURITY,
   getSignupFieldErrors,
 } from "@/lib/formValidation";
-import { UtensilsCrossed } from "lucide-react";
+import BhojDeskLogo from "@/components/brand/BhojDeskLogo";
+import { BHOJDESK_BRAND } from "@/config/bhojdeskBrand";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -139,11 +140,9 @@ export default function SignupPage() {
   return (
     <div className="min-w-0 w-full max-w-md">
       <div className="mb-6 text-center sm:mb-8">
-        <span className={authLogoBadgeCls}>
-          <UtensilsCrossed className="size-7" aria-hidden />
-        </span>
+        <BhojDeskLogo variant="vertical" height={80} className="mx-auto" priority />
         <h1 className="mt-4 break-words text-xl font-semibold tracking-tight text-zinc-50 sm:text-2xl">Create account</h1>
-        <p className="mt-1 text-sm text-zinc-500">Restaurant Management System</p>
+        <p className="mt-1 text-sm text-zinc-500">{BHOJDESK_BRAND.shortName}</p>
       </div>
 
       <div className="min-w-0 rounded-2xl border border-zinc-800 bg-zinc-900/80 p-4 shadow-2xl shadow-black/40 backdrop-blur-sm sm:p-6">

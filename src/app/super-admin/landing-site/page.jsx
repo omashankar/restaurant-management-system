@@ -114,7 +114,7 @@ function NavbarPanel({ data, onChange, onSave, saving, fieldErrors = {}, onClear
               onChange("logo", { ...logo, text: e.target.value });
               onClearError?.("logoText");
             }}
-            placeholder="Restaurant OS"
+            placeholder="BhojDesk"
             maxLength={80}
             aria-invalid={fieldErrors.logoText ? true : undefined}
             className={ic}
@@ -521,7 +521,7 @@ function FooterPanel({ data, onChange, onSave, saving, fieldErrors = {}, onClear
               onChange("companyName", e.target.value);
               onClearError?.("companyName");
             }}
-            placeholder="Restaurant OS"
+            placeholder="BhojDesk"
             maxLength={80}
             aria-invalid={fieldErrors.companyName ? true : undefined}
             className={ic}
@@ -547,7 +547,7 @@ function FooterPanel({ data, onChange, onSave, saving, fieldErrors = {}, onClear
               onChange("email", e.target.value);
               onClearError?.("email");
             }}
-            placeholder="support@rms.com"
+            placeholder="support@bhojdesk.com"
             className={ic}
           />
         </Field>
@@ -657,7 +657,7 @@ function ContactPanel({ data, onChange, onSave, saving, fieldErrors = {}, onClea
               onChange("email", e.target.value);
               onClearError?.("email");
             }}
-            placeholder="support@restaurantos.com"
+            placeholder="support@bhojdesk.com"
             aria-invalid={fieldErrors.email ? true : undefined}
             className={ic}
           />
@@ -725,7 +725,7 @@ function SeoPanel({ data, onChange, onSave, saving, fieldErrors = {}, onClearErr
             onChange("title", e.target.value);
             onClearError?.("title");
           }}
-          placeholder="Restaurant OS — All-in-One Restaurant Management System"
+          placeholder="BhojDesk Restaurant Management System"
           maxLength={70}
           className={ic}
         />
@@ -880,7 +880,7 @@ function HowItWorksPanel({ data, onChange, onSave, saving }) {
 function BenefitsPanel({ data, onChange, onSave, saving }) {
   return (
     <div className="space-y-5">
-      <AdminSectionHeader icon={Users} title="Benefits Block" description="Device card + Why RMS card content." />
+      <AdminSectionHeader icon={Users} title="Benefits Block" description="Device card + Why BhojDesk card content." />
       <div className="grid gap-4 sm:grid-cols-3">
         <Field label="Section Eyebrow"><input value={data.sectionEyebrow ?? ""} onChange={(e) => onChange("sectionEyebrow", e.target.value)} className={ic} /></Field>
         <Field label="Section Title"><input value={data.sectionTitle ?? ""} onChange={(e) => onChange("sectionTitle", e.target.value)} className={ic} /></Field>
@@ -1148,7 +1148,7 @@ const PRICING_FIELDS = [
 const TESTIMONIAL_FIELDS = [
   { key: "name",  label: "Name",  placeholder: "Rahul Mehta",       required: true },
   { key: "role",  label: "Role",  placeholder: "Operations Manager" },
-  { key: "quote", label: "Quote", placeholder: "RMS helped us…",    required: true, type: "textarea" },
+  { key: "quote", label: "Quote", placeholder: "BhojDesk helped us…", required: true, type: "textarea" },
 ];
 
 /* ════════════════════════════════════════

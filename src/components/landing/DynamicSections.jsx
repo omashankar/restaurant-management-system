@@ -1,5 +1,7 @@
 "use client";
 
+import LandingBrandLogo from "@/components/landing/LandingBrandLogo";
+import { BHOJDESK_BRAND } from "@/config/bhojdeskBrand";
 import { ArrowUp, Check, Star, X } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
@@ -281,7 +283,7 @@ export function DynamicTestimonials({ testimonials = [] }) {
         <SectionTitle
           eyebrow="Testimonials"
           title="Loved by restaurant teams"
-          subtext="Real feedback from teams using RMS to run daily operations."
+          subtext="Real feedback from teams using BhojDesk to run daily operations."
         />
 
         {featured && (
@@ -348,7 +350,7 @@ export function DynamicTestimonials({ testimonials = [] }) {
 ───────────────────────────────────────── */
 export function DynamicFooter({ footer = {} }) {
   const {
-    companyName = "Restaurant OS",
+    companyName = BHOJDESK_BRAND.name,
     tagline     = "",
     email       = "",
     phone       = "",
@@ -362,7 +364,8 @@ export function DynamicFooter({ footer = {} }) {
       <div className="mx-auto w-full min-w-0 max-w-7xl px-4 py-12 sm:px-6 sm:py-14 lg:px-8">
         <div className="grid gap-8 sm:gap-10 md:grid-cols-2 lg:grid-cols-4">
           <div className="md:col-span-2">
-            <p className="text-sm font-bold tracking-tight text-slate-900">{companyName}</p>
+            <LandingBrandLogo slot="footer" alt={companyName} />
+            <p className="sr-only">{companyName}</p>
             {tagline && <p className="mt-3 max-w-xs text-sm leading-relaxed text-slate-500">{tagline}</p>}
             <div className="mt-4 space-y-1 break-all text-sm text-slate-500">
               {email   && <p><a href={`mailto:${email}`} className="cursor-pointer hover:text-indigo-600">{email}</a></p>}
