@@ -339,22 +339,26 @@ export function AboutExtrasFields({ about, setAbout }) {
 
 export function ContactPageTab({ contact, setContact, saving, onSaveDraft, onPublish }) {
   const fields = [
-    "eyebrow",
-    "title",
-    "subtitle",
-    "formTitle",
-    "submitLabel",
-    "successTitle",
-    "successMessage",
+    ["eyebrow", "Hero badge"],
+    ["title", "Page title"],
+    ["subtitle", "Page subtitle"],
+    ["detailsTitle", "Contact card title"],
+    ["detailsSubtitle", "Contact card subtitle"],
+    ["hoursTitle", "Hours card title"],
+    ["hoursSubtitle", "Hours card subtitle"],
+    ["socialLabel", "Social section label"],
+    ["ctaTitle", "Bottom banner title"],
+    ["ctaSubtitle", "Bottom banner subtitle"],
+    ["ctaButtonLabel", "Bottom banner button"],
   ];
   return (
     <div className={`${CMS_EDITOR_SECTION} space-y-4`}>
-      <p className="text-xs admin-surface-muted">Contact page headings and form labels. Address/phone/email → Settings.</p>
-      {fields.map((key) => (
-        <Field key={key} label={key}>
-          {key.includes("subtitle") || key.includes("Message") ? (
+      <p className="text-xs admin-surface-muted">Contact page text. Address, phone, email, and hours → Settings.</p>
+      {fields.map(([key, label]) => (
+        <Field key={key} label={label}>
+          {key.includes("subtitle") ? (
             <textarea
-              rows={key.includes("Message") ? 3 : 2}
+              rows={2}
               value={contact[key] ?? ""}
               onChange={(e) => setContact((p) => ({ ...p, [key]: e.target.value }))}
               className={textareaCls}

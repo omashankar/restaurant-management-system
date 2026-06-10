@@ -57,7 +57,7 @@ export default function TopNavbar({
     markAllRead,
     resolveMessage,
   } = useInbox();
-  const { name: brandName } = useRestaurantBranding();
+  const { name: brandName, tagline: brandTagline } = useRestaurantBranding();
   const roleMenuPosition = useAnchoredPortalPosition(open, roleMenuBtnRef);
   const profileMenuPosition = useAnchoredPortalPosition(isProfileOpen, profileBtnRef);
 
@@ -121,7 +121,7 @@ export default function TopNavbar({
         {showMobileMenu ? (
           <div className="min-w-0 flex-1 sm:hidden">
             <p className={`truncate text-sm font-semibold ${adminSurface.title}`}>
-              {brandName?.trim() || "Restaurant Admin"}
+              {brandName}
             </p>
             <p className={`truncate text-[10px] ${adminSurface.muted}`}>{roleLabel(user.role)} workspace</p>
           </div>
@@ -129,7 +129,7 @@ export default function TopNavbar({
 
         <div className="hidden min-w-0 max-w-[14rem] lg:max-w-xs sm:block">
           <p className={`truncate text-xs font-medium uppercase tracking-widest ${adminSurface.muted}`}>
-            Restaurant Management System
+            {brandTagline}
           </p>
           <p className={`truncate text-sm font-semibold ${adminSurface.title}`}>
             {roleLabel(user.role)} workspace

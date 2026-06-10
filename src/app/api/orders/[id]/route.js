@@ -1,6 +1,7 @@
 import { withTenant } from "@/lib/tenantDb";
 import { logInfo } from "@/lib/logger";
 import { orderPatchSchema, parseSchema } from "@/lib/validationSchemas";
+import { creditCustomerRewardsOnOrderComplete } from "@/lib/customerRewards";
 import { sendOrderWhatsApp, getOrderStatusWhatsAppEvent, sendNewOrderAlertWhatsApp } from "@/lib/whatsappService";
 import { ObjectId } from "mongodb";
 
@@ -97,6 +98,10 @@ export const PATCH = withTenant(
           restaurantName,
         }).catch(() => {});
       }
+    }
+
+    if (parsed.status === "completed" && existing.status !== "completed" && existing.source === "customer") {
+      creditCustomerRewardsOnOrderComplete(db, { ...existing, _id: existing._id }).catch(() => {});
     }
 
     return Response.json({ success: true });

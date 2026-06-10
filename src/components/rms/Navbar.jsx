@@ -1,5 +1,6 @@
 "use client";
 
+import { BHOJDESK_PLATFORM_UI } from "@/config/bhojdeskBrand";
 import { ROLES, roleLabel, useApp } from "@/context/AppProviders";
 import { ChevronDown, LogOut, User } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -26,7 +27,7 @@ export default function Navbar() {
     <header className="sticky top-0 z-30 flex h-16 items-center justify-between gap-4 border-b admin-shell-border bg-zinc-950/90 px-4 backdrop-blur-md">
       <div className="min-w-0 flex-1">
         <p className="truncate text-xs font-medium uppercase tracking-widest admin-surface-muted">
-          Restaurant Management System
+          {BHOJDESK_PLATFORM_UI.tagline}
         </p>
         <p className="truncate admin-surface-title text-sm font-semibold">
           {roleLabel(user.role)} workspace

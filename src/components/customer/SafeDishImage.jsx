@@ -18,7 +18,7 @@ export default function SafeDishImage({
   if (!url || failed) {
     return (
       <div
-        className={`flex items-center justify-center bg-gradient-to-br from-customer-cream via-[#FFE4D6]/30 to-white ${className}`}
+        className={`flex items-center justify-center bg-gradient-to-br from-[var(--customer-card)] via-[var(--customer-cream)] to-[var(--customer-section-alt)] ${className}`}
         aria-hidden={!alt}
       >
         <UtensilsCrossed className={iconClassName} aria-hidden />

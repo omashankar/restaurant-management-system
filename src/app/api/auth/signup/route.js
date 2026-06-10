@@ -1,3 +1,4 @@
+import { platformEmailSubject } from "@/config/bhojdeskBrand";
 import { getClientIp, signupLimiter } from "@/lib/rateLimit";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
@@ -125,7 +126,7 @@ export async function POST(request) {
       pushBody: cleanRestaurantName,
       emailType: "newRestaurant",
       emailContent: {
-        subject: `[RMS] New restaurant signup: ${cleanRestaurantName}`,
+        subject: platformEmailSubject(`New restaurant signup: ${cleanRestaurantName}`),
         text: `A new restaurant registered.\n\n${cleanRestaurantName}\nSlug: ${validatedSlug}\nOwner: ${cleanEmail}`,
       },
     }).catch(() => {});

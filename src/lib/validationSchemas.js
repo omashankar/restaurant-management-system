@@ -426,6 +426,9 @@ export const customerCheckoutSchema = z.object({
     .default("cod"),
   customer: customerCheckoutInfoSchema,
   notes: z.string().trim().max(500).optional(),
+  couponCode: z.string().trim().max(40).optional(),
+  pointsRedeemed: z.number().int().nonnegative().optional(),
+  scheduleFor: z.string().trim().max(40).optional(),
 });
 
 /** Parse schema — returns data or throws first error message */

@@ -257,13 +257,13 @@ function FooterPanel({ data, onChange, onSave, saving }) {
       <SectionHeader icon={Mail} title="Footer" description="Company info, contact details, and footer links." color="text-zinc-400" bg="bg-zinc-800" ring="ring-zinc-700" />
       <div className="grid gap-4 sm:grid-cols-2">
         <Field label="Company Name" required error={errors.companyName}>
-          <input value={data.companyName ?? ""} onChange={(e) => { onChange("companyName", e.target.value); setErrors(p => ({ ...p, companyName: "" })); }} placeholder="Restaurant OS" className={ic} />
+          <input value={data.companyName ?? ""} onChange={(e) => { onChange("companyName", e.target.value); setErrors(p => ({ ...p, companyName: "" })); }} placeholder="BhojDesk" className={ic} />
         </Field>
         <Field label="Tagline">
           <input value={data.tagline ?? ""} onChange={(e) => onChange("tagline", e.target.value)} placeholder="All-in-one restaurant management\u2026" className={ic} />
         </Field>
         <Field label="Support Email">
-          <input type="email" value={data.email ?? ""} onChange={(e) => onChange("email", e.target.value)} placeholder="support@restaurantos.com" className={ic} />
+          <input type="email" value={data.email ?? ""} onChange={(e) => onChange("email", e.target.value)} placeholder="support@bhojdesk.com" className={ic} />
         </Field>
         <Field label="Phone">
           <input value={data.phone ?? ""} onChange={(e) => onChange("phone", e.target.value)} placeholder="+1 (555) 000-0000" className={ic} />

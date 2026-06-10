@@ -5,12 +5,37 @@ import {
   getPaymentSecrets,
   verifyRazorpayCheckoutSignature,
 } from "@/lib/paymentGateway";
+import { ObjectId } from "mongodb";
+
+function customerOwnsOrder(order, payload) {
+  if (!payload) return false;
+  if (payload.id && order.customerAccountId) {
+    try {
+      if (String(order.customerAccountId) === String(new ObjectId(payload.id))) return true;
+    } catch {
+      /* ignore */
+    }
+  }
+  const orderPhone = String(order.customerInfo?.phone ?? "").trim();
+  const orderEmail = String(order.customerInfo?.email ?? "").trim().toLowerCase();
+  if (payload.phone && orderPhone && payload.phone === orderPhone) return true;
+  if (payload.email && orderEmail && String(payload.email).trim().toLowerCase() === orderEmail) {
+    return true;
+  }
+  return false;
+}
+
+function canConfirmPayment(order, payload) {
+  if (order.source !== "customer") return false;
+  if (!payload?.id && !payload?.phone && !payload?.email) {
+    // Guest checkout — cryptographic gateway verification is the trust boundary.
+    return true;
+  }
+  return customerOwnsOrder(order, payload);
+}
 
 export async function POST(request) {
   const customerPayload = verifyCustomerToken(getCustomerTokenFromRequest(request));
-  if (!customerPayload?.id && !customerPayload?.phone && !customerPayload?.email) {
-    return Response.json({ success: false, error: "Not authenticated." }, { status: 401 });
-  }
 
   let body;
   try {
@@ -33,12 +58,33 @@ export async function POST(request) {
       return Response.json({ success: false, error: "Order not found." }, { status: 404 });
     }
 
+    if (!canConfirmPayment(order, customerPayload)) {
+      return Response.json({ success: false, error: "Not allowed to confirm this order." }, { status: 403 });
+    }
+
+    if (order.payment?.status === "paid") {
+      return Response.json({ success: true });
+    }
+
+    if (order.payment?.status !== "initiated") {
+      return Response.json(
+        { success: false, error: "Order payment cannot be confirmed." },
+        { status: 400 }
+      );
+    }
+
     if (provider === "razorpay") {
       const razorpayOrderId = String(body?.razorpay_order_id ?? "").trim();
       const razorpayPaymentId = String(body?.razorpay_payment_id ?? "").trim();
       const razorpaySignature = String(body?.razorpay_signature ?? "").trim();
       if (!razorpayOrderId || !razorpayPaymentId || !razorpaySignature) {
         return Response.json({ success: false, error: "Incomplete Razorpay payload." }, { status: 400 });
+      }
+      if (
+        order.payment?.gatewayOrderId &&
+        razorpayOrderId !== String(order.payment.gatewayOrderId)
+      ) {
+        return Response.json({ success: false, error: "Payment does not match this order." }, { status: 400 });
       }
       const secrets = await getPaymentSecrets(db, order.restaurantId);
       const ok = verifyRazorpayCheckoutSignature({

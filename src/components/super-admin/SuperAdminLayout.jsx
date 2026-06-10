@@ -9,8 +9,10 @@ import {
   adminShell,
   adminSurface,
 } from "@/config/adminSurfaceClasses";
+import BhojDeskLogo from "@/components/brand/BhojDeskLogo";
 import SuperAdminPreloader from "./SuperAdminPreloader";
 import SuperAdminSidebar from "./SuperAdminSidebar";
+import { BHOJDESK_BRAND } from "@/config/bhojdeskBrand";
 import ChangePasswordModal from "@/components/rms/ChangePasswordModal";
 import InboxDropdown, { InboxCountBadge } from "@/components/rms/InboxDropdown";
 import MobileDrawer from "@/components/rms/MobileDrawer";
@@ -29,7 +31,6 @@ import {
   Menu,
   MessageSquare,
   Search,
-  Shield,
   User,
 } from "lucide-react";
 
@@ -167,8 +168,10 @@ export default function SuperAdminLayout({ children }) {
 
             {!mdUp ? (
               <div className="flex min-w-0 flex-1 items-center justify-center gap-2 px-1">
-                <Shield className="size-4 shrink-0 text-sa-primary" aria-hidden />
-                <span className={`truncate text-sm font-semibold ${adminSurface.title}`}>Super Admin</span>
+                <BhojDeskLogo variant="icon" height={28} className="shrink-0" />
+                <span className={`truncate text-sm font-semibold ${adminSurface.title}`}>
+                  {BHOJDESK_BRAND.shortName}
+                </span>
               </div>
             ) : null}
 

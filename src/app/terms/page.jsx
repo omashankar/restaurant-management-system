@@ -1,8 +1,9 @@
+import { BHOJDESK_BRAND } from "@/config/bhojdeskBrand";
 import Link from "next/link";
 
 export const metadata = {
-  title: "Terms of Use · Restaurant OS",
-  description: "Terms of use for Restaurant OS platform.",
+  title: `Terms of Use · ${BHOJDESK_BRAND.name}`,
+  description: `Terms of use for ${BHOJDESK_BRAND.fullName}.`,
 };
 
 export default function TermsPage() {

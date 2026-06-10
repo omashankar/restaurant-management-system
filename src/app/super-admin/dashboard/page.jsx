@@ -6,7 +6,7 @@ import { saSpinnerCls } from "@/config/superAdminTheme";
 import { useUser } from "@/context/AuthContext";
 import {
   Activity, BarChart3, Building2, CheckCircle2,
-  ChevronRight, Clock, Plus, RefreshCw,
+  ChevronRight, Clock, Inbox, Plus, RefreshCw,
   Settings, Shield, UserCheck, Users, XCircle,
 } from "lucide-react";
 import { formatSaMoney } from "@/lib/formatSaMoney";
@@ -117,10 +117,19 @@ function SuperAdminDashboard() {
       {loading && !stats ? (
         <SuperAdminPageSkeleton cards={4} cardClassName="h-28" rows={0} />
       ) : (
-        <div className="grid min-w-0 grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid min-w-0 grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
           <StatCard label="Total Restaurants" value={stats?.totalRestaurants ?? 0} sub="Registered tenants"              icon={Building2} color="text-sa-primary" bg="bg-sa-primary-5" border="border-sa-primary-20" />
           <StatCard label="Restaurant Admins" value={stats?.totalAdmins ?? 0}      sub={`${stats?.activeAdmins ?? 0} active`} icon={Users}     color="text-amber-400"   bg="bg-amber-500/5"   border="border-amber-500/20"   />
           <StatCard label="Total Revenue"     value={formatSaMoney(stats?.totalRevenue ?? 0)} sub="All time paid"  icon={Activity}  color="text-indigo-400"  bg="bg-indigo-500/5"  border="border-indigo-500/20"  />
+          <StatCard
+            label="New Contact Messages"
+            value={stats?.newContactMessages ?? 0}
+            sub="Landing + customer site"
+            icon={Inbox}
+            color="text-sky-400"
+            bg="bg-sky-500/5"
+            border="border-sky-500/20"
+          />
           <StatCard
             label="System Status"
             value={stats?.systemStatus === "online" ? "Online" : "Degraded"}

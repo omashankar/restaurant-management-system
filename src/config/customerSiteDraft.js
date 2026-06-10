@@ -20,3 +20,14 @@ export function publishHeadlineForSection(section) {
   if (section === "social") return "Social links";
   return section;
 }
+
+/** True while draft or publish request is in flight for a CMS section. */
+export function isCmsSectionSaving(saving, section) {
+  if (!saving || !section) return false;
+  return saving === `draft-${section}` || saving === `pub-${section}`;
+}
+
+/** True while any CMS save/publish is in progress (blocks uploads). */
+export function isCmsSaving(saving) {
+  return Boolean(saving);
+}

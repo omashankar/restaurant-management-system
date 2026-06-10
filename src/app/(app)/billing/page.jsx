@@ -113,7 +113,7 @@ export default function BillingPage() {
           order_id: startData.checkout.orderId,
           amount: startData.checkout.amount,
           currency: startData.checkout.currency,
-          name: "Restaurant Management System",
+          name: profile?.restaurantName?.trim() || "BhojDesk Restaurant Management System",
           description: `${plan.name} - ${billingCycle}`,
           prefill: {
             name: profile?.restaurantName ?? "",

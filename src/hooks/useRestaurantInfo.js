@@ -12,15 +12,21 @@
 
 "use client";
 
+import { BHOJDESK_BRAND, BHOJDESK_LOGOS } from "@/config/bhojdeskBrand";
+import { resolveCustomerSiteName } from "@/lib/resolveBrandLogos";
+import {
+  RESTAURANT_IDENTITY_UPDATED,
+  notifyRestaurantIdentityUpdated,
+} from "@/lib/restaurantIdentityEvents";
 import { useEffect, useState } from "react";
 
 const DEFAULT_INFO = {
-  name: "RMS Restaurant",
-  address: "123 Restaurant St, Food City",
-  phone: "+1 (555) 123-4567",
-  email: "hello@rmsrestaurant.com",
+  name: resolveCustomerSiteName(""),
+  address: "",
+  phone: "",
+  email: BHOJDESK_BRAND.supportEmail,
   googleMapsLink: "",
-  logoUrl: null,
+  logoUrl: BHOJDESK_LOGOS.horizontalLight,
   slug: null,
   currency: "USD",
   openingHours: [],
@@ -49,10 +55,16 @@ function syncRestaurantSlugCookie(slug) {
 export function useRestaurantInfo() {
   const [info, setInfo] = useState(_cache ?? DEFAULT_INFO);
   const [loading, setLoading] = useState(!_cache);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {
-    // Use cache if fresh
-    if (_cache && Date.now() - _cacheTime < CACHE_TTL) {
+    const onUpdated = () => setRefreshKey((k) => k + 1);
+    window.addEventListener(RESTAURANT_IDENTITY_UPDATED, onUpdated);
+    return () => window.removeEventListener(RESTAURANT_IDENTITY_UPDATED, onUpdated);
+  }, []);
+
+  useEffect(() => {
+    if (refreshKey === 0 && _cache && Date.now() - _cacheTime < CACHE_TTL) {
       setInfo(_cache);
       setLoading(false);
       return;
@@ -80,7 +92,7 @@ export function useRestaurantInfo() {
       });
 
     return () => { cancelled = true; };
-  }, []);
+  }, [refreshKey]);
 
   return { info, loading };
 }
@@ -89,4 +101,5 @@ export function useRestaurantInfo() {
 export function invalidateRestaurantInfoCache() {
   _cache = null;
   _cacheTime = 0;
+  notifyRestaurantIdentityUpdated();
 }

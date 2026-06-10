@@ -22,7 +22,10 @@ export async function GET(request) {
       areas: areas
         .filter((a) => a?.name)
         .map((a) => ({
+          id: String(a._id),
           name: a.name,
+          description: a.description ?? "",
+          color: a.color ?? "emerald",
           imageUrl: a.imageUrl ?? "",
         })),
     });

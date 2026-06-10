@@ -21,6 +21,7 @@ import {
   useMemo,
   useState,
 } from "react";
+import { isCustomerStorefrontPath } from "@/lib/customerStorefrontPath";
 import { usePathname } from "next/navigation";
 
 const KEY = "rms-modules-v3";
@@ -76,10 +77,8 @@ function normalizeInventoryItem(row) {
 export function ModuleDataProvider({ children }) {
   const { user, hydrated: authHydrated } = useUser();
   const pathname = usePathname();
-  /** Staff previewing /home · /order/* · /account/* should see the same public menu as guests */
-  const isCustomerFacing =
-    typeof pathname === "string" &&
-    /^(\/home|\/order|\/account)(\/|$)/.test(pathname);
+  /** Staff previewing customer routes (incl. /r/[slug]/…) should see the public storefront APIs */
+  const isCustomerFacing = isCustomerStorefrontPath(pathname);
   const [hydrated, setHydrated] = useState(false);
   const [categories, setCategories] = useState(INITIAL_CATEGORIES);
   const [tableCategories, setTableCategories] = useState(INITIAL_TABLE_CATEGORIES);
@@ -103,8 +102,10 @@ export function ModuleDataProvider({ children }) {
       const raw = sessionStorage.getItem(KEY);
       if (raw) {
         const d = JSON.parse(raw);
-        if (d.tableCategories) setTableCategories(d.tableCategories);
-        if (d.floorTables) setFloorTables(d.floorTables);
+        if (!isCustomerStorefrontPath(pathname)) {
+          if (d.tableCategories) setTableCategories(d.tableCategories);
+          if (d.floorTables) setFloorTables(d.floorTables);
+        }
         if (d.staffRows) setStaffRows(d.staffRows);
         if (d.inventoryHistory) setInventoryHistory(d.inventoryHistory);
       }
@@ -116,18 +117,31 @@ export function ModuleDataProvider({ children }) {
 
     let cancelled = false;
 
-    async function fetchPublicCustomerMenuCategories() {
-      const [menuRes, catRes] = await Promise.all([
+    async function fetchPublicCustomerStorefront() {
+      const [menuRes, catRes, tablesRes, areasRes] = await Promise.all([
         fetch("/api/customer/menu"),
         fetch("/api/customer/categories"),
+        fetch("/api/customer/tables?status=all"),
+        fetch("/api/customer/table-areas"),
       ]);
-      const [menuData, catData] = await Promise.all([menuRes.json(), catRes.json()]);
+      const [menuData, catData, tablesData, areasData] = await Promise.all([
+        menuRes.json(),
+        catRes.json(),
+        tablesRes.json(),
+        areasRes.json(),
+      ]);
       if (cancelled) return;
       if (menuData.success && Array.isArray(menuData.items)) {
         setMenuItems(menuData.items);
       }
       if (catData.success && Array.isArray(catData.categories)) {
         setCategories(catData.categories);
+      }
+      if (tablesData.success && Array.isArray(tablesData.tables)) {
+        setFloorTables(tablesData.tables);
+      }
+      if (areasData.success && Array.isArray(areasData.areas)) {
+        setTableCategories(areasData.areas);
       }
     }
 
@@ -194,7 +208,7 @@ export function ModuleDataProvider({ children }) {
       try {
         if (!user) {
           try {
-            await fetchPublicCustomerMenuCategories();
+            await fetchPublicCustomerStorefront();
           } catch (err) {
             console.error("[ModuleDataContext] Failed to fetch customer data:", err.message);
           }
@@ -204,7 +218,7 @@ export function ModuleDataProvider({ children }) {
         if (user.role === "super_admin") {
           if (isCustomerFacing) {
             try {
-              await fetchPublicCustomerMenuCategories();
+              await fetchPublicCustomerStorefront();
             } catch (err) {
               console.error("[ModuleDataContext] Failed to fetch customer data:", err.message);
             }
@@ -215,7 +229,7 @@ export function ModuleDataProvider({ children }) {
         if (isCustomerFacing) {
           // Customer storefront: slug-scoped public menu only (matches guest experience).
           try {
-            await fetchPublicCustomerMenuCategories();
+            await fetchPublicCustomerStorefront();
           } catch (err) {
             console.error("[ModuleDataContext] Failed to fetch customer menu:", err.message);
           }
@@ -235,18 +249,30 @@ export function ModuleDataProvider({ children }) {
     return () => {
       cancelled = true;
     };
-  }, [authHydrated, user, isCustomerFacing]);
+  }, [authHydrated, user, isCustomerFacing, pathname]);
 
   const refreshMenu = useCallback(async () => {
     const usePublicStorefront = !user || isCustomerFacing;
     const menuUrl = usePublicStorefront ? "/api/customer/menu" : "/api/menu";
     const categoriesUrl = usePublicStorefront ? "/api/customer/categories" : "/api/categories";
     try {
-      if (usePublicStorefront && !user) {
-        const [menuRes, catRes] = await Promise.all([fetch(menuUrl), fetch(categoriesUrl)]);
-        const [menuData, catData] = await Promise.all([menuRes.json(), catRes.json()]);
+      if (usePublicStorefront) {
+        const [menuRes, catRes, tablesRes, areasRes] = await Promise.all([
+          fetch(menuUrl),
+          fetch(categoriesUrl),
+          fetch("/api/customer/tables?status=all"),
+          fetch("/api/customer/table-areas"),
+        ]);
+        const [menuData, catData, tablesData, areasData] = await Promise.all([
+          menuRes.json(),
+          catRes.json(),
+          tablesRes.json(),
+          areasRes.json(),
+        ]);
         if (menuData.success && Array.isArray(menuData.items)) setMenuItems(menuData.items);
         if (catData.success && Array.isArray(catData.categories)) setCategories(catData.categories);
+        if (tablesData.success && Array.isArray(tablesData.tables)) setFloorTables(tablesData.tables);
+        if (areasData.success && Array.isArray(areasData.areas)) setTableCategories(areasData.areas);
         return;
       }
 

@@ -8,6 +8,9 @@ import { sendNewOrderAlertEmail } from "@/lib/emailService";
 import { getRestaurantNotificationPrefs } from "@/lib/restaurantNotificationPrefs";
 import { sendOrderWhatsApp, sendNewOrderAlertWhatsApp } from "@/lib/whatsappService";
 import { resolvePaymentCurrency } from "@/lib/platformCurrency";
+import { validateCustomerCoupon } from "@/lib/customerCoupons";
+import { redeemCustomerPoints } from "@/lib/customerRewards";
+import { isValidIndianMobile, extractIndianMobileDigits, toIndianE164 } from "@/lib/phoneUtils";
 import { getRestaurantIdFromRequest } from "@/lib/restaurantResolver";
 import { assertPlatformFeatureForPath } from "@/lib/platformFeatureGuard";
 import { ObjectId } from "mongodb";
@@ -24,6 +27,7 @@ export async function GET(request) {
   try {
     const client = await clientPromise;
     const db = client.db();
+    const restaurantId = await getRestaurantIdFromRequest(db, request);
     const match = [];
     if (payload.phone) {
       match.push({ "customerInfo.phone": payload.phone });
@@ -45,9 +49,12 @@ export async function GET(request) {
       return Response.json({ success: false, error: "Not authenticated." }, { status: 401 });
     }
 
+    const query = { $or: match };
+    if (restaurantId) query.restaurantId = restaurantId;
+
     const orders = await db
       .collection("orders")
-      .find({ $or: match })
+      .find(query)
       .sort({ createdAt: -1 })
       .limit(50)
       .toArray();
@@ -93,12 +100,6 @@ export async function POST(request) {
   if (blocked) return blocked;
 
   const customerPayload = verifyCustomerToken(getCustomerTokenFromRequest(request));
-  if (!customerPayload?.id && !customerPayload?.phone && !customerPayload?.email) {
-    return Response.json(
-      { success: false, error: "Please login to place an order." },
-      { status: 401 }
-    );
-  }
   let customerAccountId = null;
   if (customerPayload?.id) {
     try { customerAccountId = new ObjectId(customerPayload.id); } catch {}
@@ -132,6 +133,20 @@ export async function POST(request) {
   }
   if (orderType === "dine-in" && !tableNumber) {
     return Response.json({ success: false, error: "Table number is required for dine-in." }, { status: 400 });
+  }
+
+  const phoneDigits = extractIndianMobileDigits(phone);
+  const phoneE164 = isValidIndianMobile(phoneDigits) ? toIndianE164(phoneDigits) : phone;
+  if (!customerPayload?.id && !customerPayload?.phone && !customerPayload?.email) {
+    if (!customerName || customerName.length < 2) {
+      return Response.json({ success: false, error: "Please enter your name to place an order." }, { status: 400 });
+    }
+    if (!isValidIndianMobile(phoneDigits) && !email) {
+      return Response.json(
+        { success: false, error: "Please enter a valid mobile number or email." },
+        { status: 400 }
+      );
+    }
   }
 
   try {
@@ -174,9 +189,46 @@ export async function POST(request) {
     }
 
     const subtotal = items.reduce((sum, item) => sum + item.price * item.qty, 0);
-    const tax = Number((subtotal * (safeTaxPercent / 100)).toFixed(2));
+    const couponCode = String(body?.couponCode ?? parsed.couponCode ?? "").trim();
+    let couponDiscount = 0;
+    let appliedCoupon = null;
+    if (couponCode) {
+      const couponCheck = validateCustomerCoupon(couponCode, subtotal);
+      if (!couponCheck.valid) {
+        return Response.json({ success: false, error: couponCheck.error }, { status: 400 });
+      }
+      couponDiscount = Number(couponCheck.discount.toFixed(2));
+      appliedCoupon = couponCheck.coupon?.code ?? couponCode.toUpperCase();
+    }
+    const minOrderAmount = Number(settingsDoc?.pos?.minOrderAmount ?? 0);
+    if (orderType === "delivery" && minOrderAmount > 0 && subtotal < minOrderAmount) {
+      return Response.json(
+        { success: false, error: `Minimum order amount is ₹${minOrderAmount}.` },
+        { status: 400 }
+      );
+    }
+
+    const taxableSubtotal = Math.max(0, subtotal - couponDiscount);
+    let pointsRedeemed = 0;
+    let pointsDiscount = 0;
+    const requestedPoints = Math.max(0, Math.floor(Number(body?.pointsRedeemed ?? parsed.pointsRedeemed ?? 0)));
+    if (requestedPoints > 0) {
+      if (!customerAccountId) {
+        return Response.json(
+          { success: false, error: "Login to redeem reward points." },
+          { status: 401 }
+        );
+      }
+      const redeemed = await redeemCustomerPoints(db, customerAccountId, requestedPoints, taxableSubtotal);
+      pointsRedeemed = redeemed.pointsRedeemed;
+      pointsDiscount = redeemed.pointsDiscount;
+    }
+
+    const afterPoints = Math.max(0, taxableSubtotal - pointsDiscount);
+    const tax = Number((afterPoints * (safeTaxPercent / 100)).toFixed(2));
     const deliveryCharge = orderType === "delivery" ? Number(safeServiceCharge.toFixed(2)) : 0;
-    const total = Number((subtotal + tax + deliveryCharge).toFixed(2));
+    const total = Number((afterPoints + tax + deliveryCharge).toFixed(2));
+    const scheduleFor = String(body?.scheduleFor ?? parsed.scheduleFor ?? "").trim() || null;
     const now = new Date();
     const currency = await resolvePaymentCurrency(
       db,
@@ -212,13 +264,18 @@ export async function POST(request) {
       customer: customerName,
       customerInfo: {
         name: customerName,
-        phone,
+        phone: phoneE164 || phone,
         email: email || null,
         address: orderType === "delivery" ? address : null,
       },
       items,
       itemCount: items.reduce((sum, item) => sum + item.qty, 0),
       subtotal,
+      couponCode: appliedCoupon,
+      couponDiscount,
+      pointsRedeemed,
+      pointsDiscount,
+      scheduleFor,
       tax,
       taxPercentage: safeTaxPercent,
       deliveryCharge,

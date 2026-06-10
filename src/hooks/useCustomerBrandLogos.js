@@ -2,24 +2,25 @@
 
 import { useRestaurantInfo } from "@/hooks/useRestaurantInfo";
 import { useRestaurantCms } from "@/hooks/useRestaurantCms";
-import { normalizeLogoSrc } from "@/lib/logoUrl";
+import { resolveCustomerSiteLogos, resolveCustomerSiteName } from "@/lib/resolveBrandLogos";
 import { resolveTheme } from "@/lib/resolveLayoutTheme";
 
-/** Customer site logos from CMS (header) with Settings fallback. */
+/** Customer site logos from CMS (header) with Settings fallback — tenant branding only. */
 export function useCustomerBrandLogos() {
   const { content: cms } = useRestaurantCms();
   const { info } = useRestaurantInfo();
   const header = resolveTheme(cms.theme).header ?? {};
 
-  const settingsLogo = normalizeLogoSrc(info.logoUrl);
-  const logoUrl = normalizeLogoSrc(header.logoUrl) || settingsLogo;
-  const logoDarkUrl =
-    normalizeLogoSrc(header.logoDarkUrl) || logoUrl || settingsLogo;
+  const { logoUrl, logoDarkUrl } = resolveCustomerSiteLogos({
+    headerLogo: header.logoUrl,
+    headerLogoDark: header.logoDarkUrl,
+    settingsLogo: info.logoUrl,
+  });
 
   return {
     logoUrl,
     logoDarkUrl,
     showBrandText: header.showBrandText === true,
-    alt: info.name?.trim() || "Restaurant",
+    alt: resolveCustomerSiteName(info.name),
   };
 }

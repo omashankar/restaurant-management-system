@@ -6,13 +6,20 @@
 import clientPromise from "@/lib/mongodb";
 import Link from "next/link";
 import { Store, MapPin, ArrowRight } from "lucide-react";
-
 export const metadata = {
   title: "Choose a Restaurant",
   description: "Select a restaurant to browse the menu and place your order.",
 };
 
-export const revalidate = 60; // 1 minute cache
+export const revalidate = 60;
+
+function isOpenToday(openingHours) {
+  if (!Array.isArray(openingHours) || openingHours.length === 0) return null;
+  const todayName = new Date().toLocaleDateString("en-US", { weekday: "long" });
+  const todayHours = openingHours.find((h) => h.day === todayName);
+  if (!todayHours) return null;
+  return !todayHours.closed;
+}
 
 async function getRestaurants() {
   try {
@@ -25,14 +32,31 @@ async function getRestaurants() {
       .project({ name: 1, slug: 1, address: 1, phone: 1, logoUrl: 1 })
       .limit(100)
       .toArray();
-    return restaurants.map((r) => ({
-      id: r._id.toString(),
-      name: r.name ?? "Restaurant",
-      slug: r.slug,
-      address: r.address ?? "",
-      phone: r.phone ?? "",
-      logoUrl: r.logoUrl ?? null,
-    }));
+
+    const ids = restaurants.map((r) => r._id);
+    const settings = ids.length
+      ? await db
+          .collection("restaurant_settings")
+          .find({ restaurantId: { $in: ids } }, { projection: { restaurantId: 1, openingHours: 1 } })
+          .toArray()
+      : [];
+    const hoursByRestaurant = new Map(
+      settings.map((s) => [String(s.restaurantId), s.openingHours ?? []])
+    );
+
+    return restaurants.map((r) => {
+      const openingHours = hoursByRestaurant.get(String(r._id)) ?? [];
+      const open = isOpenToday(openingHours);
+      return {
+        id: r._id.toString(),
+        name: r.name ?? "Restaurant",
+        slug: r.slug,
+        address: r.address ?? "",
+        phone: r.phone ?? "",
+        logoUrl: r.logoUrl ?? null,
+        isOpenToday: open,
+      };
+    });
   } catch {
     return [];
   }
@@ -44,7 +68,6 @@ export default async function RestaurantListPage() {
   return (
     <div className="min-h-screen bg-zinc-50 px-4 py-12 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-4xl">
-        {/* Header */}
         <div className="mb-10 text-center">
           <span className="inline-flex items-center gap-2 rounded-full border border-emerald-500/25 bg-emerald-500/10 px-4 py-1.5 text-xs font-semibold uppercase tracking-wide text-emerald-800">
             <Store className="size-3.5" />
@@ -58,7 +81,6 @@ export default async function RestaurantListPage() {
           </p>
         </div>
 
-        {/* Restaurant Grid */}
         {restaurants.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-zinc-300 bg-white p-12 text-center">
             <Store className="mx-auto size-12 text-zinc-300" />
@@ -74,7 +96,6 @@ export default async function RestaurantListPage() {
                 href={`/r/${r.slug}/home`}
                 className="group flex flex-col rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm ring-1 ring-zinc-100 transition-all duration-200 hover:-translate-y-0.5 hover:border-emerald-500/30 hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
               >
-                {/* Logo / Icon */}
                 <div className="mb-4 flex size-14 items-center justify-center rounded-xl bg-emerald-50 ring-1 ring-emerald-100">
                   {r.logoUrl ? (
                     // eslint-disable-next-line @next/next/no-img-element
@@ -88,7 +109,7 @@ export default async function RestaurantListPage() {
                   )}
                 </div>
 
-                <h2 className="text-base font-bold text-zinc-900 group-hover:text-emerald-700 transition-colors">
+                <h2 className="text-base font-bold text-zinc-900 transition-colors group-hover:text-emerald-700">
                   {r.name}
                 </h2>
 
@@ -100,9 +121,17 @@ export default async function RestaurantListPage() {
                 )}
 
                 <div className="mt-auto flex items-center justify-between pt-4">
-                  <span className="rounded-full bg-emerald-100 px-2.5 py-1 text-[10px] font-semibold text-emerald-800">
-                    Open
-                  </span>
+                  {r.isOpenToday === true && (
+                    <span className="rounded-full bg-emerald-100 px-2.5 py-1 text-[10px] font-semibold text-emerald-800">
+                      Open now
+                    </span>
+                  )}
+                  {r.isOpenToday === false && (
+                    <span className="rounded-full bg-zinc-100 px-2.5 py-1 text-[10px] font-semibold text-zinc-600">
+                      Closed today
+                    </span>
+                  )}
+                  {r.isOpenToday == null && <span />}
                   <span className="flex items-center gap-1 text-xs font-semibold text-emerald-700">
                     View menu <ArrowRight className="size-3.5" />
                   </span>

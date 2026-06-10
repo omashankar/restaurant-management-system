@@ -4,7 +4,9 @@ import CustomerMobileInput from "@/components/customer/CustomerMobileInput";
 import StripePaymentModal from "@/components/payments/StripePaymentModal";
 import Modal from "@/components/ui/Modal";
 import { useCustomer } from "@/context/CustomerContext";
+import { useRestaurantInfo } from "@/hooks/useRestaurantInfo";
 import { useRestaurantSlug } from "@/hooks/useRestaurantSlug";
+import { BHOJDESK_BRAND } from "@/config/bhojdeskBrand";
 import { calcOrderTotals, useCheckoutMeta } from "@/hooks/useCheckoutMeta";
 import {
   isValidGuestName,
@@ -28,17 +30,28 @@ const PAYMENT_LABEL = {
   cashCounter: "Cash at Counter",
   upi: "UPI",
   card: "Card",
+  debitCard: "Debit Card",
   netBanking: "Net Banking",
   wallet: "Wallet",
   payLater: "Pay Later",
   bankTransfer: "Bank Transfer",
 };
 
+const ONLINE_PAYMENT_METHODS = [
+  "upi",
+  "card",
+  "debitCard",
+  "netBanking",
+  "wallet",
+  "payLater",
+  "bankTransfer",
+];
+
 function Field({ label, required, children }) {
   return (
     <div>
       <label className={customerPage.label}>
-        {label}{required && <span className="ml-0.5 text-red-400">*</span>}
+        {label}{required && <span className={`ml-0.5 ${customerClasses.textDanger}`}>*</span>}
       </label>
       {children}
     </div>
@@ -61,6 +74,7 @@ export default function CheckoutPage() {
   } = useCustomer();
   const router = useRouter();
   const { link } = useRestaurantSlug();
+  const { info: restaurantInfo } = useRestaurantInfo();
   const [loading, setLoading] = useState(false);
   const [paying, setPaying] = useState(false);
   const [stripeCheckout, setStripeCheckout] = useState(null);
@@ -80,6 +94,10 @@ export default function CheckoutPage() {
   const otpRefs = useRef([]);
   const [availableTables, setAvailableTables] = useState([]);
   const [tablesLoading, setTablesLoading] = useState(false);
+  const [rewardPoints, setRewardPoints] = useState(0);
+  const [pointsToRedeem, setPointsToRedeem] = useState(0);
+  const [savedAddresses, setSavedAddresses] = useState([]);
+  const [scheduleFor, setScheduleFor] = useState("asap");
 
   const { lines, subtotal, clearCart } = cart;
   const couponDiscount = useMemo(() => {
@@ -91,13 +109,16 @@ export default function CheckoutPage() {
     }
     return Number(appliedCoupon.value ?? 0);
   }, [appliedCoupon, subtotal]);
-  const { tax, delivery: deliveryCharge, total, taxRate } = calcOrderTotals({
+  const effectivePoints = Math.min(Math.max(0, pointsToRedeem), rewardPoints);
+  const { tax, delivery: deliveryCharge, total, taxRate, pointsDiscount } = calcOrderTotals({
     subtotal,
     orderType,
     taxPercentage: checkoutMeta.taxPercentage,
     deliveryCharge: checkoutMeta.deliveryCharge,
     couponDiscount,
+    pointsDiscount: effectivePoints,
   });
+  const minOrderAmount = Number(checkoutMeta.minOrderAmount ?? 0);
   const etaLabel = checkoutMeta.etaMinutes?.[orderType] ?? "20-30";
   const enabledPaymentMethods = useMemo(() => {
     const pm = checkoutMeta.paymentMethods ?? {};
@@ -187,6 +208,23 @@ export default function CheckoutPage() {
     };
   }, [orderType]);
 
+  useEffect(() => {
+    if (!authUser) {
+      setRewardPoints(0);
+      setSavedAddresses([]);
+      return;
+    }
+    fetch("/api/customer/dashboard/summary", { cache: "no-store" })
+      .then((r) => r.json())
+      .then((data) => {
+        if (data?.success && data.summary) {
+          setRewardPoints(Number(data.summary.rewardPoints ?? 0));
+          setSavedAddresses(Array.isArray(data.summary.savedAddresses) ? data.summary.savedAddresses : []);
+        }
+      })
+      .catch(() => {});
+  }, [authUser]);
+
   if (!orderType) {
     return (
       <motion.div
@@ -206,7 +244,7 @@ export default function CheckoutPage() {
           whileTap={{ scale: 0.97 }}
           type="button"
           onClick={() => setOrderTypeModalOpen(true)}
-          className="rounded-xl gradient-primary px-7 py-3 text-sm font-bold text-white shadow-lg shadow-[var(--customer-primary-shadow)]/25"
+          className={`${customerClasses.btnPrimary} px-7 py-3 text-sm`}
         >
           Select Order Type
         </motion.button>
@@ -217,10 +255,6 @@ export default function CheckoutPage() {
   if (lines.length === 0) return null;
 
   const placeOrder = async () => {
-    if (!authUser) {
-      setIsAuthModalOpen(true);
-      return;
-    }
     if (!isValidGuestName(customer.name)) {
       showToast("Please enter a valid full name (at least 2 letters).", "error");
       return;
@@ -247,6 +281,10 @@ export default function CheckoutPage() {
       showToast("Selected payment method is not available.", "error");
       return;
     }
+    if (orderType === "delivery" && minOrderAmount > 0 && subtotal < minOrderAmount) {
+      showToast(`Minimum order for delivery is ${formatCustomerMoney(minOrderAmount)}.`, "error");
+      return;
+    }
     setLoading(true);
     try {
       const res = await fetch("/api/customer/orders", {
@@ -269,6 +307,9 @@ export default function CheckoutPage() {
             tableNumber: customer.tableNumber.trim(),
           },
           paymentMethod,
+          couponCode: appliedCoupon?.code ?? undefined,
+          pointsRedeemed: pointsToRedeem > 0 ? pointsToRedeem : undefined,
+          scheduleFor: scheduleFor !== "asap" ? scheduleFor : undefined,
         }),
       });
       const data = await res.json();
@@ -294,7 +335,7 @@ export default function CheckoutPage() {
           key: payment.checkout.key,
           amount: payment.checkout.amount,
           currency: payment.checkout.currency,
-          name: "Restaurant Management System",
+          name: restaurantInfo?.name?.trim() || BHOJDESK_BRAND.fullName,
           description: `Order ${createdOrderId}`,
           order_id: payment.checkout.orderId,
           prefill: {
@@ -343,6 +384,16 @@ export default function CheckoutPage() {
           clientSecret: payment.checkout.clientSecret,
           publishableKey,
         });
+        return;
+      }
+
+      if (ONLINE_PAYMENT_METHODS.includes(paymentMethod)) {
+        showToast(
+          payment?.gatewayProvider
+            ? `${payment.gatewayProvider} checkout is not supported on the website yet. Use COD or configure Razorpay/Stripe.`
+            : "Online payment could not be started. Try cash on delivery or contact the restaurant.",
+          "error"
+        );
         return;
       }
 
@@ -452,7 +503,7 @@ export default function CheckoutPage() {
   };
 
   return (
-    <div className="ct-page-shell">
+    <div className="ct-page-shell pb-28 lg:pb-0">
       {/* Hero */}
       <div className="ct-page-header">
         <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
@@ -473,34 +524,34 @@ export default function CheckoutPage() {
         <div className="space-y-5 lg:col-span-2">
           {!authLoading && !authUser ? (
             <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}
-              className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3.5 text-sm text-amber-800">
-              Login required to complete checkout.{" "}
+              className={`${customerClasses.alertInfo} text-sm`}>
+              Guest checkout — enter your details below.{" "}
               <button type="button" onClick={() => setIsAuthModalOpen(true)}
-                className="font-bold text-customer-primary underline underline-offset-2 hover:text-[#E85A24]">
-                Login with OTP
+                className="font-bold text-customer-primary underline underline-offset-2">
+                Login for rewards & order history
               </button>
             </motion.div>
           ) : null}
 
           {/* Order type */}
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
-            className="flex items-center justify-between ct-surface-card px-4 py-3.5 shadow-sm">
+            className="flex items-center justify-between ct-surface-card px-4 py-3.5">
             <div className="flex items-center gap-2.5">
               {TypeIcon && <TypeIcon className="size-4 text-customer-primary" />}
               <span className="font-poppins text-sm font-bold text-customer-text">{TYPE_LABEL[orderType]}</span>
             </div>
             <button type="button" onClick={() => setOrderTypeModalOpen(true)}
-              className="rounded-full border border-customer-border px-3.5 py-1.5 text-xs font-semibold text-customer-muted transition-colors hover:border-customer-primary/30 hover:text-customer-primary">
+              className="min-h-[44px] rounded-full border border-customer-border px-4 py-2 text-xs font-semibold text-customer-muted transition-colors hover:border-customer-primary/30 hover:text-customer-primary">
               Change
             </button>
           </motion.div>
 
           {/* Customer details */}
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}
-            className="ct-surface-card rounded-3xl p-6 shadow-sm">
+            className="ct-surface-card rounded-3xl p-6">
             <h2 className="mb-1 font-poppins text-lg font-black text-customer-text">Your Details</h2>
             <p className="mb-5 text-xs text-customer-muted">
-              <span className="text-red-400">*</span> Name required. Phone <strong>or</strong> Email required.
+              <span className={customerClasses.textDanger}>*</span> Name required. Phone <strong>or</strong> Email required.
             </p>
             <div className="grid gap-4 sm:grid-cols-2">
               <Field label="Full Name" required>
@@ -512,7 +563,7 @@ export default function CheckoutPage() {
                   autoComplete="name"
                 />
                 {customer.name.trim() && !isValidGuestName(customer.name) ? (
-                  <p className="mt-1 text-[11px] text-red-500">Use at least 2 letters (not numbers only).</p>
+                  <p className={`mt-1 text-[11px] ${customerClasses.textDanger}`}>Use at least 2 letters (not numbers only).</p>
                 ) : null}
               </Field>
               <CustomerMobileInput
@@ -533,7 +584,7 @@ export default function CheckoutPage() {
                   autoComplete="email"
                 />
                 {customer.email.trim() && !isValidEmail(customer.email) ? (
-                  <p className="mt-1 text-[11px] text-red-500">Enter a valid email address.</p>
+                  <p className={`mt-1 text-[11px] ${customerClasses.textDanger}`}>Enter a valid email address.</p>
                 ) : null}
               </Field>
               {orderType === "dine-in" && (
@@ -573,12 +624,39 @@ export default function CheckoutPage() {
                 </Field>
               )}
               {orderType === "delivery" && (
-                <div className="sm:col-span-2">
+                <div className="sm:col-span-2 space-y-3">
+                  {savedAddresses.length > 0 && (
+                    <div className="flex flex-wrap gap-2">
+                      {savedAddresses.map((addr) => (
+                        <button
+                          key={addr}
+                          type="button"
+                          onClick={() => updateCustomer({ address: addr })}
+                          className={`rounded-full border px-3 py-1.5 text-xs font-medium ${customer.address === addr ? "border-customer-primary bg-customer-primary/10 text-customer-primary" : "border-customer-border text-customer-muted"}`}
+                        >
+                          {addr.length > 40 ? `${addr.slice(0, 40)}…` : addr}
+                        </button>
+                      ))}
+                    </div>
+                  )}
                   <Field label="Delivery Address" required>
                     <textarea rows={2} value={customer.address} onChange={(e) => updateCustomer({ address: e.target.value })} placeholder="Full delivery address" className={`${inputCls} resize-none`} />
                   </Field>
+                  {minOrderAmount > 0 && subtotal < minOrderAmount && (
+                    <p className={`${customerClasses.alertWarning} text-xs`}>Minimum delivery order: {formatCustomerMoney(minOrderAmount)}</p>
+                  )}
                 </div>
               )}
+              <div className="sm:col-span-2">
+                <Field label="When do you want it?">
+                  <select value={scheduleFor} onChange={(e) => setScheduleFor(e.target.value)} className={`${inputCls} cursor-pointer`}>
+                    <option value="asap">As soon as possible</option>
+                    <option value="30min">In ~30 minutes</option>
+                    <option value="1hr">In ~1 hour</option>
+                    <option value="2hr">In ~2 hours</option>
+                  </select>
+                </Field>
+              </div>
               <div className="sm:col-span-2">
                 <Field label="Special Cooking Instructions">
                   <textarea
@@ -594,7 +672,7 @@ export default function CheckoutPage() {
           </motion.div>
 
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
-            className="ct-surface-card rounded-3xl p-6 shadow-sm">
+            className="ct-surface-card rounded-3xl p-6">
             <h2 className="mb-5 font-poppins text-lg font-black text-customer-text">Payment Method</h2>
             <div className="grid gap-2 sm:grid-cols-2">
               {enabledPaymentMethods.map((methodKey) => (
@@ -602,16 +680,16 @@ export default function CheckoutPage() {
                   onClick={() => setPaymentMethod(methodKey)}
                   className={`rounded-2xl border px-4 py-3 text-left text-sm font-semibold transition-all ${
                     paymentMethod === methodKey
-                      ? "border-customer-primary/40 bg-customer-primary/8 text-customer-primary shadow-sm"
-                      : "border-customer-border bg-white text-customer-muted hover:border-customer-primary/30 hover:text-customer-text"
+                      ? "border-customer-primary/40 bg-customer-primary/8 text-customer-primary"
+                      : "border-customer-border bg-[var(--customer-card)] text-customer-muted hover:border-customer-primary/30 hover:text-customer-text"
                   }`}>
                   {PAYMENT_LABEL[methodKey] ?? methodKey}
                 </motion.button>
               ))}
             </div>
-            {!enabledPaymentMethods.length && <p className="mt-3 text-xs text-red-500">No payment method enabled.</p>}
+            {!enabledPaymentMethods.length && <p className={`mt-3 text-xs ${customerClasses.textDanger}`}>No payment method enabled.</p>}
             {checkoutMeta.onlinePaymentsAvailable === false && (
-              <p className="mt-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-800">
+              <p className={`mt-3 ${customerClasses.alertWarning} text-xs`}>
                 Card/UPI needs <strong>Stripe</strong> or <strong>Razorpay</strong>. Cash on delivery works.
               </p>
             )}
@@ -621,7 +699,7 @@ export default function CheckoutPage() {
         {/* ── Order summary ── */}
         <div className="lg:col-span-1">
           <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.25 }}
-            className="ct-surface-card overflow-hidden rounded-3xl shadow-sm lg:sticky lg:top-24">
+            className="ct-surface-card overflow-hidden rounded-3xl lg:sticky lg:top-24">
             <div className="h-1 gradient-primary" />
             <div className="p-6">
             <h2 className="mb-5 font-poppins text-lg font-black text-customer-text">Order Summary</h2>
@@ -635,18 +713,36 @@ export default function CheckoutPage() {
             </ul>
             <div className="mt-5 space-y-2.5 border-t border-customer-border pt-5 text-sm">
               <p className="text-xs text-customer-muted">Est. time: <span className="font-bold text-customer-text">{etaLabel} mins</span></p>
-              <div className="flex gap-2">
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
                 <input value={couponCode} onChange={(e) => setCouponCode(e.target.value)} placeholder="Coupon code"
-                  className={`${customerClasses.field} rounded-full py-2 text-xs`} />
+                  className={`${customerClasses.field} min-w-0 flex-1 rounded-full py-2.5 text-xs`} />
                 <button type="button" onClick={applyCoupon}
-                  className="rounded-full border border-customer-border px-4 py-2 text-xs font-semibold text-customer-muted hover:border-customer-primary/30 hover:text-customer-primary">
+                  className="min-h-[44px] rounded-full border border-customer-border px-4 py-2.5 text-xs font-semibold text-customer-muted hover:border-customer-primary/30 hover:text-customer-primary sm:shrink-0">
                   Apply
                 </button>
               </div>
               <div className="flex justify-between text-customer-muted"><span>Subtotal</span><span className="font-semibold text-customer-text">{formatCustomerMoney(subtotal)}</span></div>
               <div className="flex justify-between text-customer-muted"><span>Tax ({taxRate.toFixed(2)}%)</span><span className="font-semibold text-customer-text">{formatCustomerMoney(tax)}</span></div>
               {orderType === "delivery" && <div className="flex justify-between text-customer-muted"><span>Delivery</span><span className="font-semibold text-customer-text">{formatCustomerMoney(deliveryCharge)}</span></div>}
-              {appliedCoupon && <div className="flex justify-between text-green-600"><span>Coupon ({appliedCoupon.code})</span><span>- {formatCustomerMoney(couponDiscount)}</span></div>}
+              {appliedCoupon && <div className={`flex justify-between ${customerClasses.textSuccess}`}><span>Coupon ({appliedCoupon.code})</span><span>- {formatCustomerMoney(couponDiscount)}</span></div>}
+              {pointsDiscount > 0 && <div className={`flex justify-between ${customerClasses.textSuccess}`}><span>Points redeemed</span><span>- {formatCustomerMoney(pointsDiscount)}</span></div>}
+              {authUser && rewardPoints > 0 && (
+                <div className="rounded-xl border border-customer-border bg-customer-cream/50 p-3">
+                  <div className="flex items-center justify-between text-xs text-customer-muted">
+                    <span>Reward points ({rewardPoints} available)</span>
+                    <span>- {formatCustomerMoney(pointsDiscount)}</span>
+                  </div>
+                  <input
+                    type="range"
+                    min={0}
+                    max={Math.min(rewardPoints, Math.floor(subtotal * 0.5))}
+                    value={pointsToRedeem}
+                    onChange={(e) => setPointsToRedeem(Number(e.target.value))}
+                    className="mt-2 w-full accent-[var(--customer-primary)]"
+                  />
+                  <p className="mt-1 text-[10px] text-customer-muted">Redeem up to 50% of subtotal (1 point = ₹1)</p>
+                </div>
+              )}
               <div className="flex justify-between border-t border-customer-border pt-3 font-poppins text-base font-black text-customer-text">
                 <span>Total</span><span className="text-customer-primary">{formatCustomerMoney(total)}</span>
               </div>
@@ -654,13 +750,11 @@ export default function CheckoutPage() {
                 <span>Payment</span><span className="font-semibold text-customer-text">{PAYMENT_LABEL[paymentMethod] ?? paymentMethod}</span>
               </div>
             </div>
-            <button type="button" onClick={placeOrder} disabled={loading || authLoading || paying}
-              className="mt-5 flex w-full items-center justify-center gap-2 rounded-full gradient-primary py-3.5 text-sm font-bold text-white shadow-lg shadow-[var(--customer-primary-shadow)]/25 transition-all hover:shadow-xl disabled:cursor-not-allowed disabled:opacity-50">
+            <button type="button" onClick={placeOrder} disabled={loading || paying}
+              className={`mt-5 hidden gap-2 text-sm disabled:cursor-not-allowed disabled:opacity-50 lg:flex ${customerClasses.btnPrimaryLg}`}>
               {loading ? <><Loader2 className="size-4 animate-spin" /> Placing Order…</>
                 : paying ? <><Loader2 className="size-4 animate-spin" /> Processing…</>
-                : authLoading ? "Checking login..."
-                : authUser ? `Place Order · ${formatCustomerMoney(total)}`
-                : "Login to Continue"}
+                : `Place Order · ${formatCustomerMoney(total)}`}
             </button>
             </div>
           </motion.div>
@@ -668,10 +762,24 @@ export default function CheckoutPage() {
       </div>
     </div>
 
+      {/* Mobile sticky checkout CTA */}
+      <div className="fixed bottom-0 left-0 right-0 z-40 border-t border-customer-border bg-[var(--customer-card)]/95 p-4 backdrop-blur-sm pb-[max(1rem,env(safe-area-inset-bottom))] lg:hidden">
+        <button
+          type="button"
+          onClick={placeOrder}
+          disabled={loading || paying}
+          className={`${customerClasses.btnPrimaryLg} w-full gap-2 text-sm disabled:cursor-not-allowed disabled:opacity-50`}
+        >
+          {loading ? <><Loader2 className="size-4 animate-spin" /> Placing Order…</>
+            : paying ? <><Loader2 className="size-4 animate-spin" /> Processing…</>
+            : `Place Order · ${formatCustomerMoney(total)}`}
+        </button>
+      </div>
+
       <Modal open={isAuthModalOpen} onClose={() => { setIsAuthModalOpen(false); setOtpStep("phone"); setOtpError(""); }} title="Login to continue checkout">
         <div className="space-y-4">
-          {otpError && <p className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700">{otpError}</p>}
-          {otpDevHint && <p className="rounded-xl border border-[#F59E0B]/30 bg-[#F59E0B]/8 px-3 py-2 text-xs text-[#92400E]">{otpDevHint}</p>}
+          {otpError && <p className={`${customerClasses.alertError} text-xs`}>{otpError}</p>}
+          {otpDevHint && <p className={`${customerClasses.alertWarning} text-xs`}>{otpDevHint}</p>}
           {otpStep === "phone" ? (
             <>
               <p className="text-sm text-customer-muted">Enter mobile number to receive OTP.</p>
@@ -684,20 +792,20 @@ export default function CheckoutPage() {
                 labelClassName="mb-1.5 block text-xs font-semibold text-customer-muted"
               />
               <button type="button" disabled={otpLoading} onClick={requestOtp}
-                className="inline-flex w-full items-center justify-center gap-2 rounded-xl gradient-primary py-3 text-sm font-semibold text-white shadow-md disabled:opacity-50">
+                className={`${customerClasses.btnPrimaryLg} gap-2 text-sm disabled:opacity-50`}>
                 {otpLoading ? <Loader2 className="size-4 animate-spin" /> : <Phone className="size-4" />} Send OTP
               </button>
             </>
           ) : (
             <>
               <p className="text-sm text-customer-muted">6-digit code sent to <span className="font-semibold text-customer-text">{otpPhone}</span>.</p>
-              <div className="flex items-center justify-between gap-2">
+              <div className="flex w-full items-center justify-between gap-1.5 sm:gap-2">
                 {otpDigits.map((digit, idx) => (
                   <input key={idx} type="tel" ref={(el) => { otpRefs.current[idx] = el; }} value={digit}
                     onChange={(e) => handleOtpDigitChange(idx, e.target.value)}
                     onKeyDown={(e) => { if (e.key === "Backspace" && !otpDigits[idx] && idx > 0) otpRefs.current[idx - 1]?.focus(); }}
                     inputMode="numeric" maxLength={1}
-                    className="h-12 w-11 rounded-xl border border-customer-border bg-white text-center text-lg font-bold text-customer-text outline-none focus:border-customer-primary/50 focus:ring-2 focus:ring-[var(--customer-primary)]/10" />
+                    className="h-11 min-w-0 flex-1 max-w-12 rounded-xl border border-customer-border bg-[var(--customer-card)] text-center text-base font-bold text-customer-text outline-none focus:border-customer-primary/50 focus:ring-2 focus:ring-[var(--customer-primary)]/10 sm:h-12 sm:max-w-[3rem] sm:text-lg" />
                 ))}
               </div>
               <div className="flex items-center justify-between">
@@ -708,7 +816,7 @@ export default function CheckoutPage() {
                 </button>
               </div>
               <button type="button" disabled={otpLoading} onClick={verifyOtp}
-                className="inline-flex w-full items-center justify-center gap-2 rounded-xl gradient-primary py-3 text-sm font-semibold text-white shadow-md disabled:opacity-50">
+                className={`${customerClasses.btnPrimaryLg} gap-2 text-sm disabled:opacity-50`}>
                 {otpLoading && <Loader2 className="size-4 animate-spin" />} Verify & Continue
               </button>
             </>
@@ -724,7 +832,7 @@ export default function CheckoutPage() {
           title="Pay for your order"
           returnUrl={
             typeof window !== "undefined"
-              ? `${window.location.origin}/order/success?id=${encodeURIComponent(stripeCheckout.orderId)}`
+              ? `${window.location.origin}${link(`/order/success?id=${encodeURIComponent(stripeCheckout.orderId)}`)}`
               : ""
           }
           onClose={() => {

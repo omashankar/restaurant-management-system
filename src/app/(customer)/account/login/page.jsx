@@ -5,8 +5,9 @@ import { useRestaurantSlug } from "@/hooks/useRestaurantSlug";
 import { motion } from "framer-motion";
 import RestaurantLogo from "@/components/customer/RestaurantLogo";
 import CustomerMobileInput from "@/components/customer/CustomerMobileInput";
-import { normalizePhoneForOtp } from "@/lib/phoneUtils";
-import { Loader2, ShieldCheck } from "lucide-react";
+import { extractIndianMobileDigits, isValidIndianMobile, normalizePhoneForOtp } from "@/lib/phoneUtils";
+import { customerClasses } from "@/lib/customerTheme";
+import { BadgeCheck, Loader2, Lock, ShieldCheck, Zap } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useState } from "react";
@@ -22,11 +23,12 @@ function CustomerLoginContent() {
   const nextPath = params.get("next")?.startsWith("/") ? params.get("next") : "/account/dashboard";
 
   const requestOtp = async () => {
-    const normalized = phone.replace(/\s|-/g, "");
-    if (!PHONE_REGEX.test(normalized)) {
-      setError("Please enter a valid mobile number.");
+    const digits = extractIndianMobileDigits(phone);
+    if (!isValidIndianMobile(digits)) {
+      setError("Please enter a valid 10-digit mobile number.");
       return;
     }
+    const normalized = normalizePhoneForOtp(digits);
     setLoading(true);
     setError("");
     setDevOtpHint("");
@@ -52,7 +54,7 @@ function CustomerLoginContent() {
   };
 
   return (
-    <div className="flex min-h-[80vh] min-h-[100dvh] w-full min-w-0 items-center justify-center overflow-x-hidden px-4 py-8 sm:py-12">
+    <div className="flex min-h-[100dvh] w-full min-w-0 items-center justify-center overflow-x-hidden px-4 py-8 sm:py-12">
       <motion.div
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
@@ -60,7 +62,7 @@ function CustomerLoginContent() {
         className="min-w-0 w-full max-w-md"
       >
         {/* Card */}
-        <div className="overflow-hidden rounded-3xl border border-customer-border bg-white shadow-2xl shadow-[var(--customer-primary-shadow)]/8">
+        <div className="ct-elevation-overlay overflow-hidden rounded-3xl border border-customer-border bg-[var(--customer-card)]">
           <div className="h-1.5 w-full gradient-primary" />
 
           <div className="p-5 sm:p-8">
@@ -78,7 +80,7 @@ function CustomerLoginContent() {
               <motion.div
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-xs text-red-700"
+                className={`mb-4 ${customerClasses.alertError}`}
               >
                 {error}
               </motion.div>
@@ -87,7 +89,7 @@ function CustomerLoginContent() {
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                className="mb-4 rounded-xl border border-[#F59E0B]/30 bg-[#F59E0B]/8 px-4 py-3 text-xs text-[#92400E]"
+                className={`mb-4 ${customerClasses.alertWarning}`}
               >
                 {devOtpHint}
               </motion.div>
@@ -115,34 +117,40 @@ function CustomerLoginContent() {
                 type="button"
                 disabled={loading}
                 onClick={requestOtp}
-                className="flex min-h-[52px] w-full items-center justify-center gap-2 rounded-xl gradient-primary text-sm font-bold text-white shadow-lg shadow-[var(--customer-primary-shadow)]/25 transition-all hover:shadow-xl disabled:opacity-60"
+                className={`${customerClasses.btnPrimaryLg} gap-2 text-sm disabled:opacity-60`}
               >
                 {loading ? <Loader2 className="size-4 animate-spin" /> : <ShieldCheck className="size-4" />}
                 {loading ? "Sending OTP..." : "Send OTP"}
               </motion.button>
 
-              <div className="text-center">
+              <div className="space-y-2 text-center">
+                <Link
+                  href={link("/account/signup")}
+                  className="block text-sm font-medium text-customer-primary hover:underline"
+                >
+                  Create account with email
+                </Link>
                 <Link
                   href={link("/order/menu")}
-                  className="text-sm font-medium text-customer-muted underline-offset-2 transition-colors hover:text-customer-primary hover:underline"
+                  className="block text-sm font-medium text-customer-muted underline-offset-2 transition-colors hover:text-customer-primary hover:underline"
                 >
-                  Continue as guest →
+                  Browse menu without account →
                 </Link>
               </div>
             </div>
 
             {/* Divider */}
             <div className="mt-6 flex items-center gap-3">
-              <div className="h-px flex-1 bg-[#FFE4D6]" />
+              <div className="h-px flex-1 bg-customer-border" />
               <span className="text-xs text-customer-muted">Secure & Fast</span>
-              <div className="h-px flex-1 bg-[#FFE4D6]" />
+              <div className="h-px flex-1 bg-customer-border" />
             </div>
 
             {/* Trust badges */}
             <div className="mt-4 flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-xs text-customer-muted sm:gap-6">
-              <span className="flex items-center gap-1">🔒 Encrypted</span>
-              <span className="flex items-center gap-1">⚡ Instant</span>
-              <span className="flex items-center gap-1">✅ Verified</span>
+              <span className="flex items-center gap-1.5"><Lock className="size-3.5" /> Encrypted</span>
+              <span className="flex items-center gap-1.5"><Zap className="size-3.5" /> Instant</span>
+              <span className="flex items-center gap-1.5"><BadgeCheck className="size-3.5" /> Verified</span>
             </div>
           </div>
         </div>

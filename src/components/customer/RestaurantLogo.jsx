@@ -1,10 +1,11 @@
 "use client";
 
+import { BHOJDESK_LOGOS, BHOJDESK_PLATFORM_UI } from "@/config/bhojdeskBrand";
 import { useCustomerBrandLogos } from "@/hooks/useCustomerBrandLogos";
 import { normalizeLogoSrc } from "@/lib/logoUrl";
 import { UtensilsCrossed } from "lucide-react";
 
-/** Full brand image (icon + name + tagline in one file) — height drives tagline readability */
+/** Full brand image — fixed height scales wide assets (navbar/footer). */
 const BRAND_MARK = {
   xs: "ct-brand-logo ct-brand-logo--xs",
   sm: "ct-brand-logo ct-brand-logo--sm",
@@ -20,8 +21,7 @@ const ICON_BOX = {
 };
 
 /**
- * Brand mark for customer site.
- * Default: full logo image from CMS (light + dark). Use imageOnly for navbar/footer.
+ * Customer site brand — full logo image by default; BhojDesk when tenant has not set one.
  */
 export default function RestaurantLogo({
   size = "sm",
@@ -41,12 +41,16 @@ export default function RestaurantLogo({
 
   const lightSrc = normalizeLogoSrc(logoOverride ?? brand.logoUrl);
   const darkSrc = normalizeLogoSrc(logoDarkOverride ?? brand.logoDarkUrl);
-  const src = mode === "dark" ? darkSrc || lightSrc : lightSrc || darkSrc;
+  const fallbackFull =
+    mode === "dark" ? BHOJDESK_LOGOS.horizontalDark : BHOJDESK_LOGOS.horizontalLight;
+  const fallbackIcon = BHOJDESK_LOGOS.icon;
+  const resolved = mode === "dark" ? darkSrc || lightSrc : lightSrc || darkSrc;
+  const src = resolved || (imageOnly ? fallbackFull : fallbackIcon);
   const name = nameOverride ?? brand.alt;
   const iconBox = ICON_BOX[size] ?? ICON_BOX.sm;
   const brandClass = BRAND_MARK[size] ?? BRAND_MARK.sm;
 
-  if (imageOnly && src) {
+  if (imageOnly) {
     return (
       // eslint-disable-next-line @next/next/no-img-element
       <img
@@ -62,18 +66,18 @@ export default function RestaurantLogo({
   }
 
   const boxStyles = src
-    ? "bg-white ring-1 ring-[#FFE4D6] shadow-sm"
+    ? "bg-[var(--customer-card)] ring-1 ring-[var(--customer-border)]"
     : variant === "footer"
-      ? "gradient-primary shadow-md shadow-[var(--customer-primary-shadow)]/30"
-      : "gradient-primary shadow-sm shadow-[var(--customer-primary-shadow)]/20";
+      ? "gradient-primary"
+      : "gradient-primary";
 
   return (
-    <span className="inline-flex shrink-0 items-center gap-2">
+    <span className={`inline-flex min-w-0 max-w-full items-center gap-1.5 sm:gap-2 ${className}`.trim()}>
       <span
         className={`inline-flex shrink-0 items-center justify-center rounded-xl ${boxStyles} ${iconBox.box} ${boxClassName}`}
         aria-hidden={!src && !showName}
       >
-        {src ? (
+        {src && src !== fallbackFull ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
             src={src}
@@ -83,12 +87,19 @@ export default function RestaurantLogo({
               e.currentTarget.style.display = "none";
             }}
           />
+        ) : src === fallbackFull ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={fallbackIcon}
+            alt={name || BHOJDESK_PLATFORM_UI.name}
+            className={`${iconBox.img} rounded-lg object-contain p-0.5`}
+          />
         ) : (
-          <UtensilsCrossed className={`${iconBox.icon} text-white`} />
+          <UtensilsCrossed className={`${iconBox.icon} text-white`} aria-hidden />
         )}
       </span>
       {showName && (
-        <span className="font-poppins text-lg font-bold tracking-tight text-customer-text">
+        <span className="min-w-0 truncate font-poppins text-sm font-bold tracking-tight text-customer-text sm:text-base lg:text-lg">
           {name}
         </span>
       )}

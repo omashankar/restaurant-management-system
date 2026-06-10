@@ -1,4 +1,6 @@
-import { Code2, Globe, MessageSquare, UtensilsCrossed } from "lucide-react";
+import LandingBrandLogo from "@/components/landing/LandingBrandLogo";
+import { BHOJDESK_BRAND } from "@/config/bhojdeskBrand";
+import { Code2, Globe, MessageSquare } from "lucide-react";
 import Link from "next/link";
 
 const FOOTER_LINKS = {
@@ -35,15 +37,9 @@ export default function LandingFooter() {
 
           {/* Brand — 2 cols */}
           <div className="lg:col-span-2">
-            <div className="inline-flex items-center gap-2.5">
-              <span className="inline-flex size-9 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-600 to-indigo-500 text-white shadow-md shadow-indigo-400/30">
-                <UtensilsCrossed className="size-4" />
-              </span>
-              <span className="text-sm font-bold tracking-tight text-slate-900">Restaurant OS</span>
-            </div>
+            <LandingBrandLogo slot="footer" />
             <p className="mt-4 max-w-xs text-sm leading-relaxed text-slate-500">
-              All-in-one restaurant management platform built for modern operations
-              and growing teams.
+              {BHOJDESK_BRAND.tagline} — built for modern operations and growing teams.
             </p>
             <Link
               href="/signup"
@@ -99,7 +95,7 @@ export default function LandingFooter() {
         {/* Bottom bar */}
         <div className="mt-12 flex flex-col items-center justify-between gap-3 border-t border-slate-200 pt-6 sm:flex-row">
           <p className="text-xs text-slate-500">
-            © {new Date().getFullYear()} Restaurant OS. All rights reserved.
+            © {new Date().getFullYear()} {BHOJDESK_BRAND.name}. All rights reserved.
           </p>
           <div className="flex items-center gap-4 text-xs text-slate-400">
             <a href="#" className="cursor-pointer hover:text-slate-600">Privacy Policy</a>

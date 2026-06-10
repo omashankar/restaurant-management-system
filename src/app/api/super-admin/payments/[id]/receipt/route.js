@@ -1,3 +1,4 @@
+import { BHOJDESK_BRAND } from "@/config/bhojdeskBrand";
 import { ObjectId } from "mongodb";
 import { getTokenFromRequest } from "@/lib/authCookies";
 import { verifyToken } from "@/lib/jwt";
@@ -161,7 +162,7 @@ async function generateReceiptPdf(payment, platform) {
   const ccy = String(payment.currency || "INR").toUpperCase();
   const hsnDisplay = platform.gstHsnSac || "—";
 
-  page.drawText(platform.name || "RMS Platform", {
+  page.drawText(platform.name || BHOJDESK_BRAND.fullName, {
     x: margin,
     y,
     size: 16,
@@ -507,7 +508,7 @@ export async function GET(request, { params }) {
     const pay = settingsDoc?.payment ?? {};
 
     const pdfBytes = await generateReceiptPdf(payment, {
-      name: app.name || "RMS Platform",
+      name: app.name || BHOJDESK_BRAND.fullName,
       legalName: app.legalName || "",
       logoUrl: app.logoUrl || "",
       supportEmail: app.supportEmail || "",

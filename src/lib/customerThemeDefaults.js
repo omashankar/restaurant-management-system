@@ -1,5 +1,6 @@
 /** Default customer-site theme (Website layout). */
 
+import { BHOJDESK_LOGOS } from "@/config/bhojdeskBrand";
 import {
   DEFAULT_FOOTER_ACCOUNT_LINKS,
   DEFAULT_FOOTER_QUICK_LINKS,
@@ -9,10 +10,10 @@ import {
 
 export const DEFAULT_CUSTOMER_THEME = {
   primaryColor: "#FF6B35",
-  secondaryColor: "#FF9F1C",
+  secondaryColor: "#FF6B35",
   fontFamily: "Inter, system-ui, sans-serif",
   colorMode: "light",
-  faviconUrl: "",
+  faviconUrl: BHOJDESK_LOGOS.icon,
   header: {
     sticky: true,
     logoUrl: "",

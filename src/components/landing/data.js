@@ -16,6 +16,7 @@ export const NAV_LINKS = [
   { label: "How It Works",href: "#how-it-works" },
   { label: "Pricing",     href: "#pricing"      },
   { label: "Demo",        href: "#demo"         },
+  { label: "FAQ",         href: "#faq"          },
   { label: "Contact",     href: "#contact"      },
 ];
 
@@ -123,7 +124,7 @@ export const TESTIMONIALS = [
     name: "Rahul Mehta",
     role: "Operations Manager",
     quote:
-      "RMS helped us reduce billing errors and speed up service during peak hours.",
+      "BhojDesk helped us reduce billing errors and speed up service during peak hours.",
   },
   {
     name: "Nina D'Souza",

@@ -20,6 +20,7 @@ export async function GET(request) {
       activeAdmins,
       recentAdmins,
       revenueResult,
+      newContactMessages,
     ] = await Promise.all([
       db.collection("restaurants").countDocuments(),
       db.collection("users").countDocuments({ role: "admin" }),
@@ -33,6 +34,9 @@ export async function GET(request) {
         { $match: { status: "paid" } },
         { $group: { _id: null, total: { $sum: "$amount" } } },
       ]).toArray(),
+      db.collection("contact_messages").countDocuments({
+        $or: [{ status: "new" }, { status: { $exists: false } }, { status: "" }],
+      }),
     ]);
 
     const totalRevenue = revenueResult[0]?.total ?? 0;
@@ -50,6 +54,7 @@ export async function GET(request) {
         totalRevenue,
         dbConnected,
         systemStatus,
+        newContactMessages,
         generatedAt: new Date().toISOString(),
       },
       recentUsers: recentAdmins.map((u) => ({

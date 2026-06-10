@@ -42,7 +42,7 @@ export async function POST(request) {
         pushBody: `Stripe · ${gatewayOrderId}`,
         emailType: "paymentFailed",
         emailContent: {
-          subject: "[RMS] Payment failed (Stripe)",
+          subject: "[BhojDesk RMS] Payment failed (Stripe)",
           text: `Gateway order: ${gatewayOrderId}`,
         },
       }).catch(() => {});

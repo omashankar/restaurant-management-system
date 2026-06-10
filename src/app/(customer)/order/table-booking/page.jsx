@@ -12,7 +12,7 @@ import { useRestaurantSlug } from "@/hooks/useRestaurantSlug";
 import { useRestaurantCms } from "@/hooks/useRestaurantCms";
 import { mergeCmsSection } from "@/lib/customerCmsMerge";
 import { DEFAULTS } from "@/lib/restaurantCmsDefaults";
-import { customerClasses, customerMotion, customerPage } from "@/lib/customerTheme";
+import { customerClasses, customerMotion, customerPage, customerSectionBg, customerType } from "@/lib/customerTheme";
 import { getCategoryAvailabilityCounts, getTableAvailability, getTablesAvailability } from "@/lib/tableAvailability";
 import { motion, AnimatePresence } from "framer-motion";
 import { AlertCircle, CalendarClock, CheckCircle2, ChevronLeft, ChevronRight, Loader2, Users, ArrowRight } from "lucide-react";
@@ -32,10 +32,10 @@ function StepDot({ n, label, active, done }) {
       <motion.span
         animate={active ? { scale: [1, 1.1, 1] } : {}}
         transition={{ duration: 0.5 }}
-        className={`flex size-10 items-center justify-center rounded-full text-xs font-bold shadow-sm transition-all duration-300 ${
-          done    ? "gradient-primary text-white shadow-[var(--customer-primary-shadow)]/20"
-          : active ? "border-2 border-customer-primary bg-white text-customer-primary"
-          : "border border-customer-border bg-white text-customer-muted"
+        className={`flex size-10 items-center justify-center rounded-full text-xs font-bold transition-all duration-300 ${
+          done    ? "gradient-primary text-white"
+          : active ? "border-2 border-customer-primary bg-[var(--customer-card)] text-customer-primary"
+          : `border border-customer-border ${customerClasses.surface} text-customer-muted`
         }`}
       >
         {done ? <CheckCircle2 className="size-4" /> : n}
@@ -168,8 +168,8 @@ export default function TableBookingPage() {
 
   const availabilityMap = useMemo(() => {
     if (!form.date || !form.time || tablesInCat.length === 0) return new Map();
-    return getTablesAvailability({ tables: tablesInCat, date: form.date, time: form.time, reservations: reservationRows });
-  }, [tablesInCat, form.date, form.time, reservationRows]);
+    return getTablesAvailability({ tables: tablesInCat, date: form.date, time: form.time, reservations: activeReservations });
+  }, [tablesInCat, form.date, form.time, activeReservations]);
 
   const step1Valid =
     isValidGuestName(form.name) &&
@@ -247,10 +247,10 @@ export default function TableBookingPage() {
       <div className="ct-page-shell">
         <div className="mx-auto max-w-lg px-4 py-16 sm:px-6">
           <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}
-            className="ct-surface-card rounded-3xl p-10 text-center shadow-sm">
+            className="ct-surface-card rounded-3xl p-10 text-center">
             <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: "spring", stiffness: 200 }}
-              className="mx-auto mb-6 flex size-24 items-center justify-center rounded-full bg-green-100">
-              <CalendarClock className="size-12 text-green-500" />
+              className={`mx-auto mb-6 flex size-24 items-center justify-center rounded-full ${customerClasses.iconRingSuccess}`}>
+              <CalendarClock className="size-12" />
             </motion.div>
             <h2 className="font-poppins text-2xl font-black text-customer-text">{bookingCms.successTitle}</h2>
             <p className="mt-2 text-sm text-customer-muted">{bookingCms.successSubtitle}</p>
@@ -259,9 +259,9 @@ export default function TableBookingPage() {
               {[{ label: "Name", value: form.name }, { label: "Date & Time", value: `${form.date} at ${form.time}` },
                 { label: "Area", value: selectedCat?.name ?? "—" }, { label: "Table", value: selectedTable?.tableNumber ?? "TBD" },
                 { label: "Guests", value: `${form.guests} persons` }].map(({ label, value }) => (
-                <div key={label} className="flex items-center justify-between border-b border-customer-border px-5 py-3 text-sm last:border-0">
-                  <span className="text-customer-muted">{label}</span>
-                  <span className="font-bold text-customer-text">{value}</span>
+                <div key={label} className="flex items-start justify-between gap-3 border-b border-customer-border px-5 py-3 text-sm last:border-0">
+                  <span className="shrink-0 text-customer-muted">{label}</span>
+                  <span className="min-w-0 max-w-[65%] break-words text-right font-bold text-customer-text">{value}</span>
                 </div>
               ))}
             </div>
@@ -272,7 +272,7 @@ export default function TableBookingPage() {
                 Book Another
               </button>
               <Link href={link("/order/menu")}
-                className="flex-1 inline-flex items-center justify-center gap-2 rounded-full gradient-primary py-3 text-sm font-bold text-white shadow-md">
+                className={`${customerClasses.btnPrimary} flex-1 gap-2 py-3 text-sm`}>
                 Browse Menu <ArrowRight className="size-4" />
               </Link>
             </div>
@@ -286,13 +286,13 @@ export default function TableBookingPage() {
     <div className="ct-page-shell">
 
       {/* ══ HERO ══ */}
-      <section className="bg-white">
+      <section className={customerSectionBg.white}>
         <div className="mx-auto max-w-2xl px-4 py-12 text-center sm:px-6">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-            <span className="mb-4 inline-flex items-center gap-1.5 rounded-full bg-customer-primary/10 px-4 py-1.5 text-xs font-bold uppercase tracking-widest text-customer-primary">
+            <span className={customerClasses.badge}>
               Reservations
             </span>
-            <h1 className="font-poppins text-3xl font-black text-customer-text sm:text-4xl">
+            <h1 className={`${customerType.heroTitle} sm:text-4xl`}>
               {bookingCms.pageTitle}
             </h1>
             <p className="mt-2 text-sm text-customer-muted">{bookingCms.pageSubtitle}</p>
@@ -319,7 +319,7 @@ export default function TableBookingPage() {
           {/* ── STEP 1 ── */}
           {step === 1 && (
             <motion.div key="step1" variants={fadeUp} initial="hidden" animate="show" exit={{ opacity: 0, y: -10 }}
-              className="ct-surface-card rounded-3xl p-5 shadow-sm sm:p-8">
+              className="ct-surface-card rounded-3xl p-5 sm:p-8">
               <h2 className="mb-6 font-poppins text-lg font-black text-customer-text sm:text-xl">{bookingCms.detailsTitle}</h2>
               <div className="grid gap-4 sm:grid-cols-2">
                 <div>
@@ -332,7 +332,7 @@ export default function TableBookingPage() {
                     autoComplete="name"
                   />
                   {form.name.trim() && !isValidGuestName(form.name) ? (
-                    <p className="mt-1 text-[11px] text-red-500">Use at least 2 letters (not numbers only).</p>
+                    <p className={`mt-1 text-[11px] ${customerClasses.textDanger}`}>Use at least 2 letters (not numbers only).</p>
                   ) : null}
                 </div>
                 <CustomerMobileInput
@@ -392,7 +392,7 @@ export default function TableBookingPage() {
                     />
                   </div>
                   {form.guests && !isValidGuestCount(form.guests) ? (
-                    <p className="mt-1 text-[11px] text-red-500">Guests must be between 1 and 20.</p>
+                    <p className={`mt-1 text-[11px] ${customerClasses.textDanger}`}>Guests must be between 1 and 20.</p>
                   ) : null}
                 </div>
               </div>
@@ -419,7 +419,7 @@ export default function TableBookingPage() {
                   }
                   setStep(2);
                 }}
-                className="mt-6 flex w-full cursor-pointer items-center justify-center gap-2 rounded-full gradient-primary py-3.5 text-sm font-bold text-[var(--customer-btn-primary-fg,#ffffff)] shadow-lg shadow-[var(--customer-primary-shadow)]/25 disabled:cursor-not-allowed disabled:brightness-[0.92] disabled:saturate-50">
+                className={`mt-6 ${customerClasses.btnPrimaryLg} cursor-pointer gap-2 text-sm disabled:cursor-not-allowed disabled:opacity-50`}>
                 Next: Choose Area <ChevronRight className="size-4" />
               </motion.button>
             </motion.div>
@@ -428,7 +428,7 @@ export default function TableBookingPage() {
           {/* ── STEP 2 ── */}
           {step === 2 && (
             <motion.div key="step2" variants={fadeUp} initial="hidden" animate="show" exit={{ opacity: 0, y: -10 }}
-              className="ct-surface-card rounded-3xl p-8 shadow-sm">
+              className="ct-surface-card rounded-3xl p-5 sm:p-8">
               <div className="mb-6">
                 <h2 className="font-poppins text-xl font-black text-customer-text">{bookingCms.areaTitle}</h2>
                 <p className="mt-1 text-sm text-customer-muted">
@@ -449,10 +449,10 @@ export default function TableBookingPage() {
                     return (
                       <motion.button key={cat.id} type="button"
                         initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
-                        whileHover={{ y: -4 }} whileTap={{ scale: 0.97 }}
+                        whileHover={customerMotion.cardHoverSm} whileTap={customerMotion.tapSm}
                         onClick={() => { setSelectedCatId(cat.id); setSelectedTable(null); }}
                         className={`flex cursor-pointer flex-col overflow-hidden rounded-2xl border-2 text-left transition-all duration-200 ${
-                          isActive ? "border-customer-primary shadow-lg shadow-[var(--customer-primary-shadow)]/15" : "border-customer-border bg-white hover:border-customer-primary/30 hover:shadow-md"
+                          isActive ? "border-customer-primary" : `border-customer-border ${customerClasses.surface} hover:border-customer-primary/30`
                         }`}>
                         {imageUrl ? (
                           <div className="aspect-[16/9] w-full overflow-hidden">
@@ -466,7 +466,7 @@ export default function TableBookingPage() {
                         <div className="p-3">
                           <p className={`font-poppins text-sm font-bold ${isActive ? "text-customer-primary" : "text-customer-text"}`}>{cat.name}</p>
                           {counts ? (
-                            <p className={`mt-0.5 text-xs font-semibold ${noAvail ? "text-red-500" : "text-green-600"}`}>
+                            <p className={`mt-0.5 text-xs font-semibold ${noAvail ? customerClasses.textDanger : customerClasses.textSuccess}`}>
                               {noAvail ? "No tables free" : `${counts.available}/${counts.total} available`}
                             </p>
                           ) : <p className="mt-0.5 text-xs text-customer-muted">No tables</p>}
@@ -483,7 +483,7 @@ export default function TableBookingPage() {
                 </button>
                 <motion.button whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.98 }}
                   type="button" disabled={!selectedCatId} onClick={() => setStep(3)}
-                  className="flex cursor-pointer flex-1 items-center justify-center gap-2 rounded-full gradient-primary py-2.5 text-sm font-bold text-white shadow-lg shadow-[var(--customer-primary-shadow)]/20 disabled:cursor-not-allowed disabled:opacity-40">
+                  className={`${customerClasses.btnPrimary} flex-1 cursor-pointer gap-2 py-2.5 text-sm disabled:cursor-not-allowed disabled:opacity-40`}>
                   Next: Pick Table <ChevronRight className="size-4" />
                 </motion.button>
               </div>
@@ -493,17 +493,17 @@ export default function TableBookingPage() {
           {/* ── STEP 3 ── */}
           {step === 3 && (
             <motion.div key="step3" variants={fadeUp} initial="hidden" animate="show" exit={{ opacity: 0, y: -10 }}
-              className="ct-surface-card rounded-3xl p-8 shadow-sm">
-              <div className="mb-6 flex flex-wrap items-start justify-between gap-3">
-                <div>
+              className="ct-surface-card rounded-3xl p-5 sm:p-8">
+              <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                <div className="min-w-0">
                   <h2 className="font-poppins text-xl font-black text-customer-text">{selectedCat?.name} {bookingCms.tableTitleSuffix}</h2>
                   <p className="mt-1 text-sm text-customer-muted">{form.date} · {form.time} · ~90 min slot</p>
                 </div>
-                <div className="flex flex-wrap gap-1.5">
+                <div className="flex w-full flex-wrap gap-1.5 sm:w-auto sm:justify-end">
                   {CUSTOMER_BOOKING_CAPACITY_FILTERS.map((f) => (
                     <button key={f.id} type="button" onClick={() => { setCapFilter(f.id); setSelectedTable(null); }}
                       className={`rounded-full cursor-pointer px-3 py-1.5 text-xs font-semibold transition-all ${
-                        capFilter === f.id ? "gradient-primary text-white shadow-sm" : "border border-customer-border bg-white text-customer-muted hover:border-customer-primary/30"
+                        capFilter === f.id ? customerClasses.chipActive : customerClasses.chip
                       }`}>
                       {f.label}
                     </button>
@@ -511,8 +511,8 @@ export default function TableBookingPage() {
                 </div>
               </div>
               <div className="mb-4 flex items-center gap-4 text-xs text-customer-muted">
-                <span className="flex items-center gap-1.5"><span className="size-2 rounded-full bg-green-500" /> Available</span>
-                <span className="flex items-center gap-1.5"><span className="size-2 rounded-full bg-red-400" /> Booked</span>
+                <span className="flex items-center gap-1.5"><span className={`size-2 ${customerClasses.statusDotOpen}`} /> Available</span>
+                <span className="flex items-center gap-1.5"><span className={`size-2 ${customerClasses.statusDotClosed}`} /> Booked</span>
               </div>
               {tablesInCat.length === 0 ? (
                 <div className="rounded-2xl border-2 border-dashed border-customer-border py-12 text-center">
@@ -541,7 +541,7 @@ export default function TableBookingPage() {
                 </button>
                 <motion.button whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.98 }}
                   type="button" disabled={!selectedTable} onClick={() => setStep(4)}
-                  className="flex cursor-pointer flex-1 items-center justify-center gap-2 rounded-full gradient-primary py-2.5 text-sm font-bold text-white shadow-lg shadow-[var(--customer-primary-shadow)]/20 disabled:cursor-not-allowed disabled:opacity-40">
+                  className={`${customerClasses.btnPrimary} flex-1 cursor-pointer gap-2 py-2.5 text-sm disabled:cursor-not-allowed disabled:opacity-40`}>
                   Review Booking <ChevronRight className="size-4" />
                 </motion.button>
               </div>
@@ -551,7 +551,7 @@ export default function TableBookingPage() {
           {/* ── STEP 4 ── */}
           {step === 4 && (
             <motion.div key="step4" variants={fadeUp} initial="hidden" animate="show" exit={{ opacity: 0, y: -10 }}
-              className="ct-surface-card rounded-3xl p-8 shadow-sm">
+              className="ct-surface-card rounded-3xl p-5 sm:p-8">
               <h2 className="mb-6 font-poppins text-xl font-black text-customer-text">{bookingCms.confirmTitle}</h2>
               <div className="overflow-hidden rounded-2xl border border-customer-border">
                 {[{ label: "Name", value: form.name }, { label: "Mobile", value: toIndianE164(form.phone) || form.phone },
@@ -560,16 +560,16 @@ export default function TableBookingPage() {
                   { label: "Table", value: selectedTable?.tableNumber }, { label: "Capacity", value: `${selectedTable?.capacity} persons` },
                   ...(form.notes ? [{ label: "Notes", value: form.notes }] : []),
                 ].map(({ label, value }) => (
-                  <div key={label} className="flex items-center justify-between border-b border-customer-border px-5 py-3.5 text-sm last:border-0">
-                    <span className="text-customer-muted">{label}</span>
-                    <span className="font-bold text-customer-text">{value}</span>
+                  <div key={label} className="flex items-start justify-between gap-3 border-b border-customer-border px-5 py-3.5 text-sm last:border-0">
+                    <span className="shrink-0 text-customer-muted">{label}</span>
+                    <span className="min-w-0 max-w-[65%] break-words text-right font-bold text-customer-text">{value}</span>
                   </div>
                 ))}
               </div>
               {conflictError && (
-                <div className="mt-4 flex items-start gap-3 rounded-2xl border border-red-200 bg-red-50 px-4 py-3">
-                  <AlertCircle className="mt-0.5 size-4 shrink-0 text-red-500" />
-                  <p className="text-sm text-red-700">{conflictError}</p>
+                <div className={`mt-4 flex items-start gap-3 ${customerClasses.alertError}`}>
+                  <AlertCircle className={`mt-0.5 size-4 shrink-0 ${customerClasses.textDanger}`} />
+                  <p className="text-sm">{conflictError}</p>
                 </div>
               )}
               <div className="mt-6 flex gap-3">
@@ -579,7 +579,7 @@ export default function TableBookingPage() {
                 </button>
                 <motion.button whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.98 }}
                   type="button" onClick={submit} disabled={loading}
-                  className="flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-full gradient-primary py-3 text-sm font-bold text-white shadow-lg shadow-[var(--customer-primary-shadow)]/25 disabled:opacity-50">
+                  className={`${customerClasses.btnPrimary} flex-1 cursor-pointer gap-2 py-3 text-sm disabled:opacity-50`}>
                   {loading ? <><Loader2 className="size-4 animate-spin" /> Sending…</> : <><CheckCircle2 className="size-4" /> Confirm Booking</>}
                 </motion.button>
               </div>

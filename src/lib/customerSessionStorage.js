@@ -97,10 +97,29 @@ function normalizeCartLine(line) {
   };
 }
 
+function localCartKey(scope) {
+  return `${sessionKey(scope)}_cart_local`;
+}
+
 export function readStoredCartLines(scope) {
-  const cart = readCustomerSession(scope)?.cart;
-  if (!Array.isArray(cart)) return [];
-  return cart.map(normalizeCartLine).filter(Boolean);
+  const fromSession = readCustomerSession(scope)?.cart;
+  if (Array.isArray(fromSession) && fromSession.length > 0) {
+    return fromSession.map(normalizeCartLine).filter(Boolean);
+  }
+  if (typeof window !== "undefined") {
+    try {
+      const raw = localStorage.getItem(localCartKey(scope));
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) {
+          return parsed.map(normalizeCartLine).filter(Boolean);
+        }
+      }
+    } catch {
+      /* ignore */
+    }
+  }
+  return [];
 }
 
 export function writeStoredCartLines(scope, lines) {
@@ -108,6 +127,13 @@ export function writeStoredCartLines(scope, lines) {
     ? lines.map(normalizeCartLine).filter(Boolean)
     : [];
   writeCustomerSession(scope, { cart });
+  if (typeof window !== "undefined") {
+    try {
+      localStorage.setItem(localCartKey(scope), JSON.stringify(cart));
+    } catch {
+      /* quota */
+    }
+  }
 }
 
 const CUSTOMER_FIELDS = ["name", "phone", "email", "address", "tableNumber"];

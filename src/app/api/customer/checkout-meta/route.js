@@ -1,3 +1,4 @@
+import { CUSTOMER_CHECKOUT_COUPONS } from "@/lib/customerCoupons";
 import { isOnlinePaymentConfigured } from "@/lib/paymentGateway";
 import clientPromise from "@/lib/mongodb";
 import { getRestaurantIdFromRequest } from "@/lib/restaurantResolver";
@@ -60,6 +61,7 @@ export async function GET(request) {
           onlinePaymentsAvailable: onlineOk,
           etaMinutes: { "dine-in": "15-20", takeaway: "20-30", delivery: "30-45" },
           coupons: [],
+          minOrderAmount: 0,
         },
       });
     }
@@ -95,11 +97,9 @@ export async function GET(request) {
         deliveryCharge: Number.isFinite(serviceCharge) ? Math.max(0, serviceCharge) : 0,
         paymentMethods,
         onlinePaymentsAvailable: onlineOk,
-        etaMinutes: { "dine-in": "15-20", takeaway: "20-30", delivery: "30-45" },
-        coupons: [
-          { code: "SAVE10", label: "Save 10% (capped)", type: "percent", value: 10, maxDiscount: 10 },
-          { code: "FLAT5", label: "Flat 5 off on orders 30+", type: "flat", value: 5, minSubtotal: 30 },
-        ],
+        coupons: CUSTOMER_CHECKOUT_COUPONS,
+        minOrderAmount: Number(settingsDoc?.pos?.minOrderAmount ?? 0),
+        etaMinutes: settingsDoc?.pos?.etaMinutes ?? { "dine-in": "15-20", takeaway: "20-30", delivery: "30-45" },
       },
     });
   } catch {

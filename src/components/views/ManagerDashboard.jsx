@@ -18,6 +18,7 @@ export default function ManagerDashboard({
   lowStockCount = 0,
   orders = [],
   topItems = [],
+  salesChartData = {},
 }) {
   return (
     <div className="space-y-8">
@@ -53,7 +54,7 @@ export default function ManagerDashboard({
         <StatsCard title="Low Stock Items" value={String(lowStockCount)}             subtitle="Need reorder"                           icon={Package} />
       </div>
 
-      <SalesChart />
+      <SalesChart data={salesChartData} />
 
       <div className="grid items-stretch gap-6 xl:grid-cols-5">
         <div className="flex min-h-0 xl:col-span-2">

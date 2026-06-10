@@ -1,51 +1,55 @@
 "use client";
 
+import { BHOJDESK_LOGOS, BHOJDESK_PLATFORM_UI } from "@/config/bhojdeskBrand";
 import { adminSurface } from "@/config/adminSurfaceClasses";
 import { normalizeLogoSrc } from "@/lib/logoUrl";
-import { UtensilsCrossed } from "lucide-react";
+import { useEffect, useState } from "react";
 
-/** Sidebar header — logo + name from Settings → General */
+const FALLBACK_ICON = BHOJDESK_LOGOS.icon;
+
+/** Sidebar header — tenant logo + name from Settings → General; BhojDesk fallback. */
 export default function SidebarBrand({
   collapsed = false,
-  name = "RMS",
-  tagline = "Restaurant OS",
-  logoUrl = "",
+  name = BHOJDESK_PLATFORM_UI.name,
+  logoUrl = BHOJDESK_PLATFORM_UI.logoUrl,
+  portal = "restaurant",
 }) {
-  const src = normalizeLogoSrc(logoUrl);
+  const ringCls =
+    portal === "super-admin" ? "ring-sa-primary-25" : "ring-ra-primary-25";
+  const [imgFailed, setImgFailed] = useState(false);
+
+  useEffect(() => {
+    setImgFailed(false);
+  }, [logoUrl]);
+
+  const rawSrc = normalizeLogoSrc(logoUrl);
+  const src = imgFailed || !rawSrc ? FALLBACK_ICON : rawSrc;
 
   return (
-    <div className="flex min-w-0 items-center gap-2">
+    <div className="flex min-w-0 items-center gap-2.5">
       <span
-        className={`flex size-10 shrink-0 items-center justify-center rounded-xl ring-1 ${
-          src
-            ? "bg-[var(--admin-control)] ring-ra-primary-25"
-            : "bg-ra-primary-15 text-ra-primary ring-ra-primary-25"
-        }`}
+        className={`flex size-10 shrink-0 items-center justify-center rounded-xl bg-[var(--admin-control)] ring-1 ${ringCls}`}
+        title={name}
       >
-        {src ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={src}
-            alt={name}
-            className="size-8 rounded-lg object-contain p-0.5"
-            onError={(e) => {
-              e.currentTarget.style.display = "none";
-            }}
-          />
-        ) : (
-          <UtensilsCrossed className="size-5" aria-hidden />
-        )}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={src}
+          alt=""
+          aria-hidden
+          className="size-8 rounded-lg object-contain p-0.5"
+          onError={() => setImgFailed(true)}
+        />
       </span>
       {!collapsed ? (
-        <div className="min-w-0">
-          <p className={`truncate text-sm font-semibold tracking-tight ${adminSurface.title}`} title={name}>
-            {name}
-          </p>
-          {tagline ? (
-            <p className={`truncate text-[11px] ${adminSurface.muted}`}>{tagline}</p>
-          ) : null}
-        </div>
-      ) : null}
+        <p
+          className={`min-w-0 flex-1 truncate text-sm font-semibold leading-tight tracking-tight ${adminSurface.title}`}
+          title={name}
+        >
+          {name}
+        </p>
+      ) : (
+        <span className="sr-only">{name}</span>
+      )}
     </div>
   );
 }

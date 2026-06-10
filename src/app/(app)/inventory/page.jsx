@@ -24,7 +24,7 @@ function emptyForm() {
     name: "",
     category: "Dry goods",
     quantity: "0",
-    unit: "",
+    unit: "piece",
     reorderLevel: "0",
     maxLevel: "",
     supplier: "",
@@ -217,7 +217,7 @@ export default function InventoryPage() {
           }),
         });
         const data = await res.json();
-        if (!res.ok) {
+        if (!res.ok || !data?.success) {
           showToast(data?.error ?? "Inventory update failed.", "error");
           return;
         }
@@ -233,7 +233,7 @@ export default function InventoryPage() {
           body: JSON.stringify(payload),
         });
         const data = await res.json();
-        if (!res.ok || !data?.id) {
+        if (!res.ok || !data?.success || !data?.id) {
           showToast(data?.error ?? "Inventory creation failed.", "error");
           return;
         }
@@ -257,7 +257,7 @@ export default function InventoryPage() {
         method: "DELETE",
       });
       const data = await res.json().catch(() => ({}));
-      if (!res.ok) {
+      if (!res.ok || !data?.success) {
         showToast(data?.error ?? "Delete failed. Permission or server error.", "error");
         return;
       }
@@ -393,16 +393,36 @@ export default function InventoryPage() {
 
       {total === 0 ? (
         <EmptyState
-          title="No inventory items"
-          description="Add ingredients and supplies to track par levels and alerts."
+          title={
+            inventoryRows.length === 0
+              ? "No inventory items"
+              : "No matching items"
+          }
+          description={
+            inventoryRows.length === 0
+              ? "Add ingredients and supplies to track par levels and alerts."
+              : statusFilter !== "all" || search.trim()
+                ? "Try a different status filter or search term."
+                : "No items match your filters."
+          }
           action={
-            <button
-              type="button"
-              onClick={openCreate}
-              className="cursor-pointer rounded-xl bg-ra-primary px-4 py-2 text-sm font-semibold text-zinc-950"
-            >
-              Add item
-            </button>
+            inventoryRows.length === 0 ? (
+              <button
+                type="button"
+                onClick={openCreate}
+                className="cursor-pointer rounded-xl bg-ra-primary px-4 py-2 text-sm font-semibold text-zinc-950"
+              >
+                Add item
+              </button>
+            ) : statusFilter !== "all" ? (
+              <button
+                type="button"
+                onClick={() => setStatusFilter("all")}
+                className="cursor-pointer rounded-xl border admin-shell-border px-4 py-2 text-sm font-medium admin-shell-text transition-colors hover:border-zinc-600"
+              >
+                Show all statuses
+              </button>
+            ) : null
           }
         />
       ) : (
@@ -410,19 +430,22 @@ export default function InventoryPage() {
           rows={pageRows}
           onEdit={openEdit}
           onDelete={setDeleteTarget}
+          allowDelete={!limited}
           onUpdateQty={(row, delta) => {
+            if (!delta) return;
             const next = Math.max(0, row.quantity + delta);
+            const historyMessage =
+              delta > 0
+                ? `+${delta} stock adjustment`
+                : `${delta} stock adjustment`;
             fetch(`/api/inventory/${row.id}`, {
               method: "PATCH",
               headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                quantity: next,
-                historyMessage: delta > 0 ? "+1 quick update" : "-1 quick update",
-              }),
+              body: JSON.stringify({ quantity: next, historyMessage }),
             })
               .then(async (res) => {
                 const data = await res.json().catch(() => ({}));
-                if (!res.ok) {
+                if (!res.ok || !data?.success) {
                   showToast(data?.error ?? "Quick quantity update failed.", "error");
                   return;
                 }

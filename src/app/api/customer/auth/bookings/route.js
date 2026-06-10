@@ -1,5 +1,6 @@
 import clientPromise from "@/lib/mongodb";
 import { getCustomerTokenFromRequest, verifyCustomerToken } from "@/lib/customerAuth";
+import { getRestaurantIdFromRequest } from "@/lib/restaurantResolver";
 
 export async function GET(request) {
   const token = getCustomerTokenFromRequest(request);
@@ -26,8 +27,12 @@ export async function GET(request) {
       return Response.json({ success: true, bookings: [] });
     }
 
+    const restaurantId = await getRestaurantIdFromRequest(db, request);
+    const query = { $or: or };
+    if (restaurantId) query.restaurantId = restaurantId;
+
     const reservations = await db.collection("reservations")
-      .find({ $or: or })
+      .find(query)
       .sort({ createdAt: -1 })
       .limit(50)
       .toArray();

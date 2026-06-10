@@ -11,9 +11,11 @@ import {
   authLogoBadgeCls,
   authSuccessBoxCls,
 } from "@/config/authTheme";
+import BhojDeskLogo from "@/components/brand/BhojDeskLogo";
 import PasswordInput from "@/components/ui/PasswordInput";
+import { BHOJDESK_BRAND } from "@/config/bhojdeskBrand";
 import { getLoginFieldErrors } from "@/lib/formValidation";
-import { Copy, UtensilsCrossed } from "lucide-react";
+import { Copy } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
@@ -206,11 +208,9 @@ function LoginContent() {
   return (
     <div className="min-w-0 w-full max-w-4xl">
       <div className="mb-6 text-center sm:mb-8">
-        <span className={authLogoBadgeCls}>
-          <UtensilsCrossed className="size-7" aria-hidden />
-        </span>
+        <BhojDeskLogo variant="vertical" height={88} className="mx-auto" priority />
         <h1 className="mt-4 break-words text-xl font-semibold tracking-tight text-zinc-50 sm:text-2xl">
-          Restaurant Management System
+          {BHOJDESK_BRAND.fullName}
         </h1>
         <p className="mt-1 text-sm text-zinc-500">Sign in to your workspace</p>
       </div>

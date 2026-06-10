@@ -1,5 +1,6 @@
+import { BHOJDESK_BRAND, BHOJDESK_LOGOS } from "@/config/bhojdeskBrand";
 import { writeAuditLog } from "@/lib/auditLog";
-import { invalidatePlatformSettingsCache } from "@/lib/platformSettings";
+import { invalidatePlatformSettingsCache, PLATFORM_DEFAULTS } from "@/lib/platformSettings";
 import { validatePlatformSettingsSectionServer } from "@/lib/platformSettingsValidation";
 import { getTokenFromRequest } from "@/lib/authCookies";
 import { verifyToken } from "@/lib/jwt";
@@ -14,21 +15,22 @@ function superAdminOnly(request) {
 }
 
 const DEFAULTS = {
+  ...PLATFORM_DEFAULTS,
   app: {
-    name:        "RMS Platform",
-    legalName:   "",
-    logoUrl:     "",
-    faviconUrl:  "",
-    supportEmail:"support@rms.com",
-    contactPhone:"",
-    address:     "",
+    ...PLATFORM_DEFAULTS.app,
+    name: BHOJDESK_BRAND.fullName,
+    legalName: BHOJDESK_BRAND.name,
+    logoUrl: BHOJDESK_LOGOS.horizontalDark,
+    faviconUrl: BHOJDESK_LOGOS.icon,
+    supportEmail: BHOJDESK_BRAND.supportEmail,
   },
   email: {
+    ...PLATFORM_DEFAULTS.email,
     smtpHost:    "",
     smtpPort:    587,
     smtpUser:    "",
     smtpPassword:"",
-    fromName:    "RMS Platform",
+    fromName:    BHOJDESK_BRAND.name,
     fromEmail:   "",
     secure:      false,
   },

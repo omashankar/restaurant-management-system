@@ -6,8 +6,10 @@ import { formatCustomerMoney } from "@/lib/customerCurrency";
 import { motion } from "framer-motion";
 import { ArrowLeft, BellRing, Loader2, Receipt, CheckCircle2, Clock, Package, Truck, Star } from "lucide-react";
 import Link from "next/link";
+import { customerClasses } from "@/lib/customerTheme";
 import { useParams, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useLiveRefresh } from "@/hooks/useLiveRefresh";
+import { useCallback, useEffect, useState } from "react";
 
 function formatWhen(iso) {
   if (!iso) return "—";
@@ -33,22 +35,33 @@ export default function CustomerOrderDetailPage() {
     if (!authLoading && !authUser) router.replace(link("/account/login"));
   }, [authLoading, authUser, router, link]);
 
-  useEffect(() => {
-    if (!id || !authUser) return undefined;
-    let cancelled = false;
-    (async () => {
-      setLoading(true);
-      setError("");
-      try {
-        const res = await fetch(`/api/customer/orders/${id}`, { cache: "no-store" });
-        const data = await res.json();
-        if (!res.ok || !data?.success) { if (!cancelled) setError(data?.error ?? "Could not load order."); return; }
-        if (!cancelled) setOrder(data.order);
-      } catch { if (!cancelled) setError("Something went wrong."); }
-      finally { if (!cancelled) setLoading(false); }
-    })();
-    return () => { cancelled = true; };
+  const loadOrder = useCallback(async (silent = false) => {
+    if (!id || !authUser) return;
+    if (!silent) { setLoading(true); setError(""); }
+    try {
+      const res = await fetch(`/api/customer/orders/${id}`, { cache: "no-store" });
+      const data = await res.json();
+      if (!res.ok || !data?.success) { if (!silent) setError(data?.error ?? "Could not load order."); return; }
+      setOrder(data.order);
+    } catch { if (!silent) setError("Something went wrong."); }
+    finally { if (!silent) setLoading(false); }
   }, [id, authUser]);
+
+  useEffect(() => {
+    loadOrder(false);
+  }, [loadOrder]);
+
+  useLiveRefresh(() => loadOrder(true), { intervalMs: 15000, eventName: null });
+
+  const cancelOrder = async () => {
+    try {
+      const res = await fetch(`/api/customer/orders/${id}/cancel`, { method: "POST" });
+      const data = await res.json();
+      if (!res.ok || !data?.success) { setError(data?.error ?? "Could not cancel."); return; }
+      setActionSuccess(data.message ?? "Order cancelled.");
+      await loadOrder(true);
+    } catch { setError("Network error."); }
+  };
 
   const submitDineInAction = async (action) => {
     if (!order?.tableNumber) { setError("Table number not found."); return; }
@@ -85,13 +98,13 @@ export default function CustomerOrderDetailPage() {
       {loading ? (
         <div className="flex justify-center py-16"><Loader2 className="size-8 animate-spin text-customer-primary" /></div>
       ) : error ? (
-        <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>
+        <div className="ct-alert ct-alert-error text-sm">{error}</div>
       ) : order ? (
         <div className="space-y-4">
 
           {/* Order header */}
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
-            className="overflow-hidden rounded-2xl border border-customer-border bg-white shadow-sm">
+            className="overflow-hidden ct-surface-card rounded-2xl">
             <div className="h-1.5 gradient-primary" />
             <div className="p-5">
               <div className="flex flex-wrap items-start justify-between gap-3">
@@ -105,16 +118,21 @@ export default function CustomerOrderDetailPage() {
                 </span>
               </div>
               {order.statusKey === "cancelled" && (
-                <div className="mt-3 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+                <div className={`mt-3 ${customerClasses.alertError} text-sm`}>
                   This order was cancelled.
                 </div>
+              )}
+              {["new", "pending"].includes(order.statusKey) && (
+                <button type="button" onClick={cancelOrder} className={`mt-3 text-sm font-semibold hover:underline ${customerClasses.textDanger}`}>
+                  Cancel this order
+                </button>
               )}
             </div>
           </motion.div>
 
           {/* Items */}
           <motion.section initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
-            className="rounded-2xl border border-customer-border bg-white p-5 shadow-sm">
+            className="ct-surface-card rounded-2xl p-5">
             <h2 className="mb-3 font-poppins text-sm font-bold text-customer-text">Items Ordered</h2>
             <ul className="divide-y divide-customer-border">
               {order.items?.length ? order.items.map((line, i) => (
@@ -141,18 +159,18 @@ export default function CustomerOrderDetailPage() {
 
           {/* Timeline */}
           <motion.section initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
-            className="rounded-2xl border border-customer-border bg-white p-5 shadow-sm">
+            className="ct-surface-card rounded-2xl p-5">
             <h2 className="mb-4 font-poppins text-sm font-bold text-customer-text">Order Status</h2>
             <ol className="space-y-0">
               {order.timeline?.map((step, idx) => (
                 <li key={step.key} className="relative flex gap-3 pb-6 last:pb-0">
                   {idx < order.timeline.length - 1 && (
-                    <span className={`absolute left-[11px] top-6 h-[calc(100%-8px)] w-px ${step.state === "done" ? "gradient-primary" : "bg-[#FFE4D6]"}`} />
+                    <span className={`absolute left-[11px] top-6 h-[calc(100%-8px)] w-px ${step.state === "done" ? "ct-timeline-line--done" : "ct-timeline-line"}`} />
                   )}
                   <span className={`relative z-[1] flex size-6 shrink-0 items-center justify-center rounded-full text-xs font-bold ${
-                    step.state === "done" ? "gradient-primary text-white shadow-sm"
-                    : step.state === "current" ? "border-2 border-customer-primary bg-white text-customer-primary"
-                    : step.state === "bad" ? "bg-red-100 text-red-600"
+                    step.state === "done" ? "gradient-primary text-white"
+                    : step.state === "current" ? "border-2 border-customer-primary bg-[var(--customer-card)] text-customer-primary"
+                    : step.state === "bad" ? "ct-status-badge ct-status-cancelled"
                     : "bg-customer-cream text-customer-muted"
                   }`}>
                     {step.state === "done" ? "✓" : step.emoji}
@@ -171,11 +189,11 @@ export default function CustomerOrderDetailPage() {
           {/* Dine-in actions */}
           {order.orderType === "dine-in" && (
             <motion.section initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}
-              className="rounded-2xl border border-customer-border bg-white p-5 shadow-sm">
+              className="ct-surface-card rounded-2xl p-5">
               <h2 className="font-poppins text-sm font-bold text-customer-text">Dine-In Actions</h2>
               <p className="mt-0.5 text-xs text-customer-muted">Table {order.tableNumber || "—"} · Request support from your phone</p>
               {actionSuccess && (
-                <div className="mt-3 rounded-xl border border-[#22C55E]/30 bg-[#22C55E]/8 px-3 py-2 text-xs font-medium text-[#15803D]">
+                <div className={`mt-3 ${customerClasses.alertSuccess} text-xs font-medium`}>
                   ✅ {actionSuccess}
                 </div>
               )}
@@ -183,14 +201,14 @@ export default function CustomerOrderDetailPage() {
                 <motion.button whileTap={{ scale: 0.97 }} type="button"
                   onClick={() => submitDineInAction("call_waiter")}
                   disabled={requestingAction !== ""}
-                  className="flex items-center gap-2 rounded-xl gradient-primary px-4 py-2.5 text-sm font-semibold text-white shadow-md disabled:opacity-60">
+                  className={`${customerClasses.btnPrimary} gap-2 px-4 py-2.5 text-sm disabled:opacity-60`}>
                   <BellRing className="size-4" />
                   {requestingAction === "call_waiter" ? "Sending..." : "Call Waiter"}
                 </motion.button>
                 <motion.button whileTap={{ scale: 0.97 }} type="button"
                   onClick={() => submitDineInAction("request_bill")}
                   disabled={requestingAction !== ""}
-                  className="flex items-center gap-2 rounded-xl border border-customer-border bg-white px-4 py-2.5 text-sm font-semibold text-customer-text transition-colors hover:border-customer-primary/30 disabled:opacity-60">
+                  className="flex items-center gap-2 rounded-xl border border-customer-border bg-[var(--customer-card)] px-4 py-2.5 text-sm font-semibold text-customer-text transition-colors hover:border-customer-primary/30 disabled:opacity-60">
                   <Receipt className="size-4" />
                   {requestingAction === "request_bill" ? "Sending..." : "Request Bill"}
                 </motion.button>

@@ -2,32 +2,41 @@
  * Customer site design system — typography, spacing, motion (pairs with globals.css .ct-*).
  */
 
+const springLift = { type: "spring", stiffness: 420, damping: 30 };
+const springTap = { type: "spring", stiffness: 500, damping: 32 };
+
 /** Framer Motion — use across sections for consistency */
 export const customerMotion = {
   fadeUp: {
-    hidden: { opacity: 0, y: 24 },
-    show: { opacity: 1, y: 0, transition: { duration: 0.45, ease: "easeOut" } },
+    hidden: { opacity: 0, y: 20 },
+    show: { opacity: 1, y: 0, transition: { duration: 0.42, ease: [0.22, 1, 0.36, 1] } },
   },
   fadeUpSm: {
-    hidden: { opacity: 0, y: 16 },
-    show: { opacity: 1, y: 0, transition: { duration: 0.4, ease: "easeOut" } },
+    hidden: { opacity: 0, y: 12 },
+    show: { opacity: 1, y: 0, transition: { duration: 0.38, ease: [0.22, 1, 0.36, 1] } },
   },
   stagger: {
     hidden: {},
-    show: { transition: { staggerChildren: 0.08, delayChildren: 0.05 } },
+    show: { transition: { staggerChildren: 0.07, delayChildren: 0.04 } },
   },
   heroEnter: {
-    hidden: { opacity: 0, x: -24 },
-    show: { opacity: 1, x: 0, transition: { duration: 0.55, ease: "easeOut" } },
+    hidden: { opacity: 0, x: -20 },
+    show: { opacity: 1, x: 0, transition: { duration: 0.5, ease: [0.22, 1, 0.36, 1] } },
   },
   heroMedia: {
-    hidden: { opacity: 0, x: 24 },
-    show: { opacity: 1, x: 0, transition: { duration: 0.55, delay: 0.12, ease: "easeOut" } },
+    hidden: { opacity: 0, x: 20 },
+    show: { opacity: 1, x: 0, transition: { duration: 0.5, delay: 0.1, ease: [0.22, 1, 0.36, 1] } },
   },
-  cardHover: { y: -6, transition: { type: "spring", stiffness: 400, damping: 28 } },
-  cardHoverSm: { y: -4, transition: { type: "spring", stiffness: 400, damping: 28 } },
-  tap: { scale: 0.98 },
-  tapSm: { scale: 0.97 },
+  /** Card lift on hover — prefer over CSS translate on motion cards */
+  cardHover: { y: -3, transition: springLift },
+  cardHoverSm: { y: -2, transition: springLift },
+  /** Buttons / pills */
+  hoverBtn: { scale: 1.02, transition: springTap },
+  hoverNudge: { y: -1, transition: springLift },
+  tap: { scale: 0.98, transition: springTap },
+  tapSm: { scale: 0.97, transition: springTap },
+  springLift,
+  springTap,
 };
 
 /** Typography + layout class names (globals.css) */
@@ -52,6 +61,7 @@ export const customerLayout = {
   stackMd: "flex flex-col gap-5 sm:gap-6 lg:gap-8",
   gridCards3: "grid gap-4 sm:gap-5 sm:grid-cols-2 lg:grid-cols-3",
   gridCards4: "grid gap-4 sm:gap-5 sm:grid-cols-2 lg:grid-cols-4",
+  stepsGrid: "ct-steps-grid",
   horizontalScroll: "ct-scroll-row",
 };
 
@@ -82,7 +92,8 @@ export const customerInteractive = {
   mediaZoom: "ct-media-zoom",
   cardMotion: "ct-card ct-card-motion ct-card-hover-shadow",
   cardStatic: "ct-card",
-  cardLiftCss: "ct-card transition-[transform,box-shadow] duration-300 group-hover:-translate-y-1 group-hover:shadow-[0_12px_36px_var(--customer-primary-shadow)]",
+  cardLiftCss:
+    "ct-card ct-card-motion transition-[transform,border-color] duration-300 ease-out group-hover:-translate-y-1 group-hover:border-[var(--customer-primary-border)]",
   pillScroll: "ct-pill-scroll",
 };
 

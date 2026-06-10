@@ -4,6 +4,7 @@
  * Uses nodemailer (already installed).
  */
 
+import { BHOJDESK_BRAND, platformEmailSubject } from "@/config/bhojdeskBrand";
 import { createSmtpTransport, buildFromAddress } from "@/lib/emailService";
 import { getTokenFromRequest } from "@/lib/authCookies";
 import { verifyToken } from "@/lib/jwt";
@@ -59,17 +60,17 @@ export async function POST(request) {
     await transporter.sendMail({
       from: buildFromAddress(effective),
       to: smtp.smtpUser,
-      subject: "RMS — SMTP Test Email",
-      text:    "This is a test email from your RMS Super Admin panel. Your SMTP configuration is working correctly.",
+      subject: platformEmailSubject("SMTP Test Email"),
+      text:    `This is a test email from your ${BHOJDESK_BRAND.name} Super Admin panel. Your SMTP configuration is working correctly.`,
       html:    `
         <div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:24px">
           <h2 style="color:#10b981;margin-bottom:8px">SMTP Test Successful ✓</h2>
           <p style="color:#71717a;font-size:14px">
-            This is a test email from your <strong>RMS Super Admin</strong> panel.
+            This is a test email from your <strong>${BHOJDESK_BRAND.name} Super Admin</strong> panel.
             Your SMTP configuration is working correctly.
           </p>
           <hr style="border:none;border-top:1px solid #27272a;margin:20px 0"/>
-          <p style="color:#52525b;font-size:12px">Sent from RMS Platform · Super Admin Settings</p>
+          <p style="color:#52525b;font-size:12px">Sent from ${BHOJDESK_BRAND.fullName} · Super Admin Settings</p>
         </div>
       `,
     });

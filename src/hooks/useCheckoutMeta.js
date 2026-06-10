@@ -19,6 +19,7 @@ const DEFAULT_META = {
   },
   etaMinutes: { "dine-in": "15-20", takeaway: "20-30", delivery: "30-45" },
   coupons: [],
+  minOrderAmount: 0,
 };
 
 /** Shared checkout settings (tax %, delivery fee, payments) for cart + checkout + success. */
@@ -57,13 +58,25 @@ export function calcOrderTotals({
   taxPercentage = 8,
   deliveryCharge = 0,
   couponDiscount = 0,
+  pointsDiscount = 0,
 }) {
   const sub = Math.max(0, Number(subtotal) || 0);
   const rate = Math.max(0, Number(taxPercentage) || 0);
   const delivery =
     orderType === "delivery" ? Math.max(0, Number(deliveryCharge) || 0) : 0;
-  const tax = sub * (rate / 100);
-  const discount = Math.max(0, Number(couponDiscount) || 0);
-  const total = Math.max(0, sub + tax + delivery - discount);
-  return { subtotal: sub, tax, delivery, couponDiscount: discount, total, taxRate: rate };
+  const coupon = Math.max(0, Number(couponDiscount) || 0);
+  const taxableSubtotal = Math.max(0, sub - coupon);
+  const tax = taxableSubtotal * (rate / 100);
+  const pts = Math.max(0, Number(pointsDiscount) || 0);
+  const total = Math.max(0, taxableSubtotal + tax + delivery - pts);
+  return {
+    subtotal: sub,
+    tax,
+    delivery,
+    couponDiscount: coupon,
+    pointsDiscount: pts,
+    total,
+    taxRate: rate,
+    taxableSubtotal,
+  };
 }

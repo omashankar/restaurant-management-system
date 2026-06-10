@@ -23,6 +23,38 @@ function escapeRegex(input) {
   return String(input).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
+/** Search after owner $lookup — owner email lives on users, not restaurants. */
+function buildSearchMatchStage(search) {
+  if (!search) return null;
+  const safeSearch = escapeRegex(search);
+  return {
+    $match: {
+      $or: [
+        { name: { $regex: safeSearch, $options: "i" } },
+        { slug: { $regex: safeSearch, $options: "i" } },
+        { phone: { $regex: safeSearch, $options: "i" } },
+        { "ownerDoc.email": { $regex: safeSearch, $options: "i" } },
+        { "ownerDoc.name": { $regex: safeSearch, $options: "i" } },
+      ],
+    },
+  };
+}
+
+async function ownerIdsMatchingSearch(db, search) {
+  const safeSearch = escapeRegex(search);
+  const owners = await db.collection("users").find(
+    {
+      role: "admin",
+      $or: [
+        { email: { $regex: safeSearch, $options: "i" } },
+        { name: { $regex: safeSearch, $options: "i" } },
+      ],
+    },
+    { projection: { _id: 1 } },
+  ).toArray();
+  return owners.map((o) => o._id);
+}
+
 /* ── GET /api/super-admin/restaurants ── */
 export async function GET(request) {
   if (!superAdminOnly(request)) {
@@ -43,14 +75,6 @@ export async function GET(request) {
     if (plan   !== "all") filter.plan   = plan;
     if (search && search.length > 80) {
       return Response.json({ success: false, error: "Search query is too long." }, { status: 400 });
-    }
-    if (search) {
-      const safeSearch = escapeRegex(search);
-      filter.$or = [
-        { name:       { $regex: safeSearch, $options: "i" } },
-        { ownerEmail: { $regex: safeSearch, $options: "i" } },
-        { phone:      { $regex: safeSearch, $options: "i" } },
-      ];
     }
 
     const pageRaw = searchParams.get("page");
@@ -75,6 +99,9 @@ export async function GET(request) {
         { $addFields: { ownerDoc: { $arrayElemAt: ["$_ownerArr", 0] } } },
         { $project: { _ownerArr: 0 } },
       ];
+
+      const searchStage = buildSearchMatchStage(search);
+      if (searchStage) pipeline.push(searchStage);
 
       if (ownerStatus !== "all") {
         pipeline.push({
@@ -163,8 +190,21 @@ export async function GET(request) {
       });
     }
 
+    const listFilter = { ...filter };
+    if (search) {
+      const safeSearch = escapeRegex(search);
+      const ownerIds = await ownerIdsMatchingSearch(db, search);
+      const orClauses = [
+        { name: { $regex: safeSearch, $options: "i" } },
+        { slug: { $regex: safeSearch, $options: "i" } },
+        { phone: { $regex: safeSearch, $options: "i" } },
+      ];
+      if (ownerIds.length) orClauses.push({ ownerId: { $in: ownerIds } });
+      listFilter.$or = orClauses;
+    }
+
     const restaurants = await db.collection("restaurants")
-      .find(filter)
+      .find(listFilter)
       .sort({ createdAt: -1 })
       .toArray();
 
@@ -354,7 +394,7 @@ export async function POST(request) {
       pushBody: name.trim(),
       emailType: "newRestaurant",
       emailContent: {
-        subject: `[RMS] New restaurant: ${name.trim()}`,
+        subject: `[BhojDesk RMS] New restaurant: ${name.trim()}`,
         text: `Created by super admin.\nOwner: ${ownerEmail}\nPlan: ${plan}`,
       },
     }).catch(() => {});

@@ -13,6 +13,12 @@ export { DEFAULTS, VALID_SECTIONS } from "./restaurantCmsDefaults";
 
 const COLLECTION = "restaurant_cms";
 const VERSION = 1;
+const CMS_CACHE_TTL_MS = 30_000;
+const cmsContentCache = new Map();
+
+export function invalidateRestaurantCmsServerCache(restaurantId) {
+  if (restaurantId) cmsContentCache.delete(String(restaurantId));
+}
 
 async function getDb() {
   const client = await clientPromise;
@@ -40,6 +46,10 @@ function mergeSectionFromDoc(def, stored, section) {
 
 /** Published content merged with defaults (customer-facing). */
 export async function getRestaurantCmsContent(restaurantId) {
+  const cacheKey = String(restaurantId);
+  const cached = cmsContentCache.get(cacheKey);
+  if (cached && cached.expiresAt > Date.now()) return cached.data;
+
   const doc = await getRestaurantCmsDoc(restaurantId);
   const content = {};
   for (const section of VALID_SECTIONS) {
@@ -47,7 +57,9 @@ export async function getRestaurantCmsContent(restaurantId) {
     const stored = doc?.[section] ?? null;
     content[section] = mergeSectionFromDoc(def, stored, section);
   }
-  return { content, updatedAt: doc?.updatedAt ?? null };
+  const data = { content, updatedAt: doc?.updatedAt ?? null };
+  cmsContentCache.set(cacheKey, { data, expiresAt: Date.now() + CMS_CACHE_TTL_MS });
+  return data;
 }
 
 /** Admin editor: draft overrides merged on top of published. */
@@ -101,6 +113,7 @@ export async function saveSection(restaurantId, section, data, { asDraft = false
     { upsert: true }
   );
   await deleteOrphanedManagedUploads(oldSection, data);
+  invalidateRestaurantCmsServerCache(restaurantId);
   return { section, asDraft: false, updatedAt: now };
 }
 
@@ -127,6 +140,7 @@ export async function publishSection(restaurantId, section) {
     { upsert: true }
   );
   await deleteOrphanedManagedUploads(oldSection, data);
+  invalidateRestaurantCmsServerCache(restaurantId);
   return { section, updatedAt: now };
 }
 
@@ -150,5 +164,6 @@ export async function publishAllDrafts(restaurantId) {
   for (const section of sections) {
     await deleteOrphanedManagedUploads(doc?.[section], draft[section]);
   }
+  invalidateRestaurantCmsServerCache(restaurantId);
   return { sections, updatedAt: now };
 }

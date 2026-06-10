@@ -36,7 +36,7 @@ export async function POST(request) {
     const otpauthUrl = getOtpAuthUrl({
       secret,
       label: user.email,
-      issuer: "RMS",
+      issuer: "BhojDesk",
     });
     const qrDataUrl = await QRCode.toDataURL(otpauthUrl);
 

@@ -115,22 +115,22 @@ export default function AboutPage() {
   const primaryHref = resolveAboutHref(about.ctaPrimaryLink, link);
   const secondaryHref = resolveAboutHref(about.ctaSecondaryLink, link);
 
-  const missingHint = "Add in Settings → Contact";
+  const missingHint = "Details coming soon";
 
   return (
     <div className="ct-page-shell">
-      <section className="bg-white">
-        <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+      <section className={`${customerSectionBg.white} ${customerClasses.sectionPad}`}>
+        <div className={`${customerClasses.container}`}>
           <div className="grid items-center gap-10 lg:grid-cols-2 lg:gap-16">
             <motion.div
               initial={{ opacity: 0, x: -30 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.6 }}
             >
-              <span className="mb-4 inline-flex items-center gap-1.5 rounded-full bg-customer-primary/10 px-4 py-1.5 text-xs font-bold uppercase tracking-widest text-customer-primary">
+              <span className={customerClasses.badge}>
                 {about.headline?.trim() || "Our Story"}
               </span>
-              <h1 className="font-poppins text-4xl font-black leading-tight text-customer-text sm:text-5xl">
+              <h1 className={`${customerType.heroTitle} sm:text-5xl`}>
                 About <span className="gradient-text">{info.name}</span>
               </h1>
               <p className="mt-5 text-base leading-relaxed text-customer-muted">
@@ -138,7 +138,7 @@ export default function AboutPage() {
                   "We started with a simple mission — to serve fresh, delicious food with warm hospitality."}
               </p>
 
-              <div className="mt-6 grid grid-cols-2 gap-2">
+              <div className="mt-6 grid grid-cols-1 gap-2 sm:grid-cols-2">
                 {promises.map((p) => (
                   <div key={p} className="flex items-center gap-2 text-sm text-customer-muted">
                     <CheckCircle2 className="size-4 shrink-0 text-customer-primary" />
@@ -150,13 +150,13 @@ export default function AboutPage() {
               <div className="mt-8 flex flex-wrap gap-3">
                 <Link
                   href={primaryHref}
-                  className="inline-flex items-center gap-2 rounded-full gradient-primary px-7 py-3.5 text-sm font-bold text-white shadow-lg shadow-[var(--customer-primary-shadow)]/25 transition-all hover:scale-105"
+                  className={`${customerClasses.btnPrimary} gap-2 px-7 py-3.5 text-sm transition-all hover:scale-105`}
                 >
                   {about.ctaPrimaryLabel?.trim() || "View Menu"} <ArrowRight className="size-4" />
                 </Link>
                 <Link
                   href={secondaryHref}
-                  className="inline-flex items-center gap-2 rounded-full border-2 border-customer-border bg-white px-7 py-3.5 text-sm font-bold text-customer-text transition-all hover:border-customer-primary/40"
+                  className="inline-flex items-center gap-2 rounded-full border-2 border-customer-border bg-[var(--customer-card)] px-7 py-3.5 text-sm font-bold text-customer-text transition-all hover:border-customer-primary/40"
                 >
                   {about.ctaSecondaryLabel?.trim() || "Book a Table"}
                 </Link>
@@ -169,7 +169,7 @@ export default function AboutPage() {
               transition={{ duration: 0.6, delay: 0.2 }}
               className="grid grid-cols-2 gap-3"
             >
-              <div className="col-span-2 overflow-hidden rounded-3xl shadow-lg">
+              <div className="col-span-2 overflow-hidden rounded-3xl">
                 <img
                   src={mainImage}
                   alt={info.name || "Restaurant"}
@@ -185,7 +185,7 @@ export default function AboutPage() {
               ).map((src, i) => (
                 <div
                   key={`${src}-${i}`}
-                  className={`overflow-hidden rounded-2xl shadow-md ${i === 2 ? "col-span-2" : ""}`}
+                  className={`overflow-hidden rounded-2xl ${i === 2 ? "col-span-2" : ""}`}
                 >
                   <img
                     src={src}
@@ -203,9 +203,9 @@ export default function AboutPage() {
       </section>
 
       {stats.length > 0 && (
-        <section className="ct-dark-band bg-[var(--customer-footer-bg,#111827)] py-14">
+        <section className="ct-dark-band py-14">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <AnimatedSection className="grid grid-cols-2 gap-5 sm:grid-cols-3">
+            <AnimatedSection className={`grid gap-5 ${stats.length === 3 ? "grid-cols-2 sm:grid-cols-3" : "grid-cols-2 sm:grid-cols-2 lg:grid-cols-4"}`}>
               {stats.map(({ value, label, icon: Icon }) => (
                 <motion.div key={label} variants={fadeUp} className="text-center">
                   <div className="mx-auto mb-3 flex size-12 items-center justify-center rounded-2xl bg-customer-primary/15">
@@ -222,16 +222,14 @@ export default function AboutPage() {
         </section>
       )}
 
-      <section className="bg-white py-16">
+      <section className={`${customerSectionBg.white} ${customerClasses.sectionPad}`}>
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <AnimatedSection>
             <motion.div variants={fadeUp} className="mb-12 text-center">
               {featuresH.badge && (
-                <span className="mb-3 inline-flex items-center gap-1.5 rounded-full bg-customer-primary/10 px-4 py-1.5 text-xs font-bold uppercase tracking-widest text-customer-primary">
-                  {featuresH.badge}
-                </span>
+                <span className={customerClasses.badge}>{featuresH.badge}</span>
               )}
-              <h2 className="font-poppins text-3xl font-black text-customer-text sm:text-4xl">{featuresH.title}</h2>
+              <h2 className={customerType.sectionTitle}>{featuresH.title}</h2>
               {featuresH.subtitle && <p className="mt-3 text-sm text-customer-muted">{featuresH.subtitle}</p>}
             </motion.div>
             <div className="grid gap-6 sm:grid-cols-3">
@@ -239,10 +237,10 @@ export default function AboutPage() {
                 <motion.div
                   key={title}
                   variants={fadeUp}
-                  whileHover={{ y: -6 }}
-                  className="group rounded-3xl border border-customer-border bg-white p-8 shadow-sm transition-all hover:shadow-xl hover:shadow-[var(--customer-primary-shadow)]/8"
+                  whileHover={customerMotion.cardHover}
+                  className="group ct-surface-card rounded-3xl p-5 transition-all sm:p-8"
                 >
-                  <div className="mb-5 flex size-14 items-center justify-center rounded-2xl gradient-primary shadow-md shadow-[var(--customer-primary-shadow)]/20 transition-transform group-hover:scale-110">
+                  <div className="mb-5 flex size-14 items-center justify-center rounded-2xl gradient-primary transition-transform group-hover:scale-110">
                     <Icon className="size-7 text-white" />
                   </div>
                   <h3 className="font-poppins text-lg font-black text-customer-text">{title}</h3>
@@ -258,12 +256,8 @@ export default function AboutPage() {
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <AnimatedSection>
             <motion.div variants={fadeUp} className="mb-12 text-center">
-              {visitH.badge && (
-                <span className="mb-3 inline-flex items-center gap-1.5 rounded-full bg-customer-primary/10 px-4 py-1.5 text-xs font-bold uppercase tracking-widest text-customer-primary">
-                  {visitH.badge}
-                </span>
-              )}
-              <h2 className="font-poppins text-3xl font-black text-customer-text sm:text-4xl">{visitH.title}</h2>
+              {visitH.badge && <span className={customerClasses.badge}>{visitH.badge}</span>}
+              <h2 className={customerType.sectionTitle}>{visitH.title}</h2>
               {visitH.subtitle && <p className="mt-3 text-sm text-customer-muted">{visitH.subtitle}</p>}
             </motion.div>
             <div className="grid gap-5 sm:grid-cols-3">
@@ -272,26 +266,26 @@ export default function AboutPage() {
                   Icon: MapPin,
                   label: "Address",
                   value: info.address?.trim() || missingHint,
-                  color: "bg-customer-primary/10 text-customer-primary",
+                  color: customerClasses.iconTintPrimary,
                 },
                 {
                   Icon: Phone,
                   label: "Phone",
                   value: info.phone?.trim() || missingHint,
-                  color: "bg-green-100 text-green-600",
+                  color: customerClasses.iconTintSuccess,
                 },
                 {
                   Icon: Clock,
                   label: "Hours",
                   value: info.hoursSummary?.trim() || missingHint,
-                  color: "bg-amber-100 text-amber-600",
+                  color: customerClasses.iconTintWarning,
                 },
               ].map(({ Icon, label, value, color }) => (
                 <motion.div
                   key={label}
                   variants={fadeUp}
-                  whileHover={{ y: -4 }}
-                  className="flex items-start gap-4 ct-surface-card rounded-3xl p-6 shadow-sm transition-all hover:shadow-md"
+                  whileHover={customerMotion.cardHoverSm}
+                  className="flex items-start gap-4 ct-surface-card rounded-3xl p-6 transition-all"
                 >
                   <div className={`flex size-12 shrink-0 items-center justify-center rounded-2xl ${color}`}>
                     <Icon className="size-6" />
@@ -307,19 +301,19 @@ export default function AboutPage() {
         </div>
       </section>
 
-      <section className="bg-white py-16">
+      <section className={`${customerSectionBg.white} py-16`}>
         <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="relative overflow-hidden rounded-3xl gradient-primary px-8 py-14 text-center shadow-2xl shadow-[var(--customer-primary-shadow)]/20"
+            className="relative overflow-hidden rounded-3xl gradient-primary px-5 py-10 text-center sm:px-8 sm:py-14"
           >
             <div className="pointer-events-none absolute inset-0">
               <div className="absolute -right-20 -top-20 size-64 rounded-full bg-white/10 blur-3xl" />
               <div className="absolute -bottom-20 -left-20 size-64 rounded-full bg-white/10 blur-3xl" />
             </div>
-            <h3 className="relative font-poppins text-3xl font-black text-white sm:text-4xl">
+            <h3 className={`relative ${customerOverlay.title} font-poppins text-3xl font-black sm:text-4xl`}>
               {bottomCta.title?.trim() || "Ready to Taste the Difference?"}
             </h3>
             <p className={`relative mt-3 text-sm ${customerOverlay.subtitle}`}>
@@ -328,7 +322,7 @@ export default function AboutPage() {
             <div className="relative mt-8 flex flex-wrap items-center justify-center gap-3">
               <Link
                 href={resolveAboutHref(bottomCta.primaryLink, link)}
-                className="inline-flex items-center gap-2 rounded-full bg-white px-8 py-3.5 text-sm font-bold text-customer-primary shadow-lg transition-all hover:scale-105 hover:shadow-xl"
+                className="inline-flex items-center gap-2 rounded-full bg-white px-8 py-3.5 text-sm font-bold text-customer-primary transition-all hover:scale-105"
               >
                 {bottomCta.primaryLabel?.trim() || "Order Now"} <ArrowRight className="size-4" />
               </Link>

@@ -9,9 +9,11 @@ import {
 import { resolveSuperAdminTheme } from "@/lib/superAdminThemeRuntime";
 import { useEffect, useState } from "react";
 
+import { BHOJDESK_BRAND } from "@/config/bhojdeskBrand";
+
 const DEFAULT_CONFIG = {
   maintenanceMode: false,
-  appName: "RMS Platform",
+  appName: BHOJDESK_BRAND.fullName,
   features: {
     featureMenuQR: true,
     featureOnlineOrder: true,

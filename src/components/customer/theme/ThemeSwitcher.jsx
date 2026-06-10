@@ -4,35 +4,20 @@ import { useCustomerTheme } from "@/context/CustomerThemeContext";
 import { Moon, Sun } from "lucide-react";
 
 /**
- * Light / dark mode toggle — persists per restaurant in localStorage.
+ * Light / dark mode — single icon shows the mode you can switch to.
  */
-export default function ThemeSwitcher({
-  className = "",
-  showLabel = true,
-  size = "sm",
-}) {
-  const { mode, toggleMode, isDark } = useCustomerTheme();
-  const iconCls = size === "md" ? "size-4" : "size-3.5";
-  const pad = size === "md" ? "px-3 py-2" : "px-2 py-1.5";
+export default function ThemeSwitcher({ className = "" }) {
+  const { toggleMode, isDark } = useCustomerTheme();
 
   return (
     <button
       type="button"
       onClick={toggleMode}
-      className={`ct-theme-switch inline-flex cursor-pointer items-center gap-1.5 rounded-lg transition-colors ${pad} ${className}`}
+      className={`ct-theme-switch flex size-11 min-h-[44px] min-w-[44px] shrink-0 cursor-pointer items-center justify-center rounded-full text-[var(--customer-nav-muted)] transition-colors hover:bg-[var(--customer-primary-soft)] hover:text-[var(--customer-nav-text)] ${className}`}
       aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
       title={isDark ? "Light mode" : "Dark mode"}
     >
-      {isDark ? (
-        <Sun className={iconCls} style={{ color: "var(--customer-primary)" }} />
-      ) : (
-        <Moon className={iconCls} style={{ color: "var(--customer-nav-muted)" }} />
-      )}
-      {showLabel && (
-        <span className="text-xs font-medium" style={{ color: "var(--customer-nav-text)" }}>
-          {isDark ? "Light" : "Dark"}
-        </span>
-      )}
+      {isDark ? <Sun className="size-4.5" /> : <Moon className="size-4.5" />}
     </button>
   );
 }

@@ -63,7 +63,7 @@ export function buildEscPosTest({ restaurantName = "Restaurant" } = {}) {
     `${restaurantName}\n`,
     `${ESC}a\x00`,
     "Test Print\n",
-    `RMS · ${new Date().toLocaleString()}\n`,
+    `BhojDesk RMS · ${new Date().toLocaleString()}\n`,
     divider(32),
     "Printer connection OK\n\n",
     `${GS}V\x00`,

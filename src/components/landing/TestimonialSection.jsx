@@ -8,7 +8,7 @@ export default function TestimonialSection() {
       <SectionTitle
         eyebrow="Testimonials"
         title="Loved by restaurant teams"
-        subtext="Real feedback from teams using RMS to run daily operations."
+        subtext="Real feedback from teams using BhojDesk to run daily operations."
       />
       <div className="mt-12 grid gap-5 md:grid-cols-3">
         {TESTIMONIALS.map((t) => (

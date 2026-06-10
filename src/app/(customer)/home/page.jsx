@@ -6,28 +6,28 @@ import { useRestaurantSlug } from "@/hooks/useRestaurantSlug";
 import { useRestaurantInfo } from "@/hooks/useRestaurantInfo";
 import { getActiveBanners, useRestaurantCms } from "@/hooks/useRestaurantCms";
 import CategoryBrowseSection from "@/components/customer/CategoryBrowseSection";
+import MenuItemCard from "@/components/customer/MenuItemCard";
 import { CustomerSectionHeader } from "@/components/customer/CustomerSection";
 import SafeDishImage from "@/components/customer/SafeDishImage";
 import {
   customerClasses,
   customerInteractive,
+  customerLayout,
   customerMotion,
   customerOverlay,
   customerSectionBg,
   customerType,
 } from "@/lib/customerTheme";
-import FoodTypeIndicator from "@/components/customer/FoodTypeIndicator";
 import { formatCustomerMoney } from "@/lib/customerCurrency";
-import { pickSectionHeaders } from "@/lib/customerCmsMerge";
 import { DEFAULT_HERO_IMAGE, DEFAULT_PROMO_SLIDE_IMAGE, DEFAULTS } from "@/lib/restaurantCmsDefaults";
-import { mergeCmsSection } from "@/lib/customerCmsMerge";
+import { mergeCmsSection, pickSectionHeaders } from "@/lib/customerCmsMerge";
 import { normalizeLogoSrc } from "@/lib/logoUrl";
 import { motion, useInView } from "framer-motion";
 import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import {
   ArrowRight, BarChart3, Bike, CalendarClock, ChefHat,
-  ChevronRight, Clock, ConciergeBell, CreditCard, LayoutGrid,
-  PackageSearch, Plus, Search, Star, Store, Zap, Flame, Award, TrendingUp
+  ChevronRight, ConciergeBell, CreditCard, LayoutGrid,
+  PackageSearch, Search, Star, Store, Flame, Award, TrendingUp
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -98,7 +98,7 @@ function PromoBannerSlider({ banners, link }) {
   const b = banners[active];
 
   return (
-    <div className="relative overflow-hidden rounded-3xl shadow-2xl">
+    <div className="relative overflow-hidden rounded-3xl">
       {/* Background images — all preloaded, only active visible */}
       {banners.map((ban, i) => (
         <div
@@ -117,14 +117,14 @@ function PromoBannerSlider({ banners, link }) {
       <div className={customerOverlay.gradientPromo} />
       <div className={customerOverlay.gradientPromoVignette} />
 
-      {/* Content */}
-      <div className="relative min-h-[240px] px-4 py-8 sm:min-h-[300px] sm:px-14 sm:py-10 lg:min-h-[320px] lg:px-20">
+      {/* Content — extra bottom padding for dot row; side padding on sm+ for arrows */}
+      <div className="relative z-[1] flex min-h-[260px] flex-col justify-center px-5 pb-16 pt-8 sm:min-h-[300px] sm:px-16 sm:pb-14 sm:pt-10 lg:min-h-[320px] lg:px-20">
         <motion.div
           key={animKey}
           initial={{ opacity: 0, y: 24 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, ease: "easeOut" }}
-          className="max-w-lg"
+          className="max-w-lg pr-2 sm:pr-0"
         >
           {/* Badge */}
           <div className="mb-4 flex items-center gap-2">
@@ -135,7 +135,7 @@ function PromoBannerSlider({ banners, link }) {
             </span>
             )}
             {b.discount && (
-              <span className="rounded-full bg-customer-primary px-3 py-1 text-xs font-black text-white shadow-lg">
+              <span className="rounded-full bg-customer-primary px-3 py-1 text-xs font-black text-white">
                 {b.discount}
               </span>
             )}
@@ -146,13 +146,15 @@ function PromoBannerSlider({ banners, link }) {
             {b.title}
           </h3>
 
-          <p className={`mt-3 text-sm leading-relaxed sm:text-base ${customerOverlay.subtitle}`}>{b.subtitle}</p>
+          <p className={`mt-3 max-w-[min(100%,20rem)] text-sm leading-relaxed sm:max-w-lg sm:text-base ${customerOverlay.subtitle}`}>
+            {b.subtitle}
+          </p>
 
           {/* CTA */}
-          <div className="mt-7 flex flex-wrap items-center gap-3">
+          <div className="mt-6 flex flex-wrap items-center gap-3 sm:mt-7">
             <Link
               href={resolvePromoHref(b.ctaLink, link)}
-              className={`${customerClasses.btnPrimary} gap-2 px-7 py-3 text-sm shadow-lg transition-transform hover:scale-[1.03]`}
+              className={`${customerClasses.btnPrimary} gap-2 px-7 py-3 text-sm transition-transform hover:scale-[1.03]`}
             >
               {b.ctaLabel || "Order Now"} <ChevronRight className="size-4" />
             </Link>
@@ -169,42 +171,46 @@ function PromoBannerSlider({ banners, link }) {
       </div>
 
       {/* Slide counter top-right */}
-      <div className="absolute right-5 top-5 rounded-full bg-black/40 px-3 py-1 text-xs font-bold text-white backdrop-blur-sm">
+      <div className="absolute right-4 top-4 z-[2] rounded-full bg-black/40 px-3 py-1 text-xs font-bold text-white backdrop-blur-sm sm:right-5 sm:top-5">
         {active + 1} / {banners.length}
       </div>
 
-      {/* Prev arrow */}
+      {/* Prev / next — tablet+ only (mobile uses dots; avoids text overlap) */}
       <button
         type="button"
         onClick={() => { prev(); resetTimer(); }}
-        className="absolute left-4 top-1/2 flex size-10 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full bg-black/40 text-white backdrop-blur-sm transition-[transform,background-color] duration-200 hover:scale-105 hover:bg-black/65"
-        aria-label="Previous"
+        className="absolute left-3 top-1/2 z-[2] hidden size-11 min-h-[44px] min-w-[44px] -translate-y-1/2 cursor-pointer items-center justify-center rounded-full bg-black/40 text-white backdrop-blur-sm transition-[transform,background-color] duration-200 hover:scale-[1.03] hover:bg-black/65 sm:flex sm:left-4"
+        aria-label="Previous slide"
       >
         <ChevronRight className="size-5 rotate-180" />
       </button>
 
-      {/* Next arrow */}
       <button
         type="button"
         onClick={() => { next(); resetTimer(); }}
-        className="absolute right-4 top-1/2 flex size-10 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full bg-black/40 text-white backdrop-blur-sm transition-[transform,background-color] duration-200 hover:scale-105 hover:bg-black/65"
-        aria-label="Next"
+        className="absolute right-3 top-1/2 z-[2] hidden size-11 min-h-[44px] min-w-[44px] -translate-y-1/2 cursor-pointer items-center justify-center rounded-full bg-black/40 text-white backdrop-blur-sm transition-[transform,background-color] duration-200 hover:scale-[1.03] hover:bg-black/65 sm:flex sm:right-4"
+        aria-label="Next slide"
       >
         <ChevronRight className="size-5" />
       </button>
 
-      {/* Dots bottom */}
-      <div className="absolute bottom-5 left-8 flex gap-2 sm:left-14 lg:left-20">
+      {/* Dots — centered, below CTA */}
+      <div className="absolute bottom-2 left-0 right-0 z-[2] flex items-center justify-center gap-0.5 px-4 sm:bottom-4">
         {banners.map((_, i) => (
           <button
             key={i}
             type="button"
             onClick={() => { setActive(i); setAnimKey((k) => k + 1); resetTimer(); }}
-            className={`h-1.5 rounded-full transition-all duration-400 ${
-              i === active ? "w-8 bg-customer-primary" : "w-1.5 bg-white/40 hover:bg-white/70"
-            }`}
-            aria-label={`Slide ${i + 1}`}
-          />
+            className="flex cursor-pointer items-center justify-center px-2.5 py-3"
+            aria-label={`Go to slide ${i + 1}`}
+            aria-current={i === active ? "true" : undefined}
+          >
+            <span
+              className={`block h-1.5 rounded-full transition-all duration-300 ${
+                i === active ? "w-7 bg-customer-primary" : "w-1.5 bg-white/50 hover:bg-white/80"
+              }`}
+            />
+          </button>
         ))}
       </div>
     </div>
@@ -212,7 +218,7 @@ function PromoBannerSlider({ banners, link }) {
 }
 
 export default function CustomerHomePage() {
-  const { setOrderType, setOrderTypeModalOpen, tryAddToCart } = useCustomer();
+  const { cart, setOrderType, setOrderTypeModalOpen, tryAddToCart } = useCustomer();
   const { menuItems, categories } = useModuleData();
   const { link } = useRestaurantSlug();
   const { info } = useRestaurantInfo();
@@ -362,12 +368,12 @@ export default function CustomerHomePage() {
                 initial={{ opacity: 0, y: -12 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.15 }}
-                className="mb-5 inline-flex w-fit items-center gap-2 rounded-full border border-customer-border bg-customer-cream px-4 py-2"
+                className="mb-5 inline-flex w-fit items-center gap-2"
               >
-                <span className="flex size-5 items-center justify-center rounded-full gradient-primary">
-                  <Flame className="size-3 text-white" />
-                </span>
-                <span className="text-xs font-semibold text-customer-primary">
+                <span className={customerClasses.badge}>
+                  <span className="flex size-4 items-center justify-center rounded-full gradient-primary">
+                    <Flame className="size-2.5 text-[var(--customer-btn-primary-fg)]" />
+                  </span>
                   {hero.badge || "Chef Crafted · Fresh · Premium"}
                 </span>
               </motion.div>
@@ -389,24 +395,29 @@ export default function CustomerHomePage() {
                   initial={{ opacity: 0, y: 12 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.3 }}
-                  className={`mt-7 max-w-md ${customerInteractive.inputWrap}`}
+                  className={`ct-hero-search mt-7 w-full max-w-md ${customerInteractive.inputWrap}`}
                 >
                   <Search className={`size-4 shrink-0 ${customerInteractive.inputIcon}`} aria-hidden />
                   <input
-                    type="search"
+                    type="text"
+                    inputMode="search"
+                    enterKeyHint="search"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     placeholder={hero.searchPlaceholder || "Search for dishes…"}
-                    className={customerInteractive.input}
+                    className={`${customerInteractive.input} min-w-0`}
                     aria-label="Search menu"
+                    role="searchbox"
                   />
                   <motion.button
-                    whileHover={{ scale: 1.03 }}
+                    whileHover={customerMotion.hoverBtn}
                     whileTap={customerMotion.tapSm}
                     type="submit"
-                    className={`${customerClasses.btnPrimary} shrink-0 cursor-pointer px-5 py-2 text-xs`}
+                    aria-label={hero.searchButtonLabel || "Search"}
+                    className={`${customerClasses.btnPrimary} ct-hero-search__btn shrink-0 cursor-pointer text-xs`}
                   >
-                    {hero.searchButtonLabel || "Search"}
+                    <ArrowRight className="size-4 sm:hidden" aria-hidden />
+                    <span className="hidden sm:inline">{hero.searchButtonLabel || "Search"}</span>
                   </motion.button>
                 </motion.form>
               )}
@@ -461,14 +472,14 @@ export default function CustomerHomePage() {
                 className="mt-8 flex flex-wrap gap-3"
               >
                 {primaryHref ? (
-                  <motion.div whileHover={{ scale: 1.03 }} whileTap={customerMotion.tapSm}>
+                  <motion.div whileHover={customerMotion.hoverBtn} whileTap={customerMotion.tapSm}>
                     <Link href={primaryHref} className={`${customerClasses.btnPrimary} gap-2 px-7 py-3.5 text-sm`}>
                       {hero.ctaPrimaryLabel || "Order Now"} <ChevronRight className="size-4" />
                     </Link>
                   </motion.div>
                 ) : (
                   <motion.button
-                    whileHover={{ scale: 1.03 }}
+                    whileHover={customerMotion.hoverBtn}
                     whileTap={customerMotion.tapSm}
                     type="button"
                     onClick={() => setOrderTypeModalOpen(true)}
@@ -477,7 +488,7 @@ export default function CustomerHomePage() {
                     {hero.ctaPrimaryLabel || "Order Now"} <ChevronRight className="size-4" />
                   </motion.button>
                 )}
-                <motion.div whileHover={{ scale: 1.02 }} whileTap={customerMotion.tapSm}>
+                <motion.div whileHover={customerMotion.hoverBtn} whileTap={customerMotion.tapSm}>
                   <Link href={secondaryHref} className={`${customerClasses.btnOutlineDark} gap-2 px-7 py-3.5 text-sm`}>
                     <CalendarClock className="size-4 text-customer-primary" />
                     {hero.ctaSecondaryLabel || "Book a Table"}
@@ -494,7 +505,7 @@ export default function CustomerHomePage() {
               className="relative mt-6 lg:mt-0"
             >
               {/* Main large image */}
-              <div className="ct-media-zoom relative overflow-hidden rounded-3xl shadow-2xl shadow-[var(--customer-primary-shadow)]/10">
+              <div className="ct-media-zoom relative overflow-hidden rounded-3xl">
                 <img
                   src={heroImage}
                   alt={heroDish?.name || info.name || "Delicious food"}
@@ -521,7 +532,7 @@ export default function CustomerHomePage() {
                   <motion.div
                     animate={{ y: [0, -5, 0] }}
                     transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-                    className="absolute left-4 top-4 z-[1] flex items-center gap-2 rounded-2xl border border-customer-border bg-white/95 px-3 py-2 shadow-lg backdrop-blur-sm"
+                    className="absolute left-4 top-4 z-[1] flex items-center gap-2 rounded-2xl border border-customer-border bg-[var(--customer-card)]/95 px-3 py-2 backdrop-blur-sm"
                   >
                     <span className="flex size-6 items-center justify-center rounded-full gradient-primary">
                       <Award className="size-3.5 text-white" />
@@ -529,12 +540,41 @@ export default function CustomerHomePage() {
                     <span className="text-xs font-bold text-customer-text">{hero.overlayBadge}</span>
                   </motion.div>
                 )}
+
+                {hero.floatingCard?.enabled !== false &&
+                  (hero.floatingCard?.title?.trim() || hero.floatingCard?.subtitle?.trim()) && (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0, y: 20 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    transition={{ delay: 0.9, type: "spring", stiffness: 200 }}
+                    className="absolute bottom-3 right-3 z-[2] flex max-w-[calc(100%-1.5rem)] items-center gap-2 rounded-2xl border border-customer-border ct-surface-card px-3 py-2.5 shadow-lg sm:bottom-4 sm:right-4 sm:max-w-none sm:px-4 sm:py-3"
+                  >
+                    <div className="flex -space-x-1.5">
+                      {["A", "R", "P"].map((initial, i) => (
+                        <span key={i} className="flex size-7 items-center justify-center rounded-full border-2 border-[var(--customer-card)] gradient-primary text-[10px] font-bold text-[var(--customer-btn-primary-fg)]">{initial}</span>
+                      ))}
+                    </div>
+                    <div>
+                      {hero.floatingCard?.title?.trim() && (
+                        <p className="text-xs font-bold text-customer-text">{hero.floatingCard.title}</p>
+                      )}
+                      {hero.floatingCard?.subtitle?.trim() && (
+                        <div className="flex items-center gap-1">
+                          <TrendingUp className={`size-3 ${customerClasses.textSuccess}`} />
+                          <span className={`text-[10px] font-semibold ${customerClasses.textSuccess}`}>
+                            {hero.floatingCard.subtitle}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </motion.div>
+                )}
               </div>
 
               {heroThumbs.length > 0 && (
                 <div className="mt-3 grid grid-cols-3 gap-3">
                   {heroThumbs.map(({ label, imageUrl }, i) => (
-                    <div key={`${label}-${i}`} className="ct-media-zoom group relative overflow-hidden rounded-2xl shadow-md">
+                    <div key={`${label}-${i}`} className="ct-media-zoom group relative overflow-hidden rounded-2xl">
                       <img
                         src={imageUrl.trim()}
                         alt={label || "Food"}
@@ -551,35 +591,6 @@ export default function CustomerHomePage() {
                   ))}
                 </div>
               )}
-
-              {hero.floatingCard?.enabled !== false &&
-                (hero.floatingCard?.title?.trim() || hero.floatingCard?.subtitle?.trim()) && (
-                <motion.div
-                  initial={{ opacity: 0, scale: 0, y: 20 }}
-                  animate={{ opacity: 1, scale: 1, y: 0 }}
-                  transition={{ delay: 0.9, type: "spring", stiffness: 200 }}
-                  className="absolute -right-4 top-1/2 z-[1] flex -translate-y-1/2 items-center gap-2 border border-customer-border ct-surface-card px-4 py-3 shadow-xl"
-                >
-                  <div className="flex -space-x-1.5">
-                    {["A", "R", "P"].map((initial, i) => (
-                      <span key={i} className="flex size-7 items-center justify-center rounded-full border-2 border-white gradient-primary text-[10px] font-bold text-white">{initial}</span>
-                    ))}
-                  </div>
-                  <div>
-                    {hero.floatingCard?.title?.trim() && (
-                      <p className="text-xs font-bold text-customer-text">{hero.floatingCard.title}</p>
-                    )}
-                    {hero.floatingCard?.subtitle?.trim() && (
-                      <div className="flex items-center gap-1">
-                        <TrendingUp className="size-3 text-[#22C55E]" />
-                        <span className="text-[10px] font-semibold text-[#22C55E]">
-                          {hero.floatingCard.subtitle}
-                        </span>
-                      </div>
-                    )}
-                  </div>
-                </motion.div>
-              )}
             </motion.div>
           </div>
         </div>
@@ -587,8 +598,10 @@ export default function CustomerHomePage() {
 
       {/* ══ PROMO BANNER SLIDER ══ */}
       {activeBanners.length > 0 && (
-        <section className={`${customerClasses.container} px-4 pb-6 pt-2 sm:px-6 sm:pb-8 lg:px-8`}>
-          <PromoBannerSlider banners={activeBanners} link={link} />
+        <section className={`${customerSectionBg.white} ${customerClasses.sectionPad}`}>
+          <div className={customerClasses.container}>
+            <PromoBannerSlider banners={activeBanners} link={link} />
+          </div>
         </section>
       )}
 
@@ -612,7 +625,7 @@ export default function CustomerHomePage() {
                     whileTap={customerMotion.tap}
                     type="button"
                     onClick={() => handleOrderType(type.id)}
-                    className="ct-step-card group flex cursor-pointer flex-col items-start p-6 text-left sm:p-7"
+                    className={`${customerClasses.choiceCard} group`}
                   >
                     <div className={`mb-5 ${customerClasses.iconBoxLg}`}>
                       <Icon className="size-8 text-white" />
@@ -655,41 +668,14 @@ export default function CustomerHomePage() {
               </motion.div>
               <motion.div variants={stagger} className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
                 {featured.map((item) => (
-                  <motion.article key={item.id} variants={fadeUp} whileHover={customerMotion.cardHover}
-                    className={`group overflow-hidden ${customerInteractive.cardMotion}`}>
-                    <div className="ct-media-zoom relative aspect-[16/10] overflow-hidden">
-                      <SafeDishImage src={item.image} alt={item.name}
-                        className="h-full w-full object-cover"
-                        iconClassName="size-14 text-customer-primary/30" />
-                      <div className={customerOverlay.gradientBottomSoft} />
-                      {item.badge && (
-                        <span className="absolute left-3 top-3 z-[1] rounded-full gradient-primary px-3 py-1 text-[10px] font-bold uppercase tracking-wide text-white shadow-sm">{item.badge}</span>
-                      )}
-                      <span className={`absolute bottom-3 right-3 z-[1] px-3 py-1.5 text-sm ${customerOverlay.pricePill}`}>
-                        {formatCustomerMoney(item.price ?? 0)}
-                      </span>
-                    </div>
-                    <div className="flex flex-col p-5">
-                      <h3 className={`${customerType.cardTitleSm} flex items-center gap-2`}>
-                        <FoodTypeIndicator type={item.itemType} size={14} />
-                        {item.name}
-                      </h3>
-                      <p className={`mt-1.5 line-clamp-2 ${customerType.caption}`}>{item.description}</p>
-                      <div className="mt-4 flex items-center justify-between gap-2 border-t border-customer-border pt-4">
-                        <span className="inline-flex items-center gap-1.5 text-xs text-customer-muted">
-                          {(item.prepTime ?? 99) < 10 ? <Zap className="size-3.5 text-amber-400" /> : <Clock className="size-3.5 text-customer-muted" />}
-                          {item.prepTime != null ? `${item.prepTime} min` : "—"}
-                        </span>
-                        <button
-                          type="button"
-                          onClick={() => tryAddToCart(item)}
-                          className={`${customerClasses.btnPrimary} cursor-pointer px-5 py-2 text-xs`}
-                        >
-                          Add to Cart
-                        </button>
-                      </div>
-                    </div>
-                  </motion.article>
+                  <MenuItemCard
+                    key={item.id}
+                    item={item}
+                    inCart={cart.lines.find((l) => l.id === item.id)}
+                    onAdd={tryAddToCart}
+                    detailHref={link(`/order/menu/${item.id}`)}
+                    motionProps={{ variants: fadeUp }}
+                  />
                 ))}
               </motion.div>
             </AnimatedSection>
@@ -716,38 +702,30 @@ export default function CustomerHomePage() {
                   }
                 />
               </motion.div>
-              <motion.div variants={fadeUp} className={`${customerInteractive.pillScroll} mb-7 sm:mx-0`}>
+              <motion.div variants={fadeUp} className="mb-7 flex min-w-0 flex-wrap gap-2">
                 {[{ id: "all", name: "All" }, ...previewCategories].map((c) => (
-                  <button key={c.id} type="button" onClick={() => setPreviewCategory(c.id)}
-                    className={previewCategory === c.id ? customerClasses.chipActive : customerClasses.chip}>
+                  <button
+                    key={c.id}
+                    type="button"
+                    onClick={(e) => {
+                      setPreviewCategory(c.id);
+                      e.currentTarget.blur();
+                    }}
+                    className={previewCategory === c.id ? customerClasses.chipActive : customerClasses.chip}
+                  >
                     {c.name}
                   </button>
                 ))}
               </motion.div>
               <motion.div key={previewCategory} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }} className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
                 {previewItems.map((item) => (
-                  <motion.div key={item.id} whileHover={customerMotion.cardHoverSm}
-                    className={`group flex flex-col overflow-hidden ${customerInteractive.cardMotion}`}>
-                    <div className="ct-media-zoom relative aspect-[4/3] overflow-hidden">
-                      <SafeDishImage src={item.image} alt={item.name} className="h-full w-full object-cover" iconClassName="size-12 text-customer-primary/25" />
-                      <div className={customerOverlay.gradientBottomSoft} />
-                      {item.badge && <span className="absolute left-2.5 top-2.5 z-[1] rounded-full gradient-primary px-2.5 py-0.5 text-[10px] font-bold uppercase text-white">{item.badge}</span>}
-                      <span className={`absolute bottom-2.5 right-2.5 z-[1] px-2.5 py-1 text-sm ${customerOverlay.pricePill}`}>{formatCustomerMoney(item.price ?? 0)}</span>
-                    </div>
-                    <div className="flex flex-1 flex-col p-4">
-                      <h3 className={`${customerType.cardTitleSm} flex items-center gap-1.5 line-clamp-1`}>
-                        <FoodTypeIndicator type={item.itemType} size={13} />{item.name}
-                      </h3>
-                      {item.description && <p className="mt-1 line-clamp-2 text-[11px] leading-relaxed text-customer-muted">{item.description}</p>}
-                      <button
-                        type="button"
-                        onClick={() => tryAddToCart(item)}
-                        className={`${customerClasses.btnPrimary} mt-auto flex w-full cursor-pointer items-center justify-center gap-1.5 py-2.5 pt-3 text-xs`}
-                      >
-                        <Plus className="size-3.5" /> Add to Cart
-                      </button>
-                    </div>
-                  </motion.div>
+                  <MenuItemCard
+                    key={item.id}
+                    item={item}
+                    inCart={cart.lines.find((l) => l.id === item.id)}
+                    onAdd={tryAddToCart}
+                    detailHref={link(`/order/menu/${item.id}`)}
+                  />
                 ))}
               </motion.div>
               <motion.div variants={fadeUp} className="mt-10 text-center">
@@ -767,19 +745,16 @@ export default function CustomerHomePage() {
             <motion.div variants={fadeUp}>
               <CustomerSectionHeader animated={false} {...stepsH} />
             </motion.div>
-            <motion.div
-              variants={stagger}
-              className="-mx-4 flex gap-4 overflow-x-auto px-4 pb-3 snap-x snap-mandatory sm:mx-0 sm:grid sm:grid-cols-2 sm:overflow-visible sm:px-0 sm:pb-0 lg:grid-cols-3 xl:grid-cols-5"
-            >
+            <motion.div variants={stagger} className={customerLayout.stepsGrid}>
               {steps.map(({ n, title, text, icon }) => {
                 const Icon = STEP_ICON_MAP[icon] ?? LayoutGrid;
                 return (
                   <motion.div
                     key={n}
                     variants={fadeUp}
-                    whileHover={{ y: -4 }}
+                    whileHover={customerMotion.cardHoverSm}
                     transition={{ type: "spring", stiffness: 400, damping: 28 }}
-                    className="ct-step-card min-w-[min(100%,260px)] shrink-0 snap-center sm:min-w-0"
+                    className="ct-step-card h-full min-w-0"
                   >
                     <div className="ct-step-card__head">
                       <div className="ct-step-card__icon" aria-hidden>
@@ -810,13 +785,13 @@ export default function CustomerHomePage() {
                 <motion.blockquote
                   key={r.name}
                   variants={fadeUp}
-                  whileHover={{ y: -4 }}
+                  whileHover={customerMotion.cardHoverSm}
                   transition={{ type: "spring", stiffness: 400, damping: 28 }}
                   className="ct-review-card"
                 >
-                  <div className="flex gap-0.5" aria-hidden>
+                  <div className="ct-review-card__stars" aria-hidden>
                     {[...Array(5)].map((_, i) => (
-                      <Star key={i} className="size-4 fill-amber-400 text-amber-400" />
+                      <Star key={i} className="size-4" />
                     ))}
                   </div>
                   <p className="ct-review-card__quote">&ldquo;{r.quote}&rdquo;</p>
@@ -842,13 +817,13 @@ export default function CustomerHomePage() {
         <div className={customerClasses.containerNarrow}>
           <AnimatedSection>
             <motion.div variants={fadeUp}
-              className="relative overflow-hidden rounded-3xl gradient-primary px-6 py-10 text-center shadow-2xl shadow-[var(--customer-primary-shadow)]/20 sm:px-10 sm:py-12 lg:px-14 md:flex md:items-center md:justify-between md:text-left">
+              className="relative overflow-hidden rounded-3xl gradient-primary px-6 py-10 text-center sm:px-10 sm:py-12 lg:px-14 md:flex md:items-center md:justify-between md:text-left">
               <div className="pointer-events-none absolute inset-0">
                 <div className="absolute -right-16 -top-16 size-56 rounded-full bg-white/10 blur-3xl" />
                 <div className="absolute -bottom-16 -left-16 size-56 rounded-full bg-white/10 blur-3xl" />
               </div>
               <div className="relative">
-                <h3 className="font-poppins text-2xl font-black text-white sm:text-3xl lg:text-4xl">
+                <h3 className={`${customerOverlay.title} font-poppins text-2xl font-black sm:text-3xl lg:text-4xl`}>
                   {cta.title?.trim() || "Ready to Order?"}
                 </h3>
                 <p className={`mt-2 text-sm ${customerOverlay.subtitle}`}>
@@ -863,17 +838,17 @@ export default function CustomerHomePage() {
                         ? cta.primaryLink
                         : link(cta.primaryLink.startsWith("/") ? cta.primaryLink : `/${cta.primaryLink}`)
                     }
-                    className="inline-flex items-center justify-center gap-2 rounded-full bg-white px-8 py-3.5 text-sm font-bold text-customer-primary shadow-lg transition-all hover:scale-105 hover:shadow-xl"
+                    className="inline-flex items-center justify-center gap-2 rounded-full bg-white px-8 py-3.5 text-sm font-bold text-customer-primary transition-all hover:scale-105"
                   >
                     {cta.primaryLabel?.trim() || "Order Now"} <ChevronRight className="size-4" />
                   </Link>
                 ) : (
                   <motion.button
-                    whileHover={{ scale: 1.05 }}
+                    whileHover={customerMotion.hoverBtn}
                     whileTap={{ scale: 0.97 }}
                     type="button"
                     onClick={() => setOrderTypeModalOpen(true)}
-                    className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-full bg-white px-8 py-3.5 text-sm font-bold text-customer-primary shadow-lg transition-all hover:shadow-xl"
+                    className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-full bg-white px-8 py-3.5 text-sm font-bold text-customer-primary transition-all"
                   >
                     {cta.primaryLabel?.trim() || "Order Now"} <ChevronRight className="size-4" />
                   </motion.button>

@@ -1,4 +1,5 @@
 import webpush from "web-push";
+import { BHOJDESK_BRAND } from "@/config/bhojdeskBrand";
 import { getPlatformSettings } from "@/lib/platformSettings";
 
 let vapidConfigured = false;
@@ -9,7 +10,7 @@ function ensureVapid(settings) {
   if (!pub || !priv) return false;
   if (!vapidConfigured) {
     webpush.setVapidDetails(
-      "mailto:support@rms.local",
+      `mailto:${BHOJDESK_BRAND.supportEmail}`,
       pub,
       priv,
     );

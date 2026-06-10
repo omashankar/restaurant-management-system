@@ -1,4 +1,9 @@
+import { BHOJDESK_LOGOS, BHOJDESK_PLATFORM_UI } from "@/config/bhojdeskBrand";
 import { DEFAULT_ACCESS_CONTROL } from "./accessControlConfig";
+
+/** Shown in admin UI when General → name/logo are empty (not written to DB). */
+export const RESTAURANT_PLATFORM_BRANDING = BHOJDESK_PLATFORM_UI;
+export const RESTAURANT_PLATFORM_LOGO = BHOJDESK_LOGOS.icon;
 import {
   Clock,
   CreditCard,

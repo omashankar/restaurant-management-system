@@ -1,6 +1,10 @@
 "use client";
 
 import { DEFAULTS } from "@/lib/restaurantCmsDefaults";
+import {
+  RESTAURANT_CMS_UPDATED,
+  notifyRestaurantCmsUpdated,
+} from "@/lib/restaurantIdentityEvents";
 import { useEffect, useState } from "react";
 
 let _cache = null;
@@ -10,9 +14,16 @@ const CACHE_TTL = 60 * 1000;
 export function useRestaurantCms() {
   const [content, setContent] = useState(_cache ?? DEFAULTS);
   const [loading, setLoading] = useState(!_cache);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {
-    if (_cache && Date.now() - _cacheTime < CACHE_TTL) {
+    const onUpdated = () => setRefreshKey((k) => k + 1);
+    window.addEventListener(RESTAURANT_CMS_UPDATED, onUpdated);
+    return () => window.removeEventListener(RESTAURANT_CMS_UPDATED, onUpdated);
+  }, []);
+
+  useEffect(() => {
+    if (refreshKey === 0 && _cache && Date.now() - _cacheTime < CACHE_TTL) {
       setContent(_cache);
       setLoading(false);
       return;
@@ -36,7 +47,7 @@ export function useRestaurantCms() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [refreshKey]);
 
   return { content, loading };
 }
@@ -44,6 +55,7 @@ export function useRestaurantCms() {
 export function invalidateRestaurantCmsCache() {
   _cache = null;
   _cacheTime = 0;
+  notifyRestaurantCmsUpdated();
 }
 
 export { getActiveBanners } from "@/lib/restaurantCmsDefaults";

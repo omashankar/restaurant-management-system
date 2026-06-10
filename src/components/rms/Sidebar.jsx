@@ -27,8 +27,7 @@ export default function Sidebar({
   onClose,
 }) {
   const { user } = useApp();
-  const { name: brandName, tagline: brandTagline, logoUrl: brandLogoUrl } =
-    useRestaurantBranding();
+  const { name: brandName, sidebarLogoUrl: brandLogoUrl } = useRestaurantBranding();
   const accessControl = useAccessControlSettings();
   const { features: platformFeatures } = usePlatformConfig();
   const pathname = usePathname();
@@ -126,12 +125,13 @@ export default function Sidebar({
       }`}
     >
       <div className={`flex h-16 shrink-0 items-center justify-between gap-2 ${adminShell.borderB} px-3`}>
-        <SidebarBrand
-          collapsed={collapsed && !fullWidth}
-          name={brandName}
-          tagline={brandTagline}
-          logoUrl={brandLogoUrl}
-        />
+        <div className="min-w-0 flex-1">
+          <SidebarBrand
+            collapsed={collapsed && !fullWidth}
+            name={brandName}
+            logoUrl={brandLogoUrl}
+          />
+        </div>
 
         {onClose ? (
           <button

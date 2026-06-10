@@ -1,36 +1,32 @@
 "use client";
 
-import { computeInventoryStatus } from "@/components/inventory/inventoryUtils";
+import {
+  computeInventoryStatus,
+  inventoryCardCls,
+  inventoryIconCls,
+  inventoryQtyTextCls,
+} from "@/components/inventory/inventoryUtils";
 import InventoryStatusBadge from "@/components/inventory/InventoryStatusBadge";
-import { AlertTriangle, Package } from "lucide-react";
+import InventoryStockLevelBar from "@/components/inventory/InventoryStockLevelBar";
+import { AlertTriangle, Package, PackageX } from "lucide-react";
 
 export default function InventoryAlertCard({ item, onOpen }) {
   const status = computeInventoryStatus(item);
-  const stressed = status !== "in";
+
+  const Icon =
+    status === "out" ? PackageX : status === "low" ? AlertTriangle : Package;
 
   return (
     <button
       type="button"
       onClick={() => onOpen?.(item)}
-      className={`cursor-pointer w-full rounded-2xl border p-4 text-left transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-ra-primary-40 ${
-        stressed
-          ? "border-amber-500/40 bg-amber-500/5 hover:border-amber-500/55"
-          : "admin-shell-border admin-surface-card hover:border-zinc-700"
-      }`}
+      className={`cursor-pointer w-full rounded-2xl border p-4 text-left transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-ra-primary-40 ${inventoryCardCls(status)}`}
     >
       <div className="flex items-start gap-3">
         <span
-          className={`flex size-10 shrink-0 items-center justify-center rounded-xl ${
-            stressed
-              ? "bg-amber-500/15 text-amber-400"
-              : "bg-ra-primary-10 text-ra-primary"
-          }`}
+          className={`flex size-10 shrink-0 items-center justify-center rounded-xl ${inventoryIconCls(status)}`}
         >
-          {stressed ? (
-            <AlertTriangle className="size-5" aria-hidden />
-          ) : (
-            <Package className="size-5" aria-hidden />
-          )}
+          <Icon className="size-5" aria-hidden />
         </span>
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
@@ -40,16 +36,17 @@ export default function InventoryAlertCard({ item, onOpen }) {
           <p className="mt-1 text-xs admin-surface-muted">{item.category}</p>
           <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
             <div>
-              <p className="text-2xl font-semibold text-zinc-50 tabular-nums">
+              <p className={`text-2xl font-bold tabular-nums ${inventoryQtyTextCls(status)}`}>
                 {item.quantity}
               </p>
               <p className="text-xs admin-surface-muted">{item.unit} on hand</p>
             </div>
             <p className="text-xs admin-surface-muted sm:text-right">
               Reorder at{" "}
-              <span className="admin-surface-body">{item.reorderLevel}</span>
+              <span className="font-medium admin-surface-body">{item.reorderLevel}</span>
             </p>
           </div>
+          <InventoryStockLevelBar item={item} showLabel className="mt-3" />
         </div>
       </div>
     </button>

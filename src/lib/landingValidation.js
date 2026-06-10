@@ -76,6 +76,48 @@ export function validateLandingHero(data) {
   errors.ctaPrimary = optionalCtaText(data?.ctaPrimary, "Primary CTA text") ?? "";
   errors.ctaSecondary =
     optionalCtaText(data?.ctaSecondary, "Secondary CTA text") ?? "";
+  errors.trialNote = optionalText(data?.trialNote, "Trial note", LIMITS.short) ?? "";
+
+  const stats = Array.isArray(data?.stats) ? data.stats : [];
+  if (stats.length > 3) {
+    errors.stats = "Hero can show at most 3 stats.";
+  }
+  for (let i = 0; i < stats.length; i++) {
+    const stat = stats[i] ?? {};
+    if (!trim(stat.value) && !trim(stat.label)) continue;
+    if (!trim(stat.value)) errors[`stat${i}Value`] = `Stat ${i + 1}: value is required.`;
+    if (!trim(stat.label)) errors[`stat${i}Label`] = `Stat ${i + 1}: label is required.`;
+    if (trim(stat.value).length > 20) errors[`stat${i}Value`] = `Stat ${i + 1}: value is too long.`;
+    if (trim(stat.label).length > 60) errors[`stat${i}Label`] = `Stat ${i + 1}: label is too long.`;
+  }
+
+  return errorsToResult(errors);
+}
+
+export function validateLandingFaq(data) {
+  const errors = {};
+  if (data?.enabled === false) return errorsToResult(errors);
+
+  errors.eyebrow = optionalText(data?.eyebrow, "Eyebrow", LIMITS.short) ?? "";
+  errors.title = optionalText(data?.title, "Title", LIMITS.title) ?? "";
+  errors.subtext = optionalText(data?.subtext, "Subtext", LIMITS.body) ?? "";
+
+  const items = Array.isArray(data?.items) ? data.items : [];
+  for (let i = 0; i < items.length; i++) {
+    const item = items[i] ?? {};
+    if (!trim(item.q)) {
+      return { valid: false, errors, message: `FAQ ${i + 1}: question is required.` };
+    }
+    if (!trim(item.a)) {
+      return { valid: false, errors, message: `FAQ ${i + 1}: answer is required.` };
+    }
+    if (trim(item.q).length > 200) {
+      return { valid: false, errors, message: `FAQ ${i + 1}: question is too long.` };
+    }
+    if (trim(item.a).length > 1000) {
+      return { valid: false, errors, message: `FAQ ${i + 1}: answer is too long.` };
+    }
+  }
   return errorsToResult(errors);
 }
 
@@ -208,6 +250,8 @@ export function validateLandingSection(section, data) {
       return validateLandingCta(data);
     case "demo":
       return validateLandingDemo(data);
+    case "faq":
+      return validateLandingFaq(data);
     case "features":
     case "roles":
     case "testimonials":

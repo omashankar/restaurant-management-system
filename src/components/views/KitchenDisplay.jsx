@@ -180,17 +180,23 @@ export default function KitchenDisplay() {
     if (!silent) setLoading(true);
     if (!silent) setFetchError("");
     try {
-      const res  = await fetch("/api/orders", { cache: "no-store" });
-      const data = await res.json();
-      if (data.success) {
-        // Kitchen: new, preparing, ready — oldest first (FIFO)
-        const active = sortKitchenOrders(
-          data.orders.filter((o) => ["new", "preparing", "ready"].includes(o.status))
-        );
+      // Fetch each active status separately — default list is paginated (12/page)
+      // and would hide older tickets still in the kitchen queue.
+      const statuses = ["new", "preparing", "ready"];
+      const responses = await Promise.all(
+        statuses.map((status) =>
+          fetch(`/api/orders?status=${status}&limit=100&sort=oldest`, { cache: "no-store" })
+        )
+      );
+      const payloads = await Promise.all(responses.map((r) => r.json()));
+      if (payloads.every((d) => d.success)) {
+        const merged = payloads.flatMap((d) => d.orders ?? []);
+        const active = sortKitchenOrders(merged);
         setOrders(active);
         setLastRefresh(new Date());
       } else {
-        setFetchError(data.error ?? "Could not load kitchen queue.");
+        const err = payloads.find((d) => !d.success);
+        setFetchError(err?.error ?? "Could not load kitchen queue.");
       }
     } catch {
       setFetchError("Network error while loading orders.");

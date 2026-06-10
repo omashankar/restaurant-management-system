@@ -1,11 +1,11 @@
-import { ArrowRight, PlayCircle } from "lucide-react";
+import { ArrowRight, PlayCircle, ShieldCheck, Users, Zap } from "lucide-react";
 import Link from "next/link";
 
 export default function CTASection({ cta = {} }) {
   const {
     eyebrow = "Get Started Today",
     title = "Start Managing Your Restaurant Smarter",
-    description = "Join 500+ restaurants already using RMS. Launch your modern operations stack in minutes — no credit card required.",
+    description = "Join 500+ restaurants already using BhojDesk. Launch your modern operations stack in minutes — no credit card required.",
     primaryCtaLabel = "Get Started Now",
     primaryCtaHref = "/signup",
     secondaryCtaLabel = "View Demo",
@@ -24,44 +24,55 @@ export default function CTASection({ cta = {} }) {
     "cursor-pointer inline-flex items-center gap-2 rounded-xl border border-white/30 bg-white/10 px-6 py-3 text-sm font-semibold text-white transition-all hover:bg-white/20";
 
   return (
-    <section className="mx-auto w-full max-w-7xl px-4 pb-20 sm:px-6 lg:px-8">
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-indigo-600 via-indigo-600 to-indigo-500 p-10 shadow-2xl shadow-indigo-500/30 md:flex md:items-center md:justify-between">
+    <section className="mx-auto w-full min-w-0 max-w-7xl px-4 pb-12 sm:px-6 sm:pb-16 lg:px-8 lg:pb-20">
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-indigo-600 via-indigo-600 to-indigo-500 p-5 shadow-2xl shadow-indigo-500/30 sm:rounded-3xl sm:p-10 lg:flex lg:items-center lg:justify-between">
         {/* Decorative blobs */}
         <div className="pointer-events-none absolute -right-10 -top-10 size-64 rounded-full bg-white/5 blur-2xl" />
         <div className="pointer-events-none absolute -bottom-10 left-20 size-48 rounded-full bg-indigo-400/20 blur-2xl" />
 
-        <div className="relative">
+        <div className="relative min-w-0">
           <p className="text-xs font-semibold uppercase tracking-widest text-indigo-200">
             {eyebrow}
           </p>
-          <h3 className="mt-2 text-2xl font-bold tracking-tight text-white md:text-3xl">
+          <h3 className="mt-2 break-words text-xl font-bold tracking-tight text-white sm:text-2xl md:text-3xl">
             {title}
           </h3>
-          <p className="mt-2 max-w-md text-sm text-indigo-100">
+          <p className="mt-2 max-w-md break-words text-sm text-indigo-100">
             {description}
           </p>
+          <ul className="mt-4 flex flex-wrap gap-x-5 gap-y-2 text-xs font-medium text-indigo-100/90">
+            <li className="inline-flex items-center gap-1.5">
+              <Users className="size-3.5 shrink-0" aria-hidden /> 500+ restaurants
+            </li>
+            <li className="inline-flex items-center gap-1.5">
+              <Zap className="size-3.5 shrink-0" aria-hidden /> 15 min setup
+            </li>
+            <li className="inline-flex items-center gap-1.5">
+              <ShieldCheck className="size-3.5 shrink-0" aria-hidden /> 99.9% uptime
+            </li>
+          </ul>
         </div>
 
-        <div className="relative mt-6 flex flex-wrap gap-3 md:mt-0 md:shrink-0">
+        <div className="relative mt-6 flex w-full flex-col gap-3 sm:flex-row sm:flex-wrap lg:mt-0 lg:w-auto lg:shrink-0">
           {primaryIsExternal ? (
-            <a href={pHref} className={primaryClass}>
+            <a href={pHref} className={`${primaryClass} w-full justify-center sm:w-auto`}>
               {primaryCtaLabel} <ArrowRight className="size-4" />
             </a>
           ) : (
-            <Link href={pHref} className={primaryClass}>
+            <Link href={pHref} className={`${primaryClass} w-full justify-center sm:w-auto`}>
               {primaryCtaLabel} <ArrowRight className="size-4" />
             </Link>
           )}
           {sHref.startsWith("#") ? (
-            <a href={sHref} className={secondaryClass}>
+            <a href={sHref} className={`${secondaryClass} w-full justify-center sm:w-auto`}>
               <PlayCircle className="size-4" /> {secondaryCtaLabel}
             </a>
           ) : secondaryIsExternal ? (
-            <a href={sHref} className={secondaryClass}>
+            <a href={sHref} className={`${secondaryClass} w-full justify-center sm:w-auto`}>
               <PlayCircle className="size-4" /> {secondaryCtaLabel}
             </a>
           ) : (
-            <Link href={sHref} className={secondaryClass}>
+            <Link href={sHref} className={`${secondaryClass} w-full justify-center sm:w-auto`}>
               <PlayCircle className="size-4" /> {secondaryCtaLabel}
             </Link>
           )}

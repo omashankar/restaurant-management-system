@@ -65,7 +65,7 @@ export async function POST(request) {
     const smsResult = await sendPlatformSms(
       db,
       phone,
-      `Your RMS onboarding OTP is ${otp}. Valid for ${OTP_EXPIRY_MINUTES} minutes.`,
+      `Your BhojDesk onboarding OTP is ${otp}. Valid for ${OTP_EXPIRY_MINUTES} minutes.`,
     );
 
     const response = {

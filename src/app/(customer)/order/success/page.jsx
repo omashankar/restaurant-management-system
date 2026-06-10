@@ -16,8 +16,10 @@ import {
   UtensilsCrossed,
 } from "lucide-react";
 import Link from "next/link";
+import { customerClasses } from "@/lib/customerTheme";
 import { useSearchParams } from "next/navigation";
-import { Suspense, useEffect, useState } from "react";
+import { useLiveRefresh } from "@/hooks/useLiveRefresh";
+import { Suspense, useCallback, useEffect, useState } from "react";
 
 const ORDER_STEPS = [
   { icon: CheckCircle2, label: "Confirmed", desc: "Order received" },
@@ -42,30 +44,31 @@ function SuccessContent() {
   const [tracked, setTracked] = useState(null);
   const [loading, setLoading] = useState(Boolean(orderId));
 
-  useEffect(() => {
+  const fetchStatus = useCallback(async (silent = false) => {
     if (!orderId) {
-      setLoading(false);
-      return undefined;
+      if (!silent) setLoading(false);
+      return;
     }
-    let cancelled = false;
-    (async () => {
-      try {
-        const res = await fetch(
-          `/api/customer/orders/track?orderId=${encodeURIComponent(orderId)}`,
-          { cache: "no-store" }
-        );
-        const data = await res.json();
-        if (!cancelled && data?.success && data.order) setTracked(data.order);
-      } catch {
-        /* keep fallback UI */
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
+    if (!silent) setLoading(true);
+    try {
+      const res = await fetch(
+        `/api/customer/orders/track?orderId=${encodeURIComponent(orderId)}`,
+        { cache: "no-store" }
+      );
+      const data = await res.json();
+      if (data?.success && data.order) setTracked(data.order);
+    } catch {
+      /* keep fallback UI */
+    } finally {
+      if (!silent) setLoading(false);
+    }
   }, [orderId]);
+
+  useEffect(() => {
+    fetchStatus(false);
+  }, [fetchStatus]);
+
+  useLiveRefresh(() => fetchStatus(true), { intervalMs: 15000, eventName: null });
 
   const displayId = tracked?.orderId || orderId || "—";
   const etaLabel =
@@ -86,9 +89,9 @@ function SuccessContent() {
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, ease: "easeOut" }}
-          className="overflow-hidden ct-surface-card rounded-3xl shadow-xl shadow-black/5"
+          className="overflow-hidden ct-surface-card rounded-3xl"
         >
-          <div className="bg-gradient-to-br from-green-50 to-emerald-50 px-8 py-10 text-center">
+          <div className={`${customerClasses.successHero} px-4 py-8 text-center sm:px-8 sm:py-10`}>
             <motion.div
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
@@ -98,16 +101,16 @@ function SuccessContent() {
               <motion.div
                 animate={{ scale: [1, 1.15, 1] }}
                 transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-                className="absolute inset-0 rounded-full bg-green-200/60"
+                className="absolute inset-0 rounded-full bg-[color-mix(in_srgb,#22c55e_22%,transparent)]"
               />
-              <div className="relative flex size-24 items-center justify-center rounded-full bg-green-100">
-                <CheckCircle2 className="size-12 text-green-500" strokeWidth={1.5} />
+              <div className={`relative flex size-24 items-center justify-center rounded-full ${customerClasses.iconRingSuccess}`}>
+                <CheckCircle2 className="size-12" strokeWidth={1.5} />
               </div>
               <motion.div
                 initial={{ scale: 0, rotate: -20 }}
                 animate={{ scale: 1, rotate: 0 }}
                 transition={{ delay: 0.5, type: "spring" }}
-                className="absolute -right-1 -top-1 flex size-9 items-center justify-center rounded-full gradient-primary shadow-lg shadow-[var(--customer-primary-shadow)]/30"
+                className="absolute -right-1 -top-1 flex size-9 items-center justify-center rounded-full gradient-primary"
               >
                 <ShoppingBag className="size-4 text-white" />
               </motion.div>
@@ -127,7 +130,7 @@ function SuccessContent() {
             </motion.div>
           </div>
 
-          <div className="space-y-5 px-8 py-7">
+          <div className="space-y-5 px-4 py-6 sm:px-8 sm:py-7">
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
@@ -136,7 +139,7 @@ function SuccessContent() {
             >
               <div>
                 <p className="text-xs font-bold uppercase tracking-widest text-customer-muted">Order ID</p>
-                <p className="mt-0.5 font-poppins text-xl font-black text-customer-primary">
+                <p className="mt-0.5 break-all font-poppins text-lg font-black text-customer-primary sm:text-xl" title={displayId}>
                   {loading ? "…" : displayId}
                 </p>
               </div>
@@ -153,14 +156,14 @@ function SuccessContent() {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.45 }}
-              className="flex items-center gap-3 rounded-2xl bg-amber-50 px-5 py-3.5"
+              className="ct-banner-warning px-5 py-3.5"
             >
-              <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-amber-100">
-                <Clock className="size-5 text-amber-600" />
+              <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-customer-primary/10">
+                <Clock className="size-5 text-customer-primary" />
               </div>
               <div>
-                <p className="text-xs font-bold text-amber-700">Estimated Time</p>
-                <p className="text-sm font-black text-amber-900">{etaLabel} minutes</p>
+                <p className="text-xs font-bold text-customer-muted">Estimated Time</p>
+                <p className="text-sm font-black text-customer-text">{etaLabel} minutes</p>
               </div>
             </motion.div>
 
@@ -168,12 +171,12 @@ function SuccessContent() {
               <p className="mb-4 text-xs font-bold uppercase tracking-widest text-customer-muted">
                 Order Progress
               </p>
-              <div className="flex items-start justify-between">
+              <div className="-mx-1 flex items-start justify-between overflow-x-auto px-1 pb-1 [scrollbar-width:none]">
                 {ORDER_STEPS.map((s, i) => {
                   const Icon = s.icon;
                   const done = i <= activeStep;
                   return (
-                    <div key={s.label} className="flex flex-1 flex-col items-center gap-1.5">
+                    <div key={s.label} className="flex min-w-[4.25rem] flex-1 flex-col items-center gap-1.5">
                       <div className="flex w-full items-center">
                         {i > 0 && (
                           <div
@@ -186,8 +189,8 @@ function SuccessContent() {
                           transition={{ delay: 0.6 + i * 0.1, type: "spring" }}
                           className={`flex size-10 shrink-0 items-center justify-center rounded-full ${
                             done
-                              ? "gradient-primary shadow-md shadow-[var(--customer-primary-shadow)]/25"
-                              : "border-2 border-customer-border bg-white"
+                              ? "gradient-primary"
+                              : "border-2 border-customer-border bg-[var(--customer-card)]"
                           }`}
                         >
                           <Icon
@@ -202,7 +205,7 @@ function SuccessContent() {
                         )}
                       </div>
                       <p
-                        className={`text-center text-[10px] font-bold ${done ? "text-customer-primary" : "text-customer-muted"}`}
+                        className={`max-w-[4.5rem] text-center text-[11px] font-bold leading-tight ${done ? "text-customer-primary" : "text-customer-muted"}`}
                       >
                         {s.label}
                       </p>
@@ -220,19 +223,19 @@ function SuccessContent() {
             >
               <Link
                 href={link("/account/dashboard")}
-                className="flex items-center justify-center gap-2 rounded-full border border-customer-border bg-white py-3 text-sm font-semibold text-customer-muted transition-all hover:border-customer-primary/30 hover:text-customer-text"
+                className={`${customerClasses.btnOutlineDark} w-full gap-2 py-3 text-sm`}
               >
                 Track in My Account
               </Link>
               <Link
                 href={link("/order/menu")}
-                className="flex items-center justify-center gap-2 rounded-full gradient-primary py-3.5 text-sm font-bold text-white shadow-lg shadow-[var(--customer-primary-shadow)]/25 transition-all hover:scale-[1.02] hover:shadow-xl"
+                className={`${customerClasses.btnPrimary} w-full gap-2 py-3.5 text-sm transition-all hover:scale-[1.02]`}
               >
                 <UtensilsCrossed className="size-4" /> Order Again
               </Link>
               <Link
                 href={link("/home")}
-                className="flex items-center justify-center gap-2 rounded-full border border-customer-border bg-white py-3 text-sm font-semibold text-customer-muted transition-all hover:border-customer-primary/30 hover:text-customer-text"
+                className={`${customerClasses.btnOutlineDark} w-full gap-2 py-3 text-sm`}
               >
                 <Home className="size-4" /> Back to Home
               </Link>

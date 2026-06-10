@@ -76,7 +76,7 @@ export default function OrderTypeModal() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 60, scale: 0.95 }}
             transition={{ type: "spring", stiffness: 300, damping: 28 }}
-            className="relative z-10 w-full max-w-md overflow-hidden rounded-3xl bg-white shadow-2xl"
+            className="relative z-10 w-full max-w-md overflow-hidden rounded-3xl border border-customer-border bg-[var(--customer-card)] shadow-2xl"
           >
             <div className="relative overflow-hidden px-6 pb-4 pt-6">
               <div className="pointer-events-none absolute inset-0 gradient-primary opacity-5" />
@@ -95,7 +95,7 @@ export default function OrderTypeModal() {
                   whileTap={{ scale: 0.9 }}
                   type="button"
                   onClick={closeOrderTypeModal}
-                  className="flex cursor-pointer size-9 items-center justify-center rounded-xl border border-customer-border text-customer-muted transition-colors hover:bg-customer-cream"
+                  className="flex size-11 min-h-[44px] min-w-[44px] cursor-pointer items-center justify-center rounded-xl border border-customer-border text-customer-muted transition-colors hover:bg-customer-cream"
                   aria-label="Close"
                 >
                   <X className="size-5" />
@@ -119,7 +119,7 @@ export default function OrderTypeModal() {
                     className={`flex cursor-pointer w-full items-center gap-4 rounded-2xl border-2 p-4 text-left transition-all duration-200 ${
                       isSelected
                         ? active
-                        : "border-customer-border bg-white hover:border-customer-primary/30 hover:bg-customer-cream"
+                        : "border-customer-border bg-[var(--customer-card)] hover:border-customer-primary/30 hover:bg-customer-cream"
                     }`}
                   >
                     <div
