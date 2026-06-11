@@ -1,6 +1,7 @@
 "use client";
 
 import { adminShell, adminSurface } from "@/config/adminSurfaceClasses";
+import { raTextareaCls } from "@/config/restaurantAdminTheme";
 import { adminControl } from "@/config/adminDesignSystem";
 import CartItem from "@/components/pos/CartItem";
 import CustomerSearch from "@/components/pos/CustomerSearch";
@@ -291,7 +292,7 @@ export default function OrderSummary({
                     value={note}
                     onChange={(e) => onNoteChange?.(e.target.value)}
                     placeholder="Allergies, special requests…"
-                    className="w-full resize-none rounded-xl border admin-shell-border admin-surface-card px-3 py-2 text-xs admin-shell-text outline-none transition-colors placeholder:admin-surface-faint focus-ra-primary"
+                    className={`${raTextareaCls} text-xs`}
                   />
                 </div>
               )}

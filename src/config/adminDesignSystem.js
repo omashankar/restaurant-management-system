@@ -3,6 +3,8 @@
  * Use these instead of mixing raw zinc-* with one-off classes.
  */
 import { adminPortalScope, adminShell, adminSurface } from "@/config/adminSurfaceClasses";
+import { raInputCls } from "@/config/restaurantAdminTheme";
+import { saInputCls } from "@/config/superAdminTheme";
 
 export { adminPortalScope, adminShell, adminSurface };
 
@@ -37,9 +39,10 @@ export const adminText = {
   faint: adminSurface.faint,
 };
 
-/** Controls — identical border, radius, focus */
+/** Controls — identical border, radius, focus (prefer raInputCls / saInputCls per portal) */
 export const adminControl = {
   input: adminSurface.input,
+  inputFocus: "outline-none transition-colors placeholder:admin-surface-faint",
   search: adminSurface.search,
   ghost: adminSurface.btnGhost,
   icon: adminSurface.btnIcon,

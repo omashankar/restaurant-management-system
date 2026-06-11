@@ -28,6 +28,12 @@ const KEY = "rms-modules-v3";
 
 const ModuleDataContext = createContext(null);
 
+const AUTH_PATHS = /^\/(login|signup|forgot-password|reset-password|verify-email)(\/|$)/;
+
+function isAuthPath(pathname = "") {
+  return AUTH_PATHS.test(pathname);
+}
+
 function normalizeCustomer(row) {
   return {
     id: row.id,
@@ -75,7 +81,7 @@ function normalizeInventoryItem(row) {
 }
 
 export function ModuleDataProvider({ children }) {
-  const { user, hydrated: authHydrated } = useUser();
+  const { user, hydrated: authHydrated, clearUser } = useUser();
   const pathname = usePathname();
   /** Staff previewing customer routes (incl. /r/[slug]/…) should see the public storefront APIs */
   const isCustomerFacing = isCustomerStorefrontPath(pathname);
@@ -114,6 +120,10 @@ export function ModuleDataProvider({ children }) {
     }
 
     if (!authHydrated) return;
+    if (isAuthPath(pathname)) {
+      setHydrated(true);
+      return;
+    }
 
     let cancelled = false;
 
@@ -146,6 +156,7 @@ export function ModuleDataProvider({ children }) {
     }
 
     async function fetchTenantModuleData() {
+      const fetchOpts = { credentials: "include", cache: "no-store" };
       const [
         menuRes,
         catRes,
@@ -156,15 +167,22 @@ export function ModuleDataProvider({ children }) {
         inventoryRes,
         ordersRes,
       ] = await Promise.all([
-        fetch("/api/menu"),
-        fetch("/api/categories"),
-        fetch("/api/tables"),
-        fetch("/api/tables/areas"),
-        fetch("/api/customers"),
-        fetch("/api/reservations"),
-        fetch("/api/inventory"),
-        fetch("/api/orders"),
+        fetch("/api/menu", fetchOpts),
+        fetch("/api/categories", fetchOpts),
+        fetch("/api/tables", fetchOpts),
+        fetch("/api/tables/areas", fetchOpts),
+        fetch("/api/customers", fetchOpts),
+        fetch("/api/reservations", fetchOpts),
+        fetch("/api/inventory", fetchOpts),
+        fetch("/api/orders", fetchOpts),
       ]);
+      if (
+        [menuRes, catRes, tablesRes, areasRes, customersRes, reservationsRes, inventoryRes, ordersRes]
+          .some((r) => r.status === 401)
+      ) {
+        clearUser();
+        return;
+      }
       const [
         menuData,
         catData,
@@ -207,10 +225,12 @@ export function ModuleDataProvider({ children }) {
     (async () => {
       try {
         if (!user) {
-          try {
-            await fetchPublicCustomerStorefront();
-          } catch (err) {
-            console.error("[ModuleDataContext] Failed to fetch customer data:", err.message);
+          if (isCustomerFacing) {
+            try {
+              await fetchPublicCustomerStorefront();
+            } catch (err) {
+              console.error("[ModuleDataContext] Failed to fetch customer data:", err.message);
+            }
           }
           return;
         }
@@ -249,7 +269,7 @@ export function ModuleDataProvider({ children }) {
     return () => {
       cancelled = true;
     };
-  }, [authHydrated, user, isCustomerFacing, pathname]);
+  }, [authHydrated, user, isCustomerFacing, pathname, clearUser]);
 
   const refreshMenu = useCallback(async () => {
     const usePublicStorefront = !user || isCustomerFacing;

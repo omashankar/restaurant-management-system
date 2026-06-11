@@ -90,6 +90,11 @@ export const staffOnboardingOtpVerifyLimiter = rateLimit({ windowMs: 10 * 60_000
 export const landingContactLimiter = rateLimit({ windowMs: 60 * 60_000, max: IS_DEV ? 30 : 5 });
 export const contactReplyLimiter = rateLimit({ windowMs: 60 * 60_000, max: IS_DEV ? 50 : 20 });
 
+/** Clear in-memory rate-limit counters (dev server restart also clears). */
+export function clearInMemoryRateLimits() {
+  store.clear();
+}
+
 /** Get client IP from Next.js request */
 export function getClientIp(request) {
   return (

@@ -138,7 +138,7 @@ export default function CustomerSiteSidebar({
 
         <div className="sticky top-24 max-h-[calc(100vh-6rem)] overflow-y-auto rounded-2xl admin-surface-card p-3 [scrollbar-width:thin]">
 
-          <p className="px-2 pb-2 pt-1 text-[10px] font-semibold uppercase tracking-wide text-zinc-500">
+          <p className="px-2 pb-2 pt-1 text-[10px] font-semibold uppercase tracking-wide admin-surface-faint">
 
             Customer website
 
@@ -148,7 +148,7 @@ export default function CustomerSiteSidebar({
 
             <div key={group.id} className={gi > 0 ? "mt-4 admin-surface-divider-t pt-3" : ""}>
 
-              <p className="px-2 pb-1.5 text-[10px] font-bold uppercase tracking-wider text-zinc-600">
+              <p className="px-2 pb-1.5 text-[10px] font-bold uppercase tracking-wider admin-surface-faint">
 
                 {group.label}
 

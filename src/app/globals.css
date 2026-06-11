@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import "./admin-surface-theme.css";
 
 /* Ensure customer-side files are always scanned */
 @source "../src/app/(customer)/**/*.jsx";
@@ -334,7 +335,7 @@ body {
 }
 
 .customer-theme:not(.customer-dark) .ct-site-header {
-  background: color-mix(in srgb, #ffffff 90%, transparent);
+  background: color-mix(in srgb, var(--customer-nav-bg) 90%, transparent);
 }
 
 .ct-site-header[data-scrolled="true"] {
@@ -427,7 +428,7 @@ body {
 
 /* Light shell — clean white canvas; brand wash only at the very top */
 .customer-theme:not(.customer-dark) {
-  background-color: #ffffff;
+  background-color: var(--customer-bg);
   background-image: radial-gradient(
     ellipse 110% 55% at 50% -35%,
     color-mix(in srgb, var(--customer-primary) 5%, transparent),
@@ -446,7 +447,17 @@ body {
   color-scheme: dark;
 }
 
-/* Smooth theme transitions */
+/* Customer storefront — no tween while light/dark flips (avoids white borders + wrong chips) */
+html[data-customer-mode-switching] .customer-theme-root,
+html[data-customer-mode-switching] .customer-theme-root *,
+html[data-customer-mode-switching] .customer-theme-root *::before,
+html[data-customer-mode-switching] .customer-theme-root *::after {
+  transition: none !important;
+  animation-duration: 0s !important;
+  animation-delay: 0s !important;
+}
+
+/* Smooth theme transitions — borders snap via guard on toggle; no border-color tween */
 .customer-theme-root,
 .customer-theme-root .ct-btn,
 .customer-theme-root .ct-card,
@@ -458,7 +469,6 @@ body {
 .customer-theme-root main {
   transition:
     background-color 0.28s ease,
-    border-color 0.28s ease,
     color 0.22s ease,
     box-shadow 0.28s ease,
     fill 0.22s ease,

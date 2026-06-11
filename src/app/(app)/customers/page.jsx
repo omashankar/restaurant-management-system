@@ -17,6 +17,7 @@ import {
 import EmptyState from "@/components/ui/EmptyState";
 import ListToolbar from "@/components/ui/ListToolbar";
 import Modal from "@/components/ui/Modal";
+import { raInputCls, raTextareaCls } from "@/config/restaurantAdminTheme";
 import PaginationBar from "@/components/ui/PaginationBar";
 import TableSkeleton from "@/components/ui/TableSkeleton";
 import RoleCard from "@/components/rms/RoleCard";
@@ -448,9 +449,7 @@ export default function CustomersModulePage() {
                 if (fieldErrors.name) setFieldErrors((p) => ({ ...p, name: "" }));
               }}
               aria-invalid={fieldErrors.name ? true : undefined}
-              className={`mt-1 w-full rounded-xl border admin-surface-card px-3 py-2 text-sm admin-shell-text ${
-                fieldErrors.name ? "border-red-500/50" : "border-zinc-700"
-              }`}
+              className={`mt-1 ${raInputCls} ${fieldErrors.name ? "border-red-500/50" : ""}`}
             />
             {fieldErrors.name && <p className="mt-1 text-xs text-red-400">{fieldErrors.name}</p>}
           </div>
@@ -475,9 +474,7 @@ export default function CustomersModulePage() {
                 if (fieldErrors.email) setFieldErrors((p) => ({ ...p, email: "" }));
               }}
               aria-invalid={fieldErrors.email ? true : undefined}
-              className={`mt-1 w-full rounded-xl border admin-surface-card px-3 py-2 text-sm admin-shell-text ${
-                fieldErrors.email ? "border-red-500/50" : "border-zinc-700"
-              }`}
+              className={`mt-1 ${raInputCls} ${fieldErrors.email ? "border-red-500/50" : ""}`}
             />
             {fieldErrors.email && <p className="mt-1 text-xs text-red-400">{fieldErrors.email}</p>}
           </div>
@@ -489,7 +486,7 @@ export default function CustomersModulePage() {
               onChange={(e) =>
                 setForm((f) => ({ ...f, notes: e.target.value }))
               }
-              className="mt-1 w-full resize-none rounded-xl border admin-shell-border admin-surface-card px-3 py-2 text-sm admin-shell-text"
+              className={`mt-1 ${raTextareaCls}`}
             />
           </div>
         </div>

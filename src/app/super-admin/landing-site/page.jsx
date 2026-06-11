@@ -4,7 +4,7 @@ import SuperAdminPageSkeleton from "@/components/super-admin/SuperAdminPageSkele
 import AdminSectionHeader from "@/components/ui/AdminSectionHeader";
 import { AdminSideNav, AdminSideNavItem, AdminSideNavList } from "@/components/ui/AdminSideNav";
 import { adminSurface } from "@/config/adminSurfaceClasses";
-import { saBtnPrimaryCls, saIconBadgeCls, saSideNavActiveCls } from "@/config/superAdminTheme";
+import { saBtnPrimaryCls, saIconBadgeCls, saInputCls, saSideNavActiveCls } from "@/config/superAdminTheme";
 import { formatLandingCurrency } from "@/lib/formatLandingCurrency";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import IconPicker from "@/components/ui/IconPicker";
@@ -22,7 +22,7 @@ import { validateLandingSection } from "@/lib/landingValidation";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 /* ── shared input class ── */
-const ic = "w-full rounded-xl border admin-shell-border admin-surface-card px-3 py-2.5 text-sm admin-shell-text outline-none focus-sa-primary placeholder:admin-surface-faint transition-colors";
+const ic = saInputCls;
 
 /* ── Field wrapper ── */
 function Field({ label, required, error, hint, children }) {
@@ -47,7 +47,7 @@ function Toggle({ checked, onChange, label, description }) {
         {description && <p className="mt-0.5 break-words text-xs admin-surface-muted">{description}</p>}
       </div>
       <button type="button" role="switch" aria-checked={checked} onClick={() => onChange(!checked)}
-        className={`cursor-pointer relative inline-flex h-5 w-9 shrink-0 items-center rounded-full transition-colors ${checked ? "bg-sa-primary" : "bg-zinc-700"}`}>
+        className={`cursor-pointer relative inline-flex h-5 w-9 shrink-0 items-center rounded-full transition-colors ${checked ? "bg-sa-primary" : "bg-[var(--admin-border)]"}`}>
         <span className={`inline-block size-3.5 rounded-full bg-white shadow transition-transform ${checked ? "translate-x-4" : "translate-x-0.5"}`} />
       </button>
     </label>
@@ -330,8 +330,8 @@ function HeroPanel({ data, onChange, onSave, saving, fieldErrors = {}, onClearEr
 
       {/* Live preview */}
       {(data.headline || data.badge) && (
-        <div className="admin-surface-card p-5">
-          <p className="mb-3 text-[10px] font-semibold uppercase tracking-widest text-zinc-600">Live Preview</p>
+        <div className="rounded-xl border border-[var(--admin-border-subtle)] bg-[var(--admin-surface-soft)] p-5">
+          <p className="mb-3 text-[10px] font-semibold uppercase tracking-widest admin-surface-faint">Live Preview</p>
           {data.badge && (
             <span className="inline-flex rounded-full border border-indigo-500/30 bg-indigo-500/10 px-3 py-1 text-xs font-semibold text-indigo-400">
               {data.badge}
@@ -341,7 +341,11 @@ function HeroPanel({ data, onChange, onSave, saving, fieldErrors = {}, onClearEr
           {data.subheadline && <p className="mt-2 break-words text-sm admin-surface-muted">{data.subheadline}</p>}
           <div className="mt-4 flex flex-wrap gap-2">
             {data.ctaPrimary && <span className="rounded-xl bg-sa-primary px-4 py-2 text-xs font-semibold text-zinc-950">{data.ctaPrimary}</span>}
-            {data.ctaSecondary && <span className="rounded-xl border border-zinc-600 px-4 py-2 text-xs font-semibold admin-surface-body">{data.ctaSecondary}</span>}
+            {data.ctaSecondary && (
+              <span className="rounded-xl border border-[var(--admin-border-subtle)] bg-[var(--admin-control)] px-4 py-2 text-xs font-semibold admin-surface-body">
+                {data.ctaSecondary}
+              </span>
+            )}
           </div>
         </div>
       )}
@@ -420,7 +424,7 @@ function ArrayPanel({ items, fields, onSave, saving, icon: Icon, title, descript
             <div className="min-w-0 flex-1">{renderCard(item)}</div>
             <div className="flex shrink-0 items-center gap-1 self-end sm:self-auto">
               <button type="button" onClick={() => openEdit(i)}
-                className="cursor-pointer rounded-lg p-1.5 text-zinc-500 hover:bg-zinc-700/60 hover:admin-shell-text transition-colors">
+                className="cursor-pointer rounded-lg p-1.5 text-zinc-500 hover:bg-[var(--admin-hover)] hover:admin-shell-text transition-colors">
                 <Pencil className="size-3.5" />
               </button>
               <button type="button" onClick={() => setDeleteIdx(i)}

@@ -1,6 +1,6 @@
 "use client";
 
-import { raIconBadgeCls } from "@/config/restaurantAdminTheme";
+import { raIconBadgeCls, raInputCls, raTextareaCls } from "@/config/restaurantAdminTheme";
 import { useUser } from "@/context/AuthContext";
 import { formatAdminMoney } from "@/lib/adminCurrency";
 import {
@@ -453,7 +453,7 @@ function CreateOrderModal({ open, onClose, onCreated, currency = "INR" }) {
                     setFieldErrors(EMPTY_CREATE_ORDER_ERRORS);
                     setError("");
                   }}
-                  className="cursor-pointer mt-1 w-full rounded-xl border admin-shell-border admin-surface-card px-3 py-2 text-sm admin-shell-text outline-none focus-ra-primary"
+                  className={`cursor-pointer mt-1 ${raInputCls}`}
                 >
                   <option value="dine-in">Dine-In</option>
                   <option value="takeaway">Takeaway</option>
@@ -475,8 +475,8 @@ function CreateOrderModal({ open, onClose, onCreated, currency = "INR" }) {
                       setError("");
                     }}
                     aria-invalid={fieldErrors.tableNumber ? true : undefined}
-                    className={`cursor-pointer mt-1 w-full rounded-xl border admin-surface-card px-3 py-2 text-sm admin-shell-text outline-none focus-ra-primary ${
-                      fieldErrors.tableNumber ? "border-red-500/50" : "border-zinc-700"
+                    className={`cursor-pointer mt-1 ${raInputCls} ${
+                      fieldErrors.tableNumber ? "border-red-500/50" : ""
                     }`}
                   >
                     <option value="">— Select table —</option>
@@ -516,8 +516,8 @@ function CreateOrderModal({ open, onClose, onCreated, currency = "INR" }) {
                   }}
                   placeholder={form.orderType === "delivery" ? "e.g. Rahul Sharma" : "e.g. Rahul Sharma (not Walk-in)"}
                   aria-invalid={fieldErrors.customer ? true : undefined}
-                  className={`mt-1 w-full rounded-xl border admin-surface-card px-3 py-2 text-sm admin-shell-text outline-none focus-ra-primary placeholder:admin-surface-faint ${
-                    fieldErrors.customer ? "border-red-500/50" : "border-zinc-700"
+                  className={`mt-1 ${raInputCls} ${
+                    fieldErrors.customer ? "border-red-500/50" : ""
                   }`}
                 />
                 {fieldErrors.customer && (
@@ -545,8 +545,8 @@ function CreateOrderModal({ open, onClose, onCreated, currency = "INR" }) {
                       : "Special requests…"
                   }
                   aria-invalid={fieldErrors.notes ? true : undefined}
-                  className={`mt-1 w-full resize-none rounded-xl border admin-surface-card px-3 py-2 text-sm admin-shell-text outline-none focus-ra-primary placeholder:admin-surface-faint ${
-                    fieldErrors.notes ? "border-red-500/50" : "border-zinc-700"
+                  className={`mt-1 ${raTextareaCls} ${
+                    fieldErrors.notes ? "border-red-500/50" : ""
                   }`}
                 />
                 {fieldErrors.notes && (

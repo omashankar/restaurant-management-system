@@ -13,7 +13,6 @@ import {
 } from "@/config/authTheme";
 import BhojDeskLogo from "@/components/brand/BhojDeskLogo";
 import PasswordInput from "@/components/ui/PasswordInput";
-import { BHOJDESK_BRAND } from "@/config/bhojdeskBrand";
 import { getLoginFieldErrors } from "@/lib/formValidation";
 import { Copy } from "lucide-react";
 import Link from "next/link";
@@ -208,11 +207,13 @@ function LoginContent() {
   return (
     <div className="min-w-0 w-full max-w-4xl">
       <div className="mb-6 text-center sm:mb-8">
-        <BhojDeskLogo variant="vertical" height={88} className="mx-auto" priority />
-        <h1 className="mt-4 break-words text-xl font-semibold tracking-tight text-zinc-50 sm:text-2xl">
-          {BHOJDESK_BRAND.fullName}
-        </h1>
-        <p className="mt-1 text-sm text-zinc-500">Sign in to your workspace</p>
+        <BhojDeskLogo
+          variant="horizontalDark"
+          height={56}
+          className="mx-auto w-full max-w-[300px] object-center"
+          priority
+        />
+        <p className="mt-4 text-sm text-zinc-500">Sign in to your workspace</p>
       </div>
 
       <div className="grid min-w-0 gap-5 lg:grid-cols-2">

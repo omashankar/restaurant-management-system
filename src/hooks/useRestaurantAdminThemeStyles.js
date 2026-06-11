@@ -36,16 +36,26 @@ export function useRestaurantAdminThemeStyles() {
 
   useEffect(() => {
     if (!isRestaurantAdmin) return;
-    documentThemeSyncCount += 1;
     applyRestaurantDocumentTheme(theme);
+  }, [isRestaurantAdmin, theme]);
+
+  useEffect(() => {
+    if (!isRestaurantAdmin) return;
+    documentThemeSyncCount += 1;
     return () => {
       documentThemeSyncCount -= 1;
       if (documentThemeSyncCount <= 0) {
         documentThemeSyncCount = 0;
+        if (
+          typeof window !== "undefined" &&
+          window.location.pathname.startsWith("/super-admin")
+        ) {
+          return;
+        }
         clearRestaurantDocumentTheme();
       }
     };
-  }, [isRestaurantAdmin, theme]);
+  }, [isRestaurantAdmin]);
 
   return isRestaurantAdmin ? themeStyle : {};
 }

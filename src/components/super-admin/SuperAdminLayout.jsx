@@ -14,7 +14,7 @@ import SuperAdminPreloader from "./SuperAdminPreloader";
 import SuperAdminSidebar from "./SuperAdminSidebar";
 import { BHOJDESK_BRAND } from "@/config/bhojdeskBrand";
 import ChangePasswordModal from "@/components/rms/ChangePasswordModal";
-import InboxDropdown, { InboxCountBadge } from "@/components/rms/InboxDropdown";
+import InboxDropdown, { HeaderInboxBadge, InboxCountBadge } from "@/components/rms/InboxDropdown";
 import MobileDrawer from "@/components/rms/MobileDrawer";
 import { useUser } from "@/context/AuthContext";
 import { useInbox } from "@/hooks/useInbox";
@@ -206,15 +206,11 @@ export default function SuperAdminLayout({ children }) {
                   setIsProfileOpen(false);
                   setActiveInbox((prev) => (prev === "messages" ? null : "messages"));
                 }}
-                className={`${adminSurface.btnIcon} relative shrink-0`}
-                aria-label="Messages"
+                className={`${adminSurface.btnIcon} relative shrink-0 overflow-visible`}
+                aria-label={unread.messages > 0 ? `Messages (${unread.messages} unread)` : "Messages"}
               >
                 <MessageSquare className="size-4" />
-                {unread.messages > 0 ? (
-                  <span className="absolute -right-1 -top-1 rounded-full bg-sa-primary px-1.5 py-0.5 text-[10px] font-semibold text-zinc-950">
-                    {unread.messages}
-                  </span>
-                ) : null}
+                <HeaderInboxBadge count={unread.messages} tone="sa" />
               </button>
               <button
                 ref={notificationsBtnRef}
@@ -223,15 +219,15 @@ export default function SuperAdminLayout({ children }) {
                   setIsProfileOpen(false);
                   setActiveInbox((prev) => (prev === "notifications" ? null : "notifications"));
                 }}
-                className={`${adminSurface.btnIcon} relative shrink-0`}
-                aria-label="Notifications"
+                className={`${adminSurface.btnIcon} relative shrink-0 overflow-visible`}
+                aria-label={
+                  unread.notifications > 0
+                    ? `Notifications (${unread.notifications} unread)`
+                    : "Notifications"
+                }
               >
                 <Bell className="size-4" />
-                {unread.notifications > 0 ? (
-                  <span className="absolute -right-1 -top-1 rounded-full bg-amber-500 px-1.5 py-0.5 text-[10px] font-semibold text-zinc-950">
-                    {unread.notifications}
-                  </span>
-                ) : null}
+                <HeaderInboxBadge count={unread.notifications} tone="amber" />
               </button>
               <InboxDropdown
                 open={activeInbox === "messages" && !isProfileOpen}

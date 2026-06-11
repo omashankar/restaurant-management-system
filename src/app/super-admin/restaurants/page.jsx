@@ -2,7 +2,7 @@
 
 
 import SuperAdminPageSkeleton from "@/components/super-admin/SuperAdminPageSkeleton";
-import { saIconBadgeCls, saSpinnerCls } from "@/config/superAdminTheme";
+import { saIconBadgeCls, saInputCls, saSpinnerCls } from "@/config/superAdminTheme";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import SearchField from "@/components/ui/SearchField";
 import PaginationBar from "@/components/ui/PaginationBar";
@@ -62,7 +62,7 @@ const emptyForm = {
   phone: "", address: "", plan: "free", status: "active",
 };
 
-const inputCls = "admin-surface-input focus-sa-primary w-full px-3 py-2.5 text-sm outline-none placeholder:admin-surface-faint transition-colors";
+const inputCls = saInputCls;
 const filterSelectCls =
   "cursor-pointer w-full min-w-0 rounded-xl border admin-shell-border bg-[var(--admin-control)] px-3 py-2.5 text-sm admin-shell-text outline-none focus-sa-primary sm:w-auto sm:min-w-[9.5rem] sm:shrink-0";
 const fieldErrorCls = "mt-1 text-xs text-red-400";

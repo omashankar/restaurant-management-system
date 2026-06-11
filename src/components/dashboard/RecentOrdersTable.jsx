@@ -131,7 +131,7 @@ export default function RecentOrdersTable({ orders = [], currency = "INR" }) {
           </div>
         ) : (
           <>
-            <div className="divide-y admin-shell-divider md:hidden">
+            <div className="admin-table-body md:hidden">
               {orders.map((order) => (
                 <RecentOrderMobileCard key={order.id} order={order} currency={currency} />
               ))}

@@ -1,6 +1,6 @@
 "use client";
 
-import { raIconBadgeCls } from "@/config/restaurantAdminTheme";
+import { raIconBadgeCls, raInputCls } from "@/config/restaurantAdminTheme";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import EmptyState from "@/components/ui/EmptyState";
 import ListToolbar from "@/components/ui/ListToolbar";
@@ -347,8 +347,8 @@ export default function TablesModulePage() {
                 }}
                 placeholder="T12"
                 aria-invalid={fieldErrors.tableNumber ? true : undefined}
-                className={`mt-1 w-full rounded-xl border admin-surface-card px-3 py-2.5 text-sm admin-shell-text outline-none focus-ra-primary ${
-                  fieldErrors.tableNumber ? "border-red-500/50" : "border-zinc-700"
+                className={`mt-1 ${raInputCls} ${
+                  fieldErrors.tableNumber ? "border-red-500/50" : ""
                 }`}
               />
               {fieldErrors.tableNumber && (
@@ -366,8 +366,8 @@ export default function TablesModulePage() {
                   if (fieldErrors.capacity) setFieldErrors((p) => ({ ...p, capacity: "" }));
                 }}
                 aria-invalid={fieldErrors.capacity ? true : undefined}
-                className={`mt-1 w-full rounded-xl border admin-surface-card px-3 py-2.5 text-sm admin-shell-text outline-none focus-ra-primary ${
-                  fieldErrors.capacity ? "border-red-500/50" : "border-zinc-700"
+                className={`mt-1 ${raInputCls} ${
+                  fieldErrors.capacity ? "border-red-500/50" : ""
                 }`}
               />
               {fieldErrors.capacity && (
@@ -377,7 +377,7 @@ export default function TablesModulePage() {
             <div>
               <label className="text-xs admin-surface-muted">Status</label>
               <select value={form.status} onChange={(e) => setForm((f) => ({ ...f, status: e.target.value }))}
-                className="cursor-pointer mt-1 w-full rounded-xl border admin-shell-border admin-surface-card px-3 py-2.5 text-sm admin-shell-text outline-none focus-ra-primary">
+                className={`cursor-pointer mt-1 ${raInputCls}`}>
                 <option value="available">Available</option>
                 <option value="occupied">Occupied</option>
               </select>
@@ -397,8 +397,8 @@ export default function TablesModulePage() {
                     if (fieldErrors.categoryId) setFieldErrors((p) => ({ ...p, categoryId: "" }));
                   }}
                   aria-invalid={fieldErrors.categoryId ? true : undefined}
-                  className={`cursor-pointer mt-1 w-full rounded-xl border admin-surface-card px-3 py-2.5 text-sm admin-shell-text outline-none focus-ra-primary ${
-                    fieldErrors.categoryId ? "border-red-500/50" : "border-zinc-700"
+                  className={`cursor-pointer mt-1 ${raInputCls} ${
+                    fieldErrors.categoryId ? "border-red-500/50" : ""
                   }`}
                 >
                   <option value="">— Select area —</option>

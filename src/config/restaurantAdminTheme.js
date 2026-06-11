@@ -7,8 +7,14 @@ export { adminBox, adminControl, adminPage, adminText };
 export const RESTAURANT_ADMIN_PRIMARY = "#10b981";
 export const RESTAURANT_ADMIN_ACCENT = "#34d399";
 
+/** Standard text/select/textarea field — Restaurant Admin + portaled modals */
 export const raInputCls =
-  "admin-surface-input focus-ra-primary transition-colors";
+  "admin-surface-input outline-none focus-ra-primary placeholder:admin-surface-faint transition-colors";
+
+export const raTextareaCls = `${raInputCls} resize-none`;
+
+/** Toolbar dropdowns — compact width, same chrome as inputs */
+export const raFilterSelectCls = `${raInputCls} admin-inline-select !w-auto min-w-[9rem] max-w-full cursor-pointer`;
 
 /** Semantic shells — dark/light via admin-surface-theme.css */
 export const raCardCls = adminSurface.card;

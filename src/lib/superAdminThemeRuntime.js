@@ -36,14 +36,7 @@ export function superAdminThemeStyle(theme) {
   };
 }
 
-export function dispatchSuperAdminThemePreview(theme) {
-  if (typeof window === "undefined") return;
-  window.dispatchEvent(
-    new CustomEvent("super-admin-theme-preview", { detail: resolveSuperAdminTheme(theme) })
-  );
-}
-
-export function clearSuperAdminThemePreview() {
-  if (typeof window === "undefined") return;
-  window.dispatchEvent(new Event("super-admin-theme-preview-clear"));
-}
+export {
+  clearSuperAdminThemePreview,
+  dispatchSuperAdminThemePreview,
+} from "@/lib/superAdminThemeStorage";

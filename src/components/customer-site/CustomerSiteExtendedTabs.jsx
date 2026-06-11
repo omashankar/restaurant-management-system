@@ -8,6 +8,9 @@ import {
   CMS_EDITOR_SECTION,
   CMS_EDITOR_SECTION_TIGHT,
   CMS_EDITOR_TEXTAREA,
+  CMS_HINT,
+  CMS_LABEL,
+  CMS_SECTION_TITLE,
 } from "@/config/customerSiteEditorClasses";
 import { DEFAULTS } from "@/lib/restaurantCmsDefaults";
 
@@ -17,9 +20,9 @@ const textareaCls = CMS_EDITOR_TEXTAREA;
 function Field({ label, hint, children, className = "" }) {
   return (
     <div className={className}>
-      <label className="mb-1.5 block text-xs font-medium text-zinc-400">{label}</label>
+      <label className={CMS_LABEL}>{label}</label>
       {children}
-      {hint && <p className="mt-1 text-[11px] text-zinc-600">{hint}</p>}
+      {hint ? <p className={CMS_HINT}>{hint}</p> : null}
     </div>
   );
 }
@@ -74,11 +77,11 @@ export function HomeSectionsTab({ home, setHome, saving, onSaveDraft, onPublish 
 
       <HeaderBlock title="Order types section" headers={home.sectionHeaders?.orderTypes} onChange={(v) => setHeader("orderTypes", v)} />
       <div className="space-y-3">
-        <p className="text-xs font-medium text-zinc-400">Order type cards (do not change IDs)</p>
+        <p className="text-xs font-medium admin-surface-muted">Order type cards (do not change IDs)</p>
         <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
         {(home.orderTypes ?? []).map((t, i) => (
           <div key={t.id} className={CMS_EDITOR_GROUP_FLAT}>
-            <p className="text-[11px] font-semibold text-zinc-500 uppercase">{t.id}</p>
+            <p className="text-[11px] font-semibold uppercase admin-surface-faint">{t.id}</p>
             <input
               value={t.title}
               onChange={(e) =>
@@ -188,7 +191,7 @@ export function HomeSectionsTab({ home, setHome, saving, onSaveDraft, onPublish 
         ))}
       </div>
 
-      <p className="text-xs font-semibold uppercase tracking-wide text-zinc-500 pt-2">Bottom CTA</p>
+      <p className={`${CMS_SECTION_TITLE} pt-2`}>Bottom CTA</p>
       <Field label="Title">
         <input
           value={home.cta?.title ?? ""}
@@ -255,7 +258,7 @@ export function AboutExtrasFields({ about, setAbout }) {
 
   return (
     <div className="space-y-4 admin-surface-divider-t pt-5 mt-5">
-      <p className="text-xs font-semibold uppercase tracking-wide text-zinc-500">About page — extra sections</p>
+      <p className={CMS_SECTION_TITLE}>About page — extra sections</p>
       <HeaderBlock title="Features block" headers={about.featuresHeader} onChange={setFh} />
       {(about.features ?? DEFAULTS.about.features).map((f, i) => (
         <div key={i} className={CMS_EDITOR_GROUP_FLAT}>
@@ -287,7 +290,7 @@ export function AboutExtrasFields({ about, setAbout }) {
       ))}
       <HeaderBlock title="Visit us" headers={about.visitHeader} onChange={(v) => setAbout((p) => ({ ...p, visitHeader: v }))} />
       <p className="text-xs admin-surface-faint">Address / phone / hours come from Settings.</p>
-      <p className="text-xs font-medium text-zinc-400">Bottom CTA on About</p>
+      <p className="text-xs font-medium admin-surface-muted">Bottom CTA on About</p>
       <Field label="Title">
         <input
           value={about.bottomCta?.title ?? ""}

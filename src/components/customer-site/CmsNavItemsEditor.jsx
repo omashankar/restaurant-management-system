@@ -1,6 +1,7 @@
 "use client";
 
 import { layoutInputCls } from "@/components/customer-site/layoutEditorUi";
+import { CMS_EDITOR_WELL } from "@/config/customerSiteEditorClasses";
 import { newNavItem, newSocialItem } from "@/lib/layoutNavDefaults";
 import { ChevronDown, ChevronUp, Eye, EyeOff, Plus, Trash2 } from "lucide-react";
 
@@ -37,7 +38,7 @@ export default function CmsNavItemsEditor({
       {list.map((item, index) => (
         <div
           key={item.id ?? index}
-          className="rounded-xl admin-surface-card p-3 space-y-2"
+          className={`${CMS_EDITOR_WELL} space-y-2`}
         >
           <div className="flex items-start justify-between gap-2">
             <div className="min-w-0 flex-1 space-y-2">
@@ -62,7 +63,7 @@ export default function CmsNavItemsEditor({
                   className={layoutInputCls}
                 />
               )}
-              <p className="break-all text-[10px] font-mono text-zinc-600">
+              <p className="break-all text-[10px] font-mono admin-surface-faint">
                 {mode === "url" ? `[Link]: ${item.url || "—"}` : `[Route]: ${item.path || "—"}`}
               </p>
             </div>

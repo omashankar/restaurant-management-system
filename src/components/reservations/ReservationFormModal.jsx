@@ -13,6 +13,7 @@ import { TIME_SLOTS, formatTimeSlot } from "@/lib/reservationUtils";
 import { getTableAvailability } from "@/lib/tableAvailability";
 import { AlertCircle, Search, UserPlus, X } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { raInputCls, raTextareaCls } from "@/config/restaurantAdminTheme";
 
 const empty = {
   customerName: "",
@@ -407,8 +408,8 @@ export default function ReservationFormModal({ open, onClose, editing, tableOpti
               }}
               placeholder="Full name"
               aria-invalid={fieldErrors.customerName ? true : undefined}
-              className={`mt-1 w-full rounded-xl border admin-surface-card px-3 py-2.5 text-sm admin-shell-text outline-none focus-ra-primary placeholder:admin-surface-faint ${
-                fieldErrors.customerName ? "border-red-500/50" : "border-zinc-700"
+              className={`mt-1 ${raInputCls} ${
+                fieldErrors.customerName ? "border-red-500/50" : ""
               }`}
             />
             {fieldErrors.customerName && (
@@ -417,7 +418,7 @@ export default function ReservationFormModal({ open, onClose, editing, tableOpti
           </div>
           <PhoneInput
             id="reservation-phone"
-            label="Phone *"
+            label="Phone"
             labelClassName="text-xs font-medium admin-surface-muted"
             required
             value={form.phone}
@@ -445,8 +446,8 @@ export default function ReservationFormModal({ open, onClose, editing, tableOpti
                 setSaveError("");
               }}
               aria-invalid={fieldErrors.guests ? true : undefined}
-              className={`mt-1 w-full rounded-xl border admin-surface-card px-3 py-2.5 text-sm admin-shell-text outline-none focus-ra-primary ${
-                fieldErrors.guests ? "border-red-500/50" : "border-zinc-700"
+              className={`mt-1 ${raInputCls} ${
+                fieldErrors.guests ? "border-red-500/50" : ""
               }`}
             />
             {fieldErrors.guests && (
@@ -464,8 +465,8 @@ export default function ReservationFormModal({ open, onClose, editing, tableOpti
                 setSaveError("");
               }}
               aria-invalid={fieldErrors.date ? true : undefined}
-              className={`mt-1 w-full rounded-xl border admin-surface-card px-3 py-2.5 text-sm admin-shell-text outline-none focus-ra-primary ${
-                fieldErrors.date ? "border-red-500/50" : "border-zinc-700"
+              className={`mt-1 ${raInputCls} ${
+                fieldErrors.date ? "border-red-500/50" : ""
               }`}
             />
             {fieldErrors.date && <p className="mt-1 text-xs text-red-400">{fieldErrors.date}</p>}
@@ -480,8 +481,8 @@ export default function ReservationFormModal({ open, onClose, editing, tableOpti
                 setSaveError("");
               }}
               aria-invalid={fieldErrors.time ? true : undefined}
-              className={`cursor-pointer mt-1 w-full rounded-xl border admin-surface-card px-3 py-2.5 text-sm admin-shell-text outline-none focus-ra-primary ${
-                fieldErrors.time ? "border-red-500/50" : "border-zinc-700"
+              className={`cursor-pointer mt-1 ${raInputCls} ${
+                fieldErrors.time ? "border-red-500/50" : ""
               }`}
             >
               {TIME_SLOTS.map((t) => (
@@ -518,7 +519,7 @@ export default function ReservationFormModal({ open, onClose, editing, tableOpti
             className={`cursor-pointer mt-1 w-full rounded-xl border px-3 py-2.5 text-sm admin-shell-text outline-none admin-surface-card ${
               isConflict || fieldErrors.tableNumber
                 ? "border-red-500/50 focus:border-red-500/50"
-                : "border-zinc-700 focus-ra-primary"
+                : ""
             }`}
           >
             <option value="">— Select table —</option>
@@ -568,7 +569,7 @@ export default function ReservationFormModal({ open, onClose, editing, tableOpti
           <label className="text-xs font-medium admin-surface-muted">Special notes</label>
           <textarea rows={2} value={form.notes}
             onChange={(e) => setForm((f) => ({ ...f, notes: e.target.value }))}
-            className="mt-1 w-full resize-none rounded-xl border admin-shell-border admin-surface-card px-3 py-2.5 text-sm admin-shell-text outline-none focus-ra-primary" />
+            className={`mt-1 ${raTextareaCls}`} />
         </div>
       </div>
     </Modal>

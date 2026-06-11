@@ -26,10 +26,36 @@ export function writeStoredAdminColorMode(mode) {
   }
 }
 
+let modeSwitchGuardTimer = null;
+
+function endAdminModeSwitchGuard() {
+  if (typeof document === "undefined") return;
+  const root = document.documentElement;
+  const clear = () => {
+    delete root.dataset.adminModeSwitching;
+    modeSwitchGuardTimer = null;
+  };
+  if (modeSwitchGuardTimer) {
+    window.clearTimeout(modeSwitchGuardTimer);
+  }
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      modeSwitchGuardTimer = window.setTimeout(clear, 400);
+    });
+  });
+}
+
+/** Suppress border/background transitions while CSS variables flip (avoids white border flash). */
+function beginAdminModeSwitchGuard(previousMode, nextMode) {
+  if (typeof document === "undefined") return;
+  if (!previousMode || previousMode === nextMode) return;
+  document.documentElement.dataset.adminModeSwitching = "";
+}
+
 export function applyAdminColorMode(theme) {
   if (typeof document === "undefined") return resolveAdminColorMode(theme);
   const mode = resolveAdminColorMode(theme);
-  document.documentElement.dataset.adminMode = mode;
+  setDocumentAdminMode(mode);
   writeStoredAdminColorMode(mode);
   return mode;
 }
@@ -44,6 +70,18 @@ export function clearAdminColorMode() {
   }
 }
 
+function setDocumentAdminMode(mode) {
+  if (typeof document === "undefined") return;
+  const root = document.documentElement;
+  const previousMode = root.dataset.adminMode;
+  const isModeChange = Boolean(previousMode && previousMode !== mode);
+  beginAdminModeSwitchGuard(previousMode, mode);
+  root.dataset.adminMode = mode;
+  if (isModeChange) {
+    endAdminModeSwitchGuard();
+  }
+}
+
 /** Re-apply light/dark for the active portal after clearing portal-specific branding. */
 export function reapplyPortalAdminColorMode() {
   if (typeof document === "undefined" || typeof window === "undefined") return;
@@ -54,7 +92,7 @@ export function reapplyPortalAdminColorMode() {
     if (raw) {
       const t = JSON.parse(raw);
       const mode = t?.darkMode === false ? "light" : "dark";
-      document.documentElement.dataset.adminMode = mode;
+      setDocumentAdminMode(mode);
       writeStoredAdminColorMode(mode);
       return mode;
     }
@@ -62,6 +100,6 @@ export function reapplyPortalAdminColorMode() {
     /* ignore */
   }
   const fallback = readStoredAdminColorMode() ?? "dark";
-  document.documentElement.dataset.adminMode = fallback;
+  setDocumentAdminMode(fallback);
   return fallback;
 }

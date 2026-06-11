@@ -17,6 +17,7 @@ import {
 import EmptyState from "@/components/ui/EmptyState";
 import ListToolbar from "@/components/ui/ListToolbar";
 import Modal from "@/components/ui/Modal";
+import { raInputCls, raTextareaCls } from "@/config/restaurantAdminTheme";
 import PaginationBar from "@/components/ui/PaginationBar";
 import TableSkeleton from "@/components/ui/TableSkeleton";
 import { usePaginatedList } from "@/hooks/usePaginatedList";
@@ -368,7 +369,7 @@ export default function RecipesPage() {
               onChange={(e) =>
                 setForm((f) => ({ ...f, name: e.target.value }))
               }
-              className="mt-1 w-full rounded-xl border admin-shell-border admin-surface-card px-3 py-2 text-sm admin-shell-text"
+              className={`mt-1 ${raInputCls}`}
             />
           </div>
           <div>
@@ -378,7 +379,7 @@ export default function RecipesPage() {
               onChange={(e) =>
                 setForm((f) => ({ ...f, menuItemId: e.target.value }))
               }
-              className="mt-1 w-full rounded-xl border admin-shell-border admin-surface-card px-3 py-2 text-sm admin-shell-text"
+              className={`mt-1 ${raInputCls}`}
             >
               {activeMenuItems.map((m) => (
                 <option key={m.id} value={m.id}>
@@ -405,7 +406,7 @@ export default function RecipesPage() {
                     value={line}
                     onChange={(e) => setIngredient(i, e.target.value)}
                     placeholder={`Ingredient ${i + 1}`}
-                    className="min-w-0 flex-1 rounded-xl border admin-shell-border admin-surface-card px-3 py-2 text-sm admin-shell-text"
+                    className={`min-w-0 flex-1 ${raInputCls}`}
                   />
                   <button
                     type="button"
@@ -428,7 +429,7 @@ export default function RecipesPage() {
                 setForm((f) => ({ ...f, steps: e.target.value }))
               }
               placeholder="Prep and plating steps…"
-              className="mt-1 w-full resize-none rounded-xl border admin-shell-border admin-surface-card px-3 py-2 text-sm admin-shell-text"
+              className={`mt-1 ${raTextareaCls}`}
             />
           </div>
         </div>

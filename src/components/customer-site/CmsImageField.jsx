@@ -1,5 +1,6 @@
 "use client";
 
+import { CMS_EDITOR_WELL, CMS_HINT, CMS_LABEL } from "@/config/customerSiteEditorClasses";
 import {
   imageUploadStatusLabel,
   uploadImageWithCompression,
@@ -10,7 +11,7 @@ import { ImageIcon, Loader2, Trash2, Upload } from "lucide-react";
 import { useRef, useState } from "react";
 
 const inputCls =
-  "admin-surface-input focus-ra-primary w-full px-3 py-2.5 text-sm outline-none focus-ra-primary placeholder:admin-surface-faint";
+  "admin-surface-input focus-ra-primary w-full px-3 py-2.5 text-sm outline-none placeholder:admin-surface-faint";
 
 /**
  * CMS image: upload file or paste URL (hero, about, gallery, banners).
@@ -62,18 +63,16 @@ export default function CmsImageField({
 
   return (
     <div className="min-w-0 space-y-2">
-      {label && (
-        <label className="block text-xs font-medium text-zinc-400">{label}</label>
-      )}
-      {hint && <p className="text-[11px] text-zinc-600">{hint}</p>}
+      {label ? <label className={CMS_LABEL}>{label}</label> : null}
+      {hint ? <p className="text-[11px] leading-snug admin-surface-faint">{hint}</p> : null}
 
-      <div className="rounded-xl admin-surface-card p-3 space-y-3">
-        <div className="overflow-hidden rounded-lg border border-[var(--admin-border-subtle)] bg-[var(--admin-control)]">
+      <div className={`${CMS_EDITOR_WELL} space-y-3`}>
+        <div className="cms-preview-frame">
           {previewSrc ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={previewSrc} alt="" className={previewClassName} />
           ) : (
-            <div className="flex h-28 items-center justify-center text-zinc-600">
+            <div className="flex h-28 items-center justify-center admin-surface-faint">
               <ImageIcon className="size-10 opacity-50" />
             </div>
           )}
@@ -93,7 +92,7 @@ export default function CmsImageField({
             )}
             {statusLabel ?? "Upload image"}
           </button>
-          {value && (
+          {value ? (
             <button
               type="button"
               disabled={disabled || busy}
@@ -102,7 +101,7 @@ export default function CmsImageField({
             >
               <Trash2 className="size-3.5" /> Remove
             </button>
-          )}
+          ) : null}
         </div>
 
         <input
@@ -124,8 +123,8 @@ export default function CmsImageField({
             className={inputCls}
           />
         </div>
-        {error && <p className="text-xs text-red-400">{error}</p>}
-        <p className="text-[11px] text-zinc-600">
+        {error ? <p className="text-xs text-red-400">{error}</p> : null}
+        <p className="text-[11px] admin-surface-faint">
           JPG, PNG, or WebP — large photos are compressed automatically
         </p>
       </div>

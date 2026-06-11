@@ -1,6 +1,6 @@
 "use client";
 
-import { raIconBadgeCls } from "@/config/restaurantAdminTheme";
+import { raIconBadgeCls, raInputCls } from "@/config/restaurantAdminTheme";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import DataTableShell from "@/components/ui/DataTableShell";
 import {
@@ -405,8 +405,8 @@ export default function StaffModulePage() {
                 }}
                 placeholder="Alex Rivera"
                 aria-invalid={fieldErrors.name ? true : undefined}
-                className={`mt-1 w-full rounded-xl border admin-surface-card px-3 py-2.5 text-sm admin-shell-text outline-none focus-ra-primary placeholder:admin-surface-faint ${
-                  fieldErrors.name ? "border-red-500/50" : "border-zinc-700"
+                className={`mt-1 ${raInputCls} ${
+                  fieldErrors.name ? "border-red-500/50" : ""
                 }`}
               />
               {fieldErrors.name && <p className="mt-1 text-xs text-red-400">{fieldErrors.name}</p>}
@@ -422,8 +422,8 @@ export default function StaffModulePage() {
                 }}
                 placeholder="alex@restaurant.com"
                 aria-invalid={fieldErrors.email ? true : undefined}
-                className={`mt-1 w-full rounded-xl border admin-surface-card px-3 py-2.5 text-sm admin-shell-text outline-none focus-ra-primary placeholder:admin-surface-faint ${
-                  fieldErrors.email ? "border-red-500/50" : "border-zinc-700"
+                className={`mt-1 ${raInputCls} ${
+                  fieldErrors.email ? "border-red-500/50" : ""
                 }`}
               />
               {fieldErrors.email && <p className="mt-1 text-xs text-red-400">{fieldErrors.email}</p>}
@@ -431,7 +431,7 @@ export default function StaffModulePage() {
             <div>
               <label className="text-xs font-medium admin-surface-muted">Role *</label>
               <select value={form.role} onChange={(e) => setForm((f) => ({ ...f, role: e.target.value }))}
-                className="cursor-pointer mt-1 w-full rounded-xl border admin-shell-border admin-surface-card px-3 py-2.5 text-sm admin-shell-text outline-none focus-ra-primary">
+                className={`cursor-pointer mt-1 ${raInputCls}`}>
                 {STAFF_ROLES.map((r) => <option key={r} value={r}>{ROLE_LABEL[r]}</option>)}
               </select>
             </div>
@@ -459,8 +459,8 @@ export default function StaffModulePage() {
                   }}
                   placeholder="••••••••"
                   labelClassName="text-xs font-medium admin-surface-muted"
-                  inputClassName={`w-full rounded-xl border admin-surface-card px-3 py-2.5 pr-11 text-sm admin-shell-text outline-none focus-ra-primary placeholder:admin-surface-faint ${
-                    fieldErrors.password ? "border-red-500/50" : "border-zinc-700"
+                  inputClassName={`${raInputCls} pr-11 ${
+                    fieldErrors.password ? "border-red-500/50" : ""
                   }`}
                 />
                 {fieldErrors.password && (
@@ -472,7 +472,7 @@ export default function StaffModulePage() {
               <div>
                 <label className="text-xs font-medium admin-surface-muted">Status</label>
                 <select value={form.status} onChange={(e) => setForm((f) => ({ ...f, status: e.target.value }))}
-                  className="cursor-pointer mt-1 w-full rounded-xl border admin-shell-border admin-surface-card px-3 py-2.5 text-sm admin-shell-text outline-none focus-ra-primary">
+                  className={`cursor-pointer mt-1 ${raInputCls}`}>
                   <option value="active">Active</option>
                   <option value="on-leave">On Leave</option>
                 </select>

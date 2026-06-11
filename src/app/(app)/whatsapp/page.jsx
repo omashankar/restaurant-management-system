@@ -9,6 +9,7 @@ import {
   validateWhatsappTestPhone,
 } from "@/lib/restaurantSettingsValidation";
 import { useEffect, useState } from "react";
+import { raTextareaCls } from "@/config/restaurantAdminTheme";
 
 const TEMPLATES = [
   { id: "order_confirmed",  event: "Order Confirmed",   emoji: "✅", audience: "Customer" },
@@ -411,7 +412,7 @@ export default function WhatsAppPage() {
                     rows={5}
                     value={activeConfig.message ?? ""}
                     onChange={(e) => updateTemplate(active.id, { message: e.target.value })}
-                    className="w-full resize-none rounded-xl border admin-shell-border admin-surface-card px-3 py-2.5 text-sm admin-shell-text outline-none focus-ra-primary"
+                    className={raTextareaCls}
                   />
                 </div>
 

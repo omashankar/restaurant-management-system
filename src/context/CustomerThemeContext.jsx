@@ -9,6 +9,7 @@ import {
   themeRootClassName,
   themeSnapshot,
 } from "@/theme/tokens";
+import { beginCustomerModeSwitch, syncCustomerDocumentMode } from "@/theme/customerColorMode";
 import {
   loadModePreference,
   loadThemeCache,
@@ -23,6 +24,7 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useState,
 } from "react";
@@ -72,7 +74,10 @@ export function CustomerThemeProvider({ children }) {
   const setMode = useCallback(
     (next) => {
       const m = next === "dark" ? "dark" : "light";
-      setModeState(m);
+      setModeState((prev) => {
+        if (prev !== m) beginCustomerModeSwitch();
+        return m;
+      });
       saveModePreference(slug, m);
     },
     [slug]
@@ -126,14 +131,10 @@ export function CustomerThemeProvider({ children }) {
     link.href = url;
   }, [cmsTheme?.faviconUrl]);
 
-  useEffect(() => {
-    document.documentElement.style.colorScheme = mode;
-    if (mode === "dark") {
-      document.documentElement.dataset.customerDark = "true";
-    } else {
-      delete document.documentElement.dataset.customerDark;
-    }
-  }, [mode]);
+  useLayoutEffect(() => {
+    if (!hydrated) return;
+    syncCustomerDocumentMode(mode);
+  }, [mode, hydrated]);
 
   const value = useMemo(
     () => ({

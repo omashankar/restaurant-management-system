@@ -1,6 +1,6 @@
 "use client";
 
-import { raBtnPrimaryCls, raBtnPrimarySmCls, raIconBadgeCls } from "@/config/restaurantAdminTheme";
+import { raBtnPrimaryCls, raBtnPrimarySmCls, raIconBadgeCls, raInputCls } from "@/config/restaurantAdminTheme";
 import { useToast } from "@/hooks/useToast";
 import { validateQrMenuConfig } from "@/lib/restaurantSettingsValidation";
 import { Download, ExternalLink, Printer, Table2, RefreshCw } from "lucide-react";
@@ -440,7 +440,7 @@ export default function QrMenuPage() {
             <h2 className="mb-3 text-base font-semibold admin-shell-text">Label on QR</h2>
             <input value={restaurantName} onChange={(e) => setRestaurantName(e.target.value)}
               placeholder="Restaurant name shown below QR"
-              className="w-full rounded-xl border admin-shell-border admin-surface-card px-3 py-2.5 text-sm admin-shell-text outline-none focus-ra-primary" />
+              className={raInputCls} />
           </section>
 
           {/* Table config */}
@@ -456,7 +456,7 @@ export default function QrMenuPage() {
                     <select
                       value={tableNumber}
                       onChange={(e) => setTableNumber(e.target.value)}
-                      className="cursor-pointer w-full rounded-xl border admin-shell-border admin-surface-card px-3 py-2.5 text-sm admin-shell-text outline-none focus-ra-primary"
+                      className={`cursor-pointer ${raInputCls}`}
                     >
                       {tableNumbers.map((tn, index) => (
                         <option key={`${tn}-${index}`} value={tn}>{tn}</option>
@@ -466,7 +466,7 @@ export default function QrMenuPage() {
                     <input type="text" value={tableNumber}
                       onChange={(e) => setTableNumber(e.target.value)}
                       placeholder="e.g. T01"
-                      className="w-full rounded-xl border admin-shell-border admin-surface-card px-3 py-2.5 text-sm admin-shell-text outline-none focus-ra-primary" />
+                      className={raInputCls} />
                   )}
                 </div>
                 {floorTables.length === 0 ? (
@@ -477,7 +477,7 @@ export default function QrMenuPage() {
                   <input type="number" value={tableCount}
                     onChange={(e) => setTableCount(Math.max(1, Math.min(50, Number(e.target.value))))}
                     min="1" max="50"
-                    className="w-full rounded-xl border admin-shell-border admin-surface-card px-3 py-2.5 text-sm admin-shell-text outline-none focus-ra-primary" />
+                    className={raInputCls} />
                 </div>
                 ) : (
                 <div className="flex items-end">

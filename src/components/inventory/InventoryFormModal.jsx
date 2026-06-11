@@ -1,6 +1,7 @@
 "use client";
 
 import Modal from "@/components/ui/Modal";
+import { raInputCls } from "@/config/restaurantAdminTheme";
 
 const CATEGORIES = [
   "Produce",
@@ -70,7 +71,7 @@ export default function InventoryFormModal({
           <input
             value={form.name}
             onChange={(e) => onChange({ ...form, name: e.target.value })}
-            className="admin-surface-input focus-ra-primary w-full px-3 py-2 text-sm"
+            className={raInputCls}
             placeholder="Item name"
           />
         </div>
@@ -82,7 +83,7 @@ export default function InventoryFormModal({
             list="inventory-category-suggestions"
             value={form.category}
             onChange={(e) => onChange({ ...form, category: e.target.value })}
-            className="admin-surface-input focus-ra-primary w-full px-3 py-2 text-sm"
+            className={raInputCls}
             placeholder="e.g. Produce"
           />
           <datalist id="inventory-category-suggestions">
@@ -104,7 +105,7 @@ export default function InventoryFormModal({
               onChange={(e) =>
                 onChange({ ...form, quantity: e.target.value })
               }
-              className="admin-surface-input focus-ra-primary w-full px-3 py-2 text-sm"
+              className={raInputCls}
             />
           </div>
           <div>
@@ -114,7 +115,7 @@ export default function InventoryFormModal({
             <select
               value={form.unit}
               onChange={(e) => onChange({ ...form, unit: e.target.value })}
-              className="admin-surface-input focus-ra-primary cursor-pointer w-full px-3 py-2 text-sm"
+              className={`cursor-pointer ${raInputCls}`}
             >
               <option value="" disabled>Select unit…</option>
               {UNITS.map((u) => (
@@ -135,7 +136,7 @@ export default function InventoryFormModal({
             onChange={(e) =>
               onChange({ ...form, reorderLevel: e.target.value })
             }
-            className="admin-surface-input focus-ra-primary w-full px-3 py-2 text-sm"
+            className={raInputCls}
           />
         </div>
         <div>
@@ -145,7 +146,7 @@ export default function InventoryFormModal({
           <input
             value={form.supplier}
             onChange={(e) => onChange({ ...form, supplier: e.target.value })}
-            className="admin-surface-input focus-ra-primary w-full px-3 py-2 text-sm"
+            className={raInputCls}
           />
         </div>
         <div>

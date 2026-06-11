@@ -150,7 +150,7 @@ export default function PaymentsPage() {
             <button
               type="button"
               onClick={() => setActiveTab("overview")}
-              className={`cursor-pointer rounded-xl px-2 py-2 text-center text-xs font-medium transition-colors sm:px-3 sm:text-sm ${
+              className={`cursor-pointer rounded-xl px-2 py-2 text-center text-xs font-medium sm:px-3 sm:text-sm ${
                 activeTab === "overview"
                   ? "admin-surface-segment-btn-active admin-shell-text"
                   : "admin-surface-segment-btn hover:admin-surface-body"
@@ -161,7 +161,7 @@ export default function PaymentsPage() {
             <button
               type="button"
               onClick={() => setActiveTab("transactions")}
-              className={`cursor-pointer rounded-xl px-2 py-2 text-center text-xs font-medium transition-colors sm:px-3 sm:text-sm ${
+              className={`cursor-pointer rounded-xl px-2 py-2 text-center text-xs font-medium sm:px-3 sm:text-sm ${
                 activeTab === "transactions"
                   ? "admin-surface-segment-btn-active admin-shell-text"
                   : "admin-surface-segment-btn hover:admin-surface-body"
@@ -172,7 +172,7 @@ export default function PaymentsPage() {
             <button
               type="button"
               onClick={() => setActiveTab("invoices")}
-              className={`cursor-pointer rounded-xl px-2 py-2 text-center text-xs font-medium transition-colors sm:px-3 sm:text-sm ${
+              className={`cursor-pointer rounded-xl px-2 py-2 text-center text-xs font-medium sm:px-3 sm:text-sm ${
                 activeTab === "invoices"
                   ? "admin-surface-segment-btn-active admin-shell-text"
                   : "admin-surface-segment-btn hover:admin-surface-body"

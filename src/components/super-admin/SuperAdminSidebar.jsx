@@ -233,7 +233,7 @@ export default function SuperAdminSidebar({ mobile = false, onNavigate, onClose 
                     : "w-full items-center gap-3 px-3 py-2.5"
                 } ${
                   active
-                    ? "bg-sa-primary-15 text-sa-primary-muted ring-1 ring-sa-primary-25"
+                    ? "bg-sa-primary-15 text-sa-primary ring-1 ring-sa-primary-25"
                     : adminSurface.navLink
                 }`}
               >

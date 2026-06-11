@@ -1,6 +1,6 @@
 "use client";
 
-import { raIconBadgeCls } from "@/config/restaurantAdminTheme";
+import { raIconBadgeCls, raInputCls, raTextareaCls } from "@/config/restaurantAdminTheme";
 import MenuCard from "@/components/menu/MenuCard";
 import MenuItemImageField from "@/components/menu/MenuItemImageField";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
@@ -472,8 +472,8 @@ export default function MenuItemsPage() {
                 }}
                 placeholder="e.g. Grilled Chicken"
                 aria-invalid={fieldErrors.name ? true : undefined}
-                className={`mt-1 w-full rounded-xl border admin-surface-card px-3 py-2.5 text-sm admin-shell-text outline-none focus-ra-primary placeholder:admin-surface-faint ${
-                  fieldErrors.name ? "border-red-500/50" : "border-zinc-700"
+                className={`mt-1 ${raInputCls} ${
+                  fieldErrors.name ? "border-red-500/50" : ""
                 }`}
               />
               {fieldErrors.name && <p className="mt-1 text-xs text-red-400">{fieldErrors.name}</p>}
@@ -487,8 +487,8 @@ export default function MenuItemsPage() {
                   if (fieldErrors.categoryId) setFieldErrors((p) => ({ ...p, categoryId: "" }));
                 }}
                 aria-invalid={fieldErrors.categoryId ? true : undefined}
-                className={`cursor-pointer mt-1 w-full rounded-xl border admin-surface-card px-3 py-2.5 text-sm admin-shell-text outline-none focus-ra-primary ${
-                  fieldErrors.categoryId ? "border-red-500/50" : "border-zinc-700"
+                className={`cursor-pointer mt-1 ${raInputCls} ${
+                  fieldErrors.categoryId ? "border-red-500/50" : ""
                 }`}
               >
                 <option value="">— Select —</option>
@@ -512,8 +512,8 @@ export default function MenuItemsPage() {
                 }}
                 placeholder="0.00"
                 aria-invalid={fieldErrors.price ? true : undefined}
-                className={`mt-1 w-full rounded-xl border admin-surface-card px-3 py-2.5 text-sm admin-shell-text outline-none focus-ra-primary ${
-                  fieldErrors.price ? "border-red-500/50" : "border-zinc-700"
+                className={`mt-1 ${raInputCls} ${
+                  fieldErrors.price ? "border-red-500/50" : ""
                 }`}
               />
               {fieldErrors.price && <p className="mt-1 text-xs text-red-400">{fieldErrors.price}</p>}
@@ -522,7 +522,7 @@ export default function MenuItemsPage() {
               <label className="text-xs font-medium admin-surface-muted">Item Type</label>
               <select value={form.itemType}
                 onChange={(e) => setForm((f) => ({ ...f, itemType: e.target.value, kitchenType: DEFAULT_KITCHEN_FOR_TYPE[e.target.value] ?? "default_kitchen" }))}
-                className="cursor-pointer mt-1 w-full rounded-xl border admin-shell-border admin-surface-card px-3 py-2.5 text-sm admin-shell-text outline-none focus-ra-primary">
+                className={`cursor-pointer mt-1 ${raInputCls}`}>
                 {ITEM_TYPES.map((t) => {
                   const label = t.charAt(0).toUpperCase() + t.slice(1);
                   return <option key={t} value={t}>{label}</option>;
@@ -534,19 +534,19 @@ export default function MenuItemsPage() {
               <input type="number" inputMode="numeric" min="0" max="120" value={form.prepTime}
                 onChange={(e) => setForm((f) => ({ ...f, prepTime: e.target.value }))}
                 placeholder="e.g. 10"
-                className="mt-1 w-full rounded-xl border admin-shell-border admin-surface-card px-3 py-2.5 text-sm admin-shell-text outline-none focus-ra-primary" />
+                className={`mt-1 ${raInputCls}`} />
             </div>
             <div>
               <label className="text-xs font-medium admin-surface-muted">Kitchen</label>
               <select value={form.kitchenType} onChange={(e) => setForm((f) => ({ ...f, kitchenType: e.target.value }))}
-                className="cursor-pointer mt-1 w-full rounded-xl border admin-shell-border admin-surface-card px-3 py-2.5 text-sm admin-shell-text outline-none focus-ra-primary">
+                className={`cursor-pointer mt-1 ${raInputCls}`}>
                 {KITCHEN_TYPES.map((k) => <option key={k} value={k}>{KITCHEN_TYPE_LABELS[k]}</option>)}
               </select>
             </div>
             <div>
               <label className="text-xs font-medium admin-surface-muted">Status</label>
               <select value={form.status} onChange={(e) => setForm((f) => ({ ...f, status: e.target.value }))}
-                className="cursor-pointer mt-1 w-full rounded-xl border admin-shell-border admin-surface-card px-3 py-2.5 text-sm admin-shell-text outline-none focus-ra-primary">
+                className={`cursor-pointer mt-1 ${raInputCls}`}>
                 <option value="active">Active</option>
                 <option value="inactive">Inactive</option>
               </select>
@@ -555,13 +555,13 @@ export default function MenuItemsPage() {
               <label className="text-xs font-medium admin-surface-muted">Featured badge (optional)</label>
               <input value={form.badge} onChange={(e) => setForm((f) => ({ ...f, badge: e.target.value }))}
                 placeholder="e.g. Chef's Pick — shows on customer home"
-                className="mt-1 w-full rounded-xl border admin-shell-border admin-surface-card px-3 py-2.5 text-sm admin-shell-text outline-none focus-ra-primary placeholder:admin-surface-faint" />
+                className={`mt-1 ${raInputCls}`} />
             </div>
             <div className="sm:col-span-2">
               <label className="text-xs font-medium admin-surface-muted">Description</label>
               <textarea rows={2} value={form.description} onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
                 placeholder="Short description…"
-                className="mt-1 w-full resize-none rounded-xl border admin-shell-border admin-surface-card px-3 py-2.5 text-sm admin-shell-text outline-none focus-ra-primary placeholder:admin-surface-faint" />
+                className={`mt-1 ${raTextareaCls}`} />
             </div>
             <div className="sm:col-span-2">
               <MenuItemImageField

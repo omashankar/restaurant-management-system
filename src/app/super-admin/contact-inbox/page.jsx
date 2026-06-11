@@ -10,7 +10,7 @@ import {
   adminTableActionBtnCls,
   supportTicketDrawerPanelCls,
 } from "@/config/supportTicketConfig";
-import { saIconBadgeCls, saSpinnerCls } from "@/config/superAdminTheme";
+import { saIconBadgeCls, saInputCls, saSpinnerCls, saTextareaCls } from "@/config/superAdminTheme";
 import { useToast } from "@/hooks/useToast";
 import { AlertTriangle, Globe, Inbox, Mail, RefreshCcw, Send, Store, X } from "lucide-react";
 import Link from "next/link";
@@ -574,7 +574,7 @@ export default function SuperAdminContactInboxPage() {
                   onChange={(e) => setReplySubject(e.target.value)}
                   maxLength={200}
                   autoComplete="off"
-                  className="w-full rounded-xl border admin-shell-border admin-surface-card px-3 py-2.5 text-sm admin-shell-text outline-none focus-sa-primary"
+                  className={saInputCls}
                 />
               </div>
               <div className="space-y-2">
@@ -589,7 +589,7 @@ export default function SuperAdminContactInboxPage() {
                   onChange={(e) => setReplyMessage(e.target.value)}
                   placeholder="Write your reply to the customer…"
                   autoComplete="off"
-                  className="w-full resize-none rounded-xl border admin-shell-border admin-surface-card px-3 py-2.5 text-sm admin-shell-text outline-none focus-sa-primary"
+                  className={saTextareaCls}
                 />
               </div>
               <button

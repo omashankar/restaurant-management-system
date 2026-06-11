@@ -3,8 +3,9 @@
 import { Eye, EyeOff } from "lucide-react";
 import { useState } from "react";
 
-const defaultInputCls =
-  "admin-surface-input w-full rounded-xl border px-4 py-3 pr-11 text-sm outline-none transition-all focus-ra-primary focus:ring-2 focus:ring-ra-primary-25";
+import { raInputCls } from "@/config/restaurantAdminTheme";
+
+const defaultInputCls = `${raInputCls} py-3 pr-11`;
 
 /**
  * Password field with show / hide toggle (auth & admin forms).

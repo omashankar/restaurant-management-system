@@ -9,8 +9,9 @@ import { normalizeLogoSrc } from "@/lib/logoUrl";
 import { ImageIcon, Loader2, Trash2, Upload } from "lucide-react";
 import { useRef, useState } from "react";
 
-const inputCls =
-  "admin-surface-input focus-ra-primary w-full px-3 py-2.5 text-sm outline-none focus-ra-primary placeholder:admin-surface-faint";
+import { raInputCls } from "@/config/restaurantAdminTheme";
+
+const inputCls = raInputCls;
 
 /**
  * Menu item image: upload file or paste URL.

@@ -32,7 +32,10 @@ import {
   CMS_EDITOR_SECTION_TIGHT,
   CMS_EDITOR_TEXTAREA,
   CMS_EDITOR_TOGGLE_ROW,
+  CMS_HINT,
+  CMS_LABEL,
   CMS_MEDIA_FORM_ROW,
+  CMS_SECTION_TITLE,
 } from "@/config/customerSiteEditorClasses";
 import {
   MANAGED_ELSEWHERE,
@@ -72,9 +75,9 @@ const textareaCls = CMS_EDITOR_TEXTAREA;
 function Field({ label, hint, children, className = "" }) {
   return (
     <div className={className}>
-      <label className="mb-1.5 block text-xs font-medium text-zinc-400">{label}</label>
+      <label className={CMS_LABEL}>{label}</label>
       {children}
-      {hint && <p className="mt-1 text-[11px] text-zinc-600">{hint}</p>}
+      {hint ? <p className={CMS_HINT}>{hint}</p> : null}
     </div>
   );
 }
@@ -105,7 +108,7 @@ function ToggleRow({ label, hint, enabled, onToggle }) {
         {hint && <p className="text-xs leading-snug admin-surface-muted">{hint}</p>}
       </div>
       <button type="button" onClick={onToggle} className="shrink-0 text-ra-primary">
-        {enabled ? <ToggleRight className="size-8" /> : <ToggleLeft className="size-8 text-zinc-600" />}
+        {enabled ? <ToggleRight className="size-8" /> : <ToggleLeft className="size-8 admin-surface-faint" />}
       </button>
     </div>
   );
@@ -501,7 +504,8 @@ export default function CustomerSitePage() {
 
         <div
           ref={panelRef}
-          className="min-w-0 flex-1 admin-surface-card p-4 sm:p-6"
+          className="customer-site-cms-panel min-w-0 flex-1 admin-surface-card p-4 sm:p-6"
+          data-customer-site-cms=""
         >
           <CustomerSiteTabHeader tab={activeTabMeta} />
 
@@ -524,9 +528,9 @@ export default function CustomerSitePage() {
                 <strong className="admin-shell-text"> Save to draft</strong> while editing; click{" "}
                 <strong className="admin-shell-text">Publish</strong> (or Publish all drafts) to go live.
               </p>
-              <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 px-4 py-3 text-xs text-zinc-400">
+              <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 px-4 py-3 text-xs admin-surface-muted">
                 <p className="font-semibold text-amber-300/90">Where to edit what</p>
-                <ul className="mt-2 list-inside list-disc space-y-1 text-zinc-500">
+                <ul className="mt-2 list-inside list-disc space-y-1 admin-surface-faint">
                   <li>
                     <strong className="admin-surface-body">Logo</strong> — Website layout → Header (image only on site).
                     Settings → General logo is only a fallback.
@@ -546,11 +550,11 @@ export default function CustomerSitePage() {
               <div className="grid gap-3 lg:grid-cols-2">
                 <div className="rounded-xl border border-ra-primary-20 bg-ra-primary-5 px-4 py-3">
                   <p className="text-xs font-semibold text-ra-primary mb-2">Settings → customer site</p>
-                  <ul className="space-y-2 text-xs text-zinc-400">
+                  <ul className="space-y-2 text-xs admin-surface-muted">
                     {SETTINGS_FOR_CUSTOMER_SITE.map(({ tab, items }) => (
                       <li key={tab}>
                         <strong className="admin-surface-body">{tab}</strong>
-                        <span className="text-zinc-500"> — {items}</span>
+                        <span className="admin-surface-faint"> — {items}</span>
                       </li>
                     ))}
                   </ul>
@@ -567,7 +571,7 @@ export default function CustomerSitePage() {
                   <ul className="space-y-2 text-xs admin-surface-muted">
                     {MANAGED_ELSEWHERE.map(({ module, items }) => (
                       <li key={module}>
-                        <strong className="text-zinc-400">{module}</strong> — {items}
+                        <strong className="admin-surface-muted">{module}</strong> — {items}
                       </li>
                     ))}
                   </ul>
@@ -589,12 +593,12 @@ export default function CustomerSitePage() {
                   >
                     <Icon className="size-5 text-ra-primary" />
                     <span className="flex-1 text-sm font-medium admin-shell-text">{label}</span>
-                    <ExternalLink className="size-3.5 text-zinc-600" />
+                    <ExternalLink className="size-3.5 admin-surface-faint" />
                   </a>
                 ))}
               </div>
               <div>
-                <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-zinc-500">
+                <p className={`mb-3 ${CMS_SECTION_TITLE}`}>
                   What each tab controls
                 </p>
                 <ul className="grid gap-2 sm:grid-cols-2">
@@ -605,12 +609,12 @@ export default function CustomerSitePage() {
                         onClick={() => switchTab(tab)}
                         className="flex h-full w-full cursor-pointer items-center gap-3 rounded-xl admin-surface-card px-4 py-3.5 text-left transition-colors hover:border-ra-primary-30 hover:bg-[var(--admin-hover)]"
                       >
-                        <Icon className="size-4 shrink-0 text-zinc-500" />
+                        <Icon className="size-4 shrink-0 admin-surface-faint" />
                         <div className="min-w-0 flex-1">
                           <p className="text-sm font-medium admin-shell-text">{label}</p>
                           <p className="text-xs admin-surface-muted">{page}</p>
                         </div>
-                        <ChevronRight className="size-4 shrink-0 text-zinc-600" />
+                        <ChevronRight className="size-4 shrink-0 admin-surface-faint" />
                       </button>
                     </li>
                   ))}
@@ -625,7 +629,7 @@ export default function CustomerSitePage() {
                 Full home hero — text, search, buttons, main image, 3 small images, and floating card.
               </p>
 
-              <p className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Text</p>
+              <p className={CMS_SECTION_TITLE}>Text</p>
               <Field label="Badge text" hint="Small label above the heading">
                 <input
                   value={hero.badge}
@@ -650,7 +654,7 @@ export default function CustomerSitePage() {
                 />
               </Field>
 
-              <p className="text-xs font-semibold uppercase tracking-wide text-zinc-500 pt-2">Search</p>
+              <p className={`${CMS_SECTION_TITLE} pt-2`}>Search</p>
               <ToggleRow
                 label="Show search bar"
                 enabled={hero.searchEnabled !== false}
@@ -675,7 +679,7 @@ export default function CustomerSitePage() {
                 </div>
               )}
 
-              <p className="text-xs font-semibold uppercase tracking-wide text-zinc-500 pt-2">Quick tags</p>
+              <p className={`${CMS_SECTION_TITLE} pt-2`}>Quick tags</p>
               <ToggleRow
                 label="Show quick search pills"
                 enabled={hero.quickPillsEnabled !== false}
@@ -713,7 +717,7 @@ export default function CustomerSitePage() {
                   </div>
                 ))}
 
-              <p className="text-xs font-semibold uppercase tracking-wide text-zinc-500 pt-2">Buttons</p>
+              <p className={`${CMS_SECTION_TITLE} pt-2`}>Buttons</p>
               <div className="grid gap-3 sm:grid-cols-2">
                 <Field label="Primary button label">
                   <input
@@ -747,7 +751,7 @@ export default function CustomerSitePage() {
                 </Field>
               </div>
 
-              <p className="text-xs font-semibold uppercase tracking-wide text-zinc-500 pt-2">Images</p>
+              <p className={`${CMS_SECTION_TITLE} pt-2`}>Images</p>
               <div className={CMS_MEDIA_FORM_ROW}>
                 <div className="min-w-0 space-y-3">
                   <CmsImageField
@@ -810,7 +814,7 @@ export default function CustomerSitePage() {
                 </div>
               </div>
 
-              <p className="text-xs font-semibold uppercase tracking-wide text-zinc-500 pt-2">Floating card</p>
+              <p className={`${CMS_SECTION_TITLE} pt-2`}>Floating card</p>
               <ToggleRow
                 label="Show floating stats card"
                 enabled={hero.floatingCard?.enabled !== false}
@@ -987,14 +991,14 @@ export default function CustomerSitePage() {
                           {ban.enabled !== false ? (
                             <ToggleRight className="size-7" />
                           ) : (
-                            <ToggleLeft className="size-7 text-zinc-600" />
+                            <ToggleLeft className="size-7 admin-surface-faint" />
                           )}
                         </button>
                         <button
                           type="button"
                           disabled={banners.length <= 1}
                           onClick={() => setBanners((p) => p.filter((_, i) => i !== index))}
-                          className="rounded-lg p-1.5 text-zinc-500 hover:bg-red-500/10 hover:text-red-400 disabled:opacity-30"
+                          className="rounded-lg p-1.5 admin-surface-faint hover:bg-red-500/10 hover:text-red-400 disabled:opacity-30"
                         >
                           <Trash2 className="size-4" />
                         </button>
@@ -1155,7 +1159,7 @@ export default function CustomerSitePage() {
                 About page story, images, promises, stats (stats also show on home hero), and buttons.
               </p>
 
-              <p className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Text</p>
+              <p className={CMS_SECTION_TITLE}>Text</p>
               <Field label="Eyebrow label" hint="Small tag above the title on About page">
                 <input
                   value={about.headline}
@@ -1189,7 +1193,7 @@ export default function CustomerSitePage() {
                 />
               </Field>
 
-              <p className="text-xs font-semibold uppercase tracking-wide text-zinc-500 pt-2">Images</p>
+              <p className={`${CMS_SECTION_TITLE} pt-2`}>Images</p>
               <div className={CMS_MEDIA_FORM_ROW}>
                 <CmsImageField
                   label="Main image (large)"
@@ -1221,8 +1225,8 @@ export default function CustomerSitePage() {
                 </div>
               </div>
 
-              <p className="text-xs font-semibold uppercase tracking-wide text-zinc-500 pt-2">Stats</p>
-              <p className="text-[11px] text-zinc-600">Three boxes — also appear under the home hero.</p>
+              <p className={`${CMS_SECTION_TITLE} pt-2`}>Stats</p>
+              <p className="text-[11px] admin-surface-faint">Three boxes — also appear under the home hero.</p>
               <div className="grid gap-2 sm:grid-cols-3">
                 {ensureAboutStats(about.stats).map((stat, i) => (
                   <div key={i} className={`space-y-1.5 ${CMS_EDITOR_GROUP_FLAT}`}>
@@ -1254,7 +1258,7 @@ export default function CustomerSitePage() {
                 ))}
               </div>
 
-              <p className="text-xs font-semibold uppercase tracking-wide text-zinc-500 pt-2">Buttons</p>
+              <p className={`${CMS_SECTION_TITLE} pt-2`}>Buttons</p>
               <div className="grid gap-3 sm:grid-cols-2">
                 <Field label="Primary button">
                   <input

@@ -39,7 +39,7 @@ import {
 
 /* ── Shared styles ── */
 const inputCls = saInputCls;
-const labelCls = "block text-xs font-medium text-zinc-400 mb-1";
+const labelCls = `block ${adminSurface.label}`;
 
 function Field({ label, hint, error, required, children }) {
   return (
@@ -50,7 +50,7 @@ function Field({ label, hint, error, required, children }) {
       </label>
       {children}
       {error && <p className="mt-1 text-xs text-red-400">{error}</p>}
-      {!error && hint && <p className="mt-1 text-[11px] text-zinc-600">{hint}</p>}
+      {!error && hint && <p className={`mt-1 text-[11px] ${adminSurface.faint}`}>{hint}</p>}
     </div>
   );
 }
@@ -535,7 +535,7 @@ function PaymentSection({ data, onChange, onSave, saving, fieldErrors = {}, onCl
                   <span className="text-sm admin-surface-muted">Enable</span>
                   <button type="button" role="switch" aria-checked={Boolean(gw.enabled)}
                     onClick={() => updateGw({ enabled: !gw.enabled })}
-                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${gw.enabled ? "bg-sa-primary" : "bg-zinc-700"}`}>
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${gw.enabled ? "bg-sa-primary" : "bg-[var(--admin-border)]"}`}>
                     <span className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform ${gw.enabled ? "translate-x-5" : "translate-x-0.5"}`} />
                   </button>
                 </label>
@@ -770,8 +770,8 @@ function ThemeSection({ data, onChange, onSave, saving, fieldErrors = {}, onClea
         </Field>
       </div>
 
-      <div className="admin-surface-card p-4">
-        <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-zinc-500">Live preview</p>
+      <div className="rounded-xl border border-[var(--admin-border-subtle)] bg-[var(--admin-surface-soft)] p-4">
+        <p className="mb-3 text-xs font-semibold uppercase tracking-wider admin-surface-faint">Live preview</p>
         <div className="flex flex-wrap items-center gap-3">
           <button type="button" className="sa-btn-primary rounded-xl px-4 py-2 text-sm font-semibold">
             Primary button

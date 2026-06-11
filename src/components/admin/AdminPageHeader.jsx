@@ -17,7 +17,7 @@ export default function AdminPageHeader({
       <div className="min-w-0">
         <h1 className={`admin-page-title ${titleClassName}`.trim()}>{title}</h1>
         {description ? (
-          <p className={`admin-page-desc mt-1 text-sm ${adminSurface.muted}`}>{description}</p>
+          <p className={`admin-page-desc ${adminSurface.muted}`}>{description}</p>
         ) : null}
       </div>
       {actions ? (

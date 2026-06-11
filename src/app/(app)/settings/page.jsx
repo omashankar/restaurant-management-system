@@ -1,6 +1,7 @@
 "use client";
 
 import InputField from "@/components/settings/InputField";
+import { raInputCls } from "@/config/restaurantAdminTheme";
 import RestaurantLogoField from "@/components/settings/RestaurantLogoField";
 import SettingsFormSection from "@/components/settings/SettingsFormSection";
 import SettingsSidebar from "@/components/settings/SettingsSidebar";
@@ -112,7 +113,7 @@ function RestaurantThemeSection({ data, onChange, onSave, saving, canSave, field
                 pushPreview({ primaryColor: v });
               }}
               placeholder={RESTAURANT_ADMIN_PRIMARY}
-              className="min-w-0 flex-1 rounded-xl border admin-shell-border admin-surface-card px-3 py-2.5 font-mono text-sm admin-shell-text outline-none focus-ra-primary"
+              className={`min-w-0 flex-1 font-mono ${raInputCls}`}
             />
           </div>
           {fieldErrors.primaryColor ? (
@@ -145,7 +146,7 @@ function RestaurantThemeSection({ data, onChange, onSave, saving, canSave, field
                 pushPreview({ accentColor: v });
               }}
               placeholder={RESTAURANT_ADMIN_ACCENT}
-              className="min-w-0 flex-1 rounded-xl border admin-shell-border admin-surface-card px-3 py-2.5 font-mono text-sm admin-shell-text outline-none focus-ra-primary"
+              className={`min-w-0 flex-1 font-mono ${raInputCls}`}
             />
           </div>
           {fieldErrors.accentColor ? (
@@ -156,8 +157,8 @@ function RestaurantThemeSection({ data, onChange, onSave, saving, canSave, field
         </div>
       </div>
 
-      <div className={`mt-5 p-4 ${adminSurface.card}`}>
-        <p className={`mb-3 text-xs font-semibold uppercase tracking-wider ${adminSurface.muted}`}>Live preview</p>
+      <div className={`mt-5 rounded-xl border border-[var(--admin-border-subtle)] bg-[var(--admin-surface-soft)] p-4`}>
+        <p className={`mb-3 text-xs font-semibold uppercase tracking-wider ${adminSurface.faint}`}>Live preview</p>
         <div className="flex flex-wrap items-center gap-3">
           <button type="button" className={`${raBtnPrimarySmCls} px-4 py-2`}>
             Primary button
