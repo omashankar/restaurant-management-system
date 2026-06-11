@@ -1,9 +1,9 @@
 "use client";
 
-import { raInputCls } from "@/config/restaurantAdminTheme";
+import { raIconBadgeCls, raInputCls } from "@/config/restaurantAdminTheme";
 import { adminSurface } from "@/config/adminSurfaceClasses";
 import { useLanguage } from "@/context/LanguageContext";
-import { CheckCircle2, ChevronRight, Loader2, Upload } from "lucide-react";
+import { CheckCircle2, ChevronRight, Loader2, Rocket, Upload } from "lucide-react";
 import { validateOnboardingFinish, validateOnboardingStep } from "@/lib/restaurantSettingsValidation";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -268,6 +268,11 @@ export default function OnboardingPage() {
       <div className="mx-auto max-w-2xl">
         {/* Header */}
         <div className="mb-8 text-center">
+          <div className="mb-4 flex justify-center">
+            <span className={`shrink-0 ${raIconBadgeCls}`}>
+              <Rocket className="size-5" aria-hidden />
+            </span>
+          </div>
           <h1 className="admin-page-title text-3xl font-bold">{t("onboarding.title")}</h1>
           <p className="mt-2 text-zinc-500">{t("onboarding.subtitle")}</p>
           {autoSaveMsg && (

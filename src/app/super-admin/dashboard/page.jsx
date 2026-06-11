@@ -2,7 +2,7 @@
 
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import SuperAdminPageSkeleton from "@/components/super-admin/SuperAdminPageSkeleton";
-import { saSpinnerCls } from "@/config/superAdminTheme";
+import { saIconBadgeCls, saSpinnerCls } from "@/config/superAdminTheme";
 import { useUser } from "@/context/AuthContext";
 import {
   Activity, BarChart3, Building2, CheckCircle2,
@@ -81,7 +81,7 @@ function SuperAdminDashboard() {
       {/* Header */}
       <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex min-w-0 items-start gap-3">
-          <span className="mt-1 flex size-10 shrink-0 items-center justify-center rounded-2xl bg-sa-primary-15 text-sa-primary ring-1 ring-sa-primary-25 sm:size-11">
+          <span className={`mt-1 shrink-0 rounded-2xl sm:size-11 ${saIconBadgeCls}`}>
             <Shield className="size-5 sm:size-6" />
           </span>
           <div className="min-w-0">

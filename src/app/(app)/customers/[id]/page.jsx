@@ -3,7 +3,8 @@
 import CustomerOrderHistoryTable from "@/components/customers/CustomerOrderHistoryTable";
 import TableSkeleton from "@/components/ui/TableSkeleton";
 import { useModuleData } from "@/context/ModuleDataContext";
-import { ArrowLeft, Mail, Phone, StickyNote } from "lucide-react";
+import { raIconBadgeCls } from "@/config/restaurantAdminTheme";
+import { ArrowLeft, Mail, Phone, StickyNote, User } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -113,13 +114,18 @@ export default function CustomerDetailPage() {
         Customers
       </Link>
 
-      <div className="min-w-0">
-        <h1 className="admin-page-title break-words text-2xl font-semibold tracking-tight">
-          {customer.name}
-        </h1>
-        <p className="admin-page-desc mt-1 text-sm">
-          Guest profile · {customer.visits} visits · last visit {lastVisitLabel}
-        </p>
+      <div className="flex min-w-0 items-start gap-3">
+        <span className={`mt-1 shrink-0 ${raIconBadgeCls}`}>
+          <User className="size-5" aria-hidden />
+        </span>
+        <div className="min-w-0">
+          <h1 className="admin-page-title break-words text-2xl font-semibold tracking-tight">
+            {customer.name}
+          </h1>
+          <p className="admin-page-desc mt-1 text-sm">
+            Guest profile · {customer.visits} visits · last visit {lastVisitLabel}
+          </p>
+        </div>
       </div>
 
       <div className="grid min-w-0 gap-4 sm:grid-cols-2">

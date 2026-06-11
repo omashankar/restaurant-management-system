@@ -1,7 +1,8 @@
 "use client";
 
 import { useUser } from "@/context/AuthContext";
-import { Loader2, MessageSquarePlus, RefreshCcw, X } from "lucide-react";
+import { raIconBadgeCls } from "@/config/restaurantAdminTheme";
+import { LifeBuoy, Loader2, MessageSquarePlus, RefreshCcw, X } from "lucide-react";
 import {
   EMPTY_SUPPORT_TICKET_ERRORS,
   getSupportTicketFieldErrors,
@@ -212,11 +213,16 @@ export default function SupportTicketsPage() {
 
   return (
     <div className="min-w-0 w-full max-w-full space-y-6 overflow-x-hidden">
-      <div className="min-w-0">
-        <h1 className="admin-page-title text-2xl font-semibold tracking-tight">Support Tickets</h1>
-        <p className="admin-page-desc mt-1 text-sm">
-          Raise issues for platform support and track progress.
-        </p>
+      <div className="flex min-w-0 items-start gap-3">
+        <span className={`mt-1 shrink-0 ${raIconBadgeCls}`}>
+          <LifeBuoy className="size-5" aria-hidden />
+        </span>
+        <div className="min-w-0">
+          <h1 className="admin-page-title text-2xl font-semibold tracking-tight">Support Tickets</h1>
+          <p className="admin-page-desc mt-1 text-sm">
+            Raise issues for platform support and track progress.
+          </p>
+        </div>
       </div>
 
       {loadError && (

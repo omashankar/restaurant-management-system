@@ -9,7 +9,7 @@ import {
   validateWhatsappTestPhone,
 } from "@/lib/restaurantSettingsValidation";
 import { useEffect, useState } from "react";
-import { raTextareaCls } from "@/config/restaurantAdminTheme";
+import { raIconBadgeCls, raTextareaCls } from "@/config/restaurantAdminTheme";
 
 const TEMPLATES = [
   { id: "order_confirmed",  event: "Order Confirmed",   emoji: "✅", audience: "Customer" },
@@ -202,11 +202,16 @@ export default function WhatsAppPage() {
     <div className="min-w-0 w-full max-w-full space-y-6 overflow-x-hidden">
       {/* Header */}
       <div className="flex min-w-0 flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <div className="min-w-0">
-          <h1 className="admin-page-title text-xl font-semibold tracking-tight sm:text-2xl">WhatsApp Automation</h1>
-          <p className="admin-page-desc mt-1 text-sm">
-            Send real WhatsApp messages via Meta Business API for orders, payments, and alerts.
-          </p>
+        <div className="flex min-w-0 items-start gap-3">
+          <span className={`mt-1 shrink-0 ${raIconBadgeCls}`}>
+            <MessageCircle className="size-5" aria-hidden />
+          </span>
+          <div className="min-w-0">
+            <h1 className="admin-page-title text-xl font-semibold tracking-tight sm:text-2xl">WhatsApp Automation</h1>
+            <p className="admin-page-desc mt-1 text-sm">
+              Send real WhatsApp messages via Meta Business API for orders, payments, and alerts.
+            </p>
+          </div>
         </div>
         <button type="button" onClick={saveSettings} disabled={saving}
           className="cursor-pointer inline-flex w-full shrink-0 items-center justify-center gap-2 rounded-xl bg-ra-primary px-4 py-2 text-sm font-semibold text-zinc-950 transition-colors hover:brightness-110 disabled:opacity-50 sm:w-auto">

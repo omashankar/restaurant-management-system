@@ -30,7 +30,8 @@ import {
   getCustomerFormFieldErrors,
 } from "@/lib/formValidation";
 import PhoneInput from "@/components/ui/PhoneInput";
-import { Eye, Pencil, Plus, Trash2 } from "lucide-react";
+import { raIconBadgeCls } from "@/config/restaurantAdminTheme";
+import { Eye, Pencil, Plus, Trash2, Users } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 
@@ -241,13 +242,18 @@ export default function CustomersModulePage() {
       ) : null}
 
       <div className="flex min-w-0 flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div className="min-w-0">
-          <h1 className="admin-page-title text-2xl font-semibold tracking-tight">
-            Customers
-          </h1>
-          <p className="admin-page-desc mt-1 text-sm">
-            CRM list with visit history on profile.
-          </p>
+        <div className="flex min-w-0 items-start gap-3">
+          <span className={`mt-1 shrink-0 ${raIconBadgeCls}`}>
+            <Users className="size-5" aria-hidden />
+          </span>
+          <div className="min-w-0">
+            <h1 className="admin-page-title text-2xl font-semibold tracking-tight">
+              Customers
+            </h1>
+            <p className="admin-page-desc mt-1 text-sm">
+              CRM list with visit history on profile.
+            </p>
+          </div>
         </div>
         <button
           type="button"

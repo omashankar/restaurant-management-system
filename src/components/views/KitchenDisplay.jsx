@@ -7,6 +7,7 @@ import {
 import { useCallback, useEffect, useState } from "react";
 import { useLiveRefresh } from "@/hooks/useLiveRefresh";
 import { adminShell } from "@/config/adminSurfaceClasses";
+import { raIconBadgeCls } from "@/config/restaurantAdminTheme";
 
 /* ── Column config ── */
 const COLUMNS = [
@@ -265,7 +266,7 @@ export default function KitchenDisplay() {
       {/* Header */}
       <div className="flex min-w-0 flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div className="flex min-w-0 items-start gap-3">
-          <span className="mt-1 flex size-10 shrink-0 items-center justify-center rounded-xl bg-ra-primary-15 text-ra-primary ring-1 ring-ra-primary-25">
+          <span className={`mt-1 shrink-0 ${raIconBadgeCls}`}>
             <ChefHat className="size-5" />
           </span>
           <div className="min-w-0">

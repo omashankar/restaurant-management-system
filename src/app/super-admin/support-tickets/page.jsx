@@ -16,10 +16,10 @@ import {
   ticketPrioritySelectCls,
   ticketStatusSelectCls,
 } from "@/config/supportTicketConfig";
-import { saInputCls, saSpinnerCls } from "@/config/superAdminTheme";
+import { saIconBadgeCls, saInputCls, saSpinnerCls } from "@/config/superAdminTheme";
 import PaginationBar from "@/components/ui/PaginationBar";
 import PageDrawer from "@/components/ui/PageDrawer";
-import { Loader2, RefreshCcw, X } from "lucide-react";
+import { LifeBuoy, Loader2, RefreshCcw, X } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 
 const TICKETS_PAGE_SIZE = 15;
@@ -168,9 +168,14 @@ export default function SuperAdminSupportTicketsPage() {
 
   return (
     <div className="min-w-0 w-full max-w-full space-y-5 overflow-x-hidden">
-      <div className="min-w-0">
-        <h1 className="admin-page-title break-words text-2xl font-semibold tracking-tight">Support Tickets</h1>
-        <p className="admin-page-desc mt-1 text-sm">Platform-wide tenant support queue.</p>
+      <div className="flex min-w-0 items-start gap-3">
+        <span className={`mt-1 shrink-0 ${saIconBadgeCls}`}>
+          <LifeBuoy className="size-5" aria-hidden />
+        </span>
+        <div className="min-w-0">
+          <h1 className="admin-page-title break-words text-2xl font-semibold tracking-tight">Support Tickets</h1>
+          <p className="admin-page-desc mt-1 text-sm">Platform-wide tenant support queue.</p>
+        </div>
       </div>
 
       {loadError && (

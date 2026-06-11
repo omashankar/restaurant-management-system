@@ -44,8 +44,8 @@ export function AdminSideNavItem({
     : usesActivePill
       ? "admin-side-nav-brand-icon"
       : active
-        ? "text-sa-primary"
-        : "admin-surface-faint";
+        ? "admin-side-nav-brand-icon"
+        : "admin-surface-muted";
   return (
     <button
       type="button"
@@ -56,10 +56,9 @@ export function AdminSideNavItem({
       } ${active ? activeClassName : ""} ${className}`}
     >
       {Icon ? (
-        <Icon
-          className={`size-4 shrink-0 ${activeIconCls}`}
-          aria-hidden
-        />
+        <span className="admin-side-nav-icon-slot" aria-hidden>
+          <Icon className={`size-4 ${activeIconCls}`} />
+        </span>
       ) : null}
       <span className="truncate">{children}</span>
     </button>

@@ -12,9 +12,10 @@ import SmartMetrics from "@/components/dashboard/SmartMetrics";
 import TopDishes from "@/components/dashboard/TopDishes";
 import Can from "@/components/rbac/Can";
 import { adminSurface } from "@/config/adminSurfaceClasses";
+import { raIconBadgeCls } from "@/config/restaurantAdminTheme";
 import { useDashboardData } from "@/hooks/useDashboardData";
 import { usePermission } from "@/hooks/usePermission";
-import { RefreshCw } from "lucide-react";
+import { LayoutDashboard, RefreshCw } from "lucide-react";
 
 export default function MainDashboard() {
   const { hasPermission, role } = usePermission();
@@ -27,7 +28,11 @@ export default function MainDashboard() {
   return (
     <div className="min-w-0 w-full max-w-full space-y-6 overflow-x-hidden sm:space-y-8">
       <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-        <div className="min-w-0">
+        <div className="flex min-w-0 items-start gap-3">
+          <span className={`mt-1 shrink-0 ${raIconBadgeCls}`}>
+            <LayoutDashboard className="size-5" aria-hidden />
+          </span>
+          <div className="min-w-0">
           <h1 className={adminSurface.heading}>
             {role === "admin" ? "Command center" : "Shift overview"}
           </h1>
@@ -45,6 +50,7 @@ export default function MainDashboard() {
               </>
             )}
           </p>
+          </div>
         </div>
         <button
           type="button"
