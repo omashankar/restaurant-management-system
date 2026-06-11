@@ -1,6 +1,6 @@
 "use client";
 
-import { raIconBadgeCls } from "@/config/restaurantAdminTheme";
+import { raIconBadgeCls, raInputCls, raTextareaCls } from "@/config/restaurantAdminTheme";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import DataTableShell from "@/components/ui/DataTableShell";
 import {
@@ -300,13 +300,13 @@ export default function CategoriesPage() {
               }}
               placeholder="e.g. Starters, Main Course, Drinks"
               aria-invalid={fieldErrors.name ? true : undefined}
-              className={`mt-1 w-full rounded-xl border admin-surface-card px-3 py-2.5 text-sm admin-shell-text outline-none focus-ra-primary placeholder:admin-surface-faint ${
-                fieldErrors.name ? "border-red-500/50" : "border-zinc-700"
+              className={`mt-1 ${raInputCls} ${
+                fieldErrors.name ? "border-red-500/50" : ""
               }`}
             />
             {fieldErrors.name && <p className="mt-1 text-xs text-red-400">{fieldErrors.name}</p>}
           </div>
-          <div><label className="text-xs font-medium admin-surface-muted">Description (optional)</label><textarea rows={2} value={form.description} onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))} placeholder="Short description" className="mt-1 w-full resize-none rounded-xl border admin-shell-border admin-surface-card px-3 py-2.5 text-sm admin-shell-text outline-none focus-ra-primary placeholder:admin-surface-faint" /></div>
+          <div><label className="text-xs font-medium admin-surface-muted">Description (optional)</label><textarea rows={2} value={form.description} onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))} placeholder="Short description" className={`mt-1 ${raTextareaCls}`} /></div>
         </div>
       </Modal>
 

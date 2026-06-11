@@ -14,13 +14,13 @@ import {
   User,
   XCircle,
 } from "lucide-react";
+import { raInputCls } from "@/config/restaurantAdminTheme";
 import { useRef } from "react";
 
 // ── reusable input ────────────────────────────────────────────────────────────
 function Field({ label, icon: Icon, type = "text", value, onChange, readOnly, placeholder, error }) {
   const inputMode =
     type === "tel" ? "numeric" : type === "number" ? "numeric" : undefined;
-  const borderCls = error ? "border-red-500/50" : readOnly ? "admin-shell-border" : "border-zinc-700";
   return (
     <div>
       <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-zinc-500">
@@ -38,13 +38,9 @@ function Field({ label, icon: Icon, type = "text", value, onChange, readOnly, pl
           readOnly={readOnly}
           placeholder={placeholder}
           aria-invalid={error ? true : undefined}
-          className={`w-full rounded-xl border admin-surface-card py-2.5 text-sm admin-shell-text outline-none transition-all ${
-            Icon ? "pl-10 pr-4" : "px-4"
-          } ${
-            readOnly
-              ? "cursor-not-allowed text-zinc-500"
-              : "focus-ra-primary focus:ring-2 focus:ring-ra-primary-25"
-          } ${borderCls}`}
+          className={`${raInputCls} ${Icon ? "!pl-10" : ""} ${
+            readOnly ? "cursor-not-allowed opacity-70" : ""
+          } ${error ? "border-red-500/50" : ""}`}
         />
       </div>
       {error ? <p className="mt-1 text-xs text-red-400">{error}</p> : null}
@@ -114,7 +110,7 @@ export default function ProfilePage() {
             type="button"
             disabled={avatarUploading}
             onClick={() => fileRef.current?.click()}
-            className="cursor-pointer absolute -bottom-1 -right-1 flex size-7 items-center justify-center rounded-full border-2 border-zinc-900 bg-ra-primary text-zinc-950 transition-colors hover:brightness-110 disabled:opacity-60"
+            className="cursor-pointer absolute -bottom-1 -right-1 flex size-7 items-center justify-center rounded-full border-2 border-[var(--admin-surface)] bg-ra-primary text-zinc-950 transition-colors hover:brightness-110 disabled:opacity-60"
             aria-label="Change profile photo"
           >
             {avatarUploading ? <Loader2 className="size-3.5 animate-spin" /> : <Camera className="size-3.5" />}
@@ -165,7 +161,7 @@ export default function ProfilePage() {
             onChange={(v) => setField("phone", v)}
             placeholder="9876543210"
             error={fieldErrors.phone}
-            wrapperClassName="border-zinc-700 admin-surface-card"
+            wrapperClassName="admin-shell-border"
           />
           <Field
             label="Role"

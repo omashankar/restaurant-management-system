@@ -1,6 +1,7 @@
 "use client";
 
-import { adminSurface } from "@/config/adminSurfaceClasses";
+import { raInputCls } from "@/config/restaurantAdminTheme";
+import { saInputCls } from "@/config/superAdminTheme";
 import Modal from "@/components/ui/Modal";
 import PasswordInput from "@/components/ui/PasswordInput";
 import { useProfile } from "@/hooks/useProfile";
@@ -51,7 +52,7 @@ export default function ChangePasswordModal({ open, onClose, variant = "emerald"
     }
   };
 
-  const inputFocusCls = accent.focus;
+  const inputCls = variant === "rose" || variant === "sa" ? saInputCls : raInputCls;
 
   return (
     <Modal
@@ -93,9 +94,9 @@ export default function ChangePasswordModal({ open, onClose, variant = "emerald"
           placeholder="••••••••"
           autoComplete="current-password"
           error={pwErrors.current}
-          inputClassName={`${adminSurface.input} py-2.5 pl-10 pr-11 ${
-            pwErrors.current ? "border-red-500/50" : "border-zinc-700"
-          } ${inputFocusCls}`}
+          inputClassName={`${inputCls} py-2.5 pl-10 pr-11 ${
+            pwErrors.current ? "border-red-500/50" : ""
+          }`}
         />
         <PasswordInput
           id="pw-new"
@@ -105,9 +106,9 @@ export default function ChangePasswordModal({ open, onClose, variant = "emerald"
           placeholder="Min. 8 characters"
           autoComplete="new-password"
           error={pwErrors.next}
-          inputClassName={`${adminSurface.input} py-2.5 pl-10 pr-11 ${
-            pwErrors.next ? "border-red-500/50" : "border-zinc-700"
-          } ${inputFocusCls}`}
+          inputClassName={`${inputCls} py-2.5 pl-10 pr-11 ${
+            pwErrors.next ? "border-red-500/50" : ""
+          }`}
         />
         <PasswordInput
           id="pw-confirm"
@@ -117,9 +118,9 @@ export default function ChangePasswordModal({ open, onClose, variant = "emerald"
           placeholder="Repeat new password"
           autoComplete="new-password"
           error={pwErrors.confirm}
-          inputClassName={`${adminSurface.input} py-2.5 pl-10 pr-11 ${
-            pwErrors.confirm ? "border-red-500/50" : "border-zinc-700"
-          } ${inputFocusCls}`}
+          inputClassName={`${inputCls} py-2.5 pl-10 pr-11 ${
+            pwErrors.confirm ? "border-red-500/50" : ""
+          }`}
         />
 
         {toast ? (

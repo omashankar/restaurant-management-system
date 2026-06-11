@@ -186,9 +186,9 @@ export default function LogsPage() {
               key={id}
               type="button"
               onClick={() => setCategory(id)}
-              className={`shrink-0 cursor-pointer flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-xs font-medium transition-all ${
+              className={`shrink-0 cursor-pointer flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-xs font-medium ${
                 active
-                  ? "border-zinc-600 admin-surface-segment-btn-active admin-shell-text"
+                  ? "admin-shell-border admin-surface-segment-btn-active admin-shell-text"
                   : "admin-shell-border admin-surface-card text-zinc-500 hover:admin-surface-body"
               }`}
             >

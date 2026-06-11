@@ -1,5 +1,13 @@
 /** Shared layout classes for Customer Site admin editor (full-width panel). */
 
+/** Mode-stable labels — use instead of text-zinc-* inside admin CMS */
+export const CMS_LABEL = "mb-1.5 block text-xs font-medium admin-surface-muted";
+export const CMS_HINT = "mt-1 text-[11px] leading-snug admin-surface-faint";
+export const CMS_SECTION_TITLE =
+  "text-xs font-semibold uppercase tracking-wide admin-surface-faint";
+export const CMS_EDITOR_WELL =
+  "cms-editor-well rounded-xl border border-[var(--admin-border-subtle)] bg-[var(--admin-surface-soft)] p-3";
+
 export const CMS_EDITOR_SECTION = "w-full space-y-5";
 
 export const CMS_EDITOR_SECTION_TIGHT = "w-full space-y-3";

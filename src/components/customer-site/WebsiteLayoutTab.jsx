@@ -10,6 +10,7 @@ import {
   LayoutToggle,
   layoutInputCls,
 } from "@/components/customer-site/layoutEditorUi";
+import { CMS_SECTION_TITLE } from "@/config/customerSiteEditorClasses";
 import SocialUrlsEditor from "@/components/customer-site/SocialUrlsEditor";
 import { CMS_EDITOR_SECTION } from "@/config/customerSiteEditorClasses";
 import { CUSTOMER_FONT_OPTIONS } from "@/lib/customerThemeDefaults";
@@ -100,10 +101,10 @@ export default function WebsiteLayoutTab({
         label="Favicon"
         value={theme.faviconUrl ?? ""}
         onChange={(v) => set("faviconUrl", v)}
-        previewClassName="size-16 object-contain rounded-lg bg-white p-2"
+        previewClassName="cms-logo-preview--light size-16 object-contain rounded-lg p-2"
       />
 
-      <p className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Header & footer</p>
+      <p className={CMS_SECTION_TITLE}>Header & footer</p>
       <div className="grid gap-3 sm:grid-cols-2">
         <button
           type="button"
@@ -117,7 +118,7 @@ export default function WebsiteLayoutTab({
             <p className="admin-surface-title text-sm font-semibold">Header</p>
             <p className="text-xs admin-surface-muted">Menu, colors, location bar, search</p>
           </div>
-          <ChevronRight className="size-5 text-zinc-500" />
+          <ChevronRight className="size-5 admin-surface-faint" />
         </button>
         <button
           type="button"
@@ -131,7 +132,7 @@ export default function WebsiteLayoutTab({
             <p className="admin-surface-title text-sm font-semibold">Footer</p>
             <p className="text-xs admin-surface-muted">Links, newsletter, hours, copyright</p>
           </div>
-          <ChevronRight className="size-5 text-zinc-500" />
+          <ChevronRight className="size-5 admin-surface-faint" />
         </button>
       </div>
 

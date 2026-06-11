@@ -5,6 +5,7 @@ import {
   sanitizeIndianMobileDigits,
 } from "@/lib/phoneUtils";
 import { phoneInputProps } from "@/lib/formInputTypes";
+import { raInputCls } from "@/config/restaurantAdminTheme";
 
 const SIZE_STYLES = {
   sm: {
@@ -21,8 +22,7 @@ const SIZE_STYLES = {
   },
 };
 
-const standaloneFieldCls =
-  "admin-surface-input focus-ra-primary w-full px-3 py-2 text-sm transition-colors";
+const standaloneFieldCls = raInputCls;
 
 /**
  * Indian mobile (+91 prefix, 10 digits). Letters are stripped — only digits 0–9.
@@ -48,10 +48,10 @@ export default function PhoneInput({
   const labelHasMargin = /\bmb-\d/.test(labelClassName ?? "");
 
   const shellCls = [
-    "flex items-center overflow-hidden rounded-xl border bg-zinc-950/60 transition-colors",
+    "flex items-center overflow-hidden rounded-xl border admin-shell-border bg-[var(--admin-control)] transition-colors",
     error
       ? "border-red-500/50 focus-within:border-red-500/50"
-      : "border-zinc-700 focus-within-ra-primary",
+      : "focus-within-ra-primary",
     disabled ? "pointer-events-none opacity-50" : "",
     label && !labelHasMargin ? "mt-1.5" : "",
     wrapperClassName,

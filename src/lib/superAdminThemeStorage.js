@@ -57,8 +57,24 @@ export function clearSuperAdminDocumentTheme() {
   reapplyPortalAdminColorMode();
 }
 
+/** Live theme preview (Settings → Theme) — applies mode/colors immediately like header toggle. */
+export function dispatchSuperAdminThemePreview(theme) {
+  if (typeof window === "undefined") return;
+  const resolved = resolveSuperAdminTheme(theme);
+  applySuperAdminDocumentTheme(resolved);
+  window.dispatchEvent(
+    new CustomEvent("super-admin-theme-preview", { detail: resolved })
+  );
+}
+
+export function clearSuperAdminThemePreview() {
+  if (typeof window === "undefined") return;
+  window.dispatchEvent(new Event("super-admin-theme-preview-clear"));
+}
+
 /** Inline script — runs synchronously in layout before React hydration. */
 export function superAdminThemeBootstrapScript() {
   const key = SUPER_ADMIN_THEME_STORAGE_KEY;
-  return `(function(){try{var p=location.pathname||"";if(p.indexOf("/super-admin")!==0)return;var r=localStorage.getItem(${JSON.stringify(key)});if(!r)return;var t=JSON.parse(r);var d=document.documentElement;if(t.primaryColor){d.style.setProperty("--sa-primary",t.primaryColor);d.style.setProperty("--platform-primary",t.primaryColor);}if(t.accentColor){d.style.setProperty("--sa-accent",t.accentColor);d.style.setProperty("--platform-accent",t.accentColor);}d.dataset.superAdminTheme="true";}catch(e){}})();`;
+  const modeKey = "rms-admin-color-mode";
+  return `(function(){try{var p=location.pathname||"";if(p.indexOf("/super-admin")!==0)return;var r=localStorage.getItem(${JSON.stringify(key)});if(!r)return;var t=JSON.parse(r);var d=document.documentElement;if(t.primaryColor){d.style.setProperty("--sa-primary",t.primaryColor);d.style.setProperty("--platform-primary",t.primaryColor);}if(t.accentColor){d.style.setProperty("--sa-accent",t.accentColor);d.style.setProperty("--platform-accent",t.accentColor);}d.dataset.superAdminTheme="true";var mode=t.darkMode===false?"light":"dark";d.dataset.adminMode=mode;try{localStorage.setItem(${JSON.stringify(modeKey)},mode);}catch(e){}}catch(e){}})();`;
 }

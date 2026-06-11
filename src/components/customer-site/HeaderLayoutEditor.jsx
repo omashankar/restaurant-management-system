@@ -10,6 +10,7 @@ import {
   LayoutToggle,
   layoutInputCls,
 } from "@/components/customer-site/layoutEditorUi";
+import { CMS_SECTION_TITLE } from "@/config/customerSiteEditorClasses";
 import { isCmsSaving } from "@/config/customerSiteDraft";
 import { DEFAULT_HEADER_MENU } from "@/lib/layoutNavDefaults";
 import { ArrowLeft } from "lucide-react";
@@ -47,7 +48,7 @@ export default function HeaderLayoutEditor({
         </button>
       </div>
 
-      <p className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Logo upload</p>
+      <p className={CMS_SECTION_TITLE}>Logo upload</p>
       <p className="text-sm admin-surface-muted">
         Upload your full brand image (icon + name in one file). With &quot;Show restaurant name as text&quot;
         off, only the image is shown. Empty fields use Settings → General logo.
@@ -59,7 +60,7 @@ export default function HeaderLayoutEditor({
           value={header.logoUrl ?? ""}
           onChange={(v) => setHeader({ logoUrl: v })}
           disabled={isCmsSaving(saving)}
-          previewClassName="ct-brand-logo ct-brand-logo--sm w-full max-w-xs bg-white rounded-lg p-3"
+          previewClassName="ct-brand-logo ct-brand-logo--sm cms-logo-preview--light w-full max-w-xs rounded-lg p-3"
         />
         <CmsImageField
           label="Dark mode logo"
@@ -67,7 +68,7 @@ export default function HeaderLayoutEditor({
           value={header.logoDarkUrl ?? ""}
           onChange={(v) => setHeader({ logoDarkUrl: v })}
           disabled={isCmsSaving(saving)}
-          previewClassName="ct-brand-logo ct-brand-logo--md w-full max-w-xs bg-[#111827] rounded-lg p-3"
+          previewClassName="ct-brand-logo ct-brand-logo--md cms-logo-preview--dark w-full max-w-xs rounded-lg p-3"
         />
       </div>
       <LayoutToggle
@@ -106,7 +107,7 @@ export default function HeaderLayoutEditor({
         onToggle={() => setHeader({ showSearch: header.showSearch === false })}
       />
 
-      <p className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Header colors</p>
+      <p className={CMS_SECTION_TITLE}>Header colors</p>
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         <LayoutColorRow label="Background" value={colors.background} onChange={(v) => setColors("background", v)} />
         <LayoutColorRow label="Font" value={colors.font} onChange={(v) => setColors("font", v)} />

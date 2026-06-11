@@ -1,4 +1,4 @@
-import DataTableShell from "@/components/ui/DataTableShell";
+import TableSkeleton from "@/components/ui/TableSkeleton";
 
 export default function ReservationTableSkeleton() {
   return (
@@ -24,29 +24,7 @@ export default function ReservationTableSkeleton() {
       </div>
 
       <div className="hidden md:block">
-        <DataTableShell>
-          <div className="min-w-[720px] space-y-0 p-4">
-            <div className="mb-3 flex gap-3 border-b admin-shell-border pb-3">
-              {Array.from({ length: 8 }).map((_, i) => (
-                <div
-                  key={i}
-                  className="h-3 max-w-[100px] flex-1 animate-pulse rounded bg-zinc-800"
-                />
-              ))}
-            </div>
-            {Array.from({ length: 6 }).map((_, r) => (
-              <div key={r} className="flex gap-3 border-b admin-shell-border/60 py-3">
-                {Array.from({ length: 8 }).map((_, c) => (
-                  <div
-                    key={c}
-                    className="h-4 flex-1 animate-pulse rounded bg-[var(--admin-hover-strong)]"
-                    style={{ animationDelay: `${(r * 8 + c) * 40}ms` }}
-                  />
-                ))}
-              </div>
-            ))}
-          </div>
-        </DataTableShell>
+        <TableSkeleton rows={6} cols={9} />
       </div>
     </div>
   );

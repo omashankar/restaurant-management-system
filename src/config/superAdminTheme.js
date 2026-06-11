@@ -8,8 +8,11 @@ export { adminBox, adminControl, adminPage, adminText };
 export const SUPER_ADMIN_PRIMARY = "#a3e635";
 export const SUPER_ADMIN_ACCENT = "#10b981";
 
+/** Standard text/select/textarea field — Super Admin + portaled modals */
 export const saInputCls =
-  "admin-surface-input focus-sa-primary transition-colors";
+  "admin-surface-input outline-none focus-sa-primary placeholder:admin-surface-faint transition-colors";
+
+export const saTextareaCls = `${saInputCls} resize-none`;
 
 export const saCardCls = adminSurface.card;
 export const saCardSolidCls = adminSurface.cardSolid;
@@ -45,7 +48,7 @@ export const saTabActiveCls =
 
 /** Settings / Landing side nav — light pill + brand icon */
 export const saSideNavActiveCls =
-  "admin-side-nav-active-pill text-zinc-900 font-semibold";
+  "admin-side-nav-active-pill font-semibold";
 
 export const saTabActiveIconCls = "text-sa-primary";
 

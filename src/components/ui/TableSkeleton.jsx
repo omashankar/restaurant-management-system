@@ -12,7 +12,7 @@ export default function TableSkeleton({ rows = 6, cols = 5 }) {
           ))}
         </div>
       </div>
-      <div className="admin-table-body">
+      <div className="admin-table-body admin-table-body--skeleton">
         {Array.from({ length: rows }).map((_, r) => (
           <div key={r} className="flex items-center gap-3 px-4 py-4">
             {Array.from({ length: cols }).map((_, c) => (

@@ -6,7 +6,7 @@ import GlobalSearch from "@/components/rms/GlobalSearch";
 import AdminColorModeToggle from "@/components/admin/AdminColorModeToggle";
 import LanguageSwitcher from "@/components/ui/LanguageSwitcher";
 import ChangePasswordModal from "@/components/rms/ChangePasswordModal";
-import InboxDropdown, { InboxCountBadge } from "@/components/rms/InboxDropdown";
+import InboxDropdown, { HeaderInboxBadge, InboxCountBadge } from "@/components/rms/InboxDropdown";
 import { useInbox } from "@/hooks/useInbox";
 import { useRestaurantBranding } from "@/hooks/useRestaurantBranding";
 import {
@@ -158,15 +158,11 @@ export default function TopNavbar({
             setIsProfileOpen(false);
             setActiveInbox((prev) => (prev === "messages" ? null : "messages"));
           }}
-          className={`${adminSurface.btnIcon} relative`}
-          aria-label="Messages"
+          className={`${adminSurface.btnIcon} relative overflow-visible`}
+          aria-label={unread.messages > 0 ? `Messages (${unread.messages} unread)` : "Messages"}
         >
           <MessageSquare className="size-4" />
-          {unread.messages > 0 ? (
-            <span className="absolute -right-1 -top-1 rounded-full bg-ra-primary px-1.5 py-0.5 text-[10px] font-semibold text-zinc-950">
-              {unread.messages}
-            </span>
-          ) : null}
+          <HeaderInboxBadge count={unread.messages} tone="ra" />
         </button>
 
         <button
@@ -176,15 +172,15 @@ export default function TopNavbar({
             setIsProfileOpen(false);
             setActiveInbox((prev) => (prev === "notifications" ? null : "notifications"));
           }}
-          className={`${adminSurface.btnIcon} relative`}
-          aria-label="Notifications"
+          className={`${adminSurface.btnIcon} relative overflow-visible`}
+          aria-label={
+            unread.notifications > 0
+              ? `Notifications (${unread.notifications} unread)`
+              : "Notifications"
+          }
         >
           <Bell className="size-4" />
-          {unread.notifications > 0 ? (
-            <span className="absolute -right-1 -top-1 rounded-full bg-amber-500 px-1.5 py-0.5 text-[10px] font-semibold text-zinc-950">
-              {unread.notifications}
-            </span>
-          ) : null}
+          <HeaderInboxBadge count={unread.notifications} tone="amber" />
         </button>
           <InboxDropdown
             open={activeInbox === "messages" && !isProfileOpen}

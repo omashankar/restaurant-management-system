@@ -87,7 +87,7 @@ export default function TablePickerModal({ open, selectedTableId, onSelect, onCl
         style={{ paddingBottom: "max(0.25rem, env(safe-area-inset-bottom))" }}
       >
         <div className="flex shrink-0 flex-col items-center pt-2 sm:hidden">
-          <span className="h-1 w-10 rounded-full bg-zinc-600" aria-hidden />
+          <span className="h-1 w-10 rounded-full bg-[var(--admin-border)]" aria-hidden />
         </div>
 
         <div className="flex min-w-0 items-start justify-between gap-2 border-b admin-shell-border px-4 py-3 sm:items-center sm:px-5 sm:py-4">

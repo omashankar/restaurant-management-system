@@ -2,6 +2,7 @@
 
 import {
   computeInventoryStatus,
+  inventoryCardCls,
   inventoryQtyInputCls,
   inventoryQtyTextCls,
   inventoryRowAccentCls,
@@ -126,7 +127,7 @@ export default function InventoryTable({
           return (
             <div
               key={row.id}
-              className={`rounded-xl border p-3 ${inventoryRowAccentCls(status)}`}
+              className={`rounded-xl p-3 ${inventoryCardCls(status)}`}
             >
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0 flex-1">

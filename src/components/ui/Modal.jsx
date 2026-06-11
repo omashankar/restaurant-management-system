@@ -37,7 +37,7 @@ export default function Modal({ open, title, onClose, children, footer }) {
         style={{ paddingBottom: "max(0rem, env(safe-area-inset-bottom))" }}
       >
         <div className="flex shrink-0 flex-col items-center pt-2 sm:hidden">
-          <span className="h-1 w-10 rounded-full bg-zinc-600" aria-hidden />
+          <span className="h-1 w-10 rounded-full bg-[var(--admin-border)]" aria-hidden />
         </div>
 
         <div

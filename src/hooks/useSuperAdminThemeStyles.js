@@ -38,18 +38,29 @@ export function useSuperAdminThemeStyles() {
     return resolveSuperAdminTheme(config.theme);
   }, [preview, config.theme]);
 
+  /* Apply theme on change — no cleanup (avoids flash when toggling light/dark). */
+  useEffect(() => {
+    if (!isSuperAdmin) return;
+    applySuperAdminDocumentTheme(theme);
+  }, [isSuperAdmin, theme]);
+
+  /* Clear branding only when leaving Super Admin (not on every theme object change). */
   useEffect(() => {
     if (!isSuperAdmin) return;
     documentThemeSyncCount += 1;
-    applySuperAdminDocumentTheme(theme);
     return () => {
       documentThemeSyncCount -= 1;
       if (documentThemeSyncCount <= 0) {
         documentThemeSyncCount = 0;
-        clearSuperAdminDocumentTheme();
+        if (
+          typeof window !== "undefined" &&
+          !window.location.pathname.startsWith("/super-admin")
+        ) {
+          clearSuperAdminDocumentTheme();
+        }
       }
     };
-  }, [isSuperAdmin, theme]);
+  }, [isSuperAdmin]);
 
   return isSuperAdmin ? superAdminThemeStyle(theme) : {};
 }

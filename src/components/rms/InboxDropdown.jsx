@@ -128,6 +128,7 @@ export default function InboxDropdown({
   );
 }
 
+/** Pill badge in profile menu rows */
 function InboxCountBadge({ count, tone = "emerald" }) {
   if (!count || count <= 0) return null;
   const cls =
@@ -139,10 +140,28 @@ function InboxCountBadge({ count, tone = "emerald" }) {
           ? "bg-ra-primary-20 text-ra-primary-muted"
           : "bg-ra-primary/20 text-ra-primary-muted";
   return (
-    <span className={`rounded-full px-1.5 py-0.5 text-[10px] font-semibold ${cls}`}>
-      {count}
+    <span className={`rounded-full px-1.5 py-0.5 text-[10px] font-semibold tabular-nums ${cls}`}>
+      {count > 99 ? "99+" : count}
     </span>
   );
 }
 
-export { InboxCountBadge };
+/** Corner badge on header icon buttons (messages / notifications) */
+function HeaderInboxBadge({ count, tone = "amber" }) {
+  if (!count || count <= 0) return null;
+  const display = count > 99 ? "99+" : count;
+  const toneCls =
+    tone === "ra"
+      ? "admin-header-inbox-badge--ra"
+      : tone === "sa"
+        ? "admin-header-inbox-badge--sa"
+        : "admin-header-inbox-badge--amber";
+
+  return (
+    <span aria-hidden className={`admin-header-inbox-badge ${toneCls}`}>
+      {display}
+    </span>
+  );
+}
+
+export { HeaderInboxBadge, InboxCountBadge };

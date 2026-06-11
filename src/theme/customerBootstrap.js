@@ -16,9 +16,12 @@ export function customerThemeBootstrapScript() {
       var e=all[slug];
       if(!e)return;
       if(e.hasUserColorModeChoice&&e.userColorMode==="dark"){
+        document.documentElement.dataset.customerMode="dark";
         document.documentElement.style.colorScheme="dark";
         document.documentElement.dataset.customerDark="true";
         document.documentElement.style.setProperty("--customer-bootstrap-bg","#09090b");
+      } else {
+        document.documentElement.dataset.customerMode="light";
       }
       if(e.primaryColor){
         document.documentElement.style.setProperty("--customer-bootstrap-primary",e.primaryColor);

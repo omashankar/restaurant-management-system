@@ -19,6 +19,7 @@ export async function POST(request) {
   const platform = await getPlatformSettings(db);
   const security = platform.security ?? {};
 
+  const isDev = process.env.NODE_ENV !== "production";
   const maxAttempts = Math.max(3, Number(security.loginAttemptLimit ?? 10) || 10);
   const windowMs = Math.max(
     60_000,
@@ -26,20 +27,23 @@ export async function POST(request) {
   );
   const dynamicLimiter = rateLimit({ windowMs, max: maxAttempts });
 
-  const limit = await dynamicLimiter.check(ip);
-  const emailKey = `${ip}:${String(body?.email ?? "").toLowerCase().trim() || "unknown"}`;
-  const emailLimit = await dynamicLimiter.check(emailKey);
-  if (!limit.allowed) {
-    return Response.json(
-      { success: false, error: `Too many login attempts. Try again in ${limit.retryAfter}s.` },
-      { status: 429, headers: { "Retry-After": String(limit.retryAfter) } }
-    );
-  }
-  if (!emailLimit.allowed) {
-    return Response.json(
-      { success: false, error: `Too many login attempts. Try again in ${emailLimit.retryAfter}s.` },
-      { status: 429, headers: { "Retry-After": String(emailLimit.retryAfter) } }
-    );
+  // Local dev: skip login rate limit (audit scripts / repeated demo logins should not lock you out).
+  if (!isDev) {
+    const limit = await dynamicLimiter.check(ip);
+    const emailKey = `${ip}:${String(body?.email ?? "").toLowerCase().trim() || "unknown"}`;
+    const emailLimit = await dynamicLimiter.check(emailKey);
+    if (!limit.allowed) {
+      return Response.json(
+        { success: false, error: `Too many login attempts. Try again in ${limit.retryAfter}s.` },
+        { status: 429, headers: { "Retry-After": String(limit.retryAfter) } }
+      );
+    }
+    if (!emailLimit.allowed) {
+      return Response.json(
+        { success: false, error: `Too many login attempts. Try again in ${emailLimit.retryAfter}s.` },
+        { status: 429, headers: { "Retry-After": String(emailLimit.retryAfter) } }
+      );
+    }
   }
   if (!body) return Response.json({ success: false, error: "Invalid JSON body." }, { status: 400 });
 

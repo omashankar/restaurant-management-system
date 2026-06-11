@@ -1,7 +1,7 @@
 "use client";
 
 import SuperAdminPageSkeleton from "@/components/super-admin/SuperAdminPageSkeleton";
-import { saIconBadgeCls, saSpinnerCls } from "@/config/superAdminTheme";
+import { saIconBadgeCls, saInputCls, saSpinnerCls, saTextareaCls } from "@/config/superAdminTheme";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import Modal from "@/components/ui/Modal";
 import { useToast } from "@/hooks/useToast";
@@ -465,10 +465,10 @@ export default function PlansPage() {
             <button
               type="button"
               onClick={() => setActiveTab("preview")}
-              className={`cursor-pointer rounded-xl px-2 py-2 text-center text-xs font-medium transition-colors sm:px-3 sm:text-sm ${
+              className={`cursor-pointer rounded-xl px-2 py-2 text-center text-xs font-medium sm:px-3 sm:text-sm ${
                 activeTab === "preview"
-                  ? "bg-[var(--admin-hover-strong)] admin-shell-text"
-                  : "admin-surface-muted hover:bg-[var(--admin-hover)] hover:admin-surface-body"
+                  ? "admin-surface-segment-btn-active admin-shell-text"
+                  : "admin-surface-segment-btn hover:admin-surface-body"
               }`}
             >
               Pricing Preview
@@ -476,10 +476,10 @@ export default function PlansPage() {
             <button
               type="button"
               onClick={() => setActiveTab("manage")}
-              className={`cursor-pointer rounded-xl px-2 py-2 text-center text-xs font-medium transition-colors sm:px-3 sm:text-sm ${
+              className={`cursor-pointer rounded-xl px-2 py-2 text-center text-xs font-medium sm:px-3 sm:text-sm ${
                 activeTab === "manage"
-                  ? "bg-[var(--admin-hover-strong)] admin-shell-text"
-                  : "admin-surface-muted hover:bg-[var(--admin-hover)] hover:admin-surface-body"
+                  ? "admin-surface-segment-btn-active admin-shell-text"
+                  : "admin-surface-segment-btn hover:admin-surface-body"
               }`}
             >
               Manage Plans
@@ -674,7 +674,7 @@ export default function PlansPage() {
                 }}
                 placeholder="e.g. Pro"
                 aria-invalid={fieldErrors.name ? true : undefined}
-                className="mt-1 w-full rounded-xl border admin-shell-border admin-surface-card px-3 py-2.5 text-sm admin-shell-text outline-none focus-sa-primary placeholder:admin-surface-faint"
+                className={`mt-1 ${saInputCls}`}
               />
               <FieldError message={fieldErrors.name} />
             </div>
@@ -689,7 +689,7 @@ export default function PlansPage() {
                 }}
                 placeholder="29"
                 aria-invalid={fieldErrors.monthlyPrice ? true : undefined}
-                className="mt-1 w-full rounded-xl border admin-shell-border admin-surface-card px-3 py-2.5 text-sm admin-shell-text outline-none focus-sa-primary"
+                className={`mt-1 ${saInputCls}`}
               />
               <FieldError message={fieldErrors.monthlyPrice} />
             </div>
@@ -704,7 +704,7 @@ export default function PlansPage() {
                 }}
                 placeholder="299"
                 aria-invalid={fieldErrors.yearlyPrice ? true : undefined}
-                className="mt-1 w-full rounded-xl border admin-shell-border admin-surface-card px-3 py-2.5 text-sm admin-shell-text outline-none focus-sa-primary"
+                className={`mt-1 ${saInputCls}`}
               />
               <FieldError message={fieldErrors.yearlyPrice} />
             </div>
@@ -716,7 +716,7 @@ export default function PlansPage() {
                   setForm((f) => ({ ...f, billingCycle: e.target.value }));
                   clearFieldError("billingCycle");
                 }}
-                className="cursor-pointer mt-1 w-full rounded-xl border admin-shell-border admin-surface-card px-3 py-2.5 text-sm admin-shell-text outline-none focus-sa-primary"
+                className={`cursor-pointer mt-1 ${saInputCls}`}
               >
                 {BILLING_CYCLES.map((b) => <option key={b} value={b} className="capitalize">{b}</option>)}
               </select>
@@ -729,7 +729,7 @@ export default function PlansPage() {
                 onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
                 placeholder="Short description"
                 maxLength={500}
-                className="mt-1 w-full rounded-xl border admin-shell-border admin-surface-card px-3 py-2.5 text-sm admin-shell-text outline-none focus-sa-primary placeholder:admin-surface-faint"
+                className={`mt-1 ${saInputCls}`}
               />
             </div>
           </div>
@@ -740,7 +740,7 @@ export default function PlansPage() {
               value={form.features}
               onChange={(e) => setForm((f) => ({ ...f, features: e.target.value }))}
               placeholder="Full POS, Inventory, Analytics, Priority support"
-              className="mt-1 w-full resize-none rounded-xl border admin-shell-border admin-surface-card px-3 py-2.5 text-sm admin-shell-text outline-none focus-sa-primary placeholder:admin-surface-faint"
+              className={`mt-1 ${saTextareaCls}`}
             />
           </div>
           <div>
@@ -764,7 +764,7 @@ export default function PlansPage() {
                     }}
                     placeholder="-1"
                     aria-invalid={fieldErrors[errKey] ? true : undefined}
-                    className="mt-0.5 w-full rounded-xl border admin-shell-border admin-surface-card px-3 py-2 text-sm admin-shell-text outline-none focus-sa-primary"
+                    className={`mt-0.5 ${saInputCls}`}
                   />
                   <FieldError message={fieldErrors[errKey]} />
                 </div>
@@ -808,7 +808,7 @@ export default function PlansPage() {
                 clearAssignFieldError("restaurantId");
               }}
               aria-invalid={assignFieldErrors.restaurantId ? true : undefined}
-              className="cursor-pointer mt-1 w-full rounded-xl border admin-shell-border admin-surface-card px-3 py-2.5 text-sm admin-shell-text outline-none focus-sa-primary"
+              className={`cursor-pointer mt-1 ${saInputCls}`}
             >
               <option value="">— Select restaurant —</option>
               {assignRestaurants.map((r) => (
@@ -826,7 +826,7 @@ export default function PlansPage() {
                 clearAssignFieldError("planSlug");
               }}
               aria-invalid={assignFieldErrors.planSlug ? true : undefined}
-              className="cursor-pointer mt-1 w-full rounded-xl border admin-shell-border admin-surface-card px-3 py-2.5 text-sm admin-shell-text outline-none focus-sa-primary"
+              className={`cursor-pointer mt-1 ${saInputCls}`}
             >
               <option value="">— Select plan —</option>
               {plans.map((p) => (
@@ -849,7 +849,7 @@ export default function PlansPage() {
                   clearAssignFieldError("endDate");
                 }}
                 aria-invalid={assignFieldErrors.startDate ? true : undefined}
-                className="mt-1 w-full rounded-xl border admin-shell-border admin-surface-card px-3 py-2.5 text-sm admin-shell-text outline-none focus-sa-primary"
+                className={`mt-1 ${saInputCls}`}
               />
               <FieldError message={assignFieldErrors.startDate} />
             </div>
@@ -865,7 +865,7 @@ export default function PlansPage() {
                   clearAssignFieldError("startDate");
                 }}
                 aria-invalid={assignFieldErrors.endDate ? true : undefined}
-                className="mt-1 w-full rounded-xl border admin-shell-border admin-surface-card px-3 py-2.5 text-sm admin-shell-text outline-none focus-sa-primary"
+                className={`mt-1 ${saInputCls}`}
               />
               <FieldError message={assignFieldErrors.endDate} />
             </div>
@@ -881,7 +881,7 @@ export default function PlansPage() {
                 }}
                 placeholder="0"
                 aria-invalid={assignFieldErrors.trialDays ? true : undefined}
-                className="mt-1 w-full rounded-xl border admin-shell-border admin-surface-card px-3 py-2.5 text-sm admin-shell-text outline-none focus-sa-primary"
+                className={`mt-1 ${saInputCls}`}
               />
               <FieldError message={assignFieldErrors.trialDays} />
             </div>
