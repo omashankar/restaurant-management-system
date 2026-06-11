@@ -1,7 +1,7 @@
 "use client";
 
 import InputField from "@/components/settings/InputField";
-import { raInputCls } from "@/config/restaurantAdminTheme";
+import { raIconBadgeCls, raInputCls } from "@/config/restaurantAdminTheme";
 import RestaurantLogoField from "@/components/settings/RestaurantLogoField";
 import SettingsFormSection from "@/components/settings/SettingsFormSection";
 import SettingsSidebar from "@/components/settings/SettingsSidebar";
@@ -17,8 +17,8 @@ import TaxSettingsSection from "@/components/payment-settings/TaxSettingsSection
 import {
   CURRENCY_OPTIONS,
   EMPTY_SETTINGS,
+  filterSettingsTabsForRole,
   LANGUAGE_OPTIONS,
-  SETTINGS_TABS,
   TIMEZONE_OPTIONS,
 } from "@/config/settingsConfig";
 import { EMPTY_PAYMENT_SETTINGS, PAYMENT_METHOD_LABELS } from "@/config/paymentConfig";
@@ -27,7 +27,7 @@ import {
   normalizeAccessControl,
 } from "@/config/accessControlConfig";
 import { useUser } from "@/context/AuthContext";
-import { CheckCircle2, Loader2, Mail, XCircle } from "lucide-react";
+import { CheckCircle2, Loader2, Mail, Settings, XCircle } from "lucide-react";
 import {
   validatePaymentBank,
   validatePaymentGatewaySave,
@@ -80,10 +80,7 @@ function RestaurantThemeSection({ data, onChange, onSave, saving, canSave, field
   );
 
   return (
-    <SettingsFormSection
-      title="Theme"
-      description="Primary Color drives your admin panel — sidebar, buttons, loaders. Accent is for success states (paid, active, online)."
-    >
+    <SettingsFormSection sectionId="theme">
       <div className="mb-4 flex min-w-0 items-center gap-2 text-sm font-medium admin-surface-body">
         <Palette className="size-4 shrink-0 text-ra-primary" />
         Brand colors
@@ -226,10 +223,7 @@ export default function SettingsPage() {
   const [payLoading, setPayLoading] = useState(false);
 
   const sidebarTabs = useMemo(
-    () => SETTINGS_TABS.filter((t) => {
-      if (t.id === "email" || t.id === "theme") return user?.role === "admin";
-      return true;
-    }),
+    () => filterSettingsTabsForRole(user?.role),
     [user?.role]
   );
 
@@ -241,7 +235,11 @@ export default function SettingsPage() {
     }
     setActiveTab(id);
     requestAnimationFrame(() => {
-      panelRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      panelRef.current?.scrollTo({ top: 0, behavior: "smooth" });
+      const main = panelRef.current?.closest("main");
+      if (main && main.scrollTop > 0) {
+        main.scrollTo({ top: 0, behavior: "smooth" });
+      }
     });
   };
 
@@ -520,9 +518,14 @@ export default function SettingsPage() {
 
   return (
     <div className="min-w-0 w-full max-w-full space-y-6 overflow-x-hidden">
-      <div className="min-w-0">
-        <h1 className="admin-page-title text-xl font-semibold tracking-tight sm:text-2xl">Settings</h1>
-        <p className="admin-page-desc mt-1 text-sm">Configure restaurant preferences, POS behavior, and notifications.</p>
+      <div className="flex min-w-0 items-start gap-3">
+        <span className={`mt-1 shrink-0 ${raIconBadgeCls}`}>
+          <Settings className="size-5" aria-hidden />
+        </span>
+        <div className="min-w-0">
+          <h1 className="admin-page-title text-xl font-semibold tracking-tight sm:text-2xl">Settings</h1>
+          <p className="admin-page-desc mt-1 text-sm">Configure restaurant preferences, POS behavior, and notifications.</p>
+        </div>
       </div>
 
       {loadError && (
@@ -531,10 +534,10 @@ export default function SettingsPage() {
         </div>
       )}
 
-      <div className="grid min-w-0 gap-5 lg:grid-cols-[minmax(0,240px)_minmax(0,1fr)] lg:items-start">
+      <div className="flex min-w-0 w-full flex-col gap-4 lg:flex-row lg:items-start lg:gap-6">
         <SettingsSidebar tabs={sidebarTabs} activeTab={activeTab} onTabChange={handleTabChange} />
 
-        <div ref={panelRef} className="min-w-0 scroll-mt-24 space-y-4">
+        <div ref={panelRef} className="min-w-0 w-full flex-1 space-y-4">
 
           {/* ── GENERAL (with Notifications merged) ── */}
           {activeTab === "general" && (
@@ -562,7 +565,7 @@ export default function SettingsPage() {
                   )}
                 </div>
               </div>
-              <SettingsFormSection title="General Settings" description="Basic profile and localization for your restaurant.">
+              <SettingsFormSection sectionId="general">
                 <div className="grid gap-4 md:grid-cols-2">
                   <InputField
                     label="Restaurant Name"
@@ -589,7 +592,7 @@ export default function SettingsPage() {
                 </div>
               </SettingsFormSection>
 
-              <SettingsFormSection title="Notifications" description="Control in-app inbox alerts and optional email/SMS alerts for new orders. SMS alerts use WhatsApp — configure credentials under WhatsApp menu.">
+              <SettingsFormSection sectionId="general.notifications">
                 <div className="grid gap-3 md:grid-cols-2">
                   <ToggleSwitch label="Order Notifications" checked={settings.notifications.orderNotifications}
                     onChange={(v) => setSettings((p) => ({ ...p, notifications: { ...p.notifications, orderNotifications: v } }))} />
@@ -611,7 +614,7 @@ export default function SettingsPage() {
 
           {/* ── POS ── */}
           {activeTab === "pos" && (
-            <SettingsFormSection title="POS & Charges" description="Control pricing behavior and order calculations.">
+            <SettingsFormSection sectionId="pos">
               <div className="grid gap-4 md:grid-cols-2">
                 <InputField
                   label="Tax Percentage (%)"
@@ -699,8 +702,7 @@ export default function SettingsPage() {
 
           {/* ── EMAIL ── */}
           {activeTab === "email" && (
-            <SettingsFormSection title="Email / SMTP"
-              description="Verification and password-reset emails for your restaurant accounts use this server when enabled; otherwise Super Admin SMTP or server env Gmail is used.">
+            <SettingsFormSection sectionId="email">
               <ToggleSwitch label="Enable custom SMTP"
                 hint="Must be on for signup verification and forgot-password mail to use this SMTP (after credentials are saved)."
                 checked={settings.email.enabled}
@@ -748,8 +750,7 @@ export default function SettingsPage() {
 
           {/* ── ACCESS CONTROL ── */}
           {activeTab === "accessControl" && (
-            <SettingsFormSection title="Access Control"
-              description="Set feature access by role. Changes apply to new sessions; existing sessions may need re-login.">
+            <SettingsFormSection sectionId="accessControl">
               <div className="overflow-x-auto rounded-xl border admin-shell-border">
                 <table className="admin-table min-w-[640px] w-full text-sm">
                   <thead className="admin-table-head text-xs uppercase tracking-wide text-zinc-500">
@@ -786,7 +787,7 @@ export default function SettingsPage() {
 
           {/* ── OPENING HOURS ── */}
           {activeTab === "hours" && (
-            <SettingsFormSection title="Opening Hours" description="Set your weekly operating schedule.">
+            <SettingsFormSection sectionId="hours">
               <div className="space-y-3">
                 {settings.openingHours.map((row, index) => (
                   <div key={row.day} className="grid grid-cols-1 gap-3 rounded-xl admin-surface-card p-3 sm:grid-cols-2 lg:grid-cols-[minmax(0,120px)_1fr_1fr_auto]">
@@ -822,7 +823,7 @@ export default function SettingsPage() {
 
           {/* ── CONTACT ── */}
           {activeTab === "contact" && (
-            <SettingsFormSection title="Contact Details" description="Public-facing contact and location settings.">
+            <SettingsFormSection sectionId="contact">
               <div className="grid gap-4 md:grid-cols-2">
                 <InputField
                   label="Phone Number"

@@ -1,5 +1,7 @@
 "use client";
 
+import AdminSectionHeader from "@/components/ui/AdminSectionHeader";
+import { resolveSettingsPanelSection } from "@/config/settingsConfig";
 import { useState } from "react";
 import { Loader2, CheckCircle2, XCircle, Zap, Lock, Settings2 } from "lucide-react";
 import Image from "next/image";
@@ -77,21 +79,21 @@ export default function GatewaySettingsSection({ data, onChange, onSave, showToa
 
   const activeInfo = GATEWAYS.find((g) => g.id === activeGw);
   const enabledGateways = GATEWAYS.filter((g) => data[g.id]?.enabled);
+  const paymentsMeta = resolveSettingsPanelSection("payments");
+  const paymentsDescription =
+    enabledGateways.length > 0
+      ? `${paymentsMeta.description} Active: ${enabledGateways.map((g) => g.label).join(", ")}.`
+      : paymentsMeta.description;
 
   return (
     <section className="admin-surface-card p-5 sm:p-6">
-      <div className="mb-5">
-        <h2 className="text-lg font-semibold admin-shell-text">Payment Gateway</h2>
-        <p className="mt-1 text-sm admin-surface-muted">
-          Select a gateway and enter your API keys. Keys are encrypted before saving.
-          {enabledGateways.length > 0 && (
-            <span className="ml-2 inline-flex items-center gap-1 text-ra-primary">
-              <CheckCircle2 className="size-3" />
-              {enabledGateways.map((g) => g.label).join(", ")} active
-            </span>
-          )}
-        </p>
-      </div>
+      <AdminSectionHeader
+        brand="ra"
+        icon={paymentsMeta.Icon}
+        title={paymentsMeta.title}
+        description={paymentsDescription}
+        className="mb-5"
+      />
 
       {/* Gateway selector — card grid */}
       <div className="mb-5 grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-5">

@@ -1,8 +1,9 @@
 "use client";
 
 import { adminShell, adminSurface } from "@/config/adminSurfaceClasses";
+import { raIconBadgeCls } from "@/config/restaurantAdminTheme";
 import { formatAdminMoney } from "@/lib/adminCurrency";
-import { CheckCircle2, ShoppingCart, Trash2 } from "lucide-react";
+import { CheckCircle2, Monitor, ShoppingCart, Trash2 } from "lucide-react";
 
 export default function PosPageHeader({
   cartItemCount,
@@ -13,14 +14,19 @@ export default function PosPageHeader({
 }) {
   return (
     <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-      <div className="min-w-0">
-        <h1 className="admin-page-title text-xl font-semibold tracking-tight sm:text-2xl">POS</h1>
-        <p className="admin-page-desc mt-1 hidden text-sm sm:block">
-          1 Dine-In · 2 Takeaway · 3 Delivery · / Search · Ctrl+Enter Place
-        </p>
-        <p className="mt-1 text-xs admin-surface-muted xl:hidden">
-          {setupReady ? "Order details ready — add menu items" : "Complete order details first"}
-        </p>
+      <div className="flex min-w-0 items-start gap-3">
+        <span className={`mt-1 shrink-0 ${raIconBadgeCls}`}>
+          <Monitor className="size-5" aria-hidden />
+        </span>
+        <div className="min-w-0">
+          <h1 className="admin-page-title text-xl font-semibold tracking-tight sm:text-2xl">POS</h1>
+          <p className="admin-page-desc mt-1 hidden text-sm sm:block">
+            1 Dine-In · 2 Takeaway · 3 Delivery · / Search · Ctrl+Enter Place
+          </p>
+          <p className="mt-1 text-xs admin-surface-muted xl:hidden">
+            {setupReady ? "Order details ready — add menu items" : "Complete order details first"}
+          </p>
+        </div>
       </div>
 
       {cartItemCount > 0 && (

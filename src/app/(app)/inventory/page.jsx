@@ -16,6 +16,7 @@ import { useModuleData } from "@/context/ModuleDataContext";
 import { usePaginatedList } from "@/hooks/usePaginatedList";
 import { useToast } from "@/hooks/useToast";
 import { getInventoryFormFieldErrors } from "@/lib/formValidation";
+import { raIconBadgeCls } from "@/config/restaurantAdminTheme";
 import { AlertTriangle, Package, Plus } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
@@ -281,13 +282,18 @@ export default function InventoryPage() {
   return (
     <div className="min-w-0 w-full max-w-full space-y-8 overflow-x-hidden">
       <div className="flex min-w-0 flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div className="min-w-0">
-          <h1 className="admin-page-title text-2xl font-semibold tracking-tight">
-            Inventory
-          </h1>
-          <p className="admin-page-desc mt-1 text-sm">
-            Par levels, stock status, and movement history.
-          </p>
+        <div className="flex min-w-0 items-start gap-3">
+          <span className={`mt-1 shrink-0 ${raIconBadgeCls}`}>
+            <Package className="size-5" aria-hidden />
+          </span>
+          <div className="min-w-0">
+            <h1 className="admin-page-title text-2xl font-semibold tracking-tight">
+              Inventory
+            </h1>
+            <p className="admin-page-desc mt-1 text-sm">
+              Par levels, stock status, and movement history.
+            </p>
+          </div>
         </div>
         <button
           type="button"

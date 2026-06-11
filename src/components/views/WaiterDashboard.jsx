@@ -2,7 +2,8 @@
 
 import RecentOrdersTable from "@/components/dashboard/RecentOrdersTable";
 import StatsCard from "@/components/rms/StatsCard";
-import { ShoppingCart, Table2, UtensilsCrossed } from "lucide-react";
+import { raIconBadgeCls } from "@/config/restaurantAdminTheme";
+import { ClipboardList, ShoppingCart, Table2, UtensilsCrossed } from "lucide-react";
 import Link from "next/link";
 
 export default function WaiterDashboard({ tables = [], orders = [] }) {
@@ -12,9 +13,14 @@ export default function WaiterDashboard({ tables = [], orders = [] }) {
 
   return (
     <div className="min-w-0 w-full max-w-full space-y-6 overflow-x-hidden sm:space-y-8">
-      <div className="min-w-0">
-        <h1 className="admin-page-title">My Shift</h1>
-        <p className="admin-page-desc">Active tables, your orders, and quick actions.</p>
+      <div className="flex min-w-0 items-start gap-3">
+        <span className={`mt-1 shrink-0 ${raIconBadgeCls}`}>
+          <ClipboardList className="size-5" aria-hidden />
+        </span>
+        <div className="min-w-0">
+          <h1 className="admin-page-title">My Shift</h1>
+          <p className="admin-page-desc">Active tables, your orders, and quick actions.</p>
+        </div>
       </div>
 
       <div className="grid min-w-0 grid-cols-1 gap-4 sm:grid-cols-3">

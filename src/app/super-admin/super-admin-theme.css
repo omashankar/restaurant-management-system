@@ -93,9 +93,10 @@
   align-items: center;
   justify-content: center;
   border-radius: 0.75rem;
+  border: 1px solid color-mix(in srgb, var(--sa-primary) 25%, transparent);
   background-color: color-mix(in srgb, var(--sa-primary) 15%, transparent);
   color: var(--sa-primary);
-  box-shadow: 0 0 0 1px color-mix(in srgb, var(--sa-primary) 25%, transparent);
+  box-shadow: none;
 }
 :is(.super-admin-panel, :root[data-super-admin-theme]) .sa-spinner {
   animation: spin 1s linear infinite;

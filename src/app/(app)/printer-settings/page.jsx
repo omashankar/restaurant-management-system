@@ -1,6 +1,6 @@
 "use client";
 
-import { raInputCls } from "@/config/restaurantAdminTheme";
+import { raIconBadgeCls, raInputCls } from "@/config/restaurantAdminTheme";
 import { adminSurface } from "@/config/adminSurfaceClasses";
 import { useLanguage } from "@/context/LanguageContext";
 import { CheckCircle2, Loader2, Plus, Printer, Save, Trash2, Wifi, Bluetooth, Usb, XCircle } from "lucide-react";
@@ -170,11 +170,16 @@ export default function PrinterSettingsPage() {
   return (
     <div className="min-w-0 w-full max-w-full space-y-6 overflow-x-hidden">
       <div className="flex min-w-0 flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <div className="min-w-0">
-          <h1 className="admin-page-title text-xl font-semibold tracking-tight sm:text-2xl">{t("printer.title")}</h1>
-          <p className="admin-page-desc mt-1 text-sm">
-            Configure thermal printers. Network printers print via ESC/POS; USB/Bluetooth use POS browser print.
-          </p>
+        <div className="flex min-w-0 items-start gap-3">
+          <span className={`mt-1 shrink-0 ${raIconBadgeCls}`}>
+            <Printer className="size-5" aria-hidden />
+          </span>
+          <div className="min-w-0">
+            <h1 className="admin-page-title text-xl font-semibold tracking-tight sm:text-2xl">{t("printer.title")}</h1>
+            <p className="admin-page-desc mt-1 text-sm">
+              Configure thermal printers. Network printers print via ESC/POS; USB/Bluetooth use POS browser print.
+            </p>
+          </div>
         </div>
         <div className="flex w-full shrink-0 flex-col gap-2 sm:w-auto sm:flex-row">
           <button type="button" onClick={() => savePrinters()} disabled={saving || !hasChanges}

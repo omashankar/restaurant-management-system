@@ -5,8 +5,9 @@ import SalesChart from "@/components/dashboard/SalesChart";
 import TopDishes from "@/components/dashboard/TopDishes";
 import RoleCard from "@/components/rms/RoleCard";
 import StatsCard from "@/components/rms/StatsCard";
+import { raIconBadgeCls } from "@/config/restaurantAdminTheme";
 import { formatAdminMoney } from "@/lib/adminCurrency";
-import { AlertTriangle, DollarSign, Package, ShoppingBag } from "lucide-react";
+import { AlertTriangle, BarChart3, DollarSign, Package, ShoppingBag } from "lucide-react";
 import Link from "next/link";
 
 export default function ManagerDashboard({
@@ -37,9 +38,14 @@ export default function ManagerDashboard({
         </Link>
       </div>
 
-      <div>
-        <h1 className="admin-page-title">Shift overview</h1>
-        <p className="mt-1 text-sm admin-surface-muted">Live metrics without sensitive HR controls.</p>
+      <div className="flex min-w-0 items-start gap-3">
+        <span className={`mt-1 shrink-0 ${raIconBadgeCls}`}>
+          <BarChart3 className="size-5" aria-hidden />
+        </span>
+        <div className="min-w-0">
+          <h1 className="admin-page-title">Shift overview</h1>
+          <p className="mt-1 text-sm admin-surface-muted">Live metrics without sensitive HR controls.</p>
+        </div>
       </div>
 
       <div className="grid gap-4 md:grid-cols-3">

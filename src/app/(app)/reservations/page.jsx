@@ -14,6 +14,7 @@ import { usePaginatedList } from "@/hooks/usePaginatedList";
 import { useApp } from "@/context/AppProviders";
 import { useModuleData } from "@/context/ModuleDataContext";
 import { useToast } from "@/hooks/useToast";
+import { raIconBadgeCls } from "@/config/restaurantAdminTheme";
 import { CalendarClock, Plus } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useLiveRefresh } from "@/hooks/useLiveRefresh";
@@ -236,7 +237,7 @@ export default function ReservationsPage() {
 
           <div className="flex min-w-0 flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <div className="flex min-w-0 items-start gap-3">
-              <span className="mt-1 flex size-11 shrink-0 items-center justify-center rounded-2xl bg-ra-primary-15 text-ra-primary ring-1 ring-ra-primary-25">
+              <span className={`mt-1 shrink-0 rounded-2xl size-11 ${raIconBadgeCls}`}>
                 <CalendarClock className="size-5" aria-hidden />
               </span>
               <div className="min-w-0">

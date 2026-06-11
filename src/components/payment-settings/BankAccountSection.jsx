@@ -9,12 +9,7 @@ export default function BankAccountSection({ data, onChange, onSave }) {
   }
 
   return (
-    <SectionCard
-      title="Bank Account Details"
-      description="Your settlement payouts will be sent to this account. Sensitive fields are masked for security."
-      onSave={onSave}
-      data={data}
-    >
+    <SectionCard sectionId="billing.bank" onSave={onSave} data={data}>
       <div className="grid gap-4 sm:grid-cols-2">
         <Field label="Account Holder Name">
           <Input

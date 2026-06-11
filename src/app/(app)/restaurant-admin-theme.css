@@ -91,9 +91,10 @@
   align-items: center;
   justify-content: center;
   border-radius: 0.75rem;
+  border: 1px solid color-mix(in srgb, var(--ra-primary) 25%, transparent);
   background-color: color-mix(in srgb, var(--ra-primary) 15%, transparent);
   color: var(--ra-primary);
-  box-shadow: 0 0 0 1px color-mix(in srgb, var(--ra-primary) 25%, transparent);
+  box-shadow: none;
 }
 :is(.restaurant-admin-panel, :root[data-restaurant-admin-theme]) .ra-spinner {
   animation: spin 1s linear infinite;

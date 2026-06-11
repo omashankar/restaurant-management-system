@@ -1,10 +1,23 @@
 "use client";
 
+import AdminSectionHeader from "@/components/ui/AdminSectionHeader";
 import { adminShell, adminSurface } from "@/config/adminSurfaceClasses";
+import { resolveSettingsPanelSection } from "@/config/settingsConfig";
 import { Loader2 } from "lucide-react";
 import { useState } from "react";
 
-export default function SectionCard({ title, description, children, onSave, data }) {
+export default function SectionCard({
+  sectionId,
+  title,
+  description,
+  icon,
+  children,
+  onSave,
+  data,
+}) {
+  const meta = sectionId
+    ? resolveSettingsPanelSection(sectionId, { title, description, icon, Icon: icon })
+    : { title, description, Icon: icon };
   const [saving, setSaving] = useState(false);
 
   async function handleSave() {
@@ -16,10 +29,20 @@ export default function SectionCard({ title, description, children, onSave, data
 
   return (
     <section className={`${adminSurface.cardSolid} p-5 sm:p-6`}>
-      <div className="mb-5">
-        <h2 className={`text-lg font-semibold ${adminSurface.title}`}>{title}</h2>
-        {description && <p className={`mt-1 text-sm ${adminSurface.muted}`}>{description}</p>}
-      </div>
+      {meta.Icon && meta.title ? (
+        <AdminSectionHeader
+          brand="ra"
+          icon={meta.Icon}
+          title={meta.title}
+          description={meta.description}
+          className="mb-5"
+        />
+      ) : (
+        <div className="mb-5">
+          <h2 className={`text-lg font-semibold ${adminSurface.title}`}>{meta.title}</h2>
+          {meta.description && <p className={`mt-1 text-sm ${adminSurface.muted}`}>{meta.description}</p>}
+        </div>
+      )}
       {children}
       {onSave && (
         <div className={`mt-6 flex justify-end border-t ${adminShell.borderT} pt-4`}>

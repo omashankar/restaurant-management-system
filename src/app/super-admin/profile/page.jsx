@@ -1,7 +1,7 @@
 "use client";
 
 import PhoneInput from "@/components/ui/PhoneInput";
-import { saSpinnerCls } from "@/config/superAdminTheme";
+import { saIconBadgeCls, saSpinnerCls } from "@/config/superAdminTheme";
 import { roleLabel } from "@/context/AppProviders";
 import { useProfile } from "@/hooks/useProfile";
 import { normalizeLogoSrc } from "@/lib/logoUrl";
@@ -88,9 +88,14 @@ export default function SuperAdminProfilePage() {
   return (
     <div className="min-w-0 w-full max-w-full overflow-x-hidden">
     <div className="mx-auto max-w-2xl space-y-6">
-      <div className="min-w-0">
-        <h1 className="admin-page-title break-words text-2xl font-semibold tracking-tight">My Profile</h1>
-        <p className="admin-page-desc mt-1 break-words text-sm">Manage your super admin profile and security.</p>
+      <div className="flex min-w-0 items-start gap-3">
+        <span className={`mt-1 shrink-0 ${saIconBadgeCls}`}>
+          <User className="size-5" aria-hidden />
+        </span>
+        <div className="min-w-0">
+          <h1 className="admin-page-title break-words text-2xl font-semibold tracking-tight">My Profile</h1>
+          <p className="admin-page-desc mt-1 break-words text-sm">Manage your super admin profile and security.</p>
+        </div>
       </div>
 
       <div className="flex flex-col items-start gap-4 admin-surface-card p-4 sm:flex-row sm:items-center sm:gap-5 sm:p-5">

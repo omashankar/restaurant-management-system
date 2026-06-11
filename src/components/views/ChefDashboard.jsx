@@ -2,6 +2,7 @@
 
 import TopDishes from "@/components/dashboard/TopDishes";
 import StatsCard from "@/components/rms/StatsCard";
+import { raIconBadgeCls } from "@/config/restaurantAdminTheme";
 import { ChefHat, Clock, Flame, MonitorPlay } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
@@ -25,9 +26,14 @@ export default function ChefDashboard({ tickets: initialTickets = [], topItems =
   return (
     <div className="space-y-8">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <h1 className="admin-page-title">Kitchen View</h1>
-          <p className="admin-page-desc">Incoming tickets and order queue.</p>
+        <div className="flex min-w-0 items-start gap-3">
+          <span className={`mt-1 shrink-0 ${raIconBadgeCls}`}>
+            <ChefHat className="size-5" aria-hidden />
+          </span>
+          <div className="min-w-0">
+            <h1 className="admin-page-title">Kitchen View</h1>
+            <p className="admin-page-desc">Incoming tickets and order queue.</p>
+          </div>
         </div>
         <Link href="/kitchen"
           className="cursor-pointer inline-flex items-center gap-2 rounded-xl border admin-shell-border px-4 py-2 text-sm font-semibold admin-shell-text hover-border-ra-primary-40">

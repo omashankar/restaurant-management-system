@@ -14,7 +14,7 @@ import {
   User,
   XCircle,
 } from "lucide-react";
-import { raInputCls } from "@/config/restaurantAdminTheme";
+import { raIconBadgeCls, raInputCls } from "@/config/restaurantAdminTheme";
 import { useRef } from "react";
 
 // ── reusable input ────────────────────────────────────────────────────────────
@@ -91,9 +91,14 @@ export default function ProfilePage() {
     <div className="mx-auto max-w-2xl space-y-6">
 
       {/* ── Header ── */}
-      <div className="min-w-0">
-        <h1 className="admin-page-title break-words text-2xl font-semibold tracking-tight">My Profile</h1>
-        <p className="admin-page-desc mt-1 break-words text-sm">Manage your personal details and security.</p>
+      <div className="flex min-w-0 items-start gap-3">
+        <span className={`mt-1 shrink-0 ${raIconBadgeCls}`}>
+          <User className="size-5" aria-hidden />
+        </span>
+        <div className="min-w-0">
+          <h1 className="admin-page-title break-words text-2xl font-semibold tracking-tight">My Profile</h1>
+          <p className="admin-page-desc mt-1 break-words text-sm">Manage your personal details and security.</p>
+        </div>
       </div>
 
       {/* ── Avatar card ── */}

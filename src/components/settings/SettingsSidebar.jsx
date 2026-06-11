@@ -8,13 +8,12 @@ import { raSideNavActiveCls } from "@/config/restaurantAdminTheme";
 function NavItems({ tabs, activeTab, onTabChange }) {
   return tabs.map((tab) => {
     const active = tab.id === activeTab;
-    const Icon = tab.Icon;
     return (
       <AdminSideNavItem
         key={tab.id}
         active={active}
         onClick={() => onTabChange(tab.id)}
-        icon={Icon}
+        icon={tab.Icon}
         activeClassName={active ? raSideNavActiveCls : ""}
       >
         {tab.label}
@@ -24,38 +23,27 @@ function NavItems({ tabs, activeTab, onTabChange }) {
 }
 
 export default function SettingsSidebar({ tabs, activeTab, onTabChange }) {
-  const mobileNavRef = useRef(null);
+  const navRef = useRef(null);
 
   useEffect(() => {
-    const activeEl = mobileNavRef.current?.querySelector('[aria-current="page"]');
-    activeEl?.scrollIntoView({ block: "nearest", inline: "center", behavior: "smooth" });
+    const activeEl = navRef.current?.querySelector('[aria-current="page"]');
+    if (!activeEl || typeof window === "undefined") return;
+    // Horizontal section picker only (mobile/tablet) — avoid shifting desktop sidebar
+    if (!window.matchMedia("(min-width: 1024px)").matches) {
+      activeEl.scrollIntoView({ block: "nearest", inline: "center", behavior: "smooth" });
+    }
   }, [activeTab]);
 
   return (
-    <>
-      {/* Mobile / tablet — horizontal section picker */}
-      <div className="min-w-0 lg:hidden">
-        <p className={`px-1 pb-2 text-xs font-semibold uppercase tracking-wide ${adminSurface.muted}`}>
-          Settings Menu
-        </p>
-        <div ref={mobileNavRef} className="min-w-0">
-          <AdminSideNavList className="gap-1.5 pb-1 [scrollbar-width:none]">
-            <NavItems tabs={tabs} activeTab={activeTab} onTabChange={onTabChange} />
-          </AdminSideNavList>
-        </div>
+    <AdminSideNav className="settings-side-nav min-w-0 w-full shrink-0 lg:w-52">
+      <p className={`px-2 pb-2 pt-1 text-xs font-semibold uppercase tracking-wide ${adminSurface.muted}`}>
+        Settings Menu
+      </p>
+      <div ref={navRef} className="min-w-0 overflow-visible px-0.5">
+        <AdminSideNavList className="gap-1.5 pb-1 lg:gap-0.5 lg:overflow-visible lg:pb-0 [scrollbar-width:none]">
+          <NavItems tabs={tabs} activeTab={activeTab} onTabChange={onTabChange} />
+        </AdminSideNavList>
       </div>
-
-      {/* Desktop — sticky sidebar; self-start prevents height jump when tab content changes */}
-      <aside className="hidden min-w-0 self-start lg:block lg:w-full">
-        <AdminSideNav className="sticky top-24 max-h-[calc(100vh-7rem)] w-full overflow-y-auto [scrollbar-width:thin]">
-          <p className={`px-2 pb-2 pt-1 text-xs font-semibold uppercase tracking-wide ${adminSurface.muted}`}>
-            Settings Menu
-          </p>
-          <AdminSideNavList className="flex-col gap-0.5 overflow-visible pb-0">
-            <NavItems tabs={tabs} activeTab={activeTab} onTabChange={onTabChange} />
-          </AdminSideNavList>
-        </AdminSideNav>
-      </aside>
-    </>
+    </AdminSideNav>
   );
 }

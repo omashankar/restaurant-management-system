@@ -8,12 +8,7 @@ export default function TaxSettingsSection({ data, onChange, onSave }) {
   }
 
   return (
-    <SectionCard
-      title="Tax Settings"
-      description="Configure GST and tax details. These are applied automatically during checkout."
-      onSave={onSave}
-      data={data}
-    >
+    <SectionCard sectionId="billing.tax" onSave={onSave} data={data}>
       <div className="grid gap-4 sm:grid-cols-2">
         <Field label="GST Number" hint="Your GSTIN registration number.">
           <Input
