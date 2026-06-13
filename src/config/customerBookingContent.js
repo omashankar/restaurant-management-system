@@ -1,8 +1,3 @@
-export const CUSTOMER_BOOKING_TIME_SLOTS = [
-  "12:00", "12:30", "13:00", "13:30", "14:00",
-  "18:00", "18:30", "19:00", "19:30", "20:00", "20:30", "21:00",
-];
-
 export const CUSTOMER_BOOKING_CAPACITY_FILTERS = [
   { id: "all", label: "All" },
   { id: "2", label: "2 seater" },

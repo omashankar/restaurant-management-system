@@ -1,6 +1,7 @@
 import { getTokenFromRequest } from "@/lib/authCookies";
 import { verifyToken } from "@/lib/jwt";
 import clientPromise from "@/lib/mongodb";
+import { SUBSCRIPTION_PAYMENT_MATCH } from "@/lib/platformCurrency";
 
 export async function GET(request) {
   try {
@@ -31,7 +32,7 @@ export async function GET(request) {
         .limit(8)
         .toArray(),
       db.collection("payments").aggregate([
-        { $match: { status: "paid" } },
+        { $match: { status: "paid", ...SUBSCRIPTION_PAYMENT_MATCH } },
         { $group: { _id: null, total: { $sum: "$amount" } } },
       ]).toArray(),
       db.collection("contact_messages").countDocuments({

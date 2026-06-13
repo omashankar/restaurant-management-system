@@ -1,5 +1,6 @@
 "use client";
 
+import { raPageRefreshBtnCls } from "@/config/restaurantAdminTheme";
 import SuperAdminPageSkeleton from "@/components/super-admin/SuperAdminPageSkeleton";
 import { saIconBadgeCls, saInputCls, saSpinnerCls, saTextareaCls } from "@/config/superAdminTheme";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
@@ -163,7 +164,7 @@ function PricingCard({ plan, onAssign, pricingView }) {
       {/* Price */}
       <div className="mt-5">
         <div className="flex items-end gap-1">
-          <span className={`text-3xl font-extrabold tabular-nums tracking-tight sm:text-4xl ${accent.price}`}>
+          <span className={`text-2xl font-extrabold tabular-nums tracking-tight break-words sm:text-3xl lg:text-4xl ${accent.price}`}>
             {(() => {
               const value = pricingView === "yearly" ? Number(plan.yearlyPrice ?? 0) : Number(plan.monthlyPrice ?? 0);
               return value === 0 ? "Free" : `₹${value}`;
@@ -450,17 +451,17 @@ export default function PlansPage() {
       {/* ── Page header ── */}
       <div className="flex min-w-0 flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div className="flex min-w-0 items-start gap-3">
-          <span className={`mt-1 shrink-0 ${saIconBadgeCls}`}>
+          <span className={`mt-1 flex shrink-0 items-center justify-center ${saIconBadgeCls}`}>
             <CreditCard className="size-5" />
           </span>
           <div className="min-w-0">
-            <h1 className="admin-page-title break-words text-2xl font-semibold tracking-tight">Plans & Pricing</h1>
+            <h1 className="admin-page-title break-words text-xl font-semibold tracking-tight sm:text-2xl">Plans & Pricing</h1>
             <p className="admin-page-desc mt-1 text-sm">
               Define subscription tiers for your SaaS. Assign plans to restaurants.
             </p>
           </div>
         </div>
-        <div className="flex w-full min-w-0 flex-col items-stretch gap-2 sm:w-auto sm:flex-row sm:flex-wrap sm:items-center sm:justify-end">
+        <div className="admin-page-header-actions">
           <div className="grid w-full grid-cols-2 gap-1 sm:flex sm:w-auto sm:gap-2">
             <button
               type="button"
@@ -485,9 +486,12 @@ export default function PlansPage() {
               Manage Plans
             </button>
           </div>
-          <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">
-            <button type="button" onClick={fetchPlans}
-              className="cursor-pointer flex w-full items-center justify-center gap-1.5 rounded-xl border admin-shell-border px-3 py-2.5 text-sm font-medium text-zinc-400 transition-colors hover:border-zinc-500 hover:admin-shell-text sm:w-auto">
+          <button
+            type="button"
+            onClick={fetchPlans}
+              aria-label="Refresh plans"
+              className={raPageRefreshBtnCls}
+            >
               <RefreshCw className={`size-4 ${loading ? saSpinnerCls : ""}`} />
               <span className="sm:hidden">Refresh</span>
             </button>
@@ -495,7 +499,6 @@ export default function PlansPage() {
               className="cursor-pointer inline-flex w-full items-center justify-center gap-2 rounded-xl bg-sa-primary px-4 py-2.5 text-sm font-semibold text-zinc-950 transition-colors hover:brightness-110 sm:w-auto">
               <Plus className="size-4" /> New Plan
             </button>
-          </div>
         </div>
       </div>
 
@@ -538,6 +541,26 @@ export default function PlansPage() {
           </div>
         </div>
 
+        {loading ? (
+          <SuperAdminPageSkeleton
+            cards={4}
+            cardClassName="h-72"
+            cardCols="grid min-w-0 grid-cols-1 gap-5 pt-2 sm:grid-cols-2 lg:grid-cols-4"
+            rows={0}
+          />
+        ) : previewPlans.length === 0 ? (
+          <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-dashed admin-shell-border py-16 text-center">
+            <CreditCard className="size-10 text-zinc-700" />
+            <p className="text-sm admin-surface-muted">No plans to preview yet.</p>
+            <button
+              type="button"
+              onClick={openCreate}
+              className="cursor-pointer rounded-xl bg-sa-primary px-4 py-2 text-sm font-semibold text-zinc-950 hover:brightness-110"
+            >
+              Create First Plan
+            </button>
+          </div>
+        ) : (
         <div className="grid min-w-0 grid-cols-1 gap-5 pt-2 sm:grid-cols-2 lg:grid-cols-4">
           {previewPlans.map((plan) => (
             <PricingCard
@@ -548,6 +571,7 @@ export default function PlansPage() {
             />
           ))}
         </div>
+        )}
       </section>
       )}
 
@@ -556,13 +580,40 @@ export default function PlansPage() {
       ══════════════════════════════════════════ */}
       {activeTab === "manage" && (
       <section className="min-w-0">
-        <div className="mb-5 min-w-0">
-          <h2 className="text-base font-semibold admin-shell-text">Manage Plans</h2>
-          <p className="mt-0.5 text-xs admin-surface-muted">Create, edit, or delete plans stored in the database.</p>
+        <div className="mb-5 flex min-w-0 flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+          <div className="min-w-0">
+            <h2 className="text-base font-semibold admin-shell-text">Manage Plans</h2>
+            <p className="mt-0.5 text-xs admin-surface-muted">Create, edit, or delete plans stored in the database.</p>
+          </div>
+          <div className="admin-surface-segment-track inline-flex w-full max-w-xs rounded-xl border p-1 sm:w-auto sm:max-w-none">
+            <button
+              type="button"
+              onClick={() => setPricingView("monthly")}
+              className={`flex-1 cursor-pointer rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors sm:flex-none ${
+                pricingView === "monthly" ? "bg-sa-primary text-zinc-950" : "admin-surface-muted hover:bg-[var(--admin-hover)]"
+              }`}
+            >
+              Monthly
+            </button>
+            <button
+              type="button"
+              onClick={() => setPricingView("yearly")}
+              className={`flex-1 cursor-pointer rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors sm:flex-none ${
+                pricingView === "yearly" ? "bg-sa-primary text-zinc-950" : "admin-surface-muted hover:bg-[var(--admin-hover)]"
+              }`}
+            >
+              Yearly
+            </button>
+          </div>
         </div>
 
         {loading ? (
-          <SuperAdminPageSkeleton cards={4} cardClassName="h-48" rows={0} />
+          <SuperAdminPageSkeleton
+            cards={4}
+            cardClassName="h-48"
+            cardCols="grid min-w-0 grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4"
+            rows={0}
+          />
         ) : plans.length === 0 ? (
           <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-dashed admin-shell-border py-16 text-center">
             <CreditCard className="size-10 text-zinc-700" />
@@ -587,7 +638,7 @@ export default function PlansPage() {
                     )}
                   </div>
                   <div className="mt-3">
-                    <span className={`text-2xl font-bold ${c.icon}`}>
+                    <span className={`text-xl font-bold break-words sm:text-2xl ${c.icon}`}>
                       {(() => {
                         const value = pricingView === "yearly"
                           ? Number(p.yearlyPrice ?? ((p.monthlyPrice ?? p.price ?? 0) * 12))

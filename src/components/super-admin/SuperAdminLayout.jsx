@@ -9,13 +9,12 @@ import {
   adminShell,
   adminSurface,
 } from "@/config/adminSurfaceClasses";
-import BhojDeskLogo from "@/components/brand/BhojDeskLogo";
 import SuperAdminPreloader from "./SuperAdminPreloader";
 import SuperAdminSidebar from "./SuperAdminSidebar";
-import { BHOJDESK_BRAND } from "@/config/bhojdeskBrand";
 import ChangePasswordModal from "@/components/rms/ChangePasswordModal";
 import InboxDropdown, { HeaderInboxBadge, InboxCountBadge } from "@/components/rms/InboxDropdown";
 import MobileDrawer from "@/components/rms/MobileDrawer";
+import { SuperAdminLocaleProvider } from "@/context/SuperAdminLocaleContext";
 import { useUser } from "@/context/AuthContext";
 import { useInbox } from "@/hooks/useInbox";
 import { useAnchoredPortalPosition } from "@/hooks/useAnchoredPortalPosition";
@@ -52,6 +51,7 @@ export default function SuperAdminLayout({ children }) {
     if (typeof window === "undefined") return true;
     return window.matchMedia("(min-width: 768px)").matches;
   });
+  const touchRef = useRef({ active: false, x: 0, y: 0 });
   const {
     loading: inboxLoading,
     messages,
@@ -96,6 +96,26 @@ export default function SuperAdminLayout({ children }) {
     setMobileOpen(false);
   }, [pathname]);
 
+  const onTouchStart = (event) => {
+    if (mdUp) return;
+    const touch = event.touches?.[0];
+    if (!touch) return;
+    touchRef.current = { active: true, x: touch.clientX, y: touch.clientY };
+  };
+
+  const onTouchEnd = (event) => {
+    if (mdUp) return;
+    if (!touchRef.current.active) return;
+    const touch = event.changedTouches?.[0];
+    if (!touch) return;
+    const dx = touch.clientX - touchRef.current.x;
+    const dy = touch.clientY - touchRef.current.y;
+    touchRef.current.active = false;
+    if (Math.abs(dx) < 70 || Math.abs(dy) > 60) return;
+    if (!mobileOpen && touchRef.current.x < 24 && dx > 0) setMobileOpen(true);
+    if (mobileOpen && dx < 0) setMobileOpen(false);
+  };
+
   useEffect(() => {
     if (!mobileOpen) return;
     setIsProfileOpen(false);
@@ -136,7 +156,11 @@ export default function SuperAdminLayout({ children }) {
   const avatarSrc = normalizeLogoSrc(user.avatarUrl);
 
   return (
-    <div className={`super-admin-panel flex min-w-0 max-w-[100vw] overflow-x-hidden ${adminShell.layout}`}>
+    <div
+      className={`super-admin-panel flex min-w-0 max-w-[100vw] overflow-x-hidden ${adminShell.layout}`}
+      onTouchStart={onTouchStart}
+      onTouchEnd={onTouchEnd}
+    >
       <div className="hidden h-full shrink-0 md:flex">
         <SuperAdminSidebar />
       </div>
@@ -151,9 +175,10 @@ export default function SuperAdminLayout({ children }) {
 
       <div className="flex min-w-0 max-w-full flex-1 flex-col">
         <header
-          className={`${adminShell.header} admin-shell-header h-14 min-w-0 w-full max-w-full gap-2 overflow-x-hidden px-3 backdrop-blur-md sm:gap-4 sm:px-4 md:h-16`}
+          className={`${adminShell.header} admin-shell-header relative isolate flex h-14 min-h-[3.5rem] min-w-0 w-full max-w-full items-center gap-2 overflow-x-hidden px-3 backdrop-blur-md sm:gap-4 sm:px-4 md:h-16`}
+          style={{ paddingTop: "max(0px, env(safe-area-inset-top))" }}
         >
-          <div className="flex min-w-0 flex-1 items-center gap-2 sm:max-w-none sm:flex-initial sm:gap-3">
+          <div className="relative z-10 flex min-w-0 shrink-0 items-center gap-2 sm:gap-3">
             {!mdUp ? (
               <button
                 type="button"
@@ -164,28 +189,19 @@ export default function SuperAdminLayout({ children }) {
               >
                 <Menu className="size-5" aria-hidden />
               </button>
-            ) : null}
-
-            {!mdUp ? (
-              <div className="flex min-w-0 flex-1 items-center justify-center gap-2 px-1">
-                <BhojDeskLogo variant="icon" height={28} className="shrink-0" />
-                <span className={`truncate text-sm font-semibold ${adminSurface.title}`}>
-                  {BHOJDESK_BRAND.shortName}
-                </span>
+            ) : (
+              <div className="hidden min-w-0 md:block">
+                <p className={`truncate text-xs font-medium uppercase tracking-widest ${adminSurface.muted}`}>
+                  Super Admin Console
+                </p>
+                <p className={`truncate text-sm font-semibold ${adminSurface.title}`}>
+                  Platform control workspace
+                </p>
               </div>
-            ) : null}
-
-            <div className="hidden min-w-0 md:block">
-              <p className={`truncate text-xs font-medium uppercase tracking-widest ${adminSurface.muted}`}>
-                Super Admin Console
-              </p>
-              <p className={`truncate text-sm font-semibold ${adminSurface.title}`}>
-                Platform control workspace
-              </p>
-            </div>
+            )}
           </div>
 
-          <div className="ml-auto flex min-w-0 shrink-0 flex-nowrap items-center justify-end gap-1 sm:gap-2 lg:gap-3">
+          <div className="relative z-10 ml-auto flex min-w-0 shrink-0 flex-nowrap items-center justify-end gap-1 sm:gap-2 lg:gap-3">
             <div className="hidden shrink-0 lg:block">
               <div className="admin-search-wrap relative">
                 <Search className="admin-search-icon" strokeWidth={2} aria-hidden />
@@ -197,8 +213,9 @@ export default function SuperAdminLayout({ children }) {
               </div>
             </div>
 
+            <AdminColorModeToggle portal="sa" className="shrink-0" />
+
             <div ref={inboxRef} className="relative hidden items-center gap-1 sm:flex sm:gap-2">
-              <AdminColorModeToggle portal="sa" />
               <button
                 ref={messagesBtnRef}
                 type="button"
@@ -253,10 +270,6 @@ export default function SuperAdminLayout({ children }) {
                 accent="sa"
                 anchorRef={notificationsBtnRef}
               />
-            </div>
-
-            <div className="flex shrink-0 items-center gap-1 sm:hidden">
-              <AdminColorModeToggle portal="sa" />
             </div>
 
             <div className={`hidden h-8 w-px shrink-0 ${adminShell.divider} md:block`} aria-hidden />
@@ -387,7 +400,7 @@ export default function SuperAdminLayout({ children }) {
         <main
           className={`${adminShell.pageContent} relative z-0 flex-1 overflow-y-auto overflow-x-hidden p-4 sm:p-6`}
         >
-          {children}
+          <SuperAdminLocaleProvider>{children}</SuperAdminLocaleProvider>
         </main>
       </div>
       <ChangePasswordModal

@@ -40,7 +40,7 @@ export default function SettingsSidebar({ tabs, activeTab, onTabChange }) {
         Settings Menu
       </p>
       <div ref={navRef} className="min-w-0 overflow-visible px-0.5">
-        <AdminSideNavList className="gap-1.5 pb-1 lg:gap-0.5 lg:overflow-visible lg:pb-0 [scrollbar-width:none]">
+        <AdminSideNavList className="gap-1.5 pb-1 [scrollbar-width:none] lg:gap-0.5 lg:overflow-visible lg:pb-0 [&::-webkit-scrollbar]:hidden">
           <NavItems tabs={tabs} activeTab={activeTab} onTabChange={onTabChange} />
         </AdminSideNavList>
       </div>

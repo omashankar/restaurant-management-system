@@ -36,8 +36,8 @@ export default function HeaderLayoutEditor({
     <div className="space-y-5">
       <div className="flex flex-col gap-3 admin-surface-divider-b pb-4 sm:flex-row sm:items-start sm:justify-between">
         <div className="min-w-0">
-          <h3 className="admin-surface-title text-lg font-semibold">Edit Header</h3>
-          <p className="text-sm admin-surface-muted">Navbar, top bar, colors, and menu links</p>
+          <h3 className="admin-surface-title break-words text-lg font-semibold">Edit Header</h3>
+          <p className="break-words text-sm admin-surface-muted">Navbar, top bar, colors, and menu links</p>
         </div>
         <button
           type="button"

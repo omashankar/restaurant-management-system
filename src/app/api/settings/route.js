@@ -1,5 +1,11 @@
-import { EMPTY_SETTINGS } from "@/config/settingsConfig";
+import { normalizeAccessControl } from "@/config/accessControlConfig";
+import {
+  EMPTY_SETTINGS,
+  normalizeDateFormat,
+  normalizeTimeFormat,
+} from "@/config/settingsConfig";
 import { resolveRestaurantAdminTheme } from "@/lib/restaurantAdminThemeRuntime";
+import { sanitizeOpeningHoursSchedule } from "@/lib/reservationUtils";
 import { validateRestaurantSettingsPatch } from "@/lib/restaurantSettingsValidation";
 import { deleteUploadedImageIfReplaced } from "@/lib/uploadImage";
 import { withTenant } from "@/lib/tenantDb";
@@ -58,6 +64,41 @@ function sanitizeThemeSection(incoming = {}) {
   return resolveRestaurantAdminTheme({ ...EMPTY_SETTINGS.theme, ...incoming });
 }
 
+function sanitizeNotificationsSection(incoming = {}) {
+  const base = { ...EMPTY_SETTINGS.notifications };
+  const out = { ...base, ...(incoming || {}) };
+  for (const key of Object.keys(base)) {
+    out[key] = Boolean(out[key]);
+  }
+  return out;
+}
+
+function sanitizeOpeningHoursSection(incoming = []) {
+  return sanitizeOpeningHoursSchedule(incoming);
+}
+
+function sanitizeAccessControlSection(incoming = {}) {
+  return normalizeAccessControl(incoming);
+}
+
+function sanitizeGeneralSection(incoming = {}, existing = {}) {
+  const merged = {
+    ...EMPTY_SETTINGS.general,
+    ...(existing ?? {}),
+    ...(incoming ?? {}),
+  };
+  merged.restaurantName = String(merged.restaurantName ?? "").trim();
+  merged.logoUrl = String(merged.logoUrl ?? "").trim();
+  merged.currency = String(merged.currency ?? EMPTY_SETTINGS.general.currency).trim()
+    || EMPTY_SETTINGS.general.currency;
+  merged.timezone = String(merged.timezone ?? EMPTY_SETTINGS.general.timezone).trim()
+    || EMPTY_SETTINGS.general.timezone;
+  merged.language = "English";
+  merged.dateFormat = normalizeDateFormat(merged.dateFormat);
+  merged.timeFormat = normalizeTimeFormat(merged.timeFormat);
+  return merged;
+}
+
 /* ── GET /api/settings ── */
 export const GET = withTenant(
   ["admin", "manager", "waiter", "chef"],
@@ -73,7 +114,12 @@ export const GET = withTenant(
       const stored = doc?.[section] ?? null;
 
       if (Array.isArray(def)) {
-        settings[section] = Array.isArray(stored) ? stored : def;
+        settings[section] =
+          section === "openingHours"
+            ? sanitizeOpeningHoursSection(Array.isArray(stored) ? stored : def)
+            : Array.isArray(stored)
+              ? stored
+              : def;
       } else {
         settings[section] = { ...def, ...(stored ?? {}) };
       }
@@ -95,10 +141,9 @@ export const GET = withTenant(
       : null;
     const restaurantSlug = restaurantDoc?.slug ?? null;
     if (settings.general) {
-      settings.general = {
-        ...settings.general,
-        logoUrl: restaurantDoc?.logoUrl?.trim() || settings.general.logoUrl?.trim() || "",
-      };
+      settings.general = sanitizeGeneralSection(settings.general);
+      settings.general.logoUrl =
+        restaurantDoc?.logoUrl?.trim() || settings.general.logoUrl?.trim() || "";
     }
 
     return Response.json({ success: true, settings, restaurantSlug });
@@ -128,11 +173,13 @@ export const PATCH = withTenant(["admin"], async ({ db, restaurantId }, request)
     } else if (body.section === "theme") {
       updateFields.theme = sanitizeThemeSection(body.data);
     } else if (body.section === "general") {
-      updateFields.general = {
-        ...EMPTY_SETTINGS.general,
-        ...(existing?.general ?? {}),
-        ...body.data,
-      };
+      updateFields.general = sanitizeGeneralSection(body.data, existing?.general);
+    } else if (body.section === "notifications") {
+      updateFields.notifications = sanitizeNotificationsSection(body.data);
+    } else if (body.section === "openingHours") {
+      updateFields.openingHours = sanitizeOpeningHoursSection(body.data);
+    } else if (body.section === "accessControl") {
+      updateFields.accessControl = sanitizeAccessControlSection(body.data);
     } else {
       updateFields[body.section] = body.data;
     }
@@ -146,11 +193,13 @@ export const PATCH = withTenant(["admin"], async ({ db, restaurantId }, request)
       } else if (section === "theme") {
         updateFields.theme = sanitizeThemeSection(body[section]);
       } else if (section === "general") {
-        updateFields.general = {
-          ...EMPTY_SETTINGS.general,
-          ...(existing?.general ?? {}),
-          ...body[section],
-        };
+        updateFields.general = sanitizeGeneralSection(body[section], existing?.general);
+      } else if (section === "notifications") {
+        updateFields.notifications = sanitizeNotificationsSection(body[section]);
+      } else if (section === "openingHours") {
+        updateFields.openingHours = sanitizeOpeningHoursSection(body[section]);
+      } else if (section === "accessControl") {
+        updateFields.accessControl = sanitizeAccessControlSection(body[section]);
       } else {
         updateFields[section] = body[section];
       }
@@ -175,7 +224,11 @@ export const PATCH = withTenant(["admin"], async ({ db, restaurantId }, request)
   const validation = validateRestaurantSettingsPatch(mergedForValidation, sectionsToValidate);
   if (!validation.valid) {
     return Response.json(
-      { success: false, error: validation.message ?? "Validation failed." },
+      {
+        success: false,
+        error: validation.message ?? "Validation failed.",
+        tabs: validation.tabs,
+      },
       { status: 422 }
     );
   }

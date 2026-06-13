@@ -1,8 +1,8 @@
 "use client";
 
 import SidebarBrand from "@/components/rms/SidebarBrand";
-import { BHOJDESK_BRAND } from "@/config/bhojdeskBrand";
-import { resolveAdminPlatformBranding } from "@/lib/resolveBrandLogos";
+import { usePlatformConfig } from "@/hooks/usePlatformConfig";
+import { resolveSuperAdminSidebarBranding } from "@/lib/resolveBrandLogos";
 import {
   BarChart3,
   Building2,
@@ -25,7 +25,6 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 
 const STORAGE_KEY = "sa-sidebar-collapsed";
-const PLATFORM = resolveAdminPlatformBranding();
 
 const NAV = [
   { href: "/super-admin/dashboard", label: "Dashboard", Icon: LayoutDashboard },
@@ -42,6 +41,14 @@ const NAV = [
 ];
 
 export default function SuperAdminSidebar({ mobile = false, onNavigate, onClose }) {
+  const { config } = usePlatformConfig();
+  const branding = useMemo(
+    () => resolveSuperAdminSidebarBranding({
+      appName: config.appName,
+      logoUrl: config.logoUrl,
+    }),
+    [config.appName, config.logoUrl],
+  );
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(() => {
     if (typeof window === "undefined") return false;
@@ -166,9 +173,9 @@ export default function SuperAdminSidebar({ mobile = false, onNavigate, onClose 
       <div className={`flex h-16 shrink-0 items-center justify-between gap-2 ${adminShell.borderB} px-3`}>
         <div className="min-w-0 flex-1">
           <SidebarBrand
-            collapsed={showCollapsed}
-            name={PLATFORM.name}
-            logoUrl={PLATFORM.sidebarLogoUrl}
+            collapsed={showCollapsed && !mobile}
+            name={branding.name}
+            logoUrl={branding.sidebarLogoUrl}
             portal="super-admin"
           />
         </div>
@@ -196,7 +203,7 @@ export default function SuperAdminSidebar({ mobile = false, onNavigate, onClose 
       </div>
 
       <div className="flex min-h-0 flex-1 flex-col justify-between">
-        <nav className="flex-1 space-y-0.5 overflow-y-auto p-2">
+        <nav className="flex-1 space-y-0.5 overflow-y-auto overscroll-y-contain p-2 [-webkit-overflow-scrolling:touch]">
           {navItems.map(({ href, label, Icon, badgeKey }) => {
             const active = isActive(href);
             const badge = badgeKey === "contact" ? contactNewCount : 0;
@@ -246,7 +253,11 @@ export default function SuperAdminSidebar({ mobile = false, onNavigate, onClose 
                   }`}
                   aria-hidden
                 />
-                {!showCollapsed ? <span className="truncate">{label}</span> : <span className="sr-only">{label}</span>}
+                {!showCollapsed ? (
+                  <span className={mobile ? "min-w-0 break-words leading-snug" : "truncate"}>{label}</span>
+                ) : (
+                  <span className="sr-only">{label}</span>
+                )}
                 {badge > 0 ? (
                   <span
                     className={`${
@@ -264,9 +275,9 @@ export default function SuperAdminSidebar({ mobile = false, onNavigate, onClose 
         <div className={`border-t ${adminShell.borderT} p-2`}>
           <p
             className={`text-center text-xs ${adminSurface.muted} ${showCollapsed ? "px-0" : "px-2"}`}
-            title={showCollapsed ? `${BHOJDESK_BRAND.name} © ${new Date().getFullYear()}` : undefined}
+            title={showCollapsed ? `${branding.name} © ${new Date().getFullYear()}` : undefined}
           >
-            {showCollapsed ? "©" : `${BHOJDESK_BRAND.name} © ${new Date().getFullYear()}`}
+            {showCollapsed ? "©" : `${branding.name} © ${new Date().getFullYear()}`}
           </p>
         </div>
       </div>

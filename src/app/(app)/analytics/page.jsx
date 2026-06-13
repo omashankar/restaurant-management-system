@@ -1,23 +1,24 @@
 "use client";
 
-import { raIconBadgeCls } from "@/config/restaurantAdminTheme";
+import { raIconBadgeCls, raSpinnerCls, raPageRefreshBtnCls } from "@/config/restaurantAdminTheme";
 import dynamic from "next/dynamic";
 import {
   BarChart3, DollarSign, RefreshCw,
   ShoppingBag, TrendingUp, Trophy,
 } from "lucide-react";
+import { useAdminLocale } from "@/context/RestaurantLocaleContext";
 import { formatAdminMoney } from "@/lib/adminCurrency";
 import TopItemsTable from "@/components/analytics/TopItemsTable";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 const TenantAnalyticsCharts = dynamic(
   () => import("@/components/analytics/TenantAnalyticsCharts"),
   {
     ssr: false,
     loading: () => (
-      <div className="grid gap-6 lg:grid-cols-2">
+      <div className="grid min-w-0 gap-6 lg:grid-cols-2">
         {Array.from({ length: 4 }).map((_, i) => (
-          <div key={i} className="h-64 animate-pulse admin-surface-card" />
+          <div key={i} className="h-64 animate-pulse rounded-2xl admin-surface-card" />
         ))}
       </div>
     ),
@@ -34,11 +35,11 @@ function KpiCard({ title, value, subtitle, icon: Icon, color = "emerald" }) {
   };
   const c = colors[color] ?? colors.emerald;
   return (
-    <div className="admin-surface-card p-4 sm:p-5">
+    <div className="min-w-0 admin-surface-card p-4 sm:p-5">
       <div className="flex min-w-0 items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
-          <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500">{title}</p>
-          <p className={`mt-2 break-words text-xl font-bold sm:text-2xl ${c.val}`}>{value}</p>
+          <p className="break-words text-xs font-semibold uppercase tracking-wider text-zinc-500">{title}</p>
+          <p className={`mt-2 break-all text-xl font-bold tabular-nums sm:text-2xl ${c.val}`}>{value}</p>
           {subtitle && <p className="mt-1 text-xs leading-snug admin-surface-faint">{subtitle}</p>}
         </div>
         <span className={`flex size-10 shrink-0 items-center justify-center rounded-xl ring-1 ${c.bg} ${c.ring}`}>
@@ -55,49 +56,82 @@ const RANGES = [
   { label: "90 days", value: "90" },
 ];
 
+function AnalyticsPageSkeleton() {
+  return (
+    <div className="min-w-0 space-y-6 overflow-x-hidden">
+      <div className="flex min-w-0 flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div className="space-y-2">
+          <div className="h-8 w-32 animate-pulse rounded-lg admin-progress-track" />
+          <div className="h-4 w-64 max-w-full animate-pulse rounded admin-progress-track" />
+        </div>
+        <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
+          <div className="h-10 w-full animate-pulse rounded-xl admin-surface-card sm:w-52" />
+          <div className="h-10 w-full animate-pulse rounded-xl admin-surface-card sm:w-24" />
+        </div>
+      </div>
+      <div className="grid min-w-0 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <div key={i} className="h-28 animate-pulse rounded-2xl admin-surface-card" />
+        ))}
+      </div>
+      <div className="grid min-w-0 gap-6 lg:grid-cols-2">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <div key={i} className="h-64 animate-pulse rounded-2xl admin-surface-card" />
+        ))}
+      </div>
+      <div className="h-48 animate-pulse rounded-2xl admin-surface-card" />
+    </div>
+  );
+}
+
 export default function AnalyticsPage() {
+  const { formatDate } = useAdminLocale();
   const [data, setData]     = useState(null);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [fetchError, setFetchError] = useState(null);
   const [range, setRange]   = useState("30");
+  const hadDataRef = useRef(false);
 
-  const fetchAnalytics = useCallback(async () => {
-    setLoading(true);
+  const fetchAnalytics = useCallback(async (silent = false) => {
+    if (silent) {
+      setRefreshing(true);
+    } else {
+      setLoading(true);
+    }
     setFetchError(null);
     try {
       const res  = await fetch(`/api/analytics?range=${range}`, { cache: "no-store" });
       const json = await res.json();
       if (res.ok && json.success) {
         setData(json);
+        hadDataRef.current = true;
       } else {
         setFetchError(json?.error ?? "Could not load analytics.");
-        setData(null);
+        if (!silent) setData(null);
       }
     } catch {
       setFetchError("Network error while loading analytics.");
-      setData(null);
+      if (!silent) setData(null);
     } finally {
-      setLoading(false);
+      if (silent) setRefreshing(false);
+      else setLoading(false);
     }
   }, [range]);
 
-  useEffect(() => { fetchAnalytics(); }, [fetchAnalytics]);
+  useEffect(() => {
+    fetchAnalytics(hadDataRef.current);
+  }, [fetchAnalytics]);
+
+  const refreshAnalytics = useCallback(async () => {
+    await fetchAnalytics(true);
+  }, [fetchAnalytics]);
 
   /* ── Skeleton ── */
   if (loading) {
     return (
-      <div className="min-w-0 w-full max-w-full space-y-6 overflow-x-hidden">
-        <div className="h-8 w-40 animate-pulse rounded-lg admin-progress-track" />
-        <div className="grid min-w-0 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-          {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="h-28 animate-pulse admin-surface-card" />
-          ))}
-        </div>
-        <div className="grid min-w-0 gap-6 lg:grid-cols-2">
-          {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="h-64 animate-pulse admin-surface-card" />
-          ))}
-        </div>
+      <div className="min-w-0 w-full max-w-full overflow-x-hidden">
+        <AnalyticsPageSkeleton />
       </div>
     );
   }
@@ -111,11 +145,11 @@ export default function AnalyticsPage() {
 
   const chartData = dailyRev.map((d) => ({
     ...d,
-    label: new Date(d.date + "T00:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric" }),
+    label: formatDate(d.date, { style: "short" }),
   }));
 
   return (
-    <div className="min-w-0 w-full max-w-full space-y-6 overflow-x-hidden">
+    <div className={`min-w-0 w-full max-w-full space-y-6 overflow-x-hidden transition-opacity duration-200 ${refreshing ? "opacity-70" : ""}`}>
 
       <div className="flex min-w-0 flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div className="flex min-w-0 items-start gap-3">
@@ -123,24 +157,39 @@ export default function AnalyticsPage() {
             <BarChart3 className="size-5" />
           </span>
           <div className="min-w-0">
-            <h1 className="admin-page-title text-2xl font-semibold tracking-tight">Analytics</h1>
-            <p className="admin-page-desc mt-1 text-sm">Revenue, orders, and performance insights.</p>
+            <h1 className="admin-page-title break-words text-xl font-semibold tracking-tight sm:text-2xl">Analytics</h1>
+            <p className="admin-page-desc mt-1 break-words text-sm">Revenue, orders, and performance insights.</p>
           </div>
         </div>
-        <div className="flex w-full min-w-0 flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">
-          <div className="flex min-w-0 overflow-x-auto rounded-xl border admin-shell-border p-0.5 [scrollbar-width:none]">
+        <div className="admin-page-header-actions">
+          <div
+            className="admin-surface-segment-track flex w-full min-w-0 overflow-x-auto p-0.5 [-ms-overflow-style:none] [scrollbar-width:none] sm:w-auto [&::-webkit-scrollbar]:hidden"
+            role="group"
+            aria-label="Date range"
+          >
             {RANGES.map((r) => (
-              <button key={r.value} type="button" onClick={() => setRange(r.value)}
-                className={`shrink-0 cursor-pointer whitespace-nowrap rounded-lg px-3 py-1.5 text-xs font-semibold transition-all ${
-                  range === r.value ? "bg-ra-primary text-zinc-950" : "text-zinc-500 hover:admin-surface-body"
-                }`}>
+              <button
+                key={r.value}
+                type="button"
+                onClick={() => setRange(r.value)}
+                aria-pressed={range === r.value}
+                className={`min-h-9 shrink-0 cursor-pointer whitespace-nowrap rounded-lg border border-transparent px-3 py-2 text-xs font-semibold transition-[background-color,color] ${
+                  range === r.value
+                    ? "bg-ra-primary text-zinc-950"
+                    : "admin-surface-muted hover:bg-[var(--admin-hover)] hover:admin-surface-body"
+                }`}
+              >
                 {r.label}
               </button>
             ))}
           </div>
-          <button type="button" onClick={fetchAnalytics}
-            className="inline-flex w-full cursor-pointer items-center justify-center gap-1.5 rounded-xl border admin-shell-border px-3 py-2 text-xs font-medium text-zinc-400 transition-colors hover:border-zinc-500 hover:admin-shell-text sm:w-auto">
-            <RefreshCw className="size-3.5" />
+          <button
+            type="button"
+            onClick={refreshAnalytics}
+            disabled={refreshing}
+            className={raPageRefreshBtnCls}
+          >
+            <RefreshCw className={`size-4 ${refreshing ? raSpinnerCls : ""}`} />
             Refresh
           </button>
         </div>

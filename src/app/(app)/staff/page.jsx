@@ -1,6 +1,6 @@
 "use client";
 
-import { raIconBadgeCls, raInputCls } from "@/config/restaurantAdminTheme";
+import { raFilterSelectCls, raIconBadgeCls, raInputCls, raSpinnerCls, raPageRefreshBtnCls, raPagePrimaryBtnCls } from "@/config/restaurantAdminTheme";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import DataTableShell from "@/components/ui/DataTableShell";
 import {
@@ -38,12 +38,50 @@ const ROLE_LABEL  = { manager: "Manager", waiter: "Waiter", chef: "Chef" };
 
 const emptyForm = { name: "", role: "waiter", phone: "", email: "", password: "", status: "active" };
 
+function StaffPageSkeleton() {
+  return (
+    <div className="min-w-0 space-y-6 overflow-x-hidden">
+      <div className="flex min-w-0 flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div className="space-y-2">
+          <div className="h-8 w-24 animate-pulse rounded-lg admin-progress-track" />
+          <div className="h-4 w-44 max-w-full animate-pulse rounded admin-progress-track" />
+        </div>
+        <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
+          <div className="h-10 w-full animate-pulse rounded-xl admin-surface-card sm:w-24" />
+          <div className="h-10 w-full animate-pulse rounded-xl admin-surface-card sm:w-32" />
+        </div>
+      </div>
+      <div className="flex min-w-0 flex-col gap-3 lg:flex-row lg:items-center">
+        <div className="h-10 w-full max-w-md animate-pulse rounded-xl admin-surface-card" />
+        <div className="h-10 w-full animate-pulse rounded-xl admin-surface-card sm:w-36" />
+      </div>
+      <div className="space-y-2 md:hidden">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <div key={i} className="animate-pulse rounded-xl border admin-shell-border bg-[var(--admin-surface-soft)] p-3">
+            <div className="flex gap-3">
+              <div className="size-8 shrink-0 rounded-full admin-progress-track" />
+              <div className="min-w-0 flex-1 space-y-2">
+                <div className="h-4 w-2/3 rounded admin-progress-track" />
+                <div className="h-5 w-24 rounded-full admin-progress-track" />
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+      <div className="hidden md:block">
+        <TableSkeleton rows={8} cols={5} />
+      </div>
+    </div>
+  );
+}
+
 export default function StaffModulePage() {
   const { user } = useUser();
   const { staffRows, setStaffRows } = useModuleData();
   const isAdmin = user?.role === "admin";
 
   const [loading, setLoading]     = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [fetchError, setFetchError] = useState(null);
   const [roleFilter, setRoleFilter] = useState("all");
   const [modalOpen, setModalOpen]   = useState(false);
@@ -57,25 +95,37 @@ export default function StaffModulePage() {
   const { showToast, ToastUI } = useToast();
 
   /* â”€â”€ Fetch staff from DB â”€â”€ */
-  const fetchStaff = useCallback(async () => {
-    setLoading(true);
-    setFetchError(null);
+  const fetchStaff = useCallback(async (silent = false) => {
+    if (!silent) {
+      setLoading(true);
+      setFetchError(null);
+    }
     try {
       const res  = await fetch("/api/users/staff", { cache: "no-store" });
       const data = await res.json();
       if (res.ok && data.success && Array.isArray(data.staff)) {
         setStaffRows(data.staff);
-      } else {
+      } else if (!silent) {
         setFetchError(data?.error ?? "Could not load staff.");
       }
     } catch {
-      setFetchError("Network error while loading staff.");
+      if (!silent) setFetchError("Network error while loading staff.");
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   }, [setStaffRows]);
 
   useEffect(() => { fetchStaff(); }, [fetchStaff]);
+
+  const refreshStaff = useCallback(async () => {
+    setRefreshing(true);
+    setFetchError(null);
+    try {
+      await fetchStaff(true);
+    } finally {
+      setRefreshing(false);
+    }
+  }, [fetchStaff]);
 
   const filterFn = useCallback(
     (row) => roleFilter === "all" ? true : row.role === roleFilter,
@@ -188,9 +238,8 @@ export default function StaffModulePage() {
 
   if (loading) {
     return (
-      <div className="min-w-0 w-full max-w-full space-y-6 overflow-x-hidden">
-        <div className="h-8 w-28 animate-pulse rounded-lg admin-progress-track" />
-        <TableSkeleton rows={8} cols={5} />
+      <div className="min-w-0 w-full max-w-full overflow-x-hidden">
+        <StaffPageSkeleton />
       </div>
     );
   }
@@ -217,18 +266,23 @@ export default function StaffModulePage() {
             <Users className="size-5" />
           </span>
           <div className="min-w-0">
-            <h1 className="admin-page-title text-2xl font-semibold tracking-tight">Staff</h1>
-            <p className="admin-page-desc mt-1 text-sm">Team roster · {total} member{total !== 1 ? "s" : ""}</p>
+            <h1 className="admin-page-title break-words text-xl font-semibold tracking-tight sm:text-2xl">Staff</h1>
+            <p className="admin-page-desc mt-1 break-words text-sm">Team roster · {total} member{total !== 1 ? "s" : ""}</p>
           </div>
         </div>
-        <div className="flex w-full min-w-0 flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">
-          <button type="button" onClick={fetchStaff}
-            className="inline-flex w-full cursor-pointer items-center justify-center gap-1.5 rounded-xl border admin-shell-border px-3 py-2 text-xs font-medium text-zinc-400 transition-colors hover:border-zinc-500 hover:admin-shell-text sm:w-auto">
-            <RefreshCw className="size-3.5" /> Refresh
+        <div className="admin-page-header-actions">
+          <button
+            type="button"
+            onClick={refreshStaff}
+            disabled={refreshing}
+            className={raPageRefreshBtnCls}
+          >
+            <RefreshCw className={`size-4 ${refreshing ? raSpinnerCls : ""}`} />
+            Refresh
           </button>
           {isAdmin && (
             <button type="button" onClick={openCreate}
-              className="inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-ra-primary px-4 py-2.5 text-sm font-semibold text-zinc-950 hover:brightness-110 sm:w-auto">
+              className={raPagePrimaryBtnCls}>
               <Plus className="size-4" /> Add Staff
             </button>
           )}
@@ -247,8 +301,12 @@ export default function StaffModulePage() {
         onSearchChange={setSearch}
         searchPlaceholder="Search name, email, phone…"
         filterSlot={
-          <select value={roleFilter} onChange={(e) => setRoleFilter(e.target.value)}
-            className="w-full cursor-pointer admin-surface-card px-3 py-2 text-sm admin-shell-text sm:w-auto">
+          <select
+            value={roleFilter}
+            onChange={(e) => setRoleFilter(e.target.value)}
+            className={`${raFilterSelectCls} w-full sm:w-auto`}
+            aria-label="Filter by role"
+          >
             <option value="all">All roles</option>
             {STAFF_ROLES.map((r) => <option key={r} value={r}>{ROLE_LABEL[r]}</option>)}
           </select>
@@ -261,8 +319,11 @@ export default function StaffModulePage() {
           title="No staff members"
           description="Add your team to manage shifts and access."
           action={isAdmin && (
-            <button type="button" onClick={openCreate}
-              className="cursor-pointer rounded-xl bg-ra-primary px-4 py-2 text-sm font-semibold text-zinc-950 hover:brightness-110">
+            <button
+              type="button"
+              onClick={openCreate}
+              className="inline-flex w-full cursor-pointer items-center justify-center rounded-xl bg-ra-primary px-4 py-2 text-sm font-semibold text-zinc-950 hover:brightness-110 sm:w-auto"
+            >
               Add Staff
             </button>
           )}
@@ -297,7 +358,12 @@ export default function StaffModulePage() {
                       <AdminTableIconButton onClick={() => openEdit(row)} aria-label="Edit">
                         <Pencil className="size-4" />
                       </AdminTableIconButton>
-                      <AdminTableIconButton variant="danger" onClick={() => setDeleteTarget(row)} aria-label="Delete">
+                      <AdminTableIconButton
+                        variant="danger"
+                        onClick={() => setDeleteTarget(row)}
+                        disabled={row.id === user?.id}
+                        aria-label="Delete"
+                      >
                         <Trash2 className="size-4" />
                       </AdminTableIconButton>
                     </div>
@@ -330,12 +396,12 @@ export default function StaffModulePage() {
             <AdminTableBody>
               {pageRows.map((row) => (
                 <AdminTableRow key={row.id}>
-                  <AdminTableTd>
+                  <AdminTableTd className="min-w-0 max-w-[12rem] sm:max-w-none">
                     <div className="flex min-w-0 items-center gap-3">
                       <span className="flex size-8 shrink-0 items-center justify-center rounded-full admin-rank-badge text-xs font-bold admin-surface-body ring-1 ring-zinc-700">
                         {row.name?.[0]?.toUpperCase()}
                       </span>
-                      <span className="truncate font-medium admin-shell-text">{row.name}</span>
+                      <span className="min-w-0 truncate font-medium admin-shell-text">{row.name}</span>
                     </div>
                   </AdminTableTd>
                   <AdminTableTd>
@@ -343,7 +409,7 @@ export default function StaffModulePage() {
                       {ROLE_LABEL[row.role] ?? row.role}
                     </span>
                   </AdminTableTd>
-                  <AdminTableTd hidden="md" className="break-all admin-surface-muted">{row.email}</AdminTableTd>
+                  <AdminTableTd hidden="md" className="max-w-[14rem] min-w-0 break-all admin-surface-muted">{row.email}</AdminTableTd>
                   <AdminTableTd hidden="md" className="tabular-nums admin-surface-muted">{row.phone || "—"}</AdminTableTd>
                   <AdminTableTd>
                     <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold capitalize ring-1 ${statusBadgeCls(row.status)}`}>
@@ -355,7 +421,12 @@ export default function StaffModulePage() {
                       <AdminTableIconButton onClick={() => openEdit(row)} aria-label="Edit">
                         <Pencil className="size-4" />
                       </AdminTableIconButton>
-                      <AdminTableIconButton variant="danger" onClick={() => setDeleteTarget(row)} aria-label="Delete">
+                      <AdminTableIconButton
+                        variant="danger"
+                        onClick={() => setDeleteTarget(row)}
+                        disabled={row.id === user?.id}
+                        aria-label="Delete"
+                      >
                         <Trash2 className="size-4" />
                       </AdminTableIconButton>
                     </AdminTableActionsCell>
@@ -390,7 +461,7 @@ export default function StaffModulePage() {
           </div>
         }
       >
-        <div className="space-y-4">
+        <div className="min-w-0 space-y-4">
           {formError && (
             <p className="rounded-xl border border-red-500/20 bg-red-500/10 px-3 py-2 text-xs text-red-400">{formError}</p>
           )}

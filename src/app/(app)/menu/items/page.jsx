@@ -1,6 +1,6 @@
 "use client";
 
-import { raIconBadgeCls, raInputCls, raTextareaCls } from "@/config/restaurantAdminTheme";
+import { raIconBadgeCls, raInputCls, raSpinnerCls, raTextareaCls, raPageRefreshBtnCls, raPagePrimaryBtnCls } from "@/config/restaurantAdminTheme";
 import MenuCard from "@/components/menu/MenuCard";
 import MenuItemImageField from "@/components/menu/MenuItemImageField";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
@@ -39,7 +39,7 @@ const emptyForm = { name: "", categoryId: "", price: "", description: "", status
 
 function GridSkeleton() {
   return (
-    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+    <div className="grid min-w-0 grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
       {Array.from({ length: 8 }).map((_, i) => (
         <div key={i} className="overflow-hidden admin-surface-card animate-pulse">
           <div className="aspect-[5/3] admin-progress-track" />
@@ -54,10 +54,41 @@ function GridSkeleton() {
   );
 }
 
+function MenuItemsPageSkeleton() {
+  return (
+    <div className="min-w-0 space-y-6 overflow-x-hidden">
+      <div className="flex min-w-0 flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div className="space-y-2">
+          <div className="h-8 w-44 animate-pulse rounded-lg admin-progress-track" />
+          <div className="h-4 w-64 max-w-full animate-pulse rounded admin-progress-track" />
+        </div>
+        <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
+          <div className="h-10 w-full animate-pulse rounded-xl admin-surface-card sm:w-24" />
+          <div className="h-10 w-full animate-pulse rounded-xl admin-surface-card sm:w-32" />
+        </div>
+      </div>
+      <div className="grid min-w-0 grid-cols-3 gap-2 sm:gap-3">
+        {Array.from({ length: 3 }).map((_, i) => (
+          <div key={i} className="h-16 animate-pulse rounded-2xl admin-surface-card" />
+        ))}
+      </div>
+      <div className="flex min-w-0 flex-col gap-3 lg:flex-row lg:items-center">
+        <div className="h-10 w-full animate-pulse rounded-full admin-surface-card lg:flex-1" />
+        <div className="flex min-w-0 flex-col gap-2 sm:flex-row">
+          <div className="h-10 w-full animate-pulse rounded-xl admin-surface-card sm:w-48" />
+          <div className="h-10 w-full animate-pulse rounded-xl admin-surface-card sm:w-20" />
+        </div>
+      </div>
+      <GridSkeleton />
+    </div>
+  );
+}
+
 export default function MenuItemsPage() {
   const [items, setItems]           = useState([]);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading]       = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [saving, setSaving]         = useState(false);
   const [activeCategory, setActiveCategory] = useState("all");
   const [viewMode, setViewMode]     = useState("grid"); // grid | list
@@ -73,32 +104,48 @@ export default function MenuItemsPage() {
   const { showToast, ToastUI }          = useToast();
 
   /* ── Fetch items + categories ── */
-  const fetchAll = useCallback(async () => {
-    setLoading(true);
-    setFetchError("");
+  const fetchAll = useCallback(async (silent = false) => {
+    if (!silent) {
+      setLoading(true);
+      setFetchError("");
+    }
     try {
       const [itemsRes, catsRes] = await Promise.all([
-        fetch("/api/menu"),
-        fetch("/api/categories"),
+        fetch("/api/menu", { cache: "no-store" }),
+        fetch("/api/categories", { cache: "no-store" }),
       ]);
       const [itemsData, catsData] = await Promise.all([itemsRes.json(), catsRes.json()]);
       if (!itemsRes.ok || !catsRes.ok) {
-        setFetchError(
-          itemsData?.error ?? catsData?.error ?? "Could not load menu data."
-        );
+        if (!silent) {
+          setFetchError(
+            itemsData?.error ?? catsData?.error ?? "Could not load menu data."
+          );
+        }
         return;
       }
       if (itemsData.success)  setItems(itemsData.items);
       if (catsData.success)   setCategories(catsData.categories);
-      if (!itemsData.success || !catsData.success) {
+      if (!silent && (!itemsData.success || !catsData.success)) {
         setFetchError("Could not load menu data.");
       }
     } catch {
-      setFetchError("Could not load menu data. Check your connection and try again.");
-    } finally { setLoading(false); }
+      if (!silent) setFetchError("Could not load menu data. Check your connection and try again.");
+    } finally {
+      if (!silent) setLoading(false);
+    }
   }, []);
 
   useEffect(() => { fetchAll(); }, [fetchAll]);
+
+  const refreshItems = useCallback(async () => {
+    setRefreshing(true);
+    setFetchError("");
+    try {
+      await fetchAll(true);
+    } finally {
+      setRefreshing(false);
+    }
+  }, [fetchAll]);
 
   const {
     search,
@@ -183,14 +230,14 @@ export default function MenuItemsPage() {
         const data = await res.json();
         if (!data.success) { setFormError(data.error ?? "Failed to update."); return; }
         setItems((prev) => prev.map((m) => m.id === editingId ? { ...m, ...body } : m));
-        await Promise.all([refreshMenu(), fetchAll()]);
+        await Promise.all([refreshMenu(), fetchAll(true)]);
         showToast("Item updated successfully.");
       } else {
         const res  = await fetch("/api/menu", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
         const data = await res.json();
         if (!data.success) { setFormError(data.error ?? "Failed to create."); return; }
         setItems((prev) => [data.item, ...prev]);
-        await Promise.all([refreshMenu(), fetchAll()]);
+        await Promise.all([refreshMenu(), fetchAll(true)]);
         showToast("Item created successfully.");
       }
       setModalOpen(false);
@@ -206,7 +253,7 @@ export default function MenuItemsPage() {
       const data = await res.json();
       if (!data.success) { showToast(data.error ?? "Failed to delete.", "error"); return; }
       setItems((prev) => prev.filter((m) => m.id !== deleteTarget.id));
-      await Promise.all([refreshMenu(), fetchAll()]);
+      await Promise.all([refreshMenu(), fetchAll(true)]);
       showToast(`"${deleteTarget.name}" deleted.`);
       setDeleteTarget(null);
     } catch { showToast("Network error.", "error"); }
@@ -215,9 +262,8 @@ export default function MenuItemsPage() {
 
   if (loading) {
     return (
-      <div className="min-w-0 w-full max-w-full space-y-8 overflow-x-hidden">
-        <div className="h-10 w-64 animate-pulse rounded-lg admin-progress-track" />
-        <GridSkeleton />
+      <div className="min-w-0 w-full max-w-full overflow-x-hidden">
+        <MenuItemsPageSkeleton />
       </div>
     );
   }
@@ -236,18 +282,22 @@ export default function MenuItemsPage() {
             <UtensilsCrossed className="size-5" />
           </span>
           <div className="min-w-0">
-            <h1 className="admin-page-title text-2xl font-semibold tracking-tight md:text-3xl">Menu Items</h1>
-            <p className="admin-page-desc mt-1 text-sm">Full catalog · filter, search, and update.</p>
+            <h1 className="admin-page-title break-words text-xl font-semibold tracking-tight sm:text-2xl md:text-3xl">Menu Items</h1>
+            <p className="admin-page-desc mt-1 break-words text-sm">Full catalog · filter, search, and update.</p>
           </div>
         </div>
-        <div className="flex w-full min-w-0 flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">
-          <button type="button" onClick={fetchAll}
-            className="inline-flex w-full cursor-pointer items-center justify-center gap-1.5 rounded-xl border admin-shell-border px-3 py-2.5 text-sm font-medium text-zinc-400 transition-colors hover:border-zinc-500 hover:admin-shell-text sm:w-auto">
-            <RefreshCw className="size-4" />
-            <span className="sm:hidden">Refresh</span>
+        <div className="admin-page-header-actions">
+          <button
+            type="button"
+            onClick={refreshItems}
+            disabled={refreshing}
+            className={raPageRefreshBtnCls}
+          >
+            <RefreshCw className={`size-4 ${refreshing ? raSpinnerCls : ""}`} />
+            Refresh
           </button>
           <button type="button" onClick={openCreate}
-            className="inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-ra-primary px-5 py-2.5 text-sm font-bold text-zinc-950 shadow-ra-primary-glow hover:brightness-110 active:scale-[0.98] sm:w-auto">
+            className={raPagePrimaryBtnCls}>
             <Plus className="size-4" strokeWidth={2.5} /> Add Item
           </button>
         </div>
@@ -270,15 +320,19 @@ export default function MenuItemsPage() {
       {/* Category tabs + search + view toggle */}
       <div className="flex min-w-0 flex-col gap-3 lg:flex-row lg:items-center">
         {/* Category pills */}
-        <div className="min-w-0 flex-1 overflow-x-auto bg-transparent pb-1 [scrollbar-width:none]">
+        <div className="min-w-0 flex-1 overflow-x-auto bg-transparent pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           <div className="flex min-w-max gap-2 bg-transparent">
             {[{ id: "all", name: "All" }, ...categoriesWithItems].map((cat) => (
-              <button key={cat.id} type="button" onClick={() => setActiveCategory(cat.id)}
-                className={`cursor-pointer rounded-full px-4 py-2 text-sm font-semibold transition-all ${
+              <button
+                key={cat.id}
+                type="button"
+                onClick={() => setActiveCategory(cat.id)}
+                className={`shrink-0 cursor-pointer rounded-full border box-border px-4 py-2 text-sm font-semibold transition-[background-color,color,border-color] ${
                   activeCategory === cat.id
-                    ? "bg-ra-primary text-zinc-950 shadow-ra-primary-glow"
-                    : "border admin-shell-border bg-[var(--admin-surface)] text-[var(--admin-text-secondary)] shadow-sm hover:bg-[var(--admin-hover)]"
-                }`}>
+                    ? "border-transparent bg-ra-primary text-zinc-950 shadow-ra-primary-glow"
+                    : "admin-shell-border bg-[var(--admin-surface)] text-[var(--admin-text-secondary)] shadow-sm hover:bg-[var(--admin-hover)]"
+                }`}
+              >
                 {cat.name}
               </button>
             ))}
@@ -295,14 +349,30 @@ export default function MenuItemsPage() {
             inputClassName="focus-ra-primary"
           />
           {/* View toggle */}
-          <div className="flex w-full rounded-xl border admin-shell-border p-0.5 sm:w-auto">
-            <button type="button" onClick={() => setViewMode("grid")}
-              className={`flex flex-1 cursor-pointer items-center justify-center gap-1 rounded-lg px-3 py-1.5 text-xs font-semibold transition-all sm:flex-none ${viewMode === "grid" ? "bg-ra-primary text-zinc-950" : "text-zinc-500 hover:admin-surface-body"}`}>
-              <LayoutGrid className="size-3.5" />
+          <div className="admin-surface-segment-track flex w-full p-0.5 sm:w-auto">
+            <button
+              type="button"
+              onClick={() => setViewMode("grid")}
+              aria-pressed={viewMode === "grid"}
+              className={`flex min-h-9 flex-1 cursor-pointer items-center justify-center gap-1 rounded-lg border border-transparent px-3 py-2 text-xs font-semibold transition-[background-color,color] sm:flex-none ${
+                viewMode === "grid"
+                  ? "bg-ra-primary text-zinc-950"
+                  : "admin-surface-muted hover:bg-[var(--admin-hover)] hover:admin-surface-body"
+              }`}
+            >
+              <LayoutGrid className="size-3.5 shrink-0" aria-hidden />
             </button>
-            <button type="button" onClick={() => setViewMode("list")}
-              className={`flex flex-1 cursor-pointer items-center justify-center gap-1 rounded-lg px-3 py-1.5 text-xs font-semibold transition-all sm:flex-none ${viewMode === "list" ? "bg-ra-primary text-zinc-950" : "text-zinc-500 hover:admin-surface-body"}`}>
-              <List className="size-3.5" />
+            <button
+              type="button"
+              onClick={() => setViewMode("list")}
+              aria-pressed={viewMode === "list"}
+              className={`flex min-h-9 flex-1 cursor-pointer items-center justify-center gap-1 rounded-lg border border-transparent px-3 py-2 text-xs font-semibold transition-[background-color,color] sm:flex-none ${
+                viewMode === "list"
+                  ? "bg-ra-primary text-zinc-950"
+                  : "admin-surface-muted hover:bg-[var(--admin-hover)] hover:admin-surface-body"
+              }`}
+            >
+              <List className="size-3.5 shrink-0" aria-hidden />
             </button>
           </div>
         </div>
@@ -313,7 +383,15 @@ export default function MenuItemsPage() {
         <EmptyState
           title="No items found"
           description={search ? "Try a different search." : "Add your first menu item."}
-          action={<button type="button" onClick={openCreate} className="cursor-pointer rounded-xl bg-ra-primary px-4 py-2 text-sm font-semibold text-zinc-950 hover:brightness-110">Add Item</button>}
+          action={
+            <button
+              type="button"
+              onClick={openCreate}
+              className="inline-flex w-full cursor-pointer items-center justify-center rounded-xl bg-ra-primary px-4 py-2 text-sm font-semibold text-zinc-950 hover:brightness-110 sm:w-auto"
+            >
+              Add Item
+            </button>
+          }
         />
       ) : viewMode === "grid" ? (
         <>
@@ -400,7 +478,7 @@ export default function MenuItemsPage() {
                 <AdminTableBody>
                   {pageRows.map((item) => (
                     <AdminTableRow key={item.id}>
-                      <AdminTableTd className="max-w-[12rem] font-medium admin-shell-text sm:max-w-none">
+                      <AdminTableTd className="max-w-[12rem] min-w-0 font-medium admin-shell-text sm:max-w-none">
                         <span className="inline-flex min-w-0 items-center gap-1.5">
                           <span className="shrink-0">
                             <AdminFoodTypeIndicator type={item.itemType} size={13} />
@@ -459,7 +537,7 @@ export default function MenuItemsPage() {
             </button>
           </div>
         }>
-        <div className="space-y-4">
+        <div className="min-w-0 space-y-4">
           {formError && <p className="rounded-xl border border-red-500/20 bg-red-500/10 px-3 py-2 text-xs text-red-400">{formError}</p>}
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="sm:col-span-2">

@@ -1,6 +1,6 @@
 "use client";
 
-import { raBtnPrimaryCls, raBtnPrimarySmCls, raIconBadgeCls, raInputCls } from "@/config/restaurantAdminTheme";
+import { raBtnPrimaryCls, raBtnPrimarySmCls, raIconBadgeCls, raInputCls, raSpinnerCls, raPageRefreshBtnCls } from "@/config/restaurantAdminTheme";
 import { useToast } from "@/hooks/useToast";
 import { validateQrMenuConfig } from "@/lib/restaurantSettingsValidation";
 import { Download, ExternalLink, Printer, Table2, RefreshCw } from "lucide-react";
@@ -65,6 +65,29 @@ function RealQrCode({ value, size = 220, restaurantName = "", canvasId = "qr-pre
   );
 }
 
+function QrMenuPageSkeleton() {
+  return (
+    <div className="min-w-0 space-y-6 overflow-x-hidden">
+      <div className="flex min-w-0 items-start gap-3">
+        <div className="size-10 shrink-0 animate-pulse rounded-2xl admin-surface-card" />
+        <div className="min-w-0 flex-1 space-y-2">
+          <div className="h-8 w-48 max-w-full animate-pulse rounded-lg admin-progress-track" />
+          <div className="h-4 w-full max-w-md animate-pulse rounded admin-progress-track" />
+        </div>
+      </div>
+      <div className="h-16 animate-pulse rounded-xl admin-surface-card" />
+      <div className="grid min-w-0 gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(260px,320px)]">
+        <div className="order-1 h-80 animate-pulse rounded-2xl admin-surface-card lg:order-2" />
+        <div className="order-2 space-y-4 lg:order-1">
+          <div className="h-40 animate-pulse rounded-2xl admin-surface-card" />
+          <div className="h-24 animate-pulse rounded-2xl admin-surface-card" />
+          <div className="h-32 animate-pulse rounded-2xl admin-surface-card" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function QrMenuPage() {
   const qrCanvasId = "qr-preview-canvas";
   const [qrType, setQrType]         = useState("restaurant");
@@ -74,6 +97,8 @@ export default function QrMenuPage() {
   const [restaurantName, setRestaurantName] = useState("My Restaurant");
   const [restaurantSlug, setRestaurantSlug] = useState("");
   const [floorTables, setFloorTables] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [settingsError, setSettingsError] = useState(null);
   const [printingSingle, setPrintingSingle] = useState(false);
   const [printingAll, setPrintingAll] = useState(false);
@@ -87,49 +112,51 @@ export default function QrMenuPage() {
     return Array.from({ length: tableCount }, (_, i) => String(i + 1));
   }, [floorTables, tableCount]);
 
+  const loadContext = useCallback(async (silent = false) => {
+    if (!silent) {
+      setLoading(true);
+    } else {
+      setRefreshing(true);
+    }
+    setSettingsError(null);
+    try {
+      const [settingsRes, tablesRes] = await Promise.all([
+        fetch("/api/settings", { cache: "no-store" }),
+        fetch("/api/tables", { cache: "no-store" }),
+      ]);
+      const [settingsData, tablesData] = await Promise.all([
+        settingsRes.json(),
+        tablesRes.json(),
+      ]);
+
+      if (settingsRes.ok && settingsData?.success) {
+        if (settingsData.settings?.general?.restaurantName) {
+          setRestaurantName(settingsData.settings.general.restaurantName);
+        }
+        if (settingsData.restaurantSlug) {
+          setRestaurantSlug(settingsData.restaurantSlug);
+        }
+      } else if (!silent) {
+        setSettingsError(settingsData?.error ?? "Could not load restaurant settings.");
+      }
+
+      if (tablesRes.ok && tablesData?.success && Array.isArray(tablesData.tables)) {
+        setFloorTables(tablesData.tables);
+        const first = tablesData.tables[0]?.tableNumber;
+        if (first) setTableNumber(String(first));
+      }
+    } catch {
+      if (!silent) setSettingsError("Network error while loading QR settings.");
+    } finally {
+      if (silent) setRefreshing(false);
+      else setLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
     setBaseUrl(window.location.origin);
-    let alive = true;
-
-    async function loadContext() {
-      setSettingsError(null);
-      try {
-        const [settingsRes, tablesRes] = await Promise.all([
-          fetch("/api/settings", { cache: "no-store" }),
-          fetch("/api/tables", { cache: "no-store" }),
-        ]);
-        const [settingsData, tablesData] = await Promise.all([
-          settingsRes.json(),
-          tablesRes.json(),
-        ]);
-        if (!alive) return;
-
-        if (settingsRes.ok && settingsData?.success) {
-          if (settingsData.settings?.general?.restaurantName) {
-            setRestaurantName(settingsData.settings.general.restaurantName);
-          }
-          if (settingsData.restaurantSlug) {
-            setRestaurantSlug(settingsData.restaurantSlug);
-          }
-        } else {
-          setSettingsError(settingsData?.error ?? "Could not load restaurant settings.");
-        }
-
-        if (tablesRes.ok && tablesData?.success && Array.isArray(tablesData.tables)) {
-          setFloorTables(tablesData.tables);
-          const first = tablesData.tables[0]?.tableNumber;
-          if (first) setTableNumber(String(first));
-        }
-      } catch {
-        if (alive) setSettingsError("Network error while loading QR settings.");
-      }
-    }
-
     loadContext();
-    return () => {
-      alive = false;
-    };
-  }, []);
+  }, [loadContext]);
 
   useEffect(() => {
     if (!tableNumber && tableNumbers.length > 0) {
@@ -365,18 +392,39 @@ export default function QrMenuPage() {
     });
   }
 
+  if (loading) {
+    return (
+      <div className="min-w-0 w-full max-w-full overflow-x-hidden">
+        <QrMenuPageSkeleton />
+      </div>
+    );
+  }
+
   return (
-    <div className="min-w-0 w-full max-w-full space-y-6 overflow-x-hidden">
+    <div className={`min-w-0 w-full max-w-full space-y-6 overflow-x-hidden transition-opacity duration-200 ${refreshing ? "opacity-70" : ""}`}>
       {/* Header */}
-      <div className="flex min-w-0 items-start gap-3">
-        <span className={`mt-1 shrink-0 ${raIconBadgeCls}`}>
-          <Table2 className="size-5" />
-        </span>
-        <div className="min-w-0">
-          <h1 className="admin-page-title text-xl font-semibold tracking-tight sm:text-2xl">QR Menu System</h1>
-          <p className="admin-page-desc mt-1 text-sm">
-            Generate real scannable QR codes. Customers scan → menu opens → order placed.
-          </p>
+      <div className="flex min-w-0 flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div className="flex min-w-0 items-start gap-3">
+          <span className={`mt-1 shrink-0 ${raIconBadgeCls}`}>
+            <Table2 className="size-5" />
+          </span>
+          <div className="min-w-0">
+            <h1 className="admin-page-title break-words text-xl font-semibold tracking-tight sm:text-2xl">QR Menu System</h1>
+            <p className="admin-page-desc mt-1 break-words text-sm">
+              Generate real scannable QR codes. Customers scan → menu opens → order placed.
+            </p>
+          </div>
+        </div>
+        <div className="admin-page-header-actions">
+        <button
+          type="button"
+          onClick={() => loadContext(true)}
+          disabled={refreshing}
+          className={raPageRefreshBtnCls}
+        >
+          <RefreshCw className={`size-4 ${refreshing ? raSpinnerCls : ""}`} />
+          Refresh
+        </button>
         </div>
       </div>
 
@@ -392,7 +440,7 @@ export default function QrMenuPage() {
           <span className="shrink-0 text-lg">🔗</span>
           <div className="min-w-0 flex-1">
             <p className="text-sm font-semibold text-ra-primary-muted">Multi-Restaurant URL Active</p>
-            <p className="mt-0.5 break-all text-xs text-ra-primary/80 sm:truncate">
+            <p className="mt-0.5 break-all text-xs text-ra-primary/80">
               Customer site: <span className="font-mono">{baseUrl}/r/{restaurantSlug}/</span>
             </p>
           </div>
@@ -402,7 +450,7 @@ export default function QrMenuPage() {
           <span className="shrink-0 text-lg">⚠️</span>
           <div className="min-w-0 flex-1">
             <p className="text-sm font-semibold text-amber-300">Restaurant Slug Set Nahi Hai</p>
-            <p className="mt-0.5 text-xs text-amber-400/80">
+            <p className="mt-0.5 break-words text-xs text-amber-400/80">
               Super Admin → Restaurants mein apna slug set karo taaki unique customer URL mile.
             </p>
           </div>
@@ -415,18 +463,18 @@ export default function QrMenuPage() {
 
           {/* QR Type */}
           <section className="admin-surface-card p-4 sm:p-5">
-            <h2 className="mb-4 text-base font-semibold admin-shell-text">QR Code Type</h2>
+            <h2 className="mb-4 break-words text-base font-semibold admin-shell-text">QR Code Type</h2>
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
               {QR_TYPES.map((type) => (
                 <button key={type.id} type="button"
                   onClick={() => setQrType(type.id)}
-                  className={`cursor-pointer rounded-xl border p-4 text-left transition-all ${
+                  className={`cursor-pointer rounded-xl border box-border p-4 text-left transition-[background-color,border-color,box-shadow] ${
                     qrType === type.id
-                      ? "border-ra-primary-40 bg-ra-primary-10 ring-1 ring-ra-primary-25"
-                      : "border admin-shell-border bg-[var(--admin-hover)] hover:border-[var(--admin-border)]"
+                      ? "border-ra-primary-40 bg-ra-primary-10 ring-1 ring-inset ring-ra-primary-25"
+                      : "admin-shell-border bg-[var(--admin-hover)] hover:border-[var(--admin-border)]"
                   }`}>
                   <div className="text-2xl mb-2">{type.icon}</div>
-                  <p className={`text-sm font-semibold ${qrType === type.id ? "text-ra-primary" : "admin-shell-text"}`}>
+                  <p className={`break-words text-sm font-semibold ${qrType === type.id ? "text-ra-primary" : "admin-shell-text"}`}>
                     {type.label}
                   </p>
                   <p className="mt-0.5 text-xs admin-surface-muted">{type.desc}</p>
@@ -437,7 +485,7 @@ export default function QrMenuPage() {
 
           {/* Restaurant name */}
           <section className="admin-surface-card p-4 sm:p-5">
-            <h2 className="mb-3 text-base font-semibold admin-shell-text">Label on QR</h2>
+            <h2 className="mb-3 break-words text-base font-semibold admin-shell-text">Label on QR</h2>
             <input value={restaurantName} onChange={(e) => setRestaurantName(e.target.value)}
               placeholder="Restaurant name shown below QR"
               className={raInputCls} />
@@ -446,7 +494,7 @@ export default function QrMenuPage() {
           {/* Table config */}
           {qrType === "table" && (
             <section className="admin-surface-card p-4 sm:p-5">
-              <h2 className="mb-4 text-base font-semibold admin-shell-text">Table Configuration</h2>
+              <h2 className="mb-4 break-words text-base font-semibold admin-shell-text">Table Configuration</h2>
               <div className="grid gap-4 sm:grid-cols-2">
                 <div>
                   <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide admin-surface-muted">
@@ -493,17 +541,17 @@ export default function QrMenuPage() {
                 <p className="mb-2 text-xs font-semibold uppercase tracking-wider admin-surface-muted">
                   Select Table to Preview
                 </p>
-                <div className="grid grid-cols-3 gap-1.5 sm:grid-cols-4 sm:gap-2 md:grid-cols-6 lg:grid-cols-8">
+                <div className="grid max-h-[14rem] grid-cols-3 gap-1.5 overflow-y-auto pr-1 sm:max-h-none sm:grid-cols-4 sm:gap-2 md:grid-cols-6 lg:grid-cols-8">
                   {tableNumbers.slice(0, 40).map((tn, index) => (
                     <button key={`${tn}-${index}`} type="button"
                       onClick={() => setTableNumber(tn)}
-                      className={`admin-table-pick-btn cursor-pointer flex flex-col items-center justify-center gap-0.5 rounded-xl border py-2 text-xs font-semibold transition-all ${
+                      className={`admin-table-pick-btn cursor-pointer flex min-h-9 flex-col items-center justify-center gap-0.5 rounded-xl border box-border px-1 py-2 text-xs font-semibold transition-[background-color,border-color] ${
                         tableNumber === tn
-                          ? "border-ra-primary-40 bg-ra-primary-10 text-ra-primary ring-1 ring-ra-primary-25"
+                          ? "border-ra-primary-40 bg-ra-primary-10 text-ra-primary ring-1 ring-inset ring-ra-primary-25"
                           : "admin-shell-border bg-[var(--admin-surface)] admin-surface-muted hover:bg-[var(--admin-hover)] hover:admin-surface-body"
                       }`}>
                       <Table2 className="size-3.5 shrink-0" aria-hidden />
-                      {tn}
+                      <span className="max-w-full truncate">{tn}</span>
                     </button>
                   ))}
                 </div>
@@ -527,9 +575,9 @@ export default function QrMenuPage() {
 
           {/* QR URL */}
           <section className="admin-surface-card p-4 sm:p-5">
-            <h2 className="mb-3 text-base font-semibold admin-shell-text">QR URL</h2>
+            <h2 className="mb-3 break-words text-base font-semibold admin-shell-text">QR URL</h2>
             <div className="flex min-w-0 items-center gap-2 rounded-xl border admin-shell-border admin-surface-card px-3 py-2.5">
-              <span className="min-w-0 flex-1 break-all font-mono text-[11px] text-zinc-400 sm:truncate sm:text-xs">{getQrValue()}</span>
+              <span className="min-w-0 flex-1 break-all font-mono text-[11px] text-zinc-400 sm:text-xs">{getQrValue()}</span>
               <button type="button"
                 onClick={copyUrl}
                 className="cursor-pointer shrink-0 text-xs admin-surface-muted hover:admin-surface-body transition-colors">
@@ -551,9 +599,9 @@ export default function QrMenuPage() {
         </div>
 
         {/* Right: QR Preview — first on mobile so staff see QR without long scroll */}
-        <div className="min-w-0 space-y-4 order-1 lg:order-2 lg:sticky lg:top-4 lg:self-start">
+        <div className="min-w-0 space-y-4 order-1 lg:order-2 lg:sticky lg:top-20 lg:self-start scroll-mt-16">
           <section className="admin-surface-card p-4 sm:p-5">
-            <h2 className="mb-4 text-base font-semibold admin-shell-text">Live Preview</h2>
+            <h2 className="mb-4 break-words text-base font-semibold admin-shell-text">Live Preview</h2>
 
             <div className="flex flex-col items-center gap-4">
               <div className="w-full max-w-[252px] rounded-2xl border-2 border-zinc-200 bg-white p-3 shadow-lg sm:p-4">
@@ -571,8 +619,8 @@ export default function QrMenuPage() {
                 )}
               </div>
 
-              <div className="text-center">
-                <p className="text-sm font-semibold admin-shell-text">
+              <div className="min-w-0 text-center">
+                <p className="break-words text-sm font-semibold admin-shell-text">
                   {qrType === "table" ? `Table ${tableNumber}` : restaurantName}
                 </p>
                 <p className="mt-0.5 text-xs admin-surface-muted">Scan to order</p>
@@ -608,11 +656,11 @@ export default function QrMenuPage() {
                 { step: "3", text: "Customer adds items and places order" },
                 { step: "4", text: "Order appears in POS & Kitchen Display" },
               ].map(({ step, text }) => (
-                <div key={step} className="flex items-start gap-2.5 text-xs admin-surface-muted">
+                <div key={step} className="flex min-w-0 items-start gap-2.5 text-xs admin-surface-muted">
                   <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-ra-primary-15 text-[10px] font-bold text-ra-primary">
                     {step}
                   </span>
-                  {text}
+                  <span className="min-w-0 break-words">{text}</span>
                 </div>
               ))}
             </div>

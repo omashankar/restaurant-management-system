@@ -1,5 +1,6 @@
 "use client";
 
+import { raPageRefreshBtnCls } from "@/config/restaurantAdminTheme";
 import SuperAdminPageSkeleton from "@/components/super-admin/SuperAdminPageSkeleton";
 import AdminSectionHeader from "@/components/ui/AdminSectionHeader";
 import { AdminSideNav, AdminSideNavItem, AdminSideNavList } from "@/components/ui/AdminSideNav";
@@ -1295,6 +1296,15 @@ export default function LandingSitePage() {
     setActiveTab(id);
     setSectionErrors({});
     panelRef.current?.scrollTo({ top: 0, behavior: "smooth" });
+    if (typeof window !== "undefined" && window.matchMedia("(max-width: 1023px)").matches) {
+      requestAnimationFrame(() => {
+        document.getElementById(`landing-tab-${id}`)?.scrollIntoView({
+          inline: "center",
+          block: "nearest",
+          behavior: "smooth",
+        });
+      });
+    }
   };
 
   const panelValidationProps = {
@@ -1305,25 +1315,32 @@ export default function LandingSitePage() {
   const sectionData = content?.[activeTab] ?? {};
 
   return (
-    <div className="min-w-0 w-full max-w-full space-y-6 overflow-x-hidden">
+    <div className="min-w-0 w-full max-w-full space-y-6 overflow-x-hidden sm:space-y-10">
 
       {/* ── Page header ── */}
       <div className="flex min-w-0 flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div className="flex min-w-0 items-start gap-3">
-          <span className={`mt-1 shrink-0 ${saIconBadgeCls}`}>
+          <span className={`mt-1 flex shrink-0 items-center justify-center ${saIconBadgeCls}`}>
             <Globe className="size-5" />
           </span>
           <div className="min-w-0">
-            <h1 className="admin-page-title break-words text-2xl font-semibold tracking-tight">Landing Site</h1>
-            <p className="admin-page-desc mt-1 text-sm">
+            <h1 className="admin-page-title break-words text-xl font-semibold tracking-tight sm:text-2xl">Landing Site</h1>
+            <p className="admin-page-desc mt-1 break-words text-sm">
               Manage your public-facing website content. Changes go live immediately.
             </p>
           </div>
         </div>
-        <Link href="/?preview=1" target="_blank"
-          className="inline-flex w-full cursor-pointer items-center justify-center gap-1.5 rounded-xl border admin-shell-border px-3 py-2.5 text-xs font-medium text-zinc-400 transition-colors hover:border-zinc-500 hover:admin-shell-text sm:w-auto">
+        <div className="admin-page-header-actions">
+        <Link
+          href="/?preview=1"
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="Preview landing site in new tab"
+          className={raPageRefreshBtnCls}
+        >
           <Globe className="size-3.5" /> Preview Site
         </Link>
+        </div>
       </div>
 
       {loadError && (
@@ -1338,14 +1355,16 @@ export default function LandingSitePage() {
           <p className={`px-2 pb-2 pt-1 text-xs font-semibold uppercase tracking-wide ${adminSurface.muted}`}>
             Sections
           </p>
-          <AdminSideNavList className="lg:gap-0.5">
+          <AdminSideNavList className="scroll-px-2 snap-x snap-mandatory lg:snap-none lg:gap-0.5">
             {TABS.map(({ id, label, Icon }) => (
               <AdminSideNavItem
                 key={id}
+                id={`landing-tab-${id}`}
                 active={id === activeTab}
                 activeClassName={id === activeTab ? saSideNavActiveCls : ""}
                 onClick={() => switchTab(id)}
                 icon={Icon}
+                className="snap-start"
               >
                 {label}
               </AdminSideNavItem>
@@ -1445,14 +1464,26 @@ export default function LandingSitePage() {
                     </div>
                   </div>
                   <div className="space-y-2">
-                    {(content.pricing ?? []).map((item) => (
+                    {(content.pricing ?? []).length === 0 ? (
+                      <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-dashed admin-shell-border py-12 text-center">
+                        <CreditCard className="size-10 text-zinc-700" />
+                        <p className="text-sm admin-surface-muted">No plans synced yet.</p>
+                        <Link
+                          href="/super-admin/plans"
+                          className="inline-flex cursor-pointer rounded-xl bg-sa-primary px-4 py-2 text-sm font-semibold text-zinc-950 hover:brightness-110"
+                        >
+                          Open Plans
+                        </Link>
+                      </div>
+                    ) : (
+                    (content.pricing ?? []).map((item) => (
                       <div key={item.id ?? item.slug ?? item.name} className="min-w-0 admin-surface-card px-4 py-3">
                         <div className="flex min-w-0 flex-wrap items-center gap-2">
                           <p className="break-words text-sm font-medium admin-shell-text">{item.name}</p>
                           {item.badge && <span className="rounded-full bg-amber-500/15 px-2 py-0.5 text-[10px] font-semibold text-amber-400">{item.badge}</span>}
                           {item.highlight && <span className="rounded-full bg-indigo-500/15 px-2 py-0.5 text-[10px] font-semibold text-indigo-400">Featured</span>}
                         </div>
-                        <p className="text-xs font-semibold admin-surface-body">
+                        <p className="break-words text-xs font-semibold admin-surface-body">
                           {formatLandingCurrency(
                             pricingView === "yearly"
                               ? (item.yearlyPrice ?? item.price?.yearly ?? item.monthlyPrice ?? item.price?.monthly ?? 0)
@@ -1463,7 +1494,8 @@ export default function LandingSitePage() {
                         </p>
                         <p className="break-words text-xs admin-surface-muted">{item.description}</p>
                       </div>
-                    ))}
+                    ))
+                    )}
                   </div>
                 </div>
               )}

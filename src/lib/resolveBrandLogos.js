@@ -12,16 +12,38 @@ export function resolveAdminPlatformBranding() {
   };
 }
 
-/** Super Admin sidebar — always BhojDesk (platform chrome). */
-export function resolveAdminSidebarBranding() {
+/** Legacy full wordmarks — sidebar uses compact B icon instead */
+const SIDEBAR_HORIZONTAL_LOGOS = new Set([
+  BHOJDESK_LOGOS.horizontalDark,
+  BHOJDESK_LOGOS.horizontalLight,
+  BHOJDESK_LOGOS.lockupDarkBg,
+]);
+
+/** Super Admin sidebar — platform App settings override BhojDesk defaults. */
+export function resolveSuperAdminSidebarBranding({
+  appName = "",
+  logoUrl = "",
+} = {}) {
   const platform = resolveAdminPlatformBranding();
+  const customName = String(appName ?? "").trim();
+  const customLogo = normalizeLogoSrc(logoUrl);
+  const sidebarLogoUrl =
+    customLogo && !SIDEBAR_HORIZONTAL_LOGOS.has(customLogo)
+      ? customLogo
+      : BHOJDESK_LOGOS.icon;
+
   return {
-    name: platform.name,
+    name: customName || platform.name,
     tagline: platform.tagline,
-    sidebarLogoUrl: platform.sidebarLogoUrl,
-    hasCustomName: false,
-    hasCustomLogo: false,
+    sidebarLogoUrl,
+    hasCustomName: Boolean(customName),
+    hasCustomLogo: Boolean(customLogo && !SIDEBAR_HORIZONTAL_LOGOS.has(customLogo)),
   };
+}
+
+/** @deprecated Use resolveSuperAdminSidebarBranding */
+export function resolveAdminSidebarBranding() {
+  return resolveSuperAdminSidebarBranding();
 }
 
 /**

@@ -2,10 +2,14 @@
 
 import CustomerMobileInput from "@/components/customer/CustomerMobileInput";
 import TableCard from "@/components/table/TableCard";
+import { CUSTOMER_BOOKING_CAPACITY_FILTERS } from "@/config/customerBookingContent";
+import { useRestaurantInfo } from "@/hooks/useRestaurantInfo";
+import { useCustomerLocale } from "@/context/CustomerLocaleContext";
 import {
-  CUSTOMER_BOOKING_CAPACITY_FILTERS,
-  CUSTOMER_BOOKING_TIME_SLOTS,
-} from "@/config/customerBookingContent";
+  getTimeSlotsForDate,
+  isRestaurantClosedOnDate,
+  pickDefaultTimeSlot,
+} from "@/lib/reservationUtils";
 import { useCustomer } from "@/context/CustomerContext";
 import { useModuleData } from "@/context/ModuleDataContext";
 import { useRestaurantSlug } from "@/hooks/useRestaurantSlug";
@@ -60,6 +64,8 @@ function StepLine({ done }) {
 
 export default function TableBookingPage() {
   const { showToast } = useCustomer();
+  const { info } = useRestaurantInfo();
+  const { formatTimeSlot, formatDate, formatReservationSlot } = useCustomerLocale();
   const { floorTables, reservationRows, setReservationRows, tableCategories } = useModuleData();
   const { link } = useRestaurantSlug();
   const { content: cms } = useRestaurantCms();
@@ -76,6 +82,23 @@ export default function TableBookingPage() {
   const [customerAreaImages, setCustomerAreaImages] = useState({});
   const dateInputRef = useRef(null);
   const minBookingDate = useMemo(() => new Date().toISOString().slice(0, 10), []);
+
+  const timeSlots = useMemo(
+    () => getTimeSlotsForDate(info.openingHours, form.date),
+    [info.openingHours, form.date]
+  );
+
+  const closedOnSelectedDate = useMemo(
+    () => isRestaurantClosedOnDate(info.openingHours, form.date),
+    [info.openingHours, form.date]
+  );
+
+  useEffect(() => {
+    if (!form.date || timeSlots.length === 0) return;
+    if (!timeSlots.includes(form.time)) {
+      setForm((f) => ({ ...f, time: pickDefaultTimeSlot(timeSlots, f.time) }));
+    }
+  }, [form.date, form.time, timeSlots]);
 
   const set = (k, v) => setForm((f) => ({ ...f, [k]: v }));
   const normalizeAreaKey = (name) => String(name ?? "").trim().toLowerCase();
@@ -256,7 +279,7 @@ export default function TableBookingPage() {
             <p className="mt-2 text-sm text-customer-muted">{bookingCms.successSubtitle}</p>
 
             <div className="mt-6 overflow-hidden rounded-2xl border border-customer-border">
-              {[{ label: "Name", value: form.name }, { label: "Date & Time", value: `${form.date} at ${form.time}` },
+              {[{ label: "Name", value: form.name }, { label: "Date & Time", value: formatReservationSlot(form.date, form.time) },
                 { label: "Area", value: selectedCat?.name ?? "—" }, { label: "Table", value: selectedTable?.tableNumber ?? "TBD" },
                 { label: "Guests", value: `${form.guests} persons` }].map(({ label, value }) => (
                 <div key={label} className="flex items-start justify-between gap-3 border-b border-customer-border px-5 py-3 text-sm last:border-0">
@@ -367,8 +390,23 @@ export default function TableBookingPage() {
                 </div>
                 <div>
                   <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-customer-muted">Time</label>
-                  <select value={form.time} onChange={(e) => set("time", e.target.value)} className={inputCls}>
-                    {CUSTOMER_BOOKING_TIME_SLOTS.map((t) => <option key={t} value={t}>{t}</option>)}
+                  <select
+                    value={form.time}
+                    onChange={(e) => set("time", e.target.value)}
+                    disabled={!form.date || closedOnSelectedDate || timeSlots.length === 0}
+                    className={`${inputCls} disabled:cursor-not-allowed disabled:opacity-60`}
+                  >
+                    {!form.date ? (
+                      <option value="">Select date first</option>
+                    ) : closedOnSelectedDate ? (
+                      <option value="">Closed this day</option>
+                    ) : timeSlots.length === 0 ? (
+                      <option value="">No slots available</option>
+                    ) : (
+                      timeSlots.map((t) => (
+                        <option key={t} value={t}>{formatTimeSlot(t)}</option>
+                      ))
+                    )}
                   </select>
                 </div>
                 <div className="sm:col-span-2">
@@ -432,7 +470,7 @@ export default function TableBookingPage() {
               <div className="mb-6">
                 <h2 className="font-poppins text-xl font-black text-customer-text">{bookingCms.areaTitle}</h2>
                 <p className="mt-1 text-sm text-customer-muted">
-                  Availability for <span className="font-semibold text-customer-text">{form.date}</span> at <span className="font-semibold text-customer-text">{form.time}</span>
+                  Availability for <span className="font-semibold text-customer-text">{formatReservationSlot(form.date, form.time)}</span>
                 </p>
               </div>
               {tableCategories.length === 0 ? (
@@ -497,7 +535,7 @@ export default function TableBookingPage() {
               <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                 <div className="min-w-0">
                   <h2 className="font-poppins text-xl font-black text-customer-text">{selectedCat?.name} {bookingCms.tableTitleSuffix}</h2>
-                  <p className="mt-1 text-sm text-customer-muted">{form.date} · {form.time} · ~90 min slot</p>
+                  <p className="mt-1 text-sm text-customer-muted">{formatReservationSlot(form.date, form.time)} · ~90 min slot</p>
                 </div>
                 <div className="flex w-full flex-wrap gap-1.5 sm:w-auto sm:justify-end">
                   {CUSTOMER_BOOKING_CAPACITY_FILTERS.map((f) => (
@@ -529,7 +567,9 @@ export default function TableBookingPage() {
                       <TableCard key={t.id} table={t} selected={selectedTable?.id === t.id}
                         onSelect={() => setSelectedTable(t)}
                         reservationBooked={avail ? !avail.available : false}
-                        nextAvailableTime={avail?.nextAvailableTime ?? null} />
+                        nextAvailableTime={
+                          avail?.nextAvailableTime ? formatTimeSlot(avail.nextAvailableTime) : null
+                        } />
                     );
                   })}
                 </div>
@@ -555,7 +595,7 @@ export default function TableBookingPage() {
               <h2 className="mb-6 font-poppins text-xl font-black text-customer-text">{bookingCms.confirmTitle}</h2>
               <div className="overflow-hidden rounded-2xl border border-customer-border">
                 {[{ label: "Name", value: form.name }, { label: "Mobile", value: toIndianE164(form.phone) || form.phone },
-                  { label: "Date", value: form.date }, { label: "Time", value: `${form.time} (~90 min)` },
+                  { label: "Date", value: formatDate(form.date) }, { label: "Time", value: `${formatTimeSlot(form.time)} (~90 min)` },
                   { label: "Guests", value: `${form.guests} persons` }, { label: "Area", value: selectedCat?.name ?? "—" },
                   { label: "Table", value: selectedTable?.tableNumber }, { label: "Capacity", value: `${selectedTable?.capacity} persons` },
                   ...(form.notes ? [{ label: "Notes", value: form.notes }] : []),

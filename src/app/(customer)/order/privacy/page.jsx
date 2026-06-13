@@ -1,11 +1,13 @@
 "use client";
 
+import { useCustomerLocale } from "@/context/CustomerLocaleContext";
 import { useRestaurantInfo } from "@/hooks/useRestaurantInfo";
 import { useRestaurantSlug } from "@/hooks/useRestaurantSlug";
 import { customerClasses, customerPage, customerType } from "@/lib/customerTheme";
 import Link from "next/link";
 
 export default function CustomerPrivacyPage() {
+  const { formatDate } = useCustomerLocale();
   const { info } = useRestaurantInfo();
   const { link } = useRestaurantSlug();
   const name = info.name?.trim() || "Our Restaurant";
@@ -48,7 +50,7 @@ export default function CustomerPrivacyPage() {
                 {info.phone ? ` or ${info.phone}` : ""}.
               </p>
             </section>
-            <p className="text-xs text-customer-muted">Last updated: {new Date().toLocaleDateString()}</p>
+            <p className="text-xs text-customer-muted">Last updated: {formatDate(new Date())}</p>
           </div>
 
           <p className="mt-8">

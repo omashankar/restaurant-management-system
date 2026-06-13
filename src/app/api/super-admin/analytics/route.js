@@ -15,6 +15,7 @@ import { getTokenFromRequest } from "@/lib/authCookies";
 import { verifyToken } from "@/lib/jwt";
 import clientPromise from "@/lib/mongodb";
 import { normalizePlanBreakdown } from "@/lib/planBreakdown";
+import { SUBSCRIPTION_PAYMENT_MATCH } from "@/lib/platformCurrency";
 
 function superAdminOnly(request) {
   const token   = getTokenFromRequest(request);
@@ -79,15 +80,15 @@ export async function GET(request) {
       db.collection("users").countDocuments({ role: "admin" }),
       db.collection("users").countDocuments(),
 
-      // Total revenue
+      // Total subscription revenue (platform SaaS — not restaurant food orders)
       db.collection("payments").aggregate([
-        { $match: { status: "paid" } },
+        { $match: { status: "paid", ...SUBSCRIPTION_PAYMENT_MATCH } },
         { $group: { _id: null, total: { $sum: "$amount" }, count: { $sum: 1 } } },
       ]).toArray(),
 
-      // Revenue by month (last 12)
+      // Subscription revenue by month (last 12)
       db.collection("payments").aggregate([
-        { $match: { status: "paid", createdAt: { $gte: twelveMonthsAgo } } },
+        { $match: { status: "paid", createdAt: { $gte: twelveMonthsAgo }, ...SUBSCRIPTION_PAYMENT_MATCH } },
         { $group: {
           _id: { year: { $year: "$createdAt" }, month: { $month: "$createdAt" } },
           revenue: { $sum: "$amount" },
@@ -112,14 +113,15 @@ export async function GET(request) {
         { $sort: { count: -1 } },
       ]).toArray(),
 
-      // Payment status breakdown
+      // Subscription payment status breakdown
       db.collection("payments").aggregate([
+        { $match: SUBSCRIPTION_PAYMENT_MATCH },
         { $group: { _id: "$status", count: { $sum: 1 } } },
       ]).toArray(),
 
-      // Top 5 restaurants by revenue
+      // Top 5 restaurants by subscription revenue
       db.collection("payments").aggregate([
-        { $match: { status: "paid" } },
+        { $match: { status: "paid", ...SUBSCRIPTION_PAYMENT_MATCH } },
         { $group: {
           _id:            "$restaurantId",
           restaurantName: { $first: "$restaurantName" },

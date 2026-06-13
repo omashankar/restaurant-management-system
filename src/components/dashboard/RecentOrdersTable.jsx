@@ -1,4 +1,5 @@
 import { adminSurface } from "@/config/adminSurfaceClasses";
+import { useAdminLocale } from "@/context/RestaurantLocaleContext";
 import { formatAdminMoney } from "@/lib/adminCurrency";
 import Link from "next/link";
 import { Bike, ConciergeBell, Store } from "lucide-react";
@@ -31,7 +32,7 @@ const paymentMethodLabel = {
   bankTransfer: "Bank Transfer",
 };
 
-function getOrderFields(order) {
+function getOrderFields(order, formatTime) {
   const orderType = order.type ?? order.orderType;
   return {
     id: order.orderId ?? order.id,
@@ -43,18 +44,11 @@ function getOrderFields(order) {
     status: order.status ?? "completed",
     paymentMethod: String(order.payment?.method ?? "cod"),
     paymentStatus: String(order.payment?.status ?? "pending"),
-    time:
-      order.time ??
-      (order.createdAt
-        ? new Date(order.createdAt).toLocaleTimeString("en-US", {
-            hour: "2-digit",
-            minute: "2-digit",
-          })
-        : "—"),
+    time: order.time ?? (order.createdAt ? formatTime(order.createdAt) : "—"),
   };
 }
 
-function RecentOrderMobileCard({ order, currency }) {
+function RecentOrderMobileCard({ order, currency, formatTime }) {
   const {
     id,
     customer,
@@ -66,12 +60,12 @@ function RecentOrderMobileCard({ order, currency }) {
     paymentMethod,
     paymentStatus,
     time,
-  } = getOrderFields(order);
+  } = getOrderFields(order, formatTime);
 
   return (
     <article className="px-4 py-3.5 sm:px-5">
       <div className="flex items-start justify-between gap-3">
-        <p className="min-w-0 truncate font-mono text-xs text-ra-primary/90" title={id}>
+        <p className="min-w-0 break-all font-mono text-xs text-ra-primary/90" title={id}>
           {id}
         </p>
         <p className="shrink-0 text-sm font-semibold tabular-nums admin-shell-text">
@@ -97,7 +91,7 @@ function RecentOrderMobileCard({ order, currency }) {
       </div>
 
       <div className="mt-2 flex flex-wrap items-center justify-between gap-2 text-xs">
-        <span className={`inline-flex min-w-0 items-center gap-1.5 ${adminSurface.muted}`}>
+        <span className={`inline-flex min-w-0 flex-wrap items-center gap-1.5 ${adminSurface.muted}`}>
           <span className="whitespace-nowrap">{paymentMethodLabel[paymentMethod] ?? paymentMethod}</span>
           <span
             className={`inline-flex shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold capitalize ring-1 ${paymentStatusStyles[paymentStatus] ?? paymentStatusStyles.pending}`}
@@ -112,42 +106,47 @@ function RecentOrderMobileCard({ order, currency }) {
 }
 
 export default function RecentOrdersTable({ orders = [], currency = "INR" }) {
+  const { formatTime } = useAdminLocale();
+
   return (
-    <div className="rms-dashboard-card rms-dashboard-card--lg flex h-full min-h-0 w-full flex-col admin-surface-table-shell">
-      <div className="admin-table-list-header flex shrink-0 items-center justify-between gap-4 px-4 py-4 sm:px-5">
+    <div className="rms-dashboard-card rms-dashboard-card--lg rms-dashboard-card--bounded flex h-full min-h-0 w-full min-w-0 flex-col admin-surface-table-shell">
+      <div className="admin-table-list-header flex shrink-0 flex-col gap-2 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:px-5">
         <div className="min-w-0">
-          <h3 className="admin-surface-title text-sm font-semibold">Recent Orders</h3>
-          <p className="admin-surface-subheading">Latest transactions across all channels</p>
+          <h3 className="admin-surface-title break-words text-sm font-semibold">Recent Orders</h3>
+          <p className="admin-surface-subheading break-words">Latest transactions across all channels</p>
         </div>
-        <Link href="/orders" className="shrink-0 text-xs font-medium text-ra-primary hover:text-ra-primary-muted">
+        <Link
+          href="/orders"
+          className="inline-flex shrink-0 items-center text-xs font-medium text-ra-primary hover:text-ra-primary-muted sm:justify-end"
+        >
           View all →
         </Link>
       </div>
 
-      <div className="rms-dashboard-card__body min-h-0 flex-1">
+      <div className="rms-dashboard-card__body rms-dashboard-card__body--y min-h-0 flex-1">
         {orders.length === 0 ? (
-          <div className={`flex min-h-[12rem] items-center justify-center px-5 py-12 text-center text-sm ${adminSurface.muted}`}>
+          <div className={`flex min-h-[10rem] items-center justify-center px-5 py-12 text-center text-sm sm:min-h-[12rem] ${adminSurface.muted}`}>
             No orders yet.
           </div>
         ) : (
           <>
-            <div className="admin-table-body md:hidden">
+            <div className="admin-table-body lg:hidden">
               {orders.map((order) => (
-                <RecentOrderMobileCard key={order.id} order={order} currency={currency} />
+                <RecentOrderMobileCard key={order.id} order={order} currency={currency} formatTime={formatTime} />
               ))}
             </div>
 
-            <div className="hidden min-h-0 overflow-x-auto md:block">
-              <table className="admin-table min-w-[52rem] w-full text-left text-sm">
+            <div className="hidden min-h-0 overflow-x-auto lg:block">
+              <table className="admin-table w-full min-w-[48rem] text-left text-sm xl:min-w-[52rem]">
                 <thead className="admin-table-head sticky top-0 z-[1] backdrop-blur-sm">
                   <tr className="admin-table-head-row">
-                    <th className="admin-table-th whitespace-nowrap px-5 py-3 text-left">Order ID</th>
-                    <th className="admin-table-th whitespace-nowrap px-5 py-3 text-left">Customer</th>
-                    <th className="admin-table-th whitespace-nowrap px-5 py-3 text-left">Type / Table</th>
-                    <th className="admin-table-th admin-table-th--right whitespace-nowrap px-5 py-3">Amount</th>
-                    <th className="admin-table-th whitespace-nowrap px-5 py-3 text-left">Status</th>
-                    <th className="admin-table-th whitespace-nowrap px-5 py-3 text-left">Payment</th>
-                    <th className="admin-table-th admin-table-th--right whitespace-nowrap px-5 py-3">Time</th>
+                    <th className="admin-table-th whitespace-nowrap px-4 py-3 text-left xl:px-5">Order ID</th>
+                    <th className="admin-table-th whitespace-nowrap px-4 py-3 text-left xl:px-5">Customer</th>
+                    <th className="admin-table-th whitespace-nowrap px-4 py-3 text-left xl:px-5">Type / Table</th>
+                    <th className="admin-table-th admin-table-th--right whitespace-nowrap px-4 py-3 xl:px-5">Amount</th>
+                    <th className="admin-table-th whitespace-nowrap px-4 py-3 text-left xl:px-5">Status</th>
+                    <th className="admin-table-th hidden whitespace-nowrap px-4 py-3 text-left xl:table-cell xl:px-5">Payment</th>
+                    <th className="admin-table-th admin-table-th--right whitespace-nowrap px-4 py-3 xl:px-5">Time</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -163,15 +162,17 @@ export default function RecentOrdersTable({ orders = [], currency = "INR" }) {
                       paymentMethod,
                       paymentStatus,
                       time,
-                    } = getOrderFields(order);
+                    } = getOrderFields(order, formatTime);
 
                     return (
                       <tr key={order.id} className="transition-colors hover:bg-[var(--admin-hover)]">
-                        <td className="whitespace-nowrap px-5 py-3 font-mono text-xs text-ra-primary/90">{id}</td>
-                        <td className="max-w-[10rem] truncate whitespace-nowrap px-5 py-3 font-medium admin-shell-text">
-                          {customer}
+                        <td className="max-w-[7rem] px-4 py-3 font-mono text-xs text-ra-primary/90 xl:max-w-[8rem] xl:px-5">
+                          <span className="block truncate" title={id}>{id}</span>
                         </td>
-                        <td className="whitespace-nowrap px-5 py-3">
+                        <td className="max-w-[8rem] px-4 py-3 font-medium admin-shell-text xl:max-w-[10rem] xl:px-5">
+                          <span className="block truncate" title={customer}>{customer}</span>
+                        </td>
+                        <td className="whitespace-nowrap px-4 py-3 xl:px-5">
                           <span className={`inline-flex items-center gap-1.5 ${adminSurface.muted}`}>
                             <TypeIcon className="size-3.5 shrink-0" />
                             <span>{typeText}</span>
@@ -180,15 +181,15 @@ export default function RecentOrdersTable({ orders = [], currency = "INR" }) {
                             ) : null}
                           </span>
                         </td>
-                        <td className="whitespace-nowrap px-5 py-3 text-right font-semibold tabular-nums admin-shell-text">
+                        <td className="whitespace-nowrap px-4 py-3 text-right font-semibold tabular-nums admin-shell-text xl:px-5">
                           {formatAdminMoney(amount, currency, { decimals: 2 })}
                         </td>
-                        <td className="whitespace-nowrap px-5 py-3">
+                        <td className="whitespace-nowrap px-4 py-3 xl:px-5">
                           <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold capitalize ring-1 ${statusStyles[status] ?? statusStyles.completed}`}>
                             {status}
                           </span>
                         </td>
-                        <td className="whitespace-nowrap px-5 py-3">
+                        <td className="hidden whitespace-nowrap px-4 py-3 xl:table-cell xl:px-5">
                           <div className="flex flex-col gap-1">
                             <span className="text-xs admin-surface-body">{paymentMethodLabel[paymentMethod] ?? paymentMethod}</span>
                             <span className={`inline-flex w-fit rounded-full px-2 py-0.5 text-[10px] font-semibold capitalize ring-1 ${paymentStatusStyles[paymentStatus] ?? paymentStatusStyles.pending}`}>
@@ -196,7 +197,7 @@ export default function RecentOrdersTable({ orders = [], currency = "INR" }) {
                             </span>
                           </div>
                         </td>
-                        <td className="whitespace-nowrap px-5 py-3 text-right text-xs admin-surface-faint">{time}</td>
+                        <td className="whitespace-nowrap px-4 py-3 text-right text-xs admin-surface-faint xl:px-5">{time}</td>
                       </tr>
                     );
                   })}

@@ -1,8 +1,9 @@
 "use client";
 
+import { useAdminLocale } from "@/context/RestaurantLocaleContext";
 import { useUser } from "@/context/AuthContext";
-import { raIconBadgeCls } from "@/config/restaurantAdminTheme";
-import { LifeBuoy, Loader2, MessageSquarePlus, RefreshCcw, X } from "lucide-react";
+import { raIconBadgeCls, raInputCls, raSpinnerCls, raPageRefreshBtnCls, raPagePrimaryBtnCls } from "@/config/restaurantAdminTheme";
+import { LifeBuoy, Loader2, MessageSquarePlus, RefreshCw, X, CheckCircle2, XCircle } from "lucide-react";
 import {
   EMPTY_SUPPORT_TICKET_ERRORS,
   getSupportTicketFieldErrors,
@@ -22,20 +23,56 @@ import {
   ticketStatusBadgeCls,
   ticketStatusSelectCls,
 } from "@/config/supportTicketConfig";
-import { raInputCls } from "@/config/restaurantAdminTheme";
 import PaginationBar from "@/components/ui/PaginationBar";
 import PageDrawer from "@/components/ui/PageDrawer";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 const TICKETS_PAGE_SIZE = 10;
 
 const inputCls = raInputCls;
 
+function SupportTicketsPageSkeleton() {
+  return (
+    <div className="min-w-0 w-full max-w-full space-y-6 overflow-x-hidden">
+      <div className="flex min-w-0 items-start gap-3">
+        <div className="mt-1 size-10 shrink-0 animate-pulse rounded-xl admin-surface-card" />
+        <div className="min-w-0 flex-1 space-y-2">
+          <div className="h-7 w-48 max-w-full animate-pulse rounded-lg admin-surface-card" />
+          <div className="h-4 w-full max-w-md animate-pulse rounded admin-surface-card" />
+        </div>
+      </div>
+      <div className="grid min-w-0 grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+        {Array.from({ length: 5 }).map((_, i) => (
+          <div key={i} className="h-16 animate-pulse rounded-xl admin-surface-card" />
+        ))}
+      </div>
+      <div className="h-72 animate-pulse rounded-2xl admin-surface-card" />
+      <div className="space-y-2 admin-surface-card p-4 sm:p-5">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <div key={i} className="h-24 animate-pulse rounded-xl admin-surface-card" />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function TicketListSkeleton() {
+  return (
+    <div className="space-y-2">
+      {Array.from({ length: 4 }).map((_, i) => (
+        <div key={i} className="h-24 animate-pulse rounded-xl admin-surface-card" />
+      ))}
+    </div>
+  );
+}
+
 export default function SupportTicketsPage() {
   const { user } = useUser();
+  const { formatDateTime } = useAdminLocale();
   const [tickets, setTickets] = useState([]);
   const [statsTickets, setStatsTickets] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [loadError, setLoadError] = useState(null);
   const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState(null);
@@ -53,6 +90,7 @@ export default function SupportTicketsPage() {
     priority: "medium",
   });
   const [fieldErrors, setFieldErrors] = useState(EMPTY_SUPPORT_TICKET_ERRORS);
+  const hadDataRef = useRef(false);
 
   const canModerate = user?.role === "admin" || user?.role === "manager";
 
@@ -61,12 +99,12 @@ export default function SupportTicketsPage() {
     setTimeout(() => setToast(null), 2400);
   }
 
-  useEffect(() => {
-    setPage(1);
-  }, [statusFilter]);
-
-  async function loadTickets() {
-    setLoading(true);
+  const loadTickets = useCallback(async (silent = false) => {
+    if (silent || hadDataRef.current) {
+      setRefreshing(true);
+    } else {
+      setLoading(true);
+    }
     setLoadError(null);
     try {
       const params = new URLSearchParams({
@@ -83,26 +121,30 @@ export default function SupportTicketsPage() {
       if (data.success) {
         setTickets(data.tickets || []);
         if (data.pagination) setPagination(data.pagination);
-      }
-      else {
+        hadDataRef.current = true;
+      } else {
         const msg = data.error || "Failed to load tickets.";
         setLoadError(msg);
-        showToast("error", msg);
+        if (!silent && !hadDataRef.current) showToast("error", msg);
       }
       if (statsData.success) setStatsTickets(statsData.tickets || []);
     } catch {
       const msg = "Could not load support tickets.";
       setLoadError(msg);
-      showToast("error", msg);
+      if (!silent && !hadDataRef.current) showToast("error", msg);
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
-  }
+  }, [page, statusFilter]);
 
   useEffect(() => {
-    loadTickets();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [statusFilter, page]);
+    setPage(1);
+  }, [statusFilter]);
+
+  useEffect(() => {
+    loadTickets(hadDataRef.current);
+  }, [loadTickets]);
 
   async function createTicket(e) {
     e.preventDefault();
@@ -126,7 +168,7 @@ export default function SupportTicketsPage() {
       }
       setForm({ subject: "", message: "", priority: "medium" });
       showToast("success", "Ticket created.");
-      loadTickets();
+      loadTickets(true);
     } catch {
       showToast("error", "Network error.");
     } finally {
@@ -148,7 +190,7 @@ export default function SupportTicketsPage() {
       const data = await res.json();
       if (!data.success) {
         showToast("error", data.error || "Failed to update ticket.");
-        loadTickets();
+        loadTickets(true);
         return;
       }
       showToast("success", "Ticket updated.");
@@ -159,7 +201,7 @@ export default function SupportTicketsPage() {
       if (selectedTicketId === ticketId) setSelectedTicket(data.ticket);
     } catch {
       showToast("error", "Network error.");
-      loadTickets();
+      loadTickets(true);
     }
   }
 
@@ -211,23 +253,45 @@ export default function SupportTicketsPage() {
 
   const stats = useMemo(() => buildTicketStats(statsTickets), [statsTickets]);
 
+  if (loading) {
+    return (
+      <div className="min-w-0 w-full max-w-full overflow-x-hidden">
+        <SupportTicketsPageSkeleton />
+      </div>
+    );
+  }
+
   return (
-    <div className="min-w-0 w-full max-w-full space-y-6 overflow-x-hidden">
-      <div className="flex min-w-0 items-start gap-3">
-        <span className={`mt-1 shrink-0 ${raIconBadgeCls}`}>
-          <LifeBuoy className="size-5" aria-hidden />
-        </span>
-        <div className="min-w-0">
-          <h1 className="admin-page-title text-2xl font-semibold tracking-tight">Support Tickets</h1>
-          <p className="admin-page-desc mt-1 text-sm">
-            Raise issues for platform support and track progress.
-          </p>
+    <div className={`min-w-0 w-full max-w-full space-y-6 overflow-x-hidden transition-opacity duration-200 ${refreshing ? "opacity-70" : ""}`}>
+      <div className="flex min-w-0 flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div className="flex min-w-0 items-start gap-3">
+          <span className={`mt-1 shrink-0 ${raIconBadgeCls}`}>
+            <LifeBuoy className="size-5" aria-hidden />
+          </span>
+          <div className="min-w-0">
+            <h1 className="admin-page-title break-words text-xl font-semibold tracking-tight sm:text-2xl">Support Tickets</h1>
+            <p className="admin-page-desc mt-1 break-words text-sm">
+              Raise issues for platform support and track progress.
+            </p>
+          </div>
+        </div>
+        <div className="admin-page-header-actions">
+        <button
+          type="button"
+          onClick={() => loadTickets(true)}
+          disabled={refreshing || saving}
+          className={raPageRefreshBtnCls}
+        >
+          <RefreshCw className={`size-4 ${refreshing ? raSpinnerCls : ""}`} />
+          Refresh
+        </button>
         </div>
       </div>
 
       {loadError && (
-        <div className="rounded-xl border border-red-500/25 bg-red-500/10 px-4 py-3 text-sm text-red-400">
-          {loadError}
+        <div className="flex min-w-0 items-start gap-2 rounded-xl border border-red-500/25 bg-red-500/10 px-4 py-3 text-sm text-red-400">
+          <XCircle className="size-4 shrink-0" />
+          <span className="min-w-0 break-words">{loadError}</span>
         </div>
       )}
 
@@ -241,9 +305,9 @@ export default function SupportTicketsPage() {
       </div>
 
       <form onSubmit={createTicket} className="space-y-4 admin-surface-card p-4 sm:p-5">
-        <div className="flex items-center gap-2 admin-shell-text">
-          <MessageSquarePlus className="size-4 text-ra-primary" />
-          <h2 className="text-sm font-semibold">Create New Ticket</h2>
+        <div className="flex min-w-0 items-center gap-2 admin-shell-text">
+          <MessageSquarePlus className="size-4 shrink-0 text-ra-primary" />
+          <h2 className="break-words text-sm font-semibold">Create New Ticket</h2>
         </div>
         <div className="grid gap-4 md:grid-cols-2">
           <div>
@@ -297,7 +361,7 @@ export default function SupportTicketsPage() {
         <button
           type="submit"
           disabled={saving}
-          className="inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-ra-primary px-4 py-2.5 text-sm font-semibold text-zinc-950 hover:brightness-110 disabled:opacity-50 sm:w-auto"
+          className={`${raPagePrimaryBtnCls} disabled:opacity-50`}
         >
           {saving ? <Loader2 className="size-4 animate-spin" /> : null}
           {saving ? "Creating..." : "Create Ticket"}
@@ -306,37 +370,24 @@ export default function SupportTicketsPage() {
 
       <div className="space-y-3 admin-surface-card p-4 sm:p-5">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <h2 className="text-sm font-semibold admin-shell-text">Tickets</h2>
-          <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className={`${adminFilterSelectCls} focus-ra-primary w-full sm:min-w-[8rem] sm:w-auto`}
-            >
-              <option value="all">Status: all</option>
-              {SUPPORT_STATUSES.map((s) => (
-                <option key={s} value={s}>
-                  {s.replace(/_/g, " ")}
-                </option>
-              ))}
-            </select>
-            <button
-              type="button"
-              onClick={loadTickets}
-              disabled={loading}
-              className="inline-flex w-full cursor-pointer items-center justify-center gap-1 rounded-lg border admin-shell-border px-2.5 py-2 text-xs admin-surface-body transition-colors hover:bg-[var(--admin-hover)] disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
-            >
-              <RefreshCcw className={`size-3.5 ${loading ? "animate-spin" : ""}`} />
-              Refresh
-            </button>
-          </div>
+          <h2 className="break-words text-sm font-semibold admin-shell-text">Tickets</h2>
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            disabled={refreshing}
+            className={`${adminFilterSelectCls} focus-ra-primary w-full sm:min-w-[8rem] sm:w-auto`}
+          >
+            <option value="all">Status: all</option>
+            {SUPPORT_STATUSES.map((s) => (
+              <option key={s} value={s}>
+                {s.replace(/_/g, " ")}
+              </option>
+            ))}
+          </select>
         </div>
 
-        {loading ? (
-          <div className="flex items-center gap-2 text-sm admin-surface-muted">
-            <Loader2 className="size-4 animate-spin" />
-            Loading tickets...
-          </div>
+        {refreshing && tickets.length === 0 ? (
+          <TicketListSkeleton />
         ) : tickets.length === 0 ? (
           <p className="text-sm admin-surface-muted">No tickets found.</p>
         ) : (
@@ -348,17 +399,17 @@ export default function SupportTicketsPage() {
                     {ticket.ticketCode} · {ticket.subject}
                   </p>
                   <p className="shrink-0 text-xs admin-surface-muted">
-                    {ticket.createdAt ? new Date(ticket.createdAt).toLocaleString() : "—"}
+                    {ticket.createdAt ? formatDateTime(ticket.createdAt) : "—"}
                   </p>
                 </div>
                 <p className="mt-1 break-words text-sm admin-surface-body">{ticket.message}</p>
-                <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
+                <div className="mt-3 flex min-w-0 flex-wrap items-center gap-2 text-xs">
                   {canModerate ? (
                     <>
                       <select
                         value={ticket.priority}
                         onChange={(e) => quickUpdate(String(ticket._id), { priority: e.target.value })}
-                        className={ticketPrioritySelectCls(ticket.priority)}
+                        className={`${ticketPrioritySelectCls(ticket.priority)} max-w-full`}
                         aria-label={`Priority for ${ticket.ticketCode}`}
                       >
                         {SUPPORT_PRIORITIES.map((p) => (
@@ -370,7 +421,7 @@ export default function SupportTicketsPage() {
                       <select
                         value={ticket.status}
                         onChange={(e) => quickUpdate(String(ticket._id), { status: e.target.value })}
-                        className={ticketStatusSelectCls(ticket.status, "restaurant")}
+                        className={`${ticketStatusSelectCls(ticket.status, "restaurant")} max-w-full`}
                         aria-label={`Status for ${ticket.ticketCode}`}
                       >
                         {SUPPORT_STATUSES.map((s) => (
@@ -402,7 +453,7 @@ export default function SupportTicketsPage() {
             ))}
           </div>
         )}
-        {!loading && tickets.length > 0 && (
+        {tickets.length > 0 && (
           <PaginationBar
             page={page}
             totalPages={pagination.pages}
@@ -420,7 +471,7 @@ export default function SupportTicketsPage() {
         ariaLabel="Support ticket details"
       >
             <div className="sticky top-0 z-10 mb-4 flex min-w-0 items-center justify-between gap-3 admin-surface-divider-b bg-[var(--admin-surface)] pb-3 pt-1 backdrop-blur">
-              <h3 className="min-w-0 truncate text-base font-semibold admin-shell-text">Ticket details</h3>
+              <h3 className="min-w-0 break-words text-base font-semibold admin-shell-text">Ticket details</h3>
               <button
                 type="button"
                 onClick={() => {
@@ -454,9 +505,9 @@ export default function SupportTicketsPage() {
                     {(selectedTicket.updates || []).slice().reverse().map((u, idx) => (
                       <div key={`${u.at}-${idx}`} className="rounded-lg border admin-shell-border admin-surface-card p-2.5">
                         <p className="text-xs admin-surface-muted">
-                          {u.at ? new Date(u.at).toLocaleString() : "—"} · {u.role || "user"}
+                          {u.at ? formatDateTime(u.at) : "—"} · {u.role || "user"}
                         </p>
-                        <p className="mt-0.5 text-sm admin-shell-text">{u.note}</p>
+                        <p className="mt-0.5 break-words text-sm admin-shell-text">{u.note}</p>
                       </div>
                     ))}
                   </div>
@@ -485,13 +536,18 @@ export default function SupportTicketsPage() {
 
       {toast ? (
         <div
-          className={`fixed bottom-4 left-4 right-4 z-50 rounded-xl border px-4 py-2 text-sm sm:bottom-5 sm:left-auto sm:right-5 sm:max-w-sm ${
+          className={`fixed bottom-4 left-4 right-4 z-50 flex min-w-0 max-w-[calc(100vw-2rem)] items-start gap-2 rounded-xl border px-4 py-2 text-sm sm:bottom-5 sm:left-auto sm:right-5 sm:max-w-sm ${
             toast.type === "success"
               ? "border-ra-primary-30 admin-surface-card text-ra-primary-muted"
               : "border-red-500/30 admin-surface-card text-red-400"
           }`}
         >
-          {toast.message}
+          {toast.type === "success" ? (
+            <CheckCircle2 className="size-4 shrink-0" />
+          ) : (
+            <XCircle className="size-4 shrink-0" />
+          )}
+          <span className="min-w-0 break-words">{toast.message}</span>
         </div>
       ) : null}
     </div>

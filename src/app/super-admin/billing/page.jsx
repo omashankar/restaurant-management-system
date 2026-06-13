@@ -1,5 +1,6 @@
 "use client";
 
+import { raPageRefreshBtnCls } from "@/config/restaurantAdminTheme";
 import SuperAdminPageSkeleton from "@/components/super-admin/SuperAdminPageSkeleton";
 import { saIconBadgeCls, saInputCls, saSpinnerCls } from "@/config/superAdminTheme";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
@@ -24,6 +25,7 @@ import {
   getAssignPlanFieldErrors,
 } from "@/lib/formValidation";
 import { intInputProps } from "@/lib/formInputTypes";
+import { useSuperAdminLocale } from "@/context/SuperAdminLocaleContext";
 import { useToast } from "@/hooks/useToast";
 import {
   AlertTriangle, Ban, Building2, Calendar,
@@ -82,6 +84,7 @@ const emptyAssignForm = {
 };
 
 export default function BillingPage() {
+  const { formatDate } = useSuperAdminLocale();
   const [activeTab, setActiveTab] = useState("overview");
   const [subs, setSubs]               = useState([]);
   const [plans, setPlans]             = useState([]);
@@ -237,15 +240,15 @@ export default function BillingPage() {
     : 1;
 
   return (
-    <div className="min-w-0 w-full max-w-full space-y-6 overflow-x-hidden">
+    <div className="min-w-0 w-full max-w-full space-y-6 overflow-x-hidden sm:space-y-10">
 
       <div className="flex min-w-0 flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div className="flex min-w-0 items-start gap-3">
-          <span className={`mt-1 shrink-0 ${saIconBadgeCls}`}>
+          <span className={`mt-1 flex shrink-0 items-center justify-center ${saIconBadgeCls}`}>
             <Receipt className="size-5" />
           </span>
           <div className="min-w-0">
-            <h1 className="admin-page-title break-words text-2xl font-semibold tracking-tight">Billing</h1>
+            <h1 className="admin-page-title break-words text-xl font-semibold tracking-tight sm:text-2xl">Billing</h1>
             <p className="admin-page-desc mt-1 break-words text-sm">
               Manage which plan each restaurant is on (active, trial, expired).{" "}
               <Link href="/super-admin/payments" className="text-sa-primary hover:text-sa-primary-muted underline-offset-2 hover:underline">
@@ -254,7 +257,7 @@ export default function BillingPage() {
             </p>
           </div>
         </div>
-        <div className="flex w-full min-w-0 flex-col items-stretch gap-2 sm:w-auto sm:flex-row sm:flex-wrap sm:items-center">
+        <div className="admin-page-header-actions">
           <div className="grid w-full grid-cols-2 gap-1 sm:flex sm:w-auto sm:gap-2">
           <button
             type="button"
@@ -279,10 +282,14 @@ export default function BillingPage() {
             Subscriptions
           </button>
           </div>
-          <button type="button" onClick={fetchAll}
-            className="inline-flex w-full cursor-pointer items-center justify-center gap-1.5 rounded-xl border admin-shell-border px-3 py-2.5 text-sm font-medium text-zinc-400 transition-colors hover:border-zinc-500 hover:admin-shell-text sm:w-auto">
+          <button
+            type="button"
+            onClick={fetchAll}
+            aria-label="Refresh billing data"
+            className={raPageRefreshBtnCls}
+          >
             <RefreshCw className={"size-4 " + (loading ? saSpinnerCls : "")} />
-            Refresh
+            <span className="sm:inline">Refresh</span>
           </button>
           <button type="button"
             onClick={() => openAssignModal()}
@@ -299,7 +306,15 @@ export default function BillingPage() {
       )}
 
       {loading ? (
-        <SuperAdminPageSkeleton cards={4} cardClassName="h-24" rows={0} />
+        activeTab === "overview" ? (
+          <SuperAdminPageSkeleton cards={4} cardClassName="h-24" rows={0} />
+        ) : (
+          <SuperAdminPageSkeleton
+            cards={0}
+            rows={6}
+            rowClassName="h-14 rounded-2xl"
+          />
+        )
       ) : (
         <>
           {activeTab === "overview" && (
@@ -445,13 +460,13 @@ export default function BillingPage() {
                           <div>
                             <p className="admin-surface-faint">Start</p>
                             <p className="admin-surface-muted">
-                              {s.startDate ? new Date(s.startDate).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "—"}
+                              {s.startDate ? formatDate(s.startDate) : "—"}
                             </p>
                           </div>
                           <div>
                             <p className="admin-surface-faint">Expires</p>
                             <p className={isExpiring ? "font-semibold text-amber-400" : "admin-surface-muted"}>
-                              {s.endDate ? new Date(s.endDate).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "—"}
+                              {s.endDate ? formatDate(s.endDate) : "—"}
                             </p>
                           </div>
                         </div>
@@ -493,9 +508,9 @@ export default function BillingPage() {
                       <AdminTableTh>Restaurant</AdminTableTh>
                       <AdminTableTh>Plan</AdminTableTh>
                       <AdminTableTh>Status</AdminTableTh>
-                      <AdminTableTh hidden="md">Start</AdminTableTh>
-                      <AdminTableTh hidden="md">Expires</AdminTableTh>
-                      <AdminTableTh hidden="lg">Days Left</AdminTableTh>
+                      <AdminTableTh>Start</AdminTableTh>
+                      <AdminTableTh>Expires</AdminTableTh>
+                      <AdminTableTh>Days Left</AdminTableTh>
                       <AdminTableThActions />
                     </AdminTableHeadRow>
                   </AdminTableHead>
@@ -530,17 +545,17 @@ export default function BillingPage() {
                               {s.status}
                             </span>
                           </AdminTableTd>
-                          <AdminTableTd hidden="md" className="text-xs admin-surface-faint">
-                            {s.startDate ? new Date(s.startDate).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "—"}
+                          <AdminTableTd className="text-xs admin-surface-faint">
+                            {s.startDate ? formatDate(s.startDate) : "—"}
                           </AdminTableTd>
-                          <AdminTableTd hidden="md">
+                          <AdminTableTd>
                             {s.endDate ? (
                               <span className={"text-xs " + (isExpiring ? "font-semibold text-amber-400" : "text-zinc-600")}>
-                                {new Date(s.endDate).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                                {formatDate(s.endDate)}
                               </span>
                             ) : <span className="text-xs text-zinc-700">—</span>}
                           </AdminTableTd>
-                          <AdminTableTd hidden="lg">
+                          <AdminTableTd>
                             {s.daysLeft != null ? (
                               <span className={"text-xs font-semibold tabular-nums " + (s.daysLeft === 0 ? "text-red-400" : s.daysLeft <= 7 ? "text-amber-400" : "text-zinc-400")}>
                                 {s.daysLeft === 0 ? "Today" : s.daysLeft + "d"}

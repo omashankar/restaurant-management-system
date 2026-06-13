@@ -1,5 +1,6 @@
 import { withTenant } from "@/lib/tenantDb";
 import { createGatewayPaymentSession } from "@/lib/paymentGateway";
+import { getPlatformCurrency } from "@/lib/platformCurrency";
 
 function normalizeBillingCycle(value) {
   return value === "yearly" ? "yearly" : "monthly";
@@ -51,6 +52,7 @@ export const POST = withTenant(["admin"], async ({ db, restaurantId }, request) 
     { projection: { name: 1, ownerEmail: 1 } }
   );
 
+  const currency = await getPlatformCurrency(db);
   const invoiceId = `SUB-${Date.now()}`;
   const payment = await db.collection("payments").insertOne({
     restaurantId,
@@ -60,7 +62,7 @@ export const POST = withTenant(["admin"], async ({ db, restaurantId }, request) 
     planName: plan.name,
     billingCycle,
     amount,
-    currency: "INR",
+    currency,
     method,
     status: "pending",
     invoiceId,
@@ -73,9 +75,10 @@ export const POST = withTenant(["admin"], async ({ db, restaurantId }, request) 
     const gateway = await createGatewayPaymentSession({
       db,
       amount,
-      currency: "INR",
+      currency,
       orderId: payment.insertedId.toString(),
       method,
+      returnKind: "subscription",
     });
 
     await db.collection("payments").updateOne(
@@ -95,7 +98,7 @@ export const POST = withTenant(["admin"], async ({ db, restaurantId }, request) 
       paymentId: payment.insertedId.toString(),
       invoiceId,
       amount,
-      currency: "INR",
+      currency,
       gatewayProvider: gateway?.provider ?? null,
       checkout: gateway?.checkout ?? null,
     });

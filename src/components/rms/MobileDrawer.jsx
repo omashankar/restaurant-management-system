@@ -40,7 +40,7 @@ export default function MobileDrawer({ open, onClose, children }) {
         role="dialog"
         aria-modal="true"
         aria-label="Navigation menu"
-        className={`admin-shell-sidebar absolute left-0 top-0 z-[1] flex h-full w-[min(280px,85vw)] max-w-[85vw] transform flex-col border-r ${adminShell.borderR} transition-transform duration-200 ${
+        className={`admin-shell-sidebar absolute left-0 top-0 z-[1] flex h-full min-w-0 w-[min(280px,85vw)] max-w-[85vw] transform flex-col border-r ${adminShell.borderR} transition-transform duration-200 ${
           open ? "translate-x-0" : "-translate-x-full"
         }`}
         style={{ paddingTop: "env(safe-area-inset-top)", paddingBottom: "env(safe-area-inset-bottom)" }}

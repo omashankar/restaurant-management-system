@@ -1,12 +1,14 @@
 "use client";
 
 import InputField from "@/components/settings/InputField";
-import { raIconBadgeCls, raInputCls } from "@/config/restaurantAdminTheme";
+import { raIconBadgeCls, raInputCls, raPageRefreshBtnCls } from "@/config/restaurantAdminTheme";
 import RestaurantLogoField from "@/components/settings/RestaurantLogoField";
 import SettingsFormSection from "@/components/settings/SettingsFormSection";
 import SettingsSidebar from "@/components/settings/SettingsSidebar";
 import { invalidateRestaurantBrandingCache } from "@/hooks/useRestaurantBranding";
 import { updateRestaurantThemeCache } from "@/hooks/useRestaurantTheme";
+import { invalidateOpeningHoursCache } from "@/hooks/useOpeningHours";
+import { primeRestaurantLocaleCache } from "@/hooks/useRestaurantLocale";
 import { invalidateRestaurantInfoCache } from "@/hooks/useRestaurantInfo";
 import { invalidateAccessControlCache } from "@/hooks/useAccessControlSettings";
 import TimePicker from "@/components/settings/TimePicker";
@@ -16,9 +18,12 @@ import BankAccountSection from "@/components/payment-settings/BankAccountSection
 import TaxSettingsSection from "@/components/payment-settings/TaxSettingsSection";
 import {
   CURRENCY_OPTIONS,
+  DATE_FORMAT_OPTIONS,
   EMPTY_SETTINGS,
   filterSettingsTabsForRole,
-  LANGUAGE_OPTIONS,
+  normalizeDateFormat,
+  normalizeTimeFormat,
+  TIME_FORMAT_OPTIONS,
   TIMEZONE_OPTIONS,
 } from "@/config/settingsConfig";
 import { EMPTY_PAYMENT_SETTINGS, PAYMENT_METHOD_LABELS } from "@/config/paymentConfig";
@@ -27,15 +32,17 @@ import {
   normalizeAccessControl,
 } from "@/config/accessControlConfig";
 import { useUser } from "@/context/AuthContext";
-import { CheckCircle2, Loader2, Mail, Settings, XCircle } from "lucide-react";
+import { CheckCircle2, Loader2, Mail, RefreshCw, Settings, XCircle } from "lucide-react";
 import {
   validatePaymentBank,
   validatePaymentGatewaySave,
   validatePaymentTax,
+  validateRestaurantOpeningHours,
   validateRestaurantSettingsPatch,
   validateRestaurantTheme,
 } from "@/lib/restaurantSettingsValidation";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { sanitizeOpeningHoursSchedule } from "@/lib/reservationUtils";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Palette } from "lucide-react";
 import { adminShell, adminSurface } from "@/config/adminSurfaceClasses";
 import {
@@ -56,6 +63,36 @@ import {
 } from "@/lib/restaurantThemeStorage";
 
 const PAYMENT_TABS = ["payments","billing"];
+
+function PaymentTabSkeleton() {
+  return (
+    <div className="space-y-5">
+      <div className="h-20 animate-pulse rounded-xl admin-surface-card" />
+      <div className="h-72 animate-pulse rounded-2xl admin-surface-card" />
+    </div>
+  );
+}
+
+function SettingsPageSkeleton() {
+  return (
+    <div className="min-w-0 w-full max-w-full space-y-6 overflow-x-hidden">
+      <div className="flex min-w-0 flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div className="flex min-w-0 items-start gap-3">
+          <div className="mt-1 size-10 shrink-0 animate-pulse rounded-xl admin-surface-card" />
+          <div className="min-w-0 flex-1 space-y-2">
+            <div className="h-7 w-32 max-w-full animate-pulse rounded-lg admin-surface-card" />
+            <div className="h-4 w-full max-w-md animate-pulse rounded admin-surface-card" />
+          </div>
+        </div>
+        <div className="h-10 w-full animate-pulse rounded-xl admin-surface-card sm:w-28" />
+      </div>
+      <div className="flex min-w-0 w-full flex-col gap-4 lg:flex-row lg:items-start lg:gap-6">
+        <div className="h-14 animate-pulse rounded-2xl admin-surface-card lg:h-80 lg:w-52 lg:shrink-0" />
+        <div className="min-h-[360px] flex-1 animate-pulse rounded-2xl admin-surface-card" />
+      </div>
+    </div>
+  );
+}
 
 function RestaurantThemeSection({ data, onChange, onSave, saving, canSave, fieldErrors = {}, onClearError }) {
   const primary = data.primaryColor ?? RESTAURANT_ADMIN_PRIMARY;
@@ -208,6 +245,7 @@ export default function SettingsPage() {
   const [settings, setSettings] = useState(EMPTY_SETTINGS);
   const [savedSnapshot, setSavedSnapshot] = useState(EMPTY_SETTINGS);
   const [isLoading, setIsLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [loadError, setLoadError] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
   const [isSavingTheme, setIsSavingTheme] = useState(false);
@@ -250,46 +288,85 @@ export default function SettingsPage() {
     }
   }, [hydrated, activeTab, user?.role]);
 
-  useEffect(() => {
-    async function load() {
-      setLoadError(null);
-      try {
-        const res = await fetch("/api/settings");
-        const data = await res.json();
-        if (!res.ok || !data.success) {
-          const msg = data.error ?? "Failed to load settings.";
-          setLoadError(msg);
-          showToast("error", msg);
-          return;
-        }
-        const apiTheme = resolveRestaurantAdminTheme({
-          ...EMPTY_SETTINGS.theme,
-          ...(data.settings.theme ?? {}),
-        });
-        const stored = readStoredRestaurantTheme();
-        const displayTheme = stored
-          ? resolveRestaurantAdminTheme(mergeLiveAdminTheme(apiTheme, stored))
-          : apiTheme;
-        const safe = {
-          ...data.settings,
-          paymentMethods: { ...EMPTY_SETTINGS.paymentMethods, ...(data.settings.paymentMethods ?? {}) },
-          email: { ...EMPTY_SETTINGS.email, ...(data.settings.email ?? {}) },
-          openingHours: Array.isArray(data.settings.openingHours) ? data.settings.openingHours : EMPTY_SETTINGS.openingHours,
-          accessControl: normalizeAccessControl(data.settings.accessControl),
-          theme: displayTheme,
-        };
-        updateRestaurantThemeCache(displayTheme);
-        setSettings(safe);
-        setSavedSnapshot({ ...safe, theme: apiTheme });
-        if (data.restaurantSlug) setRestaurantSlug(data.restaurantSlug);
-      } catch {
-        const msg = "Could not load settings.";
-        setLoadError(msg);
-        showToast("error", msg);
-      } finally { setIsLoading(false); }
+  function showToast(type, message) {
+    setToast({ type, message });
+    setTimeout(() => setToast(null), 2500);
+  }
+
+  const loadSettings = useCallback(async (silent = false) => {
+    if (silent) {
+      setRefreshing(true);
+    } else {
+      setIsLoading(true);
     }
-    load();
+    setLoadError(null);
+    try {
+      const res = await fetch("/api/settings", { cache: "no-store" });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        const msg = data.error ?? "Failed to load settings.";
+        setLoadError(msg);
+        if (!silent) showToast("error", msg);
+        return;
+      }
+      const apiTheme = resolveRestaurantAdminTheme({
+        ...EMPTY_SETTINGS.theme,
+        ...(data.settings.theme ?? {}),
+      });
+      const stored = readStoredRestaurantTheme();
+      const displayTheme = stored
+        ? resolveRestaurantAdminTheme(mergeLiveAdminTheme(apiTheme, stored))
+        : apiTheme;
+      const safe = {
+        ...data.settings,
+        general: {
+          ...EMPTY_SETTINGS.general,
+          ...(data.settings.general ?? {}),
+          dateFormat: normalizeDateFormat(data.settings?.general?.dateFormat),
+          timeFormat: normalizeTimeFormat(data.settings?.general?.timeFormat),
+        },
+        paymentMethods: { ...EMPTY_SETTINGS.paymentMethods, ...(data.settings.paymentMethods ?? {}) },
+        email: { ...EMPTY_SETTINGS.email, ...(data.settings.email ?? {}) },
+        openingHours: sanitizeOpeningHoursSchedule(
+          Array.isArray(data.settings.openingHours)
+            ? data.settings.openingHours
+            : EMPTY_SETTINGS.openingHours,
+        ),
+        accessControl: normalizeAccessControl(data.settings.accessControl),
+        theme: displayTheme,
+      };
+      updateRestaurantThemeCache(displayTheme);
+      setSettings(safe);
+      setSavedSnapshot({ ...safe, theme: apiTheme });
+      if (data.restaurantSlug) setRestaurantSlug(data.restaurantSlug);
+      else setRestaurantSlug(null);
+    } catch {
+      const msg = "Could not load settings.";
+      setLoadError(msg);
+      if (!silent) showToast("error", msg);
+    } finally {
+      if (silent) setRefreshing(false);
+      else setIsLoading(false);
+    }
   }, []);
+
+  const loadPaymentSettings = useCallback(async (silent = false) => {
+    if (!silent) setPayLoading(true);
+    try {
+      const res = await fetch("/api/payment-settings", { cache: "no-store" });
+      const data = await res.json();
+      if (data.success) setPaySettings((prev) => ({ ...prev, ...data.settings }));
+      else if (!silent) showToast("error", "Failed to load payment settings.");
+    } catch {
+      if (!silent) showToast("error", "Failed to load payment settings.");
+    } finally {
+      if (!silent) setPayLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadSettings();
+  }, [loadSettings]);
 
   /** Keep Theme tab darkMode in sync with header toggle (live stored theme). */
   useEffect(() => {
@@ -328,18 +405,8 @@ export default function SettingsPage() {
   // Load payment settings when a payment tab is first opened
   useEffect(() => {
     if (!PAYMENT_TABS.includes(activeTab)) return;
-    async function loadPay() {
-      setPayLoading(true);
-      try {
-        const res = await fetch("/api/payment-settings");
-        const data = await res.json();
-        if (data.success) setPaySettings((prev) => ({ ...prev, ...data.settings }));
-      } catch { showToast("error", "Failed to load payment settings."); }
-      finally { setPayLoading(false); }
-    }
-    loadPay();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeTab]);
+    loadPaymentSettings();
+  }, [activeTab, loadPaymentSettings]);
 
   const hasChanges = useMemo(
     () => JSON.stringify(settings) !== JSON.stringify(savedSnapshot),
@@ -351,9 +418,11 @@ export default function SettingsPage() {
     [settings.theme, savedSnapshot.theme]
   );
 
-  function showToast(type, message) {
-    setToast({ type, message });
-    setTimeout(() => setToast(null), 2500);
+  async function handleRefresh() {
+    await loadSettings(true);
+    if (PAYMENT_TABS.includes(activeTab)) {
+      await loadPaymentSettings(true);
+    }
   }
 
   async function saveThemeSettings() {
@@ -483,8 +552,21 @@ export default function SettingsPage() {
           updateRestaurantThemeCache(settings.theme);
           clearRestaurantThemePreview();
         }
+        invalidateOpeningHoursCache();
+        if (changedSections.includes("general")) {
+          primeRestaurantLocaleCache(settings.general);
+        }
         showToast("success", "Settings saved successfully.");
-      } else showToast("error", data.error || "Failed to save settings.");
+      } else {
+        if (data.tabs) {
+          const nextErrors = {};
+          for (const result of Object.values(data.tabs)) {
+            Object.assign(nextErrors, result.errors ?? {});
+          }
+          setFieldErrors(nextErrors);
+        }
+        showToast("error", data.error || "Failed to save settings.");
+      }
     } catch { showToast("error", "Network error. Please try again."); }
     finally { setIsSaving(false); }
   }
@@ -492,9 +574,66 @@ export default function SettingsPage() {
   const updateDay = (index, patch) => {
     setSettings((prev) => ({
       ...prev,
-      openingHours: prev.openingHours.map((day, i) => i === index ? { ...day, ...patch } : day),
+      openingHours: prev.openingHours.map((day, i) => (i === index ? { ...day, ...patch } : day)),
     }));
+    setFieldErrors((prev) => {
+      const next = { ...prev };
+      for (const key of Object.keys(next)) {
+        if (
+          key === "openingHours" ||
+          key.startsWith("hours_") ||
+          key.startsWith("day_") ||
+          key.startsWith("open_") ||
+          key.startsWith("close_") ||
+          key.startsWith("missing_")
+        ) {
+          next[key] = "";
+        }
+      }
+      return next;
+    });
   };
+
+  async function saveOpeningHours() {
+    const hours = sanitizeOpeningHoursSchedule(settings.openingHours);
+    const validation = validateRestaurantOpeningHours(hours);
+    if (!validation.valid) {
+      setFieldErrors((prev) => ({ ...prev, ...validation.errors }));
+      showToast("error", validation.message ?? "Fix opening hours.");
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      const res = await fetch("/api/settings", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ openingHours: hours }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        const nextSettings = { ...settings, openingHours: hours };
+        setSettings(nextSettings);
+        setSavedSnapshot((prev) => ({ ...prev, openingHours: hours }));
+        setFieldErrors({});
+        invalidateOpeningHoursCache();
+        showToast("success", "Opening hours saved.");
+      } else {
+        if (data.tabs) {
+          const nextErrors = {};
+          for (const result of Object.values(data.tabs)) {
+            Object.assign(nextErrors, result.errors ?? {});
+          }
+          setFieldErrors(nextErrors);
+        }
+        showToast("error", data.error || "Failed to save opening hours.");
+      }
+    } catch {
+      showToast("error", "Network error. Please try again.");
+    } finally {
+      setIsSaving(false);
+    }
+  }
 
   const updateAccess = (featureKey, role, nextValue) => {
     setSettings((prev) => ({
@@ -508,8 +647,8 @@ export default function SettingsPage() {
 
   if (isLoading) {
     return (
-      <div className="flex h-64 items-center justify-center">
-        <Loader2 className={`size-6 animate-spin ${raSpinnerCls}`} />
+      <div className="min-w-0 w-full max-w-full overflow-x-hidden">
+        <SettingsPageSkeleton />
       </div>
     );
   }
@@ -517,20 +656,34 @@ export default function SettingsPage() {
   const isPayTab = PAYMENT_TABS.includes(activeTab);
 
   return (
-    <div className="min-w-0 w-full max-w-full space-y-6 overflow-x-hidden">
-      <div className="flex min-w-0 items-start gap-3">
-        <span className={`mt-1 shrink-0 ${raIconBadgeCls}`}>
-          <Settings className="size-5" aria-hidden />
-        </span>
-        <div className="min-w-0">
-          <h1 className="admin-page-title text-xl font-semibold tracking-tight sm:text-2xl">Settings</h1>
-          <p className="admin-page-desc mt-1 text-sm">Configure restaurant preferences, POS behavior, and notifications.</p>
+    <div className={`min-w-0 w-full max-w-full space-y-6 overflow-x-hidden transition-opacity duration-200 ${refreshing ? "opacity-70" : ""}`}>
+      <div className="flex min-w-0 flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div className="flex min-w-0 items-start gap-3">
+          <span className={`mt-1 shrink-0 ${raIconBadgeCls}`}>
+            <Settings className="size-5" aria-hidden />
+          </span>
+          <div className="min-w-0">
+            <h1 className="admin-page-title break-words text-xl font-semibold tracking-tight sm:text-2xl">Settings</h1>
+            <p className="admin-page-desc mt-1 break-words text-sm">Configure restaurant preferences, POS behavior, and notifications.</p>
+          </div>
+        </div>
+        <div className="admin-page-header-actions">
+        <button
+          type="button"
+          onClick={handleRefresh}
+          disabled={refreshing || isSaving || isSavingTheme}
+          className={raPageRefreshBtnCls}
+        >
+          <RefreshCw className={`size-4 ${refreshing ? raSpinnerCls : ""}`} />
+          Refresh
+        </button>
         </div>
       </div>
 
       {loadError && (
-        <div className="rounded-xl border border-red-500/25 bg-red-500/10 px-4 py-3 text-sm text-red-400">
-          {loadError}
+        <div className="flex min-w-0 items-start gap-2 rounded-xl border border-red-500/25 bg-red-500/10 px-4 py-3 text-sm text-red-400">
+          <XCircle className="size-4 shrink-0" />
+          <span className="min-w-0 break-words">{loadError}</span>
         </div>
       )}
 
@@ -555,7 +708,7 @@ export default function SettingsPage() {
                     {restaurantSlug ? "Customer Site URL" : "Customer URL Set Nahi Hai"}
                   </p>
                   {restaurantSlug ? (
-                    <p className="mt-0.5 break-all font-mono text-xs text-ra-primary/80 sm:truncate">
+                    <p className="mt-0.5 break-all font-mono text-xs text-ra-primary/80">
                       {typeof window !== "undefined" ? window.location.origin : ""}/r/{restaurantSlug}/home
                     </p>
                   ) : (
@@ -587,8 +740,30 @@ export default function SettingsPage() {
                     onChange={(v) => setSettings((p) => ({ ...p, general: { ...p.general, currency: v } }))} />
                   <InputField label="Timezone" value={settings.general.timezone} options={TIMEZONE_OPTIONS}
                     onChange={(v) => setSettings((p) => ({ ...p, general: { ...p.general, timezone: v } }))} />
-                  <InputField label="Language" value={settings.general.language} options={LANGUAGE_OPTIONS}
-                    onChange={(v) => setSettings((p) => ({ ...p, general: { ...p.general, language: v } }))} />
+                  <InputField
+                    label="Date Format"
+                    value={settings.general.dateFormat}
+                    options={DATE_FORMAT_OPTIONS}
+                    error={fieldErrors.dateFormat}
+                    onChange={(v) => {
+                      setSettings((p) => ({ ...p, general: { ...p.general, dateFormat: v } }));
+                      if (fieldErrors.dateFormat) {
+                        setFieldErrors((e) => ({ ...e, dateFormat: "" }));
+                      }
+                    }}
+                  />
+                  <InputField
+                    label="Time Format"
+                    value={settings.general.timeFormat}
+                    options={TIME_FORMAT_OPTIONS}
+                    error={fieldErrors.timeFormat}
+                    onChange={(v) => {
+                      setSettings((p) => ({ ...p, general: { ...p.general, timeFormat: v } }));
+                      if (fieldErrors.timeFormat) {
+                        setFieldErrors((e) => ({ ...e, timeFormat: "" }));
+                      }
+                    }}
+                  />
                 </div>
               </SettingsFormSection>
 
@@ -651,15 +826,15 @@ export default function SettingsPage() {
           {/* ── PAYMENTS (Gateway only — Methods auto-detected) ── */}
           {activeTab === "payments" && (
             payLoading ? (
-              <div className="flex h-32 items-center justify-center"><Loader2 className="size-5 animate-spin text-ra-primary" /></div>
+              <PaymentTabSkeleton />
             ) : (
               <div className="space-y-5">
                 {/* ── Info card — auto-detection notice ── */}
                 <div className="flex min-w-0 items-start gap-3 rounded-xl border border-ra-primary-25 bg-ra-primary-10 px-4 py-3.5">
                   <span className="mt-0.5 shrink-0 text-lg">⚡</span>
                   <div className="min-w-0 flex-1">
-                    <p className="text-sm font-semibold text-ra-primary-muted">Payment Methods — Auto Detected</p>
-                    <p className="mt-0.5 text-xs text-ra-primary/80">
+                    <p className="break-words text-sm font-semibold text-ra-primary-muted">Payment Methods — Auto Detected</p>
+                    <p className="mt-0.5 break-words text-xs text-ra-primary/80">
                       Payment methods are automatically enabled based on your gateway configuration.
                       Configure your gateway below — UPI, Card, Net Banking will be available automatically.
                       Cash on Delivery is always available.
@@ -681,7 +856,7 @@ export default function SettingsPage() {
           {/* ── BILLING INFO (Bank + Tax merged) ── */}
           {activeTab === "billing" && (
             payLoading ? (
-              <div className="flex h-32 items-center justify-center"><Loader2 className="size-5 animate-spin text-ra-primary" /></div>
+              <PaymentTabSkeleton />
             ) : (
               <div className="space-y-5">
                 {/* Bank Account */}
@@ -767,7 +942,9 @@ export default function SettingsPage() {
                       const row = settings.accessControl?.[feature.key] ?? {};
                       return (
                         <tr key={feature.key} className="admin-surface-card">
-                          <td className="px-4 py-3 font-medium admin-shell-text">{feature.label}</td>
+                          <td className="min-w-0 px-4 py-3 font-medium admin-shell-text">
+                            <span className="break-words">{feature.label}</span>
+                          </td>
                           {["admin", "manager", "waiter", "chef"].map((role) => (
                             <td key={role} className="px-4 py-3 text-center">
                               <input type="checkbox" checked={Boolean(row[role])} disabled={role === "admin"}
@@ -788,17 +965,71 @@ export default function SettingsPage() {
           {/* ── OPENING HOURS ── */}
           {activeTab === "hours" && (
             <SettingsFormSection sectionId="hours">
+              {(fieldErrors.openingHours ||
+                Object.entries(fieldErrors).find(
+                  ([key, msg]) =>
+                    msg &&
+                    (key.startsWith("hours_") ||
+                      key.startsWith("day_") ||
+                      key.startsWith("open_") ||
+                      key.startsWith("close_") ||
+                      key.startsWith("missing_"))
+                )?.[1]) && (
+                <p className="mb-3 rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-400">
+                  {fieldErrors.openingHours ||
+                    Object.entries(fieldErrors).find(
+                      ([key, msg]) =>
+                        msg &&
+                        (key.startsWith("hours_") ||
+                          key.startsWith("day_") ||
+                          key.startsWith("open_") ||
+                          key.startsWith("close_") ||
+                          key.startsWith("missing_"))
+                    )?.[1]}
+                </p>
+              )}
+              <p className="mb-3 text-xs admin-surface-faint">
+                Close at midnight? Select <strong className="text-zinc-300">12:00 AM</strong> (end of day).
+                Same-day close: use e.g. <strong className="text-zinc-300">10:00 PM</strong>.
+                Last bookable slot is 90 minutes before close.
+              </p>
               <div className="space-y-3">
                 {settings.openingHours.map((row, index) => (
-                  <div key={row.day} className="grid grid-cols-1 gap-3 rounded-xl admin-surface-card p-3 sm:grid-cols-2 lg:grid-cols-[minmax(0,120px)_1fr_1fr_auto]">
-                    <div className="flex items-center text-sm font-medium admin-shell-text">{row.day}</div>
-                    <TimePicker label="Open" value={row.openTime} disabled={row.closed} onChange={(v) => updateDay(index, { openTime: v })} />
-                    <TimePicker label="Close" value={row.closeTime} disabled={row.closed} onChange={(v) => updateDay(index, { closeTime: v })} />
-                    <div className="flex items-end sm:col-span-2 lg:col-span-1">
+                  <div
+                    key={row.day}
+                    className="grid grid-cols-1 gap-3 rounded-xl admin-surface-card p-3 sm:grid-cols-2 sm:p-4 xl:grid-cols-[7rem_minmax(0,1fr)_minmax(0,1fr)_auto] xl:items-end"
+                  >
+                    <div className="shrink-0 whitespace-nowrap text-sm font-medium admin-shell-text sm:col-span-2 xl:col-span-1 xl:self-center">
+                      {row.day}
+                    </div>
+                    <TimePicker
+                      label="Open"
+                      value={row.openTime ?? row.open ?? ""}
+                      disabled={row.closed}
+                      onChange={(v) => updateDay(index, { openTime: v, open: v })}
+                    />
+                    <TimePicker
+                      label="Close"
+                      value={row.closeTime ?? row.close ?? ""}
+                      disabled={row.closed}
+                      onChange={(v) => updateDay(index, { closeTime: v, close: v })}
+                    />
+                    <div className="flex min-w-0 items-end sm:col-span-2 xl:col-span-1">
                       <ToggleSwitch label="Closed" checked={row.closed} onChange={(v) => updateDay(index, { closed: v })} />
                     </div>
                   </div>
                 ))}
+              </div>
+              <div className="mt-4 flex justify-stretch sm:justify-end">
+                <button
+                  type="button"
+                  onClick={saveOpeningHours}
+                  disabled={isSaving}
+                  className="cursor-pointer inline-flex w-full items-center justify-center gap-2 rounded-xl bg-ra-primary px-4 py-2 text-sm font-semibold text-zinc-950 transition-colors hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-45 sm:w-auto"
+                >
+                  {isSaving ? <Loader2 className="size-4 animate-spin" /> : null}
+                  {isSaving ? "Saving..." : "Save Opening Hours"}
+                </button>
               </div>
             </SettingsFormSection>
           )}
@@ -871,11 +1102,11 @@ export default function SettingsPage() {
       </div>
 
       {toast && (
-        <div className={`fixed inset-x-4 bottom-4 z-50 flex items-center gap-2 rounded-xl border px-4 py-2 text-sm shadow-2xl shadow-black/40 sm:inset-x-auto sm:right-5 sm:bottom-5 ${
+        <div className={`fixed inset-x-4 bottom-4 z-50 flex min-w-0 max-w-[calc(100vw-2rem)] items-start gap-2 rounded-xl border px-4 py-2 text-sm shadow-2xl shadow-black/40 sm:inset-x-auto sm:right-5 sm:bottom-5 sm:max-w-md ${
           toast.type === "success" ? "border-ra-primary-30 admin-surface-card text-ra-primary-muted" : "border-red-500/30 admin-surface-card text-red-400"
         }`}>
-          {toast.type === "success" ? <CheckCircle2 className="size-4" /> : <XCircle className="size-4" />}
-          {toast.message}
+          {toast.type === "success" ? <CheckCircle2 className="size-4 shrink-0" /> : <XCircle className="size-4 shrink-0" />}
+          <span className="min-w-0 break-words">{toast.message}</span>
         </div>
       )}
     </div>

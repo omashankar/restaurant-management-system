@@ -1,8 +1,10 @@
 "use client";
 
+import { raPageRefreshBtnCls } from "@/config/restaurantAdminTheme";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import SuperAdminPageSkeleton from "@/components/super-admin/SuperAdminPageSkeleton";
 import { saIconBadgeCls, saSpinnerCls } from "@/config/superAdminTheme";
+import { useSuperAdminLocale } from "@/context/SuperAdminLocaleContext";
 import { useUser } from "@/context/AuthContext";
 import {
   Activity, BarChart3, Building2, CheckCircle2,
@@ -19,7 +21,7 @@ function StatCard({ label, value, sub, icon: Icon, color, bg, border }) {
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
           <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500">{label}</p>
-          <p className={`mt-2 truncate text-2xl font-bold tabular-nums sm:text-3xl ${color}`}>{value}</p>
+          <p className={`mt-2 text-xl font-bold tabular-nums break-words sm:text-2xl lg:text-3xl ${color}`}>{value}</p>
           {sub && <p className="mt-1 break-words text-xs admin-surface-faint">{sub}</p>}
         </div>
         <span className={`flex size-10 shrink-0 items-center justify-center rounded-xl sm:size-11 ${bg}`}>
@@ -46,6 +48,7 @@ function RoleBadge({ role }) {
 
 function SuperAdminDashboard() {
   const { user } = useUser();
+  const { formatTime, formatDateTime } = useSuperAdminLocale();
   const [stats, setStats]             = useState(null);
   const [recentUsers, setRecentUsers] = useState([]);
   const [loading, setLoading]         = useState(true);
@@ -81,7 +84,7 @@ function SuperAdminDashboard() {
       {/* Header */}
       <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex min-w-0 items-start gap-3">
-          <span className={`mt-1 shrink-0 rounded-2xl sm:size-11 ${saIconBadgeCls}`}>
+          <span className={`mt-1 flex shrink-0 items-center justify-center ${saIconBadgeCls} sm:size-11`}>
             <Shield className="size-5 sm:size-6" />
           </span>
           <div className="min-w-0">
@@ -92,20 +95,22 @@ function SuperAdminDashboard() {
               Super Admin · Full system access
               {lastRefresh && (
                 <span className="block sm:ml-2 sm:inline text-zinc-700">
-                  · Updated {lastRefresh.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })}
+                  · Updated {formatTime(lastRefresh)}
                 </span>
               )}
             </p>
           </div>
         </div>
+        <div className="admin-page-header-actions">
         <button
           type="button"
           onClick={fetchStats}
           disabled={loading}
-          className="cursor-pointer flex w-full items-center justify-center gap-2 rounded-xl border admin-shell-border px-4 py-2 text-sm font-medium text-zinc-400 transition-colors hover:border-zinc-500 hover:admin-shell-text disabled:opacity-50 sm:w-auto"
+          className={raPageRefreshBtnCls}
         >
           <RefreshCw className={`size-4 ${loading ? saSpinnerCls : ""}`} /> Refresh
         </button>
+        </div>
       </div>
 
       {/* Stat cards */}
@@ -115,12 +120,17 @@ function SuperAdminDashboard() {
         </div>
       )}
       {loading && !stats ? (
-        <SuperAdminPageSkeleton cards={4} cardClassName="h-28" rows={0} />
+        <SuperAdminPageSkeleton
+          cards={5}
+          cardClassName="h-28"
+          cardCols="grid min-w-0 grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5"
+          rows={0}
+        />
       ) : (
         <div className="grid min-w-0 grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
           <StatCard label="Total Restaurants" value={stats?.totalRestaurants ?? 0} sub="Registered tenants"              icon={Building2} color="text-sa-primary" bg="bg-sa-primary-5" border="border-sa-primary-20" />
           <StatCard label="Restaurant Admins" value={stats?.totalAdmins ?? 0}      sub={`${stats?.activeAdmins ?? 0} active`} icon={Users}     color="text-amber-400"   bg="bg-amber-500/5"   border="border-amber-500/20"   />
-          <StatCard label="Total Revenue"     value={formatSaMoney(stats?.totalRevenue ?? 0)} sub="All time paid"  icon={Activity}  color="text-indigo-400"  bg="bg-indigo-500/5"  border="border-indigo-500/20"  />
+          <StatCard label="Subscription Revenue" value={formatSaMoney(stats?.totalRevenue ?? 0)} sub="Platform SaaS · all time" icon={Activity} color="text-indigo-400" bg="bg-indigo-500/5" border="border-indigo-500/20" />
           <StatCard
             label="New Contact Messages"
             value={stats?.newContactMessages ?? 0}
@@ -268,13 +278,13 @@ function SuperAdminDashboard() {
                   {i < 4 && <span className="mt-1 w-px flex-1 bg-[var(--admin-border-subtle)]" />}
                 </div>
                 <div className="min-w-0 flex-1 pb-4">
-                  <p className="break-words text-sm admin-shell-text">
-                    <span className="font-semibold">{u.name}</span> registered as <RoleBadge role={u.role} />
+                  <p className="flex min-w-0 flex-wrap items-center gap-x-1.5 gap-y-1 text-sm admin-shell-text">
+                    <span className="font-semibold">{u.name}</span>
+                    <span className="admin-surface-faint">registered as</span>
+                    <RoleBadge role={u.role} />
                   </p>
                   <p className="mt-0.5 text-xs admin-surface-faint">
-                    {u.createdAt
-                      ? new Date(u.createdAt).toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" })
-                      : "—"}
+                    {u.createdAt ? formatDateTime(u.createdAt) : "—"}
                   </p>
                 </div>
               </li>

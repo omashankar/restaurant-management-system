@@ -553,6 +553,33 @@ html[data-admin-mode="light"]
   padding-right: 0.75rem;
 }
 
+/* Hide browser-native search chrome — use SearchField clearable instead */
+:is(.restaurant-admin-panel, .super-admin-panel, .admin-portal-scope) .admin-search-input[type="search"] {
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+:is(.restaurant-admin-panel, .super-admin-panel, .admin-portal-scope)
+  .admin-search-input[type="search"]::-webkit-search-cancel-button,
+:is(.restaurant-admin-panel, .super-admin-panel, .admin-portal-scope)
+  .admin-search-input[type="search"]::-webkit-search-decoration,
+:is(.restaurant-admin-panel, .super-admin-panel, .admin-portal-scope)
+  .admin-search-input[type="search"]::-webkit-search-results-button {
+  -webkit-appearance: none;
+  appearance: none;
+  display: none;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+
+:is(.restaurant-admin-panel, .super-admin-panel, .admin-portal-scope)
+  .admin-search-input[type="search"]::-ms-clear {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
 :is(.restaurant-admin-panel, .super-admin-panel) .admin-surface-search.admin-search-input {
   padding-right: 2rem;
 }
@@ -656,10 +683,7 @@ html[data-admin-mode="light"]
 }
 
 :is(.restaurant-admin-panel, .super-admin-panel) .admin-surface-btn-icon {
-  display: inline-flex;
   cursor: pointer;
-  align-items: center;
-  justify-content: center;
   border-radius: 0.75rem;
   border: 1px solid var(--admin-border);
   background-color: var(--admin-control);
@@ -1327,6 +1351,75 @@ html[data-admin-mode="light"]
   font-weight: var(--admin-desc-weight);
   line-height: var(--admin-desc-leading);
   color: var(--admin-text-muted);
+}
+
+/* Page header — title row + actions (Refresh / Add / tabs) */
+:is(.restaurant-admin-panel, .super-admin-panel) .admin-page-header-row {
+  overflow: visible;
+  flex-wrap: wrap;
+}
+
+/* Flex page headers that contain .admin-page-header-actions — protect title from flex crush */
+:is(.restaurant-admin-panel, .super-admin-panel)
+  .flex:has(> .admin-page-header-actions) {
+  flex-wrap: wrap;
+}
+
+:is(.restaurant-admin-panel, .super-admin-panel)
+  .flex:has(> .admin-page-header-actions)
+  > :not(.admin-page-header-actions):first-child {
+  flex: 1 1 auto;
+  min-width: min(100%, 11rem) !important;
+}
+
+:is(.restaurant-admin-panel, .super-admin-panel) .admin-page-header-actions {
+  display: flex;
+  flex-shrink: 0;
+  flex-direction: column;
+  gap: 0.5rem;
+  width: 100%;
+  max-width: 100%;
+}
+
+:is(.restaurant-admin-panel, .super-admin-panel) .admin-page-header-actions > * {
+  flex-shrink: 0;
+  max-width: 100%;
+}
+
+:is(.restaurant-admin-panel, .super-admin-panel) .admin-page-header-actions :is(button, a) {
+  white-space: nowrap;
+}
+
+@media (min-width: 640px) {
+  :is(.restaurant-admin-panel, .super-admin-panel) .admin-page-header-actions {
+    flex-flow: row wrap;
+    align-items: center;
+    justify-content: flex-end;
+    width: auto;
+    margin-left: auto;
+  }
+
+  :is(.restaurant-admin-panel, .super-admin-panel) .admin-page-header-actions :is(button, a) {
+    width: auto;
+  }
+
+  :is(.restaurant-admin-panel, .super-admin-panel) .admin-page-header-actions > .admin-surface-segment-track {
+    width: auto;
+  }
+}
+
+@media (max-width: 639px) {
+  :is(.restaurant-admin-panel, .super-admin-panel) .admin-page-header-actions {
+    min-width: 0;
+  }
+
+  :is(.restaurant-admin-panel, .super-admin-panel) .admin-page-header-actions > :is(button, a) {
+    width: 100%;
+  }
+
+  :is(.restaurant-admin-panel, .super-admin-panel) .admin-page-header-actions > .admin-surface-segment-track {
+    width: 100%;
+  }
 }
 
 :is(.restaurant-admin-panel, .super-admin-panel) .admin-page-content a:not([class*="btn"]):not([class*="rounded"]) {
@@ -2065,6 +2158,27 @@ html[data-admin-mode="light"] .super-admin-panel .sa-pricing-card--free [class*=
   color: var(--admin-text-secondary) !important;
 }
 
+/* Kitchen display — ticket row surfaces (dark default) */
+.kitchen-display .kitchen-item-row {
+  background-color: color-mix(in srgb, var(--admin-hover) 85%, transparent);
+}
+
+.kitchen-display .kitchen-qty-badge {
+  background-color: var(--admin-hover-strong);
+  color: var(--admin-text);
+}
+
+.kitchen-display .kitchen-mark-served {
+  background-color: var(--admin-hover-strong);
+  border: 1px solid var(--admin-border);
+  color: var(--admin-text-secondary);
+}
+
+.kitchen-display .kitchen-mark-served:hover {
+  background-color: var(--admin-hover);
+  color: var(--admin-text);
+}
+
 /* Kitchen display — light surfaces */
 html[data-admin-mode="light"] .kitchen-display .kitchen-item-row,
 html[data-admin-mode="light"] .kitchen-display .kitchen-elapsed-normal {
@@ -2456,6 +2570,20 @@ html[data-admin-mode="light"] .restaurant-admin-panel [class*="customer-site"] :
 }
 
 /* Customer Site CMS panel — nested wells (no double white card chrome) */
+:is(.restaurant-admin-panel, .super-admin-panel) [data-customer-site-cms] .cms-media-form-row {
+  overflow: hidden;
+}
+
+:is(.restaurant-admin-panel, .super-admin-panel) [data-customer-site-cms] .cms-media-form-row > * {
+  min-width: 0;
+  max-width: 100%;
+}
+
+:is(.restaurant-admin-panel, .super-admin-panel) [data-customer-site-cms] {
+  overflow-x: hidden;
+  max-width: 100%;
+}
+
 :is(.restaurant-admin-panel, .super-admin-panel) [data-customer-site-cms] .cms-editor-well {
   border-color: var(--admin-border-subtle);
   background-color: var(--admin-surface-soft);

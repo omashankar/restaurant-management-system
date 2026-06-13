@@ -48,8 +48,8 @@ export default function DonutChart({ channels = DEFAULT_CHANNELS }) {
   return (
     <div className={`rms-dashboard-card rms-dashboard-card--md flex h-full min-h-0 w-full flex-col p-5 ${adminSurface.card}`}>
       <div className="shrink-0">
-        <h3 className={`text-sm font-semibold ${adminSurface.title}`}>Order Channels</h3>
-        <p className={`text-xs ${adminSurface.muted}`}>Online vs offline split</p>
+        <h3 className={`break-words text-sm font-semibold ${adminSurface.title}`}>Order Channels</h3>
+        <p className={`break-words text-xs ${adminSurface.muted}`}>Online vs offline split</p>
       </div>
 
       <div className="rms-dashboard-card__body rms-dashboard-card__body--y mt-4 min-h-0 flex-1 pr-1">
@@ -71,12 +71,12 @@ export default function DonutChart({ channels = DEFAULT_CHANNELS }) {
           </div>
         </div>
 
-        <div className="w-full min-w-0 space-y-3 sm:w-auto">
+        <div className="w-full min-w-0 flex-1 space-y-3 sm:w-auto sm:flex-none">
           {items.map((c) => (
-            <div key={c.id} className="flex items-center gap-3">
+            <div key={c.id} className="flex min-w-0 items-center gap-3">
               <span className="size-3 shrink-0 rounded-full" style={{ backgroundColor: c.color }} />
-              <div>
-                <p className={`text-sm font-medium ${adminSurface.body}`}>{c.label}</p>
+              <div className="min-w-0">
+                <p className={`break-words text-sm font-medium ${adminSurface.body}`}>{c.label}</p>
                 <p className={`text-xs ${adminSurface.muted}`}>{c.value} orders</p>
               </div>
             </div>

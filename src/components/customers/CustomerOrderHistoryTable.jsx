@@ -24,9 +24,11 @@ export default function CustomerOrderHistoryTable({ orders = [] }) {
                 key={o.id}
                 className="rounded-xl border admin-shell-border bg-[var(--admin-surface-soft)] p-3"
               >
-                <div className="flex flex-wrap items-start justify-between gap-2">
-                  <p className="font-mono text-xs text-ra-primary/90">{o.id}</p>
-                  <p className="shrink-0 font-medium tabular-nums admin-shell-text">
+                <div className="flex min-w-0 flex-wrap items-start justify-between gap-2">
+                  <p className="min-w-0 truncate font-mono text-xs text-ra-primary/90" title={o.id}>
+                    {o.id}
+                  </p>
+                  <p className="shrink-0 break-all font-medium tabular-nums admin-shell-text">
                     ${Number(o.total ?? 0).toFixed(2)}
                   </p>
                 </div>
@@ -62,12 +64,16 @@ export default function CustomerOrderHistoryTable({ orders = [] }) {
                     key={o.id}
                     className="transition-colors hover:bg-[var(--admin-hover)]"
                   >
-                    <td className="px-4 py-3 font-mono text-xs text-ra-primary/90">{o.id}</td>
-                    <td className="px-4 py-3 text-zinc-400">{o.date}</td>
-                    <td className="max-w-[16rem] px-4 py-3 admin-surface-body lg:max-w-none">
-                      <span className="line-clamp-2">{o.items}</span>
+                    <td className="max-w-[8rem] min-w-0 px-4 py-3">
+                      <span className="block truncate font-mono text-xs text-ra-primary/90" title={o.id}>
+                        {o.id}
+                      </span>
                     </td>
-                    <td className="px-4 py-3 text-right font-medium tabular-nums admin-shell-text">
+                    <td className="whitespace-nowrap px-4 py-3 text-zinc-400">{o.date}</td>
+                    <td className="max-w-[16rem] min-w-0 px-4 py-3 admin-surface-body lg:max-w-none">
+                      <span className="line-clamp-2 break-words">{o.items}</span>
+                    </td>
+                    <td className="whitespace-nowrap px-4 py-3 text-right font-medium tabular-nums admin-shell-text">
                       ${Number(o.total ?? 0).toFixed(2)}
                     </td>
                   </tr>

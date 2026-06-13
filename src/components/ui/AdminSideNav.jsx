@@ -32,6 +32,7 @@ export function AdminSideNavItem({
   icon: Icon,
   className = "",
   activeClassName = "",
+  id,
 }) {
   const useCustomActive = Boolean(active && activeClassName);
   const isSolidBrandFill =
@@ -49,6 +50,7 @@ export function AdminSideNavItem({
   return (
     <button
       type="button"
+      id={id}
       onClick={onClick}
       aria-current={active ? "page" : undefined}
       className={`admin-side-nav-item cursor-pointer flex shrink-0 items-center gap-2.5 rounded-lg px-3 py-2.5 text-left text-sm font-medium transition-colors whitespace-nowrap lg:w-full ${

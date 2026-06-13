@@ -17,7 +17,7 @@ import {
 import EmptyState from "@/components/ui/EmptyState";
 import ListToolbar from "@/components/ui/ListToolbar";
 import Modal from "@/components/ui/Modal";
-import { raInputCls, raTextareaCls } from "@/config/restaurantAdminTheme";
+import { raFilterSelectCls, raIconBadgeCls, raInputCls, raSpinnerCls, raTextareaCls, raPageRefreshBtnCls, raPagePrimaryBtnCls } from "@/config/restaurantAdminTheme";
 import PaginationBar from "@/components/ui/PaginationBar";
 import TableSkeleton from "@/components/ui/TableSkeleton";
 import RoleCard from "@/components/rms/RoleCard";
@@ -30,8 +30,7 @@ import {
   getCustomerFormFieldErrors,
 } from "@/lib/formValidation";
 import PhoneInput from "@/components/ui/PhoneInput";
-import { raIconBadgeCls } from "@/config/restaurantAdminTheme";
-import { Eye, Pencil, Plus, Trash2, Users } from "lucide-react";
+import { Eye, Pencil, Plus, RefreshCw, Trash2, Users } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 
@@ -48,10 +47,43 @@ function normalizeCustomer(row) {
   };
 }
 
+function CustomersPageSkeleton() {
+  return (
+    <div className="min-w-0 space-y-6 overflow-x-hidden">
+      <div className="flex min-w-0 flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div className="space-y-2">
+          <div className="h-8 w-36 animate-pulse rounded-lg admin-progress-track" />
+          <div className="h-4 w-56 max-w-full animate-pulse rounded admin-progress-track" />
+        </div>
+        <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
+          <div className="h-10 w-full animate-pulse rounded-xl admin-surface-card sm:w-24" />
+          <div className="h-10 w-full animate-pulse rounded-xl admin-surface-card sm:w-36" />
+        </div>
+      </div>
+      <div className="flex min-w-0 flex-col gap-3 lg:flex-row lg:items-center">
+        <div className="h-10 w-full max-w-md animate-pulse rounded-xl admin-surface-card" />
+        <div className="h-10 w-full animate-pulse rounded-xl admin-surface-card sm:w-40" />
+      </div>
+      <div className="space-y-2 md:hidden">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <div key={i} className="animate-pulse rounded-xl border admin-shell-border bg-[var(--admin-surface-soft)] p-3">
+            <div className="h-4 w-2/3 rounded admin-progress-track" />
+            <div className="mt-2 h-3 w-1/2 rounded admin-progress-track" />
+          </div>
+        ))}
+      </div>
+      <div className="hidden md:block">
+        <TableSkeleton rows={8} cols={5} />
+      </div>
+    </div>
+  );
+}
+
 export default function CustomersModulePage() {
   const { user } = useApp();
   const { hydrated, customerRows, setCustomerRows } = useModuleData();
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [fetchError, setFetchError] = useState(null);
   const [visitFilter, setVisitFilter] = useState("all");
   const [modalOpen, setModalOpen] = useState(false);
@@ -68,32 +100,40 @@ export default function CustomersModulePage() {
   const canDelete = user?.role === "admin" || user?.role === "manager";
   const { showToast, ToastUI } = useToast();
 
-  useEffect(() => {
+  const loadCustomers = useCallback(async (silent = false) => {
     if (!hydrated) return;
-    let alive = true;
-    async function loadCustomers() {
+    if (!silent) {
       setLoading(true);
       setFetchError(null);
-      try {
-        const res = await fetch("/api/customers", { cache: "no-store" });
-        const data = await res.json();
-        if (!alive) return;
-        if (res.ok && data?.success && Array.isArray(data.customers)) {
-          setCustomerRows(data.customers.map(normalizeCustomer));
-        } else {
-          setFetchError(data?.error ?? "Could not load customers.");
-        }
-      } catch {
-        if (alive) setFetchError("Network error while loading customers.");
-      } finally {
-        if (alive) setLoading(false);
-      }
     }
-    loadCustomers();
-    return () => {
-      alive = false;
-    };
+    try {
+      const res = await fetch("/api/customers", { cache: "no-store" });
+      const data = await res.json();
+      if (res.ok && data?.success && Array.isArray(data.customers)) {
+        setCustomerRows(data.customers.map(normalizeCustomer));
+      } else if (!silent) {
+        setFetchError(data?.error ?? "Could not load customers.");
+      }
+    } catch {
+      if (!silent) setFetchError("Network error while loading customers.");
+    } finally {
+      if (!silent) setLoading(false);
+    }
   }, [hydrated, setCustomerRows]);
+
+  useEffect(() => {
+    loadCustomers();
+  }, [loadCustomers]);
+
+  const refreshCustomers = useCallback(async () => {
+    setRefreshing(true);
+    setFetchError(null);
+    try {
+      await loadCustomers(true);
+    } finally {
+      setRefreshing(false);
+    }
+  }, [loadCustomers]);
 
   const filterFn = useCallback(
     (row) => {
@@ -224,9 +264,8 @@ export default function CustomersModulePage() {
 
   if (!hydrated || loading) {
     return (
-      <div className="min-w-0 w-full max-w-full space-y-6 overflow-x-hidden">
-        <div className="h-8 w-40 animate-pulse rounded-lg admin-progress-track" />
-        <TableSkeleton rows={8} cols={6} />
+      <div className="min-w-0 w-full max-w-full overflow-x-hidden">
+        <CustomersPageSkeleton />
       </div>
     );
   }
@@ -247,22 +286,33 @@ export default function CustomersModulePage() {
             <Users className="size-5" aria-hidden />
           </span>
           <div className="min-w-0">
-            <h1 className="admin-page-title text-2xl font-semibold tracking-tight">
+            <h1 className="admin-page-title break-words text-xl font-semibold tracking-tight sm:text-2xl">
               Customers
             </h1>
-            <p className="admin-page-desc mt-1 text-sm">
+            <p className="admin-page-desc mt-1 break-words text-sm">
               CRM list with visit history on profile.
             </p>
           </div>
         </div>
-        <button
-          type="button"
-          onClick={openCreate}
-          className="inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-ra-primary px-4 py-2.5 text-sm font-semibold text-zinc-950 hover:brightness-110 sm:w-auto"
-        >
-          <Plus className="size-4" />
-          Add customer
-        </button>
+        <div className="admin-page-header-actions">
+          <button
+            type="button"
+            onClick={refreshCustomers}
+            disabled={refreshing}
+            className={raPageRefreshBtnCls}
+          >
+            <RefreshCw className={`size-4 ${refreshing ? raSpinnerCls : ""}`} />
+            Refresh
+          </button>
+          <button
+            type="button"
+            onClick={openCreate}
+            className={raPagePrimaryBtnCls}
+          >
+            <Plus className="size-4" />
+            Add customer
+          </button>
+        </div>
       </div>
 
       {fetchError ? (
@@ -279,7 +329,8 @@ export default function CustomersModulePage() {
           <select
             value={visitFilter}
             onChange={(e) => setVisitFilter(e.target.value)}
-            className="w-full admin-surface-card px-3 py-2 text-sm admin-shell-text sm:w-auto"
+            className={`${raFilterSelectCls} w-full sm:w-auto`}
+            aria-label="Filter by visits"
           >
             <option value="all">All visits</option>
             <option value="1-5">1–5 visits</option>
@@ -297,7 +348,7 @@ export default function CustomersModulePage() {
             <button
               type="button"
               onClick={openCreate}
-              className="cursor-pointer rounded-xl bg-ra-primary px-4 py-2 text-sm font-semibold text-zinc-950"
+              className="inline-flex w-full cursor-pointer items-center justify-center rounded-xl bg-ra-primary px-4 py-2 text-sm font-semibold text-zinc-950 hover:brightness-110 sm:w-auto"
             >
               Add customer
             </button>
@@ -377,7 +428,7 @@ export default function CustomersModulePage() {
             <AdminTableBody>
               {pageRows.map((row) => (
                 <AdminTableRow key={row.id}>
-                  <AdminTableTd className="max-w-[10rem] font-medium admin-shell-text sm:max-w-none">
+                  <AdminTableTd className="max-w-[10rem] min-w-0 font-medium admin-shell-text sm:max-w-none">
                     <span className="block truncate">{row.name}</span>
                   </AdminTableTd>
                   <AdminTableTd className="tabular-nums admin-surface-muted">{row.phone}</AdminTableTd>
@@ -445,7 +496,7 @@ export default function CustomersModulePage() {
           </div>
         }
       >
-        <div className="space-y-4">
+        <div className="min-w-0 space-y-4">
           <div>
             <label className="text-xs admin-surface-muted">Name</label>
             <input

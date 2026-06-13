@@ -7,7 +7,7 @@ import SocialMediaIcons from "@/components/customer/SocialMediaIcons";
 import { DEFAULTS } from "@/lib/restaurantCmsDefaults";
 import { mergeCmsSection } from "@/lib/customerCmsMerge";
 import { resolveSiteSocialLinks } from "@/lib/resolveLayoutTheme";
-import { formatTimeSlot } from "@/lib/reservationUtils";
+import { useCustomerLocale } from "@/context/CustomerLocaleContext";
 import {
   customerClasses,
   customerOverlay,
@@ -25,11 +25,6 @@ const MISSING_HINT = "Not set yet";
 function telHref(phone) {
   const digits = String(phone ?? "").replace(/[^\d+]/g, "");
   return digits ? `tel:${digits}` : "";
-}
-
-function formatHoursRange(open, close) {
-  if (!open || !close) return "—";
-  return `${formatTimeSlot(open)} – ${formatTimeSlot(close)}`;
 }
 
 function CardHeader({ Icon, iconClass, title, subtitle }) {
@@ -89,7 +84,7 @@ function ContactInfoArticle({ Icon, label, value, color, href, mapsHref }) {
   );
 }
 
-function OpeningHoursList({ hours, hoursSummary, todayName }) {
+function OpeningHoursList({ hours, hoursSummary, todayName, formatHoursRange }) {
   if (hours?.length > 0) {
     return (
       <ul className="space-y-2">
@@ -140,14 +135,16 @@ function OpeningHoursList({ hours, hoursSummary, todayName }) {
 export default function ContactPage() {
   const { link } = useRestaurantSlug();
   const { info, loading } = useRestaurantInfo();
+  const { formatTimeSlot, formatWeekdayLong } = useCustomerLocale();
+  const formatHoursRange = (open, close) => {
+    if (!open || !close) return "—";
+    return `${formatTimeSlot(open)} – ${formatTimeSlot(close)}`;
+  };
   const { content: cms } = useRestaurantCms();
   const contactCms = mergeCmsSection(DEFAULTS.contact, cms.contact);
   const socialLinks = resolveSiteSocialLinks(cms.theme, cms.social);
 
-  const todayName = useMemo(
-    () => new Date().toLocaleDateString("en-US", { weekday: "long" }),
-    []
-  );
+  const todayName = useMemo(() => formatWeekdayLong(), [formatWeekdayLong]);
 
   const todayHours = info.openingHours?.find((h) => h.day === todayName);
   const todayStatusLabel = info.isOpenToday && todayHours && !todayHours.closed
@@ -285,6 +282,7 @@ export default function ContactPage() {
                   hours={info.openingHours}
                   hoursSummary={info.hoursSummary}
                   todayName={todayName}
+                  formatHoursRange={formatHoursRange}
                 />
               </div>
             </motion.article>

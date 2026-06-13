@@ -1,6 +1,7 @@
 /**
  * POST /api/printer-settings/test — send ESC/POS test to a network printer
  */
+import { normalizeLocalePrefs } from "@/lib/localeFormat";
 import { withTenant } from "@/lib/tenantDb";
 import { buildEscPosTest, sanitizePrinter, sendToNetworkPrinter } from "@/lib/networkPrinter";
 
@@ -22,12 +23,13 @@ export const POST = withTenant(["admin", "manager"], async ({ db, restaurantId }
 
   const settingsDoc = await db.collection("restaurant_settings").findOne(
     { restaurantId },
-    { projection: { "general.restaurantName": 1 } }
+    { projection: { general: 1 } }
   ).catch(() => null);
   const restaurantName = settingsDoc?.general?.restaurantName ?? "Restaurant";
+  const localePrefs = normalizeLocalePrefs(settingsDoc?.general ?? {});
 
   try {
-    const data = buildEscPosTest({ restaurantName });
+    const data = buildEscPosTest({ restaurantName, localePrefs });
     await sendToNetworkPrinter({
       host: printer.ipAddress,
       port: printer.port,

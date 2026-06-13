@@ -126,6 +126,8 @@ export const EMPTY_SETTINGS = {
     currency: "USD",
     timezone: "UTC",
     language: "English",
+    dateFormat: "DD/MM/YYYY",
+    timeFormat: "12h",
   },
   pos: {
     taxPercentage: "0",
@@ -195,4 +197,36 @@ export const TIMEZONE_OPTIONS = [
   "Asia/Dubai",
   "Asia/Singapore",
 ];
-export const LANGUAGE_OPTIONS = ["English", "Hindi", "Arabic", "Spanish", "French"];
+export const LANGUAGE_OPTIONS = ["English"];
+
+/** Stored as English only (UI is not localized). */
+export const PANEL_LANGUAGE_OPTIONS = ["English"];
+
+export const DATE_FORMAT_OPTIONS = ["MM/DD/YYYY", "DD/MM/YYYY", "YYYY-MM-DD"];
+
+export const TIME_FORMAT_OPTIONS = [
+  { value: "12h", label: "12-hour (AM/PM)" },
+  { value: "24h", label: "24-hour" },
+];
+
+export function normalizeDateFormat(format) {
+  const value = String(format ?? "").trim();
+  return DATE_FORMAT_OPTIONS.includes(value) ? value : EMPTY_SETTINGS.general.dateFormat;
+}
+
+export function normalizeTimeFormat(format) {
+  const value = String(format ?? "").trim();
+  return TIME_FORMAT_OPTIONS.some((opt) => opt.value === value) ? value : EMPTY_SETTINGS.general.timeFormat;
+}
+
+export function normalizePanelLanguage() {
+  return "English";
+}
+
+export function panelLanguageToCode() {
+  return "en";
+}
+
+export function panelLanguageFromCode() {
+  return "English";
+}

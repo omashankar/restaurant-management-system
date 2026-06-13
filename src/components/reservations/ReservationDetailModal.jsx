@@ -1,11 +1,8 @@
 "use client";
 
 import Modal from "@/components/ui/Modal";
-import {
-  formatReservationDate,
-  formatTimeSlot,
-  getReservationTimeline,
-} from "@/lib/reservationUtils";
+import { useAdminLocale } from "@/context/RestaurantLocaleContext";
+import { getReservationTimeline } from "@/lib/reservationUtils";
 import { Check, Circle, X } from "lucide-react";
 import StatusBadge from "./StatusBadge";
 
@@ -36,6 +33,7 @@ function dotForTone(tone) {
 }
 
 export default function ReservationDetailModal({ open, onClose, reservation }) {
+  const { formatReservationDate, formatTimeSlot, formatDateTime } = useAdminLocale();
   if (!reservation) return null;
 
   const timeline = getReservationTimeline(reservation);
@@ -118,10 +116,7 @@ export default function ReservationDetailModal({ open, onClose, reservation }) {
                   <p className="font-medium admin-shell-text">{step.label}</p>
                   <p className="text-xs admin-surface-muted">
                     {step.at
-                      ? new Date(step.at).toLocaleString(undefined, {
-                          dateStyle: "medium",
-                          timeStyle: "short",
-                        })
+                      ? formatDateTime(step.at)
                       : step.tone === "wait"
                         ? "Awaiting…"
                         : "—"}

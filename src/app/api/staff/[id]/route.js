@@ -1,4 +1,10 @@
+import {
+  findStaffPhoneConflict,
+  normalizeStaffPhoneStored,
+  staffPhoneConflictMessage,
+} from "@/lib/staffPhone";
 import { withTenant } from "@/lib/tenantDb";
+import { isValidIndianMobile, extractIndianMobileDigits } from "@/lib/phoneUtils";
 import { ObjectId } from "mongodb";
 
 const STAFF_ROLES = ["manager", "waiter", "chef"];
@@ -17,7 +23,7 @@ export const PATCH = withTenant(
     const body = await request.json();
     const existing = await db.collection("users").findOne(
       { ...tenantFilter, _id },
-      { projection: { role: 1 } }
+      { projection: { role: 1, phone: 1 } }
     );
     if (!existing) return Response.json({ success: false, error: "Staff not found." }, { status: 404 });
     if (!STAFF_ROLES.includes(existing.role)) {
@@ -49,7 +55,36 @@ export const PATCH = withTenant(
       }
       update.role = nextRole;
     }
-    if (body.phone)  update.phone  = body.phone.trim();
+    if (body.phone !== undefined) {
+      const raw = String(body.phone ?? "").trim();
+      if (!raw) {
+        update.phone = "";
+      } else {
+        const digits = extractIndianMobileDigits(raw);
+        if (!isValidIndianMobile(digits)) {
+          return Response.json(
+            { success: false, error: "Enter a valid 10-digit Indian mobile number." },
+            { status: 400 },
+          );
+        }
+        const phoneStored = normalizeStaffPhoneStored(digits);
+        const currentStored = normalizeStaffPhoneStored(existing.phone);
+        if (phoneStored !== currentStored) {
+          const phoneConflict = await findStaffPhoneConflict(db, {
+            tenantFilter,
+            phone: phoneStored,
+            excludeUserId: params.id,
+          });
+          if (phoneConflict) {
+            return Response.json(
+              { success: false, error: staffPhoneConflictMessage(phoneConflict.name) },
+              { status: 409 },
+            );
+          }
+        }
+        update.phone = phoneStored;
+      }
+    }
     if (body.status) {
       if (!STAFF_STATUSES.includes(body.status)) {
         return Response.json({ success: false, error: "Invalid status." }, { status: 400 });

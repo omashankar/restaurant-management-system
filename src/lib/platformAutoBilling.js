@@ -14,6 +14,7 @@ export async function runPlatformAutoBilling(db) {
   }
 
   const now = new Date();
+  const currency = await getPlatformCurrency(db);
   const prefix = String(settings.advanced?.invoicePrefix ?? "INV-").trim() || "INV-";
 
   const expired = await db.collection("subscriptions").find({
@@ -73,7 +74,7 @@ export async function runPlatformAutoBilling(db) {
   }
 
   if (updated > 0) {
-    await sendPlatformAlert(db, "weeklyReport", {
+    await sendPlatformAlert(db, "systemHealth", {
       subject: platformEmailSubject(`Auto-billing: ${updated} subscription(s) expired`),
       text: `${updated} subscription(s) were marked expired. ${soon.length} renewal invoice(s) pending.`,
     }).catch(() => {});

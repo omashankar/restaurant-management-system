@@ -1,6 +1,7 @@
 "use client";
 
 
+import { raPageRefreshBtnCls } from "@/config/restaurantAdminTheme";
 import SuperAdminPageSkeleton from "@/components/super-admin/SuperAdminPageSkeleton";
 import { saIconBadgeCls, saInputCls, saSpinnerCls } from "@/config/superAdminTheme";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
@@ -22,6 +23,7 @@ import {
 import Modal from "@/components/ui/Modal";
 import PasswordInput from "@/components/ui/PasswordInput";
 import PhoneInput from "@/components/ui/PhoneInput";
+import { useSuperAdminLocale } from "@/context/SuperAdminLocaleContext";
 import { useToast } from "@/hooks/useToast";
 import {
   DEFAULT_SIGNUP_PASSWORD_SECURITY,
@@ -121,6 +123,7 @@ function Field({ label, required, children }) {
    PREVIEW MODAL
 ───────────────────────────────────────── */
 function PreviewModal({ restaurant, onClose }) {
+  const { formatDate } = useSuperAdminLocale();
   if (!restaurant) return null;
   return (
     <Modal open={!!restaurant} onClose={onClose} title="Restaurant Details"
@@ -178,13 +181,13 @@ function PreviewModal({ restaurant, onClose }) {
             { icon: Crown,    label: "Owner",   value: restaurant.ownerName },
             { icon: Mail,     label: "Email",   value: restaurant.ownerEmail },
             { icon: Phone,    label: "Phone",   value: restaurant.phone !== "—" ? restaurant.phone : "Not provided" },
-            { icon: Calendar, label: "Created", value: restaurant.createdAt ? new Date(restaurant.createdAt).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" }) : "—" },
+            { icon: Calendar, label: "Created", value: restaurant.createdAt ? formatDate(restaurant.createdAt) : "—" },
           ].map(({ icon: Icon, label, value }) => (
             <div key={label} className="flex items-start gap-3 rounded-xl border admin-shell-border admin-surface-card px-3 py-2.5">
               <Icon className="mt-0.5 size-4 shrink-0 text-zinc-500" />
               <div className="min-w-0">
                 <p className="text-[10px] font-semibold uppercase tracking-wider text-zinc-600">{label}</p>
-                <p className="mt-0.5 truncate text-sm admin-shell-text">{value || "—"}</p>
+                <p className="mt-0.5 break-all text-sm admin-shell-text">{value || "—"}</p>
               </div>
             </div>
           ))}
@@ -232,6 +235,7 @@ function RestaurantRowActions({ r, onPreview, onEdit, onDelete, onToggleOwner, o
    MAIN PAGE
 ───────────────────────────────────────── */
 export default function RestaurantsPage() {
+  const { formatDate } = useSuperAdminLocale();
   const [restaurants, setRestaurants]   = useState([]);
   const [totalCount, setTotalCount]     = useState(0);
   const [listStats, setListStats]       = useState({
@@ -518,17 +522,21 @@ export default function RestaurantsPage() {
       {/* Header */}
       <div className="flex min-w-0 flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div className="flex min-w-0 items-start gap-3">
-          <span className={`mt-1 shrink-0 ${saIconBadgeCls}`}>
+          <span className={`mt-1 flex shrink-0 items-center justify-center ${saIconBadgeCls}`}>
             <Building2 className="size-5" />
           </span>
           <div className="min-w-0">
-            <h1 className="break-words text-2xl font-semibold tracking-tight text-zinc-50">Restaurants</h1>
+            <h1 className="admin-page-title break-words text-xl font-semibold tracking-tight sm:text-2xl">Restaurants</h1>
             <p className="mt-1 text-sm admin-surface-muted">Manage all registered tenants and their admin accounts.</p>
           </div>
         </div>
-        <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">
-          <button type="button" onClick={fetchRestaurants}
-            className="cursor-pointer flex w-full items-center justify-center gap-1.5 rounded-xl border admin-shell-border px-3 py-2.5 text-sm font-medium text-zinc-400 transition-colors hover:border-zinc-500 hover:admin-shell-text sm:w-auto">
+        <div className="admin-page-header-actions">
+          <button
+            type="button"
+            onClick={fetchRestaurants}
+            aria-label="Refresh restaurant list"
+            className={raPageRefreshBtnCls}
+          >
             <RefreshCw className={"size-4 " + (loading ? saSpinnerCls : "")} />
             <span className="sm:hidden">Refresh</span>
           </button>
@@ -590,7 +598,14 @@ export default function RestaurantsPage() {
 
       {/* Table */}
       {loading ? (
-        <SuperAdminPageSkeleton rows={6} rowClassName="h-16" />
+        <div className="space-y-4">
+          <SuperAdminPageSkeleton
+            cards={4}
+            cardClassName="h-16"
+            cardCols="grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4"
+          />
+          <SuperAdminPageSkeleton rows={6} rowClassName="h-16" />
+        </div>
       ) : totalCount === 0 ? (
         <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-dashed admin-shell-border py-20 text-center">
           <Building2 className="size-10 text-zinc-700" />
@@ -672,11 +687,11 @@ export default function RestaurantsPage() {
                     </span>
                   </div>
                   <span className="shrink-0 text-[10px] admin-surface-faint">
-                    {r.createdAt ? new Date(r.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "—"}
+                    {r.createdAt ? formatDate(r.createdAt) : "—"}
                   </span>
                 </div>
 
-                <div className="mt-3 flex flex-wrap items-center gap-1 border-t admin-shell-border pt-3">
+                <div className="mt-3 flex flex-wrap items-center justify-end gap-1 border-t admin-shell-border pt-3">
                   <RestaurantRowActions
                     r={r}
                     onPreview={setPreviewTarget}
@@ -696,10 +711,10 @@ export default function RestaurantsPage() {
                 <AdminTableHeadRow>
                   <AdminTableTh>Restaurant</AdminTableTh>
                   <AdminTableTh hidden="md">Owner Admin</AdminTableTh>
-                  <AdminTableTh hidden="lg">Phone</AdminTableTh>
+                  <AdminTableTh>Phone</AdminTableTh>
                   <AdminTableTh hidden="md">Plan</AdminTableTh>
                   <AdminTableTh>Status</AdminTableTh>
-                  <AdminTableTh hidden="lg">Created</AdminTableTh>
+                  <AdminTableTh>Created</AdminTableTh>
                   <AdminTableThActions />
                 </AdminTableHeadRow>
               </AdminTableHead>
@@ -723,7 +738,7 @@ export default function RestaurantsPage() {
                               /r/{r.slug}
                             </a>
                           ) : (
-                            <p className="truncate text-xs admin-surface-faint md:hidden">{r.ownerEmail}</p>
+                            <p className="truncate text-xs admin-surface-faint">{r.ownerEmail}</p>
                           )}
                         </div>
                       </div>
@@ -750,7 +765,7 @@ export default function RestaurantsPage() {
                       </div>
                     </AdminTableTd>
 
-                    <AdminTableTd hidden="lg">
+                    <AdminTableTd>
                       <span className="text-xs text-zinc-400">{r.phone !== "—" ? r.phone : <span className="text-zinc-700">—</span>}</span>
                     </AdminTableTd>
 
@@ -777,8 +792,8 @@ export default function RestaurantsPage() {
                       </div>
                     </AdminTableTd>
 
-                    <AdminTableTd hidden="lg" className="text-xs admin-surface-faint">
-                      {r.createdAt ? new Date(r.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "—"}
+                    <AdminTableTd className="text-xs admin-surface-faint whitespace-nowrap">
+                      {r.createdAt ? formatDate(r.createdAt) : "—"}
                     </AdminTableTd>
 
                     <AdminTableActionsCell>
@@ -951,7 +966,7 @@ export default function RestaurantsPage() {
                   placeholder="123 Main St, City, Country (optional)" className={inputCls} />
               </Field>
             </div>
-            <div className="sm:col-span-2 flex items-center justify-between rounded-xl border admin-shell-border admin-surface-card px-4 py-3">
+            <div className="sm:col-span-2 flex flex-col gap-3 rounded-xl border admin-shell-border admin-surface-card px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <p className="text-sm font-medium admin-shell-text">Status</p>
                 <p className="admin-surface-faint">Restaurant will be {createForm.status === "active" ? "active" : "inactive"} immediately</p>

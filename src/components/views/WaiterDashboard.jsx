@@ -18,8 +18,8 @@ export default function WaiterDashboard({ tables = [], orders = [] }) {
           <ClipboardList className="size-5" aria-hidden />
         </span>
         <div className="min-w-0">
-          <h1 className="admin-page-title">My Shift</h1>
-          <p className="admin-page-desc">Active tables, your orders, and quick actions.</p>
+          <h1 className="admin-page-title break-words text-xl font-semibold tracking-tight sm:text-2xl">My Shift</h1>
+          <p className="admin-page-desc mt-1 break-words text-sm">Active tables, your orders, and quick actions.</p>
         </div>
       </div>
 

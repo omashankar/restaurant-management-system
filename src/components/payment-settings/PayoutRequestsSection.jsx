@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import PaginationBar from "@/components/ui/PaginationBar";
+import { useAdminLocale } from "@/context/RestaurantLocaleContext";
 import { Loader2, RefreshCw } from "lucide-react";
 
 const STATUS_BADGE = {
@@ -11,6 +12,7 @@ const STATUS_BADGE = {
 };
 
 export default function PayoutRequestsSection({ settlement, showToast }) {
+  const { formatDate } = useAdminLocale();
   const [requests, setRequests]     = useState([]);
   const [pagination, setPagination] = useState({ page: 1, pages: 1, total: 0 });
   const [loading, setLoading]       = useState(true);
@@ -146,7 +148,7 @@ export default function PayoutRequestsSection({ settlement, showToast }) {
                     <td className="hidden px-4 py-3 text-xs admin-surface-muted md:table-cell">{r.note || "—"}</td>
                     <td className="hidden px-4 py-3 text-xs admin-surface-muted md:table-cell">{r.adminNote || "—"}</td>
                     <td className="px-4 py-3 text-xs admin-surface-faint">
-                      {r.createdAt ? new Date(r.createdAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }) : "—"}
+                      {r.createdAt ? formatDate(r.createdAt) : "—"}
                     </td>
                   </tr>
                 ))}

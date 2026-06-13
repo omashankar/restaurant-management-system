@@ -1,6 +1,6 @@
 "use client";
 
-import { raIconBadgeCls } from "@/config/restaurantAdminTheme";
+import { raIconBadgeCls, raInputCls, raSpinnerCls, raTextareaCls, raPageRefreshBtnCls, raPagePrimaryBtnCls } from "@/config/restaurantAdminTheme";
 import DataTableShell from "@/components/ui/DataTableShell";
 import {
   AdminTable,
@@ -17,7 +17,6 @@ import {
 import EmptyState from "@/components/ui/EmptyState";
 import ListToolbar from "@/components/ui/ListToolbar";
 import Modal from "@/components/ui/Modal";
-import { raInputCls, raTextareaCls } from "@/config/restaurantAdminTheme";
 import PaginationBar from "@/components/ui/PaginationBar";
 import TableSkeleton from "@/components/ui/TableSkeleton";
 import { usePaginatedList } from "@/hooks/usePaginatedList";
@@ -26,10 +25,40 @@ import { getRecipeFormFieldErrors } from "@/lib/formValidation";
 import { BookOpen, Eye, Pencil, Plus, RefreshCw, X } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 
+function RecipesPageSkeleton() {
+  return (
+    <div className="min-w-0 space-y-6 overflow-x-hidden">
+      <div className="flex min-w-0 flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div className="space-y-2">
+          <div className="h-8 w-32 animate-pulse rounded-lg admin-progress-track" />
+          <div className="h-4 w-64 max-w-full animate-pulse rounded admin-progress-track" />
+        </div>
+        <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
+          <div className="h-10 w-full animate-pulse rounded-xl admin-surface-card sm:w-24" />
+          <div className="h-10 w-full animate-pulse rounded-xl admin-surface-card sm:w-32" />
+        </div>
+      </div>
+      <div className="h-10 w-full max-w-md animate-pulse rounded-xl admin-surface-card" />
+      <div className="space-y-2 md:hidden">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <div key={i} className="animate-pulse rounded-xl border admin-shell-border bg-[var(--admin-surface-soft)] p-3">
+            <div className="h-4 w-2/3 rounded admin-progress-track" />
+            <div className="mt-2 h-3 w-full rounded admin-progress-track" />
+          </div>
+        ))}
+      </div>
+      <div className="hidden md:block">
+        <TableSkeleton rows={7} cols={4} />
+      </div>
+    </div>
+  );
+}
+
 export default function RecipesPage() {
   const [recipes, setRecipes] = useState([]);
   const [menuItems, setMenuItems] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [fetchError, setFetchError] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
@@ -43,38 +72,52 @@ export default function RecipesPage() {
   });
   const { showToast, ToastUI } = useToast();
 
-  const fetchAll = useCallback(async () => {
-    setLoading(true);
-    setFetchError("");
+  const fetchAll = useCallback(async (silent = false) => {
+    if (!silent) {
+      setLoading(true);
+      setFetchError("");
+    }
     try {
       const [recipesRes, menuRes] = await Promise.all([
-        fetch("/api/recipes"),
-        fetch("/api/menu"),
+        fetch("/api/recipes", { cache: "no-store" }),
+        fetch("/api/menu", { cache: "no-store" }),
       ]);
       const [recipesData, menuData] = await Promise.all([
         recipesRes.json(),
         menuRes.json(),
       ]);
       if (!recipesRes.ok || !menuRes.ok) {
-        setFetchError(
-          recipesData?.error ?? menuData?.error ?? "Could not load recipes."
-        );
+        if (!silent) {
+          setFetchError(
+            recipesData?.error ?? menuData?.error ?? "Could not load recipes."
+          );
+        }
         return;
       }
       if (recipesData.success) setRecipes(recipesData.recipes ?? []);
       if (menuData.success) setMenuItems(menuData.items ?? []);
-      if (!recipesData.success || !menuData.success) {
+      if (!silent && (!recipesData.success || !menuData.success)) {
         setFetchError("Could not load recipes.");
       }
     } catch {
-      setFetchError("Could not load recipes. Check your connection and try again.");
+      if (!silent) setFetchError("Could not load recipes. Check your connection and try again.");
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   }, []);
 
   useEffect(() => {
     fetchAll();
+  }, [fetchAll]);
+
+  const refreshRecipes = useCallback(async () => {
+    setRefreshing(true);
+    setFetchError("");
+    try {
+      await fetchAll(true);
+    } finally {
+      setRefreshing(false);
+    }
   }, [fetchAll]);
 
   const {
@@ -149,7 +192,7 @@ export default function RecipesPage() {
         showToast(data?.error ?? "Failed to save recipe.", "error");
         return;
       }
-      await fetchAll();
+      await fetchAll(true);
       showToast(editingId ? "Recipe updated." : "Recipe added.");
       setModalOpen(false);
     } catch {
@@ -177,9 +220,8 @@ export default function RecipesPage() {
 
   if (loading) {
     return (
-      <div className="min-w-0 w-full max-w-full space-y-6 overflow-x-hidden">
-        <div className="h-8 w-40 animate-pulse rounded-lg admin-progress-track" />
-        <TableSkeleton rows={7} cols={5} />
+      <div className="min-w-0 w-full max-w-full overflow-x-hidden">
+        <RecipesPageSkeleton />
       </div>
     );
   }
@@ -197,29 +239,30 @@ export default function RecipesPage() {
             <BookOpen className="size-5" />
           </span>
           <div className="min-w-0">
-            <h1 className="admin-page-title text-2xl font-semibold tracking-tight">
+            <h1 className="admin-page-title break-words text-xl font-semibold tracking-tight sm:text-2xl">
               Recipes
             </h1>
-            <p className="admin-page-desc mt-1 text-sm">
+            <p className="admin-page-desc mt-1 break-words text-sm">
               Linked to menu items for kitchen consistency.
             </p>
           </div>
         </div>
-        <div className="flex w-full min-w-0 flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">
+        <div className="admin-page-header-actions">
           <button
             type="button"
-            onClick={fetchAll}
-            className="inline-flex w-full cursor-pointer items-center justify-center gap-1.5 rounded-xl border admin-shell-border px-3 py-2.5 text-sm font-medium text-zinc-400 transition-colors hover:border-zinc-500 hover:admin-shell-text sm:w-auto"
+            onClick={refreshRecipes}
+            disabled={refreshing}
+            className={raPageRefreshBtnCls}
             aria-label="Refresh"
           >
-            <RefreshCw className="size-4" />
-            <span className="sm:hidden">Refresh</span>
+            <RefreshCw className={`size-4 ${refreshing ? raSpinnerCls : ""}`} />
+            Refresh
           </button>
           <button
             type="button"
             onClick={openCreate}
             disabled={activeMenuItems.length === 0}
-            className="inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-ra-primary px-4 py-2.5 text-sm font-semibold text-zinc-950 hover:brightness-110 disabled:opacity-40 sm:w-auto"
+            className={`${raPagePrimaryBtnCls} disabled:opacity-40`}
           >
             <Plus className="size-4" />
             Add recipe
@@ -242,7 +285,7 @@ export default function RecipesPage() {
               type="button"
               onClick={openCreate}
               disabled={activeMenuItems.length === 0}
-              className="cursor-pointer rounded-xl bg-ra-primary px-4 py-2 text-sm font-semibold text-zinc-950 disabled:opacity-40"
+              className="inline-flex w-full cursor-pointer items-center justify-center rounded-xl bg-ra-primary px-4 py-2 text-sm font-semibold text-zinc-950 hover:brightness-110 disabled:opacity-40 sm:w-auto"
             >
               Add recipe
             </button>
@@ -303,10 +346,10 @@ export default function RecipesPage() {
                 <AdminTableBody>
                   {pageRows.map((row) => (
                     <AdminTableRow key={row.id}>
-                      <AdminTableTd className="max-w-[10rem] font-medium admin-shell-text sm:max-w-none">
+                      <AdminTableTd className="max-w-[10rem] min-w-0 font-medium admin-shell-text sm:max-w-none">
                         <span className="block truncate">{row.name}</span>
                       </AdminTableTd>
-                      <AdminTableTd className="max-w-[10rem] admin-surface-muted sm:max-w-none">
+                      <AdminTableTd className="max-w-[10rem] min-w-0 admin-surface-muted sm:max-w-none">
                         <span className="block truncate">{row.menuItemName}</span>
                       </AdminTableTd>
                       <AdminTableTd className="max-w-xs truncate admin-surface-muted">{row.ingredientsPreview}</AdminTableTd>
@@ -361,7 +404,7 @@ export default function RecipesPage() {
           </div>
         }
       >
-        <div className="space-y-4">
+        <div className="min-w-0 space-y-4">
           <div>
             <label className="text-xs admin-surface-muted">Recipe name</label>
             <input

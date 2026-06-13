@@ -7,6 +7,7 @@ import { ModuleDataProvider } from "@/context/ModuleDataContext";
 import { LanguageProvider } from "@/context/LanguageContext";
 import PlatformLanguageSync from "@/components/PlatformLanguageSync";
 import DebugModeBanner from "@/components/DebugModeBanner";
+import PlatformBrandingHead from "@/components/PlatformBrandingHead";
 
 export default function Providers({ children }) {
   return (
@@ -14,6 +15,7 @@ export default function Providers({ children }) {
       <AppProvider>
         <LanguageProvider>
           <PlatformLanguageSync />
+          <PlatformBrandingHead />
           <ModuleDataProvider>
             <AppPreloader />
             <DebugModeBanner />

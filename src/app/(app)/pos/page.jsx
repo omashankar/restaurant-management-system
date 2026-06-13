@@ -11,6 +11,7 @@ import PrintInvoice from "@/components/pos/PrintInvoice";
 import { triggerPosAutoPrint } from "@/lib/posPrint";
 import Modal from "@/components/ui/Modal";
 import { useMenuFilter } from "@/hooks/useMenuFilter";
+import { useAdminLocale } from "@/context/RestaurantLocaleContext";
 import { useModuleData } from "@/context/ModuleDataContext";
 import {
   EMPTY_POS_ORDER_ERRORS,
@@ -28,6 +29,7 @@ const KITCHEN_LABELS = {
 };
 
 function PosPageContent() {
+  const { formatTime, prefs } = useAdminLocale();
   const {
     customerRows,
     setCustomerRows,
@@ -348,7 +350,7 @@ function PosPageContent() {
         table:      newOrder.table,
         orderType,
         customer:   newOrder.customer,
-        placedAt:   now.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" }),
+        placedAt:   formatTime(now),
         elapsedMin: 0,
         status:     "new",
         items:      cart.map((l) => ({
@@ -419,6 +421,7 @@ function PosPageContent() {
       triggerPosAutoPrint({
         printers,
         restaurantName,
+        localePrefs: prefs,
         lastOrder: {
           orderId,
           orderType,
@@ -523,7 +526,7 @@ function PosPageContent() {
   };
 
   return (
-    <div className={`min-w-0 w-full max-w-full space-y-4 overflow-x-hidden ${cartItemCount > 0 ? "pb-24 xl:pb-0" : ""}`}>
+    <div className={`min-w-0 w-full max-w-full space-y-4 overflow-x-hidden ${cartItemCount > 0 && !checkoutOpen ? "pb-24 xl:pb-0" : ""}`}>
       <div className="sticky top-0 z-20 -mx-4 min-w-0 max-w-[100vw] space-y-3 overflow-x-hidden border-b admin-shell-border bg-[var(--admin-bg)]/95 px-4 pb-3 backdrop-blur-md sm:-mx-6 sm:max-w-none sm:px-6 xl:static xl:z-auto xl:mx-0 xl:border-0 xl:bg-transparent xl:px-0 xl:pb-0 xl:backdrop-blur-none">
         <PosPageHeader
           cartItemCount={cartItemCount}
@@ -610,6 +613,7 @@ function PosPageContent() {
         setupReady={setupReady}
         onOpenSetup={openSetup}
         onOpenCheckout={() => setCheckoutOpen(true)}
+        hidden={checkoutOpen}
       />
 
       <PosCheckoutDrawer

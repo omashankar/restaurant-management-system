@@ -1,10 +1,6 @@
 import clientPromise from "@/lib/mongodb";
 import { getCustomerTokenFromRequest, verifyCustomerToken } from "@/lib/customerAuth";
-import {
-  assertStripePaymentIntentForOrder,
-  getPaymentSecrets,
-  verifyRazorpayCheckoutSignature,
-} from "@/lib/paymentGateway";
+import { getPaymentSecrets, verifyGatewayPayment } from "@/lib/paymentGateway";
 import { ObjectId } from "mongodb";
 
 function customerOwnsOrder(order, payload) {
@@ -27,10 +23,7 @@ function customerOwnsOrder(order, payload) {
 
 function canConfirmPayment(order, payload) {
   if (order.source !== "customer") return false;
-  if (!payload?.id && !payload?.phone && !payload?.email) {
-    // Guest checkout — cryptographic gateway verification is the trust boundary.
-    return true;
-  }
+  if (!payload?.id && !payload?.phone && !payload?.email) return true;
   return customerOwnsOrder(order, payload);
 }
 
@@ -66,79 +59,60 @@ export async function POST(request) {
       return Response.json({ success: true });
     }
 
+    if (provider === "offline") {
+      if (order.payment?.gatewayProvider !== "offline") {
+        return Response.json({ success: false, error: "Offline payment not available for this order." }, { status: 400 });
+      }
+      await db.collection("orders").updateOne(
+        { orderId },
+        {
+          $set: {
+            "payment.status": "pending",
+            "payment.gatewayProvider": "offline",
+            "payment.offlineAcknowledgedAt": new Date(),
+            updatedAt: new Date(),
+          },
+        },
+      );
+      return Response.json({ success: true, pending: true });
+    }
+
     if (order.payment?.status !== "initiated") {
       return Response.json(
         { success: false, error: "Order payment cannot be confirmed." },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
-    if (provider === "razorpay") {
-      const razorpayOrderId = String(body?.razorpay_order_id ?? "").trim();
-      const razorpayPaymentId = String(body?.razorpay_payment_id ?? "").trim();
-      const razorpaySignature = String(body?.razorpay_signature ?? "").trim();
-      if (!razorpayOrderId || !razorpayPaymentId || !razorpaySignature) {
-        return Response.json({ success: false, error: "Incomplete Razorpay payload." }, { status: 400 });
-      }
-      if (
-        order.payment?.gatewayOrderId &&
-        razorpayOrderId !== String(order.payment.gatewayOrderId)
-      ) {
-        return Response.json({ success: false, error: "Payment does not match this order." }, { status: 400 });
-      }
-      const secrets = await getPaymentSecrets(db, order.restaurantId);
-      const ok = verifyRazorpayCheckoutSignature({
-        orderId: razorpayOrderId,
-        paymentId: razorpayPaymentId,
-        signature: razorpaySignature,
-        secret: secrets.razorpayKeySecret,
-      });
-      if (!ok) {
-        return Response.json({ success: false, error: "Invalid payment signature." }, { status: 400 });
-      }
-
-      await db.collection("orders").updateOne(
-        { orderId },
-        {
-          $set: {
-            "payment.status": "paid",
-            "payment.gatewayProvider": "razorpay",
-            "payment.gatewayOrderId": razorpayOrderId,
-            "payment.gatewayPaymentId": razorpayPaymentId,
-            updatedAt: new Date(),
-          },
-        }
-      );
-      return Response.json({ success: true });
+    const ok = await verifyGatewayPayment(db, order.restaurantId, provider, order, body);
+    if (!ok) {
+      return Response.json({ success: false, error: "Payment verification failed." }, { status: 400 });
     }
 
-    if (provider === "stripe") {
-      const paymentIntentId = String(body?.paymentIntentId ?? "").trim();
-      if (!paymentIntentId) {
-        return Response.json({ success: false, error: "paymentIntentId is required." }, { status: 400 });
-      }
-      try {
-        await assertStripePaymentIntentForOrder(db, paymentIntentId, orderId, order.restaurantId);
-      } catch (err) {
-        return Response.json({ success: false, error: err.message || "Stripe verification failed." }, { status: 400 });
-      }
-      await db.collection("orders").updateOne(
-        { orderId },
-        {
-          $set: {
-            "payment.status": "paid",
-            "payment.gatewayProvider": "stripe",
-            "payment.gatewayPaymentId": paymentIntentId,
-            updatedAt: new Date(),
-          },
-        }
-      );
-      return Response.json({ success: true });
-    }
+    const paymentId =
+      body.razorpay_payment_id ||
+      body.paymentIntentId ||
+      body.merchantTransactionId ||
+      body.txnid ||
+      body.paypalOrderId ||
+      body.token ||
+      order.payment?.gatewayOrderId ||
+      null;
 
-    return Response.json({ success: false, error: "Unsupported provider." }, { status: 400 });
+    await db.collection("orders").updateOne(
+      { orderId },
+      {
+        $set: {
+          "payment.status": "paid",
+          "payment.gatewayProvider": provider,
+          "payment.gatewayPaymentId": paymentId,
+          updatedAt: new Date(),
+        },
+      },
+    );
+    return Response.json({ success: true });
   } catch (err) {
     console.error("confirm-payment failed:", err.message);
-    return Response.json({ success: false, error: "Failed to confirm payment." }, { status: 500 });
+    return Response.json({ success: false, error: err.message || "Failed to confirm payment." }, { status: 500 });
   }
 }

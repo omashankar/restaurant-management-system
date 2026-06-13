@@ -12,7 +12,7 @@ export default function AdminPageHeader({
 }) {
   return (
     <div
-      className={`mb-6 flex flex-col gap-4 sm:mb-8 sm:flex-row sm:items-end sm:justify-between ${className}`}
+      className={`mb-6 sm:mb-8 ${adminSurface.pageHeaderRow} ${className}`.trim()}
     >
       <div className="min-w-0">
         <h1 className={`admin-page-title ${titleClassName}`.trim()}>{title}</h1>
@@ -21,7 +21,7 @@ export default function AdminPageHeader({
         ) : null}
       </div>
       {actions ? (
-        <div className="flex shrink-0 flex-wrap items-center gap-2">{actions}</div>
+        <div className={adminSurface.pageHeaderActions}>{actions}</div>
       ) : null}
     </div>
   );

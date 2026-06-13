@@ -24,9 +24,9 @@ export const CMS_EDITOR_INPUT =
 
 export const CMS_EDITOR_TEXTAREA = CMS_EDITOR_INPUT + " resize-none";
 
-/** Promo / media row: image left, fields right on large screens */
+/** Promo / media row: stack on tablet; side-by-side only when the CMS panel is wide enough */
 export const CMS_MEDIA_FORM_ROW =
-  "min-w-0 rounded-xl border border-[var(--admin-border-subtle)] bg-[var(--admin-surface-soft)] p-3 space-y-4 sm:p-4 lg:grid lg:grid-cols-[minmax(0,380px)_minmax(0,1fr)] lg:gap-6 lg:items-start lg:space-y-0";
+  "cms-media-form-row min-w-0 w-full max-w-full rounded-xl border border-[var(--admin-border-subtle)] bg-[var(--admin-surface-soft)] p-3 flex flex-col gap-4 sm:p-4 xl:grid xl:grid-cols-[minmax(15rem,22.5rem)_minmax(0,1fr)] xl:items-start xl:gap-6";
 
 /** Toggle / control row */
 export const CMS_EDITOR_TOGGLE_ROW =

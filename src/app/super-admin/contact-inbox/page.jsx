@@ -11,6 +11,7 @@ import {
   supportTicketDrawerPanelCls,
 } from "@/config/supportTicketConfig";
 import { saIconBadgeCls, saInputCls, saSpinnerCls, saTextareaCls } from "@/config/superAdminTheme";
+import { useSuperAdminLocale } from "@/context/SuperAdminLocaleContext";
 import { useToast } from "@/hooks/useToast";
 import { AlertTriangle, Globe, Inbox, Mail, RefreshCcw, Send, Store, X } from "lucide-react";
 import Link from "next/link";
@@ -49,18 +50,8 @@ function sourceLabel(source) {
   return source || "Unknown";
 }
 
-function formatWhen(date) {
-  if (!date) return "—";
-  return new Date(date).toLocaleString(undefined, {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-}
-
 export default function SuperAdminContactInboxPage() {
+  const { formatDateTime } = useSuperAdminLocale();
   const [messages, setMessages] = useState([]);
   const [stats, setStats] = useState({ total: 0, new: 0, read: 0, replied: 0, archived: 0 });
   const [loading, setLoading] = useState(true);
@@ -266,16 +257,18 @@ export default function SuperAdminContactInboxPage() {
   ];
 
   return (
-    <div className="min-w-0 w-full max-w-full space-y-5 overflow-x-hidden">
-      <div className="flex min-w-0 items-start gap-3">
-        <span className={`mt-1 shrink-0 ${saIconBadgeCls}`}>
-          <Inbox className="size-5" />
-        </span>
-        <div className="min-w-0">
-          <h1 className="admin-page-title break-words text-2xl font-semibold tracking-tight">Contact Inbox</h1>
-          <p className="admin-page-desc mt-1 text-sm">
-            Landing page and customer site inquiries in one place.
-          </p>
+    <div className="min-w-0 w-full max-w-full space-y-6 overflow-x-hidden sm:space-y-10">
+      <div className="flex min-w-0 flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div className="flex min-w-0 items-start gap-3">
+          <span className={`mt-1 flex shrink-0 items-center justify-center ${saIconBadgeCls}`}>
+            <Inbox className="size-5" />
+          </span>
+          <div className="min-w-0">
+            <h1 className="admin-page-title break-words text-xl font-semibold tracking-tight sm:text-2xl">Contact Inbox</h1>
+            <p className="admin-page-desc mt-1 text-sm">
+              Landing page and customer site inquiries in one place.
+            </p>
+          </div>
         </div>
       </div>
 
@@ -302,11 +295,11 @@ export default function SuperAdminContactInboxPage() {
         </div>
       )}
 
-      <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+      <div className="grid min-w-0 grid-cols-2 gap-2 sm:grid-cols-4 sm:gap-3">
         {statItems.map(({ key, label, cls }) => (
-          <div key={key} className="min-w-0 admin-surface-card px-3 py-2.5">
-            <p className={`text-lg font-semibold tabular-nums ${cls}`}>{stats[key] ?? 0}</p>
-            <p className="text-xs uppercase tracking-wider admin-surface-muted">{label}</p>
+          <div key={key} className="min-w-0 admin-surface-card px-3 py-2.5 sm:px-4 sm:py-3">
+            <p className={`text-lg font-semibold tabular-nums sm:text-xl ${cls}`}>{stats[key] ?? 0}</p>
+            <p className="break-words text-xs uppercase tracking-wider admin-surface-muted">{label}</p>
           </div>
         ))}
       </div>
@@ -349,6 +342,7 @@ export default function SuperAdminContactInboxPage() {
             type="button"
             onClick={loadMessages}
             disabled={loading}
+            aria-label="Refresh contact messages"
             className="inline-flex w-full cursor-pointer items-center justify-center gap-1 rounded-lg border admin-shell-border px-2.5 py-2 text-xs admin-surface-body transition-colors hover:bg-[var(--admin-hover)] disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
           >
             <RefreshCcw className={`size-3.5 ${loading ? saSpinnerCls : ""}`} />
@@ -361,10 +355,14 @@ export default function SuperAdminContactInboxPage() {
         {loading ? (
           <SuperAdminPreloader compact message="Loading messages…" />
         ) : messages.length === 0 ? (
-          <div className="px-4 py-8 text-center text-sm admin-surface-muted">No contact messages yet.</div>
+          <div className="flex flex-col items-center justify-center gap-3 px-4 py-16 text-center">
+            <Inbox className="size-10 text-zinc-700" />
+            <p className="text-sm admin-surface-muted">No contact messages yet.</p>
+            <p className="text-xs admin-surface-faint">Inquiries from the landing page and customer sites appear here.</p>
+          </div>
         ) : (
           <>
-            <div className="space-y-2 p-3 lg:hidden">
+            <div className="space-y-2 p-3 md:hidden">
               {messages.map((msg) => (
                 <div key={String(msg._id)} className="min-w-0 space-y-3 rounded-xl border admin-shell-border admin-surface-card p-3">
                   <div className="flex items-start justify-between gap-2">
@@ -381,7 +379,7 @@ export default function SuperAdminContactInboxPage() {
                       {sourceLabel(msg.source)}
                     </span>
                     <span>·</span>
-                    <span>{formatWhen(msg.createdAt)}</span>
+                    <span>{formatDateTime(msg.createdAt)}</span>
                   </div>
                   <div className="flex flex-col gap-2 sm:flex-row">
                     <select
@@ -409,7 +407,8 @@ export default function SuperAdminContactInboxPage() {
               ))}
             </div>
 
-            <div className="hidden min-w-0 lg:block">
+            <div className="hidden min-w-0 md:block">
+              <div className="min-w-[44rem]">
               <div className="grid grid-cols-[minmax(0,1.1fr)_minmax(0,1.4fr)_minmax(0,0.9fr)_minmax(0,0.8fr)_minmax(0,0.7fr)_auto] gap-3 admin-table-list-header px-4 py-2.5 text-xs uppercase tracking-wide admin-surface-muted">
                 <span>From</span>
                 <span>Message</span>
@@ -433,7 +432,7 @@ export default function SuperAdminContactInboxPage() {
                       <p className="mt-0.5 line-clamp-2 text-xs admin-surface-muted">{msg.message}</p>
                     </div>
                     <p className="min-w-0 truncate text-xs admin-surface-body">{sourceLabel(msg.source)}</p>
-                    <p className="min-w-0 text-xs admin-surface-muted">{formatWhen(msg.createdAt)}</p>
+                    <p className="min-w-0 text-xs admin-surface-muted">{formatDateTime(msg.createdAt)}</p>
                     <div className="flex justify-center">
                       <select
                         id={`contact-inbox-status-desktop-${msg._id}`}
@@ -460,6 +459,7 @@ export default function SuperAdminContactInboxPage() {
                     </div>
                   </div>
                 ))}
+              </div>
               </div>
             </div>
           </>
@@ -490,7 +490,7 @@ export default function SuperAdminContactInboxPage() {
           <button
             type="button"
             onClick={closeDrawer}
-            className="admin-surface-btn-icon shrink-0"
+            className="inline-flex items-center justify-center admin-surface-btn-icon shrink-0"
             aria-label="Close"
           >
             <X className="size-4" />
@@ -525,7 +525,7 @@ export default function SuperAdminContactInboxPage() {
                 </p>
               )}
               <p className="mt-3 text-xs admin-surface-muted">
-                Received {formatWhen(selected.createdAt)}
+                Received {formatDateTime(selected.createdAt)}
               </p>
             </div>
 
@@ -545,7 +545,7 @@ export default function SuperAdminContactInboxPage() {
                   {[...(selected.replies ?? [])].reverse().map((reply) => (
                     <div key={reply.id} className="rounded-lg border admin-shell-border admin-surface-card p-3">
                       <p className="text-xs admin-surface-muted">
-                        {reply.sentAt ? formatWhen(reply.sentAt) : "—"} · To {reply.to}
+                        {reply.sentAt ? formatDateTime(reply.sentAt) : "—"} · To {reply.to}
                       </p>
                       <p className="mt-1 break-words text-sm font-medium admin-shell-text">{reply.subject}</p>
                       <p className="mt-1 whitespace-pre-wrap break-words text-sm admin-surface-body">{reply.body}</p>

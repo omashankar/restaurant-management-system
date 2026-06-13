@@ -1,6 +1,7 @@
 "use client";
 
 import { CustomerProvider } from "@/context/CustomerContext";
+import { CustomerLocaleProvider } from "@/context/CustomerLocaleContext";
 import { CustomerThemeProvider } from "@/context/CustomerThemeContext";
 import CartDrawer from "@/components/customer/CartDrawer";
 import CustomerFooter from "@/components/customer/CustomerFooter";
@@ -41,22 +42,24 @@ export default function CustomerLayout({ children }) {
     <CustomerProvider>
       <CustomerThemeBootstrap />
       <CustomerThemeProvider>
-        <CustomerShellGate>
-          <div className="flex min-h-0 flex-1 flex-col text-[var(--customer-text,#111827)]">
-            <CustomerNavbar />
-            <div className="flex flex-1 flex-col overflow-x-clip">
-              <main className="flex-1">
-                <PageTransition>
-                  <PlatformFeatureGate>{children}</PlatformFeatureGate>
-                </PageTransition>
-              </main>
-              <CustomerFooter />
+        <CustomerLocaleProvider>
+          <CustomerShellGate>
+            <div className="flex min-h-0 flex-1 flex-col text-[var(--customer-text,#111827)]">
+              <CustomerNavbar />
+              <div className="flex flex-1 flex-col overflow-x-clip">
+                <main className="flex-1">
+                  <PageTransition>
+                    <PlatformFeatureGate>{children}</PlatformFeatureGate>
+                  </PageTransition>
+                </main>
+                <CustomerFooter />
+              </div>
+              <CustomerToasts />
+              <OrderTypeModal />
+              <CartDrawer />
             </div>
-            <CustomerToasts />
-            <OrderTypeModal />
-            <CartDrawer />
-          </div>
-        </CustomerShellGate>
+          </CustomerShellGate>
+        </CustomerLocaleProvider>
       </CustomerThemeProvider>
     </CustomerProvider>
   );

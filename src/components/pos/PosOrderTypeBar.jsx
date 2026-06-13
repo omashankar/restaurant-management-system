@@ -31,7 +31,7 @@ export default function PosOrderTypeBar({
             onClearFieldError?.("deliveryPhone");
             onClearFieldError?.("deliveryAddress");
           }}
-          className={`cursor-pointer flex min-w-0 flex-1 items-center justify-center gap-1 rounded-lg px-1 py-2 text-[10px] font-semibold transition-all sm:gap-1.5 sm:px-2 sm:text-xs ${
+          className={`cursor-pointer flex min-w-0 flex-1 items-center justify-center gap-1 rounded-lg border border-transparent px-1 py-2 text-[10px] font-semibold transition-[background-color,color] sm:gap-1.5 sm:px-2 sm:text-xs ${
             orderType === id
               ? "bg-ra-primary text-zinc-950 shadow-sm"
               : `${adminSurface.muted} hover:bg-[var(--admin-hover)] hover:admin-shell-text`

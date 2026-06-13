@@ -1,4 +1,8 @@
 import { isReservationSlotAvailable } from "@/lib/reservationConflict";
+import {
+  fetchRestaurantOpeningHours,
+  validateReservationDateTime,
+} from "@/lib/reservationUtils";
 import { withTenant } from "@/lib/tenantDb";
 import { parseSchema, reservationCreateSchema } from "@/lib/validationSchemas";
 import { ObjectId } from "mongodb";
@@ -15,7 +19,7 @@ function toOid(id) {
 
 export const GET = withTenant(
   ["admin", "manager", "waiter"],
-  async ({ db, tenantFilter }, request, { params }) => {
+  async ({ db, tenantFilter, restaurantId }, request, { params }) => {
     const _id = toOid(params.id);
     if (!_id) return Response.json({ success: false, error: "Invalid ID." }, { status: 400 });
     const res = await db.collection("reservations").findOne({ ...tenantFilter, _id });
@@ -26,7 +30,7 @@ export const GET = withTenant(
 
 export const PATCH = withTenant(
   ["admin", "manager", "waiter"],
-  async ({ db, tenantFilter }, request, { params }) => {
+  async ({ db, tenantFilter, restaurantId }, request, { params }) => {
     const _id = toOid(params.id);
     if (!_id) return Response.json({ success: false, error: "Invalid ID." }, { status: 400 });
 
@@ -78,6 +82,14 @@ export const PATCH = withTenant(
     const time = update.time ?? current.time;
     const nextStatus = update.status ?? current.status;
 
+    if (nextStatus !== "cancelled") {
+      const openingHours = await fetchRestaurantOpeningHours(db, restaurantId);
+      const hoursCheck = validateReservationDateTime(openingHours, date, time);
+      if (!hoursCheck.valid) {
+        return Response.json({ success: false, error: hoursCheck.error }, { status: 422 });
+      }
+    }
+
     if (tableNum !== "TBD" && nextStatus !== "cancelled") {
       const existing = await db.collection("reservations")
         .find({ ...tenantFilter, date, status: { $ne: "cancelled" } })
@@ -113,7 +125,7 @@ export const PATCH = withTenant(
 
 export const DELETE = withTenant(
   ["admin", "manager"],
-  async ({ db, tenantFilter }, request, { params }) => {
+  async ({ db, tenantFilter, restaurantId }, request, { params }) => {
     const _id = toOid(params.id);
     if (!_id) return Response.json({ success: false, error: "Invalid ID." }, { status: 400 });
     const result = await db.collection("reservations").deleteOne({ ...tenantFilter, _id });

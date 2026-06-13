@@ -37,7 +37,7 @@ function resolveAlertRecipient(settings) {
 
 /**
  * @param {import("mongodb").Db} db
- * @param {"newRestaurant"|"paymentFailed"|"weeklyReport"} type
+ * @param {"newRestaurant"|"paymentFailed"|"weeklyReport"|"systemHealth"} type
  * @param {{ subject: string, text: string, html?: string }} content
  */
 export async function sendPlatformAlert(db, type, content) {
@@ -47,7 +47,7 @@ export async function sendPlatformAlert(db, type, content) {
   if (type === "newRestaurant" && !notif.newRestaurantAlert) return false;
   if (type === "paymentFailed" && !notif.paymentFailAlert) return false;
   if (type === "weeklyReport" && !notif.weeklyReport) return false;
-  if (!notif.systemAlerts && type !== "weeklyReport") return false;
+  if (type === "systemHealth" && !notif.systemAlerts) return false;
 
   const to = resolveAlertRecipient(settings);
   if (!to) return false;

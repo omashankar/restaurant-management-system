@@ -32,10 +32,18 @@ export const raSegmentBtnActiveCls = adminSurface.segmentBtnActive;
 export const raDashedBoxCls = adminSurface.dashedBox;
 
 export const raBtnPrimaryCls =
-  "ra-btn-primary inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-semibold disabled:cursor-not-allowed transition-colors";
+  "ra-btn-primary inline-flex shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-xl px-5 py-2.5 text-sm font-semibold disabled:cursor-not-allowed transition-colors";
 
 export const raBtnPrimarySmCls =
-  "ra-btn-primary inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold disabled:cursor-not-allowed transition-colors";
+  "ra-btn-primary inline-flex shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-xl px-4 py-2 text-sm font-semibold disabled:cursor-not-allowed transition-colors";
+
+/** Page header — ghost refresh / secondary action */
+export const raPageRefreshBtnCls =
+  `${adminSurface.btnGhost} inline-flex w-full shrink-0 cursor-pointer items-center justify-center gap-1.5 whitespace-nowrap px-3 py-2.5 text-sm disabled:opacity-50 sm:w-auto hover-border-ra-primary-40`;
+
+/** Page header — primary CTA (Add …) */
+export const raPagePrimaryBtnCls =
+  `${raBtnPrimarySmCls} w-full cursor-pointer text-zinc-950 shadow-ra-primary-glow hover:brightness-110 active:scale-[0.98] sm:w-auto`;
 
 export const raIconBadgeCls = "ra-icon-badge size-10 shrink-0";
 

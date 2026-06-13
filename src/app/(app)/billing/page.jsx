@@ -1,12 +1,19 @@
 "use client";
 
-import { raIconBadgeCls } from "@/config/restaurantAdminTheme";
+import { adminSurface } from "@/config/adminSurfaceClasses";
+import { raIconBadgeCls, raSpinnerCls, raPageRefreshBtnCls } from "@/config/restaurantAdminTheme";
 import StripePaymentModal from "@/components/payments/StripePaymentModal";
 import PaymentTransactionsSection from "@/components/payment-settings/PaymentTransactionsSection";
+import { useAdminLocale } from "@/context/RestaurantLocaleContext";
 import { useRestaurantTheme } from "@/hooks/useRestaurantTheme";
 import { useToast } from "@/hooks/useToast";
 import { CheckCircle2, CreditCard, Loader2, RefreshCw } from "lucide-react";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import {
+  loadRazorpayScript,
+  openRazorpayCheckout,
+  startGatewayCheckout,
+} from "@/lib/gatewayCheckoutClient";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 const PLAN_COLORS = [
   "border-sky-500/30 bg-sky-500/5",
@@ -20,22 +27,27 @@ const TABS = [
   { id: "transactions", label: "Transactions" },
 ];
 
-async function loadRazorpayScript() {
-  if (typeof window === "undefined") return false;
-  if (window.Razorpay) return true;
-  return new Promise((resolve) => {
-    const script = document.createElement("script");
-    script.src = "https://checkout.razorpay.com/v1/checkout.js";
-    script.async = true;
-    script.onload = () => resolve(true);
-    script.onerror = () => resolve(false);
-    document.body.appendChild(script);
-  });
+function BillingPageSkeleton() {
+  return (
+    <>
+      <div className="grid min-w-0 gap-4 lg:grid-cols-3">
+        <div className="h-32 animate-pulse rounded-2xl admin-surface-card lg:col-span-2" />
+        <div className="h-32 animate-pulse rounded-2xl admin-surface-card" />
+      </div>
+      <div className="grid min-w-0 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+        {Array.from({ length: 3 }).map((_, idx) => (
+          <div key={idx} className="h-52 animate-pulse rounded-2xl admin-surface-card" />
+        ))}
+      </div>
+    </>
+  );
 }
 
 export default function BillingPage() {
+  const { formatDate } = useAdminLocale();
   const [activeTab, setActiveTab] = useState("subscription");
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [fetchError, setFetchError] = useState(null);
   const [submittingPlan, setSubmittingPlan] = useState("");
   const [billingCycle, setBillingCycle] = useState("monthly");
@@ -46,8 +58,14 @@ export default function BillingPage() {
   const { theme } = useRestaurantTheme();
   const { showToast, ToastUI } = useToast();
 
-  const fetchOverview = useCallback(async () => {
-    setLoading(true);
+  const hadDataRef = useRef(false);
+
+  const fetchOverview = useCallback(async (silent = false) => {
+    if (silent) {
+      setRefreshing(true);
+    } else {
+      setLoading(true);
+    }
     setFetchError(null);
     try {
       const res = await fetch("/api/billing/overview", { cache: "no-store" });
@@ -55,23 +73,25 @@ export default function BillingPage() {
       if (!res.ok || !data?.success) {
         const msg = data?.error ?? "Failed to load billing data.";
         setFetchError(msg);
-        showToast(msg, "error");
+        if (!silent) showToast(msg, "error");
         return;
       }
       setProfile(data.profile ?? null);
       setSubscription(data.subscription ?? null);
       setPlans(Array.isArray(data.plans) ? data.plans : []);
+      hadDataRef.current = true;
     } catch {
       const msg = "Failed to load billing data.";
       setFetchError(msg);
-      showToast(msg, "error");
+      if (!silent) showToast(msg, "error");
     } finally {
-      setLoading(false);
+      if (silent) setRefreshing(false);
+      else setLoading(false);
     }
   }, [showToast]);
 
   useEffect(() => {
-    fetchOverview();
+    fetchOverview(hadDataRef.current);
   }, [fetchOverview]);
 
   const currentPlanSlug = subscription?.planSlug ?? profile?.currentPlan ?? "free";
@@ -100,79 +120,98 @@ export default function BillingPage() {
         return;
       }
 
-      if (startData.gatewayProvider === "razorpay" && startData.checkout?.orderId) {
-        const loaded = await loadRazorpayScript();
-        if (!loaded) {
-          showToast("Could not load payment gateway. Try again.", "error");
-          return;
-        }
+      const paymentPayload = {
+        gatewayProvider: startData.gatewayProvider,
+        checkout: startData.checkout,
+      };
 
-        clearSpinnerInFinally = false;
-        const rz = new window.Razorpay({
-          key: startData.checkout.key,
-          order_id: startData.checkout.orderId,
-          amount: startData.checkout.amount,
-          currency: startData.checkout.currency,
-          name: profile?.restaurantName?.trim() || "BhojDesk Restaurant Management System",
-          description: `${plan.name} - ${billingCycle}`,
-          prefill: {
-            name: profile?.restaurantName ?? "",
-            email: profile?.ownerEmail ?? "",
-          },
-          handler: async (response) => {
+      clearSpinnerInFinally = false;
+      const launched = startGatewayCheckout(paymentPayload, {
+        onRazorpay: async (checkout) => {
+          const loaded = await loadRazorpayScript();
+          if (!loaded) {
+            showToast("Could not load payment gateway. Try again.", "error");
             setSubmittingPlan("");
-            const confirmRes = await fetch("/api/billing/confirm-payment", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                paymentId: startData.paymentId,
-                provider: "razorpay",
-                ...response,
-              }),
-            });
-            const confirmData = await confirmRes.json();
-            if (!confirmRes.ok || !confirmData?.success) {
-              showToast(confirmData?.error ?? "Payment confirmation failed.", "error");
-              return;
-            }
-            showToast("Subscription activated successfully.");
-            fetchOverview();
-          },
-          modal: {
-            ondismiss: () => {
+            return;
+          }
+          openRazorpayCheckout({
+            checkout,
+            options: {
+              name: profile?.restaurantName?.trim() || "BhojDesk Restaurant Management System",
+              description: `${plan.name} - ${billingCycle}`,
+              prefill: {
+                name: profile?.restaurantName ?? "",
+                email: profile?.ownerEmail ?? "",
+              },
+              theme: { color: theme.primaryColor },
+            },
+            onSuccess: async (response) => {
+              setSubmittingPlan("");
+              const confirmRes = await fetch("/api/billing/confirm-payment", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  paymentId: startData.paymentId,
+                  provider: "razorpay",
+                  ...response,
+                }),
+              });
+              const confirmData = await confirmRes.json();
+              if (!confirmRes.ok || !confirmData?.success) {
+                showToast(confirmData?.error ?? "Payment confirmation failed.", "error");
+                return;
+              }
+              showToast("Subscription activated successfully.");
+              fetchOverview(true);
+            },
+            onError: () => {
+              setSubmittingPlan("");
+              showToast("Payment failed. Please retry.", "error");
+            },
+            onDismiss: () => {
               setSubmittingPlan("");
               showToast("Payment cancelled.", "error");
             },
-          },
-          theme: { color: theme.primaryColor },
-        });
-
-        rz.on("payment.failed", () => {
+          });
+        },
+        onStripe: (checkout) => {
+          const publishableKey = checkout.publishableKey || "";
+          if (!publishableKey) {
+            showToast("Stripe publishable key missing in payment settings.", "error");
+            setSubmittingPlan("");
+            return;
+          }
+          setStripeSession({
+            clientSecret: checkout.clientSecret,
+            publishableKey,
+            paymentId: startData.paymentId,
+            planName: plan.name,
+            provider: "stripe",
+          });
           setSubmittingPlan("");
-          showToast("Payment failed. Please retry.", "error");
-        });
-        setSubmittingPlan("");
-        rz.open();
-        return;
-      }
+        },
+        onPaytmComplete: async () => {
+          setSubmittingPlan("");
+          const confirmRes = await fetch("/api/billing/confirm-payment", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ paymentId: startData.paymentId, provider: "paytm" }),
+          });
+          const confirmData = await confirmRes.json();
+          if (confirmData?.success) {
+            showToast("Subscription activated successfully.");
+            fetchOverview();
+          } else {
+            showToast(confirmData?.error ?? "Payment confirmation failed.", "error");
+          }
+        },
+        onError: (msg) => {
+          setSubmittingPlan("");
+          showToast(msg || "No payment gateway is configured.", "error");
+        },
+      });
 
-      if (startData.gatewayProvider === "stripe" && startData.checkout?.clientSecret) {
-        const publishableKey =
-          startData.checkout.publishableKey || "";
-        if (!publishableKey) {
-          showToast(
-            "Stripe publishable key missing. Add Super Admin → Payment settings.",
-            "error"
-          );
-          return;
-        }
-        clearSpinnerInFinally = false;
-        setStripeSession({
-          clientSecret: startData.checkout.clientSecret,
-          publishableKey,
-          paymentId: startData.paymentId,
-          planName: plan.name,
-        });
+      if (launched) {
         setSubmittingPlan("");
         return;
       }
@@ -194,28 +233,42 @@ export default function BillingPage() {
             <CreditCard className="size-5" />
           </span>
           <div className="min-w-0">
-            <h1 className="admin-page-title text-2xl font-semibold tracking-tight">Billing</h1>
-            <p className="admin-page-desc mt-1 text-sm">Manage your subscription plan and view payment transactions.</p>
+            <h1 className="admin-page-title break-words text-xl font-semibold tracking-tight sm:text-2xl">Billing</h1>
+            <p className="admin-page-desc mt-1 break-words text-sm">Manage your subscription plan and view payment transactions.</p>
           </div>
         </div>
-        <div className="flex w-full min-w-0 flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">
+        <div className="admin-page-header-actions">
           {/* Tabs */}
-          <div className="flex min-w-0 overflow-x-auto admin-surface-card p-1 [scrollbar-width:none]">
+          <div
+            className="admin-surface-segment-track inline-flex w-full min-w-0 max-w-full p-0.5 sm:w-auto"
+            role="tablist"
+            aria-label="Billing sections"
+          >
             {TABS.map((tab) => (
-              <button key={tab.id} type="button" onClick={() => setActiveTab(tab.id)}
-                className={`shrink-0 cursor-pointer whitespace-nowrap rounded-lg px-4 py-1.5 text-sm font-medium transition-colors ${
+              <button
+                key={tab.id}
+                type="button"
+                role="tab"
+                aria-selected={activeTab === tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`min-h-9 min-w-0 flex-1 cursor-pointer whitespace-nowrap rounded-lg border border-transparent px-3 py-2 text-sm font-medium transition-[background-color,color] sm:flex-none sm:px-4 ${
                   activeTab === tab.id
                     ? "bg-ra-primary text-zinc-950"
-                    : "text-zinc-400 hover:admin-shell-text"
-                }`}>
+                    : "admin-surface-muted hover:bg-[var(--admin-hover)] hover:admin-shell-text"
+                }`}
+              >
                 {tab.label}
               </button>
             ))}
           </div>
           {activeTab === "subscription" && (
-            <button type="button" onClick={fetchOverview}
-              className="inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl border admin-shell-border px-3 py-2 text-sm admin-surface-body hover:border-zinc-500 sm:w-auto">
-              <RefreshCw className={`size-4 ${loading ? "animate-spin" : ""}`} />
+            <button
+              type="button"
+              onClick={() => fetchOverview(true)}
+              disabled={refreshing}
+              className={raPageRefreshBtnCls}
+            >
+              <RefreshCw className={`size-4 ${refreshing ? raSpinnerCls : ""}`} />
               Refresh
             </button>
           )}
@@ -228,7 +281,7 @@ export default function BillingPage() {
       )}
 
       {/* Subscription Tab */}
-      {activeTab === "subscription" && (<>
+      {activeTab === "subscription" && (<div className={`min-w-0 space-y-6 transition-opacity duration-200 ${refreshing ? "opacity-70" : ""}`}>
 
       {fetchError ? (
         <div className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-400">
@@ -236,55 +289,56 @@ export default function BillingPage() {
         </div>
       ) : null}
 
-      <div className="grid min-w-0 gap-4 md:grid-cols-3">
-        <div className="admin-surface-card p-4 sm:p-5 md:col-span-2">
-          <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500">Current Plan</p>
+      {loading ? (
+        <BillingPageSkeleton />
+      ) : (
+        <>
+      <div className="grid min-w-0 gap-4 lg:grid-cols-3">
+        <div className="min-w-0 admin-surface-card p-4 sm:p-5 lg:col-span-2">
+          <p className={`text-xs font-semibold uppercase tracking-wider ${adminSurface.muted}`}>Current Plan</p>
           <div className="mt-2 flex flex-wrap items-center gap-2 sm:gap-3">
-            <h2 className="text-xl font-semibold admin-shell-text">{currentPlan?.name ?? "Free"}</h2>
+            <h2 className="break-words text-xl font-semibold admin-shell-text">{currentPlan?.name ?? "Free"}</h2>
             <span className="rounded-full bg-ra-primary-15 px-2.5 py-0.5 text-xs font-semibold capitalize text-ra-primary ring-1 ring-ra-primary-25">
               {subscription?.status ?? profile?.subscriptionStatus ?? "active"}
             </span>
           </div>
-          <p className="mt-2 text-sm admin-surface-muted">
+          <p className="mt-2 break-words text-sm admin-surface-muted">
             {subscription?.endDate
-              ? `Valid until ${new Date(subscription.endDate).toLocaleDateString("en-US", {
-                  month: "short",
-                  day: "numeric",
-                  year: "numeric",
-                })}`
+              ? `Valid until ${formatDate(subscription.endDate)}`
               : "No expiry date available."}
           </p>
         </div>
 
-        <div className="admin-surface-card p-4 sm:p-5">
-          <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500">Billing Cycle</p>
-          <div className="mt-3 grid grid-cols-2 gap-2">
-            {["monthly", "yearly"].map((cycle) => (
+        <div className="min-w-0 admin-surface-card p-4 sm:p-5">
+          <p className={`text-xs font-semibold uppercase tracking-wider ${adminSurface.muted}`}>Billing Cycle</p>
+          <div
+            className="admin-surface-segment-track mt-3 inline-flex w-full min-w-0 p-0.5"
+            role="group"
+            aria-label="Billing cycle"
+          >
+            {[
+              { id: "monthly", label: "Monthly" },
+              { id: "yearly", label: "Yearly" },
+            ].map(({ id, label }) => (
               <button
-                key={cycle}
+                key={id}
                 type="button"
-                onClick={() => setBillingCycle(cycle)}
-                className={`cursor-pointer rounded-xl border px-3 py-2 text-sm font-medium capitalize transition-colors ${
-                  billingCycle === cycle
-                    ? "border-ra-primary-40 bg-ra-primary-10 text-ra-primary-muted"
-                    : "border-zinc-700 text-zinc-400 hover:border-zinc-500 hover:admin-shell-text"
+                onClick={() => setBillingCycle(id)}
+                aria-pressed={billingCycle === id}
+                className={`min-h-9 min-w-0 flex-1 cursor-pointer whitespace-nowrap rounded-lg border border-transparent px-3 py-2 text-sm font-semibold transition-[background-color,color] ${
+                  billingCycle === id
+                    ? "bg-ra-primary text-zinc-950"
+                    : "admin-surface-muted hover:bg-[var(--admin-hover)] hover:admin-shell-text"
                 }`}
               >
-                {cycle}
+                {label}
               </button>
             ))}
           </div>
         </div>
       </div>
 
-      {loading ? (
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-          {Array.from({ length: 3 }).map((_, idx) => (
-            <div key={idx} className="h-52 animate-pulse admin-surface-card" />
-          ))}
-        </div>
-      ) : (
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+        <div className="grid min-w-0 gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {plans.map((plan, idx) => {
             const isCurrent = plan.slug === currentPlanSlug;
             const amount = billingCycle === "yearly" ? plan.yearlyPrice : plan.monthlyPrice;
@@ -303,7 +357,7 @@ export default function BillingPage() {
                     </span>
                   )}
                 </div>
-                <p className="mt-2 break-words text-3xl font-bold admin-shell-text">
+                <p className="mt-2 break-all text-3xl font-bold tabular-nums admin-shell-text">
                   Rs {Number(amount ?? 0).toLocaleString("en-IN")}
                   <span className="ml-1 text-sm font-medium text-zinc-500">/{billingCycle === "yearly" ? "year" : "month"}</span>
                 </p>
@@ -341,6 +395,7 @@ export default function BillingPage() {
             );
           })}
         </div>
+        </>
       )}
       {stripeSession ? (
         <StripePaymentModal
@@ -376,7 +431,7 @@ export default function BillingPage() {
                 return;
               }
               showToast("Subscription activated successfully.");
-              fetchOverview();
+              fetchOverview(true);
             } catch {
               setStripeSession(null);
               showToast("Network error confirming payment.", "error");
@@ -385,7 +440,7 @@ export default function BillingPage() {
         />
       ) : null}
 
-      </>)}
+      </div>)}
 
       {ToastUI}
     </div>

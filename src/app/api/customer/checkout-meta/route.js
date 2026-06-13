@@ -1,55 +1,13 @@
 import { CUSTOMER_CHECKOUT_COUPONS } from "@/lib/customerCoupons";
-import { isOnlinePaymentConfigured } from "@/lib/paymentGateway";
+import { buildAutoPaymentMethods, loadRestaurantCheckoutMeta } from "@/lib/checkoutPaymentMeta";
 import clientPromise from "@/lib/mongodb";
 import { getRestaurantIdFromRequest } from "@/lib/restaurantResolver";
-
-const ONLINE_KEYS = ["upi", "card", "debitCard", "netBanking", "wallet", "qrCode", "payLater", "bankTransfer"];
-
-/**
- * Option C — Auto-detect payment methods from gateway config.
- * If gateway is configured → online methods available
- * If no gateway → only COD + Cash at Counter
- */
-function buildAutoPaymentMethods(onlineOk, storedMethods = {}) {
-  // Always available — no gateway needed
-  const base = {
-    cod:         storedMethods.cod         !== false,  // default ON
-    cashCounter: storedMethods.cashCounter !== false,  // default ON
-  };
-
-  if (!onlineOk) {
-    // No gateway configured — only cash methods
-    return {
-      ...base,
-      upi: false, card: false, debitCard: false,
-      netBanking: false, wallet: false, qrCode: false,
-      payLater: false, bankTransfer: false,
-      defaultMethod: "cod",
-    };
-  }
-
-  // Gateway configured — enable online methods
-  // Respect stored preferences if admin has set them, otherwise default ON
-  return {
-    ...base,
-    upi:         storedMethods.upi         !== false,
-    card:        storedMethods.card        !== false,
-    debitCard:   storedMethods.debitCard   !== false,
-    netBanking:  storedMethods.netBanking  !== false,
-    wallet:      storedMethods.wallet      !== false,
-    qrCode:      Boolean(storedMethods.qrCode),       // default OFF
-    payLater:    Boolean(storedMethods.payLater),      // default OFF
-    bankTransfer:Boolean(storedMethods.bankTransfer),  // default OFF
-    defaultMethod: storedMethods.defaultMethod ?? "cod",
-  };
-}
 
 export async function GET(request) {
   try {
     const client = await clientPromise;
     const db = client.db();
     const restaurantId = await getRestaurantIdFromRequest(db, request);
-    const onlineOk = await isOnlinePaymentConfigured(db, restaurantId).catch(() => false);
 
     if (!restaurantId) {
       return Response.json({
@@ -57,8 +15,8 @@ export async function GET(request) {
         meta: {
           taxPercentage: 8,
           deliveryCharge: 0,
-          paymentMethods: buildAutoPaymentMethods(onlineOk),
-          onlinePaymentsAvailable: onlineOk,
+          paymentMethods: buildAutoPaymentMethods(false),
+          onlinePaymentsAvailable: false,
           etaMinutes: { "dine-in": "15-20", takeaway: "20-30", delivery: "30-45" },
           coupons: [],
           minOrderAmount: 0,
@@ -66,35 +24,19 @@ export async function GET(request) {
       });
     }
 
-    const settingsDoc = await db.collection("restaurant_settings").findOne(
-      { restaurantId },
-      { projection: { pos: 1, paymentMethods: 1 } }
-    );
-    const paymentSettingsDoc = await db.collection("restaurant_payment_settings").findOne(
-      { restaurantId },
-      { projection: { methods: 1, tax: 1 } }
-    );
-
-    const taxPercentage = Number(
-      paymentSettingsDoc?.tax?.gstPercentage ??
-      settingsDoc?.pos?.taxPercentage ?? 8
-    );
-    const serviceCharge = Number(settingsDoc?.pos?.serviceCharge ?? 0);
-
-    // Merge stored methods — new system takes priority
-    const storedMethods = {
-      ...(settingsDoc?.paymentMethods ?? {}),
-      ...(paymentSettingsDoc?.methods ?? {}),
-    };
-
-    // Auto-detect based on gateway config
-    const paymentMethods = buildAutoPaymentMethods(onlineOk, storedMethods);
+    const {
+      settingsDoc,
+      onlineOk,
+      taxPercentage,
+      serviceCharge,
+      paymentMethods,
+    } = await loadRestaurantCheckoutMeta(db, restaurantId);
 
     return Response.json({
       success: true,
       meta: {
-        taxPercentage: Number.isFinite(taxPercentage) ? Math.max(0, taxPercentage) : 8,
-        deliveryCharge: Number.isFinite(serviceCharge) ? Math.max(0, serviceCharge) : 0,
+        taxPercentage,
+        deliveryCharge: serviceCharge,
         paymentMethods,
         onlinePaymentsAvailable: onlineOk,
         coupons: CUSTOMER_CHECKOUT_COUPONS,

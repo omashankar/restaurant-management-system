@@ -9,9 +9,15 @@
  */
 
 import { BHOJDESK_LOGOS } from "@/config/bhojdeskBrand";
+import { EMPTY_SETTINGS } from "@/config/settingsConfig";
+import {
+  formatTime24,
+  normalizeLocalePrefs,
+} from "@/lib/localeFormat";
 import { resolveCustomerSiteName } from "@/lib/resolveBrandLogos";
 import clientPromise from "@/lib/mongodb";
 import { getRestaurantIdFromRequest } from "@/lib/restaurantResolver";
+import { sanitizeOpeningHoursSchedule } from "@/lib/reservationUtils";
 
 export async function GET(request) {
   try {
@@ -55,22 +61,32 @@ export async function GET(request) {
       BHOJDESK_LOGOS.horizontalLight;
     const slug    = restaurantDoc?.slug ?? null;
     const currency = settingsDoc?.general?.currency || "USD";
+    const locale = normalizeLocalePrefs({
+      dateFormat: settingsDoc?.general?.dateFormat,
+      timeFormat: settingsDoc?.general?.timeFormat,
+      timezone: settingsDoc?.general?.timezone,
+    });
 
     // Opening hours — build a human-readable summary
-    const openingHours = Array.isArray(settingsDoc?.openingHours)
-      ? settingsDoc.openingHours
-      : getDefaultHours();
+    const openingHours = sanitizeOpeningHoursSchedule(
+      Array.isArray(settingsDoc?.openingHours)
+        ? settingsDoc.openingHours
+        : getDefaultHours(),
+    );
 
     // Today's status
-    const todayName = new Date().toLocaleDateString("en-US", { weekday: "long" });
+    const todayName = new Intl.DateTimeFormat("en-US", {
+      timeZone: locale.timezone,
+      weekday: "long",
+    }).format(new Date());
     const todayHours = openingHours.find((h) => h.day === todayName);
     const isOpenToday = todayHours && !todayHours.closed;
     const todayLabel = isOpenToday
-      ? `${todayHours.openTime} – ${todayHours.closeTime}`
+      ? `${formatTime24(todayHours.openTime, locale)} – ${formatTime24(todayHours.closeTime, locale)}`
       : "Closed today";
 
     // Short hours summary (e.g. "Mon–Fri: 9AM–10PM · Sat–Sun: 10AM–11PM")
-    const hoursSummary = buildHoursSummary(openingHours);
+    const hoursSummary = buildHoursSummary(openingHours, locale);
 
     return Response.json({
       success: true,
@@ -83,6 +99,9 @@ export async function GET(request) {
         logoUrl,
         slug,
         currency,
+        dateFormat: locale.dateFormat,
+        timeFormat: locale.timeFormat,
+        timezone: locale.timezone,
         openingHours,
         isOpenToday,
         todayLabel,
@@ -110,6 +129,9 @@ function getDefaults() {
     logoUrl: BHOJDESK_LOGOS.horizontalLight,
     slug: null,
     currency: "USD",
+    dateFormat: EMPTY_SETTINGS.general.dateFormat,
+    timeFormat: EMPTY_SETTINGS.general.timeFormat,
+    timezone: EMPTY_SETTINGS.general.timezone,
     openingHours: getDefaultHours(),
     isOpenToday: true,
     todayLabel: "11:00 – 22:00",
@@ -129,13 +151,15 @@ function getDefaultHours() {
   ];
 }
 
-function buildHoursSummary(hours) {
+function buildHoursSummary(hours, locale = normalizeLocalePrefs()) {
   if (!Array.isArray(hours) || hours.length === 0) return "";
   // Group consecutive days with same hours
   const groups = [];
   let current = null;
   for (const h of hours) {
-    const label = h.closed ? "Closed" : `${h.openTime} – ${h.closeTime}`;
+    const label = h.closed
+      ? "Closed"
+      : `${formatTime24(h.openTime, locale)} – ${formatTime24(h.closeTime, locale)}`;
     if (current && current.label === label) {
       current.end = h.day;
     } else {

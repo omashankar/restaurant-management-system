@@ -3,13 +3,13 @@
 import InputField from "@/components/settings/InputField";
 import PhoneInput from "@/components/ui/PhoneInput";
 
-import { CheckCircle2, ChevronDown, ChevronUp, Loader2, MessageCircle, Save, Send, XCircle } from "lucide-react";
+import { CheckCircle2, ChevronDown, ChevronUp, Loader2, MessageCircle, RefreshCw, Save, Send, XCircle } from "lucide-react";
 import {
   validateWhatsappSettings,
   validateWhatsappTestPhone,
 } from "@/lib/restaurantSettingsValidation";
-import { useEffect, useState } from "react";
-import { raIconBadgeCls, raTextareaCls } from "@/config/restaurantAdminTheme";
+import { useCallback, useEffect, useState } from "react";
+import { raIconBadgeCls, raSpinnerCls, raTabActiveCls, raTextareaCls, raPageRefreshBtnCls } from "@/config/restaurantAdminTheme";
 
 const TEMPLATES = [
   { id: "order_confirmed",  event: "Order Confirmed",   emoji: "✅", audience: "Customer" },
@@ -32,43 +32,43 @@ const fieldLabelCls =
 const SETUP_STEPS = [
   {
     step: 1,
-    title: "Meta Business account बनाएं",
-    detail: "business.facebook.com पर जाएँ → Business account create करें → WhatsApp product add करें।",
+    title: "Create a Meta Business account",
+    detail: "Go to business.facebook.com → create a Business account → add the WhatsApp product.",
   },
   {
     step: 2,
-    title: "WhatsApp Cloud API app setup",
-    detail: "developers.facebook.com → Create App → Business → WhatsApp → API Setup tab खोलें। Phone number add करें और verify करें।",
+    title: "Set up WhatsApp Cloud API app",
+    detail: "Go to developers.facebook.com → Create App → Business → WhatsApp → open the API Setup tab. Add and verify your phone number.",
   },
   {
     step: 3,
-    title: "Phone Number ID copy करें",
-    detail: "Meta → WhatsApp → Phone Numbers → अपना number select करें → Phone Number ID copy करके यहाँ paste करें।",
+    title: "Copy your Phone Number ID",
+    detail: "In Meta → WhatsApp → Phone Numbers → select your number → copy the Phone Number ID and paste it below.",
   },
   {
     step: 4,
-    title: "Permanent System User Token बनाएं",
-    detail: "Meta Business Settings → System Users → Generate Token → permission whatsapp_business_messaging select करें → token copy करके API Token field में paste करें।",
+    title: "Create a permanent System User token",
+    detail: "Meta Business Settings → System Users → Generate Token → select whatsapp_business_messaging → copy the token into the API Token field.",
   },
   {
     step: 5,
-    title: "Restaurant Alert Phone set करें",
-    detail: "नीचे Alert Phone में वह number डालें जिस पर नया order alert चाहिए (India: 10-digit mobile)। खाली छोड़ने पर Settings → Contact phone use होगा।",
+    title: "Set the restaurant alert phone",
+    detail: "Enter the number that should receive new order alerts in Alert Phone below (India: 10-digit mobile). If left blank, Settings → Contact phone is used.",
   },
   {
     step: 6,
-    title: "Settings में SMS/WhatsApp alerts ON करें",
-    detail: "Settings → Notifications → SMS Notifications ON करें। बिना इसके WhatsApp alert नहीं जाएगा, भले credentials save हों।",
+    title: "Turn on SMS/WhatsApp alerts in Settings",
+    detail: "Settings → Notifications → enable SMS Notifications. Without this, WhatsApp alerts will not send even if credentials are saved.",
   },
   {
     step: 7,
-    title: "New Order Alert template enable करें",
-    detail: "नीचे Message Templates → New Order Alert → Enable ON रखें → message save करें (variables: {order_id}, {amount}, {order_type})।",
+    title: "Enable the New Order Alert template",
+    detail: "Below: Message Templates → New Order Alert → keep Enable ON → save the message (variables: {order_id}, {amount}, {order_type}).",
   },
   {
     step: 8,
-    title: "Test message भेजकर verify करें",
-    detail: "Page के नीचे Send Real Test Message से अपने WhatsApp number पर test भेजें। Sandbox mode में recipient Meta whitelist में होना चाहिए।",
+    title: "Verify with a test message",
+    detail: "Use Send Real Test Message at the bottom of this page. In sandbox mode, the recipient must be on Meta’s whitelist.",
   },
 ];
 
@@ -76,8 +76,8 @@ function Toggle({ checked, onChange, label, hint }) {
   return (
     <label className="flex cursor-pointer items-start justify-between gap-3 rounded-xl border admin-shell-border admin-surface-card px-3 py-3 sm:gap-4 sm:px-4">
       <span className="min-w-0 flex-1">
-        <span className="block text-sm font-medium admin-shell-text">{label}</span>
-        {hint && <span className="mt-0.5 block text-xs leading-snug admin-surface-muted">{hint}</span>}
+        <span className="block break-words text-sm font-medium admin-shell-text">{label}</span>
+        {hint && <span className="mt-0.5 block break-words text-xs leading-snug admin-surface-muted">{hint}</span>}
       </span>
       <button type="button" role="switch" aria-checked={checked} onClick={() => onChange(!checked)}
         className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors ${checked ? "bg-ra-primary" : "bg-zinc-700"}`}>
@@ -87,8 +87,35 @@ function Toggle({ checked, onChange, label, hint }) {
   );
 }
 
+function WhatsAppPageSkeleton() {
+  return (
+    <div className="min-w-0 w-full max-w-full space-y-6 overflow-x-hidden">
+      <div className="flex min-w-0 flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div className="flex min-w-0 items-start gap-3">
+          <div className="mt-1 size-10 shrink-0 animate-pulse rounded-xl admin-surface-card" />
+          <div className="min-w-0 flex-1 space-y-2">
+            <div className="h-7 w-52 max-w-full animate-pulse rounded-lg admin-surface-card" />
+            <div className="h-4 w-full max-w-md animate-pulse rounded admin-surface-card" />
+          </div>
+        </div>
+        <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
+          <div className="h-10 w-full animate-pulse rounded-xl admin-surface-card sm:w-24" />
+          <div className="h-10 w-full animate-pulse rounded-xl admin-surface-card sm:w-32" />
+        </div>
+      </div>
+      <div className="h-40 animate-pulse rounded-2xl admin-surface-card" />
+      <div className="h-48 animate-pulse rounded-2xl admin-surface-card" />
+      <div className="grid min-w-0 gap-5 lg:grid-cols-[minmax(0,260px)_minmax(0,1fr)]">
+        <div className="h-64 animate-pulse rounded-2xl admin-surface-card" />
+        <div className="h-80 animate-pulse rounded-2xl admin-surface-card" />
+      </div>
+    </div>
+  );
+}
+
 export default function WhatsAppPage() {
   const [loading, setLoading]           = useState(true);
+  const [refreshing, setRefreshing]     = useState(false);
   const [loadError, setLoadError]       = useState(null);
   const [saving, setSaving]             = useState(false);
   const [saveResult, setSaveResult]     = useState(null); // { success, message }
@@ -107,29 +134,36 @@ export default function WhatsAppPage() {
   const [testPhoneError, setTestPhoneError] = useState("");
   const [guideOpen, setGuideOpen]       = useState(true);
 
-  // Load settings on mount
-  useEffect(() => {
-    async function load() {
-      setLoadError(null);
-      try {
-        const res  = await fetch("/api/whatsapp-settings");
-        const data = await res.json();
-        if (data.success) {
-          setEnabled(data.settings.enabled);
-          setToken(data.settings.token ?? "");
-          setPhoneNumberId(data.settings.phoneNumberId ?? "");
-          setAlertPhone(data.settings.alertPhone ?? "");
-          setTemplates(data.settings.templates ?? {});
-        } else {
-          setLoadError(data.error ?? "Failed to load WhatsApp settings.");
-        }
-      } catch {
-        setLoadError("Could not load WhatsApp settings. Check your connection.");
-      }
-      finally { setLoading(false); }
+  const loadSettings = useCallback(async (silent = false) => {
+    if (silent) {
+      setRefreshing(true);
+    } else {
+      setLoading(true);
     }
-    load();
+    setLoadError(null);
+    try {
+      const res = await fetch("/api/whatsapp-settings", { cache: "no-store" });
+      const data = await res.json();
+      if (data.success) {
+        setEnabled(data.settings.enabled);
+        setToken(data.settings.token ?? "");
+        setPhoneNumberId(data.settings.phoneNumberId ?? "");
+        setAlertPhone(data.settings.alertPhone ?? "");
+        setTemplates(data.settings.templates ?? {});
+      } else {
+        setLoadError(data.error ?? "Failed to load WhatsApp settings.");
+      }
+    } catch {
+      setLoadError("Could not load WhatsApp settings. Check your connection.");
+    } finally {
+      if (silent) setRefreshing(false);
+      else setLoading(false);
+    }
   }, []);
+
+  useEffect(() => {
+    loadSettings();
+  }, [loadSettings]);
 
   function updateTemplate(id, patch) {
     setTemplates((prev) => ({ ...prev, [id]: { ...prev[id], ...patch } }));
@@ -158,6 +192,9 @@ export default function WhatsAppPage() {
       });
       const data = await res.json();
       setSaveResult({ success: data.success, message: data.success ? "Settings saved." : (data.error ?? "Failed.") });
+      if (data.success) {
+        await loadSettings(true);
+      }
       setTimeout(() => setSaveResult(null), 3000);
     } catch {
       setSaveResult({ success: false, message: "Network error." });
@@ -192,51 +229,62 @@ export default function WhatsAppPage() {
 
   if (loading) {
     return (
-      <div className="flex h-64 items-center justify-center">
-        <Loader2 className="size-6 animate-spin text-ra-primary" />
+      <div className="min-w-0 w-full max-w-full overflow-x-hidden">
+        <WhatsAppPageSkeleton />
       </div>
     );
   }
 
   return (
-    <div className="min-w-0 w-full max-w-full space-y-6 overflow-x-hidden">
+    <div className={`min-w-0 w-full max-w-full space-y-6 overflow-x-hidden transition-opacity duration-200 ${refreshing ? "opacity-70" : ""}`}>
       {/* Header */}
-      <div className="flex min-w-0 flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+      <div className="flex min-w-0 flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div className="flex min-w-0 items-start gap-3">
           <span className={`mt-1 shrink-0 ${raIconBadgeCls}`}>
             <MessageCircle className="size-5" aria-hidden />
           </span>
           <div className="min-w-0">
-            <h1 className="admin-page-title text-xl font-semibold tracking-tight sm:text-2xl">WhatsApp Automation</h1>
-            <p className="admin-page-desc mt-1 text-sm">
+            <h1 className="admin-page-title break-words text-xl font-semibold tracking-tight sm:text-2xl">WhatsApp Automation</h1>
+            <p className="admin-page-desc mt-1 break-words text-sm">
               Send real WhatsApp messages via Meta Business API for orders, payments, and alerts.
             </p>
           </div>
         </div>
-        <button type="button" onClick={saveSettings} disabled={saving}
-          className="cursor-pointer inline-flex w-full shrink-0 items-center justify-center gap-2 rounded-xl bg-ra-primary px-4 py-2 text-sm font-semibold text-zinc-950 transition-colors hover:brightness-110 disabled:opacity-50 sm:w-auto">
-          {saving ? <Loader2 className="size-4 animate-spin" /> : <Save className="size-4" />}
-          {saving ? "Saving…" : "Save Settings"}
-        </button>
+        <div className="admin-page-header-actions">
+          <button
+            type="button"
+            onClick={() => loadSettings(true)}
+            disabled={refreshing || saving}
+            className={raPageRefreshBtnCls}
+          >
+            <RefreshCw className={`size-4 ${refreshing ? raSpinnerCls : ""}`} />
+            Refresh
+          </button>
+          <button type="button" onClick={saveSettings} disabled={saving || refreshing}
+            className="cursor-pointer inline-flex w-full shrink-0 items-center justify-center gap-2 rounded-xl bg-ra-primary px-4 py-2.5 text-sm font-semibold text-zinc-950 transition-colors hover:brightness-110 disabled:opacity-50 sm:w-auto">
+            {saving ? <Loader2 className="size-4 animate-spin" /> : <Save className="size-4" />}
+            {saving ? "Saving…" : "Save Settings"}
+          </button>
+        </div>
       </div>
 
       {/* Load error */}
       {loadError && (
         <div className="flex min-w-0 items-start gap-2 rounded-xl border border-red-500/25 bg-red-500/10 px-4 py-3 text-sm text-red-400">
           <XCircle className="size-4 shrink-0" />
-          {loadError}
+          <span className="min-w-0 break-words">{loadError}</span>
         </div>
       )}
 
       {/* Save result */}
       {saveResult && (
-        <div className={`flex items-center gap-2 rounded-xl border px-4 py-3 text-sm ${
+        <div className={`flex min-w-0 items-start gap-2 rounded-xl border px-4 py-3 text-sm ${
           saveResult.success
             ? "border-ra-primary-25 bg-ra-primary-10 text-ra-primary"
             : "border-red-500/25 bg-red-500/10 text-red-400"
         }`}>
-          {saveResult.success ? <CheckCircle2 className="size-4" /> : <XCircle className="size-4" />}
-          {saveResult.message}
+          {saveResult.success ? <CheckCircle2 className="size-4 shrink-0" /> : <XCircle className="size-4 shrink-0" />}
+          <span className="min-w-0 break-words">{saveResult.message}</span>
         </div>
       )}
 
@@ -248,11 +296,11 @@ export default function WhatsAppPage() {
           className="cursor-pointer flex w-full min-w-0 items-start justify-between gap-3 text-left"
         >
           <div className="min-w-0 flex-1">
-            <h2 className="text-base font-semibold text-ra-primary-muted">
+            <h2 className="break-words text-base font-semibold text-ra-primary-muted">
               WhatsApp Setup Guide — Step by Step
             </h2>
-            <p className="mt-1 text-xs admin-surface-muted">
-              नया order आने पर restaurant phone पर WhatsApp alert — पूरा setup 8 steps में
+            <p className="mt-1 break-words text-xs admin-surface-muted">
+              WhatsApp alerts to your restaurant phone when a new order arrives — complete setup in 8 steps.
             </p>
           </div>
           {guideOpen
@@ -268,8 +316,8 @@ export default function WhatsAppPage() {
                   {step}
                 </span>
                 <div className="min-w-0 flex-1">
-                  <p className="text-sm font-medium admin-shell-text">{title}</p>
-                  <p className="mt-0.5 text-xs leading-relaxed admin-surface-muted">{detail}</p>
+                  <p className="break-words text-sm font-medium admin-shell-text">{title}</p>
+                  <p className="mt-0.5 break-words text-xs leading-relaxed admin-surface-muted">{detail}</p>
                 </div>
               </li>
             ))}
@@ -361,18 +409,19 @@ export default function WhatsAppPage() {
             {/* Template list */}
             <section className="admin-surface-card min-w-0 p-4">
               <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-zinc-500">Message Templates</p>
-              <div className="flex gap-2 overflow-x-auto pb-1 lg:flex-col lg:gap-1 lg:overflow-visible lg:pb-0">
+              <div className="flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] lg:flex-col lg:gap-1 lg:overflow-visible lg:pb-0 [&::-webkit-scrollbar]:hidden">
                 {TEMPLATES.map((tp) => {
                   const cfg = templates[tp.id] ?? { enabled: true };
+                  const active = activeTemplate === tp.id;
                   return (
                     <button key={tp.id} type="button" onClick={() => setActiveTemplate(tp.id)}
-                      className={`cursor-pointer min-w-[11rem] shrink-0 rounded-xl px-3 py-2.5 text-left transition-all lg:min-w-0 lg:w-full ${
-                        activeTemplate === tp.id
-                          ? "bg-ra-primary-15 text-ra-primary ring-1 ring-ra-primary-25"
-                          : "text-zinc-400 hover:admin-shell-hover hover:admin-shell-text"
+                      className={`box-border min-w-[11rem] shrink-0 cursor-pointer rounded-xl border px-3 py-2.5 text-left transition-all lg:min-w-0 lg:w-full ${
+                        active
+                          ? `${raTabActiveCls} border-transparent`
+                          : "border-[var(--admin-border-subtle)] text-zinc-400 hover:bg-[var(--admin-hover)] hover:admin-shell-text"
                       }`}>
                       <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between sm:gap-2">
-                        <span className="min-w-0 truncate text-sm">
+                        <span className="min-w-0 break-words text-sm lg:truncate">
                           <span className="mr-1.5">{tp.emoji}</span>
                           {tp.event}
                         </span>
@@ -395,10 +444,10 @@ export default function WhatsAppPage() {
               <section className="admin-surface-card min-w-0 p-4 sm:p-5">
                 <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
                   <div className="min-w-0">
-                    <h2 className="text-base font-semibold admin-shell-text">
+                    <h2 className="break-words text-base font-semibold admin-shell-text">
                       {active.emoji} {active.event}
                     </h2>
-                    <p className="text-xs admin-surface-muted">Sent to: {active.audience}</p>
+                    <p className="break-words text-xs admin-surface-muted">Sent to: {active.audience}</p>
                   </div>
                   <div className="w-full shrink-0 sm:w-auto">
                     <Toggle
@@ -455,8 +504,8 @@ export default function WhatsAppPage() {
 
           {/* Test message */}
           <section className="admin-surface-card p-4 sm:p-5">
-            <h2 className="mb-1 text-base font-semibold admin-shell-text">Send Real Test Message</h2>
-            <p className="mb-4 text-xs admin-surface-muted">
+            <h2 className="mb-1 break-words text-base font-semibold admin-shell-text">Send Real Test Message</h2>
+            <p className="mb-4 break-words text-xs admin-surface-muted">
               Sends an actual WhatsApp message using your saved credentials. Phone must be registered on WhatsApp.
             </p>
             <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-start">
@@ -479,13 +528,13 @@ export default function WhatsAppPage() {
 
             {/* Test result */}
             {testResult && (
-              <div className={`mt-3 flex items-center gap-2 rounded-xl border px-4 py-3 text-sm ${
+              <div className={`mt-3 flex min-w-0 items-start gap-2 rounded-xl border px-4 py-3 text-sm ${
                 testResult.success
                   ? "border-ra-primary-25 bg-ra-primary-10 text-ra-primary"
                   : "border-red-500/25 bg-red-500/10 text-red-400"
               }`}>
                 {testResult.success ? <CheckCircle2 className="size-4 shrink-0" /> : <XCircle className="size-4 shrink-0" />}
-                {testResult.message}
+                <span className="min-w-0 break-words">{testResult.message}</span>
               </div>
             )}
           </section>
@@ -498,8 +547,8 @@ export default function WhatsAppPage() {
           <div className="flex min-w-0 items-start gap-4">
             <MessageCircle className="mt-1 size-8 shrink-0 text-ra-primary" />
             <div className="min-w-0 flex-1">
-              <h2 className="text-base font-semibold admin-shell-text">WhatsApp Business API</h2>
-              <p className="admin-page-desc mt-1 text-sm">
+              <h2 className="break-words text-base font-semibold admin-shell-text">WhatsApp Business API</h2>
+              <p className="admin-page-desc mt-1 break-words text-sm">
                 Enable to send real WhatsApp messages automatically when orders are placed, prepared, or delivered.
               </p>
               <div className="mt-3 grid gap-2 sm:grid-cols-2 text-xs admin-surface-muted">

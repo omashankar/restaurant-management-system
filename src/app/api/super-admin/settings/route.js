@@ -1,5 +1,6 @@
 import { BHOJDESK_BRAND, BHOJDESK_LOGOS } from "@/config/bhojdeskBrand";
 import { writeAuditLog } from "@/lib/auditLog";
+import { normalizePlatformLocaleSection } from "@/config/platformLocaleConfig";
 import { invalidatePlatformSettingsCache, PLATFORM_DEFAULTS } from "@/lib/platformSettings";
 import { validatePlatformSettingsSectionServer } from "@/lib/platformSettingsValidation";
 import { getTokenFromRequest } from "@/lib/authCookies";
@@ -20,7 +21,7 @@ const DEFAULTS = {
     ...PLATFORM_DEFAULTS.app,
     name: BHOJDESK_BRAND.fullName,
     legalName: BHOJDESK_BRAND.name,
-    logoUrl: BHOJDESK_LOGOS.horizontalDark,
+    logoUrl: BHOJDESK_LOGOS.icon,
     faviconUrl: BHOJDESK_LOGOS.icon,
     supportEmail: BHOJDESK_BRAND.supportEmail,
   },
@@ -69,8 +70,8 @@ const DEFAULTS = {
     pushVapidPrivateKey:"",
   },
   currencies: {
-    default:   "USD",
-    supported: ["USD", "EUR", "GBP", "INR", "AUD", "CAD"],
+    default:   "INR",
+    supported: ["INR", "USD", "EUR", "GBP", "AUD", "CAD"],
   },
 
   /* ── NEW SECTIONS ── */
@@ -213,11 +214,35 @@ function sanitizeSectionData(section, incoming = {}) {
     clean.retentionDays = Math.min(365, Math.max(1, Number(clean.retentionDays ?? base.retentionDays)));
     if (!["daily", "weekly"].includes(clean.backupSchedule)) clean.backupSchedule = base.backupSchedule;
   }
+  if (section === "language") {
+    Object.assign(clean, normalizePlatformLocaleSection(clean));
+  }
+  if (section === "currencies") {
+    const def = String(clean.default ?? base.default).toUpperCase().slice(0, 3);
+    let supported = Array.isArray(clean.supported)
+      ? [...new Set(clean.supported.map((c) => String(c).toUpperCase().slice(0, 3)).filter((c) => /^[A-Z]{3}$/.test(c)))]
+      : [...base.supported];
+    if (!supported.length) supported = [def || base.default];
+    if (def && !supported.includes(def)) supported.unshift(def);
+    clean.default = def || base.default;
+    clean.supported = supported;
+  }
   if (section === "advanced") {
     clean.invoicePrefix = (clean.invoicePrefix || base.invoicePrefix).slice(0, 20);
   }
 
   return { ...base, ...clean };
+}
+
+function maskSectionForClient(section, merged) {
+  const out = { ...merged };
+  for (const key of SECRET_FIELDS[section] ?? []) {
+    if (out[key]) out[key] = SECRET_MASK;
+  }
+  if (section === "payment" && out.gateways) {
+    out.gateways = maskGatewaySecrets(out.gateways);
+  }
+  return out;
 }
 
 /* ── GET /api/super-admin/settings ── */
@@ -233,13 +258,7 @@ export async function GET(request) {
     const settings = {};
     for (const section of Object.keys(DEFAULTS)) {
       const merged = { ...DEFAULTS[section], ...(doc?.[section] ?? {}) };
-      for (const key of SECRET_FIELDS[section] ?? []) {
-        if (merged[key]) merged[key] = SECRET_MASK;
-      }
-      if (section === "payment" && merged.gateways) {
-        merged.gateways = maskGatewaySecrets(merged.gateways);
-      }
-      settings[section] = merged;
+      settings[section] = maskSectionForClient(section, merged);
     }
     return Response.json({ success: true, settings });
   } catch (err) {
@@ -282,7 +301,11 @@ export async function PATCH(request) {
   try {
     const client = await clientPromise;
     const db     = client.db();
-    const existing = await db.collection("settings").findOne({ _id: "platform" }, { projection: { [section]: 1 } });
+    const projection =
+      section === "payment"
+        ? { payment: 1, currencies: 1 }
+        : { [section]: 1 };
+    const existing = await db.collection("settings").findOne({ _id: "platform" }, { projection });
 
     // Keep already-saved secrets unless caller provides a new value.
     const mergedForSave = { ...clean };
@@ -299,9 +322,28 @@ export async function PATCH(request) {
       );
     }
 
+    const setFields = { [section]: mergedForSave, updatedAt: new Date() };
+
+    /* Keep billing currency aligned with Currencies tab default */
+    if (section === "currencies" && mergedForSave.default) {
+      setFields["payment.currency"] = mergedForSave.default;
+    }
+    if (section === "payment" && mergedForSave.currency) {
+      const code = String(mergedForSave.currency).toUpperCase();
+      const existingCurrencies = existing?.currencies ?? DEFAULTS.currencies;
+      let supported = Array.isArray(existingCurrencies.supported)
+        ? [...existingCurrencies.supported]
+        : [...DEFAULTS.currencies.supported];
+      if (!supported.map((c) => String(c).toUpperCase()).includes(code)) {
+        supported.unshift(code);
+      }
+      setFields["currencies.default"] = code;
+      setFields["currencies.supported"] = supported;
+    }
+
     await db.collection("settings").updateOne(
       { _id: "platform" },
-      { $set: { [section]: mergedForSave, updatedAt: new Date() } },
+      { $set: setFields },
       { upsert: true }
     );
 
@@ -316,7 +358,11 @@ export async function PATCH(request) {
       ip: getClientIp(request),
     });
 
-    return Response.json({ success: true, section });
+    return Response.json({
+      success: true,
+      section,
+      sectionData: maskSectionForClient(section, mergedForSave),
+    });
   } catch (err) {
     console.error("PATCH settings error:", err.message);
     return Response.json({ success: false, error: "Something went wrong." }, { status: 500 });

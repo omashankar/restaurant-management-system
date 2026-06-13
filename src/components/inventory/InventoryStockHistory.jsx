@@ -10,22 +10,11 @@ import {
 import PaginationBar from "@/components/ui/PaginationBar";
 import { usePaginatedList } from "@/hooks/usePaginatedList";
 import { TrendingDown, TrendingUp } from "lucide-react";
+import { useAdminLocale } from "@/context/RestaurantLocaleContext";
 import { useMemo } from "react";
 
-function formatShortDate(iso) {
-  try {
-    return new Intl.DateTimeFormat(undefined, {
-      month: "short",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    }).format(new Date(iso));
-  } catch {
-    return iso;
-  }
-}
-
 export default function InventoryStockHistory({ historyEntries, items }) {
+  const { formatShortDateTime } = useAdminLocale();
   const {
     page,
     setPage,
@@ -43,10 +32,10 @@ export default function InventoryStockHistory({ historyEntries, items }) {
   return (
     <div className="grid min-w-0 gap-6 lg:grid-cols-2">
       <div className="min-w-0 rounded-2xl border admin-shell-border bg-zinc-900/40 p-4 sm:p-5">
-        <h3 className="admin-surface-title text-sm font-semibold">
+        <h3 className="break-words admin-surface-title text-sm font-semibold">
           Recent adjustments
         </h3>
-        <p className="mt-0.5 text-xs admin-surface-muted">
+        <p className="mt-0.5 break-words text-xs admin-surface-muted">
           Latest stock movements (newest first)
         </p>
         <ul className="mt-4 space-y-3 pr-1">
@@ -80,7 +69,7 @@ export default function InventoryStockHistory({ historyEntries, items }) {
                     <p className="break-words text-xs admin-surface-muted">{entry.message}</p>
                     <p className="mt-1 text-xs tabular-nums admin-surface-muted">
                       {up ? "+" : ""}
-                      {entry.delta} · {formatShortDate(entry.createdAt)}
+                      {entry.delta} · {formatShortDateTime(entry.createdAt)}
                     </p>
                   </div>
                 </li>
@@ -102,8 +91,8 @@ export default function InventoryStockHistory({ historyEntries, items }) {
       </div>
 
       <div className="min-w-0 rounded-2xl border admin-shell-border bg-zinc-900/40 p-4 sm:p-5">
-        <h3 className="admin-surface-title text-sm font-semibold">Stock levels</h3>
-        <p className="mt-0.5 text-xs admin-surface-muted">
+        <h3 className="break-words admin-surface-title text-sm font-semibold">Stock levels</h3>
+        <p className="mt-0.5 break-words text-xs admin-surface-muted">
           On-hand vs par level — out &amp; low items first, bar color matches status
         </p>
         <div className="mt-4 max-h-[28rem] space-y-3 overflow-y-auto pr-1">

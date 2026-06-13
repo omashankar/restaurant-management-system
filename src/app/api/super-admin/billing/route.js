@@ -2,6 +2,7 @@ import { getTokenFromRequest } from "@/lib/authCookies";
 import { verifyToken } from "@/lib/jwt";
 import clientPromise from "@/lib/mongodb";
 import { normalizePlanBreakdown } from "@/lib/planBreakdown";
+import { SUBSCRIPTION_PAYMENT_MATCH } from "@/lib/platformCurrency";
 
 function superAdminOnly(request) {
   const token   = getTokenFromRequest(request);
@@ -26,9 +27,7 @@ export async function GET(request) {
     const sixMonthsAgo = new Date();
     sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
 
-    const subscriptionPaymentMatch = {
-      paymentType: { $in: ["subscription", "subscription_renewal"] },
-    };
+    const subscriptionPaymentMatch = SUBSCRIPTION_PAYMENT_MATCH;
 
     const [
       revenueByMonth,

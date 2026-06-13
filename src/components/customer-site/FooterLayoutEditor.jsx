@@ -40,8 +40,8 @@ export default function FooterLayoutEditor({
     <div className="space-y-5">
       <div className="flex flex-col gap-3 admin-surface-divider-b pb-4 sm:flex-row sm:items-start sm:justify-between">
         <div className="min-w-0">
-          <h3 className="admin-surface-title text-lg font-semibold">Edit Footer</h3>
-          <p className="text-sm admin-surface-muted">Footer content, links, colors, and newsletter</p>
+          <h3 className="admin-surface-title break-words text-lg font-semibold">Edit Footer</h3>
+          <p className="break-words text-sm admin-surface-muted">Footer content, links, colors, and newsletter</p>
         </div>
         <button
           type="button"
