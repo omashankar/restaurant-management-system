@@ -5,6 +5,7 @@ import StatsCard from "@/components/rms/StatsCard";
 import { raIconBadgeCls } from "@/config/restaurantAdminTheme";
 import { ChefHat, Clock, Flame, MonitorPlay } from "lucide-react";
 import Link from "next/link";
+import { useAdminLocale } from "@/context/RestaurantLocaleContext";
 import { useState } from "react";
 
 const statusStyles = {
@@ -14,6 +15,7 @@ const statusStyles = {
 };
 
 export default function ChefDashboard({ tickets: initialTickets = [], topItems = [] }) {
+  const { formatTime } = useAdminLocale();
   const [tickets, setTickets] = useState(initialTickets);
 
   const updateStatus = (id, status) =>
@@ -24,19 +26,19 @@ export default function ChefDashboard({ tickets: initialTickets = [], topItems =
   const readyCount = tickets.filter((t) => t.status === "ready").length;
 
   return (
-    <div className="space-y-8">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+    <div className="min-w-0 w-full max-w-full space-y-6 overflow-x-hidden sm:space-y-8">
+      <div className="flex min-w-0 flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div className="flex min-w-0 items-start gap-3">
           <span className={`mt-1 shrink-0 ${raIconBadgeCls}`}>
             <ChefHat className="size-5" aria-hidden />
           </span>
           <div className="min-w-0">
-            <h1 className="admin-page-title">Kitchen View</h1>
-            <p className="admin-page-desc">Incoming tickets and order queue.</p>
+            <h1 className="admin-page-title break-words text-xl font-semibold tracking-tight sm:text-2xl">Kitchen View</h1>
+            <p className="admin-page-desc mt-1 break-words text-sm">Incoming tickets and order queue.</p>
           </div>
         </div>
         <Link href="/kitchen"
-          className="cursor-pointer inline-flex items-center gap-2 rounded-xl border admin-shell-border px-4 py-2 text-sm font-semibold admin-shell-text hover-border-ra-primary-40">
+          className="inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl border admin-shell-border px-4 py-2.5 text-sm font-semibold admin-shell-text hover-border-ra-primary-40 sm:w-auto">
           <MonitorPlay className="size-4" /> Full KDS
         </Link>
       </div>
@@ -55,9 +57,7 @@ export default function ChefDashboard({ tickets: initialTickets = [], topItems =
           <div className="grid gap-4 lg:grid-cols-3">
             {tickets.map((ticket) => {
               const tone = statusStyles[ticket.status] ?? statusStyles.new;
-              const placedAt = ticket.placedAt ?? (ticket.createdAt
-                ? new Date(ticket.createdAt).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })
-                : "—");
+              const placedAt = ticket.placedAt ?? (ticket.createdAt ? formatTime(ticket.createdAt) : "—");
               return (
                 <article key={ticket.id}
                   className={`admin-surface-card border-l-4 ${tone.border}`}>

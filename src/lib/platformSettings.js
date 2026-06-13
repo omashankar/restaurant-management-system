@@ -6,7 +6,7 @@ export const PLATFORM_DEFAULTS = {
   app: {
     name: BHOJDESK_BRAND.fullName,
     legalName: BHOJDESK_BRAND.name,
-    logoUrl: BHOJDESK_LOGOS.horizontalDark,
+    logoUrl: BHOJDESK_LOGOS.icon,
     faviconUrl: BHOJDESK_LOGOS.icon,
     supportEmail: BHOJDESK_BRAND.supportEmail,
     contactPhone: "",
@@ -70,6 +70,14 @@ export const PLATFORM_DEFAULTS = {
     metaPixelId: "",
     webhookUrl: "",
     webhookSecret: "",
+    razorpayKeyId: "",
+    razorpayKeySecret: "",
+  },
+  backup: {
+    autoBackup: false,
+    backupSchedule: "daily",
+    retentionDays: 30,
+    lastBackupAt: null,
   },
   advanced: {
     maintenanceMode: false,
@@ -127,6 +135,8 @@ export async function getPublicPlatformConfig(db) {
   return {
     maintenanceMode: Boolean(adv.maintenanceMode),
     appName: s.app?.name ?? BHOJDESK_BRAND.fullName,
+    logoUrl: String(s.app?.logoUrl ?? "").trim() || BHOJDESK_LOGOS.icon,
+    faviconUrl: String(s.app?.faviconUrl ?? "").trim() || BHOJDESK_LOGOS.icon,
     supportEmail: s.app?.supportEmail ?? "",
     features: {
       featureMenuQR: adv.featureMenuQR !== false,
@@ -134,7 +144,7 @@ export async function getPublicPlatformConfig(db) {
       featureReservations: adv.featureReservations !== false,
       featureInventory: adv.featureInventory !== false,
     },
-    currency: s.payment?.currency ?? s.currencies?.default ?? "INR",
+    currency: s.currencies?.default ?? s.payment?.currency ?? "INR",
     supportedCurrencies: s.currencies?.supported ?? ["INR"],
     language: s.language?.defaultLanguage ?? "en",
     timezone: s.language?.timezone ?? "UTC",

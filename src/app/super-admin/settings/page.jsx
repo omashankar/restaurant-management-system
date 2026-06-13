@@ -1,12 +1,23 @@
 "use client";
 
 import SuperAdminPageSkeleton from "@/components/super-admin/SuperAdminPageSkeleton";
+import PlatformBrandingImageField from "@/components/super-admin/PlatformBrandingImageField";
 import AdminSectionHeader from "@/components/ui/AdminSectionHeader";
 import { AdminSideNav, AdminSideNavItem, AdminSideNavList } from "@/components/ui/AdminSideNav";
 import { adminSurface } from "@/config/adminSurfaceClasses";
 import PushNotificationEnable from "@/components/PushNotificationEnable";
 import { useToast } from "@/hooks/useToast";
-import { invalidatePlatformConfigCache, updateSuperAdminThemeCache } from "@/hooks/usePlatformConfig";
+import {
+  normalizePlatformLocaleSection,
+} from "@/config/platformLocaleConfig";
+import { useSuperAdminLocale } from "@/context/SuperAdminLocaleContext";
+import {
+  invalidatePlatformConfigCache,
+  primePlatformConfigApp,
+  primePlatformConfigLocale,
+  updateSuperAdminThemeCache,
+} from "@/hooks/usePlatformConfig";
+import { DATE_FORMAT_OPTIONS } from "@/config/settingsConfig";
 import { decimalInputProps, intInputProps, phoneInputProps } from "@/lib/formInputTypes";
 import { validatePlatformSettingsSection } from "@/lib/platformSettingsValidation";
 import {
@@ -121,28 +132,34 @@ function AppSection({ data, onChange, onSave, saving, fieldErrors = {}, onClearE
             />
           </Field>
         </div>
-        <Field label="Logo URL" error={fieldErrors.logoUrl}>
-          <input
+        <div className="sm:col-span-1">
+          <PlatformBrandingImageField
+            label="Logo"
+            hint="Sidebar icon (square). Default: /branding/bhojdesk/icon.png"
             value={data.logoUrl ?? ""}
-            onChange={(e) => {
-              onChange("logoUrl", e.target.value);
+            onChange={(v) => {
+              onChange("logoUrl", v);
               onClearError?.("logoUrl");
             }}
-            placeholder="https://cdn.example.com/logo.png"
-            className={inputCls}
+            disabled={saving}
+            error={fieldErrors.logoUrl}
+            kind="logo"
           />
-        </Field>
-        <Field label="Favicon URL" error={fieldErrors.faviconUrl}>
-          <input
+        </div>
+        <div className="sm:col-span-1">
+          <PlatformBrandingImageField
+            label="Favicon"
+            hint="Browser tab icon. Square PNG/WebP, 32×32 or 64×64 recommended."
             value={data.faviconUrl ?? ""}
-            onChange={(e) => {
-              onChange("faviconUrl", e.target.value);
+            onChange={(v) => {
+              onChange("faviconUrl", v);
               onClearError?.("faviconUrl");
             }}
-            placeholder="https://cdn.example.com/favicon.ico"
-            className={inputCls}
+            disabled={saving}
+            error={fieldErrors.faviconUrl}
+            kind="favicon"
           />
-        </Field>
+        </div>
         <Field label="Support Email" required error={fieldErrors.supportEmail}>
           <input
             type="email"
@@ -310,19 +327,11 @@ function EmailSection({ data, onChange, onSave, saving, fieldErrors = {}, onClea
 }
 
 function LanguageSection({ data, onChange, onSave, saving }) {
-  const LANGUAGES = [["en","English"],["es","Spanish"],["fr","French"],["de","German"],["ar","Arabic"],["hi","Hindi"]];
   const TIMEZONES = ["UTC","America/New_York","America/Chicago","America/Los_Angeles","Europe/London","Europe/Paris","Asia/Kolkata","Asia/Tokyo","Australia/Sydney"];
-  const DATE_FMTS = ["MM/DD/YYYY","DD/MM/YYYY","YYYY-MM-DD"];
   return (
     <div className="space-y-5">
-      <AdminSectionHeader icon={Globe} title="Language & Locale" description="Default language, timezone, and date format." />
+      <AdminSectionHeader icon={Globe} title="Locale" description="Timezone and date/time format for the Super Admin panel." />
       <div className="grid gap-4 sm:grid-cols-2">
-        <Field label="Default Language">
-          <select value={data.defaultLanguage ?? "en"} onChange={(e) => onChange("defaultLanguage", e.target.value)}
-            className={`cursor-pointer ${inputCls}`}>
-            {LANGUAGES.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
-          </select>
-        </Field>
         <Field label="Timezone">
           <select value={data.timezone ?? "UTC"} onChange={(e) => onChange("timezone", e.target.value)}
             className={`cursor-pointer ${inputCls}`}>
@@ -332,7 +341,7 @@ function LanguageSection({ data, onChange, onSave, saving }) {
         <Field label="Date Format">
           <select value={data.dateFormat ?? "MM/DD/YYYY"} onChange={(e) => onChange("dateFormat", e.target.value)}
             className={`cursor-pointer ${inputCls}`}>
-            {DATE_FMTS.map((f) => <option key={f} value={f}>{f}</option>)}
+            {DATE_FORMAT_OPTIONS.map((f) => <option key={f} value={f}>{f}</option>)}
           </select>
         </Field>
         <Field label="Time Format">
@@ -667,6 +676,23 @@ function PaymentSection({ data, onChange, onSave, saving, fieldErrors = {}, onCl
                   <option value="inter_state">Inter-state (IGST)</option>
                 </select>
               </Field>
+              <Field label="Place of Supply" hint="Printed on GST receipts (e.g. Rajasthan).">
+                <input
+                  value={data.gstPlaceOfSupply ?? ""}
+                  onChange={(e) => onChange("gstPlaceOfSupply", e.target.value)}
+                  placeholder="Rajasthan"
+                  maxLength={80}
+                  className={inputCls}
+                />
+              </Field>
+              <div className="sm:col-span-2">
+                <Toggle
+                  checked={data.gstInclusivePricing !== false}
+                  onChange={(v) => onChange("gstInclusivePricing", v)}
+                  label="GST Inclusive Pricing"
+                  description="When on, invoice amounts already include GST. When off, GST is added on top."
+                />
+              </div>
               <Field label="Trial Period (days)" hint="0 = no trial." error={fieldErrors.trialDays}>
                 <input
                   {...intInputProps({ min: 0, max: 90, step: 1 })}
@@ -799,7 +825,7 @@ function ThemeSection({ data, onChange, onSave, saving, fieldErrors = {}, onClea
   );
 }
 
-function NotificationsSection({ data, onChange, onSave, saving }) {
+function NotificationsSection({ data, onChange, onSave, saving, fieldErrors = {}, onClearError }) {
   const alerts = [
     { key: "newRestaurantAlert", label: "New restaurant registered",  desc: "Alert when a new tenant signs up." },
     { key: "paymentFailAlert",   label: "Payment failure alert",      desc: "Alert when a subscription payment fails." },
@@ -820,13 +846,29 @@ function NotificationsSection({ data, onChange, onSave, saving }) {
           label="Enable Push Notifications" description="Send browser push notifications to admins." />
         {data.pushEnabled && (
           <div className="mt-3 grid gap-3 sm:grid-cols-2">
-            <Field label="VAPID Public Key">
-              <input value={data.pushVapidPublicKey ?? ""} onChange={(e) => onChange("pushVapidPublicKey", e.target.value)}
-                placeholder="BN…" className={`${inputCls} font-mono text-xs`} />
+            <Field label="VAPID Public Key" error={fieldErrors.pushVapidPublicKey}>
+              <input
+                value={data.pushVapidPublicKey ?? ""}
+                onChange={(e) => {
+                  onChange("pushVapidPublicKey", e.target.value);
+                  onClearError?.("pushVapidPublicKey");
+                }}
+                placeholder="BN…"
+                className={`${inputCls} font-mono text-xs`}
+              />
             </Field>
-            <Field label="VAPID Private Key">
-              <input type="password" value={data.pushVapidPrivateKey ?? ""} onChange={(e) => onChange("pushVapidPrivateKey", e.target.value)}
-                placeholder="••••••••" autoComplete="new-password" className={`${inputCls} font-mono text-xs`} />
+            <Field label="VAPID Private Key" error={fieldErrors.pushVapidPrivateKey}>
+              <input
+                type="password"
+                value={data.pushVapidPrivateKey ?? ""}
+                onChange={(e) => {
+                  onChange("pushVapidPrivateKey", e.target.value);
+                  onClearError?.("pushVapidPrivateKey");
+                }}
+                placeholder="••••••••"
+                autoComplete="new-password"
+                className={`${inputCls} font-mono text-xs`}
+              />
             </Field>
             <div className="sm:col-span-2">
               <PushNotificationEnable vapidPublicKey={data.pushVapidPublicKey} />
@@ -839,7 +881,7 @@ function NotificationsSection({ data, onChange, onSave, saving }) {
   );
 }
 
-function CurrenciesSection({ data, onChange, onSave, saving }) {
+function CurrenciesSection({ data, onChange, onSave, saving, fieldErrors = {} }) {
   const ALL_CURRENCIES = ["USD","EUR","GBP","INR","AUD","CAD","SGD","JPY","CHF","MXN","BRL","ZAR","AED","SAR","NGN","KES"];
   const supported = Array.isArray(data.supported) ? data.supported : [];
 
@@ -851,14 +893,17 @@ function CurrenciesSection({ data, onChange, onSave, saving }) {
   return (
     <div className="space-y-5">
       <AdminSectionHeader icon={DollarSign} title="Currencies" description="Default currency and supported currencies." />
-      <Field label="Default Currency">
-        <select value={data.default ?? "USD"} onChange={(e) => onChange("default", e.target.value)}
+      <Field label="Default Currency" error={fieldErrors.default}>
+        <select value={data.default ?? "INR"} onChange={(e) => onChange("default", e.target.value)}
           className={`cursor-pointer ${inputCls}`}>
           {ALL_CURRENCIES.map((c) => <option key={c} value={c}>{c}</option>)}
         </select>
       </Field>
       <div>
         <p className={labelCls}>Supported Currencies</p>
+        {fieldErrors.supported && (
+          <p className="mt-1 text-xs text-red-400">{fieldErrors.supported}</p>
+        )}
         <div className="flex flex-wrap gap-2 mt-1">
           {ALL_CURRENCIES.map((c) => {
             const active = supported.includes(c);
@@ -895,16 +940,17 @@ function SmsSection({ data, onChange, onSave, saving, fieldErrors = {}, onClearE
       />
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="sm:col-span-2">
-          <Field label="SMS Provider">
+          <Field label="SMS Provider" error={fieldErrors.provider}>
             <select
               value={data.provider ?? "twilio"}
-              onChange={(e) => onChange("provider", e.target.value)}
+              onChange={(e) => {
+                onChange("provider", e.target.value);
+                onClearError?.("provider");
+              }}
               className={`cursor-pointer ${inputCls}`}
             >
               <option value="twilio">Twilio</option>
-              <option value="fast2sms">Fast2SMS</option>
-              <option value="msg91">MSG91</option>
-              <option value="vonage">Vonage</option>
+              <option value="fast2sms">Fast2SMS (India)</option>
             </select>
           </Field>
         </div>
@@ -919,11 +965,14 @@ function SmsSection({ data, onChange, onSave, saving, fieldErrors = {}, onClearE
             className={`${inputCls} font-mono text-xs`}
           />
         </Field>
-        <Field label="Auth Token / API Secret" hint="Twilio: Auth Token. Fast2SMS: leave blank.">
+        <Field label="Auth Token / API Secret" hint="Twilio: Auth Token. Fast2SMS: leave blank." error={fieldErrors.authToken}>
           <input
             type="password"
             value={data.authToken ?? ""}
-            onChange={(e) => onChange("authToken", e.target.value)}
+            onChange={(e) => {
+              onChange("authToken", e.target.value);
+              onClearError?.("authToken");
+            }}
             placeholder="••••••••"
             autoComplete="new-password"
             className={`${inputCls} font-mono text-xs`}
@@ -1047,7 +1096,8 @@ function SecuritySection({ data, onChange, onSave, saving, fieldErrors = {}, onC
 /* ════════════════════════════════════════
    BACKUP & RESTORE
 ════════════════════════════════════════ */
-function BackupSection({ data, onChange, onSave, saving, showToast }) {
+function BackupSection({ data, onChange, onSave, saving, showToast, fieldErrors = {} }) {
+  const { formatDateTime } = useSuperAdminLocale();
   const [backups, setBackups]         = useState([]);
   const [loadingBackups, setLoadingBackups] = useState(true);
   const [triggering, setTriggering]   = useState(false);
@@ -1067,6 +1117,7 @@ function BackupSection({ data, onChange, onSave, saving, showToast }) {
       const json = await res.json();
       if (json.success) {
         setBackups(json.backups ?? []);
+        if (json.lastBackupAt) onChange("lastBackupAt", json.lastBackupAt);
         showToast("Backup completed successfully.");
       } else {
         showToast(json.error ?? "Backup failed.", "error");
@@ -1088,7 +1139,7 @@ function BackupSection({ data, onChange, onSave, saving, showToast }) {
           <p className="text-sm font-medium admin-shell-text">Manual Backup</p>
           <p className="mt-0.5 break-words text-xs admin-surface-muted">
             {data.lastBackupAt
-              ? `Last backup: ${new Date(data.lastBackupAt).toLocaleString()}`
+              ? `Last backup: ${formatDateTime(data.lastBackupAt)}`
               : "No backup taken yet."}
           </p>
         </div>
@@ -1125,7 +1176,7 @@ function BackupSection({ data, onChange, onSave, saving, showToast }) {
                 <option value="weekly">Weekly (Sunday midnight)</option>
               </select>
             </Field>
-            <Field label="Retention (days)" hint="Backups older than this are deleted.">
+            <Field label="Retention (days)" hint="Backups older than this are deleted." error={fieldErrors.retentionDays}>
               <input
                 type="number" min={1} max={365}
                 value={data.retentionDays ?? 30}
@@ -1160,7 +1211,7 @@ function BackupSection({ data, onChange, onSave, saving, showToast }) {
                       {b.type === "manual" ? "Manual" : "Auto"} backup
                     </p>
                     <p className="text-[10px] admin-surface-faint">
-                      {new Date(b.createdAt).toLocaleString()}
+                      {formatDateTime(b.createdAt)}
                     </p>
                   </div>
                 </div>
@@ -1354,7 +1405,7 @@ function AdvancedSection({ data, onChange, onSave, saving, showToast }) {
 const TABS = [
   { id: "app",           label: "App",           Icon: Settings    },
   { id: "email",         label: "Email",         Icon: Key         },
-  { id: "language",      label: "Language",      Icon: Globe       },
+  { id: "language",      label: "Locale",        Icon: Globe       },
   { id: "payment",       label: "Payment",       Icon: CreditCard  },
   { id: "theme",         label: "Theme",         Icon: Palette     },
   { id: "notifications", label: "Notifications", Icon: Bell        },
@@ -1381,7 +1432,16 @@ export default function SuperAdminSettingsPage() {
 
   useEffect(() => {
     const tab = new URLSearchParams(window.location.search).get("tab");
-    if (tab && VALID_TAB_IDS.has(tab)) setActiveTab(tab);
+    if (tab && VALID_TAB_IDS.has(tab)) {
+      setActiveTab(tab);
+      requestAnimationFrame(() => {
+        document.getElementById(`settings-tab-${tab}`)?.scrollIntoView({
+          inline: "center",
+          block: "nearest",
+          behavior: "smooth",
+        });
+      });
+    }
   }, []);
 
   useEffect(() => {
@@ -1396,7 +1456,11 @@ export default function SuperAdminSettingsPage() {
           const displayTheme = stored
             ? resolveSuperAdminTheme(mergeLiveAdminTheme(apiTheme, stored))
             : apiTheme;
-          const merged = { ...data.settings, theme: displayTheme };
+          const merged = {
+            ...data.settings,
+            theme: displayTheme,
+            language: normalizePlatformLocaleSection(data.settings?.language),
+          };
           if (stored) updateSuperAdminThemeCache(displayTheme);
           setSettings(merged);
         }
@@ -1455,10 +1519,26 @@ export default function SuperAdminSettingsPage() {
   }, [activeTab]);
 
   const handleChange = useCallback((key, value) => {
-    setSettings((prev) => ({
-      ...prev,
-      [activeTab]: { ...prev[activeTab], [key]: value },
-    }));
+    setSettings((prev) => {
+      if (activeTab === "currencies") {
+        const cur = { ...prev.currencies, [key]: value };
+        if (key === "default") {
+          const sup = Array.isArray(cur.supported) ? [...cur.supported] : [];
+          if (value && !sup.includes(value)) cur.supported = [...sup, value];
+        }
+        if (key === "supported" && Array.isArray(value)) {
+          const def = cur.default ?? "INR";
+          let next = value.length ? [...value] : [def];
+          if (def && !next.includes(def)) next = [...next, def];
+          cur.supported = next;
+        }
+        return { ...prev, currencies: cur };
+      }
+      return {
+        ...prev,
+        [activeTab]: { ...prev[activeTab], [key]: value },
+      };
+    });
   }, [activeTab]);
 
   const clearSectionError = useCallback((key) => {
@@ -1484,8 +1564,33 @@ export default function SuperAdminSettingsPage() {
       });
       const data = await res.json();
       if (!data.success) { showToast(data.error ?? "Failed to save.", "error"); return; }
+
+      if (data.sectionData) {
+        setSettings((prev) => {
+          const next = { ...prev, [activeTab]: data.sectionData };
+          if (activeTab === "payment" && data.sectionData.currency) {
+            const code = String(data.sectionData.currency).toUpperCase();
+            const supported = Array.isArray(prev.currencies?.supported)
+              ? [...prev.currencies.supported]
+              : [];
+            if (!supported.map((c) => String(c).toUpperCase()).includes(code)) {
+              supported.unshift(code);
+            }
+            next.currencies = { ...prev.currencies, default: code, supported };
+          }
+          if (activeTab === "currencies" && data.sectionData.default) {
+            next.payment = { ...prev.payment, currency: data.sectionData.default };
+          }
+          return next;
+        });
+      }
+
       if (activeTab === "theme") {
         updateSuperAdminThemeCache(payload);
+      } else if (activeTab === "language") {
+        primePlatformConfigLocale(payload);
+      } else if (activeTab === "app") {
+        primePlatformConfigApp(payload);
       } else {
         invalidatePlatformConfigCache();
       }
@@ -1503,6 +1608,15 @@ export default function SuperAdminSettingsPage() {
     setActiveTab(id);
     setSectionErrors({});
     panelRef.current?.scrollTo({ top: 0, behavior: "smooth" });
+    if (typeof window !== "undefined" && window.matchMedia("(max-width: 1023px)").matches) {
+      requestAnimationFrame(() => {
+        document.getElementById(`settings-tab-${id}`)?.scrollIntoView({
+          inline: "center",
+          block: "nearest",
+          behavior: "smooth",
+        });
+      });
+    }
   };
 
   const sectionData = settings?.[activeTab] ?? {};
@@ -1512,15 +1626,17 @@ export default function SuperAdminSettingsPage() {
   };
 
   return (
-    <div className="min-w-0 w-full max-w-full space-y-6 overflow-x-hidden">
+    <div className="min-w-0 w-full max-w-full space-y-6 overflow-x-hidden sm:space-y-10">
       {/* Header */}
-      <div className="flex min-w-0 items-start gap-3">
-        <span className={`mt-1 shrink-0 ${saIconBadgeCls}`}>
-          <Settings className="size-5" />
-        </span>
-        <div className="min-w-0">
-          <h1 className="admin-page-title break-words text-2xl font-semibold tracking-tight">Settings</h1>
-          <p className="admin-page-desc mt-1 text-sm">Centralized platform configuration.</p>
+      <div className="flex min-w-0 flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div className="flex min-w-0 items-start gap-3">
+          <span className={`mt-1 flex shrink-0 items-center justify-center ${saIconBadgeCls}`}>
+            <Settings className="size-5" />
+          </span>
+          <div className="min-w-0">
+            <h1 className="admin-page-title break-words text-xl font-semibold tracking-tight sm:text-2xl">Settings</h1>
+            <p className="admin-page-desc mt-1 text-sm">Centralized platform configuration.</p>
+          </div>
         </div>
       </div>
 
@@ -1535,14 +1651,16 @@ export default function SuperAdminSettingsPage() {
           <p className={`px-2 pb-2 pt-1 text-xs font-semibold uppercase tracking-wide ${adminSurface.muted}`}>
             Settings Menu
           </p>
-          <AdminSideNavList className="lg:gap-0.5">
+          <AdminSideNavList className="scroll-px-2 snap-x snap-mandatory lg:snap-none lg:gap-0.5">
             {TABS.map(({ id, label, Icon }) => (
               <AdminSideNavItem
                 key={id}
+                id={`settings-tab-${id}`}
                 active={id === activeTab}
                 activeClassName={id === activeTab ? saSideNavActiveCls : ""}
                 onClick={() => switchTab(id)}
                 icon={Icon}
+                className="snap-start"
               >
                 {label}
               </AdminSideNavItem>
@@ -1553,19 +1671,35 @@ export default function SuperAdminSettingsPage() {
         {/* Panel */}
         <div ref={panelRef} className="min-w-0 flex-1 admin-surface-card p-4 sm:p-6">
           {fetching ? (
-            <SuperAdminPageSkeleton rows={4} />
-          ) : !settings ? null : (
+            <SuperAdminPageSkeleton rows={6} rowClassName="h-12 rounded-xl" />
+          ) : !settings ? (
+            <div className="flex flex-col items-center justify-center gap-3 py-20 text-center">
+              <Settings2 className="size-10 text-zinc-700" />
+              <p className="text-sm admin-surface-muted">
+                {loadError ? "Could not load settings." : "Settings unavailable."}
+              </p>
+              {loadError && (
+                <button
+                  type="button"
+                  onClick={() => window.location.reload()}
+                  className="cursor-pointer rounded-xl border admin-shell-border px-4 py-2 text-sm admin-surface-body transition-colors hover:border-zinc-500"
+                >
+                  Retry
+                </button>
+              )}
+            </div>
+          ) : (
             <>
               {activeTab === "app"           && <AppSection           data={sectionData} onChange={handleChange} onSave={handleSave} saving={saving} {...panelValidationProps} />}
               {activeTab === "email"         && <EmailSection         data={sectionData} onChange={handleChange} onSave={handleSave} saving={saving} {...panelValidationProps} />}
               {activeTab === "language"      && <LanguageSection      data={sectionData} onChange={handleChange} onSave={handleSave} saving={saving} />}
               {activeTab === "payment"       && <PaymentSection       data={sectionData} onChange={handleChange} onSave={handleSave} saving={saving} {...panelValidationProps} />}
               {activeTab === "theme"         && <ThemeSection         data={sectionData} onChange={handleChange} onSave={handleSave} saving={saving} {...panelValidationProps} />}
-              {activeTab === "notifications" && <NotificationsSection data={sectionData} onChange={handleChange} onSave={handleSave} saving={saving} />}
-              {activeTab === "currencies"    && <CurrenciesSection    data={sectionData} onChange={handleChange} onSave={handleSave} saving={saving} />}
+              {activeTab === "notifications" && <NotificationsSection data={sectionData} onChange={handleChange} onSave={handleSave} saving={saving} {...panelValidationProps} />}
+              {activeTab === "currencies"    && <CurrenciesSection    data={sectionData} onChange={handleChange} onSave={handleSave} saving={saving} {...panelValidationProps} />}
               {activeTab === "sms"           && <SmsSection           data={sectionData} onChange={handleChange} onSave={handleSave} saving={saving} {...panelValidationProps} />}
               {activeTab === "security"      && <SecuritySection      data={sectionData} onChange={handleChange} onSave={handleSave} saving={saving} {...panelValidationProps} />}
-              {activeTab === "backup"        && <BackupSection        data={sectionData} onChange={handleChange} onSave={handleSave} saving={saving} showToast={showToast} />}
+              {activeTab === "backup"        && <BackupSection        data={sectionData} onChange={handleChange} onSave={handleSave} saving={saving} showToast={showToast} {...panelValidationProps} />}
               {activeTab === "integrations"  && <IntegrationsSection  data={sectionData} onChange={handleChange} onSave={handleSave} saving={saving} {...panelValidationProps} />}
               {activeTab === "advanced"      && <AdvancedSection      data={sectionData} onChange={handleChange} onSave={handleSave} saving={saving} showToast={showToast} />}
             </>

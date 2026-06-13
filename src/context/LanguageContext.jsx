@@ -2,16 +2,15 @@
 
 import { createContext, useCallback, useContext, useEffect, useState } from "react";
 import { en } from "@/config/i18n/en";
-import { hi } from "@/config/i18n/hi";
 
-const TRANSLATIONS = { en, hi };
+const TRANSLATIONS = { en };
 const LS_KEY = "rms-language";
 
 const LanguageContext = createContext(null);
 
 /**
  * Get a nested translation value by dot-notation key.
- * e.g. t("nav.dashboard") → "Dashboard" or "डैशबोर्ड"
+ * e.g. t("nav.dashboard") → "Dashboard"
  * Supports {variable} interpolation: t("onboarding.progress", { current: 1, total: 7 })
  */
 function getTranslation(translations, key, vars = {}) {
@@ -33,7 +32,10 @@ export function LanguageProvider({ children }) {
     function syncFromStorage() {
       try {
         const stored = localStorage.getItem(LS_KEY);
-        if (stored && TRANSLATIONS[stored]) setLangState(stored);
+        if (stored && stored !== "en") {
+          localStorage.setItem(LS_KEY, "en");
+        }
+        setLangState("en");
       } catch { /* ignore */ }
     }
     syncFromStorage();

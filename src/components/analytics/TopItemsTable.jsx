@@ -26,9 +26,9 @@ export default function TopItemsTable({ items = [], formatMoney }) {
 
   return (
     <div className="min-w-0 overflow-hidden admin-surface-card">
-      <div className="flex items-center gap-2 admin-surface-divider-b px-4 py-3 sm:px-5 sm:py-4">
+      <div className="flex min-w-0 items-center gap-2 admin-surface-divider-b px-4 py-3 sm:px-5 sm:py-4">
         <Trophy className="size-4 shrink-0 text-amber-400" />
-        <p className="text-sm font-semibold admin-shell-text">Top Items by Revenue</p>
+        <p className="min-w-0 break-words text-sm font-semibold admin-shell-text">Top Items by Revenue</p>
       </div>
 
       <div className="space-y-2 p-3 md:hidden">
@@ -42,7 +42,7 @@ export default function TopItemsTable({ items = [], formatMoney }) {
                 <p className="font-mono text-xs admin-surface-muted">#{startIndex + i + 1}</p>
                 <p className="mt-0.5 break-words font-medium admin-shell-text">{item.name}</p>
               </div>
-              <p className="shrink-0 font-semibold text-ra-primary">{formatMoney(item.revenue)}</p>
+              <p className="shrink-0 break-all text-right font-semibold tabular-nums text-ra-primary">{formatMoney(item.revenue)}</p>
             </div>
             <p className="mt-2 text-xs admin-surface-muted">
               Qty sold: <span className="font-medium admin-surface-body">{item.qty}</span>
@@ -78,11 +78,11 @@ export default function TopItemsTable({ items = [], formatMoney }) {
                   <AdminTableTd className="px-5 font-mono text-xs admin-surface-muted">
                     {startIndex + i + 1}
                   </AdminTableTd>
-                  <AdminTableTd className="max-w-[12rem] px-5 font-medium admin-shell-text sm:max-w-none">
+                  <AdminTableTd className="max-w-[12rem] min-w-0 px-5 font-medium admin-shell-text sm:max-w-none">
                     <span className="block truncate">{item.name}</span>
                   </AdminTableTd>
                   <AdminTableTd align="right" className="px-5 admin-surface-body">{item.qty}</AdminTableTd>
-                  <AdminTableTd align="right" className="px-5 font-semibold text-ra-primary">
+                  <AdminTableTd align="right" className="px-5 font-semibold tabular-nums text-ra-primary">
                     {formatMoney(item.revenue)}
                   </AdminTableTd>
                 </AdminTableRow>

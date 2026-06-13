@@ -1,11 +1,18 @@
 import { getPlatformSettings } from "@/lib/platformSettings";
 
+/** SaaS subscription rows in `payments` (food orders use `payment_transactions`). */
+export const SUBSCRIPTION_PAYMENT_TYPES = ["subscription", "subscription_renewal"];
+
+export const SUBSCRIPTION_PAYMENT_MATCH = {
+  paymentType: { $in: SUBSCRIPTION_PAYMENT_TYPES },
+};
+
 /** @param {import("mongodb").Db} [db] */
 export async function getPlatformCurrency(db) {
   const settings = await getPlatformSettings(db);
   const code =
+    String(settings.currencies?.default ?? "").trim() ||
     String(settings.payment?.currency ?? "").trim() ||
-    String(settings.currencies?.default ?? "INR").trim() ||
     "INR";
   return code.toUpperCase();
 }

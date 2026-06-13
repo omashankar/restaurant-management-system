@@ -1,6 +1,7 @@
 "use client";
 
-import { raIconBadgeCls, raInputCls, raTextareaCls } from "@/config/restaurantAdminTheme";
+import { raIconBadgeCls, raInputCls, raSpinnerCls, raTextareaCls, raPageRefreshBtnCls, raPagePrimaryBtnCls } from "@/config/restaurantAdminTheme";
+import { useAdminLocale } from "@/context/RestaurantLocaleContext";
 import { useUser } from "@/context/AuthContext";
 import { formatAdminMoney } from "@/lib/adminCurrency";
 import {
@@ -14,7 +15,7 @@ import {
 } from "@/lib/formValidation";
 import SearchField from "@/components/ui/SearchField";
 import PaginationBar from "@/components/ui/PaginationBar";
-import { adminModalOverlay } from "@/config/adminSurfaceClasses";
+import { adminModalOverlay, adminSurface } from "@/config/adminSurfaceClasses";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import { useLiveRefresh } from "@/hooks/useLiveRefresh";
@@ -58,34 +59,9 @@ const PAYMENT_METHOD_LABEL = {
 const NEXT_STATUS = { new: "preparing", preparing: "ready", ready: "completed" };
 const NEXT_LABEL  = { new: "Start Preparing", preparing: "Mark Ready", ready: "Mark Completed" };
 
-function formatOrderPlacedAt(iso) {
-  if (!iso) return { label: "—", full: "—" };
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return { label: "—", full: "—" };
-
-  const now = new Date();
-  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const orderDay = new Date(d.getFullYear(), d.getMonth(), d.getDate());
-  const diffDays = Math.round((today - orderDay) / 86400000);
-  const timeStr = d.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" });
-  const dateStr = d.toLocaleDateString("en-IN", {
-    weekday: "short",
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  });
-  const full = `${dateStr}, ${timeStr}`;
-
-  if (diffDays === 0) return { label: `Today · ${timeStr}`, full };
-  if (diffDays === 1) return { label: `Yesterday · ${timeStr}`, full };
-  return {
-    label: `${d.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })} · ${timeStr}`,
-    full,
-  };
-}
-
 /* ── Order card ── */
 function OrderCard({ order, currency, onStatusChange, onMarkPaid, canEdit }) {
+  const { formatOrderPlacedAt } = useAdminLocale();
   const [expanded, setExpanded] = useState(false);
   const [updating, setUpdating] = useState(false);
   const [payUpdating, setPayUpdating] = useState(false);
@@ -123,7 +99,10 @@ function OrderCard({ order, currency, onStatusChange, onMarkPaid, canEdit }) {
               <TypeIcon className={`size-4 ${tp.color}`} />
             </span>
             <div className="min-w-0">
-              <p className="font-mono text-sm font-semibold text-ra-primary">
+              <p
+                className="truncate font-mono text-sm font-semibold text-ra-primary"
+                title={String(order.orderId ?? order.id ?? "")}
+              >
                 {order.orderId ?? order.id?.slice(-8).toUpperCase()}
               </p>
               <p className="text-xs admin-surface-muted">
@@ -137,7 +116,7 @@ function OrderCard({ order, currency, onStatusChange, onMarkPaid, canEdit }) {
         </div>
 
         <div className="mt-3 flex flex-wrap items-start justify-between gap-x-3 gap-y-1">
-          <p className="min-w-0 flex-1 break-words text-sm admin-surface-muted">{order.customer}</p>
+          <p className="min-w-0 flex-1 break-all text-sm admin-surface-muted">{order.customer}</p>
           <p className="shrink-0 text-base font-bold tabular-nums admin-shell-text">{formatAdminMoney(orderTotal, currency)}</p>
         </div>
 
@@ -402,28 +381,35 @@ function CreateOrderModal({ open, onClose, onCreated, currency = "INR" }) {
   return createPortal(
     <div className={`${adminModalOverlay} p-0 sm:p-4`}>
       <button type="button" className="cursor-pointer absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative z-10 flex max-h-[95vh] w-full flex-col rounded-t-2xl border admin-shell-border admin-surface-card-solid shadow-2xl sm:max-h-[90vh] sm:max-w-3xl sm:rounded-2xl">
+      <div
+        className="relative z-10 flex max-h-[min(95dvh,900px)] w-full min-w-0 max-w-full flex-col rounded-t-2xl border admin-shell-border admin-surface-card-solid shadow-2xl sm:max-h-[90vh] sm:max-w-3xl sm:rounded-2xl"
+        style={{ paddingBottom: "max(0px, env(safe-area-inset-bottom))" }}
+      >
+        <div className="flex shrink-0 flex-col items-center pt-2 sm:hidden">
+          <span className="h-1 w-10 rounded-full bg-[var(--admin-border)]" aria-hidden />
+        </div>
 
         {/* Header */}
         <div className="flex items-center justify-between admin-surface-divider-b px-4 py-4 sm:px-5">
-          <h2 className="text-base font-bold text-zinc-50">New Order</h2>
-          <button type="button" onClick={onClose} className="cursor-pointer rounded-lg p-2 text-zinc-500 hover:bg-[var(--admin-hover)] hover:admin-shell-text">
+          <h2 className={`text-base font-bold ${adminSurface.title}`}>New Order</h2>
+          <button type="button" onClick={onClose} className={`cursor-pointer rounded-lg p-2 ${adminSurface.muted} hover:bg-[var(--admin-hover)] hover:admin-shell-text`}>
             <X className="size-5" />
           </button>
         </div>
 
-        <div className="flex flex-1 flex-col overflow-hidden lg:flex-row">
+        <div className="flex min-h-0 flex-1 flex-col overflow-y-auto lg:flex-row lg:overflow-hidden">
           {/* Left — menu */}
-          <div className="flex max-h-[38vh] flex-1 flex-col overflow-hidden border-b admin-shell-border lg:max-h-none lg:border-b-0 lg:border-r">
-            <div className="p-3 admin-surface-divider-b">
+          <div className="flex shrink-0 flex-col border-b admin-shell-border lg:max-h-none lg:min-h-0 lg:flex-1 lg:overflow-hidden lg:border-b-0 lg:border-r">
+            <div className="shrink-0 p-3 admin-surface-divider-b">
               <SearchField
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search menu…"
+                clearable
                 inputClassName="focus-ra-primary"
               />
             </div>
-            <div className="flex-1 overflow-y-auto p-3 space-y-1.5">
+            <div className="min-h-[11rem] flex-1 overflow-y-auto p-3 space-y-1.5 lg:min-h-0">
               {filteredMenu.map((item) => (
                 <button key={item.id} type="button" onClick={() => addItem(item)}
                   className="cursor-pointer flex w-full items-start justify-between gap-2 rounded-xl admin-surface-card px-3 py-2.5 text-left hover:border-ra-primary-30 hover:bg-ra-primary-5 transition-all">
@@ -441,8 +427,8 @@ function CreateOrderModal({ open, onClose, onCreated, currency = "INR" }) {
           </div>
 
           {/* Right — order details */}
-          <div className="flex w-full shrink-0 flex-col overflow-hidden lg:w-72">
-            <div className="flex-1 overflow-y-auto p-3 space-y-3">
+          <div className="flex w-full shrink-0 flex-col lg:w-72 lg:overflow-hidden">
+            <div className="flex-1 space-y-3 overflow-visible p-3 lg:overflow-y-auto">
               {/* Order type */}
               <div>
                 <label className="text-xs font-medium admin-surface-muted">Order Type</label>
@@ -609,10 +595,10 @@ function CreateOrderModal({ open, onClose, onCreated, currency = "INR" }) {
                       if (m === "cod") setPaymentStatus("pending");
                       else setPaymentStatus("paid");
                     }}
-                    className={`cursor-pointer rounded-lg py-2 text-[10px] font-semibold sm:flex-1 sm:py-1 ${
+                    className={`cursor-pointer rounded-lg border box-border py-2 text-[10px] font-semibold transition-[background-color,color] sm:flex-1 sm:py-1 ${
                       paymentMethod === m
-                        ? "bg-ra-primary/20 text-ra-primary-muted"
-                        : "text-zinc-600 hover:text-zinc-400"
+                        ? "border-ra-primary/25 bg-ra-primary/20 text-ra-primary-muted"
+                        : "border-[var(--admin-border-subtle)] bg-[var(--admin-hover)] text-zinc-500 hover:admin-shell-text"
                     }`}
                   >
                     {PAYMENT_METHOD_LABEL[m] ?? m}
@@ -642,8 +628,10 @@ function CreateOrderModal({ open, onClose, onCreated, currency = "INR" }) {
 /* ── Page ── */
 export default function OrdersPage() {
   const { user } = useUser();
+  const { formatTime } = useAdminLocale();
   const [orders, setOrders]     = useState([]);
   const [loading, setLoading]   = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [fetchError, setFetchError] = useState("");
   const [currency, setCurrency] = useState("INR");
   const [filter, setFilter]     = useState("all");
@@ -705,6 +693,16 @@ export default function OrdersPage() {
   useEffect(() => { fetchOrders(); }, [fetchOrders]);
   useLiveRefresh(() => fetchOrders(true));
 
+  const refreshOrders = useCallback(async () => {
+    setRefreshing(true);
+    setFetchError("");
+    try {
+      await fetchOrders(true);
+    } finally {
+      setRefreshing(false);
+    }
+  }, [fetchOrders]);
+
   const handleStatusChange = useCallback(async (id, status) => {
     const res  = await fetch(`/api/orders/${id}`, {
       method: "PATCH",
@@ -752,10 +750,17 @@ export default function OrdersPage() {
   if (loading) {
     return (
       <div className="min-w-0 w-full max-w-full space-y-6 overflow-x-hidden">
-        <div className="h-8 w-32 animate-pulse rounded-lg admin-progress-track" />
+        <div className="flex min-w-0 flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+          <div className="h-8 w-40 animate-pulse rounded-lg admin-progress-track" />
+          <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
+            <div className="h-10 w-full animate-pulse rounded-xl admin-surface-card sm:w-24" />
+            <div className="h-10 w-full animate-pulse rounded-xl admin-surface-card sm:w-32" />
+          </div>
+        </div>
         <div className="grid min-w-0 grid-cols-2 gap-2 sm:grid-cols-5 sm:gap-3">
           {Array.from({ length: 5 }).map((_, i) => <div key={i} className="h-16 animate-pulse admin-surface-card" />)}
         </div>
+        <div className="h-10 w-full max-w-xs animate-pulse rounded-xl admin-surface-card" />
         <div className="grid min-w-0 grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
           {Array.from({ length: 8 }).map((_, i) => <div key={i} className="h-32 animate-pulse admin-surface-card" />)}
         </div>
@@ -778,27 +783,31 @@ export default function OrdersPage() {
               <UtensilsCrossed className="size-5" />
             </span>
             <div className="min-w-0">
-              <h1 className="admin-page-title text-2xl font-semibold tracking-tight">Orders</h1>
-              <p className="admin-page-desc mt-1 text-sm">
-                {totalOrders} total ·{" "}
-                <span className="inline-flex items-center gap-1.5">
-                  <span className="size-1.5 animate-pulse rounded-full bg-ra-accent" />
-                  Live
-                  {lastUpdated
-                    ? ` · updated ${lastUpdated.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", second: "2-digit" })}`
-                    : ""}
+              <h1 className="admin-page-title break-words text-xl font-semibold tracking-tight sm:text-2xl">Orders</h1>
+              <p className="admin-page-desc mt-1 break-words text-sm">
+                {totalOrders} total
+                <span className="mt-1 block sm:mt-0 sm:inline">
+                  <span className="hidden sm:inline"> · </span>
+                  <span className="inline-flex flex-wrap items-center gap-1.5">
+                    <span className="size-1.5 animate-pulse rounded-full bg-ra-accent" />
+                    Live
+                    {lastUpdated
+                      ? ` · updated ${formatTime(lastUpdated, { seconds: true })}`
+                      : ""}
+                  </span>
                 </span>
               </p>
             </div>
           </div>
-          <div className="flex w-full min-w-0 flex-col gap-2 sm:w-auto sm:flex-row sm:flex-wrap sm:items-center">
+          <div className="admin-page-header-actions">
             <button
               type="button"
-              onClick={() => fetchOrders()}
-              className="inline-flex w-full cursor-pointer items-center justify-center gap-1.5 rounded-xl border admin-shell-border px-3 py-2 text-xs font-medium text-zinc-400 transition-colors hover:border-zinc-500 hover:admin-shell-text sm:w-auto"
+              onClick={refreshOrders}
+              disabled={refreshing}
+              className={raPageRefreshBtnCls}
             >
-              <RefreshCw className="size-3.5" />
-              <span className="sm:hidden">Refresh</span>
+              <RefreshCw className={`size-3.5 ${refreshing ? raSpinnerCls : ""}`} />
+              Refresh
             </button>
             <button
               type="button"
@@ -812,7 +821,7 @@ export default function OrdersPage() {
               <button
                 type="button"
                 onClick={() => setCreateOpen(true)}
-                className="inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-ra-primary px-4 py-2 text-sm font-bold text-zinc-950 shadow-ra-primary-glow hover:brightness-110 active:scale-[0.98] sm:w-auto"
+                className={`${raPagePrimaryBtnCls} px-4 py-2 text-sm font-bold`}
               >
                 <Plus className="size-4" /> New Order
               </button>
@@ -821,7 +830,7 @@ export default function OrdersPage() {
         </div>
 
         {/* Summary strip */}
-        <div className="grid min-w-0 grid-cols-2 gap-2 sm:grid-cols-5 sm:gap-3">
+        <div className="-mx-1 flex min-w-0 gap-2 overflow-x-auto scroll-px-1 px-1 pb-0.5 [-webkit-overflow-scrolling:touch] sm:mx-0 sm:grid sm:grid-cols-5 sm:gap-3 sm:overflow-visible sm:px-0 sm:pb-0">
           {[
             { key: "new",       label: "New",       color: "text-amber-400",   bg: "bg-amber-500/10",   border: "border-amber-500/20"   },
             { key: "preparing", label: "Preparing", color: "text-sky-400",     bg: "bg-sky-500/10",     border: "border-sky-500/20"     },
@@ -833,10 +842,12 @@ export default function OrdersPage() {
               key={key}
               type="button"
               onClick={() => setFilter(filter === key ? "all" : key)}
-              className={`min-w-0 cursor-pointer rounded-2xl border p-2.5 text-left transition-all hover:-translate-y-0.5 sm:p-3 ${bg} ${border} ${filter === key ? "ring-1 ring-current" : ""}`}
+              className={`min-w-[7.5rem] shrink-0 cursor-pointer rounded-2xl border box-border p-2.5 text-left transition-[background-color,box-shadow] sm:min-w-0 sm:p-3 sm:hover:-translate-y-0.5 ${bg} ${border} ${
+                filter === key ? "ring-1 ring-inset ring-white/15" : "ring-1 ring-transparent"
+              }`}
             >
               <p className={`text-lg font-bold tabular-nums sm:text-xl ${color}`}>{summary[key]}</p>
-              <p className="mt-0.5 text-[11px] admin-surface-muted sm:text-xs">{label}</p>
+              <p className="mt-0.5 truncate text-[11px] admin-surface-muted sm:text-xs">{label}</p>
             </button>
           ))}
         </div>

@@ -1,4 +1,8 @@
 import { isReservationSlotAvailable } from "@/lib/reservationConflict";
+import {
+  fetchRestaurantOpeningHours,
+  validateReservationDateTime,
+} from "@/lib/reservationUtils";
 import { parseSchema, reservationCreateSchema } from "@/lib/validationSchemas";
 import { withTenant } from "@/lib/tenantDb";
 import { assertPlatformFeatureForPath } from "@/lib/platformFeatureGuard";
@@ -32,7 +36,7 @@ export const GET = withTenant(
 
 export const POST = withTenant(
   ["admin", "manager", "waiter"],
-  async ({ db, tenantFilter, payload }, request) => {
+  async ({ db, tenantFilter, restaurantId, payload }, request) => {
     const blocked = await assertPlatformFeatureForPath("/api/reservations", db);
     if (blocked) return blocked;
 
@@ -49,6 +53,12 @@ export const POST = withTenant(
     const { customerName, phone, date, time, guests, tableNumber, notes, area, status } = data;
     const tableNum = tableNumber?.trim() || "TBD";
     const statusVal = ALLOWED_STATUS.includes(status) ? status : "pending";
+
+    const openingHours = await fetchRestaurantOpeningHours(db, restaurantId);
+    const hoursCheck = validateReservationDateTime(openingHours, date, time);
+    if (!hoursCheck.valid) {
+      return Response.json({ success: false, error: hoursCheck.error }, { status: 422 });
+    }
 
     if (tableNum !== "TBD") {
       const existing = await db.collection("reservations")

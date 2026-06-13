@@ -14,11 +14,8 @@ export default function PlatformLanguageSync() {
     try {
       const stored = localStorage.getItem(LS_KEY);
       if (stored) return;
-      const lang = config.language ?? "en";
-      if (lang === "en" || lang === "hi") {
-        localStorage.setItem(LS_KEY, lang);
-        window.dispatchEvent(new Event("rms-language-set"));
-      }
+      localStorage.setItem(LS_KEY, "en");
+      window.dispatchEvent(new Event("rms-language-set"));
     } catch {
       /* ignore */
     }

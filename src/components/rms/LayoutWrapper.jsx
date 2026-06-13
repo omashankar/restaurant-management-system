@@ -10,6 +10,7 @@ import MobileDrawer from "./MobileDrawer";
 import ResponsiveSidebar from "./ResponsiveSidebar";
 import TopNavbar from "./TopNavbar";
 import Sidebar from "./Sidebar";
+import { RestaurantLocaleProvider } from "@/context/RestaurantLocaleContext";
 
 const SIDEBAR_STATE_KEY = "sidebarCollapsed";
 
@@ -104,7 +105,7 @@ export default function LayoutWrapper({ children }) {
     }
   };
 
-  const contentOffset = mdUp ? (collapsed ? 80 : 256) : 0;
+  const contentOffset = mdUp ? (collapsed ? 72 : 256) : 0;
 
   // Prevents hydration flicker between server/default and stored client state.
   if (!mounted) {
@@ -145,7 +146,7 @@ export default function LayoutWrapper({ children }) {
             onToggleSidebar={toggleSidebar}
           />
           <main className={`${adminShell.pageContent} relative z-0 flex-1 overflow-y-auto overflow-x-hidden p-4 sm:p-6`}>
-            {children}
+            <RestaurantLocaleProvider>{children}</RestaurantLocaleProvider>
           </main>
         </div>
       </div>

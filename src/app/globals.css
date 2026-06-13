@@ -2765,3 +2765,18 @@ html[data-customer-dark="true"] body {
 .rms-dashboard-card__body::-webkit-scrollbar-track {
   background: transparent;
 }
+
+/* Stacked dashboard cards — natural height on phone/tablet; cap height on desktop grids */
+@media (max-width: 1023px) {
+  :is(.restaurant-admin-panel, .super-admin-panel) .rms-dashboard-card,
+  :is(.restaurant-admin-panel, .super-admin-panel) .rms-dashboard-card--lg,
+  :is(.restaurant-admin-panel, .super-admin-panel) .rms-dashboard-card--md {
+    max-height: none;
+    min-height: 0;
+  }
+
+  :is(.restaurant-admin-panel, .super-admin-panel) .rms-dashboard-card--bounded {
+    max-height: min(28rem, 72vh);
+    min-height: 10rem;
+  }
+}

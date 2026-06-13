@@ -17,7 +17,7 @@ const SearchField = forwardRef(function SearchField(
     compact = false,
     clearable = false,
     onClear,
-    type = "search",
+    type = "text",
     id,
     ...inputProps
   },

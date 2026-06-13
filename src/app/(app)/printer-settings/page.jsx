@@ -1,9 +1,8 @@
 "use client";
 
-import { raIconBadgeCls, raInputCls } from "@/config/restaurantAdminTheme";
-import { adminSurface } from "@/config/adminSurfaceClasses";
+import { raGhostBtnCls, raIconBadgeCls, raInputCls, raSpinnerCls, raTabActiveCls, raPageRefreshBtnCls, raPagePrimaryBtnCls } from "@/config/restaurantAdminTheme";
 import { useLanguage } from "@/context/LanguageContext";
-import { CheckCircle2, Loader2, Plus, Printer, Save, Trash2, Wifi, Bluetooth, Usb, XCircle } from "lucide-react";
+import { CheckCircle2, Loader2, Plus, Printer, RefreshCw, Save, Trash2, Wifi, Bluetooth, Usb, XCircle } from "lucide-react";
 import { EMPTY_PRINTER_ERRORS, getPrinterFieldErrors } from "@/lib/formValidation";
 import { useCallback, useEffect, useState } from "react";
 
@@ -26,8 +25,8 @@ function Toggle({ checked, onChange, label, hint }) {
   return (
     <label className="flex cursor-pointer items-start justify-between gap-3 rounded-xl admin-surface-card px-3 py-3 sm:gap-4 sm:px-4">
       <span className="min-w-0 flex-1">
-        <span className="block text-sm font-medium admin-shell-text">{label}</span>
-        {hint && <span className="mt-0.5 block text-xs leading-snug admin-surface-muted">{hint}</span>}
+        <span className="block break-words text-sm font-medium admin-shell-text">{label}</span>
+        {hint && <span className="mt-0.5 block break-words text-xs leading-snug admin-surface-muted">{hint}</span>}
       </span>
       <button type="button" role="switch" aria-checked={checked} onClick={() => onChange(!checked)}
         className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors ${checked ? "bg-ra-primary" : "bg-zinc-700"}`}>
@@ -37,9 +36,37 @@ function Toggle({ checked, onChange, label, hint }) {
   );
 }
 
+function PrinterSettingsPageSkeleton() {
+  return (
+    <div className="min-w-0 w-full max-w-full space-y-6 overflow-x-hidden">
+      <div className="flex min-w-0 flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div className="flex min-w-0 items-start gap-3">
+          <div className="mt-1 size-10 shrink-0 animate-pulse rounded-xl admin-surface-card" />
+          <div className="min-w-0 flex-1 space-y-2">
+            <div className="h-7 w-44 max-w-full animate-pulse rounded-lg admin-surface-card" />
+            <div className="h-4 w-full max-w-lg animate-pulse rounded admin-surface-card" />
+          </div>
+        </div>
+        <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
+          <div className="h-10 w-full animate-pulse rounded-xl admin-surface-card sm:w-24" />
+          <div className="h-10 w-full animate-pulse rounded-xl admin-surface-card sm:w-32" />
+        </div>
+      </div>
+      <div className="h-36 animate-pulse rounded-2xl admin-surface-card" />
+      <div className="h-44 animate-pulse rounded-2xl admin-surface-card" />
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        {Array.from({ length: 3 }).map((_, i) => (
+          <div key={i} className="h-28 animate-pulse rounded-xl admin-surface-card" />
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export default function PrinterSettingsPage() {
   const { t } = useLanguage();
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [loadError, setLoadError] = useState(null);
   const [saving, setSaving] = useState(false);
   const [saveResult, setSaveResult] = useState(null);
@@ -54,7 +81,12 @@ export default function PrinterSettingsPage() {
 
   const hasChanges = JSON.stringify(printers) !== JSON.stringify(savedPrinters);
 
-  const loadPrinters = useCallback(async () => {
+  const loadPrinters = useCallback(async (silent = false) => {
+    if (silent) {
+      setRefreshing(true);
+    } else {
+      setLoading(true);
+    }
     setLoadError(null);
     try {
       const res = await fetch("/api/printer-settings", { cache: "no-store" });
@@ -69,7 +101,8 @@ export default function PrinterSettingsPage() {
     } catch {
       setLoadError("Could not load printer settings. Check your connection.");
     } finally {
-      setLoading(false);
+      if (silent) setRefreshing(false);
+      else setLoading(false);
     }
   }, []);
 
@@ -161,34 +194,43 @@ export default function PrinterSettingsPage() {
 
   if (loading) {
     return (
-      <div className="flex h-64 items-center justify-center">
-        <Loader2 className="size-6 animate-spin text-ra-primary" />
+      <div className="min-w-0 w-full max-w-full overflow-x-hidden">
+        <PrinterSettingsPageSkeleton />
       </div>
     );
   }
 
   return (
-    <div className="min-w-0 w-full max-w-full space-y-6 overflow-x-hidden">
-      <div className="flex min-w-0 flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+    <div className={`min-w-0 w-full max-w-full space-y-6 overflow-x-hidden transition-opacity duration-200 ${refreshing ? "opacity-70" : ""}`}>
+      <div className="flex min-w-0 flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div className="flex min-w-0 items-start gap-3">
           <span className={`mt-1 shrink-0 ${raIconBadgeCls}`}>
             <Printer className="size-5" aria-hidden />
           </span>
           <div className="min-w-0">
-            <h1 className="admin-page-title text-xl font-semibold tracking-tight sm:text-2xl">{t("printer.title")}</h1>
-            <p className="admin-page-desc mt-1 text-sm">
+            <h1 className="admin-page-title break-words text-xl font-semibold tracking-tight sm:text-2xl">{t("printer.title")}</h1>
+            <p className="admin-page-desc mt-1 break-words text-sm">
               Configure thermal printers. Network printers print via ESC/POS; USB/Bluetooth use POS browser print.
             </p>
           </div>
         </div>
-        <div className="flex w-full shrink-0 flex-col gap-2 sm:w-auto sm:flex-row">
-          <button type="button" onClick={() => savePrinters()} disabled={saving || !hasChanges}
-            className="cursor-pointer inline-flex w-full items-center justify-center gap-2 rounded-xl border admin-shell-border px-4 py-2 text-sm font-semibold admin-shell-text transition-colors hover:border-zinc-500 disabled:opacity-50 sm:w-auto">
+        <div className="admin-page-header-actions">
+          <button
+            type="button"
+            onClick={() => loadPrinters(true)}
+            disabled={refreshing || saving}
+            className={raPageRefreshBtnCls}
+          >
+            <RefreshCw className={`size-4 ${refreshing ? raSpinnerCls : ""}`} />
+            Refresh
+          </button>
+          <button type="button" onClick={() => savePrinters()} disabled={saving || refreshing || !hasChanges}
+            className={`${raGhostBtnCls} inline-flex w-full shrink-0 cursor-pointer items-center justify-center gap-2 whitespace-nowrap px-4 py-2.5 text-sm font-semibold disabled:opacity-50 sm:w-auto`}>
             {saving ? <Loader2 className="size-4 animate-spin" /> : <Save className="size-4" />}
             {saving ? "Saving…" : "Save"}
           </button>
-          <button type="button" onClick={() => setShowForm(true)}
-            className="cursor-pointer inline-flex w-full items-center justify-center gap-2 rounded-xl bg-ra-primary px-4 py-2 text-sm font-semibold text-zinc-950 transition-colors hover:brightness-110 sm:w-auto">
+          <button type="button" onClick={() => setShowForm(true)} disabled={refreshing}
+            className={`${raPagePrimaryBtnCls} disabled:opacity-50`}>
             <Plus className="size-4" /> {t("printer.addPrinter")}
           </button>
         </div>
@@ -197,26 +239,26 @@ export default function PrinterSettingsPage() {
       {loadError && (
         <div className="flex min-w-0 items-start gap-2 rounded-xl border border-red-500/25 bg-red-500/10 px-4 py-3 text-sm text-red-400">
           <XCircle className="size-4 shrink-0" />
-          {loadError}
+          <span className="min-w-0 break-words">{loadError}</span>
         </div>
       )}
 
       {saveResult && (
-        <div className={`flex items-center gap-2 rounded-xl border px-4 py-3 text-sm ${
+        <div className={`flex min-w-0 items-start gap-2 rounded-xl border px-4 py-3 text-sm ${
           saveResult.success
             ? "border-ra-primary-25 bg-ra-primary-10 text-ra-primary"
             : "border-red-500/25 bg-red-500/10 text-red-400"
         }`}>
-          {saveResult.success ? <CheckCircle2 className="size-4" /> : <XCircle className="size-4" />}
-          {saveResult.message}
+          {saveResult.success ? <CheckCircle2 className="size-4 shrink-0" /> : <XCircle className="size-4 shrink-0" />}
+          <span className="min-w-0 break-words">{saveResult.message}</span>
         </div>
       )}
 
       {showForm && (
         <section className="admin-surface-card p-4 sm:p-5">
-          <h2 className="mb-4 text-base font-semibold admin-shell-text">Add New Printer</h2>
+          <h2 className="mb-4 break-words text-base font-semibold admin-shell-text">Add New Printer</h2>
           {formError && (
-            <p className="mb-3 rounded-xl border border-red-500/20 bg-red-500/10 px-3 py-2 text-xs text-red-400">
+            <p className="mb-3 break-words rounded-xl border border-red-500/20 bg-red-500/10 px-3 py-2 text-xs text-red-400">
               {formError}
             </p>
           )}
@@ -241,8 +283,10 @@ export default function PrinterSettingsPage() {
                 <div className="grid grid-cols-3 gap-2">
                   {PRINTER_TYPES.map((pt) => (
                     <button key={pt.id} type="button" onClick={() => setForm((f) => ({ ...f, type: pt.id }))}
-                      className={`cursor-pointer min-w-0 rounded-xl border px-1.5 py-2 text-[10px] font-medium transition-all sm:px-2 sm:text-xs ${
-                        form.type === pt.id ? `${pt.bg} ${pt.color} ring-1` : "border admin-shell-border bg-[var(--admin-surface)] text-[var(--admin-text-secondary)] hover:bg-[var(--admin-hover)]"
+                      className={`box-border min-w-0 cursor-pointer rounded-xl border px-1.5 py-2 text-[10px] font-medium transition-all sm:px-2 sm:text-xs ${
+                        form.type === pt.id
+                          ? `${pt.bg} ${pt.color} border-transparent ring-1`
+                          : "border-[var(--admin-border-subtle)] bg-[var(--admin-surface)] text-[var(--admin-text-secondary)] hover:bg-[var(--admin-hover)]"
                       }`}>
                       <pt.Icon className="mx-auto mb-1 size-4" />
                       <span className="block truncate">{pt.id === "network" ? "LAN" : pt.id === "bluetooth" ? "BT" : "USB"}</span>
@@ -292,10 +336,10 @@ export default function PrinterSettingsPage() {
                 <div className="flex gap-2">
                   {PAPER_SIZES.map((size) => (
                     <button key={size} type="button" onClick={() => setForm((f) => ({ ...f, paperSize: size }))}
-                      className={`cursor-pointer flex-1 rounded-xl border py-2 text-sm font-semibold transition-all ${
+                      className={`box-border flex-1 rounded-xl border py-2 text-sm font-semibold transition-all ${
                         form.paperSize === size
-                          ? "border-ra-primary-40 bg-ra-primary-15 text-ra-primary"
-                          : "border admin-shell-border bg-[var(--admin-surface)] text-[var(--admin-text-secondary)] hover:bg-[var(--admin-hover)]"
+                          ? `${raTabActiveCls} border-transparent`
+                          : "border-[var(--admin-border-subtle)] bg-[var(--admin-surface)] text-[var(--admin-text-secondary)] hover:bg-[var(--admin-hover)]"
                       }`}>
                       {size}
                     </button>
@@ -346,8 +390,8 @@ export default function PrinterSettingsPage() {
                       {pt && <pt.Icon className={`size-5 ${pt.color}`} />}
                     </span>
                     <div className="min-w-0">
-                      <p className="font-semibold admin-shell-text">{printer.name}</p>
-                      <p className="break-words text-xs admin-surface-muted">
+                      <p className="break-words font-semibold admin-shell-text">{printer.name}</p>
+                      <p className="break-all text-xs admin-surface-muted sm:break-words">
                         {pt?.label} · {printer.paperSize}
                         {printer.type === "network" && printer.ipAddress && (
                           <>
@@ -377,7 +421,7 @@ export default function PrinterSettingsPage() {
                 </div>
 
                 {result?.message && (
-                  <p className={`mt-2 text-xs ${result.success ? "text-ra-primary" : "text-red-400"}`}>
+                  <p className={`mt-2 break-words text-xs ${result.success ? "text-ra-primary" : "text-red-400"}`}>
                     {result.message}
                   </p>
                 )}
@@ -403,17 +447,17 @@ export default function PrinterSettingsPage() {
       )}
 
       <section className="admin-surface-card p-4 sm:p-5">
-        <h2 className="mb-3 text-base font-semibold admin-shell-text">How printing works</h2>
+        <h2 className="mb-3 break-words text-base font-semibold admin-shell-text">How printing works</h2>
         <div className="grid grid-cols-1 gap-3 text-sm sm:grid-cols-2 lg:grid-cols-3">
           {[
             { label: "Network (LAN)", desc: "Server sends ESC/POS to printer IP:9100. App server must be on same WiFi/LAN.", icon: "📡" },
             { label: "USB / Bluetooth", desc: "Use POS → Print Bill. Browser print dialog sends to your connected printer.", icon: "🖨️" },
             { label: "Auto Print", desc: "When enabled, POS prints invoice/KOT automatically after each order.", icon: "⚡" },
           ].map((item) => (
-            <div key={item.label} className="rounded-xl admin-surface-card p-3">
+            <div key={item.label} className="min-w-0 rounded-xl admin-surface-card p-3">
               <div className="text-xl mb-1">{item.icon}</div>
-              <p className="font-medium admin-shell-text">{item.label}</p>
-              <p className="mt-0.5 text-xs admin-surface-muted">{item.desc}</p>
+              <p className="break-words font-medium admin-shell-text">{item.label}</p>
+              <p className="mt-0.5 break-words text-xs admin-surface-muted">{item.desc}</p>
             </div>
           ))}
         </div>

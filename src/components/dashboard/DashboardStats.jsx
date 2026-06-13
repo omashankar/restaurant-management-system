@@ -1,6 +1,7 @@
 "use client";
 
 import StatsCard from "@/components/rms/StatsCard";
+import { useAdminLocale } from "@/context/RestaurantLocaleContext";
 import { formatAdminMoney } from "@/lib/adminCurrency";
 import { usePermission } from "@/hooks/usePermission";
 import { BookOpen, DollarSign, ShoppingBag, Users } from "lucide-react";
@@ -15,6 +16,10 @@ export default function DashboardStats({
   reservationsCalendarDate = "",
 }) {
   const { hasPermission } = usePermission();
+  const { formatDate } = useAdminLocale();
+  const reservationsDateLabel = reservationsCalendarDate
+    ? formatDate(reservationsCalendarDate)
+    : "";
 
   const showSales = hasPermission("view_sales");
 
@@ -51,8 +56,8 @@ export default function DashboardStats({
             title="Reservations"
             value={String(reservationsToday)}
             subtitle={
-              reservationsCalendarDate
-                ? `Pending & confirmed · ${reservationsCalendarDate}`
+              reservationsDateLabel
+                ? `Pending & confirmed · ${reservationsDateLabel}`
                 : "Pending & confirmed for today"
             }
             icon={BookOpen}

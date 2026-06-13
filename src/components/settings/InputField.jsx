@@ -38,11 +38,15 @@ export default function InputField({
           className={fieldCls}
           aria-invalid={error ? true : undefined}
         >
-          {options.map((opt) => (
-            <option key={opt} value={opt}>
-              {opt}
-            </option>
-          ))}
+          {options.map((opt) => {
+            const optionValue = typeof opt === "object" && opt !== null ? opt.value : opt;
+            const optionLabel = typeof opt === "object" && opt !== null ? opt.label : opt;
+            return (
+              <option key={optionValue} value={optionValue}>
+                {optionLabel}
+              </option>
+            );
+          })}
         </select>
       ) : multiline ? (
         <textarea

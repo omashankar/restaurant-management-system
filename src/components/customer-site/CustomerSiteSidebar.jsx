@@ -86,7 +86,7 @@ export default function CustomerSiteSidebar({
 
       <nav
 
-        className="-mx-1 flex min-w-0 gap-1.5 overflow-x-auto px-1 pb-1 lg:hidden [scrollbar-width:none]"
+        className="-mx-1 flex min-w-0 gap-1.5 overflow-x-auto px-1 pb-1 xl:hidden [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
 
         aria-label="Customer site sections"
 
@@ -109,11 +109,9 @@ export default function CustomerSiteSidebar({
               onClick={() => onTabChange(tab.id)}
 
               className={`flex shrink-0 items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-medium whitespace-nowrap transition-all ${
-
                 active
                   ? raSideNavActiveCls
-                  : "border border-[var(--admin-border-subtle)] admin-surface-body hover:bg-[var(--admin-hover)]"
-
+                  : "admin-surface-body hover:bg-[var(--admin-hover)]"
               }`}
 
             >
@@ -134,7 +132,7 @@ export default function CustomerSiteSidebar({
 
 
 
-      <aside className="hidden min-w-0 lg:block lg:w-56 lg:shrink-0">
+      <aside className="hidden min-w-0 xl:block xl:w-56 xl:shrink-0">
 
         <div className="sticky top-24 max-h-[calc(100vh-6rem)] overflow-y-auto rounded-2xl admin-surface-card p-3 [scrollbar-width:thin]">
 

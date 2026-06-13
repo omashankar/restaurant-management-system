@@ -14,7 +14,24 @@ import {
 } from "@/lib/formValidation";
 import { optionalLinkError } from "@/lib/landingValidation";
 import { extractIndianMobileDigits, isValidIndianMobile } from "@/lib/phoneUtils";
+import {
+  ACCESS_CONTROL_FEATURES,
+  ACCESS_ROLES,
+} from "@/config/accessControlConfig";
+import { DATE_FORMAT_OPTIONS, EMPTY_SETTINGS, TIME_FORMAT_OPTIONS } from "@/config/settingsConfig";
+import {
+  getOperatingWindowMinutes,
+  normalizeOpeningHoursRow,
+} from "@/lib/reservationUtils";
+import { SLOT_DURATION_MINUTES } from "@/lib/tableAvailability";
+import { timeToMinutes } from "@/lib/tableAvailability";
 import { normalizeHexColor } from "@/lib/superAdminThemeRuntime";
+
+const OPENING_HOURS_WEEKDAYS = EMPTY_SETTINGS.openingHours.map((row) => row.day);
+const NOTIFICATION_KEYS = Object.keys(EMPTY_SETTINGS.notifications);
+const ACCESS_FEATURE_KEYS = new Set(ACCESS_CONTROL_FEATURES.map((f) => f.key));
+
+const TIME_FORMAT_VALUES = TIME_FORMAT_OPTIONS.map((opt) => opt.value);
 
 function trim(value) {
   return String(value ?? "").trim();
@@ -42,6 +59,16 @@ export function validateRestaurantGeneral(data) {
 
   const currency = trim(data?.currency);
   if (!currency) errors.currency = "Currency is required.";
+
+  const dateFormat = trim(data?.dateFormat);
+  if (dateFormat && !DATE_FORMAT_OPTIONS.includes(dateFormat)) {
+    errors.dateFormat = "Select a valid date format.";
+  }
+
+  const timeFormat = trim(data?.timeFormat);
+  if (timeFormat && !TIME_FORMAT_VALUES.includes(timeFormat)) {
+    errors.timeFormat = "Select a valid time format.";
+  }
 
   return errorsToResult(errors);
 }
@@ -181,6 +208,139 @@ export function validateRestaurantTheme(data) {
   return errorsToResult(errors);
 }
 
+export function validateRestaurantNotifications(data) {
+  const errors = {};
+  if (!data || typeof data !== "object" || Array.isArray(data)) {
+    return errorsToResult({ notifications: "Invalid notification settings." });
+  }
+
+  for (const key of NOTIFICATION_KEYS) {
+    if (key in data && typeof data[key] !== "boolean") {
+      errors[key] = "Each notification option must be on or off.";
+    }
+  }
+
+  for (const key of Object.keys(data)) {
+    if (!NOTIFICATION_KEYS.includes(key)) {
+      errors[key] = `Unknown notification option: ${key}.`;
+    }
+  }
+
+  return errorsToResult(errors);
+}
+
+export function validateRestaurantOpeningHours(data) {
+  const errors = {};
+  if (!Array.isArray(data)) {
+    return errorsToResult({ openingHours: "Opening hours must be a weekly schedule." });
+  }
+  if (data.length !== OPENING_HOURS_WEEKDAYS.length) {
+    errors.openingHours = "Provide opening hours for all 7 days of the week.";
+  }
+
+  const seenDays = new Set();
+
+  data.forEach((row, index) => {
+    const day = trim(row?.day);
+    const label = day || `Day ${index + 1}`;
+
+    if (!day) {
+      errors[`day_${index}`] = `${label}: weekday name is required.`;
+      return;
+    }
+    if (!OPENING_HOURS_WEEKDAYS.includes(day)) {
+      errors[`day_${index}`] = `${label}: select a valid weekday (Monday–Sunday).`;
+      return;
+    }
+    if (seenDays.has(day.toLowerCase())) {
+      errors[`day_${index}`] = `Duplicate schedule for ${day}.`;
+      return;
+    }
+    seenDays.add(day.toLowerCase());
+
+    if (typeof row.closed !== "boolean" && row.closed != null) {
+      errors[`closed_${day}`] = `${day}: closed flag must be true or false.`;
+    }
+
+    if (row.closed) return;
+
+    const normalized = normalizeOpeningHoursRow(row);
+    if (!normalized) {
+      errors[`hours_${day}`] = `${day}: enter valid open and close times (HH:MM).`;
+      return;
+    }
+
+    const openMin = timeToMinutes(normalized.openTime);
+    const closeMin = timeToMinutes(normalized.closeTime);
+    if (!Number.isFinite(openMin) || openMin < 0 || openMin >= 24 * 60) {
+      errors[`open_${day}`] = `${day}: open time must be between 00:00 and 23:59.`;
+    }
+    if (!Number.isFinite(closeMin) || closeMin < 0 || closeMin >= 24 * 60) {
+      errors[`close_${day}`] = `${day}: close time must be between 00:00 and 23:59.`;
+    }
+    if (
+      Number.isFinite(openMin) &&
+      Number.isFinite(closeMin) &&
+      openMin === closeMin
+    ) {
+      errors[`hours_${day}`] = `${day}: open and close times cannot be the same.`;
+    }
+
+    const windowMinutes = getOperatingWindowMinutes(
+      normalized.openTime,
+      normalized.closeTime,
+    );
+    if (windowMinutes > 0 && windowMinutes < SLOT_DURATION_MINUTES) {
+      errors[`hours_${day}`] =
+        `${day}: open at least ${SLOT_DURATION_MINUTES} minutes before close (each booking is ${SLOT_DURATION_MINUTES} min).`;
+    }
+  });
+
+  for (const weekday of OPENING_HOURS_WEEKDAYS) {
+    if (!seenDays.has(weekday.toLowerCase())) {
+      errors[`missing_${weekday}`] = `Missing opening hours for ${weekday}.`;
+    }
+  }
+
+  return errorsToResult(errors);
+}
+
+export function validateRestaurantAccessControl(data) {
+  const errors = {};
+  if (!data || typeof data !== "object" || Array.isArray(data)) {
+    return errorsToResult({ accessControl: "Invalid access control settings." });
+  }
+
+  for (const feature of ACCESS_CONTROL_FEATURES) {
+    const key = feature.key;
+    const row = data[key];
+    if (!row || typeof row !== "object" || Array.isArray(row)) {
+      errors[`feature_${key}`] = `${feature.label}: role permissions are required.`;
+      continue;
+    }
+
+    for (const role of ACCESS_ROLES) {
+      if (!(role in row)) {
+        errors[`${key}_${role}`] = `${feature.label}: set access for ${role}.`;
+      } else if (typeof row[role] !== "boolean") {
+        errors[`${key}_${role}`] = `${feature.label} → ${role} must be allowed or denied.`;
+      }
+    }
+
+    if (row.admin === false) {
+      errors[`${key}_admin`] = "Restaurant admin access cannot be disabled.";
+    }
+  }
+
+  for (const key of Object.keys(data)) {
+    if (!ACCESS_FEATURE_KEYS.has(key)) {
+      errors[`feature_${key}`] = `Unknown feature: ${key}.`;
+    }
+  }
+
+  return errorsToResult(errors);
+}
+
 export function validateRestaurantSettingsPatch(settings, sections = null) {
   const validators = {
     general: () => validateRestaurantGeneral(settings?.general),
@@ -188,6 +348,9 @@ export function validateRestaurantSettingsPatch(settings, sections = null) {
     contact: () => validateRestaurantContact(settings?.contact),
     email: () => validateRestaurantEmail(settings?.email),
     theme: () => validateRestaurantTheme(settings?.theme),
+    notifications: () => validateRestaurantNotifications(settings?.notifications),
+    openingHours: () => validateRestaurantOpeningHours(settings?.openingHours),
+    accessControl: () => validateRestaurantAccessControl(settings?.accessControl),
   };
 
   const keys = sections?.length

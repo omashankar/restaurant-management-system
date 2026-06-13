@@ -4,6 +4,7 @@ import { runPlatformBackup, isBackupDue } from "@/lib/platformBackup";
 import { runPlatformAutoBilling } from "@/lib/platformAutoBilling";
 import { getPlatformSettings } from "@/lib/platformSettings";
 import { sendPlatformAlert } from "@/lib/platformAlerts";
+import { runPlatformHealthCheck } from "@/lib/platformHealth";
 
 /**
  * GET /api/cron/platform-tasks
@@ -49,10 +50,20 @@ export async function GET(request) {
     }
 
     results.autoBilling = await runPlatformAutoBilling(db);
+    results.health = await runPlatformHealthCheck(db);
 
     return Response.json({ success: true, results });
   } catch (err) {
     console.error("platform-tasks cron:", err.message);
+    try {
+      const client = await clientPromise;
+      await sendPlatformAlert(client.db(), "systemHealth", {
+        subject: "[BhojDesk RMS] Platform cron failed",
+        text: `The platform-tasks cron job failed:\n\n${err.message}`,
+      });
+    } catch {
+      /* ignore alert failure */
+    }
     return Response.json({ success: false, error: err.message }, { status: 500 });
   }
 }

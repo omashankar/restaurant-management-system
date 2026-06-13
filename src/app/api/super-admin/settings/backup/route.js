@@ -7,7 +7,9 @@ import { writeAuditLog } from "@/lib/auditLog";
 import { getTokenFromRequest } from "@/lib/authCookies";
 import { verifyToken } from "@/lib/jwt";
 import clientPromise from "@/lib/mongodb";
+import { sendPlatformAlert } from "@/lib/platformAlerts";
 import { runPlatformBackup } from "@/lib/platformBackup";
+import { invalidatePlatformSettingsCache } from "@/lib/platformSettings";
 import { getClientIp } from "@/lib/rateLimit";
 
 function superAdminOnly(request) {
@@ -26,24 +28,10 @@ export async function POST(request) {
   try {
     const client = await clientPromise;
     const db     = client.db();
-    const now    = new Date();
 
-    /* Record backup entry */
-    await db.collection("backups").insertOne({
-      createdAt: now,
-      type:      "manual",
-      status:    "completed",
-      size:      "—",
-    });
+    await runPlatformBackup(db, "manual");
+    invalidatePlatformSettingsCache();
 
-    /* Update last backup timestamp in settings */
-    await db.collection("settings").updateOne(
-      { _id: "platform" },
-      { $set: { "backup.lastBackupAt": now, updatedAt: now } },
-      { upsert: true }
-    );
-
-    /* Return last 10 backups */
     const backups = await db.collection("backups")
       .find({})
       .sort({ createdAt: -1 })
@@ -73,6 +61,15 @@ export async function POST(request) {
     });
   } catch (err) {
     console.error("POST backup error:", err.message);
+    try {
+      const client = await clientPromise;
+      await sendPlatformAlert(client.db(), "systemHealth", {
+        subject: "[BhojDesk RMS] Manual backup failed",
+        text: `A manual platform backup failed:\n\n${err.message}`,
+      });
+    } catch {
+      /* ignore */
+    }
     return Response.json({ success: false, error: "Backup failed." }, { status: 500 });
   }
 }

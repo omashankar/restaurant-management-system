@@ -17,6 +17,7 @@ import ContactSection from "@/components/landing/ContactSection";
 import FaqSection from "@/components/landing/FaqSection";
 import HowItWorksSection from "@/components/landing/HowItWorksSection";
 import LandingNavbar from "@/components/landing/LandingNavbar";
+import LandingPreviewBanner from "@/components/landing/LandingPreviewBanner";
 import LandingStickyCta from "@/components/landing/LandingStickyCta";
 import LandingTrustBar from "@/components/landing/LandingTrustBar";
 import ProblemSolutionSection from "@/components/landing/ProblemSolutionSection";
@@ -82,24 +83,23 @@ function mapPlansToLandingPricing(plans = []) {
   });
 }
 
-/* ── Fetch landing page content directly (no internal HTTP hop) ── */
-const getLandingContent = unstable_cache(async function getLandingContent() {
-  /** Deterministic full defaults when DB is unavailable (e.g. production build phase). */
+async function plansPricingFromDb(client) {
+  const db = client.db();
+  const plans = await db
+    .collection("plans")
+    .find({ isActive: { $ne: false } })
+    .sort({ price: 1 })
+    .toArray();
+  return mapPlansToLandingPricing(plans);
+}
+
+/** Fresh fetch — used for ?preview=1 so CMS edits show immediately. */
+async function loadLandingContentFresh() {
   if (process.env.NEXT_PHASE === "phase-production-build") {
     return mergeWithDefaults(null);
   }
 
   const defaults = mergeWithDefaults(null);
-
-  async function plansPricingFromDb(client) {
-    const db = client.db();
-    const plans = await db
-      .collection("plans")
-      .find({ isActive: { $ne: false } })
-      .sort({ price: 1 })
-      .toArray();
-    return mapPlansToLandingPricing(plans);
-  }
 
   try {
     const [{ content }, client] = await Promise.all([
@@ -125,22 +125,28 @@ const getLandingContent = unstable_cache(async function getLandingContent() {
     }
     return defaults;
   }
-}, ["landing-home-content"], {
+}
+
+/* ── Fetch landing page content directly (no internal HTTP hop) ── */
+const getLandingContent = unstable_cache(loadLandingContentFresh, ["landing-home-content"], {
   tags: ["landing"],
   revalidate: 60,
 });
 
-export async function generateMetadata() {
-  const content = await getLandingContent();
+export async function generateMetadata({ searchParams }) {
+  const params = await searchParams;
+  const isPreviewMode = params?.preview === "1";
+  const content = isPreviewMode ? await loadLandingContentFresh() : await getLandingContent();
   const seo = content?.seo ?? {};
   const title = seo.title || BHOJDESK_BRAND.fullName;
   const description = seo.description || "Manage billing, inventory, staff, and analytics from one powerful platform.";
   const keywords = seo.keywords || "restaurant management, POS, inventory, staff management, SaaS";
 
   return {
-    title,
+    title: isPreviewMode ? `${title} (Preview)` : title,
     description,
     keywords,
+    ...(isPreviewMode ? { robots: { index: false, follow: false } } : {}),
     openGraph: {
       title,
       description,
@@ -167,8 +173,8 @@ export default async function Home({ searchParams }) {
     redirect(redirectForRole(payload.role));
   }
 
-  /* Fetch CMS content on the server — no client JS needed */
-  const content = await getLandingContent();
+  /* Preview skips ISR cache so super-admin edits appear on refresh */
+  const content = isPreviewMode ? await loadLandingContentFresh() : await getLandingContent();
   const brands = content?.brands?.items ?? [];
   const problemSolution = content?.problemSolution ?? {};
   const howItWorks = content?.howItWorks ?? {};
@@ -178,6 +184,7 @@ export default async function Home({ searchParams }) {
 
   return (
     <main className="min-h-screen min-h-[100dvh] w-full max-w-[100vw] overflow-x-hidden bg-slate-50 pb-[4.75rem] text-slate-900 lg:pb-0">
+      {isPreviewMode && <LandingPreviewBanner />}
       {/* ── Navbar ── */}
       <LandingNavbar navbar={content?.navbar} />
 

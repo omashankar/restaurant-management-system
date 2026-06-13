@@ -1,5 +1,6 @@
 "use client";
 
+import { useAdminLocale } from "@/context/RestaurantLocaleContext";
 import { printInvoiceInBrowser } from "@/lib/posPrint";
 import { Printer } from "lucide-react";
 
@@ -23,6 +24,8 @@ export default function PrintInvoice({
   paperSize = "80mm",
   className = "",
 }) {
+  const { prefs } = useAdminLocale();
+
   function handlePrint() {
     printInvoiceInBrowser(
       {
@@ -39,7 +42,7 @@ export default function PrintInvoice({
         total,
         currency,
       },
-      { restaurantName, paperSize, currency }
+      { restaurantName, paperSize, currency, localePrefs: prefs }
     );
   }
 

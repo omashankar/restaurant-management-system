@@ -15,6 +15,7 @@ import PlatformThemeStyles from "@/components/PlatformThemeStyles";
 import AdminThemeBootstrap from "@/components/AdminThemeBootstrap";
 import LandingPreloadBootstrap from "@/components/landing/LandingPreloadBootstrap";
 import { BHOJDESK_BRAND, BHOJDESK_LOGOS } from "@/config/bhojdeskBrand";
+import { getPublicPlatformConfig } from "@/lib/platformSettings";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -68,20 +69,31 @@ const openSans = Open_Sans({
   display: "swap",
 });
 
-export const metadata = {
-  title: BHOJDESK_BRAND.fullName,
-  description: BHOJDESK_BRAND.tagline,
-  manifest: "/manifest.json",
-  icons: {
-    icon: BHOJDESK_LOGOS.icon,
-    apple: BHOJDESK_LOGOS.icon,
-  },
-  appleWebApp: {
-    capable: true,
-    statusBarStyle: "black-translucent",
-    title: BHOJDESK_BRAND.shortName,
-  },
-};
+export async function generateMetadata() {
+  let appName = BHOJDESK_BRAND.fullName;
+  let favicon = BHOJDESK_LOGOS.icon;
+  try {
+    const config = await getPublicPlatformConfig();
+    appName = config.appName || appName;
+    favicon = config.faviconUrl || favicon;
+  } catch {
+    /* use defaults */
+  }
+  return {
+    title: appName,
+    description: BHOJDESK_BRAND.tagline,
+    manifest: "/manifest.json",
+    icons: {
+      icon: favicon,
+      apple: favicon,
+    },
+    appleWebApp: {
+      capable: true,
+      statusBarStyle: "black-translucent",
+      title: appName.split(/\s+/)[0] || BHOJDESK_BRAND.shortName,
+    },
+  };
+}
 
 // Next.js 16: themeColor viewport export mein hona chahiye
 export const viewport = {

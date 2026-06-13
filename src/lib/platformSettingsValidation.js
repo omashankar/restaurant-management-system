@@ -1,4 +1,7 @@
+import { DATE_FORMAT_OPTIONS, TIME_FORMAT_OPTIONS } from "@/config/settingsConfig";
 import { emailError, optionalIndianPhoneError } from "@/lib/formValidation";
+
+const TIME_FORMAT_VALUES = TIME_FORMAT_OPTIONS.map((opt) => opt.value);
 import { optionalLinkError } from "@/lib/landingValidation";
 
 function trim(value) {
@@ -36,8 +39,8 @@ export function validatePlatformAppSettings(data) {
     errors.legalName = "Legal name must be 120 characters or less.";
   }
 
-  errors.logoUrl = optionalHttpsUrl(data?.logoUrl, "Logo URL") ?? "";
-  errors.faviconUrl = optionalHttpsUrl(data?.faviconUrl, "Favicon URL") ?? "";
+  errors.logoUrl = optionalLinkError(data?.logoUrl, "Logo URL") ?? "";
+  errors.faviconUrl = optionalLinkError(data?.faviconUrl, "Favicon URL") ?? "";
 
   errors.supportEmail = emailError(data?.supportEmail) ?? "";
 
@@ -138,8 +141,35 @@ export function validatePlatformSmsSettings(data) {
   const errors = {};
   if (!data?.enabled) return errorsToResult(errors);
 
+  const provider = String(data?.provider ?? "twilio").toLowerCase();
+  if (!["twilio", "fast2sms"].includes(provider)) {
+    errors.provider = "Only Twilio and Fast2SMS are supported right now.";
+  }
+
   if (!trim(data?.apiKey)) errors.apiKey = "API key is required when SMS is enabled.";
   if (!trim(data?.senderId)) errors.senderId = "Sender ID is required when SMS is enabled.";
+  if (provider === "twilio" && !trim(data?.authToken)) {
+    errors.authToken = "Auth token is required for Twilio.";
+  }
+
+  return errorsToResult(errors);
+}
+
+export function validatePlatformLanguageSettings(data) {
+  const errors = {};
+
+  const dateFormat = String(data?.dateFormat ?? "").trim();
+  if (dateFormat && !DATE_FORMAT_OPTIONS.includes(dateFormat)) {
+    errors.dateFormat = "Select a valid date format.";
+  }
+
+  const timeFormat = String(data?.timeFormat ?? "").trim();
+  if (timeFormat && !TIME_FORMAT_VALUES.includes(timeFormat)) {
+    errors.timeFormat = "Select a valid time format.";
+  }
+
+  const timezone = String(data?.timezone ?? "").trim();
+  if (!timezone) errors.timezone = "Timezone is required.";
 
   return errorsToResult(errors);
 }
@@ -162,6 +192,53 @@ export function validatePlatformIntegrationsSettings(data) {
   return errorsToResult(errors);
 }
 
+export function validatePlatformCurrenciesSettings(data) {
+  const errors = {};
+  const def = trim(data?.default).toUpperCase();
+  if (!def) errors.default = "Default currency is required.";
+  else if (!/^[A-Z]{3}$/.test(def)) errors.default = "Default currency must be a 3-letter code.";
+
+  const supported = Array.isArray(data?.supported)
+    ? data.supported.map((c) => String(c).trim().toUpperCase()).filter(Boolean)
+    : [];
+  if (!supported.length) {
+    errors.supported = "Select at least one supported currency.";
+  } else if (def && !supported.includes(def)) {
+    errors.supported = "Default currency must be included in supported currencies.";
+  }
+
+  return errorsToResult(errors);
+}
+
+const SECRET_MASK = "********";
+
+export function validatePlatformNotificationsSettings(data) {
+  const errors = {};
+  if (!data?.pushEnabled) return errorsToResult(errors);
+
+  if (!trim(data?.pushVapidPublicKey)) {
+    errors.pushVapidPublicKey = "VAPID public key is required when push is enabled.";
+  }
+  const priv = trim(data?.pushVapidPrivateKey);
+  if (!priv || (priv !== SECRET_MASK && priv.length < 8)) {
+    errors.pushVapidPrivateKey = "VAPID private key is required when push is enabled.";
+  }
+
+  return errorsToResult(errors);
+}
+
+export function validatePlatformBackupSettings(data) {
+  const errors = {};
+  if (!data?.autoBackup) return errorsToResult(errors);
+
+  const retention = Number(data?.retentionDays);
+  if (!Number.isInteger(retention) || retention < 1 || retention > 365) {
+    errors.retentionDays = "Retention must be between 1 and 365 days.";
+  }
+
+  return errorsToResult(errors);
+}
+
 /** Client + server validation by settings tab id */
 export function validatePlatformSettingsSection(section, data) {
   switch (section) {
@@ -169,6 +246,8 @@ export function validatePlatformSettingsSection(section, data) {
       return validatePlatformAppSettings(data);
     case "email":
       return validatePlatformEmailSettings(data);
+    case "language":
+      return validatePlatformLanguageSettings(data);
     case "payment":
       return validatePlatformPaymentSettings(data);
     case "security":
@@ -179,6 +258,12 @@ export function validatePlatformSettingsSection(section, data) {
       return validatePlatformThemeSettings(data);
     case "integrations":
       return validatePlatformIntegrationsSettings(data);
+    case "currencies":
+      return validatePlatformCurrenciesSettings(data);
+    case "notifications":
+      return validatePlatformNotificationsSettings(data);
+    case "backup":
+      return validatePlatformBackupSettings(data);
     default:
       return { valid: true, errors: {}, message: null };
   }

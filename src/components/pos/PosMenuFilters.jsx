@@ -3,7 +3,6 @@
 import ItemTypeChipIcon, { FastFilterChipIcon } from "@/components/menu/ItemTypeChipIcon";
 import CategoryTabs from "@/components/pos/CategoryTabs";
 import ListToolbar from "@/components/ui/ListToolbar";
-import { adminShell } from "@/config/adminSurfaceClasses";
 
 const TYPE_LABELS = {
   all: "All Types",
@@ -32,7 +31,7 @@ export default function PosMenuFilters({
     <div className="min-w-0 space-y-4">
       <CategoryTabs categories={categories} activeCategory={activeCategory} onChange={onCategoryChange} />
 
-      <div className="flex min-w-0 w-full flex-wrap items-center gap-2">
+      <div className="-mx-1 flex min-w-0 gap-2 overflow-x-auto scroll-px-1 px-1 pb-0.5 [-webkit-overflow-scrolling:touch] sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0">
         {["all", "veg", "non-veg", "egg", "drink", "halal", "other"]
           .filter((t) => t === "all" || availableItemTypes.includes(t))
           .map((t) => {
@@ -42,10 +41,10 @@ export default function PosMenuFilters({
                 key={t}
                 type="button"
                 onClick={() => onItemTypeChange(t)}
-                className={`cursor-pointer inline-flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold transition-all duration-150 ${
+                className={`cursor-pointer inline-flex shrink-0 items-center gap-1.5 rounded-full border box-border px-3 py-1.5 text-xs font-semibold transition-[background-color,color] ${
                   active
-                    ? "bg-ra-primary/20 text-ra-primary ring-1 ring-ra-primary-25"
-                    : "border admin-shell-border bg-[var(--admin-surface)] text-[var(--admin-text-muted)] hover:bg-[var(--admin-hover)] hover:text-[var(--admin-text)]"
+                    ? "border-ra-primary/25 bg-ra-primary/20 text-ra-primary"
+                    : "border-[var(--admin-border-subtle)] bg-[var(--admin-surface)] text-[var(--admin-text-muted)] hover:bg-[var(--admin-hover)] hover:text-[var(--admin-text)]"
                 }`}
                 aria-pressed={active}
               >
@@ -57,10 +56,10 @@ export default function PosMenuFilters({
         <button
           type="button"
           onClick={() => onFastOnlyChange((v) => !v)}
-          className={`cursor-pointer inline-flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold transition-all duration-150 ${
+          className={`cursor-pointer inline-flex shrink-0 items-center gap-1.5 rounded-full border box-border px-3 py-1.5 text-xs font-semibold transition-[background-color,color] ${
             fastOnly
-              ? "bg-amber-500/20 text-amber-300 ring-1 ring-amber-500/30"
-              : `admin-surface-card admin-surface-muted ${adminShell.ringSubtle} hover:admin-shell-text`
+              ? "border-amber-500/30 bg-amber-500/20 text-amber-300"
+              : "border-[var(--admin-border-subtle)] bg-[var(--admin-surface)] admin-surface-muted hover:bg-[var(--admin-hover)] hover:admin-shell-text"
           }`}
           aria-pressed={fastOnly}
         >

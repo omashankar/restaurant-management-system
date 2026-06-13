@@ -19,7 +19,7 @@ export default function PosPageHeader({
           <Monitor className="size-5" aria-hidden />
         </span>
         <div className="min-w-0">
-          <h1 className="admin-page-title text-xl font-semibold tracking-tight sm:text-2xl">POS</h1>
+          <h1 className="admin-page-title break-words text-xl font-semibold tracking-tight sm:text-2xl">POS</h1>
           <p className="admin-page-desc mt-1 hidden text-sm sm:block">
             1 Dine-In · 2 Takeaway · 3 Delivery · / Search · Ctrl+Enter Place
           </p>

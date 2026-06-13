@@ -197,10 +197,10 @@ export default function InventoryTable({
                     key={row.id}
                     className={`border-b border-[var(--admin-border-subtle)] transition-colors duration-150 ${inventoryRowAccentCls(status)}`}
                   >
-                    <AdminTableTd className="max-w-[10rem] font-medium admin-shell-text sm:max-w-none">
+                    <AdminTableTd className="max-w-[10rem] min-w-0 font-medium admin-shell-text sm:max-w-none">
                       <span className="block truncate">{row.name}</span>
                     </AdminTableTd>
-                    <AdminTableTd hidden="md" className="admin-surface-muted">{row.category}</AdminTableTd>
+                    <AdminTableTd hidden="md" className="max-w-[8rem] min-w-0 truncate admin-surface-muted">{row.category}</AdminTableTd>
                     <AdminTableTd align="center">
                       <span className={`text-base font-bold tabular-nums ${inventoryQtyTextCls(status)}`}>
                         {row.quantity}
@@ -212,7 +212,9 @@ export default function InventoryTable({
                       <InventoryStatusBadge status={status} />
                     </AdminTableTd>
                     <AdminTableTd>
-                      <QtyEditor row={row} onUpdateQty={onUpdateQty} />
+                      <div className="flex justify-center">
+                        <QtyEditor row={row} onUpdateQty={onUpdateQty} />
+                      </div>
                     </AdminTableTd>
                     <AdminTableActionsCell>
                       <AdminTableIconButton onClick={() => onEdit(row)} aria-label={`Edit ${row.name}`}>

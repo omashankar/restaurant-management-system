@@ -1,17 +1,20 @@
 import crypto from "node:crypto";
-import { decryptSecret, isSecretMask } from "@/lib/cryptoUtils";
-
-function toLowerCurrency(value) {
-  return String(value || "USD").trim().toLowerCase();
-}
-
-function toMinorUnits(amount) {
-  return Math.max(0, Math.round(Number(amount || 0) * 100));
-}
-
-function isOnlineMethod(method) {
-  return ["upi", "card", "debitCard", "netBanking", "wallet", "payLater", "bankTransfer"].includes(method);
-}
+import {
+  gatewayHasCredentials,
+  getGatewayConfig,
+  listEnabledGateways,
+  pickGatewayField,
+} from "@/lib/gateways/credentials";
+import { createSessionForGateway } from "@/lib/gateways/sessions";
+import {
+  verifyCashfreePayment,
+  verifyCcAvenueReturn,
+  verifyPayPalCapture,
+  verifyPaytmPayment,
+  verifyPayuReturn,
+  verifyPhonePePayment,
+  verifyRazorpayCheckoutSignature,
+} from "@/lib/gateways/verify";
 
 const EMPTY_SECRETS = {
   razorpayKeyId: "",
@@ -25,60 +28,45 @@ const EMPTY_SECRETS = {
   gateways: {},
 };
 
-function pickGatewayField(gw, field) {
-  if (!gw?.enabled) return "";
-  const raw = String(gw[field] ?? "").trim();
-  if (!raw) return "";
-  if (isSecretMask(raw)) return "";
-  const decrypted = decryptSecret(raw);
-  if (decrypted) return decrypted;
-  // Legacy plaintext in DB (not yet encrypted)
-  if (field === "apiKey" && /^rzp_|^pk_|^CF_/i.test(raw)) return raw;
-  if (field === "secretKey" && raw.length >= 8 && !/^•/.test(raw)) return raw;
-  return "";
+function isOnlineMethod(method) {
+  return ["upi", "card", "debitCard", "netBanking", "wallet", "payLater", "bankTransfer"].includes(method);
+}
+
+function plainGatewayField(gw, field) {
+  const raw = String(gw?.[field] ?? "").trim();
+  return raw && raw !== "********" ? raw : "";
 }
 
 async function readPlatformSettings(db) {
   const doc = await db.collection("settings").findOne(
     { _id: "platform" },
-    { projection: { payment: 1, integrations: 1 } }
+    { projection: { payment: 1, integrations: 1 } },
   );
 
-  const gateways = doc?.payment?.gateways ?? {};
+  const gateways = { ...(doc?.payment?.gateways ?? {}) };
   const rzpGw = gateways?.razorpay ?? {};
-  const razorpayKeyId = String(rzpGw.apiKey || doc?.integrations?.razorpayKeyId || "").trim();
-  const razorpayKeySecret = String(rzpGw.secretKey || doc?.integrations?.razorpayKeySecret || "").trim();
-  const razorpayWebhookSecret = String(rzpGw.webhookSecret || doc?.integrations?.webhookSecret || "").trim();
-
   const stripeGw = gateways?.stripe ?? {};
-  const stripeSecretKey = String(stripeGw.secretKey || doc?.payment?.stripeSecretKey || "").trim();
-  const stripePublicKey = String(stripeGw.publicKey || doc?.payment?.stripePublicKey || "").trim();
-  const stripeWebhookSecret = String(stripeGw.webhookSecret || doc?.payment?.webhookSecret || "").trim();
-
   const cashfreeGw = gateways?.cashfree ?? {};
-  const cashfreeApiKey = String(cashfreeGw.apiKey || "").trim();
-  const cashfreeSecretKey = String(cashfreeGw.secretKey || "").trim();
 
   return {
-    razorpayKeyId,
-    razorpayKeySecret,
-    razorpayWebhookSecret,
-    stripeSecretKey,
-    stripePublicKey,
-    stripeWebhookSecret,
-    cashfreeApiKey,
-    cashfreeSecretKey,
+    razorpayKeyId: plainGatewayField(rzpGw, "apiKey") || String(doc?.integrations?.razorpayKeyId ?? "").trim(),
+    razorpayKeySecret: plainGatewayField(rzpGw, "secretKey") || String(doc?.integrations?.razorpayKeySecret ?? "").trim(),
+    razorpayWebhookSecret: plainGatewayField(rzpGw, "webhookSecret") || String(doc?.integrations?.webhookSecret ?? "").trim(),
+    stripeSecretKey: plainGatewayField(stripeGw, "secretKey") || String(doc?.payment?.stripeSecretKey ?? "").trim(),
+    stripePublicKey: plainGatewayField(stripeGw, "publicKey") || String(doc?.payment?.stripePublicKey ?? "").trim(),
+    stripeWebhookSecret: plainGatewayField(stripeGw, "webhookSecret") || String(doc?.payment?.webhookSecret ?? "").trim(),
+    cashfreeApiKey: plainGatewayField(cashfreeGw, "apiKey"),
+    cashfreeSecretKey: plainGatewayField(cashfreeGw, "secretKey"),
     gateways,
   };
 }
 
-/** Restaurant admin → Settings → Payments (encrypted keys). */
 async function readRestaurantGatewaySettings(db, restaurantId) {
   if (!restaurantId) return { ...EMPTY_SECRETS };
 
   const doc = await db.collection("restaurant_payment_settings").findOne(
     { restaurantId },
-    { projection: { gateways: 1 } }
+    { projection: { gateways: 1 } },
   );
   const gateways = doc?.gateways ?? {};
   const rzp = gateways.razorpay ?? {};
@@ -99,6 +87,10 @@ async function readRestaurantGatewaySettings(db, restaurantId) {
 }
 
 function mergePaymentSecrets(platform, restaurant) {
+  const mergedGateways = { ...platform.gateways };
+  for (const [id, gw] of Object.entries(restaurant.gateways ?? {})) {
+    if (gw?.enabled) mergedGateways[id] = { ...mergedGateways[id], ...gw };
+  }
   return {
     razorpayKeyId: restaurant.razorpayKeyId || platform.razorpayKeyId,
     razorpayKeySecret: restaurant.razorpayKeySecret || platform.razorpayKeySecret,
@@ -108,11 +100,11 @@ function mergePaymentSecrets(platform, restaurant) {
     stripeWebhookSecret: restaurant.stripeWebhookSecret || platform.stripeWebhookSecret,
     cashfreeApiKey: restaurant.cashfreeApiKey || platform.cashfreeApiKey,
     cashfreeSecretKey: restaurant.cashfreeSecretKey || platform.cashfreeSecretKey,
-    gateways: { ...platform.gateways, ...restaurant.gateways },
+    gateways: mergedGateways,
   };
 }
 
-/** Platform + restaurant keys (restaurant Settings → Payment Gateway wins when enabled). */
+/** Platform + restaurant keys (restaurant gateway wins when enabled). */
 export async function getPaymentSecrets(db, restaurantId = null) {
   const platform = await readPlatformSettings(db);
   if (!restaurantId) return platform;
@@ -120,27 +112,10 @@ export async function getPaymentSecrets(db, restaurantId = null) {
   return mergePaymentSecrets(platform, restaurant);
 }
 
-function gatewayEnabled(cfg, id) {
-  const gw = cfg.gateways?.[id];
-  if (gw && gw.enabled === false) return false;
-  return true;
-}
-
 function isConfigured(cfg) {
-  const rzp =
-    gatewayEnabled(cfg, "razorpay") && cfg.razorpayKeyId && cfg.razorpayKeySecret;
-  const stripe = gatewayEnabled(cfg, "stripe") && cfg.stripeSecretKey;
-  const cashfree =
-    gatewayEnabled(cfg, "cashfree") && cfg.cashfreeApiKey && cfg.cashfreeSecretKey;
-  const payuGw = cfg.gateways?.payu ?? {};
-  const payu =
-    gatewayEnabled(cfg, "payu") &&
-    String(payuGw.apiKey ?? "").trim() &&
-    String(payuGw.secretKey ?? "").trim();
-  return Boolean(rzp || stripe || cashfree || payu);
+  return listEnabledGateways(cfg).some((g) => gatewayHasCredentials(g.id, g));
 }
 
-/** True if customer online methods (card/UPI/…) can create a gateway session. */
 export async function isOnlinePaymentConfigured(db, restaurantId = null) {
   const cfg = await getPaymentSecrets(db, restaurantId);
   return isConfigured(cfg);
@@ -153,149 +128,98 @@ export async function createGatewayPaymentSession({
   currency,
   orderId,
   method,
+  customer = null,
+  returnKind = "order",
 }) {
   if (!isOnlineMethod(method)) return null;
 
-  const cfg = await getPaymentSecrets(db, restaurantId);
-  const ccy = toLowerCurrency(currency);
-  const minor = toMinorUnits(amount);
+  /* Subscription fees always use Super Admin platform gateways — never restaurant keys. */
+  const secretsRestaurantId = returnKind === "subscription" ? null : restaurantId;
+  const cfg = await getPaymentSecrets(db, secretsRestaurantId);
+  const ctx = { amount, currency, orderId, method, customer, returnKind };
+  const errors = [];
 
-  if (gatewayEnabled(cfg, "razorpay") && cfg.razorpayKeyId && cfg.razorpayKeySecret) {
-    const res = await fetch("https://api.razorpay.com/v1/orders", {
-      method: "POST",
-      headers: {
-        Authorization: `Basic ${Buffer.from(`${cfg.razorpayKeyId}:${cfg.razorpayKeySecret}`).toString("base64")}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        amount: minor,
-        currency: String(currency || "INR").toUpperCase(),
-        receipt: String(orderId).slice(0, 40),
-        notes: { orderId, method },
-      }),
-    });
-    if (!res.ok) {
-      const txt = await res.text();
-      throw new Error(`Razorpay order failed: ${txt || res.status}`);
+  for (const g of listEnabledGateways(cfg)) {
+    if (g.id === "offline" && method !== "bankTransfer") continue;
+    if (!gatewayHasCredentials(g.id, g)) continue;
+
+    try {
+      const session = await createSessionForGateway(g.id, g, ctx);
+      if (session) return session;
+    } catch (err) {
+      errors.push(`${g.id}: ${err.message}`);
     }
-    const data = await res.json();
-    return {
-      provider: "razorpay",
-      providerOrderId: data.id,
-      amountMinor: minor,
-      currency: String(currency || "INR").toUpperCase(),
-      keyId: cfg.razorpayKeyId,
-      checkout: {
-        orderId: data.id,
-        key: cfg.razorpayKeyId,
-        amount: minor,
-        currency: String(currency || "INR").toUpperCase(),
-      },
-    };
   }
 
-  if (gatewayEnabled(cfg, "cashfree") && cfg.cashfreeApiKey && cfg.cashfreeSecretKey) {
-    const orderIdCf = `cf_${String(orderId).replace(/[^a-zA-Z0-9_-]/g, "").slice(0, 40)}`;
-    const res = await fetch("https://api.cashfree.com/pg/orders", {
-      method: "POST",
-      headers: {
-        "x-client-id": cfg.cashfreeApiKey,
-        "x-client-secret": cfg.cashfreeSecretKey,
-        "x-api-version": "2023-08-01",
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        order_id: orderIdCf,
-        order_amount: Number(amount),
-        order_currency: String(currency || "INR").toUpperCase(),
-        customer_details: {
-          customer_id: String(orderId).slice(0, 50),
-        },
-        order_meta: {
-          return_url: `${process.env.NEXT_PUBLIC_APP_URL ?? ""}/order/checkout?orderId=${encodeURIComponent(orderId)}`,
-        },
-      }),
+  throw new Error(
+    errors.length
+      ? `No payment gateway available. ${errors.join(" | ")}`
+      : "No online payment gateway configured.",
+  );
+}
+
+export async function verifyGatewayPayment(db, restaurantId, provider, order, body = {}, options = {}) {
+  const secretsRestaurantId =
+    options.platformOnly || order?.payment?.paymentType === "subscription" ? null : restaurantId;
+  const cfg = await getPaymentSecrets(db, secretsRestaurantId);
+  const p = String(provider ?? "").toLowerCase();
+
+  if (p === "razorpay") {
+    return verifyRazorpayCheckoutSignature({
+      orderId: body.razorpay_order_id,
+      paymentId: body.razorpay_payment_id,
+      signature: body.razorpay_signature,
+      secret: cfg.razorpayKeySecret || getGatewayConfig(cfg, "razorpay").secretKey,
     });
-    if (!res.ok) {
-      const txt = await res.text();
-      throw new Error(`Cashfree order failed: ${txt || res.status}`);
-    }
-    const data = await res.json();
-    return {
-      provider: "cashfree",
-      providerOrderId: data.order_id ?? data.cf_order_id,
-      amountMinor: minor,
-      currency: String(currency || "INR").toUpperCase(),
-      checkout: {
-        paymentSessionId: data.payment_session_id,
-        orderId: data.order_id,
-      },
-    };
+  }
+  if (p === "stripe") {
+    await assertStripePaymentIntentForOrder(db, body.paymentIntentId, order.orderId, secretsRestaurantId);
+    return true;
+  }
+  if (p === "cashfree") {
+    return verifyCashfreePayment(cfg, order.orderId, order.payment?.gatewayOrderId);
+  }
+  if (p === "phonepe") {
+    return verifyPhonePePayment(cfg, body.merchantTransactionId || order.payment?.gatewayOrderId);
+  }
+  if (p === "payu") {
+    return verifyPayuReturn(cfg, body);
+  }
+  if (p === "paytm") {
+    return verifyPaytmPayment(cfg, order.payment?.gatewayOrderId || order.orderId);
+  }
+  if (p === "paypal") {
+    return verifyPayPalCapture(cfg, body.paypalOrderId || body.token || order.payment?.gatewayOrderId);
+  }
+  if (p === "ccavenue") {
+    return verifyCcAvenueReturn(cfg, body.encResp || body.enc_response);
+  }
+  if (p === "offline") {
+    return Boolean(order.payment?.gatewayProvider === "offline");
   }
 
-  if (gatewayEnabled(cfg, "stripe") && cfg.stripeSecretKey) {
-    const form = new URLSearchParams();
-    form.set("amount", String(minor));
-    form.set("currency", ccy);
-    form.set("automatic_payment_methods[enabled]", "true");
-    form.set("metadata[orderId]", String(orderId));
-    form.set("metadata[method]", String(method));
-    const res = await fetch("https://api.stripe.com/v1/payment_intents", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${cfg.stripeSecretKey}`,
-        "Content-Type": "application/x-www-form-urlencoded",
-      },
-      body: form.toString(),
-    });
-    if (!res.ok) {
-      const txt = await res.text();
-      throw new Error(`Stripe payment intent failed: ${txt || res.status}`);
-    }
-    const data = await res.json();
-    return {
-      provider: "stripe",
-      providerOrderId: data.id,
-      amountMinor: minor,
-      currency: ccy,
-      key: cfg.stripePublicKey || "",
-      checkout: {
-        clientSecret: data.client_secret,
-        paymentIntentId: data.id,
-        publishableKey: cfg.stripePublicKey || "",
-      },
-    };
-  }
-
-  throw new Error("No online payment gateway configured.");
+  return false;
 }
 
 export async function assertStripePaymentIntentForOrder(
   db,
   paymentIntentId,
   expectedMetadataOrderId,
-  restaurantId = null
+  restaurantId = null,
 ) {
   const cfg = await getPaymentSecrets(db, restaurantId);
-  if (!cfg.stripeSecretKey) {
-    throw new Error("Stripe is not configured.");
-  }
+  if (!cfg.stripeSecretKey) throw new Error("Stripe is not configured.");
   const id = String(paymentIntentId ?? "").trim();
-  if (!id) {
-    throw new Error("Missing payment intent id.");
-  }
+  if (!id) throw new Error("Missing payment intent id.");
   const res = await fetch(
     `https://api.stripe.com/v1/payment_intents/${encodeURIComponent(id)}`,
-    { headers: { Authorization: `Bearer ${cfg.stripeSecretKey}` } }
+    { headers: { Authorization: `Bearer ${cfg.stripeSecretKey}` } },
   );
   const pi = await res.json();
   if (!res.ok) {
-    const msg = typeof pi?.error?.message === "string" ? pi.error.message : "Stripe verification failed.";
-    throw new Error(msg);
+    throw new Error(typeof pi?.error?.message === "string" ? pi.error.message : "Stripe verification failed.");
   }
-  if (pi.status !== "succeeded") {
-    throw new Error(`Payment status is "${pi.status}".`);
-  }
+  if (pi.status !== "succeeded") throw new Error(`Payment status is "${pi.status}".`);
   if (String(pi.metadata?.orderId ?? "") !== String(expectedMetadataOrderId)) {
     throw new Error("Payment intent does not match this order.");
   }
@@ -308,29 +232,18 @@ export function verifyRazorpayWebhook(body, signature, secret) {
   return crypto.timingSafeEqual(Buffer.from(expected), Buffer.from(signature));
 }
 
-export function verifyRazorpayCheckoutSignature({
-  orderId,
-  paymentId,
-  signature,
-  secret,
-}) {
-  if (!orderId || !paymentId || !signature || !secret) return false;
-  const payload = `${orderId}|${paymentId}`;
-  const expected = crypto.createHmac("sha256", secret).update(payload).digest("hex");
-  return crypto.timingSafeEqual(Buffer.from(expected), Buffer.from(signature));
-}
-
 export function verifyStripeWebhook(body, signature, secret) {
   if (!signature || !secret) return false;
   const elements = String(signature).split(",").map((v) => v.trim());
-  const tsPart = elements.find((p) => p.startsWith("t="));
-  const v1Part = elements.find((p) => p.startsWith("v1="));
+  const tsPart = elements.find((part) => part.startsWith("t="));
+  const v1Part = elements.find((part) => part.startsWith("v1="));
   if (!tsPart || !v1Part) return false;
-  const ts = tsPart.slice(2);
-  const signedPayload = `${ts}.${body}`;
+  const signedPayload = `${tsPart.slice(2)}.${body}`;
   const expected = crypto.createHmac("sha256", secret).update(signedPayload).digest("hex");
   return crypto.timingSafeEqual(Buffer.from(expected), Buffer.from(v1Part.slice(3)));
 }
+
+export { verifyRazorpayCheckoutSignature };
 
 /** @deprecated Use getPaymentSecrets(db, restaurantId) */
 export async function getPlatformPaymentSecrets(db) {

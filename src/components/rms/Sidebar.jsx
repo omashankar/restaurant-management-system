@@ -311,9 +311,7 @@ export default function Sidebar({
                   }`}
                   aria-hidden
                 />
-                <span className="flex min-w-0 flex-1 items-center gap-2 truncate">
-                  {label}
-                </span>
+                <span className="min-w-0 flex-1 truncate">{label}</span>
                 <ChevronDown
                   className={`size-4 shrink-0 admin-surface-muted transition-transform duration-200 ${
                     open ? "rotate-180" : ""
@@ -337,7 +335,7 @@ export default function Sidebar({
                         key={child.href}
                         href={child.href}
                         onClick={onNavigate}
-                        className={`group relative flex items-center gap-2 rounded-lg py-2 pl-2 pr-2 text-sm transition-all duration-200 ${
+                        className={`group relative flex min-w-0 items-center gap-2 rounded-lg py-2 pl-2 pr-2 text-sm transition-all duration-200 ${
                           active
                             ? "bg-ra-primary-15 font-medium text-ra-primary"
                             : `${adminSurface.muted} hover:bg-[var(--admin-hover)] hover:text-[var(--admin-text)]`
@@ -350,7 +348,7 @@ export default function Sidebar({
                           />
                         ) : null}
                         <ChildIcon className="size-4 shrink-0 opacity-80 transition-transform duration-200 group-hover:scale-110" />
-                        <span className="truncate">{child.label}</span>
+                        <span className="min-w-0 truncate">{child.label}</span>
                       </Link>
                     );
                   })}
@@ -363,7 +361,7 @@ export default function Sidebar({
 
         <div className={`border-t ${adminShell.borderT} p-2`}>
           <p
-            className={`text-center text-xs ${adminSurface.muted} ${
+            className={`truncate text-center text-xs ${adminSurface.muted} ${
               collapsed ? "px-0" : "px-2"
             }`}
             title={collapsed ? `${brandName} © ${new Date().getFullYear()}` : undefined}

@@ -9,11 +9,14 @@ import {
 import { resolveSuperAdminTheme } from "@/lib/superAdminThemeRuntime";
 import { useEffect, useState } from "react";
 
-import { BHOJDESK_BRAND } from "@/config/bhojdeskBrand";
+import { BHOJDESK_BRAND, BHOJDESK_LOGOS } from "@/config/bhojdeskBrand";
+import { normalizePlatformLanguage } from "@/config/platformLocaleConfig";
 
 const DEFAULT_CONFIG = {
   maintenanceMode: false,
   appName: BHOJDESK_BRAND.fullName,
+  logoUrl: BHOJDESK_LOGOS.icon,
+  faviconUrl: BHOJDESK_LOGOS.icon,
   features: {
     featureMenuQR: true,
     featureOnlineOrder: true,
@@ -22,6 +25,9 @@ const DEFAULT_CONFIG = {
   },
   currency: "INR",
   language: "en",
+  timezone: "UTC",
+  dateFormat: "DD/MM/YYYY",
+  timeFormat: "12h",
   theme: { primaryColor: "#a3e635", accentColor: "#10b981", darkMode: true },
   integrations: { googleAnalyticsId: "", metaPixelId: "" },
 };
@@ -95,6 +101,35 @@ export function updateSuperAdminThemeCache(theme) {
 export function invalidatePlatformConfigCache() {
   _cache = null;
   _cacheTime = 0;
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new Event("platform-config-updated"));
+  }
+}
+
+/** Apply saved language/locale prefs immediately after Settings → Language save. */
+/** Apply saved App identity immediately after Settings → App save. */
+export function primePlatformConfigApp(app = {}) {
+  _cache = mergeConfig({
+    ...(_cache ?? DEFAULT_CONFIG),
+    appName: String(app.name ?? "").trim() || _cache?.appName || DEFAULT_CONFIG.appName,
+    logoUrl: String(app.logoUrl ?? "").trim() || _cache?.logoUrl || DEFAULT_CONFIG.logoUrl,
+    faviconUrl: String(app.faviconUrl ?? "").trim() || _cache?.faviconUrl || DEFAULT_CONFIG.faviconUrl,
+  });
+  _cacheTime = Date.now();
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new Event("platform-config-updated"));
+  }
+}
+
+export function primePlatformConfigLocale(prefs = {}) {
+  _cache = mergeConfig({
+    ...(_cache ?? DEFAULT_CONFIG),
+    language: normalizePlatformLanguage(prefs.defaultLanguage ?? prefs.language),
+    timezone: prefs.timezone ?? _cache?.timezone ?? DEFAULT_CONFIG.timezone,
+    dateFormat: prefs.dateFormat ?? _cache?.dateFormat ?? DEFAULT_CONFIG.dateFormat,
+    timeFormat: prefs.timeFormat ?? _cache?.timeFormat ?? DEFAULT_CONFIG.timeFormat,
+  });
+  _cacheTime = Date.now();
   if (typeof window !== "undefined") {
     window.dispatchEvent(new Event("platform-config-updated"));
   }

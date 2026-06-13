@@ -8,6 +8,7 @@ import {
   mapOrderForDashboard,
   splitPeriodRevenue,
 } from "@/lib/dashboardAnalytics";
+import { useAdminLocale } from "@/context/RestaurantLocaleContext";
 import { useLiveRefresh } from "@/hooks/useLiveRefresh";
 import { useCallback, useEffect, useState } from "react";
 
@@ -41,8 +42,10 @@ const EMPTY = {
 };
 
 export function useDashboardData() {
+  const { prefs } = useAdminLocale();
   const [data, setData] = useState(EMPTY);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState(null);
   const [lastUpdated, setLastUpdated] = useState(null);
 
@@ -111,18 +114,19 @@ export function useDashboardData() {
           todayKpis: { totalRevenue: salesToday, totalOrders: ordersToday },
           weekDaily,
           monthDaily,
+          localePrefs: prefs,
         }),
         ordersByType: summary.ordersByType ?? [],
         salesComparison: {
           current,
           previous,
           monthly: monthDaily.slice(-6).map((d) => ({
-            month: chartLabelFromDate(d.date, "short"),
+            month: chartLabelFromDate(d.date, "short", prefs),
             sales: d.revenue ?? 0,
           })),
         },
         smartMetrics: {
-          peakHour: computePeakHour(rawOrders),
+          peakHour: computePeakHour(rawOrders, prefs),
           bestCategory: topItems[0]?.name ?? "—",
           lowStockCount: summary.lowStockCount ?? 0,
           lowStockItems: summary.lowStockItems ?? [],
@@ -150,7 +154,7 @@ export function useDashboardData() {
     } finally {
       if (!silent) setLoading(false);
     }
-  }, []);
+  }, [prefs]);
 
   useEffect(() => {
     load();
@@ -158,5 +162,15 @@ export function useDashboardData() {
 
   useLiveRefresh(load, { intervalMs: 15_000 });
 
-  return { ...data, loading, error, lastUpdated, refresh: () => load() };
+  const refresh = useCallback(async () => {
+    setRefreshing(true);
+    setError(null);
+    try {
+      await load(true);
+    } finally {
+      setRefreshing(false);
+    }
+  }, [load]);
+
+  return { ...data, loading, refreshing, error, lastUpdated, refresh };
 }

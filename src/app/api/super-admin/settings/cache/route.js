@@ -5,6 +5,7 @@
 import { writeAuditLog } from "@/lib/auditLog";
 import { getTokenFromRequest } from "@/lib/authCookies";
 import { verifyToken } from "@/lib/jwt";
+import { invalidatePlatformSettingsCache } from "@/lib/platformSettings";
 import { revalidatePath, revalidateTag } from "next/cache";
 import { getClientIp } from "@/lib/rateLimit";
 
@@ -26,6 +27,7 @@ export async function POST(request) {
     revalidatePath("/super-admin/settings");
     revalidatePath("/super-admin/landing-site");
     revalidateTag("landing");
+    invalidatePlatformSettingsCache();
 
     await writeAuditLog({
       action: "system.cache_cleared",

@@ -1,6 +1,6 @@
 "use client";
 
-import { raDashedBoxCls, raIconBadgeCls, raInputCls } from "@/config/restaurantAdminTheme";
+import { raDashedBoxCls, raIconBadgeCls, raInputCls, raSpinnerCls, raPageRefreshBtnCls, raPagePrimaryBtnCls } from "@/config/restaurantAdminTheme";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import EmptyState from "@/components/ui/EmptyState";
 import Modal from "@/components/ui/Modal";
@@ -25,6 +25,7 @@ export default function TableAreasPage() {
   const [areas, setAreas]           = useState([]);
   const [tableCounts, setTableCounts] = useState({});
   const [loading, setLoading]       = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [saving, setSaving]         = useState(false);
   const [modalOpen, setModalOpen]   = useState(false);
   const [editingId, setEditingId]   = useState(null);
@@ -49,9 +50,11 @@ export default function TableAreasPage() {
   };
 
   /* ── Fetch areas + table counts ── */
-  const fetchAreas = useCallback(async () => {
-    setLoading(true);
-    setFetchError("");
+  const fetchAreas = useCallback(async (silent = false) => {
+    if (!silent) {
+      setLoading(true);
+      setFetchError("");
+    }
     try {
       const [areasRes, tablesRes] = await Promise.all([
         fetch("/api/tables/areas"),
@@ -77,11 +80,23 @@ export default function TableAreasPage() {
         setFetchError("Could not load table areas.");
       }
     } catch {
-      setFetchError("Could not load table areas. Check your connection and try again.");
-    } finally { setLoading(false); }
+      if (!silent) setFetchError("Could not load table areas. Check your connection and try again.");
+    } finally {
+      if (!silent) setLoading(false);
+    }
   }, []);
 
   useEffect(() => { fetchAreas(); }, [fetchAreas]);
+
+  const refreshAreas = useCallback(async () => {
+    setRefreshing(true);
+    setFetchError("");
+    try {
+      await fetchAreas(true);
+    } finally {
+      setRefreshing(false);
+    }
+  }, [fetchAreas]);
   useEffect(() => {
     return () => {
       if (previewUrl?.startsWith("blob:")) {
@@ -205,11 +220,17 @@ export default function TableAreasPage() {
 
   if (loading) {
     return (
-      <div className="min-w-0 w-full max-w-full space-y-4 overflow-x-hidden">
-        <div className="h-8 w-40 animate-pulse rounded-lg admin-progress-track" />
+      <div className="min-w-0 w-full max-w-full space-y-6 overflow-x-hidden">
+        <div className="flex min-w-0 flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+          <div className="h-8 w-40 animate-pulse rounded-lg admin-progress-track" />
+          <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
+            <div className="h-10 w-full animate-pulse rounded-xl admin-surface-card sm:w-28" />
+            <div className="h-10 w-full animate-pulse rounded-xl admin-surface-card sm:w-28" />
+          </div>
+        </div>
         <div className="grid min-w-0 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {Array.from({ length: 6 }).map((_, i) => (
-            <div key={i} className="h-28 animate-pulse admin-surface-card" />
+            <div key={i} className="h-36 animate-pulse admin-surface-card" />
           ))}
         </div>
       </div>
@@ -230,22 +251,26 @@ export default function TableAreasPage() {
             <LayoutGrid className="size-5" />
           </span>
           <div className="min-w-0">
-            <h1 className="admin-page-title text-2xl font-semibold tracking-tight">Table Areas</h1>
-            <p className="admin-page-desc mt-1 text-sm">Seating areas — assign to tables for filtering.</p>
+            <h1 className="admin-page-title break-words text-xl font-semibold tracking-tight sm:text-2xl">Table Areas</h1>
+            <p className="admin-page-desc mt-1 break-words text-sm">Seating areas — assign to tables for filtering.</p>
           </div>
         </div>
-        <div className="flex w-full min-w-0 flex-col gap-2 sm:w-auto sm:flex-row sm:flex-wrap sm:items-center">
+        <div className="admin-page-header-actions">
           <Link href="/tables"
-            className="inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl border admin-shell-border px-4 py-2.5 text-sm font-medium admin-surface-body hover:border-zinc-500 sm:w-auto">
+            className={raPageRefreshBtnCls}>
             <Table2 className="size-4" /> Tables
           </Link>
-          <button type="button" onClick={fetchAreas}
-            className="inline-flex w-full cursor-pointer items-center justify-center gap-1.5 rounded-xl border admin-shell-border px-3 py-2.5 text-sm font-medium text-zinc-400 transition-colors hover:border-zinc-500 hover:admin-shell-text sm:w-auto">
-            <RefreshCw className="size-4" />
-            <span className="sm:hidden">Refresh</span>
+          <button
+            type="button"
+            onClick={refreshAreas}
+            disabled={refreshing}
+            className={raPageRefreshBtnCls}
+          >
+            <RefreshCw className={`size-4 ${refreshing ? raSpinnerCls : ""}`} />
+            Refresh
           </button>
           <button type="button" onClick={openCreate}
-            className="inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-ra-primary px-4 py-2.5 text-sm font-semibold text-zinc-950 hover:brightness-110 sm:w-auto">
+            className={raPagePrimaryBtnCls}>
             <Plus className="size-4" /> Add Area
           </button>
         </div>
@@ -412,7 +437,7 @@ export default function TableAreasPage() {
             <div className="mt-2 grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
               {CATEGORY_COLORS.map((c) => (
                 <button key={c.id} type="button" onClick={() => set("color", c.id)}
-                  className={`cursor-pointer flex items-center justify-center gap-1.5 rounded-lg border px-3 py-2 text-xs font-medium transition-colors sm:justify-start sm:py-1.5 ${
+                  className={`cursor-pointer box-border flex items-center justify-center gap-1.5 rounded-lg border px-3 py-2 text-xs font-medium transition-[background-color,color,border-color] sm:justify-start sm:py-1.5 ${
                     form.color === c.id
                       ? getCategoryActive(c.id)
                       : `border-[var(--admin-border-subtle)] admin-surface-muted ${getCategoryHover(c.id)}`

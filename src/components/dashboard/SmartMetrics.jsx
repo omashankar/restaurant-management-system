@@ -49,7 +49,7 @@ export default function SmartMetrics({
           <div className="rms-dashboard-card__body rms-dashboard-card__body--y mt-3 max-h-28 space-y-1.5 pr-1">
             {lowStockItems.map((item, i) => (
               <div key={i} className="flex items-center justify-between gap-2">
-                <span className="truncate text-xs text-zinc-400">{item.name}</span>
+                <span className="min-w-0 flex-1 truncate text-xs text-zinc-400">{item.name}</span>
                 <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold ring-1 ${
                   item.quantity === 0 ? "bg-red-500/15 text-red-400 ring-red-500/25" : "bg-amber-500/15 text-amber-300 ring-amber-500/25"
                 }`}>

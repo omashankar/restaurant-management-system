@@ -4,7 +4,6 @@ import { ROLES, roleLabel, useApp } from "@/context/AppProviders";
 import { useUser } from "@/context/AuthContext";
 import GlobalSearch from "@/components/rms/GlobalSearch";
 import AdminColorModeToggle from "@/components/admin/AdminColorModeToggle";
-import LanguageSwitcher from "@/components/ui/LanguageSwitcher";
 import ChangePasswordModal from "@/components/rms/ChangePasswordModal";
 import InboxDropdown, { HeaderInboxBadge, InboxCountBadge } from "@/components/rms/InboxDropdown";
 import { useInbox } from "@/hooks/useInbox";
@@ -104,27 +103,21 @@ export default function TopNavbar({
   const avatarSrc = normalizeLogoSrc(user.avatarUrl);
 
   return (
-    <header className={`${adminShell.header} min-w-0 w-full max-w-full gap-2 overflow-x-hidden px-3 sm:gap-4 sm:px-4`}>
-      <div className="flex min-w-0 flex-1 items-center gap-2 sm:max-w-none sm:flex-initial sm:gap-3">
+    <header
+      className={`${adminShell.header} relative isolate flex h-14 min-h-[3.5rem] min-w-0 w-full max-w-full items-center gap-2 overflow-x-hidden px-3 backdrop-blur-md sm:gap-4 sm:px-4 md:h-16`}
+      style={{ paddingTop: "max(0px, env(safe-area-inset-top))" }}
+    >
+      <div className="relative z-10 flex min-w-0 shrink-0 items-center gap-2 sm:gap-3">
         {showMobileMenu ? (
           <button
             type="button"
             onClick={onToggleSidebar ?? onOpenSidebar}
             className={`${adminSurface.btnIcon} shrink-0`}
-            aria-label="Open menu"
+            aria-label={isSidebarOpen ? "Close menu" : "Open menu"}
             aria-expanded={isSidebarOpen}
           >
             <Menu className="size-5" aria-hidden />
           </button>
-        ) : null}
-
-        {showMobileMenu ? (
-          <div className="min-w-0 flex-1 sm:hidden">
-            <p className={`truncate text-sm font-semibold ${adminSurface.title}`}>
-              {brandName}
-            </p>
-            <p className={`truncate text-[10px] ${adminSurface.muted}`}>{roleLabel(user.role)} workspace</p>
-          </div>
         ) : null}
 
         <div className="hidden min-w-0 max-w-[14rem] lg:max-w-xs sm:block">
@@ -137,15 +130,10 @@ export default function TopNavbar({
         </div>
       </div>
 
-      <div className="ml-auto flex min-w-0 shrink-0 flex-nowrap items-center justify-end gap-1 sm:gap-2 lg:gap-3">
+      <div className="relative z-10 ml-auto flex min-w-0 shrink-0 flex-nowrap items-center justify-end gap-1 sm:gap-2 lg:gap-3">
         {/* Global Search — desktop only (mobile: profile menu / sidebar) */}
         <div className="hidden shrink-0 lg:block">
           <GlobalSearch />
-        </div>
-
-        {/* Language — tablet+ */}
-        <div className="hidden shrink-0 sm:block">
-          <LanguageSwitcher compact />
         </div>
 
         <AdminColorModeToggle portal="ra" className="shrink-0" />
@@ -290,9 +278,9 @@ export default function TopNavbar({
                   }`}
                   role="menu"
                 >
-                <div className="px-2.5 py-2">
-                  <p className={`truncate text-sm font-medium ${adminSurface.title}`}>{user.name}</p>
-                  <p className={`truncate text-xs ${adminSurface.muted}`}>{roleLabel(user.role)}</p>
+                <div className="min-w-0 px-2.5 py-2">
+                  <p className={`break-words text-sm font-medium ${adminSurface.title}`}>{user.name}</p>
+                  <p className={`break-words text-xs ${adminSurface.muted}`}>{roleLabel(user.role)}</p>
                 </div>
 
                 <div className="md:hidden">

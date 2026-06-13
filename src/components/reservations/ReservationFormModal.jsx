@@ -9,8 +9,16 @@ import {
   validateCustomerForm,
 } from "@/lib/formValidation";
 import PhoneInput from "@/components/ui/PhoneInput";
-import { TIME_SLOTS, formatTimeSlot } from "@/lib/reservationUtils";
+import { useAdminLocale } from "@/context/RestaurantLocaleContext";
+import { invalidateOpeningHoursCache } from "@/hooks/useOpeningHours";
+import {
+  getTimeSlotsForDate,
+  getWeekdayNameForDate,
+  isRestaurantClosedOnDate,
+  pickDefaultTimeSlot,
+} from "@/lib/reservationUtils";
 import { getTableAvailability } from "@/lib/tableAvailability";
+import { useOpeningHours } from "@/hooks/useOpeningHours";
 import { AlertCircle, Search, UserPlus, X } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { raInputCls, raTextareaCls } from "@/config/restaurantAdminTheme";
@@ -240,11 +248,30 @@ function CustomerSearchField({ onSelect, initialName = "", initialPhone = "" }) 
    Main modal
 ══════════════════════════════════════════════════════════ */
 export default function ReservationFormModal({ open, onClose, editing, tableOptions, onSave }) {
+  const { formatTimeSlot } = useAdminLocale();
   const { floorTables, reservationRows, tableCategories, setCustomerRows } = useModuleData();
+  const [hoursRevision, setHoursRevision] = useState(0);
+  const { openingHours } = useOpeningHours({ enabled: open, revision: hoursRevision });
+
+  useEffect(() => {
+    if (!open) return;
+    invalidateOpeningHoursCache();
+    setHoursRevision((n) => n + 1);
+  }, [open]);
   const [form, setForm] = useState(empty);
   const [linkedCustomerId, setLinkedCustomerId] = useState(null);
   const [saveError, setSaveError] = useState("");
   const [fieldErrors, setFieldErrors] = useState(EMPTY_RESERVATION_FORM_ERRORS);
+
+  const timeSlots = useMemo(
+    () => getTimeSlotsForDate(openingHours, form.date),
+    [openingHours, form.date]
+  );
+
+  const closedOnSelectedDate = useMemo(
+    () => isRestaurantClosedOnDate(openingHours, form.date),
+    [openingHours, form.date]
+  );
 
   useEffect(() => {
     if (!open) return;
@@ -274,6 +301,13 @@ export default function ReservationFormModal({ open, onClose, editing, tableOpti
     });
     return () => cancelAnimationFrame(raf);
   }, [open, editing, tableOptions]);
+
+  useEffect(() => {
+    if (!open || !form.date || timeSlots.length === 0) return;
+    if (!timeSlots.includes(form.time)) {
+      setForm((f) => ({ ...f, time: pickDefaultTimeSlot(timeSlots, f.time) }));
+    }
+  }, [open, form.date, form.time, timeSlots]);
 
   /* Customer selected from search widget */
   const handleCustomerSelect = ({ name, phone, customerId }) => {
@@ -380,7 +414,7 @@ export default function ReservationFormModal({ open, onClose, editing, tableOpti
         </div>
       }
     >
-      <div className="space-y-4">
+      <div className="min-w-0 space-y-4">
 
         {/* ── Customer search ── */}
         <div>
@@ -475,20 +509,37 @@ export default function ReservationFormModal({ open, onClose, editing, tableOpti
             <label className="text-xs font-medium admin-surface-muted">Time slot</label>
             <select
               value={form.time}
+              disabled={closedOnSelectedDate || timeSlots.length === 0}
               onChange={(e) => {
                 setForm((f) => ({ ...f, time: e.target.value }));
                 if (fieldErrors.time) setFieldErrors((p) => ({ ...p, time: "" }));
                 setSaveError("");
               }}
               aria-invalid={fieldErrors.time ? true : undefined}
-              className={`cursor-pointer mt-1 ${raInputCls} ${
+              className={`cursor-pointer mt-1 ${raInputCls} disabled:cursor-not-allowed disabled:opacity-60 ${
                 fieldErrors.time ? "border-red-500/50" : ""
               }`}
             >
-              {TIME_SLOTS.map((t) => (
-                <option key={t} value={t}>{formatTimeSlot(t)}</option>
-              ))}
+              {closedOnSelectedDate ? (
+                <option value="">Closed this day</option>
+              ) : timeSlots.length === 0 ? (
+                <option value="">No slots available</option>
+              ) : (
+                timeSlots.map((t) => (
+                  <option key={t} value={t}>{formatTimeSlot(t)}</option>
+                ))
+              )}
             </select>
+            {closedOnSelectedDate ? (
+              <p className="mt-1 text-xs text-amber-400">
+                Restaurant is closed on {getWeekdayNameForDate(form.date) || "this day"} (Settings → Opening Hours).
+              </p>
+            ) : timeSlots.length === 0 && form.date ? (
+              <p className="mt-1 text-xs text-amber-400">
+                No slots for {getWeekdayNameForDate(form.date)} — open/close must allow at least 90 minutes
+                (Settings → Opening Hours, then Save Opening Hours).
+              </p>
+            ) : null}
           </div>
           <div>
             <label className="text-xs font-medium admin-surface-muted">Status</label>

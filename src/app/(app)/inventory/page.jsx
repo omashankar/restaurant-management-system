@@ -16,8 +16,8 @@ import { useModuleData } from "@/context/ModuleDataContext";
 import { usePaginatedList } from "@/hooks/usePaginatedList";
 import { useToast } from "@/hooks/useToast";
 import { getInventoryFormFieldErrors } from "@/lib/formValidation";
-import { raIconBadgeCls } from "@/config/restaurantAdminTheme";
-import { AlertTriangle, Package, Plus } from "lucide-react";
+import { raFilterSelectCls, raIconBadgeCls, raSpinnerCls, raPageRefreshBtnCls, raPagePrimaryBtnCls } from "@/config/restaurantAdminTheme";
+import { AlertTriangle, Package, Plus, RefreshCw } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 function emptyForm() {
@@ -47,6 +47,48 @@ function normalizeInventoryItem(row) {
   };
 }
 
+function InventoryPageSkeleton() {
+  return (
+    <div className="min-w-0 space-y-8 overflow-x-hidden">
+      <div className="flex min-w-0 flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div className="space-y-2">
+          <div className="h-8 w-36 animate-pulse rounded-lg admin-progress-track" />
+          <div className="h-4 w-64 max-w-full animate-pulse rounded admin-progress-track" />
+        </div>
+        <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
+          <div className="h-10 w-full animate-pulse rounded-xl admin-surface-card sm:w-24" />
+          <div className="h-10 w-full animate-pulse rounded-xl admin-surface-card sm:w-28" />
+        </div>
+      </div>
+      <div className="grid min-w-0 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <div key={i} className="h-20 animate-pulse rounded-2xl admin-surface-card" />
+        ))}
+      </div>
+      <div className="grid min-w-0 gap-3 md:grid-cols-2">
+        <div className="h-28 animate-pulse rounded-2xl admin-surface-card" />
+        <div className="h-28 animate-pulse rounded-2xl admin-surface-card" />
+      </div>
+      <div className="flex min-w-0 flex-col gap-3 lg:flex-row lg:items-center">
+        <div className="h-10 w-full max-w-md animate-pulse rounded-xl admin-surface-card" />
+        <div className="h-10 w-full animate-pulse rounded-xl admin-surface-card sm:w-40" />
+      </div>
+      <div className="space-y-2 md:hidden">
+        {Array.from({ length: 3 }).map((_, i) => (
+          <div key={i} className="h-36 animate-pulse rounded-xl admin-surface-card" />
+        ))}
+      </div>
+      <div className="hidden md:block">
+        <TableSkeleton rows={6} cols={7} />
+      </div>
+      <div className="grid min-w-0 gap-6 lg:grid-cols-2">
+        <div className="h-64 animate-pulse rounded-2xl admin-surface-card" />
+        <div className="h-64 animate-pulse rounded-2xl admin-surface-card" />
+      </div>
+    </div>
+  );
+}
+
 export default function InventoryPage() {
   const { user } = useApp();
   const limited = user?.role === "manager";
@@ -59,6 +101,7 @@ export default function InventoryPage() {
   } = useModuleData();
 
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [fetchError, setFetchError] = useState(null);
   const [statusFilter, setStatusFilter] = useState("all");
   const [modalOpen, setModalOpen] = useState(false);
@@ -79,41 +122,49 @@ export default function InventoryPage() {
     }
   }, [setInventoryHistory]);
 
-  useEffect(() => {
+  const loadInventory = useCallback(async (silent = false) => {
     if (!hydrated) return;
-    let alive = true;
-    async function loadInventory() {
+    if (!silent) {
       setLoading(true);
       setFetchError(null);
-      try {
-        const [itemsRes, historyRes] = await Promise.all([
-          fetch("/api/inventory", { cache: "no-store" }),
-          fetch("/api/inventory/history?limit=80", { cache: "no-store" }),
-        ]);
-        const [itemsData, historyData] = await Promise.all([
-          itemsRes.json(),
-          historyRes.json(),
-        ]);
-        if (!alive) return;
-        if (itemsRes.ok && itemsData?.success && Array.isArray(itemsData.items)) {
-          setInventoryRows(itemsData.items.map(normalizeInventoryItem));
-        } else {
-          setFetchError(itemsData?.error ?? "Could not load inventory.");
-        }
-        if (historyRes.ok && historyData?.success && Array.isArray(historyData.history)) {
-          setInventoryHistory(historyData.history);
-        }
-      } catch {
-        if (alive) setFetchError("Network error while loading inventory.");
-      } finally {
-        if (alive) setLoading(false);
-      }
     }
-    loadInventory();
-    return () => {
-      alive = false;
-    };
+    try {
+      const [itemsRes, historyRes] = await Promise.all([
+        fetch("/api/inventory", { cache: "no-store" }),
+        fetch("/api/inventory/history?limit=80", { cache: "no-store" }),
+      ]);
+      const [itemsData, historyData] = await Promise.all([
+        itemsRes.json(),
+        historyRes.json(),
+      ]);
+      if (itemsRes.ok && itemsData?.success && Array.isArray(itemsData.items)) {
+        setInventoryRows(itemsData.items.map(normalizeInventoryItem));
+      } else if (!silent) {
+        setFetchError(itemsData?.error ?? "Could not load inventory.");
+      }
+      if (historyRes.ok && historyData?.success && Array.isArray(historyData.history)) {
+        setInventoryHistory(historyData.history);
+      }
+    } catch {
+      if (!silent) setFetchError("Network error while loading inventory.");
+    } finally {
+      if (!silent) setLoading(false);
+    }
   }, [hydrated, setInventoryRows, setInventoryHistory]);
+
+  useEffect(() => {
+    loadInventory();
+  }, [loadInventory]);
+
+  const refreshInventory = useCallback(async () => {
+    setRefreshing(true);
+    setFetchError(null);
+    try {
+      await loadInventory(true);
+    } finally {
+      setRefreshing(false);
+    }
+  }, [loadInventory]);
 
   const filterFn = useCallback(
     (row) => {
@@ -272,9 +323,8 @@ export default function InventoryPage() {
 
   if (!hydrated || loading) {
     return (
-      <div className="min-w-0 w-full max-w-full space-y-6 overflow-x-hidden">
-        <div className="h-8 w-40 animate-pulse rounded-lg admin-progress-track" />
-        <TableSkeleton rows={8} cols={7} />
+      <div className="min-w-0 w-full max-w-full overflow-x-hidden">
+        <InventoryPageSkeleton />
       </div>
     );
   }
@@ -287,22 +337,33 @@ export default function InventoryPage() {
             <Package className="size-5" aria-hidden />
           </span>
           <div className="min-w-0">
-            <h1 className="admin-page-title text-2xl font-semibold tracking-tight">
+            <h1 className="admin-page-title break-words text-xl font-semibold tracking-tight sm:text-2xl">
               Inventory
             </h1>
-            <p className="admin-page-desc mt-1 text-sm">
+            <p className="admin-page-desc mt-1 break-words text-sm">
               Par levels, stock status, and movement history.
             </p>
           </div>
         </div>
-        <button
-          type="button"
-          onClick={openCreate}
-          className="inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-ra-primary px-4 py-2.5 text-sm font-semibold text-zinc-950 transition-colors hover:brightness-110 sm:w-auto"
-        >
-          <Plus className="size-4" />
-          Add item
-        </button>
+        <div className="admin-page-header-actions">
+          <button
+            type="button"
+            onClick={refreshInventory}
+            disabled={refreshing}
+            className={raPageRefreshBtnCls}
+          >
+            <RefreshCw className={`size-4 ${refreshing ? raSpinnerCls : ""}`} />
+            Refresh
+          </button>
+          <button
+            type="button"
+            onClick={openCreate}
+            className={raPagePrimaryBtnCls}
+          >
+            <Plus className="size-4" />
+            Add item
+          </button>
+        </div>
       </div>
 
       {fetchError ? (
@@ -320,7 +381,7 @@ export default function InventoryPage() {
       ) : null}
 
       <div className="grid min-w-0 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <div className="admin-surface-card px-4 py-3 sm:py-4 transition-colors hover:border-zinc-700">
+        <div className="admin-surface-card min-w-0 px-4 py-3 sm:py-4 transition-colors hover:border-zinc-700">
           <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">
             Total SKUs
           </p>
@@ -328,7 +389,7 @@ export default function InventoryPage() {
             {stats.total}
           </p>
         </div>
-        <div className="admin-surface-card px-4 py-3 sm:py-4 transition-colors hover:border-ra-primary-20">
+        <div className="admin-surface-card min-w-0 px-4 py-3 sm:py-4 transition-colors hover:border-ra-primary-20">
           <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">
             In stock
           </p>
@@ -336,7 +397,7 @@ export default function InventoryPage() {
             {stats.ok}
           </p>
         </div>
-        <div className="admin-surface-card px-4 py-3 sm:py-4 transition-colors hover:border-amber-500/25">
+        <div className="admin-surface-card min-w-0 px-4 py-3 sm:py-4 transition-colors hover:border-amber-500/25">
           <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">
             Low stock
           </p>
@@ -344,7 +405,7 @@ export default function InventoryPage() {
             {stats.low}
           </p>
         </div>
-        <div className="admin-surface-card px-4 py-3 sm:py-4 transition-colors hover:border-red-500/25">
+        <div className="admin-surface-card min-w-0 px-4 py-3 sm:py-4 transition-colors hover:border-red-500/25">
           <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">
             Out of stock
           </p>
@@ -357,12 +418,12 @@ export default function InventoryPage() {
       <section className="min-w-0 space-y-3">
         <div className="flex items-center gap-2">
           <AlertTriangle className="size-4 text-amber-400" aria-hidden />
-          <h2 className="text-sm font-semibold admin-shell-text">
+          <h2 className="break-words text-sm font-semibold admin-shell-text">
             Attention needed
           </h2>
         </div>
         {alertItems.length === 0 ? (
-          <div className="flex items-center gap-3 rounded-2xl border border-ra-primary-25 bg-ra-primary-5 px-4 py-4 text-sm admin-surface-muted">
+          <div className="flex min-w-0 items-center gap-3 break-words rounded-2xl border border-ra-primary-25 bg-ra-primary-5 px-4 py-4 text-sm admin-surface-muted">
             <Package className="size-5 shrink-0 text-ra-primary" />
             All items are above reorder levels.
           </div>
@@ -387,7 +448,8 @@ export default function InventoryPage() {
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="w-full admin-surface-card px-3 py-2 text-sm admin-shell-text sm:w-auto"
+            className={`${raFilterSelectCls} w-full sm:w-auto`}
+            aria-label="Filter by stock status"
           >
             <option value="all">All statuses</option>
             <option value="in">In stock</option>
@@ -416,7 +478,7 @@ export default function InventoryPage() {
               <button
                 type="button"
                 onClick={openCreate}
-                className="cursor-pointer rounded-xl bg-ra-primary px-4 py-2 text-sm font-semibold text-zinc-950"
+                className="inline-flex w-full cursor-pointer items-center justify-center rounded-xl bg-ra-primary px-4 py-2 text-sm font-semibold text-zinc-950 hover:brightness-110 sm:w-auto"
               >
                 Add item
               </button>
@@ -424,7 +486,7 @@ export default function InventoryPage() {
               <button
                 type="button"
                 onClick={() => setStatusFilter("all")}
-                className="cursor-pointer rounded-xl border admin-shell-border px-4 py-2 text-sm font-medium admin-shell-text transition-colors hover:border-zinc-600"
+                className="inline-flex w-full cursor-pointer items-center justify-center rounded-xl border admin-shell-border px-4 py-2 text-sm font-medium admin-shell-text transition-colors hover:border-zinc-600 sm:w-auto"
               >
                 Show all statuses
               </button>
@@ -465,7 +527,7 @@ export default function InventoryPage() {
               });
           }}
           footer={
-            <div className="px-4 pb-4">
+            <div className="px-1 pb-1 md:px-4 md:pb-4">
               <PaginationBar
                 page={page}
                 totalPages={totalPages}

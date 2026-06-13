@@ -3,7 +3,7 @@ import { verifyToken } from "@/lib/jwt";
 import clientPromise from "@/lib/mongodb";
 import { safeSearchPattern } from "@/lib/search";
 import { generatePlatformInvoiceId } from "@/lib/platformInvoice";
-import { resolvePaymentCurrency } from "@/lib/platformCurrency";
+import { resolvePaymentCurrency, SUBSCRIPTION_PAYMENT_TYPES } from "@/lib/platformCurrency";
 import { ObjectId } from "mongodb";
 
 function superAdminOnly(request) {
@@ -36,7 +36,7 @@ export async function GET(request) {
     if (status !== "all") filter.status = status;
     const paymentType = searchParams.get("paymentType");
     if (paymentType === "subscription") {
-      filter.paymentType = { $in: ["subscription", "subscription_renewal"] };
+      filter.paymentType = { $in: SUBSCRIPTION_PAYMENT_TYPES };
     }
     if (search) {
       filter.$or = [
@@ -105,7 +105,7 @@ export async function POST(request) {
   try { body = await request.json(); }
   catch { return Response.json({ success: false, error: "Invalid JSON." }, { status: 400 }); }
 
-  const { restaurantId, plan, amount, currency = "USD", method = "manual", notes } = body;
+  const { restaurantId, plan, amount, currency, method = "manual", notes } = body;
   const amountNum = Number(amount);
 
   if (!restaurantId) return Response.json({ success: false, error: "restaurantId is required." }, { status: 400 });

@@ -1,11 +1,8 @@
 "use client";
 
 import { Eye, Pencil, Trash2 } from "lucide-react";
+import { useAdminLocale } from "@/context/RestaurantLocaleContext";
 import StatusBadge from "./StatusBadge";
-import {
-  formatReservationDate,
-  formatTimeSlot,
-} from "@/lib/reservationUtils";
 
 /** Group rows by date string YYYY-MM-DD and sort dates ascending */
 function groupByDate(rows) {
@@ -22,7 +19,8 @@ function groupByDate(rows) {
   }));
 }
 
-export default function ReservationCalendarView({ rows, onView, onEdit, onDelete }) {
+export default function ReservationCalendarView({ rows, onView, onEdit, onDelete, canDelete = true }) {
+  const { formatReservationDate, formatTimeSlot } = useAdminLocale();
   const groups = groupByDate(rows);
 
   if (groups.length === 0) return null;
@@ -37,7 +35,7 @@ export default function ReservationCalendarView({ rows, onView, onEdit, onDelete
     <div className="min-w-0 space-y-8 overflow-x-hidden">
       {groups.map(({ date, items }) => (
         <section key={date} className="min-w-0">
-          <h3 className="sticky top-0 z-10 mb-4 inline-flex max-w-full rounded-lg border border-ra-primary-25 bg-[var(--admin-surface)] px-3 py-1.5 text-sm font-semibold text-ra-primary backdrop-blur-sm">
+          <h3 className="sticky top-0 z-10 mb-4 inline-flex max-w-full scroll-mt-16 rounded-lg border border-ra-primary-25 bg-[var(--admin-surface)] px-3 py-1.5 text-sm font-semibold text-ra-primary backdrop-blur-sm">
             {formatReservationDate(date)}
           </h3>
           <div className={`min-w-0 ${gridCls(items.length)}`}>
@@ -94,7 +92,8 @@ export default function ReservationCalendarView({ rows, onView, onEdit, onDelete
                   <button
                     type="button"
                     onClick={() => onDelete(r)}
-                    className="cursor-pointer flex flex-1 items-center justify-center gap-1 rounded-lg py-2 text-xs font-medium text-[var(--admin-text-muted)] transition-colors hover:bg-red-500/10 hover:text-red-600"
+                    disabled={!canDelete}
+                    className="cursor-pointer flex flex-1 items-center justify-center gap-1 rounded-lg py-2 text-xs font-medium text-[var(--admin-text-muted)] transition-colors hover:bg-red-500/10 hover:text-red-600 disabled:cursor-not-allowed disabled:opacity-40"
                   >
                     <Trash2 className="size-3.5" />
                     Delete

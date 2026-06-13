@@ -1,6 +1,6 @@
 "use client";
 
-import { raIconBadgeCls } from "@/config/restaurantAdminTheme";
+import { raIconBadgeCls, raSpinnerCls, raPageRefreshBtnCls } from "@/config/restaurantAdminTheme";
 
 import CmsImageField from "@/components/customer-site/CmsImageField";
 import {
@@ -48,7 +48,7 @@ import { validateRestaurantCmsSection } from "@/lib/restaurantSettingsValidation
 import {
   Globe, Loader2, Megaphone, Info, Sparkles,
   ToggleLeft, ToggleRight, ExternalLink, Plus, Trash2, Layers,
-  UtensilsCrossed, Phone, ChevronRight, Home, Settings, Rocket, RotateCcw,
+  UtensilsCrossed, Phone, ChevronRight, Home, Settings, Rocket, RotateCcw, RefreshCw,
 } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -74,7 +74,7 @@ const textareaCls = CMS_EDITOR_TEXTAREA;
 
 function Field({ label, hint, children, className = "" }) {
   return (
-    <div className={className}>
+    <div className={`min-w-0 ${className}`.trim()}>
       <label className={CMS_LABEL}>{label}</label>
       {children}
       {hint ? <p className={CMS_HINT}>{hint}</p> : null}
@@ -104,7 +104,7 @@ function ToggleRow({ label, hint, enabled, onToggle }) {
   return (
     <div className={CMS_EDITOR_TOGGLE_ROW}>
       <div className="min-w-0 flex-1">
-        <p className="text-sm font-medium admin-shell-text">{label}</p>
+        <p className="break-words text-sm font-medium admin-shell-text">{label}</p>
         {hint && <p className="text-xs leading-snug admin-surface-muted">{hint}</p>}
       </div>
       <button type="button" onClick={onToggle} className="shrink-0 text-ra-primary">
@@ -121,11 +121,39 @@ const OVERVIEW_SECTIONS = CUSTOMER_SITE_TABS.filter((t) => t.id !== "overview").
   icon: t.icon,
 }));
 
+function CustomerSitePageSkeleton() {
+  return (
+    <div className="min-w-0 w-full max-w-full space-y-6 overflow-x-hidden">
+      <div className="flex min-w-0 flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div className="flex min-w-0 items-start gap-3">
+          <div className="mt-1 size-10 shrink-0 animate-pulse rounded-xl admin-surface-card" />
+          <div className="min-w-0 flex-1 space-y-2">
+            <div className="h-7 w-48 max-w-full animate-pulse rounded-lg admin-surface-card" />
+            <div className="h-4 w-full max-w-md animate-pulse rounded admin-surface-card" />
+          </div>
+        </div>
+        <div className="h-10 w-full animate-pulse rounded-xl admin-surface-card sm:w-28" />
+      </div>
+      <div className="h-14 animate-pulse rounded-xl admin-surface-card" />
+      <div className="grid min-w-0 gap-4 xl:grid-cols-[minmax(0,224px)_minmax(0,1fr)] xl:gap-5">
+        <div className="-mx-1 flex gap-2 overflow-hidden px-1 xl:hidden">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <div key={i} className="h-10 w-24 shrink-0 animate-pulse rounded-xl admin-surface-card" />
+          ))}
+        </div>
+        <div className="hidden h-80 animate-pulse rounded-2xl admin-surface-card xl:block" />
+        <div className="min-h-[420px] animate-pulse rounded-2xl admin-surface-card" />
+      </div>
+    </div>
+  );
+}
+
 export default function CustomerSitePage() {
   const { showToast, ToastUI } = useToast();
   const panelRef = useRef(null);
   const publishedRef = useRef(null);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [loadError, setLoadError] = useState(null);
   const [saving, setSaving] = useState(null);
   const [siteUrl, setSiteUrl] = useState("");
@@ -163,79 +191,89 @@ export default function CustomerSitePage() {
     else if (tab && CUSTOMER_SITE_TAB_IDS.includes(tab)) setActiveTab(tab);
   }, []);
 
-  useEffect(() => {
-    async function load() {
-      setLoadError(null);
-      try {
-        const [cmsRes, settingsRes] = await Promise.all([
-          fetch("/api/restaurant-cms"),
-          fetch("/api/settings"),
-        ]);
-        const [cmsData, settingsData] = await Promise.all([cmsRes.json(), settingsRes.json()]);
-
-        if (!cmsRes.ok || !cmsData?.success) {
-          setLoadError(cmsData?.error ?? "Failed to load site content.");
-          return;
-        }
-
-        if (cmsData.content) {
-          const c = cmsData.content;
-          if (c.hero) {
-            const merged = mergeCmsSection(DEFAULTS.hero, c.hero);
-            setHero({
-              ...merged,
-              thumbnails: ensureHeroThumbnails(merged.thumbnails),
-              quickPills:
-                Array.isArray(merged.quickPills) && merged.quickPills.length > 0
-                  ? merged.quickPills
-                  : DEFAULTS.hero.quickPills,
-            });
-          }
-          if (c.announcement) {
-            setAnnouncement(mergeCmsSection(DEFAULTS.announcement, c.announcement));
-          }
-          if (c.about) {
-            const merged = mergeCmsSection(DEFAULTS.about, c.about);
-            setAbout({
-              ...merged,
-              sideImages: ensureAboutSideImages(merged.sideImages),
-              stats: ensureAboutStats(merged.stats),
-              promises:
-                Array.isArray(merged.promises) && merged.promises.length > 0
-                  ? merged.promises
-                  : DEFAULTS.about.promises,
-            });
-          }
-          if (c.social) setSocial((p) => ({ ...p, ...c.social }));
-          if (Array.isArray(c.banners)) setBanners(c.banners);
-          if (c.home) setHome(mergeCmsSection(DEFAULTS.home, c.home));
-          if (c.contact) setContact(mergeCmsSection(DEFAULTS.contact, c.contact));
-          if (c.booking) setBooking(mergeCmsSection(DEFAULTS.booking, c.booking));
-          if (c.menu) setMenu(mergeCmsSection(DEFAULTS.menu, c.menu));
-          if (c.theme) setTheme(mergeCmsSection(DEFAULTS.theme, c.theme));
-        }
-        if (cmsData.published) {
-          publishedRef.current = cmsData.published;
-        }
-        if (Array.isArray(cmsData.draftSections)) {
-          setDraftSections(cmsData.draftSections);
-        }
-        if (settingsData.success) {
-          if (settingsData.restaurantSlug) {
-            setSiteUrl(`${window.location.origin}/r/${settingsData.restaurantSlug}/home`);
-          }
-        }
-      } catch {
-        const msg = "Could not load customer site content.";
-        setLoadError(msg);
-        showToast(msg, "error");
-      } finally {
-        setLoading(false);
-      }
+  const loadContext = useCallback(async (silent = false) => {
+    if (silent) {
+      setRefreshing(true);
+    } else {
+      setLoading(true);
     }
-    load();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    setLoadError(null);
+    try {
+      const [cmsRes, settingsRes] = await Promise.all([
+        fetch("/api/restaurant-cms", { cache: "no-store" }),
+        fetch("/api/settings", { cache: "no-store" }),
+      ]);
+      const [cmsData, settingsData] = await Promise.all([cmsRes.json(), settingsRes.json()]);
+
+      if (!cmsRes.ok || !cmsData?.success) {
+        const msg = cmsData?.error ?? "Failed to load site content.";
+        setLoadError(msg);
+        if (silent) showToast(msg, "error");
+        return;
+      }
+
+      if (cmsData.content) {
+        const c = cmsData.content;
+        if (c.hero) {
+          const merged = mergeCmsSection(DEFAULTS.hero, c.hero);
+          setHero({
+            ...merged,
+            thumbnails: ensureHeroThumbnails(merged.thumbnails),
+            quickPills:
+              Array.isArray(merged.quickPills) && merged.quickPills.length > 0
+                ? merged.quickPills
+                : DEFAULTS.hero.quickPills,
+          });
+        }
+        if (c.announcement) {
+          setAnnouncement(mergeCmsSection(DEFAULTS.announcement, c.announcement));
+        }
+        if (c.about) {
+          const merged = mergeCmsSection(DEFAULTS.about, c.about);
+          setAbout({
+            ...merged,
+            sideImages: ensureAboutSideImages(merged.sideImages),
+            stats: ensureAboutStats(merged.stats),
+            promises:
+              Array.isArray(merged.promises) && merged.promises.length > 0
+                ? merged.promises
+                : DEFAULTS.about.promises,
+          });
+        }
+        if (c.social) setSocial((p) => ({ ...p, ...c.social }));
+        if (Array.isArray(c.banners)) setBanners(c.banners);
+        if (c.home) setHome(mergeCmsSection(DEFAULTS.home, c.home));
+        if (c.contact) setContact(mergeCmsSection(DEFAULTS.contact, c.contact));
+        if (c.booking) setBooking(mergeCmsSection(DEFAULTS.booking, c.booking));
+        if (c.menu) setMenu(mergeCmsSection(DEFAULTS.menu, c.menu));
+        if (c.theme) setTheme(mergeCmsSection(DEFAULTS.theme, c.theme));
+      }
+      if (cmsData.published) {
+        publishedRef.current = cmsData.published;
+      }
+      if (Array.isArray(cmsData.draftSections)) {
+        setDraftSections(cmsData.draftSections);
+      }
+      if (settingsData.success) {
+        if (settingsData.restaurantSlug) {
+          setSiteUrl(`${window.location.origin}/r/${settingsData.restaurantSlug}/home`);
+        } else {
+          setSiteUrl("");
+        }
+      }
+    } catch {
+      const msg = "Could not load customer site content.";
+      setLoadError(msg);
+      showToast(msg, "error");
+    } finally {
+      if (silent) setRefreshing(false);
+      else setLoading(false);
+    }
+  }, [showToast]);
+
+  useEffect(() => {
+    loadContext();
+  }, [loadContext]);
 
   const switchTab = useCallback((id) => {
     setActiveTab(id);
@@ -410,27 +448,36 @@ export default function CustomerSitePage() {
 
   if (loading) {
     return (
-      <div className="flex min-h-[60vh] items-center justify-center">
-        <Loader2 className="size-8 animate-spin text-ra-primary" />
+      <div className="min-w-0 w-full max-w-full overflow-x-hidden">
+        <CustomerSitePageSkeleton />
       </div>
     );
   }
 
   return (
-    <div className="min-w-0 w-full max-w-full space-y-6 overflow-x-hidden">
+    <div className={`min-w-0 w-full max-w-full space-y-6 overflow-x-hidden transition-opacity duration-200 ${refreshing ? "opacity-70" : ""}`}>
       <div className="flex min-w-0 flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div className="flex min-w-0 items-start gap-3">
           <span className={`mt-1 shrink-0 ${raIconBadgeCls}`}>
             <Globe className="size-5" />
           </span>
           <div className="min-w-0">
-            <h1 className="admin-page-title text-2xl font-semibold tracking-tight">Customer Site</h1>
-            <p className="admin-page-desc mt-1 text-sm">
+            <h1 className="admin-page-title break-words text-xl font-semibold tracking-tight sm:text-2xl">Customer Site</h1>
+            <p className="admin-page-desc mt-1 break-words text-sm">
               Edit your public ordering website section by section — draft & publish.
             </p>
           </div>
         </div>
-        <div className="flex w-full min-w-0 flex-col gap-2 sm:w-auto sm:flex-row sm:flex-wrap sm:items-center">
+        <div className="admin-page-header-actions">
+          <button
+            type="button"
+            onClick={() => loadContext(true)}
+            disabled={refreshing || !!saving}
+            className={raPageRefreshBtnCls}
+          >
+            <RefreshCw className={`size-4 ${refreshing ? raSpinnerCls : ""}`} />
+            Refresh
+          </button>
           {activeTab !== "overview" && (
             <button
               type="button"
@@ -474,7 +521,7 @@ export default function CustomerSitePage() {
           <Globe className="size-4 shrink-0 text-ra-primary" />
           <div className="min-w-0">
             <p className="text-xs font-semibold text-ra-primary-muted">Customer site URL</p>
-            <p className="truncate font-mono text-xs text-ra-primary/80">{siteUrl}</p>
+            <p className="break-all font-mono text-xs text-ra-primary/80">{siteUrl}</p>
           </div>
         </div>
       )}
@@ -495,7 +542,7 @@ export default function CustomerSitePage() {
         </div>
       )}
 
-      <div className="grid min-w-0 gap-4 lg:grid-cols-[minmax(0,224px)_minmax(0,1fr)] lg:gap-5">
+      <div className="grid min-w-0 gap-4 xl:grid-cols-[minmax(0,224px)_minmax(0,1fr)] xl:gap-5">
         <CustomerSiteSidebar
           activeTab={activeTab}
           onTabChange={switchTab}
@@ -611,8 +658,8 @@ export default function CustomerSitePage() {
                       >
                         <Icon className="size-4 shrink-0 admin-surface-faint" />
                         <div className="min-w-0 flex-1">
-                          <p className="text-sm font-medium admin-shell-text">{label}</p>
-                          <p className="text-xs admin-surface-muted">{page}</p>
+                          <p className="break-words text-sm font-medium admin-shell-text">{label}</p>
+                          <p className="break-words text-xs admin-surface-muted">{page}</p>
                         </div>
                         <ChevronRight className="size-4 shrink-0 admin-surface-faint" />
                       </button>
@@ -779,7 +826,7 @@ export default function CustomerSitePage() {
                 </div>
                 <div className="min-w-0 space-y-3">
               <p className="text-xs admin-surface-muted">Three small images below the main hero</p>
-              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-3">
+              <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-3">
               {ensureHeroThumbnails(hero.thumbnails).map((thumb, i) => (
                 <div key={i} className={`space-y-2 ${CMS_EDITOR_GROUP_FLAT}`}>
                   <Field label={`Small image ${i + 1} label`}>
@@ -1195,6 +1242,7 @@ export default function CustomerSitePage() {
 
               <p className={`${CMS_SECTION_TITLE} pt-2`}>Images</p>
               <div className={CMS_MEDIA_FORM_ROW}>
+                <div className="min-w-0">
                 <CmsImageField
                   label="Main image (large)"
                   value={about.imageUrl ?? ""}
@@ -1202,9 +1250,10 @@ export default function CustomerSitePage() {
                   disabled={isCmsSaving(saving)}
                   previewClassName="h-36 w-full object-cover lg:h-44"
                 />
+                </div>
                 <div className="min-w-0 space-y-3">
                   <p className="text-xs admin-surface-muted">Three smaller images beside / below the main photo</p>
-                  <div className="grid gap-3 grid-cols-1 sm:grid-cols-3">
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
                     {ensureAboutSideImages(about.sideImages).map((img, i) => (
                       <CmsImageField
                         key={i}

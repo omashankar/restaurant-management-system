@@ -220,7 +220,7 @@ export default function OnboardingPage() {
             restaurantName: draft.restaurantName,
             currency: "INR",
             timezone: "Asia/Kolkata",
-            language: "Hindi",
+            language: "English",
           },
           contact: {
             phoneNumber: draft.mobile,

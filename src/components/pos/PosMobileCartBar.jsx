@@ -29,7 +29,7 @@ export default function PosMobileSetupCard({
   return (
     <div
       id={id}
-      className={`scroll-mt-20 overflow-hidden rounded-2xl xl:hidden ${adminShell.border} ${
+      className={`scroll-mt-28 overflow-hidden rounded-2xl xl:hidden ${adminShell.border} ${
         ready ? "border-ra-primary-25 bg-ra-primary/[0.03]" : ""
       } bg-[var(--admin-surface)]`}
     >
@@ -64,8 +64,9 @@ export function PosMobileCartBar({
   setupReady = false,
   onOpenSetup,
   onOpenCheckout,
+  hidden = false,
 }) {
-  if (itemCount <= 0) return null;
+  if (itemCount <= 0 || hidden) return null;
 
   const handlePrimary = () => {
     if (setupReady) onOpenCheckout?.();
@@ -104,7 +105,7 @@ export function PosMobileCartBar({
               {setupReady ? " · Review & pay" : " · Finish setup first"}
             </span>
           </span>
-          <span className="shrink-0 text-sm font-bold tabular-nums">
+          <span className="truncate text-sm font-bold tabular-nums sm:text-base">
             {formatAdminMoney(total, currency, { decimals: 2 })}
           </span>
         </button>

@@ -14,8 +14,8 @@ import { usePaginatedList } from "@/hooks/usePaginatedList";
 import { useApp } from "@/context/AppProviders";
 import { useModuleData } from "@/context/ModuleDataContext";
 import { useToast } from "@/hooks/useToast";
-import { raIconBadgeCls } from "@/config/restaurantAdminTheme";
-import { CalendarClock, Plus } from "lucide-react";
+import { raIconBadgeCls, raSpinnerCls, raPageRefreshBtnCls } from "@/config/restaurantAdminTheme";
+import { CalendarClock, Plus, RefreshCw } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useLiveRefresh } from "@/hooks/useLiveRefresh";
 
@@ -49,6 +49,7 @@ export default function ReservationsPage() {
   } = useModuleData();
 
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [fetchError, setFetchError] = useState(null);
   const [dateFilter, setDateFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -90,6 +91,16 @@ export default function ReservationsPage() {
   }, [loadReservations]);
 
   useLiveRefresh(loadReservations, { intervalMs: 15_000 });
+
+  const refreshReservations = useCallback(async () => {
+    setRefreshing(true);
+    setFetchError(null);
+    try {
+      await loadReservations(true);
+    } finally {
+      setRefreshing(false);
+    }
+  }, [loadReservations]);
 
   const tableOptions = useMemo(
     () =>
@@ -237,26 +248,37 @@ export default function ReservationsPage() {
 
           <div className="flex min-w-0 flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <div className="flex min-w-0 items-start gap-3">
-              <span className={`mt-1 shrink-0 rounded-2xl size-11 ${raIconBadgeCls}`}>
+              <span className={`mt-1 shrink-0 ${raIconBadgeCls}`}>
                 <CalendarClock className="size-5" aria-hidden />
               </span>
               <div className="min-w-0">
-                <h1 className="admin-page-title text-2xl font-semibold tracking-tight md:text-3xl">
+                <h1 className="admin-page-title break-words text-xl font-semibold tracking-tight sm:text-2xl md:text-3xl">
                   Reservations
                 </h1>
-                <p className="admin-page-desc mt-1 text-sm">
+                <p className="admin-page-desc mt-1 break-words text-sm">
                   Booking-style book · search, filter, and manage holds.
                 </p>
               </div>
             </div>
-            <button
-              type="button"
-              onClick={openAdd}
-              className="inline-flex w-full shrink-0 cursor-pointer items-center justify-center gap-2 rounded-xl bg-ra-primary px-5 py-2.5 text-sm font-bold text-zinc-950 shadow-ra-primary-glow transition-all duration-200 hover:brightness-110 hover:shadow-ra-primary-soft active:scale-[0.98] sm:w-auto"
-            >
-              <Plus className="size-4" strokeWidth={2.5} />
-              Add Reservation
-            </button>
+            <div className="admin-page-header-actions">
+              <button
+                type="button"
+                onClick={refreshReservations}
+                disabled={refreshing}
+                className={raPageRefreshBtnCls}
+              >
+                <RefreshCw className={`size-4 ${refreshing ? raSpinnerCls : ""}`} />
+                Refresh
+              </button>
+              <button
+                type="button"
+                onClick={openAdd}
+                className="inline-flex w-full shrink-0 cursor-pointer items-center justify-center gap-2 rounded-xl bg-ra-primary px-5 py-2.5 text-sm font-bold text-zinc-950 shadow-ra-primary-glow transition-all duration-200 hover:brightness-110 hover:shadow-ra-primary-soft active:scale-[0.98] sm:w-auto"
+              >
+                <Plus className="size-4" strokeWidth={2.5} />
+                Add Reservation
+              </button>
+            </div>
           </div>
 
           {fetchError ? (
@@ -287,7 +309,7 @@ export default function ReservationsPage() {
                 <button
                   type="button"
                   onClick={openAdd}
-                  className="cursor-pointer rounded-xl bg-ra-primary px-4 py-2 text-sm font-semibold text-zinc-950 hover:brightness-110"
+                  className="inline-flex w-full cursor-pointer items-center justify-center rounded-xl bg-ra-primary px-4 py-2 text-sm font-semibold text-zinc-950 hover:brightness-110 sm:w-auto"
                 >
                   Add reservation
                 </button>
@@ -313,12 +335,13 @@ export default function ReservationsPage() {
               />
             </div>
           ) : (
-            <div className="min-w-0 overflow-x-hidden transition-opacity duration-300">
+            <div className="min-w-0 overflow-hidden transition-opacity duration-300">
               <ReservationCalendarView
                 rows={filteredRows}
                 onView={setViewing}
                 onEdit={openEdit}
                 onDelete={setDeleteTarget}
+                canDelete={canDelete}
               />
             </div>
           )}

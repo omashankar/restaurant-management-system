@@ -37,7 +37,7 @@ export default function AiInsights({ insights = [] }) {
                   <span className={`mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-lg ring-1 ${s.icon}`}>
                     <Icon className="size-3.5" />
                   </span>
-                  <p className={`text-xs leading-relaxed ${s.text}`}>{insight.text}</p>
+                  <p className={`min-w-0 flex-1 break-words text-xs leading-relaxed ${s.text}`}>{insight.text}</p>
                 </div>
               );
             })}

@@ -14,6 +14,11 @@ import {
   validateCheckoutContact,
 } from "@/lib/customerFormValidation";
 import { formatCustomerMoney } from "@/lib/customerCurrency";
+import {
+  loadRazorpayScript,
+  openRazorpayCheckout,
+  startGatewayCheckout,
+} from "@/lib/gatewayCheckoutClient";
 import { normalizePhoneForOtp } from "@/lib/phoneUtils";
 import { customerClasses, customerPage, customerType } from "@/lib/customerTheme";
 import { motion, AnimatePresence } from "framer-motion";
@@ -98,6 +103,7 @@ export default function CheckoutPage() {
   const [pointsToRedeem, setPointsToRedeem] = useState(0);
   const [savedAddresses, setSavedAddresses] = useState([]);
   const [scheduleFor, setScheduleFor] = useState("asap");
+  const [offlineCheckout, setOfflineCheckout] = useState(null);
 
   const { lines, subtotal, clearCart } = cart;
   const couponDiscount = useMemo(() => {
@@ -125,19 +131,6 @@ export default function CheckoutPage() {
     return Object.keys(PAYMENT_LABEL).filter((key) => Boolean(pm[key]));
   }, [checkoutMeta.paymentMethods]);
   const TypeIcon = orderType ? TYPE_ICON[orderType] : null;
-
-  async function loadRazorpayScript() {
-    if (typeof window === "undefined") return false;
-    if (window.Razorpay) return true;
-    return new Promise((resolve) => {
-      const script = document.createElement("script");
-      script.src = "https://checkout.razorpay.com/v1/checkout.js";
-      script.async = true;
-      script.onload = () => resolve(true);
-      script.onerror = () => resolve(false);
-      document.body.appendChild(script);
-    });
-  }
 
   async function confirmPayment(orderId, provider, payload) {
     const res = await fetch("/api/customer/orders/confirm-payment", {
@@ -324,76 +317,77 @@ export default function CheckoutPage() {
         return;
       }
 
-      if (payment?.gatewayProvider === "razorpay" && payment?.checkout?.orderId) {
-        const loaded = await loadRazorpayScript();
-        if (!loaded) {
-          showToast("Could not load payment gateway. Try again.", "error");
-          return;
-        }
+      if (payment?.gatewayProvider && payment?.checkout) {
         setPaying(true);
-        const options = {
-          key: payment.checkout.key,
-          amount: payment.checkout.amount,
-          currency: payment.checkout.currency,
-          name: restaurantInfo?.name?.trim() || BHOJDESK_BRAND.fullName,
-          description: `Order ${createdOrderId}`,
-          order_id: payment.checkout.orderId,
-          prefill: {
-            name: customer.name.trim(),
-            email: customer.email.trim(),
-            contact: contact.phoneE164 || customer.phone.trim(),
-          },
-          handler: async (response) => {
-            const confirm = await confirmPayment(createdOrderId, "razorpay", response);
-            if (confirm?.success) {
-              finishSuccess(createdOrderId);
-            } else {
-              showToast(confirm?.error || "Payment confirmation failed.", "error");
+        const launched = startGatewayCheckout(payment, {
+          onRazorpay: async (checkout) => {
+            const loaded = await loadRazorpayScript();
+            if (!loaded) {
+              setPaying(false);
+              showToast("Could not load payment gateway. Try again.", "error");
+              return;
             }
+            openRazorpayCheckout({
+              checkout,
+              options: {
+                name: restaurantInfo?.name?.trim() || BHOJDESK_BRAND.fullName,
+                description: `Order ${createdOrderId}`,
+                prefill: {
+                  name: customer.name.trim(),
+                  email: customer.email.trim(),
+                  contact: contact.phoneE164 || customer.phone.trim(),
+                },
+                theme: { color: "var(--customer-primary)" },
+              },
+              onSuccess: async (response) => {
+                const confirm = await confirmPayment(createdOrderId, "razorpay", response);
+                if (confirm?.success) finishSuccess(createdOrderId);
+                else showToast(confirm?.error || "Payment confirmation failed.", "error");
+                setPaying(false);
+              },
+              onError: () => {
+                setPaying(false);
+                showToast("Payment failed. Please retry.", "error");
+              },
+              onDismiss: () => {
+                setPaying(false);
+                showToast("Payment cancelled.", "error");
+              },
+            });
+          },
+          onStripe: (checkout) => {
+            const publishableKey = checkout.publishableKey || "";
+            if (!publishableKey) {
+              setPaying(false);
+              showToast("Stripe publishable key missing in payment settings.", "error");
+              return;
+            }
+            setStripeCheckout({
+              orderId: createdOrderId,
+              clientSecret: checkout.clientSecret,
+              publishableKey,
+            });
+          },
+          onOffline: (checkout) => {
+            setPaying(false);
+            setOfflineCheckout({ orderId: createdOrderId, ...checkout });
+          },
+          onPaytmComplete: async () => {
+            const confirm = await confirmPayment(createdOrderId, "paytm", {});
+            if (confirm?.success) finishSuccess(createdOrderId);
+            else showToast(confirm?.error || "Payment confirmation failed.", "error");
             setPaying(false);
           },
-          modal: {
-            ondismiss: () => {
-              setPaying(false);
-              showToast("Payment cancelled.", "error");
-            },
+          onError: (msg) => {
+            setPaying(false);
+            showToast(msg || "Could not start payment.", "error");
           },
-          theme: { color: "var(--customer-primary)" },
-        };
-        const rz = new window.Razorpay(options);
-        rz.on("payment.failed", () => {
-          setPaying(false);
-          showToast("Payment failed. Please retry.", "error");
         });
-        rz.open();
-        return;
-      }
-
-      if (payment?.gatewayProvider === "stripe" && payment?.checkout?.clientSecret) {
-        const publishableKey = payment.checkout.publishableKey || "";
-        if (!publishableKey) {
-          showToast(
-            "Stripe publishable key missing. Add it under Super Admin → Payment settings.",
-            "error"
-          );
-          return;
-        }
-        setPaying(true);
-        setStripeCheckout({
-          orderId: createdOrderId,
-          clientSecret: payment.checkout.clientSecret,
-          publishableKey,
-        });
-        return;
+        if (launched) return;
       }
 
       if (ONLINE_PAYMENT_METHODS.includes(paymentMethod)) {
-        showToast(
-          payment?.gatewayProvider
-            ? `${payment.gatewayProvider} checkout is not supported on the website yet. Use COD or configure Razorpay/Stripe.`
-            : "Online payment could not be started. Try cash on delivery or contact the restaurant.",
-          "error"
-        );
+        showToast("Online payment could not be started. Try cash on delivery or contact the restaurant.", "error");
         return;
       }
 
@@ -855,6 +849,42 @@ export default function CheckoutPage() {
           }}
         />
       ) : null}
+
+      <Modal
+        open={!!offlineCheckout}
+        onClose={() => setOfflineCheckout(null)}
+        title="Complete bank / UPI transfer"
+      >
+        {offlineCheckout ? (
+          <div className="space-y-4 text-sm text-customer-text">
+            {offlineCheckout.instructions ? (
+              <p className="whitespace-pre-wrap rounded-xl bg-customer-cream/60 p-3">{offlineCheckout.instructions}</p>
+            ) : null}
+            {offlineCheckout.upiId ? (
+              <p><strong>UPI ID:</strong> {offlineCheckout.upiId}</p>
+            ) : null}
+            {offlineCheckout.bankDetails ? (
+              <p className="whitespace-pre-wrap"><strong>Bank:</strong> {offlineCheckout.bankDetails}</p>
+            ) : null}
+            <button
+              type="button"
+              className={`${customerClasses.btnPrimaryLg} w-full text-sm`}
+              onClick={async () => {
+                const confirm = await confirmPayment(offlineCheckout.orderId, "offline", {});
+                setOfflineCheckout(null);
+                if (confirm?.success) {
+                  showToast(confirm.pending ? "Payment submitted for verification." : "Order placed.");
+                  finishSuccess(offlineCheckout.orderId);
+                } else {
+                  showToast(confirm?.error || "Could not submit payment.", "error");
+                }
+              }}
+            >
+              I have paid — submit order
+            </button>
+          </div>
+        ) : null}
+      </Modal>
     </div>
   );
 }

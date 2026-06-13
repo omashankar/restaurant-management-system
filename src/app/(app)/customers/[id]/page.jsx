@@ -77,9 +77,24 @@ export default function CustomerDetailPage() {
 
   if (!hydrated || loading) {
     return (
-      <div className="min-w-0 w-full max-w-full space-y-6 overflow-x-hidden">
-        <div className="h-10 w-64 animate-pulse rounded-lg admin-progress-track" />
-        <TableSkeleton rows={4} cols={4} />
+      <div className="min-w-0 w-full max-w-full space-y-8 overflow-x-hidden">
+        <div className="h-5 w-28 animate-pulse rounded admin-progress-track" />
+        <div className="flex min-w-0 items-start gap-3">
+          <div className="size-10 shrink-0 animate-pulse rounded-2xl admin-surface-card" />
+          <div className="min-w-0 flex-1 space-y-2">
+            <div className="h-8 w-48 max-w-full animate-pulse rounded-lg admin-progress-track" />
+            <div className="h-4 w-64 max-w-full animate-pulse rounded admin-progress-track" />
+          </div>
+        </div>
+        <div className="grid min-w-0 gap-4 sm:grid-cols-2">
+          <div className="h-24 animate-pulse rounded-2xl admin-surface-card" />
+          <div className="h-24 animate-pulse rounded-2xl admin-surface-card" />
+          <div className="h-28 animate-pulse rounded-2xl admin-surface-card sm:col-span-2" />
+        </div>
+        <div className="space-y-3">
+          <div className="h-6 w-36 animate-pulse rounded admin-progress-track" />
+          <TableSkeleton rows={4} cols={4} />
+        </div>
       </div>
     );
   }
@@ -119,10 +134,10 @@ export default function CustomerDetailPage() {
           <User className="size-5" aria-hidden />
         </span>
         <div className="min-w-0">
-          <h1 className="admin-page-title break-words text-2xl font-semibold tracking-tight">
+          <h1 className="admin-page-title break-words text-xl font-semibold tracking-tight sm:text-2xl">
             {customer.name}
           </h1>
-          <p className="admin-page-desc mt-1 text-sm">
+          <p className="admin-page-desc mt-1 break-words text-sm">
             Guest profile · {customer.visits} visits · last visit {lastVisitLabel}
           </p>
         </div>
@@ -161,8 +176,8 @@ export default function CustomerDetailPage() {
       </div>
 
       <div className="min-w-0">
-        <h2 className="text-lg font-semibold admin-shell-text">Order history</h2>
-        <p className="admin-page-desc mt-1 text-sm">
+        <h2 className="break-words text-lg font-semibold admin-shell-text">Order history</h2>
+        <p className="admin-page-desc mt-1 break-words text-sm">
           Orders linked from POS when this guest was selected at checkout.
         </p>
         <CustomerOrderHistoryTable orders={customer.orderHistory ?? []} />

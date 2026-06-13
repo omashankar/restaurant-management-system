@@ -1,6 +1,6 @@
 "use client";
 
-import { raIconBadgeCls, raInputCls, raTextareaCls } from "@/config/restaurantAdminTheme";
+import { raIconBadgeCls, raInputCls, raSpinnerCls, raTextareaCls, raPageRefreshBtnCls, raPagePrimaryBtnCls } from "@/config/restaurantAdminTheme";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import DataTableShell from "@/components/ui/DataTableShell";
 import {
@@ -30,9 +30,39 @@ import {
 } from "@/lib/formValidation";
 import { useCallback, useEffect, useState } from "react";
 
+function CategoriesPageSkeleton() {
+  return (
+    <div className="min-w-0 space-y-6 overflow-x-hidden">
+      <div className="flex min-w-0 flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div className="space-y-2">
+          <div className="h-8 w-40 animate-pulse rounded-lg admin-progress-track" />
+          <div className="h-4 w-56 max-w-full animate-pulse rounded admin-progress-track" />
+        </div>
+        <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
+          <div className="h-10 w-full animate-pulse rounded-xl admin-surface-card sm:w-24" />
+          <div className="h-10 w-full animate-pulse rounded-xl admin-surface-card sm:w-36" />
+        </div>
+      </div>
+      <div className="h-10 w-full max-w-md animate-pulse rounded-xl admin-surface-card" />
+      <div className="space-y-2 md:hidden">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <div key={i} className="animate-pulse rounded-xl border admin-shell-border bg-[var(--admin-surface-soft)] p-3">
+            <div className="h-4 w-2/3 rounded admin-progress-track" />
+            <div className="mt-2 h-3 w-full rounded admin-progress-track" />
+          </div>
+        ))}
+      </div>
+      <div className="hidden md:block">
+        <TableSkeleton rows={6} cols={4} />
+      </div>
+    </div>
+  );
+}
+
 export default function CategoriesPage() {
   const [categories, setCategories] = useState([]);
   const [loading, setLoading]   = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [saving, setSaving]     = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
@@ -45,23 +75,37 @@ export default function CategoriesPage() {
   const { refreshMenu } = useModuleData();
   const { showToast, ToastUI } = useToast();
 
-  const fetchCategories = useCallback(async () => {
-    setLoading(true);
-    setFetchError("");
+  const fetchCategories = useCallback(async (silent = false) => {
+    if (!silent) {
+      setLoading(true);
+      setFetchError("");
+    }
     try {
-      const res  = await fetch("/api/categories");
+      const res  = await fetch("/api/categories", { cache: "no-store" });
       const data = await res.json();
       if (!res.ok || !data.success) {
-        setFetchError(data?.error ?? "Could not load categories.");
+        if (!silent) setFetchError(data?.error ?? "Could not load categories.");
         return;
       }
       setCategories(data.categories);
     } catch {
-      setFetchError("Could not load categories. Check your connection and try again.");
-    } finally { setLoading(false); }
+      if (!silent) setFetchError("Could not load categories. Check your connection and try again.");
+    } finally {
+      if (!silent) setLoading(false);
+    }
   }, []);
 
   useEffect(() => { fetchCategories(); }, [fetchCategories]);
+
+  const refreshCategories = useCallback(async () => {
+    setRefreshing(true);
+    setFetchError("");
+    try {
+      await fetchCategories(true);
+    } finally {
+      setRefreshing(false);
+    }
+  }, [fetchCategories]);
 
   const { search, setSearch, page, setPage, pageRows, total, totalPages, pageSize } =
     usePaginatedList(categories, { searchKeys: ["name", "description"], pageSize: 8 });
@@ -103,7 +147,7 @@ export default function CategoriesPage() {
         showToast("Category created.");
       }
       setModalOpen(false);
-      await Promise.all([refreshMenu(), fetchCategories()]);
+      await Promise.all([refreshMenu(), fetchCategories(true)]);
     } catch { setFormError("Network error."); }
     finally { setSaving(false); }
   };
@@ -116,7 +160,7 @@ export default function CategoriesPage() {
       const data = await res.json();
       if (!data.success) { showToast(data.error ?? "Failed to delete.", "error"); return; }
       setCategories((prev) => prev.filter((c) => c.id !== deleteTarget.id));
-      await Promise.all([refreshMenu(), fetchCategories()]);
+      await Promise.all([refreshMenu(), fetchCategories(true)]);
       showToast(`"${deleteTarget.name}" deleted.`);
       setDeleteTarget(null);
     } catch { showToast("Network error.", "error"); }
@@ -125,9 +169,8 @@ export default function CategoriesPage() {
 
   if (loading) {
     return (
-      <div className="min-w-0 w-full max-w-full space-y-6 overflow-x-hidden">
-        <div className="h-8 w-56 animate-pulse rounded-lg admin-progress-track" />
-        <TableSkeleton rows={6} cols={4} />
+      <div className="min-w-0 w-full max-w-full overflow-x-hidden">
+        <CategoriesPageSkeleton />
       </div>
     );
   }
@@ -143,23 +186,24 @@ export default function CategoriesPage() {
         <div className="flex min-w-0 items-start gap-3">
           <span className={`mt-1 shrink-0 ${raIconBadgeCls}`}><FolderTree className="size-5" /></span>
           <div className="min-w-0">
-            <h1 className="admin-page-title text-2xl font-semibold tracking-tight">Categories</h1>
-            <p className="admin-page-desc mt-1 text-sm">Group menu items for POS and printing.</p>
+            <h1 className="admin-page-title break-words text-xl font-semibold tracking-tight sm:text-2xl">Categories</h1>
+            <p className="admin-page-desc mt-1 break-words text-sm">Group menu items for POS and printing.</p>
           </div>
         </div>
-        <div className="flex w-full min-w-0 flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">
+        <div className="admin-page-header-actions">
           <button
             type="button"
-            onClick={fetchCategories}
-            className="inline-flex w-full cursor-pointer items-center justify-center gap-1.5 rounded-xl border admin-shell-border px-3 py-2.5 text-sm font-medium text-zinc-400 transition-colors hover:border-zinc-500 hover:admin-shell-text sm:w-auto"
+            onClick={refreshCategories}
+            disabled={refreshing}
+            className={raPageRefreshBtnCls}
           >
-            <RefreshCw className="size-4" />
-            <span className="sm:hidden">Refresh</span>
+            <RefreshCw className={`size-4 ${refreshing ? raSpinnerCls : ""}`} />
+            Refresh
           </button>
           <button
             type="button"
             onClick={openCreate}
-            className="inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-ra-primary px-4 py-2.5 text-sm font-semibold text-zinc-950 hover:brightness-110 sm:w-auto"
+            className={raPagePrimaryBtnCls}
           >
             <Plus className="size-4" /> Add Category
           </button>
@@ -170,7 +214,16 @@ export default function CategoriesPage() {
 
       {total === 0 ? (
         <EmptyState title="No categories" description="Create categories like Starters, Main Course, Drinks."
-          action={<button type="button" onClick={openCreate} className="cursor-pointer rounded-xl bg-ra-primary px-4 py-2 text-sm font-semibold text-zinc-950 hover:brightness-110">Add Category</button>} />
+          action={
+            <button
+              type="button"
+              onClick={openCreate}
+              className="inline-flex w-full cursor-pointer items-center justify-center rounded-xl bg-ra-primary px-4 py-2 text-sm font-semibold text-zinc-950 hover:brightness-110 sm:w-auto"
+            >
+              Add Category
+            </button>
+          }
+        />
       ) : (
         <div className="min-w-0 overflow-hidden admin-surface-card">
           <div className="space-y-2 p-3 md:hidden">
@@ -230,7 +283,7 @@ export default function CategoriesPage() {
                 <AdminTableBody>
                   {pageRows.map((row) => (
                     <AdminTableRow key={row.id}>
-                      <AdminTableTd className="max-w-[10rem] font-medium admin-shell-text sm:max-w-none">
+                      <AdminTableTd className="max-w-[10rem] min-w-0 font-medium admin-shell-text sm:max-w-none">
                         <span className="block truncate">{row.name}</span>
                       </AdminTableTd>
                       <AdminTableTd className="max-w-[14rem] text-xs admin-surface-muted sm:max-w-none">
@@ -288,7 +341,7 @@ export default function CategoriesPage() {
             </button>
           </div>
         }>
-        <div className="space-y-4">
+        <div className="min-w-0 space-y-4">
           {formError && <p className="rounded-xl border border-red-500/20 bg-red-500/10 px-3 py-2 text-xs text-red-400">{formError}</p>}
           <div>
             <label className="text-xs font-medium admin-surface-muted">Category Name *</label>

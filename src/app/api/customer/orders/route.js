@@ -7,6 +7,10 @@ import { customerCheckoutSchema, parseSchema } from "@/lib/validationSchemas";
 import { sendNewOrderAlertEmail } from "@/lib/emailService";
 import { getRestaurantNotificationPrefs } from "@/lib/restaurantNotificationPrefs";
 import { sendOrderWhatsApp, sendNewOrderAlertWhatsApp } from "@/lib/whatsappService";
+import {
+  listEnabledPaymentMethods,
+  loadRestaurantCheckoutMeta,
+} from "@/lib/checkoutPaymentMeta";
 import { resolvePaymentCurrency } from "@/lib/platformCurrency";
 import { validateCustomerCoupon } from "@/lib/customerCoupons";
 import { redeemCustomerPoints } from "@/lib/customerRewards";
@@ -158,29 +162,9 @@ export async function POST(request) {
       return Response.json({ success: false, error: "No active restaurant available for ordering." }, { status: 404 });
     }
 
-    const settingsDoc = await db.collection("restaurant_settings").findOne(
-      { restaurantId },
-      { projection: { pos: 1, paymentMethods: 1, general: 1 } }
-    );
-    const taxPercentage = Number(settingsDoc?.pos?.taxPercentage ?? 8);
-    const serviceCharge = Number(settingsDoc?.pos?.serviceCharge ?? 0);
-    const safeTaxPercent = Number.isFinite(taxPercentage) ? Math.max(0, taxPercentage) : 8;
-    const safeServiceCharge = Number.isFinite(serviceCharge) ? Math.max(0, serviceCharge) : 0;
-    const paymentMethods = {
-      defaultMethod: "cod",
-      cod: true,
-      cashCounter: true,
-      upi: true,
-      card: true,
-      netBanking: true,
-      wallet: true,
-      payLater: false,
-      bankTransfer: false,
-      ...(settingsDoc?.paymentMethods ?? {}),
-    };
-    const enabledMethods = Object.keys(paymentMethods).filter(
-      (k) => k !== "defaultMethod" && Boolean(paymentMethods[k])
-    );
+    const { settingsDoc, taxPercentage: safeTaxPercent, serviceCharge: safeServiceCharge, paymentMethods } =
+      await loadRestaurantCheckoutMeta(db, restaurantId);
+    const enabledMethods = listEnabledPaymentMethods(paymentMethods);
     if (!enabledMethods.includes(paymentMethod)) {
       return Response.json(
         { success: false, error: "Selected payment method is disabled for this restaurant." },
@@ -245,6 +229,11 @@ export async function POST(request) {
           currency,
           orderId,
           method: paymentMethod,
+          customer: {
+            name: customerName,
+            email: email || "",
+            phone: phoneE164 || phone,
+          },
         });
       } catch (err) {
         return Response.json(

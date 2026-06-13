@@ -1,5 +1,9 @@
 import clientPromise from "@/lib/mongodb";
 import { isReservationSlotAvailable } from "@/lib/reservationConflict";
+import {
+  fetchRestaurantOpeningHours,
+  validateReservationDateTime,
+} from "@/lib/reservationUtils";
 import { getRestaurantIdFromRequest } from "@/lib/restaurantResolver";
 import { assertPlatformFeatureForPath } from "@/lib/platformFeatureGuard";
 
@@ -85,6 +89,12 @@ export async function POST(request) {
 
     const tableNum = tableNumber?.trim() || "TBD";
     const guestCount = Math.max(1, parseInt(guests, 10) || 2);
+
+    const openingHours = await fetchRestaurantOpeningHours(db, restaurantId);
+    const hoursCheck = validateReservationDateTime(openingHours, date, time);
+    if (!hoursCheck.valid) {
+      return Response.json({ success: false, error: hoursCheck.error }, { status: 422 });
+    }
 
     if (tableNum !== "TBD") {
       const existing = await db.collection("reservations")

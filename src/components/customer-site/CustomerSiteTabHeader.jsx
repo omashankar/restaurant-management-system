@@ -11,14 +11,14 @@ export default function CustomerSiteTabHeader({ tab, badge }) {
         </span>
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
-            <h2 className="admin-surface-title text-lg font-semibold">{tab.headline}</h2>
+            <h2 className="admin-surface-title break-words text-lg font-semibold">{tab.headline}</h2>
             {badge && (
               <span className="rounded-full border border-[var(--admin-border-subtle)] bg-[var(--admin-hover)] px-2.5 py-0.5 text-[10px] font-semibold admin-surface-muted">
                 {badge}
               </span>
             )}
           </div>
-          <p className="mt-1 text-sm admin-surface-muted">{tab.description}</p>
+          <p className="mt-1 break-words text-sm admin-surface-muted">{tab.description}</p>
           {tab.pages?.length > 0 && (
             <p className="mt-2 break-words text-xs admin-surface-faint">
               <span className="font-medium admin-surface-faint">Shows on: </span>

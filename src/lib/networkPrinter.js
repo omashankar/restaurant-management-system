@@ -1,5 +1,11 @@
 import net from "node:net";
 import { randomUUID } from "node:crypto";
+import {
+  DEFAULT_LOCALE_PREFS,
+  formatAdminDateTime,
+  formatTimeFromDate,
+  normalizeLocalePrefs,
+} from "@/lib/localeFormat";
 
 const ESC = "\x1B";
 const GS = "\x1D";
@@ -56,14 +62,18 @@ function divider(width) {
 }
 
 /** Build ESC/POS test slip. */
-export function buildEscPosTest({ restaurantName = "Restaurant" } = {}) {
+export function buildEscPosTest({
+  restaurantName = "Restaurant",
+  localePrefs = DEFAULT_LOCALE_PREFS,
+} = {}) {
+  const prefs = normalizeLocalePrefs(localePrefs);
   const chunks = [
     `${ESC}@`,
     `${ESC}a\x01`,
     `${restaurantName}\n`,
     `${ESC}a\x00`,
     "Test Print\n",
-    `BhojDesk RMS · ${new Date().toLocaleString()}\n`,
+    `BhojDesk RMS · ${formatAdminDateTime(new Date(), prefs)}\n`,
     divider(32),
     "Printer connection OK\n\n",
     `${GS}V\x00`,
@@ -72,15 +82,20 @@ export function buildEscPosTest({ restaurantName = "Restaurant" } = {}) {
 }
 
 /** Build ESC/POS invoice bytes. */
-export function buildEscPosInvoice(order, { restaurantName = "Restaurant", paperSize = "80mm" } = {}) {
+export function buildEscPosInvoice(order, {
+  restaurantName = "Restaurant",
+  paperSize = "80mm",
+  localePrefs = DEFAULT_LOCALE_PREFS,
+} = {}) {
   const w = lineWidth(paperSize);
   const sym = order.currency ?? "INR";
+  const prefs = normalizeLocalePrefs(localePrefs);
   const lines = [
     `${ESC}@`,
     `${ESC}a\x01`,
     `${restaurantName}\n`,
     `${ESC}a\x00`,
-    `${new Date().toLocaleString()}\n`,
+    `${formatAdminDateTime(new Date(), prefs)}\n`,
     divider(w),
     padLine("Order", order.orderId ?? "—", w) + "\n",
     padLine("Type", order.orderType ?? "—", w) + "\n",
@@ -114,8 +129,17 @@ export function buildEscPosInvoice(order, { restaurantName = "Restaurant", paper
 }
 
 /** Build ESC/POS kitchen ticket bytes. */
-export function buildEscPosKot({ orderId, orderType, tableNumber, customer, kitchenRouting, paperSize = "80mm" }) {
+export function buildEscPosKot({
+  orderId,
+  orderType,
+  tableNumber,
+  customer,
+  kitchenRouting,
+  paperSize = "80mm",
+  localePrefs = DEFAULT_LOCALE_PREFS,
+}) {
   const w = lineWidth(paperSize);
+  const prefs = normalizeLocalePrefs(localePrefs);
   const lines = [
     `${ESC}@`,
     `${ESC}a\x01** KITCHEN **\n`,
@@ -125,7 +149,7 @@ export function buildEscPosKot({ orderId, orderType, tableNumber, customer, kitc
   ];
   if (tableNumber) lines.push(padLine("Table", tableNumber, w) + "\n");
   if (customer) lines.push(padLine("Customer", customer, w) + "\n");
-  lines.push(divider(w), `${new Date().toLocaleTimeString()}\n`, divider(w));
+  lines.push(divider(w), `${formatTimeFromDate(new Date(), prefs)}\n`, divider(w));
 
   for (const [kitchen, items] of Object.entries(kitchenRouting ?? {})) {
     lines.push(`${kitchen.replace(/_/g, " ").toUpperCase()}\n`);

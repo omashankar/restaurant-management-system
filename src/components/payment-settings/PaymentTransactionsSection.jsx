@@ -1,8 +1,10 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { raFilterSelectCls, raSpinnerCls } from "@/config/restaurantAdminTheme";
+import { useCallback, useEffect, useRef, useState } from "react";
 import PaginationBar from "@/components/ui/PaginationBar";
 import { RefreshCw, Search } from "lucide-react";
+import { useAdminLocale } from "@/context/RestaurantLocaleContext";
 import { PAYMENT_METHOD_LABELS } from "@/config/paymentConfig";
 
 const STATUS_BADGE = {
@@ -13,18 +15,25 @@ const STATUS_BADGE = {
 };
 
 export default function PaymentTransactionsSection({ showToast }) {
+  const { formatDate } = useAdminLocale();
   const [transactions, setTransactions] = useState([]);
   const [summary, setSummary]           = useState({ totalAmount: 0, paidCount: 0 });
   const [pagination, setPagination]     = useState({ page: 1, pages: 1, total: 0 });
   const [loading, setLoading]           = useState(true);
+  const [refreshing, setRefreshing]     = useState(false);
+  const hadDataRef = useRef(false);
   const [page, setPage]                 = useState(1);
   const [status, setStatus]             = useState("all");
   const [method, setMethod]             = useState("all");
   const [from, setFrom]                 = useState("");
   const [to, setTo]                     = useState("");
 
-  const fetchData = useCallback(async () => {
-    setLoading(true);
+  const fetchData = useCallback(async (silent = false) => {
+    if (silent) {
+      setRefreshing(true);
+    } else {
+      setLoading(true);
+    }
     try {
       const params = new URLSearchParams({ page: String(page) });
       if (status !== "all") params.set("status", status);
@@ -37,38 +46,45 @@ export default function PaymentTransactionsSection({ showToast }) {
         setTransactions(data.transactions);
         setSummary(data.summary);
         setPagination(data.pagination);
-      } else {
+        hadDataRef.current = true;
+      } else if (!silent) {
         showToast(data?.error ?? "Failed to load transactions.", "error");
       }
     } catch {
-      showToast("Failed to load transactions.", "error");
+      if (!silent) showToast("Failed to load transactions.", "error");
+    } finally {
+      if (silent) setRefreshing(false);
+      else setLoading(false);
     }
-    finally { setLoading(false); }
   }, [page, status, method, from, to, showToast]);
 
-  useEffect(() => { fetchData(); }, [fetchData]);
+  useEffect(() => { fetchData(hadDataRef.current); }, [fetchData]);
   useEffect(() => { setPage(1); }, [status, method, from, to]);
 
   return (
-    <section className="min-w-0 admin-surface-card p-4 sm:p-6">
+    <section className={`min-w-0 admin-surface-card p-4 transition-opacity duration-200 sm:p-6 ${refreshing ? "opacity-70" : ""}`}>
       <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div className="min-w-0">
-          <h2 className="text-lg font-semibold admin-shell-text">Transaction History</h2>
-          <p className="mt-1 text-sm admin-surface-muted">Subscription payments and online order transactions for your restaurant.</p>
+          <h2 className="break-words text-lg font-semibold admin-shell-text">Transaction History</h2>
+          <p className="mt-1 break-words text-sm admin-surface-muted">Subscription payments and online order transactions for your restaurant.</p>
         </div>
-        <button type="button" onClick={fetchData}
-          className="inline-flex w-full shrink-0 cursor-pointer items-center justify-center gap-1.5 rounded-xl border admin-shell-border px-3 py-2 text-sm admin-surface-muted transition-colors hover:border-zinc-500 hover:admin-shell-text sm:w-auto">
-          <RefreshCw className={`size-4 ${loading ? "animate-spin" : ""}`} />
+        <button
+          type="button"
+          onClick={() => fetchData(true)}
+          disabled={refreshing}
+          className="inline-flex w-full shrink-0 cursor-pointer items-center justify-center gap-1.5 rounded-xl border admin-shell-border px-3 py-2.5 text-sm admin-surface-muted transition-colors hover:border-zinc-500 hover:admin-shell-text disabled:opacity-50 sm:w-auto"
+        >
+          <RefreshCw className={`size-4 ${refreshing ? raSpinnerCls : ""}`} />
           Refresh
         </button>
       </div>
 
-      <div className="mb-5 grid gap-3 sm:grid-cols-2">
-        <div className="rounded-xl border border-ra-primary-20 bg-ra-primary-5 px-4 py-3">
+      <div className="mb-5 grid min-w-0 gap-3 sm:grid-cols-2">
+        <div className="min-w-0 rounded-xl border border-ra-primary-20 bg-ra-primary-5 px-4 py-3">
           <p className="text-xs admin-surface-muted">Total Revenue</p>
-          <p className="mt-1 text-xl font-bold tabular-nums text-ra-primary">₹{summary.totalAmount.toLocaleString()}</p>
+          <p className="mt-1 break-all text-xl font-bold tabular-nums text-ra-primary">₹{summary.totalAmount.toLocaleString()}</p>
         </div>
-        <div className="rounded-xl border admin-shell-border bg-[var(--admin-hover)] px-4 py-3">
+        <div className="min-w-0 rounded-xl border admin-shell-border bg-[var(--admin-hover)] px-4 py-3">
           <p className="text-xs admin-surface-muted">Paid Transactions</p>
           <p className="mt-1 text-xl font-bold tabular-nums admin-shell-text">{summary.paidCount}</p>
         </div>
@@ -76,7 +92,9 @@ export default function PaymentTransactionsSection({ showToast }) {
 
       <div className="mb-4 grid grid-cols-1 gap-2 sm:flex sm:flex-wrap sm:gap-3">
         <select value={status} onChange={(e) => setStatus(e.target.value)}
-          className="w-full cursor-pointer rounded-xl border admin-shell-border bg-[var(--admin-control)] px-3 py-2 text-sm admin-shell-text outline-none focus-ra-primary sm:w-auto">
+          className={`${raFilterSelectCls} w-full sm:w-auto`}
+          aria-label="Filter by status"
+        >
           <option value="all">All Statuses</option>
           <option value="paid">Paid</option>
           <option value="pending">Pending</option>
@@ -84,7 +102,9 @@ export default function PaymentTransactionsSection({ showToast }) {
           <option value="refunded">Refunded</option>
         </select>
         <select value={method} onChange={(e) => setMethod(e.target.value)}
-          className="w-full cursor-pointer rounded-xl border admin-shell-border bg-[var(--admin-control)] px-3 py-2 text-sm admin-shell-text outline-none focus-ra-primary sm:w-auto">
+          className={`${raFilterSelectCls} w-full sm:w-auto`}
+          aria-label="Filter by payment method"
+        >
           <option value="all">All Methods</option>
           {Object.entries(PAYMENT_METHOD_LABELS).map(([k, v]) => (
             <option key={k} value={k}>{v}</option>
@@ -123,13 +143,13 @@ export default function PaymentTransactionsSection({ showToast }) {
                 </div>
                 <div className="mt-2 flex flex-wrap items-center justify-between gap-2 text-sm">
                   <span className="capitalize admin-surface-muted">{PAYMENT_METHOD_LABELS[t.paymentMethod] ?? t.paymentMethod}</span>
-                  <span className="font-semibold tabular-nums admin-shell-text">₹{t.amount.toLocaleString()}</span>
+                  <span className="shrink-0 break-all font-semibold tabular-nums admin-shell-text">₹{t.amount.toLocaleString()}</span>
                 </div>
                 {t.customerName ? (
                   <p className="mt-1 truncate text-xs admin-surface-body">{t.customerName}</p>
                 ) : null}
                 <p className="mt-1 text-xs admin-surface-faint">
-                  {t.createdAt ? new Date(t.createdAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }) : "—"}
+                  {t.createdAt ? formatDate(t.createdAt) : "—"}
                 </p>
               </div>
             ))}
@@ -162,8 +182,12 @@ export default function PaymentTransactionsSection({ showToast }) {
               <tbody>
                 {transactions.map((t) => (
                   <tr key={t.id} className="transition-colors hover:bg-[var(--admin-hover)]">
-                    <td className="px-4 py-3 font-mono text-xs admin-surface-muted">{t.transactionId.slice(-8)}</td>
-                    <td className="px-4 py-3 text-xs admin-surface-muted">{t.orderId}</td>
+                    <td className="max-w-[8rem] min-w-0 px-4 py-3 font-mono text-xs admin-surface-muted">
+                      <span className="block truncate" title={t.transactionId}>{t.transactionId.slice(-8)}</span>
+                    </td>
+                    <td className="max-w-[8rem] min-w-0 px-4 py-3 text-xs admin-surface-muted">
+                      <span className="block truncate" title={t.orderId}>{t.orderId}</span>
+                    </td>
                     <td className="hidden px-4 py-3 admin-surface-body md:table-cell">{t.customerName}</td>
                     <td className="px-4 py-3 text-xs capitalize admin-surface-muted">{PAYMENT_METHOD_LABELS[t.paymentMethod] ?? t.paymentMethod}</td>
                     <td className="px-4 py-3 font-semibold tabular-nums admin-shell-text">₹{t.amount.toLocaleString()}</td>
@@ -173,7 +197,7 @@ export default function PaymentTransactionsSection({ showToast }) {
                       </span>
                     </td>
                     <td className="hidden px-4 py-3 text-xs admin-surface-faint md:table-cell">
-                      {t.createdAt ? new Date(t.createdAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }) : "—"}
+                      {t.createdAt ? formatDate(t.createdAt) : "—"}
                     </td>
                   </tr>
                 ))}

@@ -67,7 +67,7 @@ export const adminSurface = {
   searchCompact: "admin-surface-search admin-search-input",
   search: "admin-surface-search",
   btnGhost: "admin-surface-btn-ghost",
-  btnIcon: "admin-surface-btn-icon",
+  btnIcon: "inline-flex items-center justify-center admin-surface-btn-icon",
   /** Sidebar expand/collapse — same chrome as icon buttons */
   sidebarToggle: "admin-surface-sidebar-toggle",
   popover: "admin-surface-popover",
@@ -87,6 +87,10 @@ export const adminSurface = {
   menuItem: "admin-surface-menu-item",
   pageTitle: "admin-page-title",
   pageDesc: "admin-page-desc",
+  /** Page header layout — title row + action buttons (never shrink below label width) */
+  pageHeaderRow:
+    "admin-page-header-row flex min-w-0 flex-col gap-4 sm:flex-row sm:items-end sm:justify-between",
+  pageHeaderActions: "admin-page-header-actions",
   navLink:
     "admin-nav-link relative group flex rounded-xl text-sm font-medium transition-all duration-200",
   navLinkCollapsed: "admin-nav-link size-11 items-center justify-center p-0",

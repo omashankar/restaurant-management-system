@@ -1,6 +1,6 @@
 "use client";
 
-import { raIconBadgeCls, raInputCls } from "@/config/restaurantAdminTheme";
+import { raIconBadgeCls, raInputCls, raSpinnerCls, raPageRefreshBtnCls, raPagePrimaryBtnCls } from "@/config/restaurantAdminTheme";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import EmptyState from "@/components/ui/EmptyState";
 import ListToolbar from "@/components/ui/ListToolbar";
@@ -32,6 +32,7 @@ export default function TablesModulePage() {
   const [tables, setTables]         = useState([]);
   const [areas, setAreas]           = useState([]);
   const [loading, setLoading]       = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [fetchError, setFetchError] = useState("");
   const [saving, setSaving]         = useState(false);
   const [statusFilter, setStatusFilter]   = useState("all");
@@ -71,6 +72,16 @@ export default function TablesModulePage() {
   useEffect(() => { fetchAll(); }, [fetchAll]);
   useLiveRefresh(fetchAll, { intervalMs: 15_000 });
 
+  const refreshTables = useCallback(async () => {
+    setRefreshing(true);
+    setFetchError("");
+    try {
+      await fetchAll(true);
+    } finally {
+      setRefreshing(false);
+    }
+  }, [fetchAll]);
+
   const filterFn = useCallback((row) => {
     const st = row.status === "reserved" ? "occupied" : row.status;
     if (statusFilter !== "all" && st !== statusFilter) return false;
@@ -90,6 +101,7 @@ export default function TablesModulePage() {
     setEditingId(null);
     setForm({ ...emptyForm, categoryId: areas[0]?.id ?? "" });
     setFormError("");
+    setFieldErrors(EMPTY_TABLE_ERRORS);
     setModalOpen(true);
   };
 
@@ -163,7 +175,14 @@ export default function TablesModulePage() {
   if (loading) {
     return (
       <div className="min-w-0 w-full max-w-full space-y-6 overflow-x-hidden">
-        <div className="h-8 w-32 animate-pulse rounded-lg admin-progress-track" />
+        <div className="flex min-w-0 flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+          <div className="h-8 w-32 animate-pulse rounded-lg admin-progress-track" />
+          <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
+            <div className="h-10 w-full animate-pulse rounded-xl admin-surface-card sm:w-36" />
+            <div className="h-10 w-full animate-pulse rounded-xl admin-surface-card sm:w-28" />
+          </div>
+        </div>
+        <div className="h-10 w-full max-w-md animate-pulse rounded-xl admin-surface-card" />
         <div className="grid min-w-0 gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {Array.from({ length: 8 }).map((_, i) => (
             <div key={i} className="h-32 animate-pulse admin-surface-card" />
@@ -187,23 +206,27 @@ export default function TablesModulePage() {
             <Table2 className="size-5" />
           </span>
           <div className="min-w-0">
-            <h1 className="admin-page-title text-2xl font-semibold tracking-tight">Tables</h1>
-            <p className="admin-page-desc mt-1 text-sm">Floor layout · {total} table{total !== 1 ? "s" : ""}</p>
+            <h1 className="admin-page-title break-words text-xl font-semibold tracking-tight sm:text-2xl">Tables</h1>
+            <p className="admin-page-desc mt-1 break-words text-sm">Floor layout · {total} table{total !== 1 ? "s" : ""}</p>
           </div>
         </div>
-        <div className="flex w-full min-w-0 flex-col gap-2 sm:w-auto sm:flex-row sm:flex-wrap sm:items-center">
+        <div className="admin-page-header-actions">
           <Link href="/tables/areas"
-            className="inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl border admin-shell-border px-4 py-2.5 text-sm font-medium admin-surface-body hover:border-zinc-500 hover:admin-shell-text sm:w-auto">
+            className={raPageRefreshBtnCls}>
             <LayoutGrid className="size-4" /> Manage Areas
           </Link>
-          <button type="button" onClick={fetchAll}
-            className="inline-flex w-full cursor-pointer items-center justify-center gap-1.5 rounded-xl border admin-shell-border px-3 py-2.5 text-sm font-medium text-zinc-400 transition-colors hover:border-zinc-500 hover:admin-shell-text sm:w-auto">
-            <RefreshCw className="size-4" />
-            <span className="sm:hidden">Refresh</span>
+          <button
+            type="button"
+            onClick={refreshTables}
+            disabled={refreshing}
+            className={raPageRefreshBtnCls}
+          >
+            <RefreshCw className={`size-4 ${refreshing ? raSpinnerCls : ""}`} />
+            Refresh
           </button>
           {isAdmin && (
             <button type="button" onClick={openCreate}
-              className="inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-ra-primary px-4 py-2.5 text-sm font-semibold text-zinc-950 hover:brightness-110 sm:w-auto">
+              className={raPagePrimaryBtnCls}>
               <Plus className="size-4" /> Add Table
             </button>
           )}
@@ -216,15 +239,21 @@ export default function TablesModulePage() {
         onSearchChange={setSearch}
         searchPlaceholder="Search table number…"
         filterSlot={
-          <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:flex-wrap">
-            <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}
-              className="w-full cursor-pointer admin-surface-card px-3 py-2 text-sm admin-shell-text sm:w-auto">
+          <div className="flex flex-wrap items-center gap-2">
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="w-full min-w-0 cursor-pointer admin-surface-card px-3 py-2 text-sm admin-shell-text sm:w-auto sm:min-w-[9.5rem]"
+            >
               <option value="all">All statuses</option>
               <option value="available">Available</option>
               <option value="occupied">Occupied</option>
             </select>
-            <select value={categoryFilter} onChange={(e) => setCategoryFilter(e.target.value)}
-              className="w-full cursor-pointer admin-surface-card px-3 py-2 text-sm admin-shell-text sm:w-auto">
+            <select
+              value={categoryFilter}
+              onChange={(e) => setCategoryFilter(e.target.value)}
+              className="w-full min-w-0 cursor-pointer admin-surface-card px-3 py-2 text-sm admin-shell-text sm:w-auto sm:min-w-[9.5rem]"
+            >
               <option value="all">All areas</option>
               {areas.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}
             </select>
@@ -313,7 +342,7 @@ export default function TablesModulePage() {
               );
             })}
           </div>
-          <div className="px-1">
+          <div className="min-w-0 px-1">
             <PaginationBar page={page} totalPages={totalPages} total={total} pageSize={pageSize} onPageChange={setPage} hideWhenSinglePage />
           </div>
         </>

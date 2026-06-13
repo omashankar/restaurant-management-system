@@ -10,7 +10,7 @@ export const COMPRESS_SKIP_BYTES = 500 * 1024;
 
 const LOGO_MAX_BYTES = 2 * 1024 * 1024;
 
-/** @typedef {'default' | 'logo' | 'avatar' | 'tableArea'} ImageUploadPreset */
+/** @typedef {'default' | 'logo' | 'avatar' | 'tableArea' | 'favicon'} ImageUploadPreset */
 
 /** @type {Record<ImageUploadPreset, { maxSizeMB: number; maxWidthOrHeight: number; maxBytes: number }>} */
 const PRESETS = {
@@ -33,6 +33,11 @@ const PRESETS = {
     maxSizeMB: 1,
     maxWidthOrHeight: 1600,
     maxBytes: IMAGE_UPLOAD_MAX_BYTES,
+  },
+  favicon: {
+    maxSizeMB: 0.15,
+    maxWidthOrHeight: 128,
+    maxBytes: LOGO_MAX_BYTES,
   },
 };
 
@@ -99,7 +104,7 @@ export async function prepareImageForUpload(file, presetKey = "default") {
  * @param {File} file
  * @param {{ url: string; preset?: ImageUploadPreset; onPhase?: (phase: 'compressing' | 'uploading') => void }} options
  */
-export async function uploadImageWithCompression(file, { url, preset = "default", onPhase }) {
+export async function uploadImageWithCompression(file, { url, preset = "default", onPhase, extraFormFields }) {
   onPhase?.("compressing");
   const prep = await prepareImageForUpload(file, preset);
   if (!prep.ok) {
@@ -110,12 +115,25 @@ export async function uploadImageWithCompression(file, { url, preset = "default"
   try {
     const fd = new FormData();
     fd.append("image", prep.file);
+    if (extraFormFields && typeof extraFormFields === "object") {
+      for (const [key, val] of Object.entries(extraFormFields)) {
+        if (val != null) fd.append(key, String(val));
+      }
+    }
     const res = await fetch(url, {
       method: "POST",
       credentials: "include",
       body: fd,
     });
-    const data = await res.json();
+    let data;
+    try {
+      data = await res.json();
+    } catch {
+      return { success: false, error: res.ok ? "Invalid server response." : `Upload failed (${res.status}).` };
+    }
+    if (!res.ok && data?.success !== false) {
+      return { success: false, error: data?.error ?? `Upload failed (${res.status}).` };
+    }
     return data;
   } catch {
     return { success: false, error: "Network error while uploading." };

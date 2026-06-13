@@ -1,6 +1,7 @@
 "use client";
 
 import { useCustomer } from "@/context/CustomerContext";
+import { useCustomerLocale } from "@/context/CustomerLocaleContext";
 import { useRestaurantSlug } from "@/hooks/useRestaurantSlug";
 import { formatCustomerMoney } from "@/lib/customerCurrency";
 import { motion } from "framer-motion";
@@ -11,12 +12,6 @@ import { useParams, useRouter } from "next/navigation";
 import { useLiveRefresh } from "@/hooks/useLiveRefresh";
 import { useCallback, useEffect, useState } from "react";
 
-function formatWhen(iso) {
-  if (!iso) return "—";
-  try { return new Date(iso).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" }); }
-  catch { return "—"; }
-}
-
 const TIMELINE_ICONS = { "✅": CheckCircle2, "⏳": Clock, "👨‍🍳": Package, "🚀": Truck, "🎉": Star };
 
 export default function CustomerOrderDetailPage() {
@@ -24,6 +19,7 @@ export default function CustomerOrderDetailPage() {
   const params = useParams();
   const id = params?.id;
   const { authUser, authLoading } = useCustomer();
+  const { formatDateTime } = useCustomerLocale();
   const { link } = useRestaurantSlug();
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -111,7 +107,7 @@ export default function CustomerOrderDetailPage() {
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-wider text-customer-muted">Order</p>
                   <h1 className="font-poppins text-xl font-bold text-customer-text">{order.orderId}</h1>
-                  <p className="mt-1 text-sm text-customer-muted">{formatWhen(order.createdAt)}</p>
+                  <p className="mt-1 text-sm text-customer-muted">{formatDateTime(order.createdAt)}</p>
                 </div>
                 <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold ${order.chipClass ?? "bg-[#6B7280]/10 text-customer-muted"}`}>
                   <span>{order.statusEmoji}</span> {order.statusLabel}

@@ -35,9 +35,9 @@ export default function SettingsFormSection({
         />
       ) : (
         <div className="mb-5">
-          <h2 className={`text-lg font-semibold ${adminSurface.title}`}>{panelTitle}</h2>
+          <h2 className={`break-words text-lg font-semibold ${adminSurface.title}`}>{panelTitle}</h2>
           {panelDescription ? (
-            <p className={`mt-1 text-sm ${adminSurface.muted}`}>{panelDescription}</p>
+            <p className={`mt-1 break-words text-sm ${adminSurface.muted}`}>{panelDescription}</p>
           ) : null}
         </div>
       )}

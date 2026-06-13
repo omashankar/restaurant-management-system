@@ -63,7 +63,7 @@ export default function InventoryFormModal({
         </div>
       }
     >
-      <div className="space-y-4">
+      <div className="min-w-0 space-y-4">
         <div>
           <label className="mb-1 block text-xs font-medium admin-surface-muted">
             Name

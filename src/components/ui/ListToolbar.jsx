@@ -10,18 +10,20 @@ export default function ListToolbar({
   endSlot,
 }) {
   return (
-    <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
+    <div className="flex min-w-0 flex-col gap-3 xl:flex-row xl:items-center">
       <SearchField
-        className="min-w-0 w-full lg:max-w-md lg:shrink-0"
+        className="min-w-0 w-full xl:max-w-md xl:shrink-0"
         value={search}
         onChange={(e) => onSearchChange(e.target.value)}
         placeholder={searchPlaceholder}
         inputClassName="focus-ra-primary"
       />
       {filterSlot || endSlot ? (
-        <div className="flex min-w-0 w-full flex-wrap items-center gap-2 lg:ml-auto lg:w-auto lg:flex-nowrap lg:justify-end">
+        <div className="flex min-w-0 w-full flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center xl:ml-auto xl:w-auto xl:flex-nowrap xl:justify-end">
           {filterSlot}
-          {endSlot}
+          {endSlot ? (
+            <div className="w-full shrink-0 sm:ml-auto sm:w-auto xl:ml-2">{endSlot}</div>
+          ) : null}
         </div>
       ) : null}
     </div>

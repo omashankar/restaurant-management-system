@@ -1,6 +1,7 @@
 "use client";
 
 import { useCustomer } from "@/context/CustomerContext";
+import { useCustomerLocale } from "@/context/CustomerLocaleContext";
 import { useRestaurantSlug } from "@/hooks/useRestaurantSlug";
 import { formatCustomerMoney } from "@/lib/customerCurrency";
 import { motion, AnimatePresence } from "framer-motion";
@@ -22,18 +23,13 @@ function displayName(u) {
   return u.phone || "Customer";
 }
 
-function formatDate(iso) {
-  if (!iso) return "—";
-  try { return new Date(iso).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" }); }
-  catch { return "—"; }
-}
-
 const VALID_TABS = new Set(["orders", "bookings", "favorites", "profile"]);
 
 function CustomerDashboardContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { authUser, authLoading, refreshAuth, logoutCustomer, showToast, cart } = useCustomer();
+  const { formatDateTime, formatReservationSlot } = useCustomerLocale();
   const { link } = useRestaurantSlug();
   const [orders, setOrders] = useState([]);
   const [bookings, setBookings] = useState([]);
@@ -271,7 +267,7 @@ function CustomerDashboardContent() {
                               {o.statusEmoji} {o.statusLabel ?? o.status}
                             </span>
                           </div>
-                          <p className="mt-0.5 text-xs text-customer-muted">{formatDate(o.createdAt)}</p>
+                          <p className="mt-0.5 text-xs text-customer-muted">{formatDateTime(o.createdAt)}</p>
                         </div>
                         <span className="shrink-0 font-poppins font-bold text-customer-text">
                           {formatCustomerMoney(Number(o.total ?? 0))}
@@ -319,7 +315,7 @@ function CustomerDashboardContent() {
                   {bookings.slice(0, 12).map((b) => (
                     <li key={b.id} className="flex items-start justify-between gap-3 px-5 py-4">
                       <div>
-                        <p className="font-poppins font-semibold text-customer-text">{b.date} at {b.time}</p>
+                        <p className="font-poppins font-semibold text-customer-text">{formatReservationSlot(b.date, b.time)}</p>
                         <p className="mt-0.5 text-xs text-customer-muted">Table {b.tableNumber || "—"} · {b.guests} guests · <span className="capitalize">{b.status}</span></p>
                       </div>
                       {b.status !== "cancelled" && b.status !== "completed" && (

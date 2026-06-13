@@ -1,5 +1,6 @@
 "use client";
 
+import { raPageRefreshBtnCls } from "@/config/restaurantAdminTheme";
 import SuperAdminPageSkeleton from "@/components/super-admin/SuperAdminPageSkeleton";
 import { saIconBadgeCls, saSpinnerCls } from "@/config/superAdminTheme";
 import { useToast } from "@/hooks/useToast";
@@ -175,29 +176,38 @@ export default function SuperAdminAnalyticsPage() {
   const ov = data?.overview ?? {};
 
   return (
-    <div className="min-w-0 w-full max-w-full space-y-6 overflow-x-hidden">
+    <div className="min-w-0 w-full max-w-full space-y-6 overflow-x-hidden sm:space-y-10">
 
       {/* ── Header ── */}
       <div className="flex min-w-0 flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div className="flex min-w-0 items-start gap-3">
-          <span className={`mt-1 shrink-0 ${saIconBadgeCls}`}>
+          <span className={`mt-1 flex shrink-0 items-center justify-center ${saIconBadgeCls}`}>
             <BarChart3 className="size-5" />
           </span>
           <div className="min-w-0">
-            <h1 className="admin-page-title break-words text-2xl font-semibold tracking-tight">Analytics</h1>
+            <h1 className="admin-page-title break-words text-xl font-semibold tracking-tight sm:text-2xl">Analytics</h1>
             <p className="admin-page-desc mt-1 text-sm">Platform-wide performance and growth metrics.</p>
           </div>
         </div>
+        <div className="admin-page-header-actions">
         <button
           type="button"
           onClick={fetchAnalytics}
           disabled={loading}
-          className="inline-flex w-full cursor-pointer items-center justify-center gap-1.5 rounded-xl border admin-shell-border px-3 py-2.5 text-sm font-medium text-zinc-400 transition-colors hover:border-zinc-500 hover:admin-shell-text disabled:opacity-50 sm:w-auto"
+          aria-label="Refresh analytics"
+          className={raPageRefreshBtnCls}
         >
           <RefreshCw className={`size-4 ${loading ? saSpinnerCls : ""}`} />
           Refresh
         </button>
+        </div>
       </div>
+
+      {loadError && (
+        <div className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-400">
+          {loadError}
+        </div>
+      )}
 
       {/* ── Skeleton ── */}
       {loading && !data && (
@@ -207,16 +217,16 @@ export default function SuperAdminAnalyticsPage() {
             <div className="h-56 animate-pulse rounded-2xl border border-sa-primary-10 admin-surface-card" />
             <div className="h-56 animate-pulse rounded-2xl border border-sa-primary-10 admin-surface-card" />
           </div>
+          <div className="grid min-w-0 grid-cols-1 gap-4 lg:grid-cols-3">
+            <div className="h-48 animate-pulse rounded-2xl border border-sa-primary-10 admin-surface-card" />
+            <div className="h-48 animate-pulse rounded-2xl border border-sa-primary-10 admin-surface-card" />
+            <div className="h-48 animate-pulse rounded-2xl border border-sa-primary-10 admin-surface-card" />
+          </div>
         </div>
       )}
 
       {data && (
         <>
-          {loadError ? (
-            <div className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-400">
-              {loadError}
-            </div>
-          ) : null}
           {/* ── Overview stat cards ── */}
           <div className="grid min-w-0 grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <StatCard

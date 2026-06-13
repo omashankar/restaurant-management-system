@@ -1,6 +1,8 @@
 /**
  * POST /api/printer-settings/print — send invoice or KOT to a network printer (ESC/POS)
  */
+import { EMPTY_SETTINGS } from "@/config/settingsConfig";
+import { normalizeLocalePrefs } from "@/lib/localeFormat";
 import { withTenant } from "@/lib/tenantDb";
 import {
   buildEscPosInvoice,
@@ -16,6 +18,15 @@ export const POST = withTenant(
     const printer = sanitizePrinter(body.printer ?? {});
     const kind = body.kind === "kot" ? "kot" : "invoice";
     const restaurantName = String(body.restaurantName ?? "Restaurant").trim() || "Restaurant";
+    const settingsDoc = await db.collection("restaurant_settings").findOne(
+      { restaurantId },
+      { projection: { general: 1 } }
+    );
+    const localePrefs = normalizeLocalePrefs({
+      dateFormat: settingsDoc?.general?.dateFormat,
+      timeFormat: settingsDoc?.general?.timeFormat,
+      timezone: settingsDoc?.general?.timezone ?? EMPTY_SETTINGS.general.timezone,
+    });
 
     if (printer.type !== "network") {
       return Response.json({ success: false, error: "Only network printers support server-side printing." }, { status: 400 });
@@ -33,9 +44,14 @@ export const POST = withTenant(
         customer: body.order?.customer,
         kitchenRouting: body.kitchenRouting ?? {},
         paperSize: printer.paperSize,
+        localePrefs,
       });
     } else {
-      data = buildEscPosInvoice(body.order ?? {}, { restaurantName, paperSize: printer.paperSize });
+      data = buildEscPosInvoice(body.order ?? {}, {
+        restaurantName,
+        paperSize: printer.paperSize,
+        localePrefs,
+      });
     }
 
     try {

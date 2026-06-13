@@ -1,5 +1,6 @@
 "use client";
 
+import { raPageRefreshBtnCls } from "@/config/restaurantAdminTheme";
 import SuperAdminPageSkeleton from "@/components/super-admin/SuperAdminPageSkeleton";
 import { saIconBadgeCls, saSpinnerCls } from "@/config/superAdminTheme";
 import SearchField from "@/components/ui/SearchField";
@@ -14,11 +15,12 @@ import {
   AdminTableTd,
   AdminTableTh,
 } from "@/components/ui/AdminTable";
+import { useSuperAdminLocale } from "@/context/SuperAdminLocaleContext";
 import { formatSaMoney } from "@/lib/formatSaMoney";
 import { useToast } from "@/hooks/useToast";
 import {
   CheckCircle2,
-  Clock, DollarSign, Download, FileText, RefreshCw, Search, XCircle,
+  Clock, DollarSign, Download, FileText, RefreshCw, XCircle,
 } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
@@ -42,12 +44,8 @@ const STATUSES = ["paid", "pending", "failed", "refunded"];
 const filterSelectCls =
   "cursor-pointer w-full min-w-0 rounded-xl border admin-shell-border bg-[var(--admin-control)] px-3 py-2.5 text-sm admin-shell-text outline-none focus-sa-primary sm:w-auto sm:min-w-[9.5rem] sm:shrink-0";
 
-function formatPaymentDate(value) {
-  if (!value) return "—";
-  return new Date(value).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
-}
-
 export default function PaymentsPage() {
+  const { formatDate } = useSuperAdminLocale();
   const [activeTab, setActiveTab] = useState("overview");
   const [payments, setPayments]   = useState([]);
   const [summary, setSummary]     = useState({ totalRevenue: 0, paidCount: 0 });
@@ -132,11 +130,11 @@ export default function PaymentsPage() {
       {/* Header */}
       <div className="flex min-w-0 flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div className="flex min-w-0 items-start gap-3">
-          <span className={`mt-1 shrink-0 ${saIconBadgeCls}`}>
+          <span className={`mt-1 flex shrink-0 items-center justify-center ${saIconBadgeCls}`}>
             <DollarSign className="size-5" />
           </span>
           <div className="min-w-0">
-            <h1 className="admin-page-title break-words text-2xl font-semibold tracking-tight">Subscription Payments</h1>
+            <h1 className="admin-page-title break-words text-xl font-semibold tracking-tight sm:text-2xl">Subscription Payments</h1>
             <p className="admin-page-desc mt-1 text-sm">
               Money received when restaurants pay for a plan.{" "}
               <Link href="/super-admin/billing" className="text-indigo-400 hover:text-indigo-300 underline-offset-2 hover:underline">
@@ -145,8 +143,8 @@ export default function PaymentsPage() {
             </p>
           </div>
         </div>
-        <div className="flex w-full min-w-0 flex-col items-stretch gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:justify-end">
-          <div className="grid w-full grid-cols-3 gap-1 sm:flex sm:w-auto sm:gap-2">
+        <div className="admin-page-header-actions">
+          <div className="grid w-full min-w-0 grid-cols-3 gap-1 sm:flex sm:w-auto sm:gap-2">
             <button
               type="button"
               onClick={() => setActiveTab("overview")}
@@ -184,9 +182,11 @@ export default function PaymentsPage() {
           <button
             type="button"
             onClick={fetchPayments}
-            className="cursor-pointer inline-flex w-full shrink-0 items-center justify-center gap-1.5 rounded-xl border admin-shell-border px-3 py-2.5 text-sm font-medium text-zinc-400 transition-colors hover:border-zinc-500 hover:admin-shell-text sm:w-auto"
+            aria-label="Refresh payments"
+            className={raPageRefreshBtnCls}
           >
-            <RefreshCw className={`size-4 ${loading ? saSpinnerCls : ""}`} /> Refresh
+            <RefreshCw className={`size-4 ${loading ? saSpinnerCls : ""}`} />
+            <span className="sm:hidden">Refresh</span>
           </button>
         </div>
       </div>
@@ -200,21 +200,21 @@ export default function PaymentsPage() {
       {/* Summary cards */}
       {activeTab === "overview" && (
       <div className="grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-3">
-        <div className="min-w-0 rounded-2xl border border-sa-accent-20 bg-sa-accent-5 px-5 py-4">
+        <div className="min-w-0 rounded-2xl border border-sa-accent-20 bg-sa-accent-5 px-4 py-4 sm:px-5">
           <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500">Total Revenue</p>
-          <p className="mt-2 text-3xl font-bold tabular-nums text-sa-accent">
+          <p className="mt-2 break-words text-xl font-bold tabular-nums text-sa-accent sm:text-2xl lg:text-3xl">
             {formatSaMoney(summary.totalRevenue)}
           </p>
           <p className="mt-1 text-xs admin-surface-faint">{summary.paidCount} paid transactions</p>
         </div>
-        <div className="min-w-0 admin-surface-card px-5 py-4">
+        <div className="min-w-0 admin-surface-card px-4 py-4 sm:px-5">
           <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500">Total Transactions</p>
-          <p className="mt-2 text-3xl font-bold tabular-nums admin-shell-text">{pagination.total}</p>
+          <p className="mt-2 text-xl font-bold tabular-nums admin-shell-text sm:text-2xl lg:text-3xl">{pagination.total}</p>
           <p className="mt-1 text-xs admin-surface-faint">All statuses</p>
         </div>
-        <div className="min-w-0 rounded-2xl border border-amber-500/20 bg-amber-500/5 px-5 py-4">
+        <div className="min-w-0 rounded-2xl border border-amber-500/20 bg-amber-500/5 px-4 py-4 sm:px-5">
           <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500">Showing</p>
-          <p className="mt-2 text-3xl font-bold tabular-nums text-amber-400">{payments.length}</p>
+          <p className="mt-2 text-xl font-bold tabular-nums text-amber-400 sm:text-2xl lg:text-3xl">{payments.length}</p>
           <p className="mt-1 text-xs admin-surface-faint">Page {pagination.page} of {pagination.pages}</p>
         </div>
       </div>
@@ -278,7 +278,7 @@ export default function PaymentsPage() {
                   </span>
                   <span className="text-xs capitalize admin-surface-muted">{p.method}</span>
                 </div>
-                <p className="mt-2 text-[10px] admin-surface-faint">{formatPaymentDate(p.createdAt)}</p>
+                <p className="mt-2 text-[10px] admin-surface-faint">{formatDate(p.createdAt)}</p>
               </div>
             ))}
           </div>
@@ -300,11 +300,13 @@ export default function PaymentsPage() {
                 {payments.map((p) => (
                   <AdminTableRow key={p.id}>
                     <AdminTableTd>
-                      <p className="font-mono text-xs admin-surface-muted">{p.invoiceId}</p>
+                      <p className="break-all font-mono text-xs admin-surface-muted">{p.invoiceId}</p>
                     </AdminTableTd>
                     <AdminTableTd>
-                      <p className="font-medium admin-shell-text">{p.restaurantName}</p>
-                      <p className="text-xs admin-surface-muted">{p.adminEmail}</p>
+                      <div className="min-w-0">
+                        <p className="truncate font-medium admin-shell-text">{p.restaurantName}</p>
+                        <p className="truncate text-xs admin-surface-muted">{p.adminEmail}</p>
+                      </div>
                     </AdminTableTd>
                     <AdminTableTd>
                       <span className="inline-flex rounded-full bg-[var(--admin-hover-strong)] px-2.5 py-0.5 text-xs font-semibold capitalize admin-surface-body">
@@ -325,8 +327,8 @@ export default function PaymentsPage() {
                     <AdminTableTd>
                       <span className="text-xs capitalize admin-surface-muted">{p.method}</span>
                     </AdminTableTd>
-                    <AdminTableTd className="text-xs admin-surface-faint">
-                      {formatPaymentDate(p.createdAt)}
+                    <AdminTableTd className="whitespace-nowrap text-xs admin-surface-faint">
+                      {formatDate(p.createdAt)}
                     </AdminTableTd>
                   </AdminTableRow>
                 ))}
@@ -382,7 +384,7 @@ export default function PaymentsPage() {
                     {p.planName || p.plan} {p.billingCycle ? `(${p.billingCycle})` : ""}
                   </span>
                   <span className="text-[10px] admin-surface-faint">
-                    Paid {formatPaymentDate(p.paidAt || p.createdAt)}
+                    Paid {formatDate(p.paidAt || p.createdAt)}
                   </span>
                 </div>
                 <button
@@ -414,11 +416,13 @@ export default function PaymentsPage() {
                 {invoiceRows.map((p) => (
                   <AdminTableRow key={p.id}>
                     <AdminTableTd>
-                      <p className="font-mono text-xs text-zinc-400">{p.invoiceId}</p>
+                      <p className="break-all font-mono text-xs text-zinc-400">{p.invoiceId}</p>
                     </AdminTableTd>
                     <AdminTableTd>
-                      <p className="font-medium admin-shell-text">{p.restaurantName}</p>
-                      <p className="text-xs admin-surface-muted">{p.adminEmail}</p>
+                      <div className="min-w-0">
+                        <p className="truncate font-medium admin-shell-text">{p.restaurantName}</p>
+                        <p className="truncate text-xs admin-surface-muted">{p.adminEmail}</p>
+                      </div>
                     </AdminTableTd>
                     <AdminTableTd>
                       <span className="inline-flex rounded-full bg-[var(--admin-hover-strong)] px-2.5 py-0.5 text-xs font-semibold capitalize admin-surface-body">
@@ -430,8 +434,8 @@ export default function PaymentsPage() {
                         {formatSaMoney(p.amount, p.currency)}
                       </p>
                     </AdminTableTd>
-                    <AdminTableTd className="text-xs admin-surface-faint">
-                      {formatPaymentDate(p.paidAt || p.createdAt)}
+                    <AdminTableTd className="whitespace-nowrap text-xs admin-surface-faint">
+                      {formatDate(p.paidAt || p.createdAt)}
                     </AdminTableTd>
                     <AdminTableTd align="right">
                       <button

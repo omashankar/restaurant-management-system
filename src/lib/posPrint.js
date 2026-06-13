@@ -2,6 +2,12 @@
  * Browser print helpers for POS (USB / Bluetooth / fallback).
  * Network thermal printers use /api/printer-settings/print from the server.
  */
+import {
+  DEFAULT_LOCALE_PREFS,
+  formatAdminDateTime,
+  formatTimeFromDate,
+  normalizeLocalePrefs,
+} from "@/lib/localeFormat";
 
 export function paperWidthPx(paperSize) {
   return paperSize === "58mm" ? 220 : 300;
@@ -51,10 +57,16 @@ export function openPrintWindow(html, paperSize = "80mm") {
   return true;
 }
 
-export function buildInvoiceHtml(order, { restaurantName = "Restaurant", paperSize = "80mm", currency } = {}) {
+export function buildInvoiceHtml(order, {
+  restaurantName = "Restaurant",
+  paperSize = "80mm",
+  currency,
+  localePrefs,
+} = {}) {
   const sym = currency ?? order.currency ?? "INR";
   const width = paperWidthPx(paperSize);
-  const date = new Date().toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" });
+  const prefs = normalizeLocalePrefs(localePrefs);
+  const date = formatAdminDateTime(new Date(), prefs);
   const rows = (order.items ?? [])
     .map(
       (i) =>
@@ -113,8 +125,18 @@ export function buildInvoiceHtml(order, { restaurantName = "Restaurant", paperSi
     </body></html>`;
 }
 
-export function buildKotHtml({ orderId, orderType, tableNumber, customer, kitchenRouting, paperSize = "80mm" }) {
+export function buildKotHtml({
+  orderId,
+  orderType,
+  tableNumber,
+  customer,
+  kitchenRouting,
+  paperSize = "80mm",
+  localePrefs,
+}) {
   const width = paperWidthPx(paperSize);
+  const prefs = normalizeLocalePrefs(localePrefs);
+  const placedAt = formatTimeFromDate(new Date(), prefs);
   const sections = Object.entries(kitchenRouting ?? {})
     .map(([k, items]) => {
       const rows = (items ?? [])
@@ -137,7 +159,7 @@ export function buildKotHtml({ orderId, orderType, tableNumber, customer, kitche
       @media print { @page { margin: 0; } }
     </style></head><body>
       <h1>KITCHEN ORDER</h1>
-      <div class="meta">Order: ${orderId} · ${orderType}${tableNumber ? ` · Table ${tableNumber}` : ""}<br/>${customer ?? ""} · ${new Date().toLocaleTimeString()}</div>
+      <div class="meta">Order: ${orderId} · ${orderType}${tableNumber ? ` · Table ${tableNumber}` : ""}<br/>${customer ?? ""} · ${placedAt}</div>
       ${sections}
     </body></html>`;
 }
@@ -156,6 +178,7 @@ export async function triggerPosAutoPrint({
   restaurantName = "Restaurant",
   lastOrder,
   kitchenRouting = {},
+  localePrefs = DEFAULT_LOCALE_PREFS,
 }) {
   const active = printers.filter((p) => p.autoPrint);
   if (!active.length || !lastOrder) return;
@@ -188,6 +211,7 @@ export async function triggerPosAutoPrint({
       restaurantName,
       paperSize: browserPrinter.paperSize,
       currency: lastOrder.currency,
+      localePrefs,
     });
   } else if (browserPrinter.printKot) {
     printKotInBrowser(
@@ -197,6 +221,7 @@ export async function triggerPosAutoPrint({
         tableNumber: lastOrder.tableNumber,
         customer: lastOrder.customer,
         kitchenRouting,
+        localePrefs,
       },
       browserPrinter.paperSize
     );
