@@ -130,6 +130,11 @@ export function CustomerProvider({ children }) {
     }
   }, []);
 
+  const patchAuthUser = useCallback((patch) => {
+    if (!patch || typeof patch !== "object") return;
+    setAuthUser((prev) => (prev ? { ...prev, ...patch } : prev));
+  }, []);
+
   const logoutCustomer = useCallback(async () => {
     await fetch("/api/customer/auth/logout", { method: "POST" }).catch(() => null);
     setAuthUser(null);
@@ -174,6 +179,7 @@ export function CustomerProvider({ children }) {
       authUser,
       authLoading,
       refreshAuth,
+      patchAuthUser,
       logoutCustomer,
     }),
     [
@@ -194,6 +200,7 @@ export function CustomerProvider({ children }) {
       authUser,
       authLoading,
       refreshAuth,
+      patchAuthUser,
       logoutCustomer,
     ]
   );

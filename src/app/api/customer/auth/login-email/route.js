@@ -1,6 +1,7 @@
 import clientPromise from "@/lib/mongodb";
 import { loginLimiter, getClientIp } from "@/lib/rateLimit";
 import { setCustomerTokenCookie, signCustomerToken } from "@/lib/customerAuth";
+import { serializeCustomerUser } from "@/lib/customerAccountSerialize";
 import bcrypt from "bcryptjs";
 
 export async function POST(request) {
@@ -46,12 +47,7 @@ export async function POST(request) {
     });
     const res = Response.json({
       success: true,
-      user: {
-        id: String(account._id),
-        phone: account.phone ?? "",
-        email: account.email ?? "",
-        name: account.name ?? "",
-      },
+      user: serializeCustomerUser(account),
     });
     return setCustomerTokenCookie(res, token, true);
   } catch (err) {

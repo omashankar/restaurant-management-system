@@ -5,8 +5,13 @@ import { useRestaurantSlug } from "@/hooks/useRestaurantSlug";
 import { useRestaurantInfo } from "@/hooks/useRestaurantInfo";
 import { useRestaurantCms } from "@/hooks/useRestaurantCms";
 import { resolveHeaderMenu, resolveSiteSocialLinks, resolveTheme } from "@/lib/resolveLayoutTheme";
+import CustomerAccountMenu, {
+  CustomerAccountLinks,
+  CustomerAccountMobileHeader,
+} from "@/components/customer/CustomerAccountMenu";
 import RestaurantLogo from "@/components/customer/RestaurantLogo";
 import SocialMediaIcons from "@/components/customer/SocialMediaIcons";
+import { customerClasses } from "@/lib/customerTheme";
 import SearchModal from "@/components/customer/SearchModal";
 import ThemeSwitcher from "@/components/customer/theme/ThemeSwitcher";
 import { useCustomerTheme } from "@/context/CustomerThemeContext";
@@ -14,8 +19,8 @@ import { useCustomerMotion } from "@/hooks/useCustomerMotion";
 import { useCustomerBrandLogos } from "@/hooks/useCustomerBrandLogos";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  LogOut, Menu, MapPin, Moon, Search, Sun,
-  ShoppingCart, UserRound, X,
+  LogIn, Menu, MapPin, Moon, Search, Sun,
+  ShoppingCart, X,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -25,7 +30,7 @@ const iconBtn =
   "flex size-11 min-h-[44px] min-w-[44px] shrink-0 cursor-pointer items-center justify-center rounded-full transition-colors hover:bg-[var(--customer-primary-soft)]";
 
 export default function CustomerNavbar() {
-  const { cart, setOrderTypeModalOpen, setCartOpen, authUser, logoutCustomer } = useCustomer();
+  const { cart, setOrderTypeModalOpen, setCartOpen, authUser } = useCustomer();
   const pathname = usePathname();
   const { link, prefix } = useRestaurantSlug();
   const { info } = useRestaurantInfo();
@@ -230,28 +235,16 @@ export default function CustomerNavbar() {
               <ThemeSwitcher className="hidden lg:flex" />
             )}
 
-            {/* Account — tablet/desktop main bar */}
+            {/* Account — desktop: single entry to login/register tabs */}
             {authUser ? (
-              <div className="hidden items-center gap-0.5 lg:flex">
-                <Link href={link("/account/dashboard")}
-                  className={`${iconBtn} hover:text-customer-primary`}
-                  style={{ color: headerIcon }}
-                  aria-label="Account">
-                  <UserRound className="size-4.5" />
-                </Link>
-                <button type="button" onClick={logoutCustomer}
-                  className={`${iconBtn} hover:bg-red-500/10 hover:text-red-500`}
-                  style={{ color: headerIcon }}
-                  aria-label="Logout">
-                  <LogOut className="size-4" />
-                </button>
-              </div>
+              <CustomerAccountMenu className="hidden lg:block" />
             ) : (
-              <Link href={link("/account/login")}
-                className={`${iconBtn} hidden hover:text-customer-primary lg:flex`}
-                style={{ color: headerIcon }}
-                aria-label="Login">
-                <UserRound className="size-4.5" />
+              <Link
+                href={link("/account/login")}
+                className={`${customerClasses.btnSecondary} hidden min-h-[40px] items-center gap-1.5 px-4 py-2 text-xs font-bold lg:inline-flex`}
+              >
+                <LogIn className="size-3.5" aria-hidden />
+                Login
               </Link>
             )}
 
@@ -344,34 +337,23 @@ export default function CustomerNavbar() {
             </div>
 
             <div className="flex flex-1 flex-col overflow-y-auto overscroll-contain px-4 py-3 sm:px-5">
-              <div className="mb-3 flex items-center gap-2 rounded-2xl border border-[var(--customer-border)] bg-[var(--customer-surface)] p-2">
+              <div className="mb-3 rounded-2xl border border-[var(--customer-border)] bg-[var(--customer-surface)] p-2">
                 {authUser ? (
                   <>
-                    <Link
-                      href={link("/account/dashboard")}
-                      onClick={() => setOpen(false)}
-                      className="flex min-h-[44px] flex-1 items-center justify-center gap-2 rounded-xl bg-customer-primary/8 px-3 text-sm font-semibold text-customer-primary"
-                    >
-                      <UserRound className="size-4" />
-                      My Account
-                    </Link>
-                    <button
-                      type="button"
-                      onClick={() => { setOpen(false); logoutCustomer(); }}
-                      className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-xl border border-red-500/30 text-red-500"
-                      aria-label="Logout"
-                    >
-                      <LogOut className="size-4" />
-                    </button>
+                    <CustomerAccountMobileHeader
+                      user={authUser}
+                      onNavigate={() => setOpen(false)}
+                    />
+                    <CustomerAccountLinks onNavigate={() => setOpen(false)} className="mt-1" />
                   </>
                 ) : (
                   <Link
                     href={link("/account/login")}
                     onClick={() => setOpen(false)}
-                    className="flex min-h-[44px] w-full items-center justify-center gap-2 rounded-xl bg-customer-primary/8 px-3 text-sm font-semibold text-customer-primary"
+                    className={`${customerClasses.btnSecondary} flex min-h-[44px] w-full items-center justify-center gap-1.5 text-sm font-bold`}
                   >
-                    <UserRound className="size-4" />
-                    Login / Sign up
+                    <LogIn className="size-4" aria-hidden />
+                    Login
                   </Link>
                 )}
               </div>
