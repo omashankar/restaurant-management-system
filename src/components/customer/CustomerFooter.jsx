@@ -1,5 +1,6 @@
 "use client";
 
+import { useCustomerLocale } from "@/context/CustomerLocaleContext";
 import { useRestaurantSlug } from "@/hooks/useRestaurantSlug";
 import { useRestaurantInfo } from "@/hooks/useRestaurantInfo";
 import { useRestaurantCms } from "@/hooks/useRestaurantCms";
@@ -17,14 +18,22 @@ import {
   Phone,
 } from "lucide-react";
 import Link from "next/link";
+import { useMemo } from "react";
 import { customerClasses } from "@/lib/customerTheme";
 import { luminance } from "@/theme/palette";
 
 export default function CustomerFooter() {
   const { link } = useRestaurantSlug();
   const { info } = useRestaurantInfo();
+  const { formatTimeSlot, formatWeekdayLong } = useCustomerLocale();
   const { content: cms } = useRestaurantCms();
   const { isDark } = useCustomerTheme();
+  const formatHoursRange = (open, close) => {
+    if (!open || !close) return "—";
+    return `${formatTimeSlot(open)} – ${formatTimeSlot(close)}`;
+  };
+  const todayName = useMemo(() => formatWeekdayLong(), [formatWeekdayLong]);
+  const todayHours = info.openingHours?.find((h) => h.day === todayName);
   const theme = resolveTheme(cms.theme);
   const footerCfg = theme.footer ?? {};
   const footerColors = footerCfg.colors ?? {};
@@ -132,7 +141,9 @@ export default function CustomerFooter() {
                       {h.closed ? (
                         <span className="text-xs font-semibold text-[color-mix(in_srgb,#ef4444_85%,var(--customer-footer-text))]">Closed</span>
                       ) : (
-                        <span className="ct-footer-heading font-medium sm:text-right">{h.openTime} – {h.closeTime}</span>
+                        <span className="ct-footer-heading font-medium tabular-nums sm:text-right">
+                          {formatHoursRange(h.openTime, h.closeTime)}
+                        </span>
                       )}
                     </div>
                   ))
@@ -156,7 +167,11 @@ export default function CustomerFooter() {
               >
                 <span className={`size-2 ${info.isOpenToday ? `${customerClasses.statusDotOpen} animate-pulse` : customerClasses.statusDotClosed}`} />
                 <span className="text-xs font-semibold">
-                  {info.isOpenToday ? `Open Now · ${info.todayLabel ?? ""}` : "Closed Today"}
+                  {info.isOpenToday && todayHours && !todayHours.closed
+                    ? `Open Now · ${formatHoursRange(todayHours.openTime, todayHours.closeTime)}`
+                    : info.isOpenToday
+                      ? `Open Now · ${info.todayLabel ?? ""}`
+                      : "Closed Today"}
                 </span>
               </div>
             </div>
