@@ -85,9 +85,9 @@ export default function CustomerOrderDetailPage() {
     <div className="mx-auto max-w-lg px-4 py-8 sm:px-6">
       {/* Back */}
       <motion.div initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }}>
-        <Link href={link("/account/dashboard")}
+        <Link href={link("/account/dashboard?section=orders")}
           className="mb-6 inline-flex items-center gap-1.5 text-sm font-medium text-customer-muted transition-colors hover:text-customer-primary">
-          <ArrowLeft className="size-4" /> Back to Dashboard
+          <ArrowLeft className="size-4" /> Back to My Orders
         </Link>
       </motion.div>
 

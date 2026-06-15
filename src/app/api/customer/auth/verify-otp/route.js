@@ -7,6 +7,7 @@ import {
   setCustomerTokenCookie,
   signCustomerToken,
 } from "@/lib/customerAuth";
+import { serializeCustomerUser } from "@/lib/customerAccountSerialize";
 import { normalizePhoneForOtp } from "@/lib/phoneUtils";
 import bcrypt from "bcryptjs";
 
@@ -69,12 +70,7 @@ export async function POST(request) {
 
     const res = Response.json({
       success: true,
-      user: {
-        id: String(account._id),
-        phone: account.phone,
-        email: account.email ?? null,
-        name: account.name ?? "",
-      },
+      user: serializeCustomerUser(account),
     });
     return setCustomerTokenCookie(res, token, true);
   } catch (err) {

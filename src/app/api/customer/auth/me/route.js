@@ -1,5 +1,6 @@
 import clientPromise from "@/lib/mongodb";
 import { getCustomerTokenFromRequest, verifyCustomerToken } from "@/lib/customerAuth";
+import { serializeCustomerUser } from "@/lib/customerAccountSerialize";
 import { ObjectId } from "mongodb";
 
 export async function GET(request) {
@@ -24,13 +25,7 @@ export async function GET(request) {
 
     return Response.json({
       success: true,
-      user: {
-        id: String(account._id),
-        name: account.name ?? "",
-        phone: account.phone ?? "",
-        email: account.email ?? "",
-        createdAt: account.createdAt ?? null,
-      },
+      user: serializeCustomerUser(account),
     });
   } catch (err) {
     console.error("customer.auth.me failed:", err.message);
@@ -56,6 +51,7 @@ export async function PATCH(request) {
 
   const nameRaw = body?.name !== undefined ? String(body.name).trim() : null;
   const emailRaw = body?.email !== undefined ? String(body.email).trim().toLowerCase() : null;
+  const addressRaw = body?.address !== undefined ? String(body.address).trim() : null;
 
   const updates = { updatedAt: new Date() };
   if (nameRaw !== null) {
@@ -69,6 +65,12 @@ export async function PATCH(request) {
       return Response.json({ success: false, error: "Invalid email address." }, { status: 400 });
     }
     updates.email = emailRaw || null;
+  }
+  if (addressRaw !== null) {
+    if (addressRaw.length > 500) {
+      return Response.json({ success: false, error: "Address is too long." }, { status: 400 });
+    }
+    updates.address = addressRaw || null;
   }
 
   if (Object.keys(updates).length <= 1) {
@@ -93,13 +95,7 @@ export async function PATCH(request) {
 
     return Response.json({
       success: true,
-      user: {
-        id: String(account._id),
-        name: account.name ?? "",
-        phone: account.phone ?? "",
-        email: account.email ?? "",
-        createdAt: account.createdAt ?? null,
-      },
+      user: serializeCustomerUser(account),
     });
   } catch (err) {
     console.error("customer.auth.me PATCH failed:", err.message);
