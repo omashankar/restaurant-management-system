@@ -66,13 +66,32 @@ const PUBLIC_API_PREFIXES = [
 ];
 
 const MAINTENANCE_EXEMPT_PREFIXES = [
-  "/super-admin",
-  "/api/super-admin",
-  "/api/platform",
   "/maintenance",
   "/login",
+  "/signup",
+  "/forgot-password",
+  "/reset-password",
+  "/verify-email",
   "/_next",
 ];
+
+/** Customer storefront only — admin/staff routes stay open during maintenance. */
+function isCustomerStorefrontPath(pathname) {
+  if (pathname === "/") return true;
+  if (pathname === "/r" || pathname.startsWith("/r/")) return true;
+  if (pathname === "/home" || pathname.startsWith("/home/")) return true;
+  if (pathname === "/order" || pathname.startsWith("/order/")) return true;
+  if (pathname === "/account" || pathname.startsWith("/account/")) return true;
+  if (pathname === "/privacy" || pathname === "/terms") return true;
+  if (pathname.startsWith("/api/customer")) return true;
+  return false;
+}
+
+function isMaintenanceExempt(pathname) {
+  return MAINTENANCE_EXEMPT_PREFIXES.some(
+    (p) => pathname === p || pathname.startsWith(`${p}/`),
+  );
+}
 
 let _maintCache = { on: false, expires: 0 };
 
@@ -93,11 +112,26 @@ async function isMaintenanceMode(request) {
   }
 }
 
-function isMaintenanceExempt(pathname) {
-  return MAINTENANCE_EXEMPT_PREFIXES.some(
-    (p) => pathname === p || pathname.startsWith(`${p}/`),
-  );
+/** @returns {Promise<Response|null>} redirect/rewrite when customer traffic should see maintenance */
+async function maintenanceBlockResponse(request, pathname, { rewrite = false } = {}) {
+  if (isMaintenanceExempt(pathname)) return null;
+  if (!isCustomerStorefrontPath(pathname)) return null;
+
+  const maintenance = await isMaintenanceMode(request);
+  if (!maintenance) return null;
+
+  if (pathname.startsWith("/api/")) {
+    return Response.json(
+      { success: false, error: "Platform is under maintenance.", code: "MAINTENANCE" },
+      { status: 503 },
+    );
+  }
+
+  const url = request.nextUrl.clone();
+  url.pathname = "/maintenance";
+  return rewrite ? NextResponse.rewrite(url) : NextResponse.redirect(url);
 }
+
 const JWT_SECRET = process.env.JWT_SECRET ?? "dev-only-secret";
 
 function decodeBase64Url(input) {
@@ -173,37 +207,17 @@ export async function proxy(request) {
       httpOnly: false,
     });
 
-    // Maintenance applies to customer slug routes too
-    if (!isMaintenanceExempt(pathname)) {
-      const maintenance = await isMaintenanceMode(request);
-      if (maintenance) {
-        const url = request.nextUrl.clone();
-        url.pathname = "/maintenance";
-        return NextResponse.rewrite(url);
-      }
-    }
+    // Maintenance — customer slug routes only
+    const maintSlug = await maintenanceBlockResponse(request, pathname, { rewrite: true });
+    if (maintSlug) return maintSlug;
 
     return response;
   }
 
-  // ── Maintenance mode (platform-wide) ──
-  if (
-    !isMaintenanceExempt(pathname) &&
-    !pathname.includes(".") &&
-    !(pathname.startsWith("/api/") && PUBLIC_API_PREFIXES.some((p) => pathname.startsWith(p)))
-  ) {
-    const maintenance = await isMaintenanceMode(request);
-    if (maintenance) {
-      if (pathname.startsWith("/api/")) {
-        return Response.json(
-          { success: false, error: "Platform is under maintenance.", code: "MAINTENANCE" },
-          { status: 503 },
-        );
-      }
-      const url = request.nextUrl.clone();
-      url.pathname = "/maintenance";
-      return NextResponse.redirect(url);
-    }
+  // ── Maintenance mode (customer storefront only) ──
+  if (!pathname.includes(".")) {
+    const maint = await maintenanceBlockResponse(request, pathname);
+    if (maint) return maint;
   }
 
   // API routes are guarded inside each route handler via verifyToken/role checks.

@@ -198,12 +198,12 @@ export default function CustomerSitePage() {
       setLoading(true);
     }
     setLoadError(null);
-    try {
-      const [cmsRes, settingsRes] = await Promise.all([
+      try {
+        const [cmsRes, settingsRes] = await Promise.all([
         fetch("/api/restaurant-cms", { cache: "no-store" }),
         fetch("/api/settings", { cache: "no-store" }),
-      ]);
-      const [cmsData, settingsData] = await Promise.all([cmsRes.json(), settingsRes.json()]);
+        ]);
+        const [cmsData, settingsData] = await Promise.all([cmsRes.json(), settingsRes.json()]);
 
       if (!cmsRes.ok || !cmsData?.success) {
         const msg = cmsData?.error ?? "Failed to load site content.";
@@ -213,7 +213,7 @@ export default function CustomerSitePage() {
       }
 
       if (cmsData.content) {
-        const c = cmsData.content;
+          const c = cmsData.content;
         if (c.hero) {
           const merged = mergeCmsSection(DEFAULTS.hero, c.hero);
           setHero({
@@ -503,7 +503,7 @@ export default function CustomerSitePage() {
               Publish all drafts ({draftSections.length})
             </button>
           )}
-          {siteUrl && (
+        {siteUrl && (
             <a
               href={siteUrl}
               target="_blank"
@@ -511,8 +511,8 @@ export default function CustomerSitePage() {
               className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-[var(--admin-border-subtle)] bg-[var(--admin-surface)] px-4 py-2.5 text-sm font-medium admin-surface-body transition-colors hover:border-ra-primary-40 hover:text-ra-primary sm:w-auto"
             >
               <ExternalLink className="size-4" /> Visit website
-            </a>
-          )}
+          </a>
+        )}
         </div>
       </div>
 
@@ -683,7 +683,7 @@ export default function CustomerSitePage() {
                   onChange={(e) => setHero((p) => ({ ...p, badge: e.target.value }))}
                   className={inputCls}
                 />
-              </Field>
+            </Field>
               <Field label="Main heading *">
                 <textarea
                   rows={2}
@@ -722,8 +722,8 @@ export default function CustomerSitePage() {
                       onChange={(e) => setHero((p) => ({ ...p, searchButtonLabel: e.target.value }))}
                       className={inputCls}
                     />
-                  </Field>
-                </div>
+              </Field>
+            </div>
               )}
 
               <p className={`${CMS_SECTION_TITLE} pt-2`}>Quick tags</p>
@@ -761,7 +761,7 @@ export default function CustomerSitePage() {
                         className={inputCls}
                       />
                     </Field>
-                  </div>
+          </div>
                 ))}
 
               <p className={`${CMS_SECTION_TITLE} pt-2`}>Buttons</p>
@@ -823,7 +823,7 @@ export default function CustomerSitePage() {
                     enabled={Boolean(hero.showMenuDishOverlay)}
                     onToggle={() => setHero((p) => ({ ...p, showMenuDishOverlay: !p.showMenuDishOverlay }))}
                   />
-                </div>
+            </div>
                 <div className="min-w-0 space-y-3">
               <p className="text-xs admin-surface-muted">Three small images below the main hero</p>
               <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-3">
@@ -841,7 +841,7 @@ export default function CustomerSitePage() {
                       }
                       className={inputCls}
                     />
-                  </Field>
+            </Field>
                   <CmsImageField
                     label="Image"
                     value={thumb.imageUrl}
@@ -897,7 +897,7 @@ export default function CustomerSitePage() {
                       }
                       className={inputCls}
                     />
-                  </Field>
+              </Field>
                 </div>
               )}
 
@@ -961,9 +961,9 @@ export default function CustomerSitePage() {
                       onChange={(e) => setAnnouncement((p) => ({ ...p, textColor: e.target.value }))}
                       className={`${inputCls} min-w-0`}
                     />
-                  </div>
-                </Field>
-              </div>
+                </div>
+              </Field>
+            </div>
               <div className="grid gap-3 sm:grid-cols-2">
                 <Field label="Link URL (optional)">
                   <input
@@ -980,7 +980,7 @@ export default function CustomerSitePage() {
                     placeholder="Shop now"
                     className={inputCls}
                   />
-                </Field>
+            </Field>
               </div>
 
               {announcement.text?.trim() && (
@@ -1048,8 +1048,8 @@ export default function CustomerSitePage() {
                           className="rounded-lg p-1.5 admin-surface-faint hover:bg-red-500/10 hover:text-red-400 disabled:opacity-30"
                         >
                           <Trash2 className="size-4" />
-                        </button>
-                      </div>
+            </button>
+          </div>
                     </div>
 
                     <CmsImageField
@@ -1214,8 +1214,8 @@ export default function CustomerSitePage() {
                   placeholder="Our Story"
                   className={inputCls}
                 />
-              </Field>
-              <Field label="Description">
+            </Field>
+            <Field label="Description">
                 <textarea
                   rows={4}
                   value={about.description}
@@ -1238,7 +1238,7 @@ export default function CustomerSitePage() {
                   }
                   className={textareaCls}
                 />
-              </Field>
+            </Field>
 
               <p className={`${CMS_SECTION_TITLE} pt-2`}>Images</p>
               <div className={CMS_MEDIA_FORM_ROW}>
@@ -1392,7 +1392,7 @@ export default function CustomerSitePage() {
             />
           )}
 
-        </div>
+          </div>
       </div>
 
       {ToastUI}

@@ -1,9 +1,8 @@
 "use client";
 
-import { customerClasses, customerMotion, customerSectionBg } from "@/lib/customerTheme";
+import { customerClasses, customerSectionBg } from "@/lib/customerTheme";
+import { useCustomerMotion } from "@/hooks/useCustomerMotion";
 import { motion } from "framer-motion";
-
-const fadeUp = customerMotion.fadeUp;
 
 /**
  * Consistent home/marketing section shell — badge, title, subtitle, background.
@@ -17,10 +16,9 @@ export function CustomerSectionHeader({
   animated = true,
   className = "",
 }) {
+  const motionFx = useCustomerMotion();
   const Wrap = animated ? motion.div : "div";
-  const motionProps = animated
-    ? { variants: fadeUp, initial: "hidden", whileInView: "show", viewport: { once: true, amount: 0.2 } }
-    : {};
+  const motionProps = animated ? motionFx.scrollReveal : {};
 
   if (align === "split") {
     return (

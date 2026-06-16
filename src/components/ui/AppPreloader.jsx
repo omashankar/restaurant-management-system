@@ -32,6 +32,7 @@ export default function AppPreloader() {
   usePlatformConfig();
 
   if (isCustomerShell) return null;
+  if (pathname === "/maintenance") return null;
   if (isPublicMarketingShell(pathname)) return <LandingPreloader />;
 
   const ready = isSuperAdmin

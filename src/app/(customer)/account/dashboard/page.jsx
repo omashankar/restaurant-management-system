@@ -16,6 +16,7 @@ import {
   formatReservationStatusLabel,
 } from "@/lib/customerStatusStyles";
 import { customerClasses, customerPage } from "@/lib/customerTheme";
+import { useCustomerMotion } from "@/hooks/useCustomerMotion";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   Calendar,
@@ -256,6 +257,7 @@ function TransactionsPanel({ orders, walletBalance, rewardPoints, formatDateTime
 function CustomerDashboardContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const motionFx = useCustomerMotion();
   const { authUser, authLoading, refreshAuth, patchAuthUser, showToast, cart } = useCustomer();
   const { formatDateTime, formatReservationSlot } = useCustomerLocale();
   const { link } = useRestaurantSlug();
@@ -446,10 +448,7 @@ function CustomerDashboardContent() {
       <AnimatePresence mode="wait">
         <motion.div
           key={activeSection}
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -8 }}
-          transition={{ duration: 0.2 }}
+          {...motionFx.sectionFade}
           className="ct-account-content"
         >
           {activeSection === "profile" && (
@@ -635,7 +634,9 @@ function CustomerDashboardContent() {
                               {o.statusEmoji} {o.statusLabel ?? o.status}
                             </span>
                           </div>
-                          <p className="mt-0.5 text-xs text-customer-muted">{formatDateTime(o.createdAt)}</p>
+                          <p className="mt-0.5 text-xs text-customer-muted">
+                            {[o.orderTypeLabel, formatDateTime(o.createdAt)].filter(Boolean).join(" · ")}
+                          </p>
                         </div>
                         <span className="shrink-0 font-bold text-customer-text">
                           {formatCustomerMoney(Number(o.total ?? 0))}

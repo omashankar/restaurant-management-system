@@ -6,6 +6,7 @@ export default function ListToolbar({
   search,
   onSearchChange,
   searchPlaceholder = "Search…",
+  searchInputProps = {},
   filterSlot,
   endSlot,
 }) {
@@ -17,6 +18,7 @@ export default function ListToolbar({
         onChange={(e) => onSearchChange(e.target.value)}
         placeholder={searchPlaceholder}
         inputClassName="focus-ra-primary"
+        {...searchInputProps}
       />
       {filterSlot || endSlot ? (
         <div className="flex min-w-0 w-full flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center xl:ml-auto xl:w-auto xl:flex-nowrap xl:justify-end">

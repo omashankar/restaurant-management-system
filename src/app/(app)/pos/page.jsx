@@ -463,7 +463,10 @@ function PosPageContent() {
       if (e.key === "1") handleOrderTypeChange("dine-in");
       if (e.key === "2") handleOrderTypeChange("takeaway");
       if (e.key === "3") handleOrderTypeChange("delivery");
-      if (e.key === "/") { e.preventDefault(); document.querySelector("input[type='search']")?.focus(); }
+      if (e.key === "/") {
+        e.preventDefault();
+        document.querySelector("[data-pos-menu-search]")?.focus();
+      }
       if (e.key === "Escape") setCart([]);
       if (e.ctrlKey && e.key === "Enter") { e.preventDefault(); placeOrder(); }
     };
@@ -596,7 +599,10 @@ function PosPageContent() {
           </div>
         </section>
 
-        <section id="pos-order-summary" className="hidden min-w-0 scroll-mt-4 xl:col-span-3 xl:block">
+        <section
+          id="pos-order-summary"
+          className="hidden min-w-0 scroll-mt-4 xl:col-span-3 xl:block xl:sticky xl:top-4 xl:self-start"
+        >
           {placeError && (
             <div className="mb-3 rounded-xl border border-red-500/25 bg-red-500/10 px-3 py-2 text-xs text-red-400">
               {placeError}

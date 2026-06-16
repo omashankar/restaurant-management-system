@@ -48,10 +48,6 @@ export function normalizeCustomerOrderStatus(raw) {
 
 /** Timeline steps for detail page — marks current + completed based on status key */
 export function buildOrderTimeline(statusKey) {
-  const order = ["pending", "preparing", "ready", "completed"];
-  const idx = order.indexOf(statusKey);
-  const effectiveIdx = statusKey === "cancelled" ? -1 : Math.max(0, idx);
-
   const steps = [
     { key: "pending", title: "Pending", emoji: "🟡" },
     { key: "preparing", title: "Preparing", emoji: "🔵" },
@@ -59,15 +55,24 @@ export function buildOrderTimeline(statusKey) {
     { key: "completed", title: "Completed", emoji: "✅" },
   ];
 
+  if (statusKey === "completed") {
+    return steps.map((step) => ({ ...step, state: "done" }));
+  }
+
+  if (statusKey === "cancelled") {
+    return steps.map((step, i) => ({
+      ...step,
+      state: i === 0 ? "bad" : "skipped",
+    }));
+  }
+
+  const order = ["pending", "preparing", "ready", "completed"];
+  const effectiveIdx = Math.max(0, order.indexOf(statusKey));
+
   return steps.map((step, i) => {
     let state = "upcoming";
-    if (statusKey === "cancelled") {
-      state = i <= 0 ? "bad" : "skipped";
-    } else if (effectiveIdx >= 0) {
-      if (i < effectiveIdx) state = "done";
-      else if (i === effectiveIdx) state = "current";
-      else state = "upcoming";
-    }
+    if (i < effectiveIdx) state = "done";
+    else if (i === effectiveIdx) state = "current";
     return { ...step, state };
   });
 }

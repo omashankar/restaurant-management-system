@@ -22,20 +22,14 @@ export default function CartDrawer() {
         <>
           {/* Overlay */}
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
+            {...motionFx.overlayFade}
             className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm"
             onClick={() => setCartOpen(false)}
           />
 
           {/* Drawer */}
           <motion.div
-            initial={{ x: "100%" }}
-            animate={{ x: 0 }}
-            exit={{ x: "100%" }}
-            transition={{ type: "spring", stiffness: 300, damping: 30 }}
+            {...motionFx.drawerSlide}
             className="ct-elevation-overlay fixed right-0 top-0 z-50 flex h-full w-full max-w-[min(100vw,24rem)] flex-col bg-[var(--customer-card)]"
           >
             {/* Header */}

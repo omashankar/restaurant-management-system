@@ -3,6 +3,7 @@
 import ItemTypeChipIcon, { FastFilterChipIcon } from "@/components/menu/ItemTypeChipIcon";
 import CategoryTabs from "@/components/pos/CategoryTabs";
 import ListToolbar from "@/components/ui/ListToolbar";
+import { useId } from "react";
 
 const TYPE_LABELS = {
   all: "All Types",
@@ -27,6 +28,8 @@ export default function PosMenuFilters({
   onSearchChange,
   itemCount,
 }) {
+  const searchInputId = useId();
+
   return (
     <div className="min-w-0 space-y-4">
       <CategoryTabs categories={categories} activeCategory={activeCategory} onChange={onCategoryChange} />
@@ -71,7 +74,14 @@ export default function PosMenuFilters({
       <ListToolbar
         search={search}
         onSearchChange={onSearchChange}
-        searchPlaceholder="Search menu (/)"
+        searchPlaceholder="Search menu…"
+        searchInputProps={{
+          id: searchInputId,
+          name: "posMenuSearch",
+          "data-pos-menu-search": "",
+          title: "Press / to focus search",
+          "aria-keyshortcuts": "/",
+        }}
         endSlot={
           <span className="w-full shrink-0 rounded-lg border admin-shell-border px-2.5 py-1 text-center text-xs text-zinc-400 sm:w-auto sm:text-left">
             {itemCount} items
