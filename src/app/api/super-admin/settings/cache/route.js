@@ -26,7 +26,7 @@ export async function POST(request) {
     revalidatePath("/super-admin", "layout");
     revalidatePath("/super-admin/settings");
     revalidatePath("/super-admin/landing-site");
-    revalidateTag("landing");
+    revalidateTag("landing", "max");
     invalidatePlatformSettingsCache();
 
     await writeAuditLog({

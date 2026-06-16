@@ -46,7 +46,7 @@ export async function PUT(request, { params }) {
   try { body = await request.json(); } catch { return badJson(); }
   try {
     const result = await replaceSection(section, body, sa.id ?? null);
-    revalidateTag("landing");
+    revalidateTag("landing", "max");
     revalidatePath("/");
     return Response.json({ success: true, ...result });
   } catch (err) {
@@ -64,7 +64,7 @@ export async function POST(request, { params }) {
   try { body = await request.json(); } catch { return badJson(); }
   try {
     const result = await addItem(section, body, sa.id ?? null);
-    revalidateTag("landing");
+    revalidateTag("landing", "max");
     revalidatePath("/");
     return Response.json({ success: true, ...result }, { status: 201 });
   } catch (err) {
