@@ -58,7 +58,7 @@ export async function PATCH(request) {
     await replaceSection(section, data, sa.id ?? null);
 
     /* Purge the public landing page cache immediately */
-    revalidateTag("landing"); // invalidates the tagged fetch in page.jsx
+    revalidateTag("landing", "max"); // invalidates the tagged fetch in page.jsx
     revalidatePath("/");      // also purge the page route cache
 
     await writeAuditLog({
@@ -96,7 +96,7 @@ export async function PUT(request) {
     delete sanitized.pricing;
     await replaceAll(sanitized, sa.id ?? null);
 
-    revalidateTag("landing");
+    revalidateTag("landing", "max");
     revalidatePath("/");
 
     return Response.json({ success: true, updatedAt: new Date(), replaced: true });

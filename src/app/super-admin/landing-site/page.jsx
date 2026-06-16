@@ -20,6 +20,7 @@ import {
 import Link from "next/link";
 import { decimalInputProps, phoneInputProps } from "@/lib/formInputTypes";
 import { validateLandingSection } from "@/lib/landingValidation";
+import { extractIndianMobileDigits, isValidIndianMobile } from "@/lib/phoneUtils";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 /* ── shared input class ── */
@@ -70,6 +71,188 @@ function SaveBtn({ saving, onClick }) {
   );
 }
 
+/* ── String list editor (one input per row) ── */
+function StringListEditor({
+  label,
+  hint,
+  required,
+  error,
+  items = [],
+  onChange,
+  placeholder = "",
+  addLabel = "Add item",
+  emptyMessage = "No items yet. Add your first one.",
+}) {
+  const list = Array.isArray(items) ? items : [];
+  const update = (i, v) => onChange(list.map((x, idx) => (idx === i ? v : x)));
+  const add = () => onChange([...list, ""]);
+  const remove = (i) => onChange(list.filter((_, idx) => idx !== i));
+
+  return (
+    <div>
+      <label className="block text-xs font-medium text-zinc-400 mb-1">
+        {label}{required && <span className="ml-0.5 text-red-400">*</span>}
+      </label>
+      <div className="space-y-2">
+        {list.length === 0 && (
+          <div className="rounded-xl border border-dashed admin-shell-border py-8 text-center text-sm admin-surface-faint">
+            {emptyMessage}
+          </div>
+        )}
+        {list.map((item, i) => (
+          <div key={i} className="flex min-w-0 gap-2">
+            <input
+              value={item ?? ""}
+              onChange={(e) => update(i, e.target.value)}
+              placeholder={placeholder}
+              className={`${ic} min-w-0 flex-1`}
+            />
+            <button
+              type="button"
+              onClick={() => remove(i)}
+              aria-label={`Remove item ${i + 1}`}
+              className="cursor-pointer shrink-0 rounded-lg p-2 text-zinc-500 transition-colors hover-bg-red-15 hover-red-danger"
+            >
+              <Trash2 className="size-4" />
+            </button>
+          </div>
+        ))}
+        <button
+          type="button"
+          onClick={add}
+          className="cursor-pointer flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-zinc-700 py-2.5 text-sm admin-surface-muted hover-border-sa-primary-40 hover-sa-primary transition-colors"
+        >
+          <Plus className="size-4" /> {addLabel}
+        </button>
+      </div>
+      {error && <p className="mt-1 flex items-center gap-1 text-[11px] text-red-400"><AlertCircle className="size-3" />{error}</p>}
+      {!error && hint && <p className="mt-1 text-[11px] text-zinc-600">{hint}</p>}
+    </div>
+  );
+}
+
+/* ── Structured list editor (multiple fields per row) ── */
+function NestedListEditor({
+  label,
+  hint,
+  required,
+  error,
+  items = [],
+  fields,
+  onChange,
+  maxItems,
+  addLabel = "Add item",
+  emptyMessage = "No items yet. Add your first one.",
+  getItemKey,
+}) {
+  const list = Array.isArray(items) ? items : [];
+
+  const makeEmptyItem = () => {
+    const item = { id: Date.now().toString(36) };
+    fields.forEach((f) => {
+      if (f.type === "iconpicker") item[f.key] = f.default ?? "Circle";
+      else item[f.key] = f.default ?? "";
+    });
+    return item;
+  };
+
+  const updateItem = (i, key, val) => {
+    onChange(list.map((item, idx) => (idx === i ? { ...item, [key]: val } : item)));
+  };
+
+  const add = () => {
+    if (maxItems != null && list.length >= maxItems) return;
+    const next = makeEmptyItem();
+    const stepField = fields.find((f) => f.key === "n");
+    if (stepField) {
+      next.n = String(list.length + 1).padStart(2, "0");
+    }
+    onChange([...list, next]);
+  };
+
+  const remove = (i) => onChange(list.filter((_, idx) => idx !== i));
+
+  const canAdd = maxItems == null || list.length < maxItems;
+
+  return (
+    <div>
+      <label className="block text-xs font-medium text-zinc-400 mb-1">
+        {label}{required && <span className="ml-0.5 text-red-400">*</span>}
+      </label>
+      <div className="space-y-3">
+        {list.length === 0 && (
+          <div className="rounded-xl border border-dashed admin-shell-border py-8 text-center text-sm admin-surface-faint">
+            {emptyMessage}
+          </div>
+        )}
+        {list.map((item, i) => (
+          <div
+            key={getItemKey?.(item, i) ?? item.id ?? i}
+            className="space-y-3 admin-surface-card p-4"
+          >
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-xs font-semibold uppercase tracking-wide admin-surface-muted">
+                Item {i + 1}
+              </span>
+              <button
+                type="button"
+                onClick={() => remove(i)}
+                aria-label={`Remove item ${i + 1}`}
+                className="cursor-pointer rounded-lg p-1.5 text-zinc-500 transition-colors hover-bg-red-15 hover-red-danger"
+              >
+                <Trash2 className="size-3.5" />
+              </button>
+            </div>
+            <div className="grid gap-3 sm:grid-cols-2">
+              {fields.map((f) => (
+                <div key={f.key} className={f.fullWidth ? "sm:col-span-2" : f.narrow ? "sm:col-span-1 max-w-[6rem]" : ""}>
+                  <label className="mb-1 block text-[11px] font-medium text-zinc-500">
+                    {f.label}{f.required && <span className="ml-0.5 text-red-400">*</span>}
+                  </label>
+                  {f.type === "iconpicker" ? (
+                    <IconPicker
+                      value={item[f.key] ?? f.default ?? "Circle"}
+                      onChange={(v) => updateItem(i, f.key, v)}
+                    />
+                  ) : f.type === "textarea" ? (
+                    <textarea
+                      rows={f.rows ?? 3}
+                      value={item[f.key] ?? ""}
+                      placeholder={f.placeholder}
+                      maxLength={f.maxLength}
+                      onChange={(e) => updateItem(i, f.key, e.target.value)}
+                      className={`${ic} resize-none`}
+                    />
+                  ) : (
+                    <input
+                      value={item[f.key] ?? ""}
+                      placeholder={f.placeholder}
+                      maxLength={f.maxLength}
+                      onChange={(e) => updateItem(i, f.key, e.target.value)}
+                      className={ic}
+                    />
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
+        {canAdd && (
+          <button
+            type="button"
+            onClick={add}
+            className="cursor-pointer flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-zinc-700 py-2.5 text-sm admin-surface-muted hover-border-sa-primary-40 hover-sa-primary transition-colors"
+          >
+            <Plus className="size-4" /> {addLabel}
+          </button>
+        )}
+      </div>
+      {error && <p className="mt-1 flex items-center gap-1 text-[11px] text-red-400"><AlertCircle className="size-3" />{error}</p>}
+      {!error && hint && <p className="mt-1 text-[11px] text-zinc-600">{hint}</p>}
+    </div>
+  );
+}
+
 /* ── Tabs ── */
 const TABS = [
   { id: "navbar",       label: "Navbar",       Icon: Link2          },
@@ -91,8 +274,72 @@ const TABS = [
   { id: "seo",          label: "SEO",          Icon: Search         },
 ];
 
-const toLines = (arr) => (Array.isArray(arr) ? arr.join("\n") : "");
-const fromLines = (txt) => String(txt ?? "").split("\n").map((x) => x.trim()).filter(Boolean);
+function trimLandingText(value) {
+  return String(value ?? "").trim();
+}
+
+function sanitizeSectionPayload(section, data) {
+  if (data == null) return data;
+
+  if (section === "brands" && typeof data === "object") {
+    return {
+      ...data,
+      items: (Array.isArray(data.items) ? data.items : [])
+        .map(trimLandingText)
+        .filter(Boolean),
+    };
+  }
+
+  if (section === "problemSolution" && typeof data === "object") {
+    return {
+      ...data,
+      problems: (Array.isArray(data.problems) ? data.problems : [])
+        .map(trimLandingText)
+        .filter(Boolean),
+      solutionPoints: (Array.isArray(data.solutionPoints) ? data.solutionPoints : [])
+        .map(trimLandingText)
+        .filter(Boolean),
+    };
+  }
+
+  if (section === "benefits" && typeof data === "object") {
+    return {
+      ...data,
+      items: (Array.isArray(data.items) ? data.items : [])
+        .map(trimLandingText)
+        .filter(Boolean),
+    };
+  }
+
+  if (section === "faq" && typeof data === "object") {
+    return {
+      ...data,
+      items: (Array.isArray(data.items) ? data.items : []).filter(
+        (item) => trimLandingText(item?.q) || trimLandingText(item?.a),
+      ),
+    };
+  }
+
+  if (section === "howItWorks" && typeof data === "object") {
+    return {
+      ...data,
+      steps: (Array.isArray(data.steps) ? data.steps : []).filter(
+        (step) => trimLandingText(step?.title) || trimLandingText(step?.text) || trimLandingText(step?.n),
+      ),
+    };
+  }
+
+  if (section === "hero" && typeof data === "object") {
+    return {
+      ...data,
+      stats: (Array.isArray(data.stats) ? data.stats : []).filter(
+        (stat) => trimLandingText(stat?.value) || trimLandingText(stat?.label),
+      ),
+    };
+  }
+
+  return data;
+}
 
 function NavbarPanel({ data, onChange, onSave, saving, fieldErrors = {}, onClearError }) {
   const links = Array.isArray(data.links) ? data.links : [];
@@ -186,6 +433,12 @@ function NavbarPanel({ data, onChange, onSave, saving, fieldErrors = {}, onClear
 
       <div>
         <p className="block text-xs font-medium text-zinc-400 mb-2">Navigation Links</p>
+        {Object.entries(fieldErrors).some(([k, v]) => k.startsWith("link_") && v) && (
+          <p className="mb-2 flex items-center gap-1 text-[11px] text-red-400">
+            <AlertCircle className="size-3 shrink-0" />
+            {Object.entries(fieldErrors).find(([k, v]) => k.startsWith("link_") && v)?.[1]}
+          </p>
+        )}
         <div className="space-y-2">
           {links.map((l, i) => (
             <div key={i} className="grid gap-2 admin-surface-card p-3 sm:grid-cols-3">
@@ -299,35 +552,24 @@ function HeroPanel({ data, onChange, onSave, saving, fieldErrors = {}, onClearEr
           className={ic}
         />
       </Field>
-      <Field
+      <NestedListEditor
         label="Hero stats"
-        hint="Up to 3 stats. Format per line: value|label (e.g. 500+|Restaurants onboarded)"
+        hint="Up to 3 stats shown under the headline."
         error={fieldErrors.stats}
-      >
-        <textarea
-          rows={4}
-          value={(Array.isArray(data.stats) ? data.stats : [])
-            .map((s) => `${s?.value ?? ""}|${s?.label ?? ""}`)
-            .join("\n")}
-          onChange={(e) => {
-            const existing = Array.isArray(data.stats) ? data.stats : [];
-            const parsed = fromLines(e.target.value).slice(0, 3).map((line, i) => {
-              const pipe = line.indexOf("|");
-              const value = pipe >= 0 ? line.slice(0, pipe).trim() : line.trim();
-              const label = pipe >= 0 ? line.slice(pipe + 1).trim() : "";
-              return {
-                value,
-                label,
-                ...(existing[i]?.id ? { id: existing[i].id } : {}),
-              };
-            });
-            onChange("stats", parsed);
-            onClearError?.("stats");
-          }}
-          placeholder={"500+|Restaurants onboarded\n15 min|Avg. setup time\n99.9%|Uptime SLA"}
-          className={`${ic} resize-none font-mono text-xs`}
-        />
-      </Field>
+        items={Array.isArray(data.stats) ? data.stats : []}
+        maxItems={3}
+        addLabel="Add stat"
+        emptyMessage="No stats yet. Add up to 3."
+        getItemKey={(item, i) => item.id ?? `stat-${i}`}
+        onChange={(stats) => {
+          onChange("stats", stats);
+          onClearError?.("stats");
+        }}
+        fields={[
+          { key: "value", label: "Value", placeholder: "500+", required: true, narrow: true, maxLength: 20 },
+          { key: "label", label: "Label", placeholder: "Restaurants onboarded", required: true, fullWidth: false },
+        ]}
+      />
 
       {/* Live preview */}
       {(data.headline || data.badge) && (
@@ -397,17 +639,25 @@ function ArrayPanel({ items, fields, onSave, saving, icon: Icon, title, descript
     });
     if (Object.keys(e).length) { setErrors(e); return; }
     setItemSaving(true);
-    const updated = editIdx === -1
-      ? [...items, { id: Date.now().toString(36), ...form }]
-      : items.map((x, i) => i === editIdx ? { ...x, ...form } : x);
-    await onSave(updated);
-    setEditIdx(null);
-    setItemSaving(false);
+    try {
+      const updated = editIdx === -1
+        ? [...items, { id: Date.now().toString(36), ...form }]
+        : items.map((x, i) => i === editIdx ? { ...x, ...form } : x);
+      const ok = await onSave(updated);
+      if (ok !== false) setEditIdx(null);
+    } finally {
+      setItemSaving(false);
+    }
   };
 
   const handleDelete = async () => {
-    await onSave(items.filter((_, i) => i !== deleteIdx));
-    setDeleteIdx(null);
+    setItemSaving(true);
+    try {
+      const ok = await onSave(items.filter((_, i) => i !== deleteIdx));
+      if (ok !== false) setDeleteIdx(null);
+    } finally {
+      setItemSaving(false);
+    }
   };
 
   return (
@@ -425,7 +675,7 @@ function ArrayPanel({ items, fields, onSave, saving, icon: Icon, title, descript
             <div className="min-w-0 flex-1">{renderCard(item)}</div>
             <div className="flex shrink-0 items-center gap-1 self-end sm:self-auto">
               <button type="button" onClick={() => openEdit(i)}
-                className="cursor-pointer rounded-lg p-1.5 text-zinc-500 hover:bg-[var(--admin-hover)] hover:admin-shell-text transition-colors">
+                className="cursor-pointer rounded-lg p-1.5 text-zinc-500 transition-colors admin-icon-hover-edit">
                 <Pencil className="size-3.5" />
               </button>
               <button type="button" onClick={() => setDeleteIdx(i)}
@@ -810,14 +1060,16 @@ function BrandsPanel({ data, onChange, onSave, saving }) {
       <Field label="Eyebrow">
         <input value={data.eyebrow ?? ""} onChange={(e) => onChange("eyebrow", e.target.value)} placeholder="Trusted by" className={ic} />
       </Field>
-      <Field label="Brands (one per line)">
-        <textarea
-          rows={6}
-          value={toLines(data.items)}
-          onChange={(e) => onChange("items", fromLines(e.target.value))}
-          className={`${ic} resize-none`}
-        />
-      </Field>
+      <StringListEditor
+        label="Brands"
+        hint="Brand names shown in the trust strip."
+        required
+        items={data.items}
+        onChange={(items) => onChange("items", items)}
+        placeholder="Restaurant name"
+        addLabel="Add brand"
+        emptyMessage="No brands yet."
+      />
       <SaveBtn saving={saving} onClick={onSave} />
     </div>
   );
@@ -841,12 +1093,26 @@ function ProblemSolutionPanel({ data, onChange, onSave, saving }) {
       <Field label="Solution Description">
         <textarea rows={3} value={data.solutionDescription ?? ""} onChange={(e) => onChange("solutionDescription", e.target.value)} className={`${ic} resize-none`} />
       </Field>
-      <Field label="Problem Points (one per line)">
-        <textarea rows={5} value={toLines(data.problems)} onChange={(e) => onChange("problems", fromLines(e.target.value))} className={`${ic} resize-none`} />
-      </Field>
-      <Field label="Solution Points (one per line)">
-        <textarea rows={5} value={toLines(data.solutionPoints)} onChange={(e) => onChange("solutionPoints", fromLines(e.target.value))} className={`${ic} resize-none`} />
-      </Field>
+      <StringListEditor
+        label="Problem points"
+        hint="Pain points listed on the problem card."
+        required
+        items={data.problems}
+        onChange={(problems) => onChange("problems", problems)}
+        placeholder="e.g. Orders get lost between counter and kitchen"
+        addLabel="Add problem point"
+        emptyMessage="No problem points yet."
+      />
+      <StringListEditor
+        label="Solution points"
+        hint="Benefits listed on the solution card."
+        required
+        items={data.solutionPoints}
+        onChange={(solutionPoints) => onChange("solutionPoints", solutionPoints)}
+        placeholder="e.g. One POS for dine-in, takeaway, and delivery"
+        addLabel="Add solution point"
+        emptyMessage="No solution points yet."
+      />
       <SaveBtn saving={saving} onClick={onSave} />
     </div>
   );
@@ -854,29 +1120,30 @@ function ProblemSolutionPanel({ data, onChange, onSave, saving }) {
 
 function HowItWorksPanel({ data, onChange, onSave, saving }) {
   const steps = Array.isArray(data.steps) ? data.steps : [];
-  const textValue = steps.map((s) => `${s.n}|${s.title}|${s.text}|${s.icon ?? "Circle"}`).join("\n");
   return (
     <div className="space-y-5">
-      <AdminSectionHeader icon={BarChart3} title="How It Works" description="Flow steps. Format: number|title|text|icon" />
+      <AdminSectionHeader icon={BarChart3} title="How It Works" description="Step-by-step flow shown on the landing page." />
       <div className="grid gap-4 sm:grid-cols-3">
         <Field label="Eyebrow"><input value={data.eyebrow ?? ""} onChange={(e) => onChange("eyebrow", e.target.value)} className={ic} /></Field>
         <Field label="Title"><input value={data.title ?? ""} onChange={(e) => onChange("title", e.target.value)} className={ic} /></Field>
         <Field label="Subtext"><input value={data.subtext ?? ""} onChange={(e) => onChange("subtext", e.target.value)} className={ic} /></Field>
       </div>
-      <Field label="Steps (one per line)">
-        <textarea
-          rows={8}
-          value={textValue}
-          onChange={(e) => {
-            const parsed = fromLines(e.target.value).map((line) => {
-              const [n = "", title = "", text = "", icon = "Circle"] = line.split("|");
-              return { n: n.trim(), title: title.trim(), text: text.trim(), icon: icon.trim() || "Circle" };
-            });
-            onChange("steps", parsed);
-          }}
-          className={`${ic} resize-none`}
-        />
-      </Field>
+      <NestedListEditor
+        label="Steps"
+        hint="Each step needs a number, title, description, and icon."
+        required
+        items={steps}
+        onChange={(next) => onChange("steps", next)}
+        addLabel="Add step"
+        emptyMessage="No steps yet."
+        getItemKey={(item, i) => item.id ?? `step-${i}`}
+        fields={[
+          { key: "n", label: "Step #", placeholder: "01", required: true, narrow: true, maxLength: 4 },
+          { key: "title", label: "Title", placeholder: "Setup Restaurant", required: true },
+          { key: "text", label: "Description", type: "textarea", rows: 2, placeholder: "Configure menu, pricing, taxes…", required: true, fullWidth: true, maxLength: 300 },
+          { key: "icon", label: "Icon", type: "iconpicker", default: "Circle", fullWidth: true },
+        ]}
+      />
       <SaveBtn saving={saving} onClick={onSave} />
     </div>
   );
@@ -900,9 +1167,16 @@ function BenefitsPanel({ data, onChange, onSave, saving }) {
       <Field label="Device Description">
         <textarea rows={3} value={data.deviceDescription ?? ""} onChange={(e) => onChange("deviceDescription", e.target.value)} className={`${ic} resize-none`} />
       </Field>
-      <Field label="Benefit points (one per line)">
-        <textarea rows={6} value={toLines(data.items)} onChange={(e) => onChange("items", fromLines(e.target.value))} className={`${ic} resize-none`} />
-      </Field>
+      <StringListEditor
+        label="Benefit points"
+        hint="Bullet points on the “Why BhojDesk” card."
+        required
+        items={data.items}
+        onChange={(items) => onChange("items", items)}
+        placeholder="e.g. Real-time kitchen display"
+        addLabel="Add benefit"
+        emptyMessage="No benefit points yet."
+      />
       <SaveBtn saving={saving} onClick={onSave} />
     </div>
   );
@@ -958,7 +1232,6 @@ function DemoSectionPanel({ data, onChange, onSave, saving, fieldErrors = {}, on
 
 function FaqPanel({ data, onChange, onSave, saving, fieldErrors = {}, onClearError }) {
   const items = Array.isArray(data.items) ? data.items : [];
-  const itemsText = items.map((item) => `${item.q ?? ""}|${item.a ?? ""}`).join("\n");
 
   return (
     <div className="space-y-5">
@@ -1007,32 +1280,19 @@ function FaqPanel({ data, onChange, onSave, saving, fieldErrors = {}, onClearErr
           />
         </Field>
       </div>
-      <Field
+      <NestedListEditor
         label="FAQ items"
-        hint="One per line. Format: question|answer"
         required
-      >
-        <textarea
-          rows={10}
-          value={itemsText}
-          onChange={(e) => {
-            const parsed = fromLines(e.target.value).map((line, i) => {
-              const pipe = line.indexOf("|");
-              const q = pipe >= 0 ? line.slice(0, pipe).trim() : line.trim();
-              const a = pipe >= 0 ? line.slice(pipe + 1).trim() : "";
-              const existing = items[i];
-              return {
-                id: existing?.id ?? `faq-${i + 1}`,
-                q,
-                a,
-              };
-            });
-            onChange("items", parsed);
-          }}
-          placeholder={"How long does setup take?|Most restaurants go live in about 15 minutes.\nIs there a free trial?|Yes — 14 days, no credit card required."}
-          className={`${ic} resize-none`}
-        />
-      </Field>
+        items={items}
+        onChange={(next) => onChange("items", next)}
+        addLabel="Add FAQ"
+        emptyMessage="No FAQs yet. Add your first question."
+        getItemKey={(item, i) => item.id ?? `faq-${i}`}
+        fields={[
+          { key: "q", label: "Question", placeholder: "How long does setup take?", required: true, fullWidth: true, maxLength: 200 },
+          { key: "a", label: "Answer", type: "textarea", rows: 3, placeholder: "Most restaurants go live in about 15 minutes…", required: true, fullWidth: true, maxLength: 1000 },
+        ]}
+      />
       <SaveBtn saving={saving} onClick={onSave} />
     </div>
   );
@@ -1174,6 +1434,11 @@ export default function LandingSitePage() {
     setSectionErrors((prev) => (prev[key] ? { ...prev, [key]: "" } : prev));
   }, []);
 
+  const normalizePhoneForEditor = (phone) => {
+    const digits = extractIndianMobileDigits(phone);
+    return digits && isValidIndianMobile(digits) ? digits : "";
+  };
+
   const normalizePricingForEditor = useCallback((rawContent) => {
     if (!rawContent) return rawContent;
     const pricing = Array.isArray(rawContent.pricing)
@@ -1183,7 +1448,13 @@ export default function LandingSitePage() {
           yearlyPrice: plan?.price?.yearly ?? plan?.price?.monthly ?? 0,
         }))
       : [];
-    return { ...rawContent, pricing };
+    const contact = rawContent.contact
+      ? { ...rawContent.contact, phone: normalizePhoneForEditor(rawContent.contact.phone) }
+      : rawContent.contact;
+    const footer = rawContent.footer
+      ? { ...rawContent.footer, phone: normalizePhoneForEditor(rawContent.footer.phone) }
+      : rawContent.footer;
+    return { ...rawContent, pricing, contact, footer };
   }, []);
 
   const mapPlansToLandingPricing = useCallback((plans = [], fallbackPricing = []) => {
@@ -1262,17 +1533,18 @@ export default function LandingSitePage() {
 
   /* ── Save active section (optionally with override data) ── */
   const handleSave = useCallback(async (overrideData) => {
-    if (!content) return;
+    if (!content) return false;
     if (activeTab === "pricing") {
       showToast("Pricing is synced from Plans. Please update /super-admin/plans.", "error");
-      return;
+      return false;
     }
-    const payload = overrideData !== undefined ? overrideData : content[activeTab];
+    const rawPayload = overrideData !== undefined ? overrideData : content[activeTab];
+    const payload = sanitizeSectionPayload(activeTab, rawPayload);
     const validation = validateLandingSection(activeTab, payload);
     if (!validation.valid) {
       setSectionErrors(validation.errors);
       showToast(validation.message ?? "Please fix the highlighted fields.", "error");
-      return;
+      return false;
     }
     setSectionErrors({});
     setSaving(true);
@@ -1283,13 +1555,23 @@ export default function LandingSitePage() {
         body:    JSON.stringify({ section: activeTab, data: payload }),
       });
       const json = await res.json();
-      if (!json.success) { showToast(json.error ?? "Failed to save.", "error"); return; }
+      if (!json.success) {
+        showToast(json.error ?? "Failed to save.", "error");
+        return false;
+      }
       if (overrideData !== undefined) {
-        setContent(prev => ({ ...prev, [activeTab]: overrideData }));
+        setContent((prev) => ({ ...prev, [activeTab]: payload }));
+      } else if (payload !== rawPayload) {
+        setContent((prev) => ({ ...prev, [activeTab]: payload }));
       }
       showToast("Saved successfully.");
-    } catch { showToast("Network error.", "error"); }
-    finally { setSaving(false); }
+      return true;
+    } catch {
+      showToast("Network error.", "error");
+      return false;
+    } finally {
+      setSaving(false);
+    }
   }, [activeTab, content, showToast]);
 
   const switchTab = (id) => {
@@ -1373,7 +1655,7 @@ export default function LandingSitePage() {
         </AdminSideNav>
 
         {/* ── Content panel ── */}
-        <div ref={panelRef} className="min-w-0 flex-1 admin-surface-card p-4 sm:p-6">
+        <div ref={panelRef} className="min-w-0 flex-1 overflow-x-hidden admin-surface-card p-4 sm:p-6">
           {fetching ? (
             <SuperAdminPageSkeleton rows={4} />
           ) : !content ? (
@@ -1532,16 +1814,16 @@ export default function LandingSitePage() {
                 <ContactPanel data={sectionData} onChange={handleChange} onSave={handleSave} saving={saving} {...panelValidationProps} />
               )}
               {activeTab === "brands" && (
-                <BrandsPanel data={sectionData} onChange={handleChange} onSave={() => handleSave()} saving={saving} />
+                <BrandsPanel data={sectionData} onChange={handleChange} onSave={handleSave} saving={saving} {...panelValidationProps} />
               )}
               {activeTab === "problemSolution" && (
-                <ProblemSolutionPanel data={sectionData} onChange={handleChange} onSave={() => handleSave()} saving={saving} />
+                <ProblemSolutionPanel data={sectionData} onChange={handleChange} onSave={handleSave} saving={saving} {...panelValidationProps} />
               )}
               {activeTab === "howItWorks" && (
-                <HowItWorksPanel data={sectionData} onChange={handleChange} onSave={() => handleSave()} saving={saving} />
+                <HowItWorksPanel data={sectionData} onChange={handleChange} onSave={handleSave} saving={saving} {...panelValidationProps} />
               )}
               {activeTab === "benefits" && (
-                <BenefitsPanel data={sectionData} onChange={handleChange} onSave={() => handleSave()} saving={saving} />
+                <BenefitsPanel data={sectionData} onChange={handleChange} onSave={handleSave} saving={saving} {...panelValidationProps} />
               )}
               {activeTab === "demo" && (
                 <DemoSectionPanel data={sectionData} onChange={handleChange} onSave={handleSave} saving={saving} {...panelValidationProps} />

@@ -38,7 +38,18 @@
 
 import { BHOJDESK_BRAND, BHOJDESK_LOGOS } from "@/config/bhojdeskBrand";
 import { validateLandingSectionServer } from "@/lib/landingValidation";
+import { extractIndianMobileDigits, isValidIndianMobile } from "@/lib/phoneUtils";
 import clientPromise from "./mongodb";
+
+function sanitizeLandingPhone(phone) {
+  const digits = extractIndianMobileDigits(phone);
+  return digits && isValidIndianMobile(digits) ? digits : "";
+}
+
+function sanitizePhoneFields(data) {
+  if (!data || typeof data !== "object") return data;
+  return { ...data, phone: sanitizeLandingPhone(data.phone) };
+}
 
 const DOC_ID     = "landing";
 const COLLECTION = "landing_cms";
@@ -179,7 +190,7 @@ export const DEFAULTS = {
 
   contact: {
     email:       BHOJDESK_BRAND.supportEmail,
-    phone:       "+1 (555) 000-0000",
+    phone:       "",
     address:     "123 Main Street, City, Country",
     mapUrl:      "",
     formEnabled: true,
@@ -189,7 +200,7 @@ export const DEFAULTS = {
     companyName: BHOJDESK_BRAND.name,
     tagline:     `${BHOJDESK_BRAND.tagline} — built for modern operations.`,
     email:       BHOJDESK_BRAND.supportEmail,
-    phone:       "+1 (555) 000-0000",
+    phone:       "",
     address:     "123 Main Street, City, Country",
     links: [
       { label: "Features",       href: "#features" },
@@ -378,24 +389,24 @@ const VALIDATORS = {
   brands: (d) => {
     if (!d || typeof d !== "object") return "brands must be an object.";
     if (!Array.isArray(d.items)) return "brands.items must be an array.";
-    return null;
+    return validateLandingSectionServer("brands", d);
   },
   problemSolution: (d) => {
     if (!d || typeof d !== "object") return "problemSolution must be an object.";
     if (!Array.isArray(d.problems) || !Array.isArray(d.solutionPoints)) {
       return "problemSolution lists must be arrays.";
     }
-    return null;
+    return validateLandingSectionServer("problemSolution", d);
   },
   howItWorks: (d) => {
     if (!d || typeof d !== "object") return "howItWorks must be an object.";
     if (!Array.isArray(d.steps)) return "howItWorks.steps must be an array.";
-    return null;
+    return validateLandingSectionServer("howItWorks", d);
   },
   benefits: (d) => {
     if (!d || typeof d !== "object") return "benefits must be an object.";
     if (!Array.isArray(d.items)) return "benefits.items must be an array.";
-    return null;
+    return validateLandingSectionServer("benefits", d);
   },
   demo: (d) => {
     if (!d || typeof d !== "object") return "demo must be an object.";
@@ -454,6 +465,9 @@ export function mergeWithDefaults(doc) {
   const content = {};
   for (const section of VALID_SECTIONS) {
     content[section] = deepMergeSection(DEFAULTS[section], doc?.[section]);
+    if (section === "contact" || section === "footer") {
+      content[section] = sanitizePhoneFields(content[section]);
+    }
   }
   return content;
 }
@@ -492,13 +506,16 @@ export async function replaceSection(section, data, updatedBy) {
   if (!VALID_SECTIONS.includes(section)) {
     throw Object.assign(new Error(`Invalid section "${section}".`), { status: 400 });
   }
-  const err = VALIDATORS[section]?.(data);
+  const payload = section === "contact" || section === "footer"
+    ? sanitizePhoneFields(data)
+    : data;
+  const err = VALIDATORS[section]?.(payload);
   if (err) throw Object.assign(new Error(err), { status: 422 });
 
   const db = await getDb();
   await db.collection(COLLECTION).updateOne(
     { _id: DOC_ID },
-    { $set: { [section]: data, updatedAt: new Date(), updatedBy: updatedBy ?? null, version: VERSION } },
+    { $set: { [section]: payload, updatedAt: new Date(), updatedBy: updatedBy ?? null, version: VERSION } },
     { upsert: true }
   );
   return { section, updatedAt: new Date() };

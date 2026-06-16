@@ -27,7 +27,7 @@ export async function PATCH(request, { params }) {
   if (!Array.isArray(body.ids) || !body.ids.length) return Response.json({ success: false, error: "ids must be a non-empty array." }, { status: 400 });
   try {
     const result = await reorderItems(section, body.ids, sa.id ?? null);
-    revalidateTag("landing");
+    revalidateTag("landing", "max");
     revalidatePath("/");
     return Response.json({ success: true, ...result });
   } catch (e) {

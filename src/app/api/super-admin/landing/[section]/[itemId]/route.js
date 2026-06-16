@@ -40,7 +40,7 @@ export async function PATCH(request, { params }) {
   try { body = await request.json(); } catch { return Response.json({ success: false, error: "Invalid JSON." }, { status: 400 }); }
   try {
     const result = await updateItem(section, itemId, body, sa.id ?? null);
-    revalidateTag("landing");
+    revalidateTag("landing", "max");
     revalidatePath("/");
     return Response.json({ success: true, ...result });
   } catch (e) {
@@ -57,7 +57,7 @@ export async function DELETE(request, { params }) {
   if (err) return err;
   try {
     const result = await deleteItem(section, itemId, sa.id ?? null);
-    revalidateTag("landing");
+    revalidateTag("landing", "max");
     revalidatePath("/");
     return Response.json({ success: true, ...result });
   } catch (e) {

@@ -232,6 +232,65 @@ export function validateLandingDemo(data) {
   return errorsToResult(errors);
 }
 
+export function validateLandingBrands(data) {
+  const errors = {};
+  errors.eyebrow = optionalText(data?.eyebrow, "Eyebrow", LIMITS.short) ?? "";
+  const items = Array.isArray(data?.items) ? data.items : [];
+  if (items.length === 0) {
+    return { valid: false, errors, message: "Add at least one brand name." };
+  }
+  for (let i = 0; i < items.length; i++) {
+    if (!trim(items[i])) {
+      return { valid: false, errors, message: `Brand ${i + 1} cannot be empty.` };
+    }
+  }
+  return errorsToResult(errors);
+}
+
+export function validateLandingProblemSolution(data) {
+  const errors = {};
+  errors.sectionTitle =
+    optionalText(data?.sectionTitle, "Section title", LIMITS.title) ?? "";
+  const problems = Array.isArray(data?.problems) ? data.problems : [];
+  const solutions = Array.isArray(data?.solutionPoints) ? data.solutionPoints : [];
+  if (problems.length === 0) {
+    return { valid: false, errors, message: "Add at least one problem point." };
+  }
+  if (solutions.length === 0) {
+    return { valid: false, errors, message: "Add at least one solution point." };
+  }
+  return errorsToResult(errors);
+}
+
+export function validateLandingHowItWorks(data) {
+  const errors = {};
+  errors.title = optionalText(data?.title, "Title", LIMITS.title) ?? "";
+  const steps = Array.isArray(data?.steps) ? data.steps : [];
+  const filled = steps.filter((s) => trim(s?.title) || trim(s?.text));
+  if (filled.length === 0) {
+    return { valid: false, errors, message: "Add at least one step." };
+  }
+  for (let i = 0; i < filled.length; i++) {
+    const step = filled[i];
+    if (!trim(step.title)) {
+      return { valid: false, errors, message: `Step ${i + 1}: title is required.` };
+    }
+    if (!trim(step.text)) {
+      return { valid: false, errors, message: `Step ${i + 1}: description is required.` };
+    }
+  }
+  return errorsToResult(errors);
+}
+
+export function validateLandingBenefits(data) {
+  const errors = {};
+  const items = Array.isArray(data?.items) ? data.items : [];
+  if (items.length === 0) {
+    return { valid: false, errors, message: "Add at least one benefit point." };
+  }
+  return errorsToResult(errors);
+}
+
 export function validateLandingSection(section, data) {
   switch (section) {
     case "hero":
@@ -252,6 +311,14 @@ export function validateLandingSection(section, data) {
       return validateLandingDemo(data);
     case "faq":
       return validateLandingFaq(data);
+    case "brands":
+      return validateLandingBrands(data);
+    case "problemSolution":
+      return validateLandingProblemSolution(data);
+    case "howItWorks":
+      return validateLandingHowItWorks(data);
+    case "benefits":
+      return validateLandingBenefits(data);
     case "features":
     case "roles":
     case "testimonials":

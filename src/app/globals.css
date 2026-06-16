@@ -2522,11 +2522,8 @@ html[data-customer-dark="true"] body {
 
 /* Stats / accent band — subtle brand wash, not a separate gray block */
 .customer-dark .ct-dark-band {
-  background: linear-gradient(
-    135deg,
-    color-mix(in srgb, var(--customer-primary) 10%, var(--customer-card)) 0%,
-    color-mix(in srgb, var(--customer-primary) 7%, var(--customer-bg)) 100%
-  ) !important;
+  background: var(--customer-section-alt);
+  border-block: 1px solid var(--customer-border);
 }
 
 /* Form controls */

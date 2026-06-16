@@ -23,12 +23,13 @@ export default function HowItWorksSection({ data = {} }) {
             aria-hidden
           />
 
-          {steps.map(({ n, title: stepTitle, text, icon }, i) => {
+          {steps.map((step, i) => {
+            const { n, title: stepTitle, text, icon } = step;
             const Icon = getIcon(icon);
             const isLast = i === steps.length - 1;
 
             return (
-              <li key={n} className="relative list-none pl-8 lg:pl-0">
+              <li key={step.id ?? `${n}-${i}`} className="relative list-none pl-8 lg:pl-0">
                 {/* Mobile / tablet timeline */}
                 {!isLast && (
                   <span

@@ -94,7 +94,7 @@ export async function POST(request) {
       const sanitizedContent = { ...body.content };
       delete sanitizedContent.pricing;
       const result = await replaceAll(sanitizedContent, sa.id ?? null);
-      revalidateTag("landing");
+      revalidateTag("landing", "max");
       revalidatePath("/");
       return Response.json({ success: true, ...result });
     }
@@ -117,7 +117,7 @@ export async function POST(request) {
     }
 
     const result = await replaceSection(section, data, sa.id ?? null);
-    revalidateTag("landing");
+    revalidateTag("landing", "max");
     revalidatePath("/");
     return Response.json({ success: true, ...result });
   } catch (err) {
