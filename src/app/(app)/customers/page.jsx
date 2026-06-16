@@ -30,6 +30,7 @@ import {
   getCustomerFormFieldErrors,
 } from "@/lib/formValidation";
 import PhoneInput from "@/components/ui/PhoneInput";
+import { extractIndianMobileDigits } from "@/lib/phoneUtils";
 import { Eye, Pencil, Plus, RefreshCw, Trash2, Users } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
@@ -96,6 +97,7 @@ export default function CustomersModulePage() {
     notes: "",
   });
   const [deleteTarget, setDeleteTarget] = useState(null);
+  const [saving, setSaving] = useState(false);
   const limited = user?.role === "waiter";
   const canDelete = user?.role === "admin" || user?.role === "manager";
   const { showToast, ToastUI } = useToast();
@@ -183,18 +185,34 @@ export default function CustomersModulePage() {
   };
 
   const saveCustomer = async () => {
+    if (saving) return;
     const validation = getCustomerFormFieldErrors(form);
     setFieldErrors(validation.errors);
     if (!validation.valid) {
       showToast(validation.message ?? "Fix the highlighted fields.", "error");
       return;
     }
+    const phoneStored = extractIndianMobileDigits(form.phone);
     const payload = {
       name: form.name.trim(),
-      phone: form.phone.trim(),
+      phone: phoneStored,
       email: form.email.trim(),
       notes: form.notes.trim(),
     };
+
+    const duplicate = customerRows.find(
+      (c) =>
+        extractIndianMobileDigits(c.phone) === phoneStored &&
+        c.id !== editingId
+    );
+    if (duplicate) {
+      const msg = "A customer with this phone number already exists.";
+      setFieldErrors((p) => ({ ...p, phone: msg }));
+      showToast(msg, "error");
+      return;
+    }
+
+    setSaving(true);
     try {
       if (editingId) {
         const res = await fetch(`/api/customers/${editingId}`, {
@@ -204,6 +222,12 @@ export default function CustomersModulePage() {
         });
         const data = await res.json();
         if (!res.ok) {
+          if (res.status === 409) {
+            setFieldErrors((p) => ({
+              ...p,
+              phone: data?.error ?? "Another customer uses this phone number.",
+            }));
+          }
           showToast(data?.error ?? "Customer update failed.", "error");
           return;
         }
@@ -219,6 +243,12 @@ export default function CustomersModulePage() {
         });
         const data = await res.json();
         if (!res.ok || !data?.id) {
+          if (res.status === 409) {
+            setFieldErrors((p) => ({
+              ...p,
+              phone: data?.error ?? "Customer with this phone already exists.",
+            }));
+          }
           showToast(data?.error ?? "Customer creation failed.", "error");
           return;
         }
@@ -237,6 +267,8 @@ export default function CustomersModulePage() {
       setModalOpen(false);
     } catch {
       showToast("Network error while saving customer.", "error");
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -489,9 +521,10 @@ export default function CustomersModulePage() {
             <button
               type="button"
               onClick={saveCustomer}
-              className="inline-flex w-full cursor-pointer items-center justify-center rounded-xl bg-ra-primary px-4 py-2 text-sm font-semibold text-zinc-950 hover:brightness-110 sm:w-auto"
+              disabled={saving}
+              className="inline-flex w-full cursor-pointer items-center justify-center rounded-xl bg-ra-primary px-4 py-2 text-sm font-semibold text-zinc-950 hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
             >
-              Save
+              {saving ? "Saving…" : "Save"}
             </button>
           </div>
         }

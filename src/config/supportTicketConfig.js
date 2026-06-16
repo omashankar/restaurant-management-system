@@ -105,3 +105,7 @@ export const supportTicketRowCardCls =
 /** Super Admin support tickets table grid */
 export const saTicketTableGridCls =
   "grid grid-cols-[minmax(7.5rem,8.5rem)_minmax(0,1fr)_minmax(6.5rem,9rem)_7.25rem_7.25rem_4.5rem] items-center gap-x-3 gap-y-2";
+
+/** Super Admin contact inbox table grid */
+export const contactInboxTableGridCls =
+  "grid w-full min-w-[48rem] grid-cols-[minmax(8rem,1fr)_minmax(10rem,1.35fr)_minmax(6.5rem,0.8fr)_minmax(7rem,0.85fr)_6.75rem_5.25rem] items-center gap-x-3 gap-y-1";

@@ -8,6 +8,7 @@ import SearchField from "@/components/ui/SearchField";
 import {
   adminFilterSelectCls,
   adminTableActionBtnCls,
+  contactInboxTableGridCls,
   supportTicketDrawerPanelCls,
 } from "@/config/supportTicketConfig";
 import { saIconBadgeCls, saInputCls, saSpinnerCls, saTextareaCls } from "@/config/superAdminTheme";
@@ -257,7 +258,7 @@ export default function SuperAdminContactInboxPage() {
   ];
 
   return (
-    <div className="min-w-0 w-full max-w-full space-y-6 overflow-x-hidden sm:space-y-10">
+    <div className="min-w-0 w-full max-w-full space-y-6 sm:space-y-10">
       <div className="flex min-w-0 flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div className="flex min-w-0 items-start gap-3">
           <span className={`mt-1 flex shrink-0 items-center justify-center ${saIconBadgeCls}`}>
@@ -362,7 +363,7 @@ export default function SuperAdminContactInboxPage() {
           </div>
         ) : (
           <>
-            <div className="space-y-2 p-3 md:hidden">
+            <div className="space-y-2 p-3 lg:hidden">
               {messages.map((msg) => (
                 <div key={String(msg._id)} className="min-w-0 space-y-3 rounded-xl border admin-shell-border admin-surface-card p-3">
                   <div className="flex items-start justify-between gap-2">
@@ -407,9 +408,8 @@ export default function SuperAdminContactInboxPage() {
               ))}
             </div>
 
-            <div className="hidden min-w-0 md:block">
-              <div className="min-w-[44rem]">
-              <div className="grid grid-cols-[minmax(0,1.1fr)_minmax(0,1.4fr)_minmax(0,0.9fr)_minmax(0,0.8fr)_minmax(0,0.7fr)_auto] gap-3 admin-table-list-header px-4 py-2.5 text-xs uppercase tracking-wide admin-surface-muted">
+            <div className="hidden min-w-0 lg:block">
+              <div className={`${contactInboxTableGridCls} admin-table-list-header px-4 py-2.5 text-xs uppercase tracking-wide admin-surface-muted`}>
                 <span>From</span>
                 <span>Message</span>
                 <span>Source</span>
@@ -421,7 +421,7 @@ export default function SuperAdminContactInboxPage() {
                 {messages.map((msg) => (
                   <div
                     key={String(msg._id)}
-                    className="grid grid-cols-[minmax(0,1.1fr)_minmax(0,1.4fr)_minmax(0,0.9fr)_minmax(0,0.8fr)_minmax(0,0.7fr)_auto] gap-3 px-4 py-3 text-sm admin-shell-text transition-colors hover:bg-[var(--admin-hover)]"
+                    className={`${contactInboxTableGridCls} px-4 py-3 text-sm admin-shell-text transition-colors hover:bg-[var(--admin-hover)]`}
                   >
                     <div className="min-w-0">
                       <p className="truncate font-medium">{msg.name}</p>
@@ -432,7 +432,7 @@ export default function SuperAdminContactInboxPage() {
                       <p className="mt-0.5 line-clamp-2 text-xs admin-surface-muted">{msg.message}</p>
                     </div>
                     <p className="min-w-0 truncate text-xs admin-surface-body">{sourceLabel(msg.source)}</p>
-                    <p className="min-w-0 text-xs admin-surface-muted">{formatDateTime(msg.createdAt)}</p>
+                    <p className="min-w-0 whitespace-nowrap text-xs admin-surface-muted">{formatDateTime(msg.createdAt)}</p>
                     <div className="flex justify-center">
                       <select
                         id={`contact-inbox-status-desktop-${msg._id}`}
@@ -459,7 +459,6 @@ export default function SuperAdminContactInboxPage() {
                     </div>
                   </div>
                 ))}
-              </div>
               </div>
             </div>
           </>
