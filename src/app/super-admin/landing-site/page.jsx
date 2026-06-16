@@ -196,7 +196,7 @@ function NavbarPanel({ data, onChange, onSave, saving, fieldErrors = {}, onClear
                   <input type="checkbox" checked={!!l.external} onChange={e => updateLink(i, "external", e.target.checked)} />
                   External
                 </label>
-                <button type="button" onClick={() => removeLink(i)} className="cursor-pointer ml-auto shrink-0 rounded-lg p-2 text-zinc-600 transition-colors hover:bg-red-500/15 hover:text-red-400">
+                <button type="button" onClick={() => removeLink(i)} className="cursor-pointer ml-auto shrink-0 rounded-lg p-2 text-zinc-600 transition-colors hover-bg-red-15 hover-red-danger">
                   <Trash2 className="size-4" />
                 </button>
               </div>
@@ -429,7 +429,7 @@ function ArrayPanel({ items, fields, onSave, saving, icon: Icon, title, descript
                 <Pencil className="size-3.5" />
               </button>
               <button type="button" onClick={() => setDeleteIdx(i)}
-                className="cursor-pointer rounded-lg p-1.5 text-zinc-500 hover:bg-red-500/15 hover:text-red-400 transition-colors">
+                className="cursor-pointer rounded-lg p-1.5 text-zinc-500 transition-colors hover-bg-red-15 hover-red-danger">
                 <Trash2 className="size-3.5" />
               </button>
             </div>
@@ -587,7 +587,7 @@ function FooterPanel({ data, onChange, onSave, saving, fieldErrors = {}, onClear
               <input value={l.href ?? ""} onChange={e => updateLink(i, "href", e.target.value)}
                 placeholder="/url or #anchor" className={`${ic} min-w-0 sm:flex-1`} />
               <button type="button" onClick={() => removeLink(i)}
-                className="cursor-pointer shrink-0 self-end rounded-lg p-2 text-zinc-600 transition-colors hover:bg-red-500/15 hover:text-red-400 sm:self-auto">
+                className="cursor-pointer shrink-0 self-end rounded-lg p-2 text-zinc-600 transition-colors hover-bg-red-15 hover-red-danger sm:self-auto">
                 <Trash2 className="size-4" />
               </button>
             </div>

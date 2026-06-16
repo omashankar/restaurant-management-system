@@ -64,7 +64,7 @@ function QtyEditor({ row, onUpdateQty }) {
           setVal(String(next));
           setDirty(false);
         }}
-        className="cursor-pointer flex size-7 shrink-0 items-center justify-center rounded-lg border admin-shell-border admin-surface-muted transition-colors hover:border-red-500/40 hover:bg-red-500/10 hover:text-red-400"
+        className="cursor-pointer flex size-7 shrink-0 items-center justify-center rounded-lg border admin-shell-border admin-surface-muted transition-colors hover-border-red-40 hover-bg-red-10 hover-red-danger"
         aria-label="Decrease"
       >
         <Minus className="size-3.5" />

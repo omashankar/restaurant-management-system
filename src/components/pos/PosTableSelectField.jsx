@@ -17,7 +17,7 @@ export default function PosTableSelectField({
           <button
             type="button"
             onClick={onClear}
-            className="cursor-pointer text-[10px] font-medium text-red-400 hover:text-red-300"
+            className="cursor-pointer text-[10px] font-medium text-red-400 transition-colors hover-text-red-300"
           >
             Clear
           </button>
@@ -31,7 +31,7 @@ export default function PosTableSelectField({
           selectedTable
             ? "border-ra-primary-30 bg-ra-primary/[0.06] hover:border-ra-primary-40"
             : fieldError
-              ? "border-red-500/30 bg-red-500/5 hover:border-red-500/40"
+              ? "border-red-500/30 bg-red-500/5 hover-border-red-40"
               : "admin-shell-border bg-[var(--admin-hover)] hover:border-[var(--admin-border)]"
         }`}
       >

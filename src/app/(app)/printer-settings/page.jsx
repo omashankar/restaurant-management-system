@@ -414,7 +414,7 @@ export default function PrinterSettingsPage() {
                       <span className="truncate">{testing === printer.id ? "Testing…" : t("printer.testPrint")}</span>
                     </button>
                     <button type="button" onClick={() => removePrinter(printer.id)} disabled={saving}
-                      className="cursor-pointer flex size-8 shrink-0 items-center justify-center rounded-xl border admin-shell-border text-zinc-600 transition-colors hover:border-red-500/40 hover:text-red-400">
+                      className="cursor-pointer flex size-8 shrink-0 items-center justify-center rounded-xl border admin-shell-border text-zinc-600 transition-colors hover-border-red-40 hover-bg-red-10 hover-red-danger">
                       <Trash2 className="size-3.5" />
                     </button>
                   </div>

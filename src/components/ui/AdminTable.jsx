@@ -106,12 +106,12 @@ export function AdminTableIconButton({
 }) {
   const variantCls =
     variant === "danger"
-      ? "hover:bg-red-500/15 hover:text-red-500"
+      ? "admin-icon-hover-danger"
       : variant === "primary"
-        ? "hover:ra-primary hover:bg-[var(--admin-hover)]"
+        ? "admin-icon-hover-edit"
         : variant === "sky"
-          ? "hover:bg-[var(--admin-hover)] hover:text-sky-600"
-          : "hover:bg-[var(--admin-hover)] hover:admin-surface-body";
+          ? "admin-icon-hover-view"
+          : "admin-icon-hover-edit";
   return (
     <button
       type="button"

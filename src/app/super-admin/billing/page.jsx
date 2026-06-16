@@ -480,7 +480,7 @@ export default function BillingPage() {
                             onClick={() => { setRenewTarget(s); setRenewDays("30"); }}
                             title="Renew / extend"
                             aria-label="Renew / extend"
-                            className="hover:text-sa-primary"
+                            className="admin-icon-hover-sa"
                           >
                             <RotateCcw className="size-4" />
                           </AdminTableIconButton>
@@ -567,7 +567,7 @@ export default function BillingPage() {
                                 onClick={() => { setRenewTarget(s); setRenewDays("30"); }}
                                 title="Renew / extend"
                                 aria-label="Renew / extend"
-                                className="hover:text-sa-primary"
+                                className="admin-icon-hover-sa"
                               >
                                 <RotateCcw className="size-4" />
                               </AdminTableIconButton>

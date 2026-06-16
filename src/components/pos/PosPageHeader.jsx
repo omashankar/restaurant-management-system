@@ -41,7 +41,7 @@ export default function PosPageHeader({
           <button
             type="button"
             onClick={onClearCart}
-            className="cursor-pointer ml-1 rounded-lg p-2 admin-surface-muted transition-colors hover:bg-[var(--admin-hover)] hover:text-red-400"
+            className="cursor-pointer ml-1 rounded-lg p-2 admin-surface-muted transition-colors hover:bg-[var(--admin-hover)] hover-red-danger"
             aria-label="Clear cart"
             title="Clear cart"
           >

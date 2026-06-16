@@ -323,11 +323,11 @@ export default function TableAreasPage() {
                 </div>
                 <div className="mt-4 flex gap-1.5 admin-surface-divider-t pt-3">
                   <button type="button" onClick={() => openEdit(area)}
-                    className="cursor-pointer flex flex-1 items-center justify-center gap-1.5 rounded-lg border admin-shell-border py-2 text-xs font-medium text-zinc-400 transition-colors hover-border-ra-primary-40 hover-ra-primary">
+                    className="cursor-pointer flex flex-1 items-center justify-center gap-1.5 rounded-lg border admin-shell-border py-2 text-xs font-medium admin-surface-muted transition-colors hover-border-brand-40 hover-bg-brand-10 hover-brand-text">
                     <Pencil className="size-3.5" /> Edit
                   </button>
                   <button type="button" onClick={() => setDeleteTarget(area)}
-                    className="cursor-pointer flex flex-1 items-center justify-center gap-1.5 rounded-lg border admin-shell-border py-2 text-xs font-medium text-zinc-400 transition-colors hover:border-red-500/40 hover:text-red-400">
+                    className="cursor-pointer flex flex-1 items-center justify-center gap-1.5 rounded-lg border admin-shell-border py-2 text-xs font-medium admin-surface-muted transition-colors hover-border-red-40 hover-bg-red-10 hover-red-danger">
                     <Trash2 className="size-3.5" /> Delete
                   </button>
                 </div>
@@ -420,7 +420,7 @@ export default function TableAreasPage() {
                     <button
                       type="button"
                       onClick={clearImage}
-                      className="inline-flex w-full cursor-pointer items-center justify-center gap-1 rounded-lg border border-[var(--admin-border-subtle)] bg-[var(--admin-surface)] px-2.5 py-1 text-xs admin-surface-body transition-colors hover:border-red-500/40 hover:bg-red-500/5 hover:text-red-500 sm:w-auto"
+                      className="inline-flex w-full cursor-pointer items-center justify-center gap-1 rounded-lg border border-[var(--admin-border-subtle)] bg-[var(--admin-surface)] px-2.5 py-1 text-xs admin-surface-body transition-colors hover-border-red-40 hover-bg-red-5 hover-text-red-500 sm:w-auto"
                     >
                       <X className="size-3.5" />
                       Delete image

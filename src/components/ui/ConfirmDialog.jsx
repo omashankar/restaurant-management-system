@@ -67,7 +67,7 @@ export default function ConfirmDialog({
                 onClick={onConfirm}
                 className={`w-full cursor-pointer rounded-xl px-4 py-2.5 text-sm font-semibold transition-colors sm:w-auto sm:py-2 ${
                   danger
-                    ? "bg-red-500 text-white hover:bg-red-400"
+                    ? "bg-red-500 text-white transition-colors hover-bg-red-400"
                     : "bg-ra-primary text-zinc-950 hover:brightness-110"
                 }`}
               >

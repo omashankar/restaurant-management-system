@@ -97,7 +97,7 @@ export default function CmsImageField({
               type="button"
               disabled={disabled || busy}
               onClick={() => onChange("")}
-              className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--admin-border-subtle)] bg-[var(--admin-surface)] px-3 py-2 text-xs admin-surface-muted transition-colors hover:border-red-500/40 hover:bg-red-500/5 hover:text-red-500 disabled:opacity-50"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--admin-border-subtle)] bg-[var(--admin-surface)] px-3 py-2 text-xs admin-surface-muted transition-colors hover-border-red-40 hover-bg-red-5 hover-text-red-500 disabled:opacity-50"
             >
               <Trash2 className="size-3.5" /> Remove
             </button>

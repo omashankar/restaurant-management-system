@@ -373,7 +373,7 @@ export default function CustomersModulePage() {
                   <div className="flex shrink-0 items-center gap-1">
                     <Link
                       href={`/customers/${row.id}`}
-                      className="admin-table-icon-btn rounded-lg p-2 admin-surface-muted transition-colors hover:bg-[var(--admin-hover)] hover:text-sky-600"
+                      className="admin-table-icon-btn cursor-pointer rounded-lg p-2 admin-surface-muted transition-colors admin-icon-hover-view"
                       aria-label="View"
                     >
                       <Eye className="size-4" />
@@ -437,7 +437,7 @@ export default function CustomersModulePage() {
                   <AdminTableActionsCell>
                     <Link
                       href={`/customers/${row.id}`}
-                      className="admin-table-icon-btn rounded-lg p-2 admin-surface-muted transition-colors hover:bg-[var(--admin-hover)] hover:text-sky-600"
+                      className="admin-table-icon-btn cursor-pointer rounded-lg p-2 admin-surface-muted transition-colors admin-icon-hover-view"
                       aria-label="View"
                     >
                       <Eye className="size-4" />

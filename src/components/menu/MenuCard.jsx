@@ -192,7 +192,7 @@ export default function MenuCard({
             <button
               type="button"
               onClick={(e) => { e.stopPropagation(); onEdit(item); }}
-              className="admin-surface-btn-ghost cursor-pointer flex flex-1 items-center justify-center gap-1.5 py-2 text-xs font-semibold transition-all hover:border-[color-mix(in_srgb,var(--ra-primary)_40%,var(--admin-border))] hover:bg-[color-mix(in_srgb,var(--ra-primary)_8%,var(--admin-surface))] hover:text-ra-primary"
+              className="admin-surface-btn-ghost cursor-pointer flex flex-1 items-center justify-center gap-1.5 py-2 text-xs font-semibold transition-all hover-border-brand-40 hover-bg-brand-10 hover-brand-text"
             >
               <Pencil className="size-3.5" aria-hidden />
               Edit
@@ -200,7 +200,7 @@ export default function MenuCard({
             <button
               type="button"
               onClick={(e) => { e.stopPropagation(); onDelete(item); }}
-              className="admin-surface-btn-ghost cursor-pointer flex flex-1 items-center justify-center gap-1.5 py-2 text-xs font-semibold text-[var(--admin-text-muted)] transition-all hover:border-red-300 hover:bg-red-50 hover:text-red-600"
+              className="admin-surface-btn-ghost cursor-pointer flex flex-1 items-center justify-center gap-1.5 py-2 text-xs font-semibold text-[var(--admin-text-muted)] transition-all hover-border-red-40 hover-bg-red-10 hover-red-danger"
             >
               <Trash2 className="size-3.5" aria-hidden />
               Delete

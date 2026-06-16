@@ -674,11 +674,11 @@ export default function PlansPage() {
                       Assign
                     </button>
                     <button type="button" onClick={() => openEdit(p)}
-                      className={`cursor-pointer flex items-center justify-center rounded-lg border bg-[var(--admin-surface)] p-1.5 admin-surface-muted transition-colors hover:bg-[var(--admin-hover)] hover:admin-shell-text ${c.btnBorder}`}>
+                      className={`cursor-pointer flex items-center justify-center rounded-lg border bg-[var(--admin-surface)] p-1.5 admin-surface-muted transition-colors admin-icon-hover-edit ${c.btnBorder}`}>
                       <Pencil className="size-3.5" />
                     </button>
                     <button type="button" onClick={() => setDeleteTarget(p)}
-                      className={`cursor-pointer flex items-center justify-center rounded-lg border bg-[var(--admin-surface)] p-1.5 admin-surface-muted transition-colors hover:border-red-500/40 hover:bg-red-500/5 hover:text-red-500 ${c.btnBorder}`}>
+                      className={`cursor-pointer flex items-center justify-center rounded-lg border bg-[var(--admin-surface)] p-1.5 admin-surface-muted transition-colors hover-border-red-40 hover-bg-red-5 hover-text-red-500 ${c.btnBorder}`}>
                       <Trash2 className="size-3.5" />
                     </button>
                   </div>
