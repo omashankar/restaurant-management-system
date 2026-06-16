@@ -17,10 +17,10 @@ export default function PosPaymentSection({
 }) {
   if (!shouldShowPosPaymentUI(orderType)) {
     return (
-      <div className="flex gap-2.5 rounded-xl border border-ra-primary/20 bg-ra-primary/[0.06] px-3 py-2.5">
+      <div className="flex gap-2.5 rounded-xl border border-ra-primary-20 bg-ra-primary-5 px-3 py-2.5">
         <Receipt className="mt-0.5 size-4 shrink-0 text-ra-primary" aria-hidden />
         <div>
-          <p className="text-[10px] font-semibold uppercase tracking-wider text-ra-primary/90">Pay at bill</p>
+          <p className="text-[10px] font-semibold uppercase tracking-wider text-ra-primary-muted">Pay at bill</p>
           <p className="mt-0.5 text-[11px] leading-snug admin-surface-muted">{getPosPaymentHint(orderType)}</p>
         </div>
       </div>

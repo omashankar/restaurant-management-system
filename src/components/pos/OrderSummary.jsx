@@ -113,7 +113,7 @@ export default function OrderSummary({
       ? "flex min-h-0 flex-col"
       : layout === "embedded"
         ? "flex min-h-0 flex-col"
-        : "flex h-full min-h-0 max-h-none flex-col overflow-hidden admin-surface-card shadow-lg shadow-black/20 xl:sticky xl:top-4 xl:max-h-[calc(100vh-5.5rem)] xl:min-h-[520px]";
+        : "flex max-h-full min-h-0 flex-col overflow-y-auto overscroll-contain admin-surface-card shadow-lg shadow-black/20 [scrollbar-width:thin] xl:max-h-[calc(100dvh-5.25rem)]";
 
   const handlePlaceOrder = () => {
     onPlaceOrder?.();
@@ -126,7 +126,7 @@ export default function OrderSummary({
           <div
             className={`shrink-0 ${
               layout === "sidebar"
-                ? `max-h-[min(38vh,300px)] overflow-y-auto overscroll-contain border-b ${adminShell.borderB}`
+                ? `max-h-[min(28vh,240px)] overflow-y-auto overscroll-contain border-b ${adminShell.borderB}`
                 : ""
             }`}
           >
@@ -234,11 +234,17 @@ export default function OrderSummary({
 
         {showCheckout && (
           <div
-            className={`flex min-h-0 flex-col overflow-hidden ${
+            className={`flex flex-col ${
               section === "checkout" || section === "all" || layout === "drawer" ? "min-h-0 flex-1" : ""
-            }`}
+            } ${layout === "sidebar" ? "" : "min-h-0 overflow-hidden"}`}
           >
-            <div className="min-h-[10rem] flex-1 overflow-y-auto overscroll-contain">
+            <div
+              className={
+                layout === "sidebar"
+                  ? "shrink-0"
+                  : "min-h-[10rem] flex-1 overflow-y-auto overscroll-contain"
+              }
+            >
               <div className="shrink-0 px-4 pt-3 pb-2">
                 <div className="flex items-center justify-between gap-2">
                   <div>
@@ -281,7 +287,7 @@ export default function OrderSummary({
               </div>
             </div>
 
-            <div className="admin-surface-divider-t shrink-0 space-y-3 p-3">
+            <div className="sticky bottom-0 z-10 shrink-0 space-y-3 border-t border-[var(--admin-border-subtle)] bg-[var(--admin-surface)] p-3 shadow-[0_-8px_24px_-12px_rgba(0,0,0,0.45)]">
               {cart.length > 0 && (
                 <div>
                   <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wider admin-surface-muted">

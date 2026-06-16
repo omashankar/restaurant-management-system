@@ -1,5 +1,5 @@
 import clientPromise from "@/lib/mongodb";
-import { normalizeCustomerOrderStatus } from "@/lib/customerOrderStatus";
+import { serializeCustomerOrderListItem } from "@/lib/customerOrderSerialize";
 import { getCustomerTokenFromRequest, verifyCustomerToken } from "@/lib/customerAuth";
 import { logError, logInfo } from "@/lib/logger";
 import { createGatewayPaymentSession } from "@/lib/paymentGateway";
@@ -65,21 +65,7 @@ export async function GET(request) {
 
     return Response.json({
       success: true,
-      orders: orders.map((o) => {
-        const meta = normalizeCustomerOrderStatus(o.status);
-        return {
-          id: String(o._id),
-          orderId: o.orderId ?? "",
-          orderType: o.orderType ?? "",
-          total: Number(o.total ?? 0),
-          status: o.status ?? "",
-          statusKey: meta.key,
-          statusLabel: meta.label,
-          statusEmoji: meta.emoji,
-          chipClass: meta.chipClass,
-          createdAt: o.createdAt ?? null,
-        };
-      }),
+      orders: orders.map((o) => serializeCustomerOrderListItem(o)),
     });
   } catch (err) {
     console.error("customer.orders.GET failed:", err.message);

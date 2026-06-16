@@ -98,17 +98,6 @@ export async function POST(request) {
       );
     }
 
-    if (security.enable2FA && user.role === "super_admin" && !user.twoFactorSecret) {
-      return Response.json(
-        {
-          success: false,
-          error: "Enable two-factor authentication in your Super Admin profile before logging in.",
-          code: "SETUP_2FA_REQUIRED",
-        },
-        { status: 403 },
-      );
-    }
-
     if (userRequires2FA(user, security)) {
       return Response.json({
         success: false,
@@ -158,7 +147,14 @@ export async function POST(request) {
       restaurantId: userPayload.restaurantId,
       type: "refresh",
     });
-    const res = Response.json({ success: true, user: userPayload });
+    const res = Response.json({
+      success: true,
+      user: userPayload,
+      requires2FASetup:
+        Boolean(security.enable2FA) &&
+        userPayload.role === "super_admin" &&
+        !user.twoFactorSecret,
+    });
     logInfo("auth.login.success", { email: userPayload.email, role: userPayload.role });
     if (userPayload.role === "super_admin") {
       await writeAuditLog({

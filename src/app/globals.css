@@ -2511,8 +2511,8 @@ html[data-customer-dark="true"] body {
   color-scheme: dark;
 }
 
-/* Header + footer blend with page */
-.customer-dark header {
+/* Site navbar only — do not add a line under in-page section headers (e.g. account) */
+.customer-dark .ct-site-header {
   box-shadow: 0 1px 0 var(--customer-border);
 }
 

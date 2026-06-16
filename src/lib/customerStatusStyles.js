@@ -8,8 +8,14 @@ export const ORDER_STATUS_BADGE = {
   cancelled: "ct-status-badge ct-status-cancelled",
 };
 
+const ORDER_STATUS_KEY_ALIASES = {
+  pending: "new",
+  completed: "delivered",
+};
+
 export function orderStatusBadgeClass(statusKey) {
-  return ORDER_STATUS_BADGE[statusKey] ?? "ct-status-badge ct-status-muted";
+  const key = ORDER_STATUS_KEY_ALIASES[statusKey] ?? statusKey;
+  return ORDER_STATUS_BADGE[key] ?? "ct-status-badge ct-status-muted";
 }
 
 const RESERVATION_STATUS_BADGE = {

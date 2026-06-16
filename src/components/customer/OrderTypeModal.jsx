@@ -61,7 +61,7 @@ export default function OrderTypeModal() {
   return (
     <AnimatePresence>
       {orderTypeModalOpen && (
-        <div className="fixed inset-0 z-[100] flex items-end justify-center p-4 sm:items-center">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 pt-[max(1rem,env(safe-area-inset-top))] pb-[max(1rem,env(safe-area-inset-bottom))] sm:p-6">
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -72,20 +72,20 @@ export default function OrderTypeModal() {
           />
 
           <motion.div
-            initial={{ opacity: 0, y: 60, scale: 0.95 }}
+            initial={{ opacity: 0, y: 24, scale: 0.98 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 60, scale: 0.95 }}
+            exit={{ opacity: 0, y: 24, scale: 0.98 }}
             transition={{ type: "spring", stiffness: 300, damping: 28 }}
-            className="relative z-10 w-full max-w-md overflow-hidden rounded-3xl border border-customer-border bg-[var(--customer-card)] shadow-2xl"
+            className="relative z-10 flex max-h-[min(90dvh,40rem)] w-full max-w-md flex-col overflow-hidden rounded-3xl border border-customer-border bg-[var(--customer-card)] shadow-2xl"
           >
-            <div className="relative overflow-hidden px-6 pb-4 pt-6">
+            <div className="relative shrink-0 border-b border-customer-border px-6 pb-5 pt-7">
               <div className="pointer-events-none absolute inset-0 gradient-primary opacity-5" />
-              <div className="flex items-start justify-between">
-                <div>
+              <div className="relative flex items-start justify-between gap-3">
+                <div className="min-w-0 pr-2">
                   <h2 className="font-poppins text-xl font-bold text-customer-text">
                     How would you like to order?
                   </h2>
-                  <p className="mt-1 text-sm text-customer-muted">
+                  <p className="mt-2 text-sm leading-relaxed text-customer-muted">
                     {pendingCartItem
                       ? `We'll add "${pendingCartItem.name}" to your cart right after you choose.`
                       : "Choose your preferred dining style. You can change this anytime."}
@@ -103,7 +103,7 @@ export default function OrderTypeModal() {
               </div>
             </div>
 
-            <div className="space-y-3 px-6 pb-6">
+            <div className="min-h-0 flex-1 space-y-3 overflow-y-auto overscroll-contain px-6 py-5">
               {TYPES.map(({ id, label, desc, Icon, gradient, active }, i) => {
                 const isSelected = orderType === id;
                 return (

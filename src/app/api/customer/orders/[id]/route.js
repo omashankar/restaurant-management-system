@@ -1,5 +1,5 @@
 import clientPromise from "@/lib/mongodb";
-import { buildOrderTimeline, normalizeCustomerOrderStatus } from "@/lib/customerOrderStatus";
+import { serializeCustomerOrderDetail } from "@/lib/customerOrderSerialize";
 import { getCustomerTokenFromRequest, verifyCustomerToken } from "@/lib/customerAuth";
 import { ObjectId } from "mongodb";
 
@@ -49,45 +49,9 @@ export async function GET(request, { params }) {
       return Response.json({ success: false, error: "Order not found." }, { status: 404 });
     }
 
-    const meta = normalizeCustomerOrderStatus(order.status);
-    const items = Array.isArray(order.items) ? order.items : [];
-    const lineItems = items.map((it) => {
-      const price = Number(it.price ?? 0);
-      const qty = Number(it.qty ?? 0);
-      return {
-        id: String(it.id ?? ""),
-        name: String(it.name ?? ""),
-        price,
-        qty,
-        lineTotal: Number((price * qty).toFixed(2)),
-      };
-    });
-
-    const subtotal = Number(order.subtotal ?? lineItems.reduce((s, l) => s + l.lineTotal, 0));
-    const tax = Number(order.tax ?? 0);
-    const total = Number(order.total ?? subtotal + tax);
-
     return Response.json({
       success: true,
-      order: {
-        id: String(order._id),
-        orderId: order.orderId ?? "",
-        orderType: order.orderType ?? "",
-        tableNumber: order.tableNumber ?? "",
-        status: order.status ?? "",
-        statusKey: meta.key,
-        statusLabel: meta.label,
-        statusEmoji: meta.emoji,
-        chipClass: meta.chipClass,
-        notes: order.notes ?? "",
-        createdAt: order.createdAt ?? null,
-        subtotal: Number(subtotal.toFixed(2)),
-        tax: Number(tax.toFixed(2)),
-        deliveryCharge: Number(order.deliveryCharge ?? 0),
-        total: Number(total.toFixed(2)),
-        items: lineItems,
-        timeline: buildOrderTimeline(meta.key),
-      },
+      order: serializeCustomerOrderDetail(order),
     });
   } catch (err) {
     console.error("customer.orders.[id].GET failed:", err.message);

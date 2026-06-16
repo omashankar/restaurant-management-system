@@ -12,13 +12,18 @@ import PlatformFeatureGate from "@/components/customer/PlatformFeatureGate";
 import CustomerShellGate from "@/components/customer/CustomerShellGate";
 import CustomerThemeBootstrap from "@/components/CustomerThemeBootstrap";
 import { isCustomerAuthPath } from "@/lib/customerAuthRoutes";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { usePathname } from "next/navigation";
 import { useRef } from "react";
 
 function PageTransition({ children }) {
   const pathname = usePathname();
   const isFirstRoute = useRef(true);
+  const reduceMotion = useReducedMotion();
+
+  if (reduceMotion) {
+    return <div key={pathname}>{children}</div>;
+  }
 
   return (
     <AnimatePresence mode="wait">

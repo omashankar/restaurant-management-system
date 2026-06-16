@@ -40,6 +40,12 @@ function FieldError({ message }) {
   );
 }
 
+function safePostLoginPath(params, role) {
+  const from = params.get("from");
+  if (from && from.startsWith("/") && !from.startsWith("//")) return from;
+  return defaultRedirectForRole(role);
+}
+
 function LoginContent() {
   const { user, hydrated, login } = useApp();
   const router = useRouter();
@@ -61,8 +67,8 @@ function LoginContent() {
 
   useEffect(() => {
     if (!hydrated) return;
-    if (user) router.replace(defaultRedirectForRole(user.role));
-  }, [hydrated, user, router]);
+    if (user) router.replace(safePostLoginPath(params, user.role));
+  }, [hydrated, user, router, params]);
 
   useEffect(() => {
     const defaultEmail = params.get("email");
@@ -102,7 +108,8 @@ function LoginContent() {
         });
         const data = await res.json();
         if (data.success) {
-          router.push(login(data.user));
+          login(data.user);
+          router.push(safePostLoginPath(params, data.user?.role));
           return;
         }
         setError(data.error ?? "Invalid code.");
@@ -118,7 +125,8 @@ function LoginContent() {
       const data = await res.json();
 
       if (data.success) {
-        router.push(login(data.user));
+        login(data.user);
+        router.push(safePostLoginPath(params, data.user?.role));
         return;
       }
 
@@ -147,7 +155,8 @@ function LoginContent() {
 
       const demo = DEMO_USERS.find((u) => u.email === trimmedEmail && u.password === password);
       if (demo) {
-        router.push(login(demo.email, demo.roleKey));
+        login(demo.email, demo.roleKey);
+        router.push(safePostLoginPath(params, demo.roleKey));
         return;
       }
 
@@ -156,7 +165,8 @@ function LoginContent() {
       const trimmedEmail = email.trim();
       const demo = DEMO_USERS.find((u) => u.email === trimmedEmail && u.password === password);
       if (demo) {
-        router.push(login(demo.email, demo.roleKey));
+        login(demo.email, demo.roleKey);
+        router.push(safePostLoginPath(params, demo.roleKey));
         return;
       }
       setError("Network error. Please try again.");

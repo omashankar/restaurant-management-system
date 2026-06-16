@@ -12,7 +12,6 @@ const BOOTSTRAP = `
     if (paths.indexOf(path) === -1) return;
     var root = document.documentElement;
     root.classList.add("landing-preload-pending");
-    if (path === "/maintenance") root.setAttribute("data-landing-shell", "dark");
     setTimeout(function () {
       root.classList.remove("landing-preload-pending");
       root.removeAttribute("data-landing-shell");

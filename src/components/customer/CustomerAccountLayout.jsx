@@ -57,6 +57,9 @@ export default function CustomerAccountLayout({
   activeSection = "profile",
   orderCount = 0,
   reservationCount = 0,
+  pageTitle,
+  pageSubtitle,
+  hidePageHeader = false,
   children,
 }) {
   const { authUser, logoutCustomer } = useCustomer();
@@ -158,10 +161,10 @@ export default function CustomerAccountLayout({
           </nav>
 
           <main className="ct-account-main">
-            {activeSection !== "profile" ? (
+            {!hidePageHeader && activeSection !== "profile" ? (
               <header className="ct-account-page-header">
-                <h1 className="ct-account-page-header__title">{meta.title}</h1>
-                <p className="ct-account-page-header__sub">{meta.subtitle}</p>
+                <h1 className="ct-account-page-header__title">{pageTitle ?? meta.title}</h1>
+                <p className="ct-account-page-header__sub">{pageSubtitle ?? meta.subtitle}</p>
               </header>
             ) : null}
             {children}
