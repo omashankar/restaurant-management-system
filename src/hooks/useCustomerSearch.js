@@ -37,6 +37,16 @@ export function useCustomerSearch() {
       notes: "",
     };
 
+    const duplicate = customerRows.find(
+      (c) => extractIndianMobileDigits(c.phone) === payload.phone
+    );
+    if (duplicate) {
+      return {
+        ok: false,
+        error: "A customer with this phone number already exists.",
+      };
+    }
+
     try {
       const res = await fetch("/api/customers", {
         method: "POST",

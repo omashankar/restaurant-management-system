@@ -326,13 +326,13 @@ export default function TablesModulePage() {
                     <div className="flex gap-1">
                     {canEdit && (
                     <button type="button" onClick={() => openEdit(t)}
-                      className="cursor-pointer flex flex-1 items-center justify-center gap-1 rounded-lg border admin-shell-border py-2 text-xs font-medium text-zinc-400 transition-colors hover-border-ra-primary-40 hover-ra-primary">
+                      className="cursor-pointer flex flex-1 items-center justify-center gap-1 rounded-lg border admin-shell-border py-2 text-xs font-medium admin-surface-muted transition-colors hover-border-brand-40 hover-bg-brand-10 hover-brand-text">
                       <Pencil className="size-3.5" /> Edit
                     </button>
                     )}
                     {isAdmin && (
                     <button type="button" onClick={() => setDeleteTarget(t)}
-                      className="cursor-pointer flex flex-1 items-center justify-center gap-1 rounded-lg border admin-shell-border py-2 text-xs font-medium text-zinc-400 transition-colors hover:border-red-500/40 hover:text-red-400">
+                      className="cursor-pointer flex flex-1 items-center justify-center gap-1 rounded-lg border admin-shell-border py-2 text-xs font-medium admin-surface-muted transition-colors hover-border-red-40 hover-bg-red-10 hover-red-danger">
                       <Trash2 className="size-3.5" /> Delete
                     </button>
                     )}

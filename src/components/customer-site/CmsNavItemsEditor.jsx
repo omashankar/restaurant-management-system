@@ -95,7 +95,7 @@ export default function CmsNavItemsEditor({
               <button
                 type="button"
                 onClick={() => remove(index)}
-                className="rounded-lg border border-red-500/30 p-1.5 text-red-400 hover:bg-red-500/10"
+                className="rounded-lg border border-red-500/30 p-1.5 text-red-400 transition-colors hover-bg-red-10"
               >
                 <Trash2 className="size-4" />
               </button>

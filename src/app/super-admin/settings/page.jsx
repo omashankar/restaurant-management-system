@@ -98,7 +98,7 @@ function AppSection({ data, onChange, onSave, saving, fieldErrors = {}, onClearE
   return (
     <div className="space-y-5">
       <AdminSectionHeader icon={Settings} title="App Settings" description="Platform identity and contact information." />
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid min-w-0 gap-4 sm:grid-cols-2">
         <div className="sm:col-span-2">
           <Field label="Platform Name" required error={fieldErrors.name}>
             <input
@@ -132,7 +132,7 @@ function AppSection({ data, onChange, onSave, saving, fieldErrors = {}, onClearE
             />
           </Field>
         </div>
-        <div className="sm:col-span-1">
+        <div className="min-w-0 sm:col-span-2 xl:col-span-1">
           <PlatformBrandingImageField
             label="Logo"
             hint="Sidebar icon (square). Default: /branding/bhojdesk/icon.png"
@@ -146,7 +146,7 @@ function AppSection({ data, onChange, onSave, saving, fieldErrors = {}, onClearE
             kind="logo"
           />
         </div>
-        <div className="sm:col-span-1">
+        <div className="min-w-0 sm:col-span-2 xl:col-span-1">
           <PlatformBrandingImageField
             label="Favicon"
             hint="Browser tab icon. Square PNG/WebP, 32×32 or 64×64 recommended."
@@ -1669,7 +1669,7 @@ export default function SuperAdminSettingsPage() {
         </AdminSideNav>
 
         {/* Panel */}
-        <div ref={panelRef} className="min-w-0 flex-1 admin-surface-card p-4 sm:p-6">
+        <div ref={panelRef} className="min-w-0 flex-1 overflow-x-hidden admin-surface-card p-4 sm:p-6">
           {fetching ? (
             <SuperAdminPageSkeleton rows={6} rowClassName="h-12 rounded-xl" />
           ) : !settings ? (

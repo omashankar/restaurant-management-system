@@ -217,7 +217,7 @@ function OrderCard({ order, currency, onStatusChange, onMarkPaid, canEdit }) {
           )}
           {canEdit && order.status === "new" && (
             <button type="button" onClick={() => onStatusChange(order.id, "cancelled")}
-              className="cursor-pointer flex w-full items-center justify-center gap-1.5 rounded-xl border admin-shell-border py-1.5 text-xs admin-surface-muted hover:border-red-500/30 hover:text-red-400 transition-colors">
+              className="cursor-pointer flex w-full items-center justify-center gap-1.5 rounded-xl border admin-shell-border py-1.5 text-xs admin-surface-muted transition-colors hover-border-red-30 hover-red-danger">
               <X className="size-3" /> Cancel Order
             </button>
           )}
@@ -555,7 +555,7 @@ function CreateOrderModal({ open, onClose, onCreated, currency = "INR" }) {
                             {formatAdminMoney(line.price * line.qty, currency)}
                           </span>
                           <button type="button" onClick={() => removeItem(line.id)}
-                            className="cursor-pointer text-zinc-600 hover:text-red-400 transition-colors">
+                            className="cursor-pointer text-zinc-600 transition-colors hover-red-danger">
                             <X className="size-3" />
                           </button>
                         </div>

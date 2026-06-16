@@ -35,7 +35,7 @@ export const INVENTORY_STATUS_STYLES = {
       "border-red-500/40 bg-red-500/15 text-red-400 ring-1 ring-red-500/25",
     qty: "text-red-400",
     row: "border-l-2 border-l-red-500/55 bg-red-500/[0.07]",
-    card: "border-red-500/40 bg-red-500/5 hover:border-red-500/55",
+    card: "border-red-500/40 bg-red-500/5 hover-border-red-40",
     icon: "bg-red-500/15 text-red-400",
     bar: "from-red-500/90 to-red-600/70",
     track: "bg-red-500/10",

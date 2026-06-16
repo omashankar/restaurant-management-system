@@ -454,7 +454,7 @@ export default function RecipesPage() {
                   <button
                     type="button"
                     onClick={() => removeIngredient(i)}
-                    className="cursor-pointer rounded-lg p-2 text-zinc-500 hover:bg-[var(--admin-hover)] hover:text-red-400"
+                    className="cursor-pointer rounded-lg p-2 text-zinc-500 transition-colors hover:bg-[var(--admin-hover)] hover-red-danger"
                     aria-label="Remove line"
                   >
                     <X className="size-4" />

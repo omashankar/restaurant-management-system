@@ -94,7 +94,7 @@ export default function RestaurantLogoField({ logoUrl, onChange, disabled, hint 
                 type="button"
                 disabled={disabled || busy}
                 onClick={() => onChange("")}
-                className="inline-flex items-center gap-2 rounded-xl border admin-shell-border px-4 py-2 text-sm admin-surface-muted hover:border-red-500/40 hover:text-red-400 disabled:opacity-50"
+                className="inline-flex items-center gap-2 rounded-xl border admin-shell-border px-4 py-2 text-sm admin-surface-muted transition-colors hover-border-red-40 hover-bg-red-10 hover-red-danger disabled:opacity-50"
               >
                 <Trash2 className="size-4" /> Remove
               </button>

@@ -82,10 +82,10 @@ export default function PlatformBrandingImageField({
   return (
     <div className="min-w-0 space-y-2">
       <label className={`block ${adminSurface.label}`}>{label}</label>
-      {hint ? <p className={`text-[11px] ${adminSurface.faint}`}>{hint}</p> : null}
+      {hint ? <p className={`break-words text-[11px] leading-relaxed ${adminSurface.faint}`}>{hint}</p> : null}
 
-      <div className="flex min-w-0 flex-col gap-3 rounded-xl admin-surface-card p-3 sm:flex-row sm:items-start sm:p-4">
-        <div className={previewBox}>
+      <div className="min-w-0 space-y-4 rounded-xl admin-surface-card p-3 sm:p-4">
+        <div className={`${previewBox} self-start`}>
           {previewSrc ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={previewSrc} alt="" className={previewClassName} />
@@ -94,8 +94,8 @@ export default function PlatformBrandingImageField({
           )}
         </div>
 
-        <div className="min-w-0 flex-1 space-y-3">
-          <div className="flex flex-wrap gap-2">
+        <div className="min-w-0 w-full space-y-3">
+          <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
             <button
               type="button"
               disabled={disabled || busy}
@@ -114,7 +114,7 @@ export default function PlatformBrandingImageField({
                 type="button"
                 disabled={disabled || busy}
                 onClick={() => onChange("")}
-                className="inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl border admin-shell-border px-3 py-2 text-sm admin-surface-muted transition-colors hover:border-red-500/40 hover:text-red-400 disabled:opacity-50 sm:w-auto"
+                className="inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl border admin-shell-border px-3 py-2 text-sm admin-surface-muted transition-colors hover-border-red-40 hover-bg-red-10 hover-red-danger disabled:opacity-50 sm:w-auto"
               >
                 <Trash2 className="size-4" /> Remove
               </button>
@@ -141,7 +141,7 @@ export default function PlatformBrandingImageField({
                   ? "https://cdn.example.com/favicon.png"
                   : "https://cdn.example.com/logo.png"
               }
-              className={saInputCls}
+              className={`${saInputCls} min-w-0 w-full`}
             />
           </div>
 
@@ -149,7 +149,7 @@ export default function PlatformBrandingImageField({
             <p className="text-xs text-red-400">{uploadError || error}</p>
           )}
 
-          <p className={`text-[11px] ${adminSurface.faint}`}>
+          <p className={`break-words text-[11px] leading-relaxed ${adminSurface.faint}`}>
             JPG, PNG, or WebP — large files are compressed automatically
           </p>
         </div>

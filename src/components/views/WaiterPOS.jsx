@@ -104,7 +104,7 @@ export default function WaiterPOS() {
                   <span className="flex items-center gap-2">
                     <span className="font-medium text-ra-primary">${(line.price * line.qty).toFixed(2)}</span>
                     <button type="button" onClick={() => removeLine(line.id)}
-                      className="cursor-pointer rounded-lg p-1 admin-surface-muted hover:bg-red-500/15 hover:text-red-400">
+                      className="cursor-pointer rounded-lg p-1 admin-surface-muted transition-colors hover-bg-red-15 hover-red-danger">
                       <Trash2 className="size-4" />
                     </button>
                   </span>

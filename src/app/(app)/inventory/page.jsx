@@ -405,7 +405,7 @@ export default function InventoryPage() {
             {stats.low}
           </p>
         </div>
-        <div className="admin-surface-card min-w-0 px-4 py-3 sm:py-4 transition-colors hover:border-red-500/25">
+        <div className="admin-surface-card min-w-0 px-4 py-3 sm:py-4 transition-colors hover-border-red-30">
           <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">
             Out of stock
           </p>

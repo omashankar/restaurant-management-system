@@ -67,6 +67,15 @@ export const adminSurface = {
   searchCompact: "admin-surface-search admin-search-input",
   search: "admin-surface-search",
   btnGhost: "admin-surface-btn-ghost",
+  /** Danger outline / delete — use instead of Tailwind red hover:* (not reliably generated) */
+  btnDangerOutline: "transition-colors hover-border-red-40 hover-bg-red-10 hover-red-danger",
+  btnDangerIcon: "transition-colors hover-bg-red-15 hover-red-danger",
+  btnDangerSubtle: "transition-colors hover-border-red-40 hover-bg-red-5 hover-text-red-500",
+  /** Card / table icon actions */
+  btnEditOutline: "transition-colors hover-border-brand-40 hover-bg-brand-10 hover-brand-text",
+  btnIconView: "admin-icon-hover-view",
+  btnIconEdit: "admin-icon-hover-edit",
+  btnIconDanger: "admin-icon-hover-danger",
   btnIcon: "inline-flex items-center justify-center admin-surface-btn-icon",
   /** Sidebar expand/collapse — same chrome as icon buttons */
   sidebarToggle: "admin-surface-sidebar-toggle",

@@ -76,7 +76,7 @@ export default function ReservationCalendarView({ rows, onView, onEdit, onDelete
                   <button
                     type="button"
                     onClick={() => onView(r)}
-                    className="cursor-pointer flex flex-1 items-center justify-center gap-1 rounded-lg py-2 text-xs font-medium text-[var(--admin-text-muted)] transition-colors hover:bg-[var(--admin-hover)] hover:text-sky-600"
+                    className="cursor-pointer flex flex-1 items-center justify-center gap-1 rounded-lg py-2 text-xs font-medium text-[var(--admin-text-muted)] transition-colors admin-icon-hover-view"
                   >
                     <Eye className="size-3.5" />
                     View
@@ -93,7 +93,7 @@ export default function ReservationCalendarView({ rows, onView, onEdit, onDelete
                     type="button"
                     onClick={() => onDelete(r)}
                     disabled={!canDelete}
-                    className="cursor-pointer flex flex-1 items-center justify-center gap-1 rounded-lg py-2 text-xs font-medium text-[var(--admin-text-muted)] transition-colors hover:bg-red-500/10 hover:text-red-600 disabled:cursor-not-allowed disabled:opacity-40"
+                    className="cursor-pointer flex flex-1 items-center justify-center gap-1 rounded-lg py-2 text-xs font-medium text-[var(--admin-text-muted)] transition-colors hover-bg-red-10 hover-text-red-500 disabled:cursor-not-allowed disabled:opacity-40"
                   >
                     <Trash2 className="size-3.5" />
                     Delete

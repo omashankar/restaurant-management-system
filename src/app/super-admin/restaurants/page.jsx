@@ -223,7 +223,7 @@ function RestaurantRowActions({ r, onPreview, onEdit, onDelete, onToggleOwner, o
         disabled={ownerTogglingId === r.id}
         title={r.ownerStatus === "blocked" ? "Unblock owner admin" : "Block owner admin"}
         aria-label={r.ownerStatus === "blocked" ? "Unblock owner admin" : "Block owner admin"}
-        className={r.ownerStatus === "blocked" ? "hover:text-sa-primary" : "hover:text-amber-500"}
+        className={r.ownerStatus === "blocked" ? "admin-icon-hover-sa" : "admin-icon-hover-amber"}
       >
         {r.ownerStatus === "blocked" ? <ShieldCheck className="size-4" /> : <ShieldOff className="size-4" />}
       </AdminTableIconButton>

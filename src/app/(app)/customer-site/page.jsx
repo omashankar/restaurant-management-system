@@ -1045,7 +1045,7 @@ export default function CustomerSitePage() {
                           type="button"
                           disabled={banners.length <= 1}
                           onClick={() => setBanners((p) => p.filter((_, i) => i !== index))}
-                          className="rounded-lg p-1.5 admin-surface-faint hover:bg-red-500/10 hover:text-red-400 disabled:opacity-30"
+                          className="rounded-lg p-1.5 admin-surface-faint transition-colors hover-bg-red-10 hover-red-danger disabled:opacity-30"
                         >
                           <Trash2 className="size-4" />
             </button>
