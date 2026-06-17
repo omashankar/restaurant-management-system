@@ -230,7 +230,6 @@ export default function TopNavbar({
                             setDemoRole(r);
                             setOpen(false);
                             if (r === "chef") router.push("/kitchen");
-                            else if (r === "waiter") router.push("/pos");
                             else router.push("/dashboard");
                           }}
                           className={`cursor-pointer flex w-full items-center gap-2 px-3 py-2 text-left text-sm ${adminSurface.rowHover} ${
@@ -297,7 +296,6 @@ export default function TopNavbar({
                             setDemoRole(r);
                             setIsProfileOpen(false);
                             if (r === "chef") router.push("/kitchen");
-                            else if (r === "waiter") router.push("/pos");
                             else router.push("/dashboard");
                           }}
                           className={`${adminSurface.menuItem} px-2.5 py-2 ${

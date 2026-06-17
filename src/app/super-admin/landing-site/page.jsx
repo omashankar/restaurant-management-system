@@ -10,7 +10,7 @@ import { formatLandingCurrency } from "@/lib/formatLandingCurrency";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import IconPicker from "@/components/ui/IconPicker";
 import Modal from "@/components/ui/Modal";
-import { getIcon } from "@/lib/iconMap";
+import { getIcon, getRoleIcon } from "@/lib/iconMap";
 import { useToast } from "@/hooks/useToast";
 import {
   AlertCircle, BarChart3, CreditCard, Globe, HelpCircle,
@@ -20,6 +20,7 @@ import {
 import Link from "next/link";
 import { decimalInputProps, phoneInputProps } from "@/lib/formInputTypes";
 import { validateLandingSection } from "@/lib/landingValidation";
+import { sanitizeLandingSectionPayload } from "@/lib/landingSanitize";
 import { extractIndianMobileDigits, isValidIndianMobile } from "@/lib/phoneUtils";
 import { useCallback, useEffect, useRef, useState } from "react";
 
@@ -60,7 +61,7 @@ function Toggle({ checked, onChange, label, description }) {
 function SaveBtn({ saving, onClick }) {
   return (
     <div className="flex justify-stretch pt-2 sm:justify-end">
-      <button type="button" onClick={onClick} disabled={saving}
+      <button type="button" onClick={() => onClick?.()} disabled={saving}
         className={`inline-flex w-full cursor-pointer items-center justify-center gap-2 sm:w-auto ${saBtnPrimaryCls} disabled:opacity-50`}>
         {saving
           ? <span className="size-3.5 animate-spin rounded-full border-2 border-zinc-950/30 border-t-zinc-950" />
@@ -274,71 +275,13 @@ const TABS = [
   { id: "seo",          label: "SEO",          Icon: Search         },
 ];
 
-function trimLandingText(value) {
-  return String(value ?? "").trim();
-}
-
-function sanitizeSectionPayload(section, data) {
-  if (data == null) return data;
-
-  if (section === "brands" && typeof data === "object") {
-    return {
-      ...data,
-      items: (Array.isArray(data.items) ? data.items : [])
-        .map(trimLandingText)
-        .filter(Boolean),
-    };
-  }
-
-  if (section === "problemSolution" && typeof data === "object") {
-    return {
-      ...data,
-      problems: (Array.isArray(data.problems) ? data.problems : [])
-        .map(trimLandingText)
-        .filter(Boolean),
-      solutionPoints: (Array.isArray(data.solutionPoints) ? data.solutionPoints : [])
-        .map(trimLandingText)
-        .filter(Boolean),
-    };
-  }
-
-  if (section === "benefits" && typeof data === "object") {
-    return {
-      ...data,
-      items: (Array.isArray(data.items) ? data.items : [])
-        .map(trimLandingText)
-        .filter(Boolean),
-    };
-  }
-
-  if (section === "faq" && typeof data === "object") {
-    return {
-      ...data,
-      items: (Array.isArray(data.items) ? data.items : []).filter(
-        (item) => trimLandingText(item?.q) || trimLandingText(item?.a),
-      ),
-    };
-  }
-
-  if (section === "howItWorks" && typeof data === "object") {
-    return {
-      ...data,
-      steps: (Array.isArray(data.steps) ? data.steps : []).filter(
-        (step) => trimLandingText(step?.title) || trimLandingText(step?.text) || trimLandingText(step?.n),
-      ),
-    };
-  }
-
-  if (section === "hero" && typeof data === "object") {
-    return {
-      ...data,
-      stats: (Array.isArray(data.stats) ? data.stats : []).filter(
-        (stat) => trimLandingText(stat?.value) || trimLandingText(stat?.label),
-      ),
-    };
-  }
-
-  return data;
+function isSavePayloadOverride(value) {
+  if (value === undefined) return false;
+  if (value == null) return true;
+  if (Array.isArray(value)) return true;
+  if (typeof value !== "object") return true;
+  if (typeof value.preventDefault === "function" && value.nativeEvent != null) return false;
+  return true;
 }
 
 function NavbarPanel({ data, onChange, onSave, saving, fieldErrors = {}, onClearError }) {
@@ -1395,7 +1338,7 @@ const FEATURE_FIELDS = [
 ];
 
 const ROLE_FIELDS = [
-  { key: "icon",        label: "Icon",        type: "iconpicker", required: true, default: "Circle" },
+  { key: "icon",        label: "Icon",        type: "iconpicker", required: true, default: "Users" },
   { key: "role",        label: "Role Name",   placeholder: "Admin",         required: true },
   { key: "description", label: "Description", placeholder: "Full control…", type: "textarea" },
 ];
@@ -1429,6 +1372,11 @@ export default function LandingSitePage() {
   const [sectionErrors, setSectionErrors] = useState({});
   const { showToast, ToastUI }    = useToast();
   const panelRef                  = useRef(null);
+  const activeTabRef              = useRef(activeTab);
+
+  useEffect(() => {
+    activeTabRef.current = activeTab;
+  }, [activeTab]);
 
   const clearSectionError = useCallback((key) => {
     setSectionErrors((prev) => (prev[key] ? { ...prev, [key]: "" } : prev));
@@ -1452,9 +1400,15 @@ export default function LandingSitePage() {
       ? { ...rawContent.contact, phone: normalizePhoneForEditor(rawContent.contact.phone) }
       : rawContent.contact;
     const footer = rawContent.footer
-      ? { ...rawContent.footer, phone: normalizePhoneForEditor(rawContent.footer.phone) }
+      ? {
+          ...sanitizeLandingSectionPayload("footer", rawContent.footer),
+          phone: normalizePhoneForEditor(rawContent.footer.phone),
+        }
       : rawContent.footer;
-    return { ...rawContent, pricing, contact, footer };
+    const navbar = rawContent.navbar
+      ? sanitizeLandingSectionPayload("navbar", rawContent.navbar)
+      : rawContent.navbar;
+    return { ...rawContent, pricing, contact, footer, navbar };
   }, []);
 
   const mapPlansToLandingPricing = useCallback((plans = [], fallbackPricing = []) => {
@@ -1524,26 +1478,34 @@ export default function LandingSitePage() {
 
   /* ── Update a field in the active section ── */
   const handleChange = useCallback((keyOrArr, val) => {
-    setContent(prev => {
+    setContent((prev) => {
+      const tab = activeTabRef.current;
       const arrSections = ["features", "roles", "pricing", "testimonials"];
-      if (arrSections.includes(activeTab)) return { ...prev, [activeTab]: keyOrArr };
-      return { ...prev, [activeTab]: { ...prev[activeTab], [keyOrArr]: val } };
+      if (arrSections.includes(tab)) return { ...prev, [tab]: keyOrArr };
+      return { ...prev, [tab]: { ...(prev[tab] ?? {}), [keyOrArr]: val } };
     });
-  }, [activeTab]);
+  }, []);
 
   /* ── Save active section (optionally with override data) ── */
   const handleSave = useCallback(async (overrideData) => {
     if (!content) return false;
-    if (activeTab === "pricing") {
+    const tab = activeTabRef.current;
+    if (tab === "pricing") {
       showToast("Pricing is synced from Plans. Please update /super-admin/plans.", "error");
       return false;
     }
-    const rawPayload = overrideData !== undefined ? overrideData : content[activeTab];
-    const payload = sanitizeSectionPayload(activeTab, rawPayload);
-    const validation = validateLandingSection(activeTab, payload);
+    const rawPayload = isSavePayloadOverride(overrideData) ? overrideData : content[tab];
+    const payload = sanitizeLandingSectionPayload(tab, rawPayload);
+    const validation = validateLandingSection(tab, payload);
     if (!validation.valid) {
       setSectionErrors(validation.errors);
-      showToast(validation.message ?? "Please fix the highlighted fields.", "error");
+      const tabLabel = TABS.find((t) => t.id === tab)?.label ?? tab;
+      showToast(
+        validation.message
+          ? `${tabLabel}: ${validation.message}`
+          : "Please fix the highlighted fields.",
+        "error",
+      );
       return false;
     }
     setSectionErrors({});
@@ -1552,18 +1514,14 @@ export default function LandingSitePage() {
       const res     = await fetch("/api/super-admin/landing", {
         method:  "PATCH",
         headers: { "Content-Type": "application/json" },
-        body:    JSON.stringify({ section: activeTab, data: payload }),
+        body:    JSON.stringify({ section: tab, data: payload }),
       });
       const json = await res.json();
       if (!json.success) {
         showToast(json.error ?? "Failed to save.", "error");
         return false;
       }
-      if (overrideData !== undefined) {
-        setContent((prev) => ({ ...prev, [activeTab]: payload }));
-      } else if (payload !== rawPayload) {
-        setContent((prev) => ({ ...prev, [activeTab]: payload }));
-      }
+      setContent((prev) => ({ ...prev, [tab]: payload }));
       showToast("Saved successfully.");
       return true;
     } catch {
@@ -1572,7 +1530,7 @@ export default function LandingSitePage() {
     } finally {
       setSaving(false);
     }
-  }, [activeTab, content, showToast]);
+  }, [content, showToast]);
 
   const switchTab = (id) => {
     setActiveTab(id);
@@ -1695,7 +1653,7 @@ export default function LandingSitePage() {
                   title="Roles"
                   description="Describe each role and their access level."
                   renderCard={item => {
-                    const RoleIcon = getIcon(item.icon);
+                    const RoleIcon = getRoleIcon(item.role, item.icon, item.id);
                     return (
                       <div className="flex items-center gap-3">
                         <span className="inline-flex size-8 shrink-0 items-center justify-center rounded-lg bg-indigo-500/15 text-indigo-400">

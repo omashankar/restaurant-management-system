@@ -27,9 +27,9 @@ export function defaultRedirectForRole(role) {
   switch (role) {
     case "super_admin": return "/super-admin/dashboard";
     case "admin":       return "/dashboard";
-    case "manager":     return "/manager/dashboard";
-    case "waiter":      return "/waiter/dashboard";
-    case "chef":        return "/chef/dashboard";
+    case "manager":     return "/dashboard";
+    case "waiter":      return "/dashboard";
+    case "chef":        return "/kitchen";
     default:            return "/dashboard";
   }
 }

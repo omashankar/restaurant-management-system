@@ -41,22 +41,22 @@ export default function CustomerAuthLayout({ children }) {
                 className="mb-6 ct-auth-hero__logo"
               />
 
-              <h1 className="font-poppins text-3xl font-bold leading-tight tracking-tight text-white xl:text-4xl">
+              <h1 className="ct-auth-hero__title font-poppins text-3xl font-bold leading-tight tracking-tight xl:text-4xl">
                 Welcome to{" "}
-                <span className="block text-white/95">{restaurantName}</span>
+                <span className="block">{restaurantName}</span>
               </h1>
-              <p className="mt-4 max-w-md text-sm leading-relaxed text-white/75 xl:text-base">
+              <p className="ct-auth-hero__lead mt-4 max-w-md text-sm leading-relaxed xl:text-base">
                 Sign in to view orders, manage bookings, and enjoy a faster checkout every time you visit.
               </p>
 
-              <ul className="mt-10 space-y-4">
+              <ul className="ct-auth-hero__points mt-10 space-y-4">
                 {HERO_POINTS.map(({ icon: Icon, text }, i) => (
                   <motion.li
                     key={text}
                     initial={{ opacity: 0, x: -12 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: 0.15 + i * 0.08 }}
-                    className="flex items-center gap-3 text-sm text-white/90"
+                    className="ct-auth-hero__point flex items-center gap-3 text-sm"
                   >
                     <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-white/15 backdrop-blur-sm">
                       <Icon className="size-4.5" aria-hidden />
@@ -71,16 +71,15 @@ export default function CustomerAuthLayout({ children }) {
 
         <main className="ct-auth-main">
           <div className="ct-auth-stack">
-            <div className="ct-auth-mobile-header lg:hidden">
-              <RestaurantLogo size="md" mode={isDark ? "dark" : "light"} imageOnly />
-            </div>
-
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.4 }}
               className="ct-auth-card"
             >
+              <div className="ct-auth-card__brand">
+                <RestaurantLogo size="md" mode={isDark ? "dark" : "light"} imageOnly />
+              </div>
               {children}
             </motion.div>
           </div>

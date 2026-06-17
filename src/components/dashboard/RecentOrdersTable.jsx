@@ -137,7 +137,7 @@ export default function RecentOrdersTable({ orders = [], currency = "INR" }) {
             </div>
 
             <div className="hidden min-h-0 overflow-x-auto lg:block">
-              <table className="admin-table w-full min-w-[48rem] text-left text-sm xl:min-w-[52rem]">
+              <table className="admin-table w-full min-w-[52rem] text-left text-sm xl:min-w-[58rem]">
                 <thead className="admin-table-head sticky top-0 z-[1] backdrop-blur-sm">
                   <tr className="admin-table-head-row">
                     <th className="admin-table-th whitespace-nowrap px-4 py-3 text-left xl:px-5">Order ID</th>
@@ -166,18 +166,18 @@ export default function RecentOrdersTable({ orders = [], currency = "INR" }) {
 
                     return (
                       <tr key={order.id} className="transition-colors hover:bg-[var(--admin-hover)]">
-                        <td className="max-w-[7rem] px-4 py-3 font-mono text-xs text-ra-primary/90 xl:max-w-[8rem] xl:px-5">
+                        <td className="max-w-[8rem] px-4 py-3 font-mono text-xs text-ra-primary/90 xl:max-w-[9rem] xl:px-5">
                           <span className="block truncate" title={id}>{id}</span>
                         </td>
-                        <td className="max-w-[8rem] px-4 py-3 font-medium admin-shell-text xl:max-w-[10rem] xl:px-5">
+                        <td className="max-w-[7rem] px-4 py-3 font-medium admin-shell-text xl:max-w-[9rem] xl:px-5">
                           <span className="block truncate" title={customer}>{customer}</span>
                         </td>
                         <td className="whitespace-nowrap px-4 py-3 xl:px-5">
-                          <span className={`inline-flex items-center gap-1.5 ${adminSurface.muted}`}>
+                          <span className={`inline-flex max-w-[10rem] items-center gap-1.5 truncate xl:max-w-[12rem] ${adminSurface.muted}`}>
                             <TypeIcon className="size-3.5 shrink-0" />
-                            <span>{typeText}</span>
+                            <span className="truncate">{typeText}</span>
                             {tableNumber ? (
-                              <span className="text-zinc-600">· {tableNumber}</span>
+                              <span className="shrink-0 text-zinc-600">· {tableNumber}</span>
                             ) : null}
                           </span>
                         </td>
@@ -190,14 +190,14 @@ export default function RecentOrdersTable({ orders = [], currency = "INR" }) {
                           </span>
                         </td>
                         <td className="hidden whitespace-nowrap px-4 py-3 xl:table-cell xl:px-5">
-                          <div className="flex flex-col gap-1">
+                          <div className="flex min-w-[5.5rem] flex-col gap-1">
                             <span className="text-xs admin-surface-body">{paymentMethodLabel[paymentMethod] ?? paymentMethod}</span>
                             <span className={`inline-flex w-fit rounded-full px-2 py-0.5 text-[10px] font-semibold capitalize ring-1 ${paymentStatusStyles[paymentStatus] ?? paymentStatusStyles.pending}`}>
                               {paymentStatus}
                             </span>
                           </div>
                         </td>
-                        <td className="whitespace-nowrap px-4 py-3 text-right text-xs admin-surface-faint xl:px-5">{time}</td>
+                        <td className="whitespace-nowrap px-4 py-3 text-right text-xs tabular-nums admin-surface-faint xl:px-5">{time}</td>
                       </tr>
                     );
                   })}

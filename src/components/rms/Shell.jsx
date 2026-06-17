@@ -7,7 +7,7 @@ import { usePlatformConfig } from "@/hooks/usePlatformConfig";
 import { useUser } from "@/context/AuthContext";
 import { BrandPreloaderFace } from "@/components/ui/BrandPreloaderFace";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useLayoutEffect, useState } from "react";
+import { useEffect } from "react";
 import { adminShell } from "@/config/adminSurfaceClasses";
 import LayoutWrapper from "./LayoutWrapper";
 import RestrictedPage from "./RestrictedPage";
@@ -19,30 +19,12 @@ export default function Shell({ children }) {
   const { features: platformFeatures } = usePlatformConfig();
   const pathname = usePathname();
   const router   = useRouter();
-  const [routing, setRouting] = useState(false);
 
   /* ── Redirect to login if not authenticated ── */
   useEffect(() => {
     if (!hydrated) return;
     if (!user) router.replace("/login");
   }, [hydrated, user, router]);
-
-  /* ── Role-based path correction ── */
-  useLayoutEffect(() => {
-    if (!user) return;
-    if (user.role === "waiter" && pathname === "/dashboard") {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setRouting(true);
-      router.replace("/pos");
-      return;
-    }
-    if (user.role === "chef" && pathname === "/dashboard") {
-      setRouting(true);
-      router.replace("/kitchen");
-      return;
-    }
-    setRouting(false);
-  }, [user, pathname, router]);
 
   /* ── Loading states ── */
   if (loading || !hydrated || !appHydrated) {
@@ -57,14 +39,6 @@ export default function Shell({ children }) {
     return (
       <div className={`restaurant-admin-panel ${adminShell.pageCentered}`}>
         <BrandPreloaderFace variant="restaurant-admin" subtitle="Redirecting…" compact />
-      </div>
-    );
-  }
-
-  if (routing) {
-    return (
-      <div className={`restaurant-admin-panel ${adminShell.pageCentered}`}>
-        <BrandPreloaderFace variant="restaurant-admin" subtitle="Opening workspace…" compact />
       </div>
     );
   }

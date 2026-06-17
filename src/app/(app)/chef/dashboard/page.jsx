@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
-export default function ChefDashboard() {
+
+export default function ChefDashboardRedirect() {
   redirect("/kitchen");
 }

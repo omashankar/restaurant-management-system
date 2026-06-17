@@ -16,6 +16,7 @@ import {
   getWeekdayNameForDate,
   isRestaurantClosedOnDate,
   pickDefaultTimeSlot,
+  areaNameForTable,
 } from "@/lib/reservationUtils";
 import { getTableAvailability } from "@/lib/tableAvailability";
 import { useOpeningHours } from "@/hooks/useOpeningHours";
@@ -277,6 +278,7 @@ export default function ReservationFormModal({ open, onClose, editing, tableOpti
     if (!open) return;
     setSaveError("");
     setFieldErrors(EMPTY_RESERVATION_FORM_ERRORS);
+    const defaultTable = editing?.tableNumber ?? tableOptions[0] ?? "";
     const nextForm = editing
       ? {
           customerName: editing.customerName,
@@ -285,14 +287,18 @@ export default function ReservationFormModal({ open, onClose, editing, tableOpti
           time: editing.time,
           guests: String(editing.guests),
           tableNumber: editing.tableNumber,
-          area: editing.area ?? "",
+          area:
+            areaNameForTable(editing.tableNumber, floorTables, tableCategories) ||
+            editing.area ||
+            "",
           notes: editing.notes ?? "",
           status: editing.status,
         }
       : {
           ...empty,
           date: new Date().toISOString().slice(0, 10),
-          tableNumber: tableOptions[0] ?? "",
+          tableNumber: defaultTable,
+          area: areaNameForTable(defaultTable, floorTables, tableCategories),
         };
 
     const raf = requestAnimationFrame(() => {
@@ -300,7 +306,7 @@ export default function ReservationFormModal({ open, onClose, editing, tableOpti
       setForm(nextForm);
     });
     return () => cancelAnimationFrame(raf);
-  }, [open, editing, tableOptions]);
+  }, [open, editing, tableOptions, floorTables, tableCategories]);
 
   useEffect(() => {
     if (!open || !form.date || timeSlots.length === 0) return;
@@ -330,21 +336,33 @@ export default function ReservationFormModal({ open, onClose, editing, tableOpti
   /* Enriched table options */
   const enrichedTables = useMemo(() => {
     return tableOptions.map((tn) => {
-      const t   = floorTables.find((ft) => ft.tableNumber === tn);
-      const cat = t ? tableCategories.find((c) => c.id === t.categoryId) : null;
+      const t   = floorTables.find((ft) => String(ft.tableNumber) === String(tn));
+      const areaName = areaNameForTable(tn, floorTables, tableCategories);
       return {
         tableNumber: tn,
-        label: t ? `${tn} — ${t.capacity} persons${cat ? ` · ${cat.name}` : ""}` : tn,
-        areaName: cat?.name ?? "",
+        label: t ? `${tn} — ${t.capacity} persons${areaName ? ` · ${areaName}` : ""}` : tn,
+        areaName,
       };
     });
   }, [tableOptions, floorTables, tableCategories]);
 
+  const selectedTableArea = useMemo(
+    () => areaNameForTable(form.tableNumber, floorTables, tableCategories),
+    [form.tableNumber, floorTables, tableCategories],
+  );
+
   /* Auto-derive area when table changes */
   const handleTableChange = (tableNumber) => {
-    const entry = enrichedTables.find((e) => e.tableNumber === tableNumber);
-    setForm((f) => ({ ...f, tableNumber, area: entry?.areaName ?? f.area }));
+    const area = areaNameForTable(tableNumber, floorTables, tableCategories);
+    setForm((f) => ({ ...f, tableNumber, area }));
   };
+
+  useEffect(() => {
+    if (!open || !form.tableNumber) return;
+    if (selectedTableArea && form.area !== selectedTableArea) {
+      setForm((f) => ({ ...f, area: selectedTableArea }));
+    }
+  }, [open, form.tableNumber, form.area, selectedTableArea]);
 
   const isConflict = availabilityInfo && !availabilityInfo.available;
 
@@ -599,20 +617,30 @@ export default function ReservationFormModal({ open, onClose, editing, tableOpti
           ) : null}
         </div>
 
-        {/* ── Area (auto-filled, editable) ── */}
+        {/* ── Area (from selected table) ── */}
         <div>
           <label className="text-xs font-medium admin-surface-muted">
             Area
-            {form.area && <span className="ml-1 admin-surface-faint">(auto-filled from table)</span>}
+            {form.tableNumber ? (
+              <span className="ml-1 admin-surface-faint">(from selected table)</span>
+            ) : null}
           </label>
-          <select value={form.area}
+          <select
+            value={form.area}
+            disabled={Boolean(form.tableNumber && selectedTableArea)}
             onChange={(e) => setForm((f) => ({ ...f, area: e.target.value }))}
-            className="cursor-pointer mt-1 admin-surface-input focus-ra-primary px-3 py-2.5">
+            className="cursor-pointer mt-1 admin-surface-input focus-ra-primary px-3 py-2.5 disabled:cursor-not-allowed disabled:opacity-80"
+          >
             <option value="">— Select area —</option>
             {tableCategories.map((c) => (
               <option key={c.id} value={c.name}>{c.name}</option>
             ))}
           </select>
+          {form.tableNumber && !selectedTableArea ? (
+            <p className="mt-1 text-xs text-amber-400">
+              This table has no floor area assigned. Set it under Tables → Areas.
+            </p>
+          ) : null}
         </div>
 
         {/* ── Notes ── */}

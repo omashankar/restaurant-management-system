@@ -64,7 +64,7 @@ export const NAV_ITEMS = [
     href: "/dashboard",
     label: "Dashboard",
     Icon: LayoutDashboard,
-    roles: ["admin", "manager"],
+    roles: ["admin", "manager", "waiter"],
   },
   {
     type: "link",
@@ -246,11 +246,14 @@ export function canAccessPath(role, pathname, accessControl, platformFeatures = 
     }
   }
 
-  const match = rules.find(
+  const matches = rules.filter(
     (r) => pathname === r.href || pathname.startsWith(`${r.href}/`)
   );
-  if (!match) return true;  // /profile and unknown paths are open to all
-  if (!match.roles.includes(role)) return false;
-  if (!match.feature) return true;
-  return Boolean(access?.[match.feature]?.[role]);
+  if (matches.length === 0) return true;
+
+  return matches.some((match) => {
+    if (!match.roles.includes(role)) return false;
+    if (!match.feature) return true;
+    return Boolean(access?.[match.feature]?.[role]);
+  });
 }

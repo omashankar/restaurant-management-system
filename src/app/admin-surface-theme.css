@@ -395,6 +395,13 @@ html[data-admin-mode="light"] .admin-shell-header {
   }
 }
 
+@media (min-width: 1280px) {
+  :is(.restaurant-admin-panel, .super-admin-panel, .admin-portal-scope)
+    th.admin-table-th.hidden.xl\:table-cell {
+    display: table-cell;
+  }
+}
+
 .admin-table-head,
 .admin-table-list-header {
   background-color: var(--admin-table-header-bg);

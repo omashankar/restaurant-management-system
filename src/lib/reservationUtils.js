@@ -265,3 +265,13 @@ export function validateReservationDateTime(openingHours, date, time) {
 
   return { valid: true, error: null };
 }
+
+/** Floor area name for a table number (Table Areas / categories). */
+export function areaNameForTable(tableNumber, floorTables = [], tableCategories = []) {
+  const tn = String(tableNumber ?? "").trim();
+  if (!tn) return "";
+  const table = floorTables.find((t) => String(t.tableNumber) === tn);
+  if (!table?.categoryId) return "";
+  const cat = tableCategories.find((c) => String(c.id) === String(table.categoryId));
+  return cat?.name?.trim() ?? "";
+}

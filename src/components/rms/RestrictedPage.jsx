@@ -9,9 +9,7 @@ export default function RestrictedPage({ title = "Access restricted", message })
   const home =
     user?.role === "chef"
       ? "/kitchen"
-      : user?.role === "waiter"
-        ? "/pos"
-        : "/dashboard";
+      : "/dashboard";
 
   return (
     <div className="flex min-h-[50vh] flex-col items-center justify-center rounded-2xl border border-amber-500/25 bg-amber-500/5 p-10 text-center">
