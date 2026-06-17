@@ -28,7 +28,7 @@ const ROLE_PATHS = {
     "/tables", "/reservations", "/customers",
     "/inventory", "/analytics", "/support-tickets", "/profile",
   ],
-  waiter: ["/waiter", "/pos", "/orders", "/tables", "/reservations", "/customers", "/support-tickets", "/profile"],
+  waiter: ["/waiter", "/dashboard", "/pos", "/orders", "/tables", "/reservations", "/customers", "/support-tickets", "/profile"],
   chef: ["/chef", "/kitchen", "/orders", "/support-tickets", "/profile"],
 };
 
@@ -36,9 +36,9 @@ const ROLE_PATHS = {
 const ROLE_HOME = {
   super_admin: "/super-admin/dashboard",
   admin: "/dashboard",
-  manager: "/manager/dashboard",
-  waiter: "/waiter/dashboard",
-  chef: "/chef/dashboard",
+  manager: "/dashboard",
+  waiter: "/dashboard",
+  chef: "/kitchen",
 };
 
 /* ── Public paths — no auth needed ── */

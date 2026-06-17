@@ -66,6 +66,30 @@ function normalizeReservation(row) {
   };
 }
 
+function tenantModuleFetchFlags(role) {
+  const isChef = role === "chef";
+  return {
+    menu: true,
+    categories: true,
+    orders: true,
+    tables: !isChef,
+    areas: !isChef,
+    customers: !isChef,
+    reservations: !isChef,
+    inventory: role === "admin" || role === "manager",
+  };
+}
+
+async function optionalFetch(url, fetchOpts, enabled) {
+  if (!enabled) return null;
+  return fetch(url, fetchOpts);
+}
+
+async function optionalJson(res) {
+  if (!res) return { success: false };
+  return res.json();
+}
+
 function normalizeInventoryItem(row) {
   return {
     id: row.id,
@@ -157,6 +181,8 @@ export function ModuleDataProvider({ children }) {
 
     async function fetchTenantModuleData() {
       const fetchOpts = { credentials: "include", cache: "no-store" };
+      const flags = tenantModuleFetchFlags(user.role);
+
       const [
         menuRes,
         catRes,
@@ -164,25 +190,25 @@ export function ModuleDataProvider({ children }) {
         areasRes,
         customersRes,
         reservationsRes,
-        inventoryRes,
         ordersRes,
+        inventoryRes,
       ] = await Promise.all([
-        fetch("/api/menu", fetchOpts),
-        fetch("/api/categories", fetchOpts),
-        fetch("/api/tables", fetchOpts),
-        fetch("/api/tables/areas", fetchOpts),
-        fetch("/api/customers", fetchOpts),
-        fetch("/api/reservations", fetchOpts),
-        fetch("/api/inventory", fetchOpts),
-        fetch("/api/orders", fetchOpts),
+        optionalFetch("/api/menu", fetchOpts, flags.menu),
+        optionalFetch("/api/categories", fetchOpts, flags.categories),
+        optionalFetch("/api/tables", fetchOpts, flags.tables),
+        optionalFetch("/api/tables/areas", fetchOpts, flags.areas),
+        optionalFetch("/api/customers", fetchOpts, flags.customers),
+        optionalFetch("/api/reservations", fetchOpts, flags.reservations),
+        optionalFetch("/api/orders", fetchOpts, flags.orders),
+        optionalFetch("/api/inventory", fetchOpts, flags.inventory),
       ]);
-      if (
-        [menuRes, catRes, tablesRes, areasRes, customersRes, reservationsRes, inventoryRes, ordersRes]
-          .some((r) => r.status === 401)
-      ) {
+
+      const authResponses = [menuRes, catRes, tablesRes, areasRes, customersRes, reservationsRes, ordersRes, inventoryRes].filter(Boolean);
+      if (authResponses.some((r) => r.status === 401)) {
         clearUser();
         return;
       }
+
       const [
         menuData,
         catData,
@@ -190,17 +216,17 @@ export function ModuleDataProvider({ children }) {
         areasData,
         customersData,
         reservationsData,
-        inventoryData,
         ordersData,
+        inventoryData,
       ] = await Promise.all([
-        menuRes.json(),
-        catRes.json(),
-        tablesRes.json(),
-        areasRes.json(),
-        customersRes.json(),
-        reservationsRes.json(),
-        inventoryRes.json(),
-        ordersRes.json(),
+        optionalJson(menuRes),
+        optionalJson(catRes),
+        optionalJson(tablesRes),
+        optionalJson(areasRes),
+        optionalJson(customersRes),
+        optionalJson(reservationsRes),
+        optionalJson(ordersRes),
+        optionalJson(inventoryRes),
       ]);
       if (cancelled) return;
       if (menuData.success && Array.isArray(menuData.items)) setMenuItems(menuData.items);

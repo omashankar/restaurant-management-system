@@ -68,7 +68,6 @@ export default function Navbar() {
                       setDemoRole(r);
                       setOpen(false);
                       if (r === "chef") router.push("/kitchen");
-                      else if (r === "waiter") router.push("/pos");
                       else router.push("/dashboard");
                     }}
                     className={`flex w-full items-center gap-2 px-3 py-2 text-left text-sm transition-colors hover:bg-[var(--admin-hover)] ${

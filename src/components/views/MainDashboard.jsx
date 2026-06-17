@@ -15,7 +15,13 @@ import { raIconBadgeCls, raPageRefreshBtnCls, raSpinnerCls } from "@/config/rest
 import { useAdminLocale } from "@/context/RestaurantLocaleContext";
 import { useDashboardData } from "@/hooks/useDashboardData";
 import { usePermission } from "@/hooks/usePermission";
-import { LayoutDashboard, RefreshCw } from "lucide-react";
+import { BarChart3, LayoutDashboard, RefreshCw } from "lucide-react";
+
+function DashboardPageIcon({ role }) {
+  if (role === "admin") return <LayoutDashboard className="size-5" aria-hidden />;
+  if (role === "manager") return <BarChart3 className="size-5" aria-hidden />;
+  return <LayoutDashboard className="size-5" aria-hidden />;
+}
 
 export default function MainDashboard() {
   const { hasPermission, role } = usePermission();
@@ -31,7 +37,7 @@ export default function MainDashboard() {
       <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div className="flex min-w-0 items-start gap-3">
           <span className={`mt-1 shrink-0 ${raIconBadgeCls}`}>
-            <LayoutDashboard className="size-5" aria-hidden />
+            <DashboardPageIcon role={role} />
           </span>
           <div className="min-w-0">
             <h1 className="admin-page-title break-words text-xl font-semibold tracking-tight sm:text-2xl">

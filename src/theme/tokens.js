@@ -1,13 +1,39 @@
 import { DEFAULT_CUSTOMER_THEME } from "@/lib/customerThemeDefaults";
 import { mergeCmsSection } from "@/lib/customerCmsMerge";
 import { resolveCustomerFontStack } from "@/theme/customerFonts";
-import { clampHex, generatePalette, luminance } from "@/theme/palette";
+import { clampHex, generatePalette, luminance, mixHex, alphaHex } from "@/theme/palette";
 import { DEFAULT_PRIMARY } from "@/theme/constants";
 
 export function resolveThemeInput(stored) {
   const t = mergeCmsSection(DEFAULT_CUSTOMER_THEME, stored);
   const primary = clampHex(t.primaryColor, DEFAULT_PRIMARY);
   return { ...t, primaryColor: primary, secondaryColor: primary };
+}
+
+/** Auth hero panel — dark base with brand tint; scales safely for any CMS primary. */
+export function buildAuthHeroCssVars(primary) {
+  const p = clampHex(primary, DEFAULT_PRIMARY);
+  const lum = luminance(p);
+  const tintStrength = lum > 0.58 ? 0.1 : lum > 0.38 ? 0.2 : 0.3;
+  const glowStrength = lum > 0.58 ? 0.2 : lum > 0.38 ? 0.36 : 0.46;
+  const highlightMix = lum > 0.58 ? 0.07 : 0.13;
+
+  const base = "#09090b";
+  const deep = mixHex("#101014", p, tintStrength * 0.5);
+  const mid = mixHex("#14141a", p, tintStrength);
+  const accent = mixHex(p, "#16161d", 0.58);
+  const highlight = mixHex(p, "#ffffff", highlightMix);
+
+  return {
+    "--customer-auth-hero-base": base,
+    "--customer-auth-hero-deep": deep,
+    "--customer-auth-hero-mid": mid,
+    "--customer-auth-hero-accent": accent,
+    "--customer-auth-hero-highlight": highlight,
+    "--customer-auth-hero-glow": alphaHex(p, glowStrength),
+    "--customer-auth-hero-glow-soft": alphaHex(p, glowStrength * 0.38),
+    "--customer-auth-hero-shine": alphaHex(highlight, lum > 0.58 ? 0.22 : 0.32),
+  };
 }
 
 /**
@@ -101,6 +127,8 @@ export function buildThemeCssVars(stored, modeOverride = null) {
     "--customer-btn-secondary-bg": palette.btnSecondaryBg,
     "--customer-btn-secondary-fg": palette.btnSecondaryFg,
     "--customer-btn-secondary-border": palette.btnSecondaryBorder,
+
+    ...buildAuthHeroCssVars(primary),
 
     "--customer-font": font,
     "--customer-mode": mode,

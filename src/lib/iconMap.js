@@ -73,6 +73,38 @@ export function getIcon(name) {
   return ICON_COMPONENTS[name] ?? Circle;
 }
 
+/** Default landing role icons — used when stored value is missing or placeholder Circle. */
+export const ROLE_ICON_BY_KEY = {
+  admin: "UserRoundCheck",
+  manager: "Users",
+  waiter: "ClipboardList",
+  chef: "ChefHat",
+};
+
+/** Pick a sensible role icon from stored value, role name, or item id. */
+export function resolveRoleIcon(roleName, iconName, itemId = "") {
+  const trimmed = String(iconName ?? "").trim();
+  if (trimmed && trimmed !== "Circle" && ICON_COMPONENTS[trimmed]) {
+    return trimmed;
+  }
+
+  const roleKey = String(roleName ?? "").trim().toLowerCase();
+  if (ROLE_ICON_BY_KEY[roleKey]) return ROLE_ICON_BY_KEY[roleKey];
+
+  const idKey = String(itemId ?? "").trim().toLowerCase();
+  if (ROLE_ICON_BY_KEY[idKey]) return ROLE_ICON_BY_KEY[idKey];
+
+  for (const [key, icon] of Object.entries(ROLE_ICON_BY_KEY)) {
+    if (roleKey.includes(key)) return icon;
+  }
+
+  return trimmed && ICON_COMPONENTS[trimmed] ? trimmed : "Users";
+}
+
+export function getRoleIcon(roleName, iconName, itemId = "") {
+  return getIcon(resolveRoleIcon(roleName, iconName, itemId));
+}
+
 /**
  * ICON_LIST — curated shortlist used by legacy code / quick references.
  * The full picker uses the complete lucide-react library (~3,800 icons).

@@ -3,6 +3,8 @@ import { withTenant } from "@/lib/tenantDb";
 
 const COMPLETED_STATUSES = ["completed", "ready"];
 const ACTIVE_STATUSES = ["new", "preparing", "ready", "completed"];
+/** Revenue charts align with “Sales today” — all non-cancelled orders */
+const REVENUE_STATUS_MATCH = { status: { $ne: "cancelled" } };
 
 function startOfToday() {
   const d = new Date();
@@ -94,7 +96,7 @@ export const GET = withTenant(["admin", "manager"], async ({ db, tenantFilter, r
         $match: {
           ...tenantFilter,
           createdAt: { $gte: weekStart },
-          status: { $in: COMPLETED_STATUSES },
+          ...REVENUE_STATUS_MATCH,
         },
       },
       {
@@ -112,7 +114,7 @@ export const GET = withTenant(["admin", "manager"], async ({ db, tenantFilter, r
         $match: {
           ...tenantFilter,
           createdAt: { $gte: monthStart },
-          status: { $in: COMPLETED_STATUSES },
+          ...REVENUE_STATUS_MATCH,
         },
       },
       {
@@ -130,7 +132,7 @@ export const GET = withTenant(["admin", "manager"], async ({ db, tenantFilter, r
         $match: {
           ...tenantFilter,
           createdAt: { $gte: fortnightStart },
-          status: { $in: COMPLETED_STATUSES },
+          ...REVENUE_STATUS_MATCH,
         },
       },
       {

@@ -37,6 +37,8 @@
  */
 
 import { BHOJDESK_BRAND, BHOJDESK_LOGOS } from "@/config/bhojdeskBrand";
+import { resolveRoleIcon } from "@/lib/iconMap";
+import { sanitizeLandingSectionPayload } from "@/lib/landingSanitize";
 import { validateLandingSectionServer } from "@/lib/landingValidation";
 import { extractIndianMobileDigits, isValidIndianMobile } from "@/lib/phoneUtils";
 import clientPromise from "./mongodb";
@@ -49,6 +51,35 @@ function sanitizeLandingPhone(phone) {
 function sanitizePhoneFields(data) {
   if (!data || typeof data !== "object") return data;
   return { ...data, phone: sanitizeLandingPhone(data.phone) };
+}
+
+function sanitizeRoles(roles) {
+  if (!Array.isArray(roles)) return roles;
+  return roles.map((item) => ({
+    ...item,
+    icon: resolveRoleIcon(item?.role, item?.icon, item?.id),
+  }));
+}
+
+/** Restore required copy when DB has blank strings (empty string beats defaults in deep merge). */
+const REQUIRED_LANDING_STRINGS = {
+  hero: ["headline"],
+  about: ["headline"],
+  footer: ["companyName"],
+};
+
+function fillEmptyRequiredLandingFields(section, data) {
+  const defaults = DEFAULTS[section];
+  const keys = REQUIRED_LANDING_STRINGS[section];
+  if (!defaults || !keys?.length || !data || typeof data !== "object") return data;
+
+  const out = { ...data };
+  for (const key of keys) {
+    if (!String(out[key] ?? "").trim() && String(defaults[key] ?? "").trim()) {
+      out[key] = defaults[key];
+    }
+  }
+  return out;
 }
 
 const DOC_ID     = "landing";
@@ -442,8 +473,7 @@ function generateId() {
 function deepMergeSection(defaultValue, storedValue) {
   if (Array.isArray(defaultValue)) {
     if (!Array.isArray(storedValue)) return defaultValue;
-    /** Empty curated lists fall back so the public site never drops whole sections */
-    return storedValue.length === 0 ? defaultValue : storedValue;
+    return storedValue;
   }
   if (defaultValue && typeof defaultValue === "object") {
     const merged = { ...defaultValue };
@@ -467,6 +497,12 @@ export function mergeWithDefaults(doc) {
     content[section] = deepMergeSection(DEFAULTS[section], doc?.[section]);
     if (section === "contact" || section === "footer") {
       content[section] = sanitizePhoneFields(content[section]);
+    }
+    if (section === "roles") {
+      content[section] = sanitizeRoles(content[section]);
+    }
+    if (REQUIRED_LANDING_STRINGS[section]) {
+      content[section] = fillEmptyRequiredLandingFields(section, content[section]);
     }
   }
   return content;
@@ -506,16 +542,23 @@ export async function replaceSection(section, data, updatedBy) {
   if (!VALID_SECTIONS.includes(section)) {
     throw Object.assign(new Error(`Invalid section "${section}".`), { status: 400 });
   }
-  const payload = section === "contact" || section === "footer"
-    ? sanitizePhoneFields(data)
-    : data;
-  const err = VALIDATORS[section]?.(payload);
+  const payload =
+    section === "contact" || section === "footer"
+      ? sanitizePhoneFields(data)
+      : sanitizeLandingSectionPayload(section, data);
+
+  const normalized =
+    section === "roles"
+      ? sanitizeRoles(payload)
+      : payload;
+
+  const err = VALIDATORS[section]?.(normalized);
   if (err) throw Object.assign(new Error(err), { status: 422 });
 
   const db = await getDb();
   await db.collection(COLLECTION).updateOne(
     { _id: DOC_ID },
-    { $set: { [section]: payload, updatedAt: new Date(), updatedBy: updatedBy ?? null, version: VERSION } },
+    { $set: { [section]: normalized, updatedAt: new Date(), updatedBy: updatedBy ?? null, version: VERSION } },
     { upsert: true }
   );
   return { section, updatedAt: new Date() };
