@@ -40,6 +40,21 @@ function buildSearchMatchStage(search) {
   };
 }
 
+async function aggregateRestaurantStats(db, matchFilter = {}) {
+  const rows = await db.collection("restaurants").aggregate([
+    ...(Object.keys(matchFilter).length ? [{ $match: matchFilter }] : []),
+    { $group: { _id: "$status", count: { $sum: 1 } } },
+  ]).toArray();
+  const countFor = (id) => (rows.find((x) => x._id === id)?.count ?? 0);
+  const total = rows.reduce((sum, row) => sum + row.count, 0);
+  return {
+    total,
+    active:    countFor("active"),
+    inactive:  countFor("inactive"),
+    suspended: countFor("suspended"),
+  };
+}
+
 async function ownerIdsMatchingSearch(db, search) {
   const safeSearch = escapeRegex(search);
   const owners = await db.collection("users").find(
@@ -117,23 +132,16 @@ export async function GET(request) {
       pipeline.push({
         $facet: {
           meta: [{ $count: "total" }],
-          byStatus: [{ $group: { _id: "$status", count: { $sum: 1 } } }],
           data: [{ $skip: skip }, { $limit: pageSize }],
         },
       });
 
-      const [aggRow] = await db.collection("restaurants").aggregate(pipeline).toArray();
+      const [aggRow, stats] = await Promise.all([
+        db.collection("restaurants").aggregate(pipeline).toArray().then((rows) => rows[0]),
+        aggregateRestaurantStats(db),
+      ]);
       const total = aggRow?.meta?.[0]?.total ?? 0;
-      const byStatus = aggRow?.byStatus ?? [];
       const rows = aggRow?.data ?? [];
-
-      const countFor = (id) => (byStatus.find((x) => x._id === id)?.count ?? 0);
-      const stats = {
-        total,
-        active:    countFor("active"),
-        inactive:  countFor("inactive"),
-        suspended: countFor("suspended"),
-      };
 
       const restaurantIds = rows.map((r) => r._id);
       const roleCountsAgg = restaurantIds.length

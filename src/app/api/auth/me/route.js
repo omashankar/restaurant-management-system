@@ -57,6 +57,35 @@ export async function GET(request) {
       return Response.json({ success: false, error: "User not found." }, { status: 404 });
     }
 
+    const userStatus = user.status ?? "active";
+    if (user.role !== "super_admin" && userStatus !== "active") {
+      return Response.json(
+        {
+          success: false,
+          error: "Your account is inactive. Please contact support.",
+          code: "ACCOUNT_INACTIVE",
+        },
+        { status: 403 },
+      );
+    }
+
+    if (user.role !== "super_admin" && user.restaurantId) {
+      const restaurant = await db.collection("restaurants").findOne(
+        { _id: user.restaurantId },
+        { projection: { status: 1 } },
+      );
+      if (restaurant && restaurant.status !== "active") {
+        return Response.json(
+          {
+            success: false,
+            error: "This restaurant is not active. Please contact support.",
+            code: "RESTAURANT_INACTIVE",
+          },
+          { status: 403 },
+        );
+      }
+    }
+
     const userPayload = {
       id: user._id.toString(),
       name: user.name,

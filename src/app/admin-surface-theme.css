@@ -1831,15 +1831,6 @@ html[data-admin-mode="light"]
   color: var(--ra-primary, var(--sa-primary, #10b981));
 }
 
-html[data-admin-mode="light"]
-  :is(.restaurant-admin-panel, .super-admin-panel, .admin-portal-scope)
-  :is(button, a):is(.hover-red-danger, .hover-text-red-400):hover,
-html[data-admin-mode="light"]
-  :is(.restaurant-admin-panel, .super-admin-panel, .admin-portal-scope)
-  :is(button, a).admin-icon-hover-danger:hover {
-  color: #dc2626;
-}
-
 /* Danger action hovers — mirror Edit's hover-ra-primary (Tailwind red hovers are not safelisted) */
 :is(.restaurant-admin-panel, .super-admin-panel, .admin-portal-scope) .hover-red-danger:hover,
 :is(.restaurant-admin-panel, .super-admin-panel, .admin-portal-scope) .hover-text-red-400:hover {
@@ -1881,7 +1872,7 @@ html[data-admin-mode="dark"]
 
 html[data-admin-mode="light"]
   :is(.restaurant-admin-panel, .super-admin-panel, .admin-portal-scope)
-  :is(.hover-red-danger:hover, .hover-text-red-400:hover) {
+  :is(button, a):is(.hover-red-danger:hover, .admin-icon-hover-danger:hover, .hover-text-red-400:hover) {
   color: #dc2626;
 }
 
@@ -1889,6 +1880,12 @@ html[data-admin-mode="light"]
   :is(.restaurant-admin-panel, .super-admin-panel, .admin-portal-scope)
   .hover-text-red-500:hover {
   color: #b91c1c;
+}
+
+/* Danger / action icon buttons — default faint (cards inherit dark body text) */
+:is(.restaurant-admin-panel, .super-admin-panel, .admin-portal-scope)
+  :is(button, a):is(.admin-icon-hover-danger, .hover-red-danger, .admin-icon-hover-edit, .admin-icon-hover-view) {
+  color: var(--admin-text-faint);
 }
 
 /* Icon row actions — view / edit / delete (all admin tables) */

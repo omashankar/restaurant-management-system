@@ -117,9 +117,9 @@ export function DynamicRoles({ roles = [] }) {
 function yearlySavePercent(monthly, yearly) {
   const m = Number(monthly);
   const y = Number(yearly);
-  if (!Number.isFinite(m) || !Number.isFinite(y) || m <= 0) return 20;
+  if (!Number.isFinite(m) || !Number.isFinite(y) || m <= 0 || y <= 0) return 0;
   const pct = Math.round((1 - y / (m * 12)) * 100);
-  return pct > 0 ? pct : 20;
+  return pct > 0 ? pct : 0;
 }
 
 function planCtaHref(plan) {
@@ -163,11 +163,13 @@ export function DynamicPricing({ pricing = [], currencyCode = "INR" }) {
               }`}
             >
               Yearly
+              {savePct > 0 && (
               <span className={`rounded-full px-1.5 py-0.5 text-[10px] font-bold ${
                 billingCycle === "yearly" ? "bg-white/20 text-white" : "bg-emerald-100 text-emerald-700"
               }`}>
                 Save {savePct}%
               </span>
+              )}
             </button>
           </div>
         </div>

@@ -21,8 +21,17 @@ import {
   tableAreaSchema,
   tableSchema,
 } from "@/lib/validationSchemas";
+import { emailFormatError } from "@/lib/emailValidation";
+import {
+  computeBillingEndDate,
+  computeSubscriptionSchedule,
+  describeSubscriptionSchedule,
+  formatDateInputValue,
+  getAssignPlanSchedulePreview,
+  parseTrialDaysValue,
+  withAutoAssignEndDate,
+} from "@/lib/subscriptionSchedule";
 
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const SLUG_RE = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 const TIME_RE = /^([01]\d|2[0-3]):[0-5]\d$/;
@@ -37,9 +46,10 @@ export {
 
 export { validatePlatformPassword } from "@/lib/platformPassword";
 
-export function isValidEmailAddress(email) {
-  const trimmed = String(email ?? "").trim();
-  return trimmed.length > 0 && EMAIL_RE.test(trimmed);
+export { isValidEmailAddress, emailFormatError } from "@/lib/emailValidation";
+
+export function emailError(email, { required = true } = {}) {
+  return emailFormatError(email, { required });
 }
 
 export function isValidPersonName(name, { min = 2, max = 80 } = {}) {
@@ -54,13 +64,6 @@ export function personNameError(name, label = "Name") {
   if (!isValidPersonName(name)) {
     return `${label} must be at least 2 characters and include letters.`;
   }
-  return null;
-}
-
-export function emailError(email, { required = true } = {}) {
-  const trimmed = String(email ?? "").trim();
-  if (!trimmed) return required ? "Email is required." : null;
-  if (!isValidEmailAddress(trimmed)) return "Enter a valid email address.";
   return null;
 }
 
@@ -389,6 +392,17 @@ export function getAssignPlanFieldErrors(form) {
     if (!Number.isNaN(start.getTime()) && !Number.isNaN(end.getTime()) && end < start) {
       endDateError = "End date must be on or after start date.";
     }
+    const trial = parseTrialDaysValue(form.trialDays);
+    if (!endDateError && trial > 0 && !Number.isNaN(start.getTime()) && !Number.isNaN(end.getTime())) {
+      const schedule = computeSubscriptionSchedule({
+        startDate: form.startDate,
+        billingCycle: form.billingCycle,
+        trialDays: trial,
+      });
+      if (end < schedule.billingStart) {
+        endDateError = "End date must be after the trial period.";
+      }
+    }
   }
 
   return {
@@ -400,13 +414,41 @@ export function getAssignPlanFieldErrors(form) {
   };
 }
 
+export const EMPTY_ASSIGN_PLAN_FORM = {
+  restaurantId: "",
+  planSlug: "",
+  billingCycle: "monthly",
+  startDate: "",
+  endDate: "",
+  trialDays: "0",
+};
+
+/** Price for assign dropdown / preview — respects monthly vs yearly toggle. */
+export function planPriceForBillingCycle(plan, billingCycle = "monthly") {
+  const monthly = Number(plan?.monthlyPrice ?? plan?.price ?? 0);
+  const yearly = Number(plan?.yearlyPrice ?? monthly * 12);
+  return billingCycle === "yearly" ? yearly : monthly;
+}
+
+/** Add one billing period from billingStart (after trial). */
+export function computeSubscriptionEndDate(startDate, billingCycle = "monthly") {
+  return computeBillingEndDate(startDate, billingCycle);
+}
+
+export {
+  describeSubscriptionSchedule,
+  formatDateInputValue,
+  getAssignPlanSchedulePreview,
+  withAutoAssignEndDate,
+};
+
 export function buildAssignPlanSubmitBody(form) {
   const trialRaw = String(form.trialDays ?? "").trim();
   return {
     restaurantId: form.restaurantId,
     planSlug: form.planSlug,
+    billingCycle: form.billingCycle === "yearly" ? "yearly" : "monthly",
     startDate: form.startDate || undefined,
-    endDate: form.endDate || undefined,
     trialDays: trialRaw === "" ? 0 : parseInt(trialRaw, 10),
   };
 }

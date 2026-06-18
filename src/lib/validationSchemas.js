@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { isValidIndianMobile, extractIndianMobileDigits } from "@/lib/phoneUtils";
+import { computeSubscriptionSchedule } from "@/lib/subscriptionSchedule";
 
 const guestNameSchema = z
   .string()
@@ -126,6 +127,7 @@ export const superAdminAssignPlanSchema = z
   .object({
     restaurantId: z.string().trim().min(1, "Select a restaurant."),
     planSlug: z.string().trim().min(1, "Select a plan."),
+    billingCycle: z.enum(["monthly", "yearly"]).optional().default("monthly"),
     startDate: z.string().optional(),
     endDate: z.string().optional(),
     trialDays: z.preprocess(
@@ -167,6 +169,19 @@ export const superAdminAssignPlanSchema = z
           path: ["endDate"],
           message: "End date must be on or after start date.",
         });
+      } else if (!Number.isNaN(start.getTime()) && data.trialDays > 0) {
+        const schedule = computeSubscriptionSchedule({
+          startDate: data.startDate,
+          billingCycle: data.billingCycle,
+          trialDays: data.trialDays,
+        });
+        if (end < schedule.billingStart) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: ["endDate"],
+            message: "End date must be after the trial period.",
+          });
+        }
       }
     }
   });
@@ -177,6 +192,11 @@ export const superAdminRestaurantUpdateSchema = z.object({
   phone: optionalIndianPhoneSchema,
   plan: z.enum(["free", "starter", "pro", "enterprise"], { message: "Invalid plan." }),
   address: z.string().trim().max(200).optional(),
+});
+
+/** Status toggle from Super Admin restaurants list — PATCH body is only { status }. */
+export const superAdminRestaurantStatusPatchSchema = z.object({
+  status: z.enum(["active", "inactive", "suspended"], { message: "Invalid status." }),
 });
 
 export const staffCreateSchema = z.object({

@@ -16,6 +16,8 @@ import {
   adminTableActionBtnCls,
   buildTicketStats,
   supportTicketDrawerPanelCls,
+  supportTicketDrawerHeaderCls,
+  supportTicketDrawerBodyCls,
   supportTicketStatsGridCls,
   supportTicketRowCardCls,
   ticketPriorityBadgeCls,
@@ -470,69 +472,72 @@ export default function SupportTicketsPage() {
         panelClassName={supportTicketDrawerPanelCls}
         ariaLabel="Support ticket details"
       >
-            <div className="sticky top-0 z-10 mb-4 flex min-w-0 items-center justify-between gap-3 admin-surface-divider-b bg-[var(--admin-surface)] pb-3 pt-1 backdrop-blur">
-              <h3 className="min-w-0 break-words text-base font-semibold admin-shell-text">Ticket details</h3>
-              <button
-                type="button"
-                onClick={() => {
-                  setSelectedTicketId("");
-                  setSelectedTicket(null);
-                  setNote("");
-                }}
-                className="cursor-pointer relative z-20 rounded-lg border admin-shell-border p-1.5 admin-surface-body hover:border-zinc-500"
-              >
-                <X className="size-4" />
-              </button>
+        <div className={supportTicketDrawerHeaderCls}>
+          <h3 className="min-w-0 flex-1 text-base font-semibold admin-shell-text">Ticket details</h3>
+          <button
+            type="button"
+            onClick={() => {
+              setSelectedTicketId("");
+              setSelectedTicket(null);
+              setNote("");
+            }}
+            className="inline-flex shrink-0 items-center justify-center admin-surface-btn-icon"
+            aria-label="Close ticket details"
+          >
+            <X className="size-4" />
+          </button>
+        </div>
+        <div className={supportTicketDrawerBodyCls}>
+          {loadingDetail ? (
+            <div className="flex items-center gap-2 text-sm admin-surface-muted">
+              <Loader2 className="size-4 animate-spin" />
+              Loading ticket...
             </div>
-            {loadingDetail ? (
-              <div className="flex items-center gap-2 text-sm admin-surface-muted">
-                <Loader2 className="size-4 animate-spin" />
-                Loading ticket...
+          ) : !selectedTicket ? (
+            <p className="text-sm admin-surface-muted">Ticket not available.</p>
+          ) : (
+            <div className="space-y-4">
+              <div className="admin-surface-card p-3">
+                <p className="break-words text-sm font-semibold admin-shell-text">
+                  {selectedTicket.ticketCode} · {selectedTicket.subject}
+                </p>
+                <p className="mt-1 break-words text-sm admin-surface-body">{selectedTicket.message}</p>
               </div>
-            ) : !selectedTicket ? (
-              <p className="text-sm admin-surface-muted">Ticket not available.</p>
-            ) : (
-              <div className="space-y-4">
-                <div className="admin-surface-card p-3">
-                  <p className="break-words text-sm font-semibold admin-shell-text">
-                    {selectedTicket.ticketCode} · {selectedTicket.subject}
-                  </p>
-                  <p className="mt-1 break-words text-sm admin-surface-body">{selectedTicket.message}</p>
-                </div>
+              <div className="space-y-2">
+                <p className="text-xs font-semibold uppercase tracking-wide admin-surface-muted">Timeline</p>
                 <div className="space-y-2">
-                  <p className="text-xs font-semibold uppercase tracking-wide admin-surface-muted">Timeline</p>
-                  <div className="space-y-2">
-                    {(selectedTicket.updates || []).slice().reverse().map((u, idx) => (
-                      <div key={`${u.at}-${idx}`} className="rounded-lg border admin-shell-border admin-surface-card p-2.5">
-                        <p className="text-xs admin-surface-muted">
-                          {u.at ? formatDateTime(u.at) : "—"} · {u.role || "user"}
-                        </p>
-                        <p className="mt-0.5 break-words text-sm admin-shell-text">{u.note}</p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <label className="text-xs font-semibold uppercase tracking-wide admin-surface-muted">Add note</label>
-                  <textarea
-                    rows={3}
-                    value={note}
-                    onChange={(e) => setNote(e.target.value)}
-                    className={inputCls}
-                    placeholder="Add extra details or update message..."
-                  />
-                  <button
-                    type="button"
-                    onClick={addNote}
-                    disabled={savingNote || !note.trim()}
-                    className="inline-flex w-full cursor-pointer items-center justify-center rounded-lg border border-ra-primary-40 bg-ra-primary-15 px-3 py-2 text-xs font-medium text-ra-primary-muted disabled:opacity-40 sm:w-auto"
-                  >
-                    {savingNote ? "Saving..." : "Save note"}
-                  </button>
+                  {(selectedTicket.updates || []).slice().reverse().map((u, idx) => (
+                    <div key={`${u.at}-${idx}`} className="rounded-lg border admin-shell-border admin-surface-card p-2.5">
+                      <p className="text-xs admin-surface-muted">
+                        {u.at ? formatDateTime(u.at) : "—"} · {u.role || "user"}
+                      </p>
+                      <p className="mt-0.5 break-words text-sm admin-shell-text">{u.note}</p>
+                    </div>
+                  ))}
                 </div>
               </div>
-            )}
-          </PageDrawer>
+              <div className="space-y-2">
+                <label className="text-xs font-semibold uppercase tracking-wide admin-surface-muted">Add note</label>
+                <textarea
+                  rows={3}
+                  value={note}
+                  onChange={(e) => setNote(e.target.value)}
+                  className={inputCls}
+                  placeholder="Add extra details or update message..."
+                />
+                <button
+                  type="button"
+                  onClick={addNote}
+                  disabled={savingNote || !note.trim()}
+                  className="inline-flex w-full cursor-pointer items-center justify-center rounded-lg border border-ra-primary-40 bg-ra-primary-15 px-3 py-2 text-xs font-medium text-ra-primary-muted disabled:opacity-40 sm:w-auto"
+                >
+                  {savingNote ? "Saving..." : "Save note"}
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      </PageDrawer>
 
       {toast ? (
         <div

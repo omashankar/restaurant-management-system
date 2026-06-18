@@ -3,8 +3,7 @@ import {
   isValidIndianMobile,
   toIndianE164,
 } from "@/lib/phoneUtils";
-
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+import { isValidEmailAddress } from "@/lib/emailValidation";
 
 /** Guest / customer name: ≥2 chars, at least one letter (Latin or Devanagari). */
 export function isValidGuestName(name) {
@@ -13,8 +12,7 @@ export function isValidGuestName(name) {
 }
 
 export function isValidEmail(email) {
-  const trimmed = String(email ?? "").trim();
-  return trimmed.length > 0 && EMAIL_RE.test(trimmed);
+  return isValidEmailAddress(email);
 }
 
 /** Checkout: phone or email required; if phone typed, must be valid Indian mobile. */

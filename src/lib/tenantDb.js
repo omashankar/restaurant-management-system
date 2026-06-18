@@ -14,6 +14,49 @@ export function getAuthPayload(request) {
 }
 
 /**
+ * Ensure tenant user + restaurant are active (blocks suspended/inactive tenants).
+ */
+export async function assertActiveTenantAccess(db, payload) {
+  if (!payload?.id || payload.role === "super_admin") return;
+
+  let userId;
+  try {
+    userId = new ObjectId(payload.id);
+  } catch {
+    throw Object.assign(new Error("Invalid user ID."), { status: 401 });
+  }
+
+  const user = await db.collection("users").findOne(
+    { _id: userId },
+    { projection: { status: 1, restaurantId: 1 } },
+  );
+  if (!user) {
+    throw Object.assign(new Error("User not found."), { status: 401 });
+  }
+
+  if ((user.status ?? "active") !== "active") {
+    throw Object.assign(
+      new Error("Your account is inactive. Please contact support."),
+      { status: 403 },
+    );
+  }
+
+  const restaurantId = user.restaurantId ?? (payload.restaurantId ? new ObjectId(payload.restaurantId) : null);
+  if (!restaurantId) return;
+
+  const restaurant = await db.collection("restaurants").findOne(
+    { _id: restaurantId },
+    { projection: { status: 1 } },
+  );
+  if (restaurant && restaurant.status !== "active") {
+    throw Object.assign(
+      new Error("This restaurant is not active. Please contact support."),
+      { status: 403 },
+    );
+  }
+}
+
+/**
  * Get DB + tenant filter from request.
  * Throws structured errors for auth/access failures.
  *
@@ -33,6 +76,8 @@ export async function getTenantContext(request, allowedRoles) {
 
   const client = await clientPromise;
   const db = client.db();
+
+  await assertActiveTenantAccess(db, payload);
 
   // restaurantId from JWT payload (set at login/signup)
   const restaurantId = payload.restaurantId

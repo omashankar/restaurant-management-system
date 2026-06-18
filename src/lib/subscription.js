@@ -1,17 +1,104 @@
 import { ObjectId } from "mongodb";
 import clientPromise from "./mongodb";
+import {
+  computeBillingEndDate,
+  computeSubscriptionSchedule,
+  parseDateInput,
+  parseTrialDaysValue,
+} from "./subscriptionSchedule";
 
-function addDays(date, days) {
-  const d = new Date(date);
-  d.setDate(d.getDate() + days);
-  return d;
+export function extendByBillingCycle(baseDate, billingCycle) {
+  return computeBillingEndDate(baseDate, billingCycle === "yearly" ? "yearly" : "monthly");
 }
 
-function computeEndDate(startDate, billingCycle) {
-  const d = new Date(startDate);
-  if (billingCycle === "yearly") d.setFullYear(d.getFullYear() + 1);
-  else d.setMonth(d.getMonth() + 1);
-  return d;
+export function computeEndDate(startDate, billingCycle) {
+  return computeBillingEndDate(startDate, billingCycle);
+}
+
+/** Effective status for display/enforcement. */
+export function resolveSubscriptionStatus(sub, now = new Date()) {
+  if (!sub) return "active";
+  const status = sub.status ?? "active";
+  if (status === "cancelled") return "cancelled";
+
+  const endDate = sub.endDate ? new Date(sub.endDate) : null;
+  if (endDate && endDate < now) return "expired";
+
+  if (status === "trial") {
+    const trialEnd = sub.trialEnd ? new Date(sub.trialEnd) : null;
+    if (trialEnd && trialEnd < now) return "active";
+    return "trial";
+  }
+
+  return status;
+}
+
+async function syncRestaurantStatuses(db, subs, status, now) {
+  const restaurantIds = [...new Set(subs.map((s) => s.restaurantId).filter(Boolean))];
+  if (!restaurantIds.length) return;
+  await db.collection("restaurants").updateMany(
+    { _id: { $in: restaurantIds } },
+    { $set: { subscriptionStatus: status, updatedAt: now } },
+  );
+}
+
+/** Sync all subscriptions in DB — expire stale, promote ended trials to active. */
+export async function syncAllSubscriptionStatuses(db, now = new Date()) {
+  const toExpire = await db.collection("subscriptions").find({
+    endDate: { $lt: now },
+    status: { $in: ["active", "trial"] },
+  }).toArray();
+
+  if (toExpire.length) {
+    await db.collection("subscriptions").updateMany(
+      { _id: { $in: toExpire.map((s) => s._id) } },
+      { $set: { status: "expired", updatedAt: now } },
+    );
+    await syncRestaurantStatuses(db, toExpire, "expired", now);
+  }
+
+  const toActivate = await db.collection("subscriptions").find({
+    status: "trial",
+    trialEnd: { $lt: now, $ne: null },
+    endDate: { $gte: now },
+  }).toArray();
+
+  if (toActivate.length) {
+    await db.collection("subscriptions").updateMany(
+      { _id: { $in: toActivate.map((s) => s._id) } },
+      { $set: { status: "active", updatedAt: now } },
+    );
+    await syncRestaurantStatuses(db, toActivate, "active", now);
+  }
+}
+
+export async function expireStaleSubscriptions(db, subs, now = new Date()) {
+  const updates = (subs ?? [])
+    .filter((s) => s.status !== "cancelled")
+    .map((s) => ({
+      _id: s._id,
+      restaurantId: s.restaurantId,
+      from: s.status,
+      to: resolveSubscriptionStatus(s, now),
+    }))
+    .filter((u) => u.from !== u.to);
+
+  if (!updates.length) return;
+
+  for (const u of updates) {
+    await db.collection("subscriptions").updateOne(
+      { _id: u._id },
+      { $set: { status: u.to, updatedAt: now } },
+    );
+  }
+
+  const byStatus = updates.reduce((acc, u) => {
+    (acc[u.to] ??= []).push(u);
+    return acc;
+  }, {});
+  for (const [status, group] of Object.entries(byStatus)) {
+    await syncRestaurantStatuses(db, group, status, now);
+  }
 }
 
 export async function getSubscription(restaurantId) {
@@ -21,17 +108,23 @@ export async function getSubscription(restaurantId) {
 
   const sub = await db.collection("subscriptions").findOne(
     { restaurantId: _rid },
-    { sort: { createdAt: -1 } }
+    { sort: { createdAt: -1 } },
   );
   if (!sub) return null;
 
   const now = new Date();
-  if (sub.status === "active" && sub.endDate && sub.endDate < now) {
+  const effectiveStatus = resolveSubscriptionStatus(sub, now);
+
+  if (effectiveStatus !== sub.status && sub.status !== "cancelled") {
     await db.collection("subscriptions").updateOne(
       { _id: sub._id },
-      { $set: { status: "expired", updatedAt: now } }
+      { $set: { status: effectiveStatus, updatedAt: now } },
     );
-    sub.status = "expired";
+    await db.collection("restaurants").updateOne(
+      { _id: sub.restaurantId },
+      { $set: { subscriptionStatus: effectiveStatus, updatedAt: now } },
+    );
+    sub.status = effectiveStatus;
   }
 
   return {
@@ -47,7 +140,7 @@ export async function getSubscription(restaurantId) {
     startDate:    sub.startDate,
     endDate:      sub.endDate,
     trialEnd:     sub.trialEnd    ?? null,
-    status:       sub.status      ?? "active",
+    status:       effectiveStatus,
     daysLeft:     sub.endDate
       ? Math.max(0, Math.ceil((new Date(sub.endDate) - now) / 86_400_000))
       : null,
@@ -62,11 +155,13 @@ export async function assignPlan(restaurantId, planSlug, options = {}) {
   const plan = await db.collection("plans").findOne({ slug: planSlug });
   if (!plan) throw new Error("Plan not found: " + planSlug);
 
-  const now       = new Date();
-  const startDate = options.startDate ? new Date(options.startDate) : now;
-  const endDate   = options.endDate
-    ? new Date(options.endDate)
-    : computeEndDate(startDate, plan.billingCycle ?? "monthly");
+  const billingCycle = options.billingCycle === "yearly" ? "yearly" : "monthly";
+  const monthlyPrice = Number(plan.monthlyPrice ?? plan.price ?? 0);
+  const yearlyPrice  = Number(plan.yearlyPrice ?? monthlyPrice * 12);
+  const price        = billingCycle === "yearly" ? yearlyPrice : monthlyPrice;
+
+  const now = new Date();
+  const startDate = options.startDate ? parseDateInput(options.startDate) : now;
 
   let trialDays = options.trialDays;
   if (trialDays == null || trialDays === undefined) {
@@ -82,10 +177,30 @@ export async function assignPlan(restaurantId, planSlug, options = {}) {
           ? platformTrial
           : 0;
   } else {
-    trialDays = Number(trialDays) || 0;
+    trialDays = parseTrialDaysValue(trialDays);
   }
-  const trialEnd  = trialDays > 0 ? addDays(startDate, trialDays) : null;
-  const status    = trialEnd && trialEnd > now ? "trial" : "active";
+
+  const schedule = computeSubscriptionSchedule({
+    startDate,
+    billingCycle,
+    trialDays,
+  });
+  const trialEnd = schedule.trialEnd;
+  const billingStart = schedule.billingStart;
+
+  let endDate = schedule.endDate;
+  if (options.endDate) {
+    const provided = new Date(options.endDate);
+    if (Number.isNaN(provided.getTime())) {
+      throw new Error("Invalid end date.");
+    }
+    if (provided < billingStart) {
+      throw new Error("End date must be after the trial period.");
+    }
+    endDate = provided;
+  }
+
+  const status = trialEnd && trialEnd > now ? "trial" : "active";
 
   const subDoc = {
     restaurantId:  _rid,
@@ -94,8 +209,8 @@ export async function assignPlan(restaurantId, planSlug, options = {}) {
     planName:      plan.name,
     limits:        plan.limits      ?? {},
     features:      plan.features    ?? [],
-    price:         plan.price       ?? 0,
-    billingCycle:  plan.billingCycle ?? "monthly",
+    price,
+    billingCycle,
     startDate,
     endDate,
     trialEnd,
@@ -106,7 +221,7 @@ export async function assignPlan(restaurantId, planSlug, options = {}) {
   const result = await db.collection("subscriptions").findOneAndUpdate(
     { restaurantId: _rid },
     { $set: subDoc, $setOnInsert: { createdAt: now } },
-    { upsert: true, returnDocument: "after" }
+    { upsert: true, returnDocument: "after" },
   );
 
   await db.collection("restaurants").updateOne(
@@ -118,7 +233,7 @@ export async function assignPlan(restaurantId, planSlug, options = {}) {
         planAssignedAt: now,
         updatedAt: now,
       },
-    }
+    },
   );
 
   return result;

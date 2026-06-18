@@ -58,6 +58,7 @@ function syncRestaurantSlugCookie(slug) {
 export function useRestaurantInfo() {
   const [info, setInfo] = useState(_cache ?? DEFAULT_INFO);
   const [loading, setLoading] = useState(!_cache);
+  const [notFound, setNotFound] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {
@@ -77,10 +78,15 @@ export function useRestaurantInfo() {
     setLoading(true);
 
     fetch("/api/customer/restaurant-info", { cache: "no-store" })
-      .then((r) => r.json())
-      .then((data) => {
+      .then(async (r) => {
+        const data = await r.json();
         if (cancelled) return;
+        if (r.status === 404 || data?.code === "RESTAURANT_NOT_FOUND") {
+          setNotFound(true);
+          return;
+        }
         if (data?.success && data.info) {
+          setNotFound(false);
           _cache = { ...DEFAULT_INFO, ...data.info };
           _cacheTime = Date.now();
           if (_cache.slug) syncRestaurantSlugCookie(_cache.slug);
@@ -97,7 +103,7 @@ export function useRestaurantInfo() {
     return () => { cancelled = true; };
   }, [refreshKey]);
 
-  return { info, loading };
+  return { info, loading, notFound };
 }
 
 /** Cache invalidate karo (e.g. settings save hone ke baad) */

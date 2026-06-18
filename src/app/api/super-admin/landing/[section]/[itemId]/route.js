@@ -36,6 +36,12 @@ export async function PATCH(request, { params }) {
   const { section, itemId } = await params;
   const err = validateSection(section);
   if (err) return err;
+  if (section === "pricing") {
+    return Response.json(
+      { success: false, error: "Pricing is managed from Super Admin Plans. Update /super-admin/plans instead." },
+      { status: 400 },
+    );
+  }
   let body;
   try { body = await request.json(); } catch { return Response.json({ success: false, error: "Invalid JSON." }, { status: 400 }); }
   try {
@@ -55,6 +61,12 @@ export async function DELETE(request, { params }) {
   const { section, itemId } = await params;
   const err = validateSection(section);
   if (err) return err;
+  if (section === "pricing") {
+    return Response.json(
+      { success: false, error: "Pricing is managed from Super Admin Plans. Update /super-admin/plans instead." },
+      { status: 400 },
+    );
+  }
   try {
     const result = await deleteItem(section, itemId, sa.id ?? null);
     revalidateTag("landing", "max");

@@ -4,7 +4,7 @@ import { verifyToken } from "@/lib/jwt";
 import clientPromise from "@/lib/mongodb";
 import { getClientIp } from "@/lib/rateLimit";
 import { extractIndianMobileDigits } from "@/lib/phoneUtils";
-import { parseSchema, superAdminRestaurantUpdateSchema } from "@/lib/validationSchemas";
+import { parseSchema, superAdminRestaurantStatusPatchSchema, superAdminRestaurantUpdateSchema } from "@/lib/validationSchemas";
 import { ObjectId } from "mongodb";
 
 function superAdminOnly(request) {
@@ -19,7 +19,42 @@ function toOid(id) {
 }
 const VALID_PLANS = ["free", "starter", "pro", "enterprise"];
 
-/* ── PATCH /api/super-admin/restaurants/:id — update status / plan ── */
+function isStatusOnlyPatch(body) {
+  return (
+    body?.status != null &&
+    body.name === undefined &&
+    body.slug === undefined &&
+    body.plan === undefined &&
+    body.phone === undefined &&
+    body.address === undefined
+  );
+}
+
+async function applyRestaurantStatusChange(db, _id, status, session) {
+  const result = await db.collection("restaurants").updateOne(
+    { _id },
+    { $set: { status, updatedAt: new Date() } },
+    { session },
+  );
+  if (result.matchedCount === 0) return false;
+
+  if (status === "inactive" || status === "suspended") {
+    await db.collection("users").updateMany(
+      { restaurantId: _id, role: { $ne: "super_admin" }, status: { $ne: "blocked" } },
+      { $set: { status: "inactive" } },
+      { session },
+    );
+  } else if (status === "active") {
+    await db.collection("users").updateMany(
+      { restaurantId: _id, role: { $ne: "super_admin" }, status: { $ne: "blocked" } },
+      { $set: { status: "active" } },
+      { session },
+    );
+  }
+  return true;
+}
+
+/* ── PATCH /api/super-admin/restaurants/:id — update status / profile ── */
 export async function PATCH(request, { params }) {
   const sa = superAdminOnly(request);
   if (!sa) {
@@ -33,6 +68,57 @@ export async function PATCH(request, { params }) {
   let body;
   try { body = await request.json(); }
   catch { return Response.json({ success: false, error: "Invalid JSON." }, { status: 400 }); }
+
+  if (isStatusOnlyPatch(body)) {
+    let validated;
+    try {
+      validated = parseSchema(superAdminRestaurantStatusPatchSchema, body);
+    } catch (err) {
+      return Response.json({ success: false, error: err.message }, { status: 400 });
+    }
+
+    try {
+      const client = await clientPromise;
+      const db = client.db();
+      const session = client.startSession();
+      let notFound = false;
+      try {
+        await session.withTransaction(async () => {
+          const ok = await applyRestaurantStatusChange(db, _id, validated.status, session);
+          if (!ok) notFound = true;
+        });
+      } finally {
+        await session.endSession();
+      }
+      if (notFound) {
+        return Response.json({ success: false, error: "Restaurant not found." }, { status: 404 });
+      }
+
+      const restaurant = await db.collection("restaurants").findOne(
+        { _id },
+        { projection: { name: 1, status: 1 } },
+      );
+      let action = "restaurant.updated";
+      if (validated.status === "active") action = "restaurant.activated";
+      else if (validated.status === "suspended") action = "restaurant.suspended";
+      else if (validated.status === "inactive") action = "restaurant.deactivated";
+
+      await writeAuditLog({
+        action,
+        category: "restaurant",
+        actorId: sa.id,
+        targetId: id,
+        targetName: restaurant?.name ?? id,
+        meta: { status: validated.status },
+        ip: getClientIp(request),
+      });
+
+      return Response.json({ success: true, status: validated.status });
+    } catch (err) {
+      console.error("PATCH restaurant status error:", err.message);
+      return Response.json({ success: false, error: "Something went wrong." }, { status: 500 });
+    }
+  }
 
   const cleanSlug = String(body?.slug ?? "").toLowerCase().replace(/[^a-z0-9-]/g, "").trim();
 
@@ -86,21 +172,8 @@ export async function PATCH(request, { params }) {
           return;
         }
 
-        // If disabling restaurant, also deactivate its users
-        if (body.status === "inactive" || body.status === "suspended") {
-          await db.collection("users").updateMany(
-            { restaurantId: _id, role: { $ne: "super_admin" } },
-            { $set: { status: "inactive" } },
-            { session }
-          );
-        }
-        // If re-enabling, reactivate users
-        if (body.status === "active") {
-          await db.collection("users").updateMany(
-            { restaurantId: _id, role: { $ne: "super_admin" } },
-            { $set: { status: "active" } },
-            { session }
-          );
+        if (body.status && ["active", "inactive", "suspended"].includes(body.status)) {
+          await applyRestaurantStatusChange(db, _id, body.status, session);
         }
       });
       if (notFound) {
@@ -116,7 +189,8 @@ export async function PATCH(request, { params }) {
     );
     let action = "restaurant.updated";
     if (body.status === "active") action = "restaurant.activated";
-    else if (body.status === "inactive" || body.status === "suspended") action = "restaurant.deactivated";
+    else if (body.status === "suspended") action = "restaurant.suspended";
+    else if (body.status === "inactive") action = "restaurant.deactivated";
 
     await writeAuditLog({
       action,

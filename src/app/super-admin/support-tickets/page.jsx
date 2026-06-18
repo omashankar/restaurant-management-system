@@ -11,6 +11,8 @@ import {
   buildTicketStats,
   saTicketTableGridCls,
   supportTicketDrawerPanelCls,
+  supportTicketDrawerHeaderCls,
+  supportTicketDrawerBodyCls,
   supportTicketRowCardCls,
   supportTicketStatsGridCls,
   ticketPrioritySelectCls,
@@ -398,78 +400,83 @@ export default function SuperAdminSupportTicketsPage() {
         panelClassName={supportTicketDrawerPanelCls}
         ariaLabel="Support ticket details"
       >
-            <div className="sticky top-0 z-10 mb-4 flex min-w-0 items-start justify-between gap-3 admin-surface-divider-b bg-[var(--admin-surface)] pb-3 pt-1 backdrop-blur sm:items-center">
-              <h3 className="min-w-0 break-words text-base font-semibold admin-shell-text sm:truncate">
-                {selectedTicket?.ticketCode ? `${selectedTicket.ticketCode}` : "Support ticket"}
-              </h3>
-              <button
-                type="button"
-                onClick={() => {
-                  setSelectedTicketId("");
-                  setSelectedTicket(null);
-                  setNote("");
-                }}
-                className="inline-flex items-center justify-center admin-surface-btn-icon shrink-0"
-                aria-label="Close"
-              >
-                <X className="size-4" />
-              </button>
+        <div className={supportTicketDrawerHeaderCls}>
+          <div className="min-w-0 flex-1">
+            <h3 className="text-base font-semibold admin-shell-text">Ticket details</h3>
+            {selectedTicket?.ticketCode ? (
+              <p className="mt-0.5 break-all text-xs admin-surface-muted sm:truncate">{selectedTicket.ticketCode}</p>
+            ) : null}
+          </div>
+          <button
+            type="button"
+            onClick={() => {
+              setSelectedTicketId("");
+              setSelectedTicket(null);
+              setNote("");
+            }}
+            className="inline-flex shrink-0 items-center justify-center admin-surface-btn-icon"
+            aria-label="Close ticket details"
+          >
+            <X className="size-4" />
+          </button>
+        </div>
+        <div className={supportTicketDrawerBodyCls}>
+          {loadingDetail ? (
+            <div className="flex items-center gap-2 text-sm admin-surface-muted">
+              <Loader2 className={saSpinnerCls} />
+              Loading ticket...
             </div>
-            {loadingDetail ? (
-              <div className="flex items-center gap-2 text-sm admin-surface-muted">
-                <Loader2 className={saSpinnerCls} />
-                Loading ticket...
+          ) : !selectedTicket ? (
+            <p className="text-sm admin-surface-muted">Ticket not available.</p>
+          ) : (
+            <div className="space-y-4">
+              <div className="admin-surface-card p-3">
+                <p className="break-words text-sm font-semibold admin-shell-text">
+                  {selectedTicket.ticketCode} · {selectedTicket.subject}
+                </p>
+                <p className="mt-1 text-xs admin-surface-muted">
+                  {selectedTicket.restaurantName || "Unknown Restaurant"}
+                </p>
+                <p className="mt-2 break-words text-sm admin-surface-body">{selectedTicket.message}</p>
               </div>
-            ) : !selectedTicket ? (
-              <p className="text-sm admin-surface-muted">Ticket not available.</p>
-            ) : (
-              <div className="space-y-4">
-                <div className="admin-surface-card p-3">
-                  <p className="break-words text-sm font-semibold admin-shell-text">
-                    {selectedTicket.ticketCode} · {selectedTicket.subject}
-                  </p>
-                  <p className="mt-1 text-xs admin-surface-muted">
-                    {selectedTicket.restaurantName || "Unknown Restaurant"}
-                  </p>
-                  <p className="mt-2 break-words text-sm admin-surface-body">{selectedTicket.message}</p>
-                </div>
+              <div className="space-y-2">
+                <p className="text-xs font-semibold uppercase tracking-wide admin-surface-muted">Timeline</p>
                 <div className="space-y-2">
-                  <p className="text-xs font-semibold uppercase tracking-wide admin-surface-muted">Timeline</p>
-                  <div className="space-y-2">
-                    {(selectedTicket.updates || []).slice().reverse().map((u, idx) => (
-                      <div key={`${u.at}-${idx}`} className="rounded-lg border admin-shell-border admin-surface-card p-2.5">
-                        <p className="text-xs admin-surface-muted">
-                          {u.at ? formatDateTime(u.at) : "—"} · {u.role || "user"}
-                        </p>
-                        <p className="mt-0.5 break-words text-sm admin-shell-text">{u.note}</p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <label htmlFor="support-ticket-note" className="text-xs font-semibold uppercase tracking-wide admin-surface-muted">
-                    Add internal note
-                  </label>
-                  <textarea
-                    id="support-ticket-note"
-                    rows={3}
-                    value={note}
-                    onChange={(e) => setNote(e.target.value)}
-                    className={`${saInputCls} resize-none`}
-                    placeholder="Add investigation notes or resolution detail..."
-                  />
-                  <button
-                    type="button"
-                    onClick={addNote}
-                    disabled={savingNote || !note.trim()}
-                    className="inline-flex w-full cursor-pointer items-center justify-center rounded-lg border border-sa-primary-40 bg-sa-primary-15 px-3 py-2 text-xs font-medium text-sa-primary-muted disabled:opacity-40 sm:w-auto"
-                  >
-                    {savingNote ? "Saving..." : "Save note"}
-                  </button>
+                  {(selectedTicket.updates || []).slice().reverse().map((u, idx) => (
+                    <div key={`${u.at}-${idx}`} className="rounded-lg border admin-shell-border admin-surface-card p-2.5">
+                      <p className="text-xs admin-surface-muted">
+                        {u.at ? formatDateTime(u.at) : "—"} · {u.role || "user"}
+                      </p>
+                      <p className="mt-0.5 break-words text-sm admin-shell-text">{u.note}</p>
+                    </div>
+                  ))}
                 </div>
               </div>
-            )}
-          </PageDrawer>
+              <div className="space-y-2">
+                <label htmlFor="support-ticket-note" className="text-xs font-semibold uppercase tracking-wide admin-surface-muted">
+                  Add internal note
+                </label>
+                <textarea
+                  id="support-ticket-note"
+                  rows={3}
+                  value={note}
+                  onChange={(e) => setNote(e.target.value)}
+                  className={`${saInputCls} resize-none`}
+                  placeholder="Add investigation notes or resolution detail..."
+                />
+                <button
+                  type="button"
+                  onClick={addNote}
+                  disabled={savingNote || !note.trim()}
+                  className="inline-flex w-full cursor-pointer items-center justify-center rounded-lg border border-sa-primary-40 bg-sa-primary-15 px-3 py-2 text-xs font-medium text-sa-primary-muted disabled:opacity-40 sm:w-auto"
+                >
+                  {savingNote ? "Saving..." : "Save note"}
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      </PageDrawer>
 
       {toast ? (
         <div

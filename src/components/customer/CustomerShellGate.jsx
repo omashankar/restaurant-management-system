@@ -3,6 +3,7 @@
 import { useCustomerTheme } from "@/context/CustomerThemeContext";
 import { usePlatformConfig } from "@/hooks/usePlatformConfig";
 import { useRestaurantCms } from "@/hooks/useRestaurantCms";
+import Link from "next/link";
 import { useRestaurantInfo } from "@/hooks/useRestaurantInfo";
 import { useEffect, useRef, useState } from "react";
 
@@ -16,7 +17,7 @@ const FADE_MS = 450;
 export default function CustomerShellGate({ children }) {
   const { hydrated: themeHydrated } = useCustomerTheme();
   const { loading: cmsLoading } = useRestaurantCms();
-  const { loading: infoLoading } = useRestaurantInfo();
+  const { loading: infoLoading, notFound } = useRestaurantInfo();
   const { loading: platformLoading } = usePlatformConfig();
 
   const mountedAt = useRef(Date.now());
@@ -57,6 +58,23 @@ export default function CustomerShellGate({ children }) {
     document.body.style.overflow = "hidden";
     return unlockScroll;
   }, [phase]);
+
+  if (notFound) {
+    return (
+      <div className="flex min-h-screen min-h-[100dvh] flex-col items-center justify-center gap-4 px-6 text-center">
+        <h1 className="text-2xl font-semibold text-[var(--customer-text,#111827)]">Restaurant not found</h1>
+        <p className="max-w-md text-sm text-customer-muted">
+          This link may be wrong or the restaurant is no longer active on BhojDesk.
+        </p>
+        <Link
+          href="/r"
+          className="rounded-xl bg-customer-primary px-5 py-2.5 text-sm font-semibold text-white hover:opacity-90"
+        >
+          Browse restaurants
+        </Link>
+      </div>
+    );
+  }
 
   return (
     <>
