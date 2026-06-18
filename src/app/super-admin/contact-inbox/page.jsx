@@ -10,6 +10,8 @@ import {
   adminTableActionBtnCls,
   contactInboxTableGridCls,
   supportTicketDrawerPanelCls,
+  supportTicketDrawerHeaderCls,
+  supportTicketDrawerBodyCls,
 } from "@/config/supportTicketConfig";
 import { saIconBadgeCls, saInputCls, saSpinnerCls, saTextareaCls } from "@/config/superAdminTheme";
 import { useSuperAdminLocale } from "@/context/SuperAdminLocaleContext";
@@ -482,20 +484,21 @@ export default function SuperAdminContactInboxPage() {
         panelClassName={supportTicketDrawerPanelCls}
         ariaLabel="Contact message details"
       >
-        <div className="sticky top-0 z-10 mb-4 flex min-w-0 items-start justify-between gap-3 admin-surface-divider-b bg-[var(--admin-surface)] pb-3 pt-1 backdrop-blur sm:items-center">
-          <h3 className="min-w-0 break-words text-base font-semibold admin-shell-text">
+        <div className={supportTicketDrawerHeaderCls}>
+          <h3 className="min-w-0 flex-1 break-words text-base font-semibold admin-shell-text">
             {selected?.name ? `Message from ${selected.name}` : "Contact message"}
           </h3>
           <button
             type="button"
             onClick={closeDrawer}
-            className="inline-flex items-center justify-center admin-surface-btn-icon shrink-0"
+            className="inline-flex shrink-0 items-center justify-center admin-surface-btn-icon"
             aria-label="Close"
           >
             <X className="size-4" />
           </button>
         </div>
 
+        <div className={supportTicketDrawerBodyCls}>
         {loadingDetail ? (
           <SuperAdminPreloader compact message="Loading…" />
         ) : !selected ? (
@@ -638,6 +641,7 @@ export default function SuperAdminContactInboxPage() {
             </div>
           </div>
         )}
+        </div>
       </PageDrawer>
 
       {ToastUI}

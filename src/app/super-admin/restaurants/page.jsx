@@ -34,7 +34,7 @@ import {
 import {
   Building2, Calendar,
   Crown, Eye, Mail, MapPin,
-  Pencil, Phone, Plus, RefreshCw, ShieldCheck, ShieldOff,
+  Pencil, Phone, Plus, RefreshCw,
   Search, Trash2, X,
 } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
@@ -44,6 +44,11 @@ import { useCallback, useEffect, useState } from "react";
 ───────────────────────────────────────── */
 const PLANS    = ["free", "starter", "pro", "enterprise"];
 const STATUSES = ["active", "inactive", "suspended"];
+const STATUS_LABELS = {
+  active: "Active",
+  inactive: "Inactive",
+  suspended: "Suspended",
+};
 const OWNER_STATUSES = ["active", "inactive", "blocked"];
 const PAGE_SIZE = 10;
 
@@ -83,25 +88,30 @@ function FieldError({ message }) {
   return <p className={fieldErrorCls} role="alert">{message}</p>;
 }
 
-/* ─────────────────────────────────────────
-   TOGGLE SWITCH
-───────────────────────────────────────── */
-function ToggleSwitch({ checked, onChange, disabled }) {
+function restaurantStatusBadgeClass(status) {
+  if (status === "active") return "sa-status-badge";
+  if (status === "suspended") return "bg-red-500/15 text-red-400 ring-red-500/25";
+  return "bg-zinc-500/15 text-zinc-400 ring-zinc-500/25";
+}
+
+const statusSelectCls =
+  "cursor-pointer min-w-[6.5rem] rounded-lg border admin-shell-border bg-[var(--admin-control)] px-2 py-1.5 text-xs font-medium capitalize outline-none focus-sa-primary disabled:cursor-not-allowed disabled:opacity-50";
+
+function RestaurantStatusSelect({ value, onChange, disabled, className = "" }) {
   return (
-    <button
-      type="button"
-      role="switch"
-      aria-checked={checked}
+    <select
+      value={value}
       disabled={disabled}
-      onClick={() => onChange(!checked)}
-      className={`cursor-pointer relative inline-flex h-5 w-9 shrink-0 items-center rounded-full transition-colors duration-200 disabled:opacity-40 ${
-        checked ? "bg-sa-primary" : "bg-[var(--admin-border)]"
-      }`}
+      onChange={(e) => onChange(e.target.value)}
+      aria-label="Restaurant status"
+      className={`${statusSelectCls} ${className}`.trim()}
     >
-      <span className={`inline-block size-3.5 rounded-full bg-white shadow-sm transition-transform duration-200 ${
-        checked ? "translate-x-4" : "translate-x-0.5"
-      }`} />
-    </button>
+      {STATUSES.map((s) => (
+        <option key={s} value={s}>
+          {STATUS_LABELS[s] ?? s}
+        </option>
+      ))}
+    </select>
   );
 }
 
@@ -148,11 +158,7 @@ function PreviewModal({ restaurant, onClose }) {
                 <span className={`size-1.5 rounded-full ${PLAN_DOT[restaurant.plan] ?? "bg-zinc-500"}`} />
                 {restaurant.plan}
               </span>
-              <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold capitalize ring-1 ${
-                restaurant.status === "active"
-                  ? "sa-status-badge"
-                  : "bg-zinc-500/15 text-zinc-400 ring-zinc-500/25"
-              }`}>
+              <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold capitalize ring-1 ${restaurantStatusBadgeClass(restaurant.status)}`}>
                 {restaurant.status}
               </span>
             </div>
@@ -206,7 +212,7 @@ function PreviewModal({ restaurant, onClose }) {
   );
 }
 
-function RestaurantRowActions({ r, onPreview, onEdit, onDelete, onToggleOwner, ownerTogglingId }) {
+function RestaurantRowActions({ r, onPreview, onEdit, onDelete }) {
   return (
     <>
       <AdminTableIconButton variant="sky" onClick={() => onPreview(r)} title="View details" aria-label="View details">
@@ -217,15 +223,6 @@ function RestaurantRowActions({ r, onPreview, onEdit, onDelete, onToggleOwner, o
       </AdminTableIconButton>
       <AdminTableIconButton variant="danger" onClick={() => onDelete(r)} title="Delete restaurant" aria-label="Delete restaurant">
         <Trash2 className="size-4" />
-      </AdminTableIconButton>
-      <AdminTableIconButton
-        onClick={() => onToggleOwner(r)}
-        disabled={ownerTogglingId === r.id}
-        title={r.ownerStatus === "blocked" ? "Unblock owner admin" : "Block owner admin"}
-        aria-label={r.ownerStatus === "blocked" ? "Unblock owner admin" : "Block owner admin"}
-        className={r.ownerStatus === "blocked" ? "admin-icon-hover-sa" : "admin-icon-hover-amber"}
-      >
-        {r.ownerStatus === "blocked" ? <ShieldCheck className="size-4" /> : <ShieldOff className="size-4" />}
       </AdminTableIconButton>
     </>
   );
@@ -249,7 +246,6 @@ export default function RestaurantsPage() {
   const [ownerStatusFilter, setOwnerStatusFilter] = useState("all");
   const [page, setPage]                 = useState(1);
   const [togglingId, setTogglingId]     = useState(null);
-  const [ownerTogglingId, setOwnerTogglingId] = useState(null);
 
   // Create modal
   const [createOpen, setCreateOpen]   = useState(false);
@@ -272,6 +268,10 @@ export default function RestaurantsPage() {
   // Delete confirm
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [deleting, setDeleting]         = useState(false);
+
+  // Suspend confirm
+  const [suspendTarget, setSuspendTarget] = useState(null);
+  const [suspending, setSuspending]       = useState(false);
 
   const { showToast, ToastUI } = useToast();
 
@@ -330,9 +330,8 @@ export default function RestaurantsPage() {
 
   const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
 
-  /* Toggle status */
-  const toggleStatus = async (r) => {
-    const newStatus = r.status === "active" ? "inactive" : "active";
+  /* Change restaurant status */
+  const applyRestaurantStatus = async (r, newStatus) => {
     setTogglingId(r.id);
     try {
       const res  = await fetch("/api/super-admin/restaurants/" + r.id, {
@@ -342,35 +341,43 @@ export default function RestaurantsPage() {
       });
       const data = await res.json();
       if (!data.success) { showToast(data.error ?? "Failed.", "error"); return; }
-      setRestaurants((prev) => prev.map((x) => x.id === r.id ? { ...x, status: newStatus } : x));
-      showToast(r.name + " " + (newStatus === "active" ? "activated." : "deactivated."));
+      const ownerStatus = newStatus === "active" ? "active" : "inactive";
+      setRestaurants((prev) =>
+        prev.map((x) =>
+          x.id === r.id
+            ? { ...x, status: newStatus, ownerStatus: x.ownerStatus === "blocked" ? x.ownerStatus : ownerStatus }
+            : x,
+        ),
+      );
+      const msg =
+        newStatus === "active"
+          ? "activated."
+          : newStatus === "suspended"
+            ? "suspended."
+            : "set to inactive.";
+      showToast(r.name + " " + msg);
       fetchRestaurants();
     } catch { showToast("Network error.", "error"); }
     finally { setTogglingId(null); }
   };
 
-  const toggleOwnerStatus = async (r) => {
-    if (!r.ownerId) {
-      showToast("Owner admin not linked.", "error");
+  const changeRestaurantStatus = (r, newStatus) => {
+    if (newStatus === r.status) return;
+    if (newStatus === "suspended") {
+      setSuspendTarget({ restaurant: r, newStatus });
       return;
     }
-    const next = r.ownerStatus === "blocked" ? "active" : "blocked";
-    setOwnerTogglingId(r.id);
+    applyRestaurantStatus(r, newStatus);
+  };
+
+  const confirmSuspend = async () => {
+    if (!suspendTarget) return;
+    setSuspending(true);
     try {
-      const res = await fetch("/api/super-admin/users/" + r.ownerId, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status: next }),
-      });
-      const data = await res.json();
-      if (!data.success) { showToast(data.error ?? "Failed.", "error"); return; }
-      setRestaurants((prev) => prev.map((x) => x.id === r.id ? { ...x, ownerStatus: next } : x));
-      showToast(next === "blocked" ? "Owner admin blocked." : "Owner admin unblocked.");
-      fetchRestaurants();
-    } catch {
-      showToast("Network error.", "error");
+      await applyRestaurantStatus(suspendTarget.restaurant, suspendTarget.newStatus);
+      setSuspendTarget(null);
     } finally {
-      setOwnerTogglingId(null);
+      setSuspending(false);
     }
   };
 
@@ -527,7 +534,9 @@ export default function RestaurantsPage() {
           </span>
           <div className="min-w-0">
             <h1 className="admin-page-title break-words text-xl font-semibold tracking-tight sm:text-2xl">Restaurants</h1>
-            <p className="mt-1 text-sm admin-surface-muted">Manage all registered tenants and their admin accounts.</p>
+            <p className="mt-1 text-sm admin-surface-muted">
+              Manage tenants. Use <span className="admin-shell-text">Status</span> only — Active, Inactive, or Suspended (platform ban).
+            </p>
           </div>
         </div>
         <div className="admin-page-header-actions">
@@ -581,7 +590,7 @@ export default function RestaurantsPage() {
           <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}
             className={filterSelectCls}>
             <option value="all">All statuses</option>
-            {STATUSES.map((s) => <option key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1)}</option>)}
+            {STATUSES.map((s) => <option key={s} value={s}>{STATUS_LABELS[s] ?? s}</option>)}
           </select>
           <select value={planFilter} onChange={(e) => setPlanFilter(e.target.value)}
             className={filterSelectCls}>
@@ -621,7 +630,7 @@ export default function RestaurantsPage() {
             {restaurants.map((r) => (
               <div
                 key={r.id}
-                className={`rounded-xl border admin-shell-border bg-[var(--admin-surface-soft)] p-3 ${r.status !== "active" ? "opacity-70" : ""}`}
+                className={`rounded-xl border admin-shell-border bg-[var(--admin-surface-soft)] p-3 ${r.status !== "active" ? "opacity-80" : ""} ${r.status === "suspended" ? "border-red-500/25" : ""}`}
               >
                 <div className="flex items-start gap-3">
                   <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-sa-accent-10 text-sm font-bold text-sa-accent ring-1 ring-sa-accent-25">
@@ -675,17 +684,12 @@ export default function RestaurantsPage() {
                   <p className="mt-2 text-xs text-zinc-400">{r.phone}</p>
                 )}
 
-                <div className="mt-3 flex items-center justify-between gap-2">
-                  <div className="flex items-center gap-2">
-                    <ToggleSwitch
-                      checked={r.status === "active"}
-                      onChange={() => toggleStatus(r)}
-                      disabled={togglingId === r.id}
-                    />
-                    <span className={"text-xs font-medium " + (r.status === "active" ? "text-sa-accent" : "text-zinc-500")}>
-                      {r.status === "active" ? "Active" : r.status.charAt(0).toUpperCase() + r.status.slice(1)}
-                    </span>
-                  </div>
+                <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
+                  <RestaurantStatusSelect
+                    value={r.status}
+                    onChange={(status) => changeRestaurantStatus(r, status)}
+                    disabled={togglingId === r.id}
+                  />
                   <span className="shrink-0 text-[10px] admin-surface-faint">
                     {r.createdAt ? formatDate(r.createdAt) : "—"}
                   </span>
@@ -697,8 +701,6 @@ export default function RestaurantsPage() {
                     onPreview={setPreviewTarget}
                     onEdit={openEdit}
                     onDelete={setDeleteTarget}
-                    onToggleOwner={toggleOwnerStatus}
-                    ownerTogglingId={ownerTogglingId}
                   />
                 </div>
               </div>
@@ -720,7 +722,7 @@ export default function RestaurantsPage() {
               </AdminTableHead>
               <AdminTableBody>
                 {restaurants.map((r) => (
-                  <AdminTableRow key={r.id} className={r.status !== "active" ? "opacity-70" : ""}>
+                  <AdminTableRow key={r.id} className={r.status !== "active" ? "opacity-80" : ""}>
                     <AdminTableTd>
                       <div className="flex items-center gap-3">
                         <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-sa-accent-10 text-sm font-bold text-sa-accent ring-1 ring-sa-accent-25">
@@ -780,16 +782,11 @@ export default function RestaurantsPage() {
                     </AdminTableTd>
 
                     <AdminTableTd>
-                      <div className="flex items-center gap-2">
-                        <ToggleSwitch
-                          checked={r.status === "active"}
-                          onChange={() => toggleStatus(r)}
-                          disabled={togglingId === r.id}
-                        />
-                        <span className={"text-xs font-medium " + (r.status === "active" ? "text-sa-accent" : "text-zinc-500")}>
-                          {r.status === "active" ? "Active" : r.status.charAt(0).toUpperCase() + r.status.slice(1)}
-                        </span>
-                      </div>
+                      <RestaurantStatusSelect
+                        value={r.status}
+                        onChange={(status) => changeRestaurantStatus(r, status)}
+                        disabled={togglingId === r.id}
+                      />
                     </AdminTableTd>
 
                     <AdminTableTd className="text-xs admin-surface-faint whitespace-nowrap">
@@ -802,8 +799,6 @@ export default function RestaurantsPage() {
                           onPreview={setPreviewTarget}
                           onEdit={openEdit}
                           onDelete={setDeleteTarget}
-                          onToggleOwner={toggleOwnerStatus}
-                          ownerTogglingId={ownerTogglingId}
                         />
                     </AdminTableActionsCell>
                   </AdminTableRow>
@@ -966,21 +961,16 @@ export default function RestaurantsPage() {
                   placeholder="123 Main St, City, Country (optional)" className={inputCls} />
               </Field>
             </div>
-            <div className="sm:col-span-2 flex flex-col gap-3 rounded-xl border admin-shell-border admin-surface-card px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <p className="text-sm font-medium admin-shell-text">Status</p>
-                <p className="admin-surface-faint">Restaurant will be {createForm.status === "active" ? "active" : "inactive"} immediately</p>
-              </div>
-              <div className="flex items-center gap-2">
-                <ToggleSwitch
-                  checked={createForm.status === "active"}
-                  onChange={(v) => setCreateForm((f) => ({ ...f, status: v ? "active" : "inactive" }))}
-                />
-                <span className={"text-xs font-medium " + (createForm.status === "active" ? "text-sa-accent" : "text-zinc-500")}>
-                  {createForm.status === "active" ? "Active" : "Inactive"}
-                </span>
-              </div>
-            </div>
+            <Field label="Status">
+              <RestaurantStatusSelect
+                value={createForm.status}
+                onChange={(status) => setCreateForm((f) => ({ ...f, status }))}
+                className="w-full min-w-0 px-3 py-2.5 text-sm"
+              />
+              <p className="mt-1.5 text-[11px] admin-surface-faint">
+                Active = live · Inactive = paused · Suspended = platform ban (all logins disabled).
+              </p>
+            </Field>
           </div>
           <p className="text-[11px] text-zinc-600">
             An admin account will be created automatically and linked to this restaurant.
@@ -1105,6 +1095,19 @@ export default function RestaurantsPage() {
         confirmLabel={deleting ? "Deleting…" : "Delete"}
         onCancel={() => setDeleteTarget(null)}
         onConfirm={confirmDelete}
+      />
+
+      <ConfirmDialog
+        open={!!suspendTarget}
+        title="Suspend restaurant?"
+        message={
+          suspendTarget
+            ? "\"" + suspendTarget.restaurant.name + "\" will be platform-banned. All staff logins will be disabled and the customer site will go offline."
+            : ""
+        }
+        confirmLabel={suspending ? "Suspending…" : "Suspend"}
+        onCancel={() => setSuspendTarget(null)}
+        onConfirm={confirmSuspend}
       />
 
       {ToastUI}

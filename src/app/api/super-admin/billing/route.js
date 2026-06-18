@@ -3,6 +3,7 @@ import { verifyToken } from "@/lib/jwt";
 import clientPromise from "@/lib/mongodb";
 import { normalizePlanBreakdown } from "@/lib/planBreakdown";
 import { SUBSCRIPTION_PAYMENT_MATCH } from "@/lib/platformCurrency";
+import { resolveSubscriptionStatus, syncAllSubscriptionStatuses } from "@/lib/subscription";
 
 function superAdminOnly(request) {
   const token   = getTokenFromRequest(request);
@@ -22,6 +23,9 @@ export async function GET(request) {
   try {
     const client = await clientPromise;
     const db     = client.db();
+    const now    = new Date();
+
+    await syncAllSubscriptionStatuses(db, now);
 
     /* Revenue by month (last 6 months) */
     const sixMonthsAgo = new Date();
@@ -79,6 +83,8 @@ export async function GET(request) {
             restaurantId: "$restaurantId",
             plan: { $ifNull: ["$planSlug", "free"] },
             subscriptionStatus: { $ifNull: ["$status", "active"] },
+            endDate: "$endDate",
+            trialEnd: "$trialEnd",
             ownerEmail: { $ifNull: ["$restaurant.ownerEmail", "—"] },
             name: { $ifNull: ["$restaurant.name", "Unknown"] },
             restaurantStatus: { $ifNull: ["$restaurant.status", "inactive"] },
@@ -122,7 +128,10 @@ export async function GET(request) {
         id:         r.restaurantId?.toString() ?? "",
         name:       r.name,
         plan:       r.plan ?? "free",
-        status:     r.subscriptionStatus ?? "active",
+        status:     resolveSubscriptionStatus(
+          { status: r.subscriptionStatus, endDate: r.endDate, trialEnd: r.trialEnd },
+          now,
+        ),
         ownerEmail: r.ownerEmail ?? "—",
         createdAt:  r.createdAt,
       })),

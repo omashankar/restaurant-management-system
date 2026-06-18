@@ -42,6 +42,12 @@ export async function PUT(request, { params }) {
   if (!sa) return forbidden();
   const { section } = await params;
   if (!VALID_SECTIONS.includes(section)) return badSection(section);
+  if (section === "pricing") {
+    return Response.json(
+      { success: false, error: "Pricing is managed from Super Admin Plans. Update /super-admin/plans instead." },
+      { status: 400 },
+    );
+  }
   let body;
   try { body = await request.json(); } catch { return badJson(); }
   try {
@@ -60,6 +66,12 @@ export async function POST(request, { params }) {
   if (!sa) return forbidden();
   const { section } = await params;
   if (!VALID_SECTIONS.includes(section)) return badSection(section);
+  if (section === "pricing") {
+    return Response.json(
+      { success: false, error: "Pricing is managed from Super Admin Plans. Update /super-admin/plans instead." },
+      { status: 400 },
+    );
+  }
   let body;
   try { body = await request.json(); } catch { return badJson(); }
   try {

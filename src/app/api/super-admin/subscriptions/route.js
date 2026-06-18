@@ -1,7 +1,7 @@
 import { getTokenFromRequest } from "@/lib/authCookies";
 import { verifyToken } from "@/lib/jwt";
 import clientPromise from "@/lib/mongodb";
-import { assignPlan } from "@/lib/subscription";
+import { assignPlan, expireStaleSubscriptions, resolveSubscriptionStatus, syncAllSubscriptionStatuses } from "@/lib/subscription";
 import { parseSchema, superAdminAssignPlanSchema } from "@/lib/validationSchemas";
 import { ObjectId } from "mongodb";
 import { buildPaginationMeta, paginationSkip, parseLimitParam, parsePageParam } from "@/lib/pagination";
@@ -22,6 +22,9 @@ export async function GET(request) {
 
     const client = await clientPromise;
     const db     = client.db();
+    const now    = new Date();
+
+    await syncAllSubscriptionStatuses(db, now);
 
     const filter = {};
     if (statusFilter !== "all") filter.status = statusFilter;
@@ -46,12 +49,25 @@ export async function GET(request) {
       restaurantMap = Object.fromEntries(restaurants.map((r) => [r._id.toString(), r]));
     }
 
-    const now = new Date();
+    await expireStaleSubscriptions(db, subs, now);
+
+    const countRows = await col.aggregate([
+      { $group: { _id: "$status", count: { $sum: 1 } } },
+    ]).toArray();
+    const statusCounts = { active: 0, trial: 0, expired: 0, cancelled: 0, total: 0 };
+    for (const row of countRows) {
+      const key = row._id ?? "active";
+      if (key in statusCounts) statusCounts[key] = row.count;
+      statusCounts.total += row.count;
+    }
+
     const pagination = buildPaginationMeta({ page, limit, total });
     return Response.json({
       success: true,
+      statusCounts,
       subscriptions: subs.map((s) => {
         const r        = restaurantMap[s.restaurantId?.toString()] ?? null;
+        const status   = resolveSubscriptionStatus(s, now);
         const daysLeft = s.endDate ? Math.max(0, Math.ceil((new Date(s.endDate) - now) / 86_400_000)) : null;
         return {
           id:               s._id.toString(),
@@ -63,7 +79,7 @@ export async function GET(request) {
           planName:         s.planName    ?? "Free",
           price:            s.price       ?? 0,
           billingCycle:     s.billingCycle ?? "monthly",
-          status:           s.status      ?? "active",
+          status,
           startDate:        s.startDate,
           endDate:          s.endDate,
           trialEnd:         s.trialEnd    ?? null,
@@ -93,6 +109,7 @@ export async function POST(request) {
     validated = parseSchema(superAdminAssignPlanSchema, {
       restaurantId: body.restaurantId,
       planSlug: body.planSlug,
+      billingCycle: body.billingCycle === "yearly" ? "yearly" : "monthly",
       startDate: body.startDate || undefined,
       endDate: body.endDate || undefined,
       trialDays: body.trialDays ?? 0,
@@ -107,6 +124,7 @@ export async function POST(request) {
 
   try {
     const sub = await assignPlan(validated.restaurantId, validated.planSlug, {
+      billingCycle: validated.billingCycle,
       startDate: validated.startDate,
       endDate: validated.endDate,
       trialDays: validated.trialDays,

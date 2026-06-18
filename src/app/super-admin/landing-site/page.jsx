@@ -112,7 +112,7 @@ function StringListEditor({
               type="button"
               onClick={() => remove(i)}
               aria-label={`Remove item ${i + 1}`}
-              className="cursor-pointer shrink-0 rounded-lg p-2 text-zinc-500 transition-colors hover-bg-red-15 hover-red-danger"
+              className="cursor-pointer shrink-0 rounded-lg p-2 admin-icon-hover-danger transition-colors"
             >
               <Trash2 className="size-4" />
             </button>
@@ -199,7 +199,7 @@ function NestedListEditor({
                 type="button"
                 onClick={() => remove(i)}
                 aria-label={`Remove item ${i + 1}`}
-                className="cursor-pointer rounded-lg p-1.5 text-zinc-500 transition-colors hover-bg-red-15 hover-red-danger"
+                className="cursor-pointer rounded-lg p-1.5 admin-icon-hover-danger transition-colors"
               >
                 <Trash2 className="size-3.5" />
               </button>
@@ -392,7 +392,7 @@ function NavbarPanel({ data, onChange, onSave, saving, fieldErrors = {}, onClear
                   <input type="checkbox" checked={!!l.external} onChange={e => updateLink(i, "external", e.target.checked)} />
                   External
                 </label>
-                <button type="button" onClick={() => removeLink(i)} className="cursor-pointer ml-auto shrink-0 rounded-lg p-2 text-zinc-600 transition-colors hover-bg-red-15 hover-red-danger">
+                <button type="button" onClick={() => removeLink(i)} className="cursor-pointer ml-auto shrink-0 rounded-lg p-2 admin-icon-hover-danger transition-colors">
                   <Trash2 className="size-4" />
                 </button>
               </div>
@@ -618,11 +618,11 @@ function ArrayPanel({ items, fields, onSave, saving, icon: Icon, title, descript
             <div className="min-w-0 flex-1">{renderCard(item)}</div>
             <div className="flex shrink-0 items-center gap-1 self-end sm:self-auto">
               <button type="button" onClick={() => openEdit(i)}
-                className="cursor-pointer rounded-lg p-1.5 text-zinc-500 transition-colors admin-icon-hover-edit">
+                className="cursor-pointer rounded-lg p-1.5 admin-icon-hover-edit transition-colors">
                 <Pencil className="size-3.5" />
               </button>
               <button type="button" onClick={() => setDeleteIdx(i)}
-                className="cursor-pointer rounded-lg p-1.5 text-zinc-500 transition-colors hover-bg-red-15 hover-red-danger">
+                className="cursor-pointer rounded-lg p-1.5 admin-icon-hover-danger transition-colors">
                 <Trash2 className="size-3.5" />
               </button>
             </div>
@@ -780,7 +780,7 @@ function FooterPanel({ data, onChange, onSave, saving, fieldErrors = {}, onClear
               <input value={l.href ?? ""} onChange={e => updateLink(i, "href", e.target.value)}
                 placeholder="/url or #anchor" className={`${ic} min-w-0 sm:flex-1`} />
               <button type="button" onClick={() => removeLink(i)}
-                className="cursor-pointer shrink-0 self-end rounded-lg p-2 text-zinc-600 transition-colors hover-bg-red-15 hover-red-danger sm:self-auto">
+                className="cursor-pointer shrink-0 self-end rounded-lg p-2 admin-icon-hover-danger transition-colors sm:self-auto">
                 <Trash2 className="size-4" />
               </button>
             </div>

@@ -5,7 +5,6 @@ import { useAdminLocale } from "@/context/RestaurantLocaleContext";
 import { formatAdminMoney } from "@/lib/adminCurrency";
 import { usePermission } from "@/hooks/usePermission";
 import { BookOpen, DollarSign, ShoppingBag, Users } from "lucide-react";
-import Link from "next/link";
 
 export default function DashboardStats({
   currency = "INR",
@@ -51,19 +50,16 @@ export default function DashboardStats({
       )}
 
       {hasPermission("view_reservations") && (
-        <Link href="/reservations" className="block rounded-2xl focus:outline-none focus-visible:ring-2 focus-visible:ring-ra-primary-40">
-          <StatsCard
-            title="Reservations"
-            value={String(reservationsToday)}
-            subtitle={
-              reservationsDateLabel
-                ? `Pending & confirmed · ${reservationsDateLabel}`
-                : "Pending & confirmed for today"
-            }
-            icon={BookOpen}
-            className="h-full"
-          />
-        </Link>
+        <StatsCard
+          title="Reservations"
+          value={String(reservationsToday)}
+          subtitle={
+            reservationsDateLabel
+              ? `Pending & confirmed · ${reservationsDateLabel}`
+              : "Pending & confirmed for today"
+          }
+          icon={BookOpen}
+        />
       )}
     </div>
   );

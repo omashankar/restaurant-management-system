@@ -6,13 +6,16 @@ import { saIconBadgeCls, saInputCls, saSpinnerCls, saTextareaCls } from "@/confi
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import Modal from "@/components/ui/Modal";
 import { useToast } from "@/hooks/useToast";
+import AssignPlanFormFields from "@/components/super-admin/AssignPlanFormFields";
 import {
   buildAssignPlanSubmitBody,
   buildPlanSubmitBody,
   EMPTY_ASSIGN_PLAN_ERRORS,
+  EMPTY_ASSIGN_PLAN_FORM,
   EMPTY_PLAN_FORM_ERRORS,
   getAssignPlanFieldErrors,
   getPlanFormFieldErrors,
+  withAutoAssignEndDate,
 } from "@/lib/formValidation";
 import { decimalInputProps, intInputProps } from "@/lib/formInputTypes";
 import { formatSaMoney } from "@/lib/formatSaMoney";
@@ -259,7 +262,6 @@ const DEFAULT_COLOR = {
 };
 const BILLING_CYCLES = ["monthly", "yearly"];
 const emptyForm = { name: "", monthlyPrice: "", yearlyPrice: "", billingCycle: "monthly", description: "", features: "", limits: { staff: "", tables: "", menuItems: "", orders: "" } };
-const emptyAssignForm = { restaurantId: "", planSlug: "", startDate: "", endDate: "", trialDays: "0" };
 
 function FieldError({ message }) {
   if (!message) return null;
@@ -285,7 +287,7 @@ export default function PlansPage() {
   const [deleting, setDeleting]   = useState(false);
   const [assignOpen, setAssignOpen] = useState(false);
   const [assignRestaurants, setAssignRestaurants] = useState([]);
-  const [assignForm, setAssignForm] = useState(emptyAssignForm);
+  const [assignForm, setAssignForm] = useState(EMPTY_ASSIGN_PLAN_FORM);
   const [assignFieldErrors, setAssignFieldErrors] = useState(EMPTY_ASSIGN_PLAN_ERRORS);
   const [assignError, setAssignError] = useState("");
   const [assigning, setAssigning] = useState(false);
@@ -327,7 +329,7 @@ export default function PlansPage() {
     setForm({
       name: p.name,
       monthlyPrice: String(p.monthlyPrice ?? p.price ?? ""),
-      yearlyPrice: String(p.yearlyPrice ?? ((p.price ?? 0) * 12)),
+      yearlyPrice: String(p.yearlyPrice ?? ""),
       billingCycle: p.billingCycle ?? "monthly",
       description: p.description ?? "",
       features: (p.features ?? []).join(", "),
@@ -384,7 +386,11 @@ export default function PlansPage() {
   };
 
   const openAssign = async (planSlug = "") => {
-    setAssignForm({ ...emptyAssignForm, planSlug });
+    setAssignForm(withAutoAssignEndDate({
+      ...EMPTY_ASSIGN_PLAN_FORM,
+      planSlug,
+      billingCycle: pricingView === "yearly" ? "yearly" : "monthly",
+    }));
     setAssignFieldErrors(EMPTY_ASSIGN_PLAN_ERRORS);
     setAssignError("");
     setAssignOpen(true);
@@ -422,7 +428,7 @@ export default function PlansPage() {
       }
       showToast("Plan assigned successfully.");
       setAssignOpen(false);
-      setAssignForm(emptyAssignForm);
+      setAssignForm(EMPTY_ASSIGN_PLAN_FORM);
       setAssignFieldErrors(EMPTY_ASSIGN_PLAN_ERRORS);
       fetchPlans();
     } catch {
@@ -839,106 +845,17 @@ export default function PlansPage() {
             </button>
           </div>
         }>
-        <form
-          noValidate
-          className="space-y-4"
-          onSubmit={(e) => {
-            e.preventDefault();
-            assignPlan();
-          }}
-        >
-          {assignError && (
-            <p className="rounded-xl border border-red-500/20 bg-red-500/10 px-3 py-2 text-xs text-red-400">{assignError}</p>
-          )}
-          <div>
-            <label className="text-xs font-medium admin-surface-muted">Restaurant *</label>
-            <select
-              value={assignForm.restaurantId}
-              onChange={(e) => {
-                setAssignForm((f) => ({ ...f, restaurantId: e.target.value }));
-                clearAssignFieldError("restaurantId");
-              }}
-              aria-invalid={assignFieldErrors.restaurantId ? true : undefined}
-              className={`cursor-pointer mt-1 ${saInputCls}`}
-            >
-              <option value="">— Select restaurant —</option>
-              {assignRestaurants.map((r) => (
-                <option key={r.id} value={r.id}>{r.name} — {r.ownerEmail ?? ""}</option>
-              ))}
-            </select>
-            <FieldError message={assignFieldErrors.restaurantId} />
-          </div>
-          <div>
-            <label className="text-xs font-medium admin-surface-muted">Plan *</label>
-            <select
-              value={assignForm.planSlug}
-              onChange={(e) => {
-                setAssignForm((f) => ({ ...f, planSlug: e.target.value }));
-                clearAssignFieldError("planSlug");
-              }}
-              aria-invalid={assignFieldErrors.planSlug ? true : undefined}
-              className={`cursor-pointer mt-1 ${saInputCls}`}
-            >
-              <option value="">— Select plan —</option>
-              {plans.map((p) => (
-                <option key={p.id} value={p.slug}>
-                  {p.name} — {p.price === 0 ? "Free" : `${formatSaMoney(p.price)}/${p.billingCycle}`}
-                </option>
-              ))}
-            </select>
-            <FieldError message={assignFieldErrors.planSlug} />
-          </div>
-          <div className="grid gap-3 sm:grid-cols-2">
-            <div>
-              <label className="text-xs font-medium admin-surface-muted">Start Date</label>
-              <input
-                type="date"
-                value={assignForm.startDate}
-                onChange={(e) => {
-                  setAssignForm((f) => ({ ...f, startDate: e.target.value }));
-                  clearAssignFieldError("startDate");
-                  clearAssignFieldError("endDate");
-                }}
-                aria-invalid={assignFieldErrors.startDate ? true : undefined}
-                className={`mt-1 ${saInputCls}`}
-              />
-              <FieldError message={assignFieldErrors.startDate} />
-            </div>
-            <div>
-              <label className="text-xs font-medium admin-surface-muted">End Date</label>
-              <input
-                type="date"
-                value={assignForm.endDate}
-                min={assignForm.startDate || undefined}
-                onChange={(e) => {
-                  setAssignForm((f) => ({ ...f, endDate: e.target.value }));
-                  clearAssignFieldError("endDate");
-                  clearAssignFieldError("startDate");
-                }}
-                aria-invalid={assignFieldErrors.endDate ? true : undefined}
-                className={`mt-1 ${saInputCls}`}
-              />
-              <FieldError message={assignFieldErrors.endDate} />
-            </div>
-            <div>
-              <label className="text-xs font-medium admin-surface-muted">Trial Days</label>
-              <input
-                {...intInputProps({ min: 0, max: 90, step: 1 })}
-                value={assignForm.trialDays}
-                onChange={(e) => {
-                  const v = e.target.value.replace(/[^\d]/g, "");
-                  setAssignForm((f) => ({ ...f, trialDays: v }));
-                  clearAssignFieldError("trialDays");
-                }}
-                placeholder="0"
-                aria-invalid={assignFieldErrors.trialDays ? true : undefined}
-                className={`mt-1 ${saInputCls}`}
-              />
-              <FieldError message={assignFieldErrors.trialDays} />
-            </div>
-          </div>
-          <p className="text-[11px] text-zinc-600">Leave Start/End blank to use today + 1 billing cycle automatically.</p>
-        </form>
+        <AssignPlanFormFields
+          form={assignForm}
+          setForm={setAssignForm}
+          fieldErrors={assignFieldErrors}
+          clearFieldError={clearAssignFieldError}
+          error={assignError}
+          restaurants={assignRestaurants}
+          plans={plans}
+          inputCls={saInputCls}
+          onSubmit={assignPlan}
+        />
       </Modal>
 
       <ConfirmDialog

@@ -19,10 +19,14 @@ import {
   AdminTableThActions,
 } from "@/components/ui/AdminTable";
 import { formatSaMoney } from "@/lib/formatSaMoney";
+import AssignPlanFormFields from "@/components/super-admin/AssignPlanFormFields";
 import {
   buildAssignPlanSubmitBody,
+  computeSubscriptionEndDate,
   EMPTY_ASSIGN_PLAN_ERRORS,
+  EMPTY_ASSIGN_PLAN_FORM,
   getAssignPlanFieldErrors,
+  withAutoAssignEndDate,
 } from "@/lib/formValidation";
 import { intInputProps } from "@/lib/formInputTypes";
 import { useSuperAdminLocale } from "@/context/SuperAdminLocaleContext";
@@ -75,13 +79,7 @@ function FieldError({ message }) {
   return <p className="mt-1 text-xs text-red-400">{message}</p>;
 }
 
-const emptyAssignForm = {
-  restaurantId: "",
-  planSlug: "",
-  startDate: "",
-  endDate: "",
-  trialDays: "0",
-};
+const emptyAssignForm = EMPTY_ASSIGN_PLAN_FORM;
 
 export default function BillingPage() {
   const { formatDate } = useSuperAdminLocale();
@@ -95,6 +93,7 @@ export default function BillingPage() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [subsPage, setSubsPage] = useState(1);
   const [subsPagination, setSubsPagination] = useState({ total: 0, pages: 1 });
+  const [statusCounts, setStatusCounts] = useState({ active: 0, trial: 0, expired: 0, cancelled: 0, total: 0 });
 
   const [assignOpen, setAssignOpen]   = useState(false);
   const [assignForm, setAssignForm] = useState(emptyAssignForm);
@@ -106,7 +105,6 @@ export default function BillingPage() {
   const [cancelling, setCancelling]     = useState(false);
 
   const [renewTarget, setRenewTarget] = useState(null);
-  const [renewDays, setRenewDays]     = useState("30");
   const [renewing, setRenewing]       = useState(false);
 
   const { showToast, ToastUI } = useToast();
@@ -139,6 +137,7 @@ export default function BillingPage() {
       if (subsData.success) {
         setSubs(subsData.subscriptions);
         if (subsData.pagination) setSubsPagination(subsData.pagination);
+        if (subsData.statusCounts) setStatusCounts(subsData.statusCounts);
       }
       if (billingData.success) setBilling(billingData);
       if (plansData.success)   setPlans(plansData.plans);
@@ -153,7 +152,7 @@ export default function BillingPage() {
   useEffect(() => { fetchAll(); }, [fetchAll]);
 
   const openAssignModal = (planSlug = "") => {
-    setAssignForm({ ...emptyAssignForm, planSlug });
+    setAssignForm(withAutoAssignEndDate({ ...emptyAssignForm, planSlug }));
     setAssignFieldErrors(EMPTY_ASSIGN_PLAN_ERRORS);
     setAssignError("");
     setAssignOpen(true);
@@ -210,9 +209,11 @@ export default function BillingPage() {
     if (!renewTarget) return;
     setRenewing(true);
     try {
-      const days    = Number(renewDays) || 30;
-      const endDate = new Date();
-      endDate.setDate(endDate.getDate() + days);
+      const cycle = renewTarget.billingCycle === "yearly" ? "yearly" : "monthly";
+      const now = new Date();
+      const currentEnd = renewTarget.endDate ? new Date(renewTarget.endDate) : now;
+      const base = currentEnd > now ? currentEnd : now;
+      const endDate = computeSubscriptionEndDate(base, cycle);
       const res  = await fetch("/api/super-admin/subscriptions/" + renewTarget.id, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
@@ -220,7 +221,7 @@ export default function BillingPage() {
       });
       const data = await res.json();
       if (!data.success) { showToast(data.error ?? "Failed.", "error"); return; }
-      showToast("Renewed for " + days + " days.");
+      showToast(`Renewed for 1 ${cycle === "yearly" ? "year" : "month"}.`);
       setRenewTarget(null);
       fetchAll();
     } catch { showToast("Network error.", "error"); }
@@ -228,12 +229,12 @@ export default function BillingPage() {
   };
 
   const stats = useMemo(() => ({
-    total:     subs.length,
-    active:    subs.filter((s) => s.status === "active").length,
-    trial:     subs.filter((s) => s.status === "trial").length,
-    expired:   subs.filter((s) => s.status === "expired").length,
-    cancelled: subs.filter((s) => s.status === "cancelled").length,
-  }), [subs]);
+    total:     statusCounts.total,
+    active:    statusCounts.active,
+    trial:     statusCounts.trial,
+    expired:   statusCounts.expired,
+    cancelled: statusCounts.cancelled,
+  }), [statusCounts]);
 
   const maxRevenue = billing?.revenueByMonth?.length
     ? Math.max(...billing.revenueByMonth.map((r) => r.revenue), 1)
@@ -477,7 +478,7 @@ export default function BillingPage() {
                         )}
                         <div className="mt-3 flex flex-wrap items-center gap-1 border-t admin-shell-border pt-3">
                           <AdminTableIconButton
-                            onClick={() => { setRenewTarget(s); setRenewDays("30"); }}
+                            onClick={() => setRenewTarget(s)}
                             title="Renew / extend"
                             aria-label="Renew / extend"
                             className="admin-icon-hover-sa"
@@ -564,7 +565,7 @@ export default function BillingPage() {
                           </AdminTableTd>
                           <AdminTableActionsCell>
                               <AdminTableIconButton
-                                onClick={() => { setRenewTarget(s); setRenewDays("30"); }}
+                                onClick={() => setRenewTarget(s)}
                                 title="Renew / extend"
                                 aria-label="Renew / extend"
                                 className="admin-icon-hover-sa"
@@ -619,106 +620,19 @@ export default function BillingPage() {
             </button>
           </div>
         }>
-        <form
-          noValidate
-          className="space-y-4"
-          onSubmit={(e) => {
-            e.preventDefault();
-            handleAssign();
-          }}
-        >
-          {assignError && (
-            <p className="rounded-xl border border-red-500/20 bg-red-500/10 px-3 py-2 text-xs text-red-400">{assignError}</p>
-          )}
-          <div>
-            <label className="block text-xs font-medium text-zinc-400 mb-1">Restaurant *</label>
-            <select
-              value={assignForm.restaurantId}
-              onChange={(e) => {
-                setAssignForm((f) => ({ ...f, restaurantId: e.target.value }));
-                clearAssignFieldError("restaurantId");
-              }}
-              aria-invalid={assignFieldErrors.restaurantId ? true : undefined}
-              className={"cursor-pointer " + inputCls}
-            >
-              <option value="">— Select restaurant —</option>
-              {restaurants.map((r) => (
-                <option key={r.id} value={r.id}>{r.name} — {r.adminEmail ?? r.ownerEmail ?? ""}</option>
-              ))}
-            </select>
-            <FieldError message={assignFieldErrors.restaurantId} />
-          </div>
-          <div>
-            <label className="block text-xs font-medium text-zinc-400 mb-1">Plan *</label>
-            <select
-              value={assignForm.planSlug}
-              onChange={(e) => {
-                setAssignForm((f) => ({ ...f, planSlug: e.target.value }));
-                clearAssignFieldError("planSlug");
-              }}
-              aria-invalid={assignFieldErrors.planSlug ? true : undefined}
-              className={"cursor-pointer " + inputCls}
-            >
-              <option value="">— Select plan —</option>
-              {plans.map((p) => (
-                <option key={p.id} value={p.slug}>
-                  {p.name} — {p.price === 0 ? "Free" : `${formatSaMoney(p.price)}/${p.billingCycle}`}
-                </option>
-              ))}
-            </select>
-            <FieldError message={assignFieldErrors.planSlug} />
-          </div>
-          <div className="grid gap-3 sm:grid-cols-2">
-            <div>
-              <label className="block text-xs font-medium text-zinc-400 mb-1">Start Date</label>
-              <input
-                type="date"
-                value={assignForm.startDate}
-                onChange={(e) => {
-                  setAssignForm((f) => ({ ...f, startDate: e.target.value }));
-                  clearAssignFieldError("startDate");
-                  clearAssignFieldError("endDate");
-                }}
-                aria-invalid={assignFieldErrors.startDate ? true : undefined}
-                className={inputCls}
-              />
-              <FieldError message={assignFieldErrors.startDate} />
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-zinc-400 mb-1">End Date</label>
-              <input
-                type="date"
-                value={assignForm.endDate}
-                min={assignForm.startDate || undefined}
-                onChange={(e) => {
-                  setAssignForm((f) => ({ ...f, endDate: e.target.value }));
-                  clearAssignFieldError("endDate");
-                  clearAssignFieldError("startDate");
-                }}
-                aria-invalid={assignFieldErrors.endDate ? true : undefined}
-                className={inputCls}
-              />
-              <FieldError message={assignFieldErrors.endDate} />
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-zinc-400 mb-1">Trial Days</label>
-              <input
-                {...intInputProps({ min: 0, max: 90, step: 1 })}
-                value={assignForm.trialDays}
-                onChange={(e) => {
-                  const v = e.target.value.replace(/[^\d]/g, "");
-                  setAssignForm((f) => ({ ...f, trialDays: v }));
-                  clearAssignFieldError("trialDays");
-                }}
-                placeholder="0"
-                aria-invalid={assignFieldErrors.trialDays ? true : undefined}
-                className={inputCls}
-              />
-              <FieldError message={assignFieldErrors.trialDays} />
-            </div>
-          </div>
-          <p className="text-[11px] text-zinc-600">Leave Start/End blank to use today + 1 billing cycle automatically.</p>
-        </form>
+        <AssignPlanFormFields
+          form={assignForm}
+          setForm={setAssignForm}
+          fieldErrors={assignFieldErrors}
+          clearFieldError={clearAssignFieldError}
+          error={assignError}
+          restaurants={restaurants}
+          plans={plans}
+          inputCls={inputCls}
+          labelCls="block text-xs font-medium text-zinc-400 mb-1"
+          formatDate={formatDate}
+          onSubmit={handleAssign}
+        />
       </Modal>
 
       <Modal open={!!renewTarget} onClose={() => setRenewTarget(null)} title="Renew Subscription"
@@ -743,11 +657,11 @@ export default function BillingPage() {
                 {renewTarget.planName}
               </span>
             </div>
-            <div>
-              <label className="block text-xs font-medium text-zinc-400 mb-1">Extend by (days)</label>
-              <input type="number" min="1" max="365" value={renewDays}
-                onChange={(e) => setRenewDays(e.target.value)}
-                className={inputCls} />
+            <div className="rounded-xl border border-sky-500/20 bg-sky-500/5 px-4 py-3 text-sm text-sky-300">
+              Extends by <strong>1 {renewTarget.billingCycle === "yearly" ? "year" : "month"}</strong> from{" "}
+              {renewTarget.endDate && new Date(renewTarget.endDate) > new Date()
+                ? "current expiry date"
+                : "today"}.
             </div>
           </div>
         )}

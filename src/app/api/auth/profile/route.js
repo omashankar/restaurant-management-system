@@ -1,4 +1,4 @@
-import { getAuthPayload } from "@/lib/tenantDb";
+import { getAuthPayload, assertActiveTenantAccess } from "@/lib/tenantDb";
 import { getProfileFormFieldErrors } from "@/lib/formValidation";
 import { extractIndianMobileDigits } from "@/lib/phoneUtils";
 import clientPromise from "@/lib/mongodb";
@@ -53,6 +53,15 @@ export async function PATCH(request) {
 
     const client = await clientPromise;
     const db = client.db();
+
+    try {
+      await assertActiveTenantAccess(db, payload);
+    } catch (err) {
+      if (err.status) {
+        return Response.json({ success: false, error: err.message }, { status: err.status });
+      }
+      throw err;
+    }
 
     const existing = await db.collection("users").findOne({ _id });
     if (!existing) {

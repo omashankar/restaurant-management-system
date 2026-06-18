@@ -95,8 +95,8 @@ export async function PATCH(request, { params }) {
     category: "billing",
     actorId: sa.id,
     targetId: sub.restaurantId?.toString() ?? id,
-    targetName: restaurant?.name ?? sub.plan ?? id,
-    meta: { status: update.status, plan: sub.plan },
+    targetName: restaurant?.name ?? sub.planSlug ?? id,
+    meta: { status: update.status, planSlug: sub.planSlug },
     ip: getClientIp(request),
   });
 
@@ -133,8 +133,8 @@ export async function DELETE(request, { params }) {
       category: "billing",
       actorId: sa.id,
       targetId: sub.restaurantId?.toString() ?? id,
-      targetName: restaurant?.name ?? sub.plan ?? id,
-      meta: { plan: sub.plan },
+      targetName: restaurant?.name ?? sub.planSlug ?? id,
+      meta: { planSlug: sub.planSlug },
       ip: getClientIp(request),
     });
 

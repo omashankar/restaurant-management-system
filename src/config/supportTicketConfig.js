@@ -63,7 +63,14 @@ const TABLE_SELECT_BASE =
 export { adminPageDrawerOverlay as supportTicketDrawerOverlayCls } from "@/config/adminSurfaceClasses";
 
 export const supportTicketDrawerPanelCls =
-  "relative flex w-full max-h-[min(92dvh,100dvh)] flex-col overflow-y-auto rounded-t-2xl border admin-shell-border admin-surface-card-solid p-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:h-full sm:max-h-none sm:max-w-xl sm:rounded-none sm:border-l sm:border-t-0 sm:pb-4";
+  "relative flex w-full max-h-[min(92dvh,100dvh)] flex-col overflow-hidden rounded-t-2xl border admin-shell-border admin-surface-card-solid sm:h-full sm:max-h-none sm:max-w-xl sm:rounded-none sm:border-l sm:border-t-0";
+
+/** Fixed drawer chrome — body scrolls separately so content cannot bleed through the header */
+export const supportTicketDrawerHeaderCls =
+  "relative z-10 flex shrink-0 items-center justify-between gap-3 border-b admin-surface-divider-b bg-[var(--admin-surface)] px-4 pb-3 pt-4 sm:pt-5";
+
+export const supportTicketDrawerBodyCls =
+  "min-h-0 flex-1 overflow-y-auto overscroll-y-contain px-4 py-4 pb-[max(1rem,env(safe-area-inset-bottom))]";
 
 export const supportTicketStatsGridCls = "grid min-w-0 grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5";
 

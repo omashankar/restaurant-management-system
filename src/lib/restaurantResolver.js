@@ -19,19 +19,40 @@ const slugCache = new Map(); // slug -> { id: ObjectId, expiresAt: number }
 const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
 
 async function resolveBySlug(db, slug) {
+  const key = slug.toLowerCase();
   const now = Date.now();
-  const cached = slugCache.get(slug);
+  const cached = slugCache.get(key);
   if (cached && cached.expiresAt > now) return cached.id;
 
   const restaurant = await db.collection("restaurants").findOne(
-    { slug: slug.toLowerCase(), status: "active" },
+    { slug: key, status: "active" },
     { projection: { _id: 1 } }
   );
 
-  if (!restaurant) return null;
+  if (!restaurant) {
+    slugCache.set(key, { id: null, expiresAt: now + CACHE_TTL_MS });
+    return null;
+  }
 
-  slugCache.set(slug, { id: restaurant._id, expiresAt: now + CACHE_TTL_MS });
+  slugCache.set(key, { id: restaurant._id, expiresAt: now + CACHE_TTL_MS });
   return restaurant._id;
+}
+
+/** Slug from middleware header or customer cookie (if any). */
+export function getRequestedSlug(request) {
+  if (!request) return null;
+  const headerSlug = request.headers.get("x-restaurant-slug")?.trim();
+  if (headerSlug) return headerSlug.toLowerCase();
+
+  const cookieHeader = request.headers.get("cookie") ?? "";
+  const cookieSlug = cookieHeader
+    .split(";")
+    .map((c) => c.trim())
+    .find((c) => c.startsWith("x-restaurant-slug="))
+    ?.split("=")[1]
+    ?.trim();
+
+  return cookieSlug ? decodeURIComponent(cookieSlug).toLowerCase() : null;
 }
 
 /**
@@ -49,14 +70,12 @@ async function resolveBySlug(db, slug) {
  */
 export async function getRestaurantIdFromRequest(db, request) {
   if (request) {
-    // 1. Header se check karo (server-side page render mein middleware set karta hai)
-    const headerSlug = request.headers.get("x-restaurant-slug");
+    const headerSlug = request.headers.get("x-restaurant-slug")?.trim();
     if (headerSlug) {
       const id = await resolveBySlug(db, headerSlug);
-      if (id) return id;
+      return id;
     }
 
-    // 2. Cookie se check karo (browser fetch calls ke liye)
     const cookieHeader = request.headers.get("cookie") ?? "";
     const cookieSlug = cookieHeader
       .split(";")
@@ -67,7 +86,7 @@ export async function getRestaurantIdFromRequest(db, request) {
 
     if (cookieSlug) {
       const id = await resolveBySlug(db, decodeURIComponent(cookieSlug));
-      if (id) return id;
+      return id;
     }
   }
 

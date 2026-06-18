@@ -16,7 +16,7 @@ import {
 } from "@/lib/localeFormat";
 import { resolveCustomerSiteName } from "@/lib/resolveBrandLogos";
 import clientPromise from "@/lib/mongodb";
-import { getRestaurantIdFromRequest } from "@/lib/restaurantResolver";
+import { getRestaurantIdFromRequest, getRequestedSlug } from "@/lib/restaurantResolver";
 import { sanitizeOpeningHoursSchedule } from "@/lib/reservationUtils";
 
 export async function GET(request) {
@@ -24,7 +24,14 @@ export async function GET(request) {
     const client = await clientPromise;
     const db = client.db();
 
+    const requestedSlug = getRequestedSlug(request);
     const restaurantId = await getRestaurantIdFromRequest(db, request);
+    if (requestedSlug && !restaurantId) {
+      return Response.json(
+        { success: false, error: "Restaurant not found.", code: "RESTAURANT_NOT_FOUND" },
+        { status: 404 },
+      );
+    }
     if (!restaurantId) {
       return Response.json({ success: true, info: getDefaults() });
     }

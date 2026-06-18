@@ -29,6 +29,7 @@ export async function PATCH(request, { params }) {
     validated = parseSchema(superAdminAssignPlanSchema, {
       restaurantId: id,
       planSlug: body.plan ?? body.planSlug,
+      billingCycle: body.billingCycle === "yearly" ? "yearly" : "monthly",
       startDate: body.startDate || undefined,
       endDate: body.endDate || undefined,
       trialDays: body.trialDays ?? 0,
@@ -43,6 +44,7 @@ export async function PATCH(request, { params }) {
 
   try {
     await assignPlan(id, validated.planSlug, {
+      billingCycle: validated.billingCycle,
       startDate: validated.startDate,
       endDate: validated.endDate,
       trialDays: validated.trialDays,
