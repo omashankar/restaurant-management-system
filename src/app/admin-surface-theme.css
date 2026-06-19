@@ -744,7 +744,7 @@ html[data-admin-mode="light"]
 
 :is(.restaurant-admin-panel, .super-admin-panel) .admin-header-inbox-badge--ra {
   background-color: var(--ra-primary, #10b981);
-  color: #09090b;
+  color: var(--ra-primary-fg, #ffffff);
 }
 
 :is(.restaurant-admin-panel, .super-admin-panel) .admin-header-inbox-badge--sa {
@@ -2664,7 +2664,7 @@ html[data-admin-mode="light"]
   :is(button, a).bg-sa-primary :is(.text-zinc-50, .text-zinc-100, .text-zinc-950, .text-white),
 html[data-admin-mode="light"]
   :is(.super-admin-panel, .admin-portal-scope) .sa-btn-primary :is(.text-zinc-50, .text-zinc-100, .text-zinc-950, .text-white) {
-  color: #09090b !important;
+  color: var(--ra-primary-fg, var(--sa-primary-fg, #111827)) !important;
 }
 
 /* Ghost / secondary buttons still on zinc borders */

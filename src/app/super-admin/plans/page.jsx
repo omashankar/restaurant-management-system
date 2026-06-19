@@ -352,11 +352,7 @@ export default function PlansPage() {
   const save = async () => {
     const errors = getPlanFormFieldErrors(form);
     setFieldErrors(errors);
-    const firstError = Object.values(errors).find(Boolean);
-    if (firstError) {
-      setFormError(firstError);
-      return;
-    }
+    if (Object.values(errors).some(Boolean)) return;
     setSaving(true);
     setFormError("");
     const body = buildPlanSubmitBody(form);
@@ -408,11 +404,7 @@ export default function PlansPage() {
   const assignPlan = async () => {
     const errors = getAssignPlanFieldErrors(assignForm);
     setAssignFieldErrors(errors);
-    const firstError = Object.values(errors).find(Boolean);
-    if (firstError) {
-      setAssignError(firstError);
-      return;
-    }
+    if (Object.values(errors).some(Boolean)) return;
     setAssigning(true);
     setAssignError("");
     try {

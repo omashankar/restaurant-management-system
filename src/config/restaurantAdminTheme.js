@@ -43,7 +43,7 @@ export const raPageRefreshBtnCls =
 
 /** Page header — primary CTA (Add …) */
 export const raPagePrimaryBtnCls =
-  `${raBtnPrimarySmCls} w-full cursor-pointer text-zinc-950 shadow-ra-primary-glow hover:brightness-110 active:scale-[0.98] sm:w-auto`;
+  `${raBtnPrimarySmCls} w-full cursor-pointer shadow-ra-primary-glow hover:brightness-110 active:scale-[0.98] sm:w-auto`;
 
 export const raIconBadgeCls = "ra-icon-badge size-10 shrink-0";
 

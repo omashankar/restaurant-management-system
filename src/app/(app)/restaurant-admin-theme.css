@@ -2,6 +2,7 @@
 
 :root {
   --ra-primary: #10b981;
+  --ra-primary-fg: #ffffff;
   --ra-accent: #34d399;
 }
 
@@ -66,16 +67,30 @@
 :is(.restaurant-admin-panel, :root[data-restaurant-admin-theme]) .shadow-ra-primary-glow {
   box-shadow: 0 10px 15px -3px color-mix(in srgb, var(--ra-primary) 18%, transparent);
 }
+:is(.restaurant-admin-panel, :root[data-restaurant-admin-theme]) .text-ra-primary-fg {
+  color: var(--ra-primary-fg);
+}
+:is(.restaurant-admin-panel, :root[data-restaurant-admin-theme]) :is(button, a, span, div).bg-ra-primary {
+  color: var(--ra-primary-fg);
+}
 :is(.restaurant-admin-panel, :root[data-restaurant-admin-theme]) .ra-btn-primary {
   cursor: pointer;
   background-color: var(--ra-primary);
-  color: #09090b;
+  color: var(--ra-primary-fg);
 }
 :is(.restaurant-admin-panel, :root[data-restaurant-admin-theme]) .ra-btn-primary:hover:not(:disabled) {
   filter: brightness(1.08);
 }
-:is(.restaurant-admin-panel, :root[data-restaurant-admin-theme]) .ra-btn-primary:disabled {
-  opacity: 0.5;
+:is(.restaurant-admin-panel, :root[data-restaurant-admin-theme]) :is(.ra-btn-primary, button.bg-ra-primary, a.bg-ra-primary):disabled {
+  opacity: 1 !important;
+  filter: none;
+  cursor: not-allowed;
+  background-color: color-mix(in srgb, var(--ra-primary) 30%, var(--admin-surface-elevated, var(--admin-surface, #27272a)));
+  color: color-mix(in srgb, var(--ra-primary-fg) 38%, var(--admin-text-muted, #a1a1aa));
+}
+:is(.restaurant-admin-panel, :root[data-restaurant-admin-theme]) .ra-primary-spinner {
+  border-color: color-mix(in srgb, var(--ra-primary-fg) 28%, transparent);
+  border-top-color: var(--ra-primary-fg);
 }
 :is(.restaurant-admin-panel, :root[data-restaurant-admin-theme]) .ra-nav-active {
   background-color: color-mix(in srgb, var(--ra-primary) 15%, transparent);
@@ -141,7 +156,7 @@ html[data-admin-mode="dark"]
 :is(.restaurant-admin-panel, :root[data-restaurant-admin-theme]) .ra-btn-add {
   cursor: pointer;
   background-color: var(--ra-primary);
-  color: #09090b;
+  color: var(--ra-primary-fg);
 }
 :is(.restaurant-admin-panel, :root[data-restaurant-admin-theme]) .ra-btn-add:hover:not(:disabled) {
   filter: brightness(1.08);

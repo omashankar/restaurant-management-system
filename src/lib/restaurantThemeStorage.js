@@ -1,5 +1,7 @@
 import { EMPTY_SETTINGS } from "@/config/settingsConfig";
 import { applyAdminColorMode, reapplyPortalAdminColorMode } from "@/lib/adminColorMode";
+import { primaryForegroundForHex } from "@/lib/primaryForeground";
+import { BOOTSTRAP_PRIMARY_FG_FN } from "@/lib/primaryForeground";
 import { resolveRestaurantAdminTheme } from "@/lib/restaurantAdminThemeRuntime";
 
 export const RESTAURANT_ADMIN_THEME_STORAGE_KEY = "rms-restaurant-admin-theme";
@@ -45,6 +47,10 @@ export function applyRestaurantDocumentTheme(theme) {
   const resolved = resolveRestaurantAdminTheme(theme);
   document.documentElement.dataset.restaurantAdminTheme = "true";
   document.documentElement.style.setProperty("--ra-primary", resolved.primaryColor);
+  document.documentElement.style.setProperty(
+    "--ra-primary-fg",
+    primaryForegroundForHex(resolved.primaryColor)
+  );
   document.documentElement.style.setProperty("--ra-accent", resolved.accentColor);
   applyAdminColorMode(resolved);
   return resolved;
@@ -53,7 +59,7 @@ export function applyRestaurantDocumentTheme(theme) {
 export function clearRestaurantDocumentTheme() {
   if (typeof document === "undefined") return;
   delete document.documentElement.dataset.restaurantAdminTheme;
-  for (const key of ["--ra-primary", "--ra-accent"]) {
+  for (const key of ["--ra-primary", "--ra-primary-fg", "--ra-accent"]) {
     document.documentElement.style.removeProperty(key);
   }
   reapplyPortalAdminColorMode();
@@ -62,5 +68,5 @@ export function clearRestaurantDocumentTheme() {
 /** Inline script — runs synchronously in layout before React hydration. */
 export function restaurantThemeBootstrapScript() {
   const key = RESTAURANT_ADMIN_THEME_STORAGE_KEY;
-  return `(function(){try{var p=location.pathname||"";if(p.indexOf("/super-admin")===0)return;var r=localStorage.getItem(${JSON.stringify(key)});if(!r)return;var t=JSON.parse(r);var d=document.documentElement;if(t.primaryColor)d.style.setProperty("--ra-primary",t.primaryColor);if(t.accentColor)d.style.setProperty("--ra-accent",t.accentColor);d.dataset.restaurantAdminTheme="true";}catch(e){}})();`;
+  return `(function(){try{${BOOTSTRAP_PRIMARY_FG_FN}var p=location.pathname||"";if(p.indexOf("/super-admin")===0)return;var r=localStorage.getItem(${JSON.stringify(key)});if(!r)return;var t=JSON.parse(r);var d=document.documentElement;if(t.primaryColor){d.style.setProperty("--ra-primary",t.primaryColor);d.style.setProperty("--ra-primary-fg",rmsPrimaryFg(t.primaryColor));}if(t.accentColor)d.style.setProperty("--ra-accent",t.accentColor);d.dataset.restaurantAdminTheme="true";}catch(e){}})();`;
 }

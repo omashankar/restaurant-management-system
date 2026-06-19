@@ -5,10 +5,15 @@ import crypto from "crypto";
 import { sendVerificationEmail } from "@/lib/emailService";
 import { logError, logInfo } from "@/lib/logger";
 import clientPromise from "@/lib/mongodb";
+import {
+  assertEmailNotRegistered,
+  DUPLICATE_EMAIL_MESSAGE,
+} from "@/lib/emailRegistry";
 import { getPlatformSettings } from "@/lib/platformSettings";
 import { validatePlatformPassword } from "@/lib/platformPassword";
 import { notifyPlatformEvent } from "@/lib/platformNotify";
 import { extractIndianMobileDigits } from "@/lib/phoneUtils";
+import { assertRealEmail, realEmailErrorResponse } from "@/lib/realEmailValidation";
 import { parseSchema, signupSchema } from "@/lib/validationSchemas";
 
 export async function POST(request) {
@@ -50,6 +55,14 @@ export async function POST(request) {
   const cleanPhone = phone ? extractIndianMobileDigits(phone) : "";
 
   try {
+    await assertRealEmail(cleanEmail, { business: true });
+  } catch (err) {
+    const res = realEmailErrorResponse(err, { business: true });
+    if (res) return res;
+    throw err;
+  }
+
+  try {
     const client = await clientPromise;
     const db     = client.db();
 
@@ -60,9 +73,16 @@ export async function POST(request) {
     }
 
     /* ── Duplicate email check ── */
-    const existing = await db.collection("users").findOne({ email: cleanEmail });
-    if (existing) {
-      return Response.json({ success: false, error: "Email already registered." }, { status: 409 });
+    try {
+      await assertEmailNotRegistered(db, cleanEmail);
+    } catch (err) {
+      if (err.message === "EMAIL_EXISTS") {
+        return Response.json(
+          { success: false, error: DUPLICATE_EMAIL_MESSAGE },
+          { status: 409 },
+        );
+      }
+      throw err;
     }
 
     /* ── Duplicate slug check ── */
@@ -97,7 +117,7 @@ export async function POST(request) {
       isVerified: isSuperAdmin,
       emailVerificationToken: isSuperAdmin ? null : verificationToken,
       emailVerificationExpires: isSuperAdmin ? null : verificationExpires,
-      status: "active",
+      status: isSuperAdmin ? "active" : "pending",
       createdAt: new Date(),
     });
 

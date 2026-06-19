@@ -399,11 +399,7 @@ export default function RestaurantsPage() {
   const handleCreate = async () => {
     const errors = getRestaurantCreateFieldErrors(createForm);
     setCreateFieldErrors(errors);
-    const firstError = Object.values(errors).find(Boolean);
-    if (firstError) {
-      setCreateError(firstError);
-      return;
-    }
+    if (Object.values(errors).some(Boolean)) return;
 
     setCreating(true);
     setCreateError("");
@@ -460,11 +456,7 @@ export default function RestaurantsPage() {
   const handleEdit = async () => {
     const errors = getRestaurantEditFieldErrors(editForm);
     setEditFieldErrors(errors);
-    const firstError = Object.values(errors).find(Boolean);
-    if (firstError) {
-      setEditError(firstError);
-      return;
-    }
+    if (Object.values(errors).some(Boolean)) return;
 
     setSaving(true);
     setEditError("");

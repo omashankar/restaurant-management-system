@@ -13,6 +13,7 @@ import {
   menuCategorySchema,
   menuItemSchema,
   orderCreateSchema,
+  deliveryAddressError,
   printerConfigSchema,
   reservationCreateSchema,
   staffCreateSchema,
@@ -22,6 +23,7 @@ import {
   tableSchema,
 } from "@/lib/validationSchemas";
 import { emailFormatError } from "@/lib/emailValidation";
+import { businessEmailFormatError } from "@/lib/businessEmailValidation";
 import {
   computeBillingEndDate,
   computeSubscriptionSchedule,
@@ -47,6 +49,19 @@ export {
 export { validatePlatformPassword } from "@/lib/platformPassword";
 
 export { isValidEmailAddress, emailFormatError } from "@/lib/emailValidation";
+
+export {
+  BUSINESS_EMAIL_MESSAGE,
+  businessEmailFormatError,
+  businessRequiredEmailSchema,
+  isValidBusinessEmail,
+} from "@/lib/businessEmailValidation";
+
+/** True when at least one inline field error message is set. */
+export function hasInlineFieldErrors(errors) {
+  if (!errors || typeof errors !== "object") return false;
+  return Object.values(errors).some((value) => String(value ?? "").trim().length > 0);
+}
 
 export function emailError(email, { required = true } = {}) {
   return emailFormatError(email, { required });
@@ -173,7 +188,7 @@ export function getSignupFieldErrors(
     restaurantName: personNameError(restaurantName, "Restaurant name") ?? "",
     slug: slugError(slug) ?? "",
     name: personNameError(name, "Your name") ?? "",
-    email: emailError(email) ?? "",
+    email: businessEmailFormatError(email) ?? "",
     phone: optionalIndianPhoneError(phone) ?? "",
     password: platformPasswordError(password, passwordSecurity) ?? "",
   };
@@ -224,7 +239,7 @@ export function getRestaurantCreateFieldErrors(
       ownerNameTrimmed && !isValidPersonName(ownerNameTrimmed)
         ? "Owner name must be at least 2 characters and include letters."
         : "",
-    ownerEmail: emailError(ownerEmail) ?? "",
+    ownerEmail: businessEmailFormatError(ownerEmail) ?? "",
     ownerPassword: platformPasswordError(ownerPassword, passwordSecurity) ?? "",
     phone: optionalIndianPhoneError(phone) ?? "",
   };
@@ -510,10 +525,9 @@ export function getPosOrderFieldErrors({
     errors.deliveryName = personNameError(delivery?.name, "Name") ?? "";
     errors.deliveryPhone = indianPhoneError(delivery?.phone) ?? "";
     const addr = String(delivery?.address ?? "").trim();
-    if (!addr) errors.deliveryAddress = "Delivery address is required.";
-    else if (addr.length < 5) {
-      errors.deliveryAddress = "Enter a complete delivery address.";
-    } else if (addr.length > 300) {
+    const addrErr = deliveryAddressError(addr);
+    if (addrErr) errors.deliveryAddress = addrErr;
+    else if (addr.length > 300) {
       errors.deliveryAddress = "Address must be 300 characters or less.";
     }
   }
@@ -766,6 +780,7 @@ export function getTableAreaFieldErrors(form) {
 
 export const EMPTY_INVENTORY_FORM_ERRORS = {
   name: "",
+  category: "",
   unit: "",
   quantity: "",
   reorderLevel: "",
@@ -778,7 +793,7 @@ export function getInventoryFormFieldErrors(form) {
     inventoryItemSchema,
     {
       name: String(form.name ?? "").trim(),
-      category: String(form.category ?? "").trim() || undefined,
+      category: String(form.category ?? "").trim(),
       quantity: Number.isNaN(quantity) ? 0 : Math.max(0, quantity),
       unit: String(form.unit ?? "").trim(),
       reorderLevel: Number.isNaN(reorderLevel) ? 0 : Math.max(0, reorderLevel),

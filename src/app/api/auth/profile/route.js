@@ -1,5 +1,6 @@
 import { getAuthPayload, assertActiveTenantAccess } from "@/lib/tenantDb";
 import { getProfileFormFieldErrors } from "@/lib/formValidation";
+import { assertRealEmail, realEmailErrorResponse } from "@/lib/realEmailValidation";
 import { extractIndianMobileDigits } from "@/lib/phoneUtils";
 import clientPromise from "@/lib/mongodb";
 import { ObjectId } from "mongodb";
@@ -42,6 +43,14 @@ export async function PATCH(request) {
         { success: false, error: validation.message ?? "Validation failed.", errors: validation.errors },
         { status: 422 }
       );
+    }
+
+    try {
+      await assertRealEmail(form.email);
+    } catch (err) {
+      const res = realEmailErrorResponse(err);
+      if (res) return res;
+      throw err;
     }
 
     let _id;

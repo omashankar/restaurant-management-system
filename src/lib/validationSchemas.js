@@ -1,6 +1,34 @@
 import { z } from "zod";
+import {
+  isValidEmailAddress,
+  optionalStrictEmailSchema,
+  strictRequiredEmailSchema,
+  STRICT_EMAIL_MESSAGE,
+} from "@/lib/emailValidation";
+import { businessRequiredEmailSchema } from "@/lib/businessEmailValidation";
 import { isValidIndianMobile, extractIndianMobileDigits } from "@/lib/phoneUtils";
 import { computeSubscriptionSchedule } from "@/lib/subscriptionSchedule";
+
+/** Minimum characters for staff/POS delivery address (city or short locality names allowed). */
+export const DELIVERY_ADDRESS_MIN_LENGTH = 3;
+
+/** Extract delivery address from order notes (plain text or "Address: …" suffix). */
+export function parseDeliveryAddressFromNotes(notes) {
+  const trimmed = String(notes ?? "").trim();
+  if (trimmed.includes("Address:")) {
+    return trimmed.split("Address:").pop()?.trim() ?? "";
+  }
+  return trimmed;
+}
+
+export function deliveryAddressError(addressRaw) {
+  const address = parseDeliveryAddressFromNotes(addressRaw);
+  if (!address) return "Delivery address is required.";
+  if (address.length < DELIVERY_ADDRESS_MIN_LENGTH) {
+    return `Enter a complete delivery address (at least ${DELIVERY_ADDRESS_MIN_LENGTH} characters).`;
+  }
+  return null;
+}
 
 const guestNameSchema = z
   .string()
@@ -40,12 +68,7 @@ export const signupSchema = z.object({
     .max(60, "Name too long.")
     .trim()
     .refine((v) => /[a-zA-Z\u0900-\u097F]/.test(v), "Name must include letters."),
-  email: z
-    .string({ required_error: "Email is required." })
-    .email("Invalid email address.")
-    .max(100, "Email too long.")
-    .toLowerCase()
-    .trim(),
+  email: businessRequiredEmailSchema.max(100, "Email too long."),
   phone: optionalIndianPhoneSchema,
   password: z
     .string({ required_error: "Password is required." })
@@ -62,7 +85,7 @@ export const signupSchema = z.object({
 export const customerUpsertSchema = z.object({
   name: guestNameSchema,
   phone: indianPhoneSchema,
-  email: z.union([z.literal(""), z.string().email("Invalid email address.")]).optional(),
+  email: optionalStrictEmailSchema,
   notes: z.string().trim().max(500).optional(),
 });
 
@@ -83,7 +106,7 @@ export const superAdminRestaurantCreateSchema = z.object({
     .optional()
     .or(z.literal(""))
     .refine((v) => !v || /[a-zA-Z\u0900-\u097F]/.test(v), "Owner name must include letters."),
-  ownerEmail: z.string().email("Invalid email address.").toLowerCase().trim(),
+  ownerEmail: businessRequiredEmailSchema,
   ownerPassword: z.string().min(6, "Password must be at least 6 characters.").max(72),
   phone: optionalIndianPhoneSchema,
   plan: z.enum(["free", "starter", "pro", "enterprise"], { message: "Invalid plan." }),
@@ -201,7 +224,7 @@ export const superAdminRestaurantStatusPatchSchema = z.object({
 
 export const staffCreateSchema = z.object({
   name: guestNameSchema,
-  email: z.string().email("Invalid email address.").toLowerCase().trim(),
+  email: strictRequiredEmailSchema,
   password: z.string().min(6, "Password must be at least 6 characters.").max(72),
   role: z.preprocess(
     (v) => String(v ?? "").toLowerCase(),
@@ -224,7 +247,7 @@ export const reservationCreateSchema = z.object({
 
 export const inventoryItemSchema = z.object({
   name: z.string().trim().min(1, "Item name is required.").max(120),
-  category: z.string().trim().max(60).optional(),
+  category: z.string().trim().min(1, "Category is required.").max(60),
   quantity: z.number().int().min(0).optional(),
   unit: z.string().trim().min(1, "Unit is required.").max(30),
   reorderLevel: z.number().int().min(0).optional(),
@@ -280,7 +303,7 @@ export const supportTicketCreateSchema = z.object({
 
 export const staffUpdateSchema = z.object({
   name: guestNameSchema,
-  email: z.string().email("Invalid email address.").toLowerCase().trim(),
+  email: strictRequiredEmailSchema,
   phone: optionalIndianPhoneSchema,
   role: z.preprocess(
     (v) => String(v ?? "").toLowerCase(),
@@ -296,11 +319,7 @@ export const printerConfigSchema = z.object({
 });
 
 export const loginSchema = z.object({
-  email: z
-    .string({ required_error: "Email is required." })
-    .email("Invalid email address.")
-    .toLowerCase()
-    .trim(),
+  email: strictRequiredEmailSchema,
   password: z
     .string({ required_error: "Password is required." })
     .min(1, "Password is required."),
@@ -308,11 +327,7 @@ export const loginSchema = z.object({
 });
 
 export const resendSchema = z.object({
-  email: z
-    .string({ required_error: "Email is required." })
-    .email("Invalid email address.")
-    .toLowerCase()
-    .trim(),
+  email: strictRequiredEmailSchema,
 });
 
 export const orderItemSchema = z.object({
@@ -380,15 +395,12 @@ export const orderCreateSchema = z
           message: nameResult.error.issues[0]?.message ?? "Customer name is required.",
         });
       }
-      const notes = String(data.notes ?? "").trim();
-      const addressPart = notes.includes("Address:")
-        ? notes.split("Address:").pop()?.trim() ?? ""
-        : notes;
-      if (!addressPart || addressPart.length < 5) {
+      const addressError = deliveryAddressError(data.notes);
+      if (addressError) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
           path: ["notes"],
-          message: "Delivery address is required.",
+          message: addressError,
         });
       }
     }
@@ -404,7 +416,7 @@ const customerCheckoutInfoSchema = z
   .object({
     name: guestNameSchema,
     phone: z.string().optional().default(""),
-    email: z.union([z.string().email("Invalid email address."), z.literal("")]).optional().default(""),
+    email: optionalStrictEmailSchema.optional().default(""),
     address: z.string().optional(),
     tableNumber: z.string().optional(),
   })
@@ -413,7 +425,7 @@ const customerCheckoutInfoSchema = z
     const digits = rawPhone.replace(/^\+91/, "").replace(/\D/g, "").slice(-10);
     const phoneOk = /^[6-9]\d{9}$/.test(digits);
     const em = String(data.email ?? "").trim();
-    const emailOk = em.length > 0 && z.string().email().safeParse(em).success;
+    const emailOk = em.length > 0 && isValidEmailAddress(em);
     if (!phoneOk && !emailOk) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
@@ -426,6 +438,13 @@ const customerCheckoutInfoSchema = z
         code: z.ZodIssueCode.custom,
         message: "Enter a valid 10-digit Indian mobile number.",
         path: ["phone"],
+      });
+    }
+    if (em && !emailOk) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: STRICT_EMAIL_MESSAGE,
+        path: ["email"],
       });
     }
   });

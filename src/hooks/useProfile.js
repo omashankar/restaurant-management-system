@@ -102,10 +102,7 @@ export function useProfile() {
   const saveProfile = async () => {
     const validation = getProfileFormFieldErrors(form);
     setFieldErrors(validation.errors);
-    if (!validation.valid) {
-      showToast("error", validation.message ?? "Fix the highlighted fields.");
-      return;
-    }
+    if (!validation.valid) return;
 
     setSaving(true);
     try {
@@ -135,10 +132,7 @@ export function useProfile() {
   const savePassword = async () => {
     const validation = validatePasswordChangeForm(pwForm);
     setPwErrors(validation.errors);
-    if (!validation.valid) {
-      showToast("error", validation.message ?? "Fix the highlighted fields.");
-      return false;
-    }
+    if (!validation.valid) return false;
 
     setSaving(true);
     try {

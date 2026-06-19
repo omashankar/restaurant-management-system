@@ -141,10 +141,7 @@ export default function PrinterSettingsPage() {
   async function addPrinter() {
     const validation = getPrinterFieldErrors(form);
     setFieldErrors(validation.errors);
-    if (!validation.valid) {
-      setFormError(validation.message ?? "Fix the highlighted fields.");
-      return;
-    }
+    if (!validation.valid) return;
     setFormError("");
     const entry = { ...form, id: crypto.randomUUID() };
     const next = [...printers, entry];

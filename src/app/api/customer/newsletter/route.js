@@ -1,8 +1,8 @@
 import clientPromise from "@/lib/mongodb";
 import { getRestaurantIdFromRequest } from "@/lib/restaurantResolver";
 import { getClientIp, landingContactLimiter } from "@/lib/rateLimit";
-
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+import { emailFormatError } from "@/lib/emailValidation";
+import { assertRealEmail, realEmailErrorResponse } from "@/lib/realEmailValidation";
 
 export async function POST(request) {
   const ip = getClientIp(request);
@@ -17,8 +17,16 @@ export async function POST(request) {
   try {
     const body = await request.json();
     const email = String(body?.email ?? "").trim().toLowerCase();
-    if (!email || !EMAIL_RE.test(email)) {
-      return Response.json({ success: false, error: "Please enter a valid email." }, { status: 400 });
+    const emailErr = emailFormatError(email);
+    if (emailErr) {
+      return Response.json({ success: false, error: emailErr }, { status: 400 });
+    }
+    try {
+      await assertRealEmail(email);
+    } catch (err) {
+      const res = realEmailErrorResponse(err);
+      if (res) return res;
+      throw err;
     }
 
     const client = await clientPromise;

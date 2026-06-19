@@ -15,7 +15,7 @@ import { useApp } from "@/context/AppProviders";
 import { useModuleData } from "@/context/ModuleDataContext";
 import { usePaginatedList } from "@/hooks/usePaginatedList";
 import { useToast } from "@/hooks/useToast";
-import { getInventoryFormFieldErrors } from "@/lib/formValidation";
+import { getInventoryFormFieldErrors, EMPTY_INVENTORY_FORM_ERRORS } from "@/lib/formValidation";
 import { raFilterSelectCls, raIconBadgeCls, raSpinnerCls, raPageRefreshBtnCls, raPagePrimaryBtnCls } from "@/config/restaurantAdminTheme";
 import { AlertTriangle, Package, Plus, RefreshCw } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -23,7 +23,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 function emptyForm() {
   return {
     name: "",
-    category: "Dry goods",
+    category: "",
     quantity: "0",
     unit: "piece",
     reorderLevel: "0",
@@ -107,6 +107,7 @@ export default function InventoryPage() {
   const [modalOpen, setModalOpen] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [form, setForm] = useState(emptyForm);
+  const [fieldErrors, setFieldErrors] = useState(EMPTY_INVENTORY_FORM_ERRORS);
   const [deleteTarget, setDeleteTarget] = useState(null);
   const { showToast, ToastUI } = useToast();
 
@@ -219,6 +220,7 @@ export default function InventoryPage() {
   const openCreate = () => {
     setEditingId(null);
     setForm(emptyForm());
+    setFieldErrors(EMPTY_INVENTORY_FORM_ERRORS);
     setModalOpen(true);
   };
 
@@ -234,20 +236,33 @@ export default function InventoryPage() {
       supplier: row.supplier ?? "",
       notes: row.notes ?? "",
     });
+    setFieldErrors(EMPTY_INVENTORY_FORM_ERRORS);
     setModalOpen(true);
+  };
+
+  const handleFormChange = (next) => {
+    setForm(next);
+    setFieldErrors((prev) => {
+      const cleared = { ...prev };
+      for (const key of Object.keys(cleared)) {
+        if (prev[key] && String(next[key] ?? "").trim()) cleared[key] = "";
+      }
+      return cleared;
+    });
   };
 
   const saveItem = async () => {
     const validation = getInventoryFormFieldErrors(form);
     if (!validation.valid) {
-      showToast(validation.message ?? "Fix the highlighted fields.", "error");
+      setFieldErrors(validation.errors);
       return;
     }
+    setFieldErrors(EMPTY_INVENTORY_FORM_ERRORS);
     const quantity = Math.max(0, parseInt(form.quantity, 10) || 0);
     const reorderLevel = Math.max(0, parseInt(form.reorderLevel, 10) || 0);
     const payload = {
       name: form.name.trim(),
-      category: (form.category.trim() || "Other"),
+      category: form.category.trim(),
       quantity,
       unit: form.unit.trim(),
       reorderLevel,
@@ -550,7 +565,8 @@ export default function InventoryPage() {
         open={modalOpen}
         title={editingId ? "Edit item" : "Add item"}
         form={form}
-        onChange={setForm}
+        fieldErrors={fieldErrors}
+        onChange={handleFormChange}
         onClose={() => setModalOpen(false)}
         onSubmit={saveItem}
       />

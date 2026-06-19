@@ -2,6 +2,7 @@ import {
   RESTAURANT_ADMIN_ACCENT,
   RESTAURANT_ADMIN_PRIMARY,
 } from "@/config/restaurantAdminTheme";
+import { primaryForegroundForHex } from "@/lib/primaryForeground";
 import { clampHexColor } from "@/lib/superAdminThemeRuntime";
 
 export function resolveRestaurantAdminTheme(theme) {
@@ -16,6 +17,7 @@ export function restaurantAdminThemeStyle(theme) {
   const { primaryColor, accentColor } = resolveRestaurantAdminTheme(theme);
   return {
     "--ra-primary": primaryColor,
+    "--ra-primary-fg": primaryForegroundForHex(primaryColor),
     "--ra-accent": accentColor,
   };
 }

@@ -128,10 +128,7 @@ export default function CategoriesPage() {
   const save = async () => {
     const validation = getMenuCategoryFieldErrors(form);
     setFieldErrors(validation.errors);
-    if (!validation.valid) {
-      setFormError(validation.message ?? "Category name is required.");
-      return;
-    }
+    if (!validation.valid) return;
     setSaving(true); setFormError("");
     try {
       const url    = editingId ? `/api/categories/${editingId}` : "/api/categories";

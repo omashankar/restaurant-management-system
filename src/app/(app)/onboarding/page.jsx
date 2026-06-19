@@ -188,7 +188,7 @@ export default function OnboardingPage() {
     const validation = validateOnboardingStep(step, draft);
     setFieldErrors(validation.errors);
     if (!validation.valid) {
-      setSaveError(validation.message ?? "Fix the highlighted fields.");
+      setSaveError("");
       if (step === 1 && !draft.mobileVerified) {
         setOtpError(validation.errors.mobileVerified ?? "Please verify your mobile number.");
       }

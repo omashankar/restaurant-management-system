@@ -2,43 +2,29 @@
 
 import Modal from "@/components/ui/Modal";
 import { raInputCls } from "@/config/restaurantAdminTheme";
-
-const CATEGORIES = [
-  "Produce",
-  "Meat",
-  "Dairy",
-  "Dry goods",
-  "Beverages",
-  "Frozen",
-  "Other",
-];
-
-const UNITS = [
-  "bottle",
-  "kg",
-  "g",
-  "litre",
-  "ml",
-  "crate",
-  "box",
-  "case",
-  "pack",
-  "piece",
-  "dozen",
-  "wheel",
-  "bag",
-  "can",
-  "jar",
-];
+import {
+  INVENTORY_CATEGORIES,
+  INVENTORY_UNITS,
+} from "@/components/inventory/inventoryUtils";
+import { useMemo } from "react";
 
 export default function InventoryFormModal({
   open,
   title,
   form,
+  fieldErrors = {},
   onChange,
   onClose,
   onSubmit,
 }) {
+  const categoryOptions = useMemo(() => {
+    const current = String(form.category ?? "").trim();
+    if (current && !INVENTORY_CATEGORIES.includes(current)) {
+      return [...INVENTORY_CATEGORIES, current];
+    }
+    return INVENTORY_CATEGORIES;
+  }, [form.category]);
+
   return (
     <Modal
       open={open}
@@ -56,7 +42,7 @@ export default function InventoryFormModal({
           <button
             type="button"
             onClick={onSubmit}
-            className="inline-flex w-full cursor-pointer items-center justify-center rounded-xl bg-ra-primary px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-ra-primary sm:w-auto"
+            className="ra-btn-primary inline-flex w-full cursor-pointer items-center justify-center rounded-xl px-4 py-2 text-sm font-semibold sm:w-auto"
           >
             Save
           </button>
@@ -71,26 +57,36 @@ export default function InventoryFormModal({
           <input
             value={form.name}
             onChange={(e) => onChange({ ...form, name: e.target.value })}
-            className={raInputCls}
+            className={`${raInputCls} ${fieldErrors.name ? "border-red-500/50" : ""}`}
             placeholder="Item name"
+            aria-invalid={fieldErrors.name ? true : undefined}
           />
+          {fieldErrors.name ? (
+            <p className="mt-1 text-xs text-red-400">{fieldErrors.name}</p>
+          ) : null}
         </div>
         <div>
           <label className="mb-1 block text-xs font-medium admin-surface-muted">
             Category
           </label>
-          <input
-            list="inventory-category-suggestions"
+          <select
             value={form.category}
             onChange={(e) => onChange({ ...form, category: e.target.value })}
-            className={raInputCls}
-            placeholder="e.g. Produce"
-          />
-          <datalist id="inventory-category-suggestions">
-            {CATEGORIES.map((c) => (
-              <option key={c} value={c} />
+            className={`cursor-pointer ${raInputCls} ${fieldErrors.category ? "border-red-500/50" : ""}`}
+            aria-invalid={fieldErrors.category ? true : undefined}
+          >
+            <option value="" disabled>
+              Select category…
+            </option>
+            {categoryOptions.map((c) => (
+              <option key={c} value={c}>
+                {c}
+              </option>
             ))}
-          </datalist>
+          </select>
+          {fieldErrors.category ? (
+            <p className="mt-1 text-xs text-red-400">{fieldErrors.category}</p>
+          ) : null}
         </div>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <div>
@@ -105,8 +101,12 @@ export default function InventoryFormModal({
               onChange={(e) =>
                 onChange({ ...form, quantity: e.target.value })
               }
-              className={raInputCls}
+              className={`${raInputCls} ${fieldErrors.quantity ? "border-red-500/50" : ""}`}
+              aria-invalid={fieldErrors.quantity ? true : undefined}
             />
+            {fieldErrors.quantity ? (
+              <p className="mt-1 text-xs text-red-400">{fieldErrors.quantity}</p>
+            ) : null}
           </div>
           <div>
             <label className="mb-1 block text-xs font-medium admin-surface-muted">
@@ -115,13 +115,21 @@ export default function InventoryFormModal({
             <select
               value={form.unit}
               onChange={(e) => onChange({ ...form, unit: e.target.value })}
-              className={`cursor-pointer ${raInputCls}`}
+              className={`cursor-pointer ${raInputCls} ${fieldErrors.unit ? "border-red-500/50" : ""}`}
+              aria-invalid={fieldErrors.unit ? true : undefined}
             >
-              <option value="" disabled>Select unit…</option>
-              {UNITS.map((u) => (
-                <option key={u} value={u}>{u}</option>
+              <option value="" disabled>
+                Select unit…
+              </option>
+              {INVENTORY_UNITS.map((u) => (
+                <option key={u} value={u}>
+                  {u}
+                </option>
               ))}
             </select>
+            {fieldErrors.unit ? (
+              <p className="mt-1 text-xs text-red-400">{fieldErrors.unit}</p>
+            ) : null}
           </div>
         </div>
         <div>
@@ -136,8 +144,12 @@ export default function InventoryFormModal({
             onChange={(e) =>
               onChange({ ...form, reorderLevel: e.target.value })
             }
-            className={raInputCls}
+            className={`${raInputCls} ${fieldErrors.reorderLevel ? "border-red-500/50" : ""}`}
+            aria-invalid={fieldErrors.reorderLevel ? true : undefined}
           />
+          {fieldErrors.reorderLevel ? (
+            <p className="mt-1 text-xs text-red-400">{fieldErrors.reorderLevel}</p>
+          ) : null}
         </div>
         <div>
           <label className="mb-1 block text-xs font-medium admin-surface-muted">

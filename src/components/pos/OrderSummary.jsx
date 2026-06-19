@@ -363,7 +363,7 @@ export default function OrderSummary({
               >
                 {isPlacing ? (
                   <>
-                    <span className="size-4 animate-spin rounded-full border-2 border-zinc-950/30 border-t-zinc-950" />
+                    <span className="ra-primary-spinner size-4 animate-spin rounded-full border-2" />
                     Placing…
                   </>
                 ) : (

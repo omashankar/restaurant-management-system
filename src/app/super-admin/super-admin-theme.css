@@ -2,6 +2,7 @@
 
 :root {
   --sa-primary: #a3e635;
+  --sa-primary-fg: #111827;
   --sa-accent: #10b981;
 }
 
@@ -69,15 +70,18 @@
 :is(.super-admin-panel, :root[data-super-admin-theme]) :is(.sa-btn-primary, button.bg-sa-primary, a.bg-sa-primary) {
   cursor: pointer;
   background-color: var(--sa-primary) !important;
-  color: #09090b;
+  color: var(--sa-primary-fg);
   border-color: transparent;
 }
 :is(.super-admin-panel, :root[data-super-admin-theme]) :is(.sa-btn-primary, button.bg-sa-primary, a.bg-sa-primary):hover:not(:disabled) {
   filter: brightness(1.08);
 }
 :is(.super-admin-panel, :root[data-super-admin-theme]) :is(.sa-btn-primary, button.bg-sa-primary, a.bg-sa-primary):disabled {
-  opacity: 0.5;
+  opacity: 1 !important;
+  filter: none;
   cursor: not-allowed;
+  background-color: color-mix(in srgb, var(--sa-primary) 30%, var(--admin-surface-elevated, var(--admin-surface, #27272a))) !important;
+  color: color-mix(in srgb, var(--sa-primary-fg) 38%, var(--admin-text-muted, #a1a1aa));
 }
 :is(.super-admin-panel, :root[data-super-admin-theme]) .sa-nav-active {
   background-color: color-mix(in srgb, var(--sa-primary) 15%, transparent);

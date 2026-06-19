@@ -3,6 +3,8 @@ import {
   normalizeStaffPhoneStored,
   staffPhoneConflictMessage,
 } from "@/lib/staffPhone";
+import { emailFormatError } from "@/lib/emailValidation";
+import { assertRealEmail, realEmailErrorResponse } from "@/lib/realEmailValidation";
 import { withTenant } from "@/lib/tenantDb";
 import { isValidIndianMobile, extractIndianMobileDigits } from "@/lib/phoneUtils";
 import { ObjectId } from "mongodb";
@@ -29,15 +31,25 @@ export const PATCH = withTenant(
     if (!STAFF_ROLES.includes(existing.role)) {
       return Response.json({ success: false, error: "Only staff roles can be modified here." }, { status: 403 });
     }
-    const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     const update = {};
     if (body.name)  update.name  = body.name.trim();
     if (body.email !== undefined) {
       const email = String(body.email ?? "").trim().toLowerCase();
-      if (email && !EMAIL_RE.test(email)) {
-        return Response.json({ success: false, error: "Enter a valid email address." }, { status: 400 });
+      const emailErr = emailFormatError(email);
+      if (emailErr) {
+        return Response.json(
+          { success: false, error: emailErr, errors: { email: emailErr } },
+          { status: 422 }
+        );
       }
       if (email) {
+        try {
+          await assertRealEmail(email);
+        } catch (err) {
+          const res = realEmailErrorResponse(err);
+          if (res) return res;
+          throw err;
+        }
         const emailConflict = await db.collection("users").findOne(
           { ...tenantFilter, email, _id: { $ne: _id } },
           { projection: { _id: 1 } }

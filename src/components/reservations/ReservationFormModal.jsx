@@ -370,7 +370,7 @@ export default function ReservationFormModal({ open, onClose, editing, tableOpti
     const validation = getReservationFormFieldErrors(form);
     setFieldErrors(validation.errors);
     if (!validation.valid) {
-      setSaveError(validation.message ?? "Fix the highlighted fields.");
+      setSaveError("");
       return;
     }
 
@@ -555,7 +555,7 @@ export default function ReservationFormModal({ open, onClose, editing, tableOpti
             ) : timeSlots.length === 0 && form.date ? (
               <p className="mt-1 text-xs text-amber-400">
                 No slots for {getWeekdayNameForDate(form.date)} — open/close must allow at least 90 minutes
-                (Settings → Opening Hours, then Save Opening Hours).
+                (Settings → Opening Hours, then Save Changes).
               </p>
             ) : null}
           </div>

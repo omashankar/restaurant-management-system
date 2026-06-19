@@ -1,3 +1,5 @@
+import { BOOTSTRAP_PRIMARY_FG_FN } from "@/lib/primaryForeground";
+
 const ADMIN_COLOR_MODE_STORAGE_KEY = "rms-admin-color-mode";
 const RESTAURANT_ADMIN_THEME_STORAGE_KEY = "rms-restaurant-admin-theme";
 const SUPER_ADMIN_THEME_STORAGE_KEY = "rms-super-admin-theme";
@@ -11,6 +13,7 @@ export function adminThemeBootstrapScript() {
   const saKey = SUPER_ADMIN_THEME_STORAGE_KEY;
   const raKey = RESTAURANT_ADMIN_THEME_STORAGE_KEY;
   return `(function(){try{
+    ${BOOTSTRAP_PRIMARY_FG_FN}
     var d=document.documentElement;
     var p=location.pathname||"";
     var sa=p.indexOf("/super-admin")===0;
@@ -24,8 +27,10 @@ export function adminThemeBootstrapScript() {
         if(sa){
           d.style.setProperty("--sa-primary",t.primaryColor);
           d.style.setProperty("--platform-primary",t.primaryColor);
+          d.style.setProperty("--sa-primary-fg",rmsPrimaryFg(t.primaryColor));
         }else{
           d.style.setProperty("--ra-primary",t.primaryColor);
+          d.style.setProperty("--ra-primary-fg",rmsPrimaryFg(t.primaryColor));
         }
       }
       if(t.accentColor){

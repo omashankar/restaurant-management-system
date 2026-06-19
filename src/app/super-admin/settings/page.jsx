@@ -1551,7 +1551,6 @@ export default function SuperAdminSettingsPage() {
     const validation = validatePlatformSettingsSection(activeTab, payload);
     if (!validation.valid) {
       setSectionErrors(validation.errors);
-      showToast(validation.message ?? "Please fix the highlighted fields.", "error");
       return;
     }
     setSectionErrors({});

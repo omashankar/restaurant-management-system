@@ -2,6 +2,7 @@ import clientPromise from "@/lib/mongodb";
 import { loginLimiter, getClientIp } from "@/lib/rateLimit";
 import { setCustomerTokenCookie, signCustomerToken } from "@/lib/customerAuth";
 import { serializeCustomerUser } from "@/lib/customerAccountSerialize";
+import { emailFormatError } from "@/lib/emailValidation";
 import bcrypt from "bcryptjs";
 
 export async function POST(request) {
@@ -17,8 +18,15 @@ export async function POST(request) {
   const body = await request.json().catch(() => null);
   const email = String(body?.email ?? "").trim().toLowerCase();
   const password = String(body?.password ?? "");
-  if (!email || !password) {
-    return Response.json({ success: false, error: "Email and password are required." }, { status: 400 });
+  const emailErr = emailFormatError(email);
+  if (emailErr) {
+    return Response.json(
+      { success: false, error: emailErr, errors: { email: emailErr } },
+      { status: 422 }
+    );
+  }
+  if (!password) {
+    return Response.json({ success: false, error: "Password is required." }, { status: 400 });
   }
 
   try {

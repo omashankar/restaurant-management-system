@@ -1,4 +1,6 @@
+import { SUPER_ADMIN_PRIMARY } from "@/config/superAdminTheme";
 import { applyAdminColorMode, reapplyPortalAdminColorMode } from "@/lib/adminColorMode";
+import { primaryForegroundForHex } from "@/lib/primaryForeground";
 import { resolveSuperAdminTheme } from "@/lib/superAdminThemeRuntime";
 
 export const SUPER_ADMIN_THEME_STORAGE_KEY = "rms-super-admin-theme";
@@ -41,6 +43,10 @@ export function applySuperAdminDocumentTheme(theme) {
   const resolved = resolveSuperAdminTheme(theme);
   document.documentElement.dataset.superAdminTheme = "true";
   document.documentElement.style.setProperty("--sa-primary", resolved.primaryColor);
+  document.documentElement.style.setProperty(
+    "--sa-primary-fg",
+    primaryForegroundForHex(resolved.primaryColor, SUPER_ADMIN_PRIMARY)
+  );
   document.documentElement.style.setProperty("--sa-accent", resolved.accentColor);
   document.documentElement.style.setProperty("--platform-primary", resolved.primaryColor);
   document.documentElement.style.setProperty("--platform-accent", resolved.accentColor);
@@ -51,7 +57,7 @@ export function applySuperAdminDocumentTheme(theme) {
 export function clearSuperAdminDocumentTheme() {
   if (typeof document === "undefined") return;
   delete document.documentElement.dataset.superAdminTheme;
-  for (const key of ["--sa-primary", "--sa-accent", "--platform-primary", "--platform-accent"]) {
+  for (const key of ["--sa-primary", "--sa-primary-fg", "--sa-accent", "--platform-primary", "--platform-accent"]) {
     document.documentElement.style.removeProperty(key);
   }
   reapplyPortalAdminColorMode();

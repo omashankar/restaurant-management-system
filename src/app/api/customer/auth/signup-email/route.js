@@ -2,6 +2,8 @@ import clientPromise from "@/lib/mongodb";
 import { signupLimiter, getClientIp } from "@/lib/rateLimit";
 import { setCustomerTokenCookie, signCustomerToken } from "@/lib/customerAuth";
 import { serializeCustomerUser } from "@/lib/customerAccountSerialize";
+import { emailFormatError } from "@/lib/emailValidation";
+import { assertRealEmail, realEmailErrorResponse } from "@/lib/realEmailValidation";
 import bcrypt from "bcryptjs";
 
 export async function POST(request) {
@@ -21,8 +23,24 @@ export async function POST(request) {
   const email = String(body?.email ?? "").trim().toLowerCase();
   const password = String(body?.password ?? "");
 
-  if (!name || !email || !password) {
-    return Response.json({ success: false, error: "Name, email and password are required." }, { status: 400 });
+  if (!name || name.length < 2 || !/[a-zA-Z\u0900-\u097F]/.test(name)) {
+    return Response.json({ success: false, error: "Enter a valid name (at least 2 letters)." }, { status: 400 });
+  }
+  const emailErr = emailFormatError(email);
+  if (emailErr) {
+    return Response.json({ success: false, error: emailErr, errors: { email: emailErr } }, { status: 422 });
+  }
+
+  try {
+    await assertRealEmail(email);
+  } catch (err) {
+    const res = realEmailErrorResponse(err);
+    if (res) return res;
+    throw err;
+  }
+
+  if (!password) {
+    return Response.json({ success: false, error: "Password is required." }, { status: 400 });
   }
   if (password.length < 6) {
     return Response.json({ success: false, error: "Password must be at least 6 characters." }, { status: 400 });

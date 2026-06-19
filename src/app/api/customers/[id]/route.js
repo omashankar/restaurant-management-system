@@ -1,6 +1,7 @@
 import { withTenant } from "@/lib/tenantDb";
 import { extractIndianMobileDigits } from "@/lib/phoneUtils";
 import { parseSchema, customerUpsertSchema } from "@/lib/validationSchemas";
+import { assertRealEmail, realEmailErrorResponse } from "@/lib/realEmailValidation";
 import { ObjectId } from "mongodb";
 
 function toOid(id) {
@@ -64,6 +65,16 @@ export const PATCH = withTenant(
         });
       } catch (err) {
         return Response.json({ success: false, error: err.message }, { status: 400 });
+      }
+
+      if (validatedProfile.email) {
+        try {
+          await assertRealEmail(validatedProfile.email);
+        } catch (err) {
+          const res = realEmailErrorResponse(err);
+          if (res) return res;
+          throw err;
+        }
       }
     }
 
