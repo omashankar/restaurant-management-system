@@ -202,10 +202,7 @@ export default function MenuItemsPage() {
   const save = async () => {
     const validation = getMenuItemFieldErrors(form);
     setFieldErrors(validation.errors);
-    if (!validation.valid) {
-      setFormError(validation.message ?? "Fix the highlighted fields.");
-      return;
-    }
+    if (!validation.valid) return;
     const price = parseFloat(form.price);
     setSaving(true); setFormError("");
 

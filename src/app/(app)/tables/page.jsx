@@ -121,10 +121,7 @@ export default function TablesModulePage() {
   const saveTable = async () => {
     const validation = getTableFieldErrors(form);
     setFieldErrors(validation.errors);
-    if (!validation.valid) {
-      setFormError(validation.message ?? "Fix the highlighted fields.");
-      return;
-    }
+    if (!validation.valid) return;
     const cap = parseInt(form.capacity, 10);
     setSaving(true); setFormError("");
 

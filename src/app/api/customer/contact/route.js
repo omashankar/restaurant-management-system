@@ -1,7 +1,7 @@
 import clientPromise from "@/lib/mongodb";
 import { getRestaurantIdFromRequest } from "@/lib/restaurantResolver";
-
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+import { emailFormatError } from "@/lib/emailValidation";
+import { assertRealEmail, realEmailErrorResponse } from "@/lib/realEmailValidation";
 
 export async function POST(request) {
   try {
@@ -14,8 +14,16 @@ export async function POST(request) {
     if (!name || name.length < 2 || !/[a-zA-Z\u0900-\u097F]/.test(name)) {
       return Response.json({ success: false, error: "Please enter a valid name (at least 2 letters)." }, { status: 400 });
     }
-    if (!email || !EMAIL_RE.test(email)) {
-      return Response.json({ success: false, error: "Please enter a valid email." }, { status: 400 });
+    const emailErr = emailFormatError(email);
+    if (emailErr) {
+      return Response.json({ success: false, error: emailErr }, { status: 400 });
+    }
+    try {
+      await assertRealEmail(email);
+    } catch (err) {
+      const res = realEmailErrorResponse(err);
+      if (res) return res;
+      throw err;
     }
     if (!message || message.length < 10) {
       return Response.json(

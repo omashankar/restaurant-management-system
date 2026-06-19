@@ -12,6 +12,7 @@ import {
 import {
   EMPTY_CREATE_ORDER_ERRORS,
   getCreateOrderFieldErrors,
+  hasInlineFieldErrors,
 } from "@/lib/formValidation";
 import SearchField from "@/components/ui/SearchField";
 import PaginationBar from "@/components/ui/PaginationBar";
@@ -330,10 +331,7 @@ function CreateOrderModal({ open, onClose, onCreated, currency = "INR" }) {
   const submit = async () => {
     const validation = getCreateOrderFieldErrors({ form, cart });
     setFieldErrors(validation.errors);
-    if (!validation.valid) {
-      setError(validation.message ?? "Fix the highlighted fields.");
-      return;
-    }
+    if (!validation.valid) return;
     setSaving(true); setError("");
     try {
       const res  = await fetch("/api/orders", {
@@ -613,7 +611,7 @@ function CreateOrderModal({ open, onClose, onCreated, currency = "INR" }) {
               >
                 {saving ? "Placing…" : "Place Order"}
               </button>
-              {!canPlaceOrder && cart.length > 0 && orderValidation.message && !error && (
+              {!canPlaceOrder && cart.length > 0 && orderValidation.message && !error && !hasInlineFieldErrors(fieldErrors) && (
                 <p className="text-center text-[10px] admin-surface-faint">{orderValidation.message}</p>
               )}
             </div>

@@ -152,10 +152,7 @@ export default function SupportTicketsPage() {
     e.preventDefault();
     const validation = getSupportTicketFieldErrors(form);
     setFieldErrors(validation.errors);
-    if (!validation.valid) {
-      showToast("error", validation.message ?? "Subject and message are required.");
-      return;
-    }
+    if (!validation.valid) return;
     setSaving(true);
     try {
       const res = await fetch("/api/support/tickets", {

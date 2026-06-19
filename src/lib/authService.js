@@ -108,7 +108,7 @@ export async function verifyEmail(token) {
   await db.collection("users").updateOne(
     { _id: user._id },
     {
-      $set: { isVerified: true },
+      $set: { isVerified: true, status: "active" },
       $unset: { emailVerificationToken: "", emailVerificationExpires: "" },
     }
   );

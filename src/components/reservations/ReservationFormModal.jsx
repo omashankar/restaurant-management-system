@@ -370,7 +370,7 @@ export default function ReservationFormModal({ open, onClose, editing, tableOpti
     const validation = getReservationFormFieldErrors(form);
     setFieldErrors(validation.errors);
     if (!validation.valid) {
-      setSaveError(validation.message ?? "Fix the highlighted fields.");
+      setSaveError("");
       return;
     }
 

@@ -160,10 +160,7 @@ export default function TableAreasPage() {
   const save = async () => {
     const validation = getTableAreaFieldErrors(form);
     setFieldErrors(validation.errors);
-    if (!validation.valid) {
-      setFormError(validation.message ?? "Area name is required.");
-      return;
-    }
+    if (!validation.valid) return;
     let imageUrl = removeCurrentImage ? "" : form.imageUrl;
 
     setSaving(true); setFormError("");

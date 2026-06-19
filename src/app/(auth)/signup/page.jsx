@@ -95,11 +95,7 @@ export default function SignupPage() {
     });
     setFieldErrors(errors);
 
-    const firstError = Object.values(errors).find(Boolean);
-    if (firstError) {
-      setError(firstError);
-      return;
-    }
+    if (Object.values(errors).some(Boolean)) return;
 
     setLoading(true);
 
@@ -213,7 +209,7 @@ export default function SignupPage() {
 
           <div>
             <label htmlFor="email" className="text-xs font-medium uppercase tracking-wider text-zinc-500">
-              Enter Email <span className="text-red-400">*</span>
+              Business email <span className="text-red-400">*</span>
             </label>
             <input
               id="email"
@@ -224,7 +220,7 @@ export default function SignupPage() {
                 setEmail(e.target.value);
                 clearFieldError("email");
               }}
-              placeholder="you@restaurant.com"
+              placeholder="you@yourcompany.com"
               className={authInputCls}
               aria-invalid={fieldErrors.email ? true : undefined}
             />

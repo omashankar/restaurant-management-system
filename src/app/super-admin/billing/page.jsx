@@ -167,11 +167,7 @@ export default function BillingPage() {
   const handleAssign = async () => {
     const errors = getAssignPlanFieldErrors(assignForm);
     setAssignFieldErrors(errors);
-    const firstError = Object.values(errors).find(Boolean);
-    if (firstError) {
-      setAssignError(firstError);
-      return;
-    }
+    if (Object.values(errors).some(Boolean)) return;
     setAssigning(true);
     setAssignError("");
     try {

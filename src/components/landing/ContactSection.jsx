@@ -1,6 +1,7 @@
 "use client";
 
 import { BHOJDESK_BRAND } from "@/config/bhojdeskBrand";
+import { isValidEmailAddress } from "@/lib/emailValidation";
 import { Mail, MapPin, Phone, Send } from "lucide-react";
 import { useState } from "react";
 import SectionTitle from "./SectionTitle";
@@ -34,7 +35,7 @@ export default function ContactSection({ contact = {} }) {
     const e = {};
     if (!form.name.trim()) e.name = "Name is required.";
     if (!form.email.trim()) e.email = "Email is required.";
-    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())) e.email = "Enter a valid email address.";
+    else if (!isValidEmailAddress(form.email.trim())) e.email = "Enter a valid email address.";
     if (!form.message.trim()) e.message = "Message is required.";
     else if (form.message.trim().length < 10) e.message = "Message should be at least 10 characters.";
     setErrors(e);

@@ -4,6 +4,7 @@ import {
   getClientIp,
 } from "@/lib/rateLimit";
 import { normalizePhoneForOtp } from "@/lib/phoneUtils";
+import { emailFormatError } from "@/lib/emailValidation";
 import bcrypt from "bcryptjs";
 import { sendPlatformSms } from "@/lib/smsService";
 
@@ -29,6 +30,12 @@ export async function POST(request) {
   const email = String(body?.email ?? "").trim().toLowerCase();
   if (!phone) {
     return Response.json({ success: false, error: "Enter a valid 10-digit mobile number." }, { status: 400 });
+  }
+  if (email) {
+    const emailErr = emailFormatError(email);
+    if (emailErr) {
+      return Response.json({ success: false, error: emailErr, errors: { email: emailErr } }, { status: 422 });
+    }
   }
 
   try {

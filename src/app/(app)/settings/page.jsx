@@ -430,7 +430,6 @@ export default function SettingsPage() {
     const validation = validateRestaurantTheme(settings.theme);
     if (!validation.valid) {
       setFieldErrors((prev) => ({ ...prev, ...validation.errors }));
-      showToast("error", validation.message ?? "Fix theme colors.");
       return;
     }
 
@@ -525,7 +524,6 @@ export default function SettingsPage() {
         Object.assign(nextErrors, result.errors ?? {});
       }
       setFieldErrors(nextErrors);
-      showToast("error", validation.message ?? "Fix the highlighted fields.");
       return;
     }
 

@@ -1,9 +1,17 @@
 import { z } from "zod";
+import {
+  isRealEmailDomain,
+} from "@/lib/emailDomainValidation";
 
 const MAX_EMAIL_LENGTH = 254;
-/** Real-world TLDs are 2–6 letters (.com, .in, .museum). Blocks typos like .comsssssss */
+/** Legacy length guard — ICANN / typo checks live in emailDomainValidation. */
 const TLD_RE = /^[a-zA-Z]{2,6}$/;
 const DOMAIN_LABEL_RE = /^[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?$/;
+
+export const STRICT_EMAIL_MESSAGE =
+  "Enter a valid email address (e.g. name@restaurant.com).";
+
+export { BUSINESS_EMAIL_MESSAGE } from "@/lib/businessEmailValidation";
 
 /**
  * Practical email check for account / contact forms.
@@ -34,12 +42,35 @@ export function isValidEmailAddress(email) {
     if (!DOMAIN_LABEL_RE.test(label)) return false;
   }
 
+  if (!isRealEmailDomain(domain)) return false;
+
   return true;
 }
 
 export function emailFormatError(email, { required = true } = {}) {
   const trimmed = String(email ?? "").trim();
   if (!trimmed) return required ? "Email is required." : null;
-  if (!isValidEmailAddress(trimmed)) return "Enter a valid email address (e.g. name@restaurant.com).";
+  if (!isValidEmailAddress(trimmed)) return STRICT_EMAIL_MESSAGE;
   return null;
 }
+
+/** Zod — required account email (signup, staff, login, profile APIs). */
+export const strictRequiredEmailSchema = z
+  .string({ required_error: "Email is required." })
+  .trim()
+  .toLowerCase()
+  .min(1, "Email is required.")
+  .max(MAX_EMAIL_LENGTH, "Email too long.")
+  .refine(isValidEmailAddress, { message: STRICT_EMAIL_MESSAGE });
+
+/** Zod — optional email; empty allowed, non-empty must be valid. */
+export const optionalStrictEmailSchema = z.preprocess(
+  (val) => String(val ?? "").trim().toLowerCase(),
+  z.union([
+    z.literal(""),
+    z
+      .string()
+      .max(MAX_EMAIL_LENGTH, "Email too long.")
+      .refine(isValidEmailAddress, { message: STRICT_EMAIL_MESSAGE }),
+  ])
+);

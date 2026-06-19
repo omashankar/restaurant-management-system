@@ -82,9 +82,9 @@ export async function POST(request) {
       return Response.json({ success: false, error: "Invalid email or password." }, { status: 401 });
     }
 
-    /* ── Block inactive accounts ── */
-    const userStatus = user.status ?? "active"; // treat missing as active
-    if (userStatus !== "active") {
+    /* ── Block inactive accounts (pending = awaiting email verification) ── */
+    const userStatus = user.status ?? "active";
+    if (userStatus !== "active" && userStatus !== "pending") {
       return Response.json(
         { success: false, error: "Your account is inactive. Please contact support.", code: "ACCOUNT_INACTIVE" },
         { status: 403 }
@@ -107,14 +107,18 @@ export async function POST(request) {
       });
     }
 
-    /* ── TEMP: Email verification check disabled for local testing ── */
-    // const isVerified = user.isVerified ?? true; // treat missing as verified
-    // if (!isVerified && user.role !== "super_admin") {
-    //   return Response.json(
-    //     { success: false, error: "Please verify your email before logging in.", code: "EMAIL_NOT_VERIFIED" },
-    //     { status: 403 }
-    //   );
-    // }
+    /* ── Email verification required before login ── */
+    const isVerified = user.isVerified ?? true;
+    if (!isVerified && user.role !== "super_admin") {
+      return Response.json(
+        {
+          success: false,
+          error: "Please verify your email before logging in.",
+          code: "EMAIL_NOT_VERIFIED",
+        },
+        { status: 403 },
+      );
+    }
 
     /* ── Build user payload ── */
     const userPayload = {

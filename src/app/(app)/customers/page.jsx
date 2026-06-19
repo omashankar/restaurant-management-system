@@ -188,10 +188,7 @@ export default function CustomersModulePage() {
     if (saving) return;
     const validation = getCustomerFormFieldErrors(form);
     setFieldErrors(validation.errors);
-    if (!validation.valid) {
-      showToast(validation.message ?? "Fix the highlighted fields.", "error");
-      return;
-    }
+    if (!validation.valid) return;
     const phoneStored = extractIndianMobileDigits(form.phone);
     const payload = {
       name: form.name.trim(),

@@ -255,7 +255,6 @@ export default function InventoryPage() {
     const validation = getInventoryFormFieldErrors(form);
     if (!validation.valid) {
       setFieldErrors(validation.errors);
-      showToast(validation.message ?? "Fix the highlighted fields.", "error");
       return;
     }
     setFieldErrors(EMPTY_INVENTORY_FORM_ERRORS);

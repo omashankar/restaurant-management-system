@@ -1,6 +1,7 @@
 import { withTenant } from "@/lib/tenantDb";
 import { extractIndianMobileDigits } from "@/lib/phoneUtils";
 import { parseSchema, customerUpsertSchema } from "@/lib/validationSchemas";
+import { assertRealEmail, realEmailErrorResponse } from "@/lib/realEmailValidation";
 import { ObjectId } from "mongodb";
 
 export const GET = withTenant(
@@ -31,6 +32,16 @@ export const POST = withTenant(
     }
 
     const phoneStored = extractIndianMobileDigits(data.phone);
+
+    if (data.email) {
+      try {
+        await assertRealEmail(data.email);
+      } catch (err) {
+        const res = realEmailErrorResponse(err);
+        if (res) return res;
+        throw err;
+      }
+    }
 
     const existing = await db.collection("customers").findOne({ ...tenantFilter, phone: phoneStored });
     if (existing) return Response.json({ success: false, error: "Customer with this phone already exists." }, { status: 409 });

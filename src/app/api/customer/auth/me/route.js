@@ -1,6 +1,8 @@
 import clientPromise from "@/lib/mongodb";
 import { getCustomerTokenFromRequest, verifyCustomerToken } from "@/lib/customerAuth";
 import { serializeCustomerUser } from "@/lib/customerAccountSerialize";
+import { emailFormatError } from "@/lib/emailValidation";
+import { assertRealEmail, realEmailErrorResponse } from "@/lib/realEmailValidation";
 import { ObjectId } from "mongodb";
 
 export async function GET(request) {
@@ -61,10 +63,25 @@ export async function PATCH(request) {
     updates.name = nameRaw;
   }
   if (emailRaw !== null) {
-    if (emailRaw && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailRaw)) {
-      return Response.json({ success: false, error: "Invalid email address." }, { status: 400 });
+    if (emailRaw) {
+      const emailErr = emailFormatError(emailRaw);
+      if (emailErr) {
+        return Response.json(
+          { success: false, error: emailErr, errors: { email: emailErr } },
+          { status: 422 }
+        );
+      }
+      try {
+        await assertRealEmail(emailRaw);
+      } catch (err) {
+        const res = realEmailErrorResponse(err);
+        if (res) return res;
+        throw err;
+      }
+      updates.email = emailRaw;
+    } else {
+      updates.email = null;
     }
-    updates.email = emailRaw || null;
   }
   if (addressRaw !== null) {
     if (addressRaw.length > 500) {

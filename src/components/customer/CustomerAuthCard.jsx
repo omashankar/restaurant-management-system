@@ -2,6 +2,7 @@
 
 import CustomerAuthLayout from "@/components/customer/CustomerAuthLayout";
 import CustomerMobileInput from "@/components/customer/CustomerMobileInput";
+import { isValidEmail } from "@/lib/customerFormValidation";
 import { useCustomer } from "@/context/CustomerContext";
 import { useRestaurantSlug } from "@/hooks/useRestaurantSlug";
 import { extractIndianMobileDigits, isValidIndianMobile, normalizePhoneForOtp } from "@/lib/phoneUtils";
@@ -173,7 +174,7 @@ function LoginEmailForm({ nextPath }) {
 
   const submit = async () => {
     const trimmedEmail = email.trim().toLowerCase();
-    if (!trimmedEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail)) {
+    if (!trimmedEmail || !isValidEmail(trimmedEmail)) {
       setError("Please enter a valid email.");
       return;
     }
@@ -306,7 +307,7 @@ function RegisterPanel() {
       setError("Please enter your name.");
       return;
     }
-    if (!trimmedEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail)) {
+    if (!trimmedEmail || !isValidEmail(trimmedEmail)) {
       setError("Please enter a valid email.");
       return;
     }

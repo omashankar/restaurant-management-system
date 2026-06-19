@@ -160,10 +160,7 @@ export default function StaffModulePage() {
     setFormError("");
     const validation = getStaffFormFieldErrors(form, { editing: Boolean(editingId) });
     setFieldErrors(validation.errors);
-    if (!validation.valid) {
-      setFormError(validation.message ?? "Fix the highlighted fields.");
-      return;
-    }
+    if (!validation.valid) return;
 
     setSaving(true);
 

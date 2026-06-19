@@ -23,6 +23,7 @@ import {
   tableSchema,
 } from "@/lib/validationSchemas";
 import { emailFormatError } from "@/lib/emailValidation";
+import { businessEmailFormatError } from "@/lib/businessEmailValidation";
 import {
   computeBillingEndDate,
   computeSubscriptionSchedule,
@@ -48,6 +49,19 @@ export {
 export { validatePlatformPassword } from "@/lib/platformPassword";
 
 export { isValidEmailAddress, emailFormatError } from "@/lib/emailValidation";
+
+export {
+  BUSINESS_EMAIL_MESSAGE,
+  businessEmailFormatError,
+  businessRequiredEmailSchema,
+  isValidBusinessEmail,
+} from "@/lib/businessEmailValidation";
+
+/** True when at least one inline field error message is set. */
+export function hasInlineFieldErrors(errors) {
+  if (!errors || typeof errors !== "object") return false;
+  return Object.values(errors).some((value) => String(value ?? "").trim().length > 0);
+}
 
 export function emailError(email, { required = true } = {}) {
   return emailFormatError(email, { required });
@@ -174,7 +188,7 @@ export function getSignupFieldErrors(
     restaurantName: personNameError(restaurantName, "Restaurant name") ?? "",
     slug: slugError(slug) ?? "",
     name: personNameError(name, "Your name") ?? "",
-    email: emailError(email) ?? "",
+    email: businessEmailFormatError(email) ?? "",
     phone: optionalIndianPhoneError(phone) ?? "",
     password: platformPasswordError(password, passwordSecurity) ?? "",
   };
@@ -225,7 +239,7 @@ export function getRestaurantCreateFieldErrors(
       ownerNameTrimmed && !isValidPersonName(ownerNameTrimmed)
         ? "Owner name must be at least 2 characters and include letters."
         : "",
-    ownerEmail: emailError(ownerEmail) ?? "",
+    ownerEmail: businessEmailFormatError(ownerEmail) ?? "",
     ownerPassword: platformPasswordError(ownerPassword, passwordSecurity) ?? "",
     phone: optionalIndianPhoneError(phone) ?? "",
   };

@@ -8,6 +8,11 @@ import { getPlatformSettings } from "@/lib/platformSettings";
 import { validatePlatformPassword } from "@/lib/platformPassword";
 import { notifyPlatformEvent } from "@/lib/platformNotify";
 import { extractIndianMobileDigits } from "@/lib/phoneUtils";
+import {
+  assertEmailNotRegistered,
+  DUPLICATE_EMAIL_MESSAGE,
+} from "@/lib/emailRegistry";
+import { assertRealEmail, realEmailErrorResponse } from "@/lib/realEmailValidation";
 import { parseSchema, superAdminRestaurantCreateSchema } from "@/lib/validationSchemas";
 
 const VALID_PLANS = ["free", "starter", "pro", "enterprise"];
@@ -324,10 +329,24 @@ export async function POST(request) {
       return Response.json({ success: false, error: pwdCheck.error }, { status: 400 });
     }
 
-    // Duplicate email check
-    const existingUser = await db.collection("users").findOne({ email: ownerEmail.toLowerCase().trim() });
-    if (existingUser) {
-      return Response.json({ success: false, error: "An account with this email already exists." }, { status: 409 });
+    try {
+      await assertRealEmail(ownerEmail, { business: true });
+    } catch (err) {
+      const res = realEmailErrorResponse(err, { business: true });
+      if (res) return res;
+      throw err;
+    }
+
+    try {
+      await assertEmailNotRegistered(db, ownerEmail);
+    } catch (err) {
+      if (err.message === "EMAIL_EXISTS") {
+        return Response.json(
+          { success: false, error: DUPLICATE_EMAIL_MESSAGE },
+          { status: 409 },
+        );
+      }
+      throw err;
     }
 
     const existingSlug = await db.collection("restaurants").findOne({ slug: validatedSlug });

@@ -15,6 +15,7 @@ import {
   reservationStatusBadgeClass,
   formatReservationStatusLabel,
 } from "@/lib/customerStatusStyles";
+import { isValidEmail } from "@/lib/customerFormValidation";
 import { customerClasses, customerPage } from "@/lib/customerTheme";
 import { useCustomerMotion } from "@/hooks/useCustomerMotion";
 import { AnimatePresence, motion } from "framer-motion";
@@ -385,7 +386,7 @@ function CustomerDashboardContent() {
   const saveProfile = async (e) => {
     e.preventDefault();
     const trimmedEmail = editEmail.trim().toLowerCase();
-    if (trimmedEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail)) {
+    if (trimmedEmail && !isValidEmail(trimmedEmail)) {
       showToast("Please enter a valid email.", "error");
       return;
     }

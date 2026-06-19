@@ -92,11 +92,7 @@ function LoginContent() {
 
     const errors = getLoginFieldErrors({ email, password, needs2FA, otpCode });
     setFieldErrors(errors);
-    const firstError = Object.values(errors).find(Boolean);
-    if (firstError) {
-      setError(firstError);
-      return;
-    }
+    if (Object.values(errors).some(Boolean)) return;
 
     setLoading(true);
     try {

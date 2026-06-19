@@ -5,6 +5,7 @@ import {
   staffPhoneConflictMessage,
 } from "@/lib/staffPhone";
 import { parseSchema, staffCreateSchema } from "@/lib/validationSchemas";
+import { assertRealEmail, realEmailErrorResponse } from "@/lib/realEmailValidation";
 import bcrypt from "bcryptjs";
 
 export const POST = withTenant(
@@ -19,6 +20,14 @@ export const POST = withTenant(
     }
     const { name, email, password, role, phone } = data;
     const phoneStored = normalizeStaffPhoneStored(phone);
+
+    try {
+      await assertRealEmail(email);
+    } catch (err) {
+      const res = realEmailErrorResponse(err);
+      if (res) return res;
+      throw err;
+    }
 
     const existing = await db.collection("users").findOne({ email });
     if (existing) return Response.json({ success: false, error: "Email already registered." }, { status: 409 });
