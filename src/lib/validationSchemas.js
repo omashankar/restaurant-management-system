@@ -2,6 +2,27 @@ import { z } from "zod";
 import { isValidIndianMobile, extractIndianMobileDigits } from "@/lib/phoneUtils";
 import { computeSubscriptionSchedule } from "@/lib/subscriptionSchedule";
 
+/** Minimum characters for staff/POS delivery address (city or short locality names allowed). */
+export const DELIVERY_ADDRESS_MIN_LENGTH = 3;
+
+/** Extract delivery address from order notes (plain text or "Address: …" suffix). */
+export function parseDeliveryAddressFromNotes(notes) {
+  const trimmed = String(notes ?? "").trim();
+  if (trimmed.includes("Address:")) {
+    return trimmed.split("Address:").pop()?.trim() ?? "";
+  }
+  return trimmed;
+}
+
+export function deliveryAddressError(addressRaw) {
+  const address = parseDeliveryAddressFromNotes(addressRaw);
+  if (!address) return "Delivery address is required.";
+  if (address.length < DELIVERY_ADDRESS_MIN_LENGTH) {
+    return `Enter a complete delivery address (at least ${DELIVERY_ADDRESS_MIN_LENGTH} characters).`;
+  }
+  return null;
+}
+
 const guestNameSchema = z
   .string()
   .trim()
@@ -380,15 +401,12 @@ export const orderCreateSchema = z
           message: nameResult.error.issues[0]?.message ?? "Customer name is required.",
         });
       }
-      const notes = String(data.notes ?? "").trim();
-      const addressPart = notes.includes("Address:")
-        ? notes.split("Address:").pop()?.trim() ?? ""
-        : notes;
-      if (!addressPart || addressPart.length < 5) {
+      const addressError = deliveryAddressError(data.notes);
+      if (addressError) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
           path: ["notes"],
-          message: "Delivery address is required.",
+          message: addressError,
         });
       }
     }

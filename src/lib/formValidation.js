@@ -13,6 +13,7 @@ import {
   menuCategorySchema,
   menuItemSchema,
   orderCreateSchema,
+  deliveryAddressError,
   printerConfigSchema,
   reservationCreateSchema,
   staffCreateSchema,
@@ -510,10 +511,9 @@ export function getPosOrderFieldErrors({
     errors.deliveryName = personNameError(delivery?.name, "Name") ?? "";
     errors.deliveryPhone = indianPhoneError(delivery?.phone) ?? "";
     const addr = String(delivery?.address ?? "").trim();
-    if (!addr) errors.deliveryAddress = "Delivery address is required.";
-    else if (addr.length < 5) {
-      errors.deliveryAddress = "Enter a complete delivery address.";
-    } else if (addr.length > 300) {
+    const addrErr = deliveryAddressError(addr);
+    if (addrErr) errors.deliveryAddress = addrErr;
+    else if (addr.length > 300) {
       errors.deliveryAddress = "Address must be 300 characters or less.";
     }
   }

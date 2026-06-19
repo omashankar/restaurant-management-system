@@ -37,7 +37,6 @@ import {
   validatePaymentBank,
   validatePaymentGatewaySave,
   validatePaymentTax,
-  validateRestaurantOpeningHours,
   validateRestaurantSettingsPatch,
   validateRestaurantTheme,
 } from "@/lib/restaurantSettingsValidation";
@@ -594,47 +593,6 @@ export default function SettingsPage() {
     });
   };
 
-  async function saveOpeningHours() {
-    const hours = sanitizeOpeningHoursSchedule(settings.openingHours);
-    const validation = validateRestaurantOpeningHours(hours);
-    if (!validation.valid) {
-      setFieldErrors((prev) => ({ ...prev, ...validation.errors }));
-      showToast("error", validation.message ?? "Fix opening hours.");
-      return;
-    }
-
-    setIsSaving(true);
-    try {
-      const res = await fetch("/api/settings", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ openingHours: hours }),
-      });
-      const data = await res.json();
-      if (data.success) {
-        const nextSettings = { ...settings, openingHours: hours };
-        setSettings(nextSettings);
-        setSavedSnapshot((prev) => ({ ...prev, openingHours: hours }));
-        setFieldErrors({});
-        invalidateOpeningHoursCache();
-        showToast("success", "Opening hours saved.");
-      } else {
-        if (data.tabs) {
-          const nextErrors = {};
-          for (const result of Object.values(data.tabs)) {
-            Object.assign(nextErrors, result.errors ?? {});
-          }
-          setFieldErrors(nextErrors);
-        }
-        showToast("error", data.error || "Failed to save opening hours.");
-      }
-    } catch {
-      showToast("error", "Network error. Please try again.");
-    } finally {
-      setIsSaving(false);
-    }
-  }
-
   const updateAccess = (featureKey, role, nextValue) => {
     setSettings((prev) => ({
       ...prev,
@@ -1019,17 +977,6 @@ export default function SettingsPage() {
                     </div>
                   </div>
                 ))}
-              </div>
-              <div className="mt-4 flex justify-stretch sm:justify-end">
-                <button
-                  type="button"
-                  onClick={saveOpeningHours}
-                  disabled={isSaving}
-                  className="cursor-pointer inline-flex w-full items-center justify-center gap-2 rounded-xl bg-ra-primary px-4 py-2 text-sm font-semibold text-zinc-950 transition-colors hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-45 sm:w-auto"
-                >
-                  {isSaving ? <Loader2 className="size-4 animate-spin" /> : null}
-                  {isSaving ? "Saving..." : "Save Opening Hours"}
-                </button>
               </div>
             </SettingsFormSection>
           )}
