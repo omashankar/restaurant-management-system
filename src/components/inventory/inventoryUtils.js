@@ -1,5 +1,33 @@
 /** @typedef {"in" | "low" | "out"} InventoryStatus */
 
+export const INVENTORY_CATEGORIES = [
+  "Produce",
+  "Meat",
+  "Dairy",
+  "Dry goods",
+  "Beverages",
+  "Frozen",
+  "Other",
+];
+
+export const INVENTORY_UNITS = [
+  "bottle",
+  "kg",
+  "g",
+  "litre",
+  "ml",
+  "crate",
+  "box",
+  "case",
+  "pack",
+  "piece",
+  "dozen",
+  "wheel",
+  "bag",
+  "can",
+  "jar",
+];
+
 export const INVENTORY_STATUS_LABELS = {
   in: "In stock",
   low: "Low stock",

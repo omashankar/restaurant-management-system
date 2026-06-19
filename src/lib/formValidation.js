@@ -766,6 +766,7 @@ export function getTableAreaFieldErrors(form) {
 
 export const EMPTY_INVENTORY_FORM_ERRORS = {
   name: "",
+  category: "",
   unit: "",
   quantity: "",
   reorderLevel: "",
@@ -778,7 +779,7 @@ export function getInventoryFormFieldErrors(form) {
     inventoryItemSchema,
     {
       name: String(form.name ?? "").trim(),
-      category: String(form.category ?? "").trim() || undefined,
+      category: String(form.category ?? "").trim(),
       quantity: Number.isNaN(quantity) ? 0 : Math.max(0, quantity),
       unit: String(form.unit ?? "").trim(),
       reorderLevel: Number.isNaN(reorderLevel) ? 0 : Math.max(0, reorderLevel),

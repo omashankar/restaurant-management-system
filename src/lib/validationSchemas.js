@@ -245,7 +245,7 @@ export const reservationCreateSchema = z.object({
 
 export const inventoryItemSchema = z.object({
   name: z.string().trim().min(1, "Item name is required.").max(120),
-  category: z.string().trim().max(60).optional(),
+  category: z.string().trim().min(1, "Category is required.").max(60),
   quantity: z.number().int().min(0).optional(),
   unit: z.string().trim().min(1, "Unit is required.").max(30),
   reorderLevel: z.number().int().min(0).optional(),

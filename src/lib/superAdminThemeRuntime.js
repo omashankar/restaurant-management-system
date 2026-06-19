@@ -1,4 +1,5 @@
 import { SUPER_ADMIN_ACCENT, SUPER_ADMIN_PRIMARY } from "@/config/superAdminTheme";
+import { primaryForegroundForHex } from "@/lib/primaryForeground";
 
 const HEX6 = /^#([0-9a-fA-F]{6})$/;
 const HEX3 = /^#([0-9a-fA-F]{3})$/;
@@ -28,8 +29,10 @@ export function resolveSuperAdminTheme(theme) {
 
 export function superAdminThemeStyle(theme) {
   const { primaryColor, accentColor } = resolveSuperAdminTheme(theme);
+  const primaryFg = primaryForegroundForHex(primaryColor, SUPER_ADMIN_PRIMARY);
   return {
     "--sa-primary": primaryColor,
+    "--sa-primary-fg": primaryFg,
     "--sa-accent": accentColor,
     "--platform-primary": primaryColor,
     "--platform-accent": accentColor,
