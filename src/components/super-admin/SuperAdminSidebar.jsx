@@ -1,6 +1,7 @@
 "use client";
 
 import SidebarBrand from "@/components/rms/SidebarBrand";
+import { SUPER_ADMIN_NAV_LINKS } from "@/config/superAdminNavigation";
 import { usePlatformConfig } from "@/hooks/usePlatformConfig";
 import { resolveSuperAdminSidebarBranding } from "@/lib/resolveBrandLogos";
 import {
@@ -26,19 +27,23 @@ import { createPortal } from "react-dom";
 
 const STORAGE_KEY = "sa-sidebar-collapsed";
 
-const NAV = [
-  { href: "/super-admin/dashboard", label: "Dashboard", Icon: LayoutDashboard },
-  { href: "/super-admin/restaurants", label: "Restaurants", Icon: Building2 },
-  { href: "/super-admin/payments", label: "Subscription Payments", Icon: Receipt },
-  { href: "/super-admin/plans", label: "Plans", Icon: CreditCard },
-  { href: "/super-admin/billing", label: "Billing", Icon: Receipt },
-  { href: "/super-admin/analytics", label: "Analytics", Icon: BarChart3 },
-  { href: "/super-admin/landing-site", label: "Landing Site", Icon: Globe },
-  { href: "/super-admin/contact-inbox", label: "Contact Inbox", Icon: Inbox, badgeKey: "contact" },
-  { href: "/super-admin/logs", label: "Logs", Icon: ClipboardList },
-  { href: "/super-admin/support-tickets", label: "Support Tickets", Icon: LifeBuoy },
-  { href: "/super-admin/settings", label: "Settings", Icon: Settings },
-];
+const ICONS = {
+  LayoutDashboard,
+  Building2,
+  Receipt,
+  CreditCard,
+  BarChart3,
+  Globe,
+  Inbox,
+  ClipboardList,
+  LifeBuoy,
+  Settings,
+};
+
+const NAV = SUPER_ADMIN_NAV_LINKS.map(({ icon, ...rest }) => ({
+  ...rest,
+  Icon: ICONS[icon] ?? LayoutDashboard,
+}));
 
 export default function SuperAdminSidebar({ mobile = false, onNavigate, onClose }) {
   const { config } = usePlatformConfig();

@@ -5,6 +5,7 @@ import { raPageRefreshBtnCls } from "@/config/restaurantAdminTheme";
 import SuperAdminPageSkeleton from "@/components/super-admin/SuperAdminPageSkeleton";
 import { saIconBadgeCls, saInputCls, saSpinnerCls } from "@/config/superAdminTheme";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
+import { useHydrateSearchFromUrl } from "@/hooks/useHydrateSearchFromUrl";
 import SearchField from "@/components/ui/SearchField";
 import PaginationBar from "@/components/ui/PaginationBar";
 import DataTableShell from "@/components/ui/DataTableShell";
@@ -274,6 +275,8 @@ export default function RestaurantsPage() {
   const [suspending, setSuspending]       = useState(false);
 
   const { showToast, ToastUI } = useToast();
+
+  useHydrateSearchFromUrl(setSearch);
 
   useEffect(() => {
     setPage(1);

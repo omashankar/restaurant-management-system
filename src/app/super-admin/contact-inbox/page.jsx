@@ -16,6 +16,7 @@ import {
 import { saIconBadgeCls, saInputCls, saSpinnerCls, saTextareaCls } from "@/config/superAdminTheme";
 import { useSuperAdminLocale } from "@/context/SuperAdminLocaleContext";
 import { useToast } from "@/hooks/useToast";
+import { useHydrateSearchFromUrl } from "@/hooks/useHydrateSearchFromUrl";
 import { AlertTriangle, Globe, Inbox, Mail, RefreshCcw, Send, Store, X } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
@@ -72,6 +73,8 @@ export default function SuperAdminContactInboxPage() {
   const [sendingReply, setSendingReply] = useState(false);
   const [emailConfigured, setEmailConfigured] = useState(true);
   const { showToast, ToastUI } = useToast();
+
+  useHydrateSearchFromUrl(setSearch);
 
   async function refreshStats() {
     try {

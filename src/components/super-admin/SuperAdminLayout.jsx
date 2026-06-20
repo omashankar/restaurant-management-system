@@ -9,6 +9,7 @@ import {
   adminShell,
   adminSurface,
 } from "@/config/adminSurfaceClasses";
+import SuperAdminGlobalSearch from "./SuperAdminGlobalSearch";
 import SuperAdminPreloader from "./SuperAdminPreloader";
 import SuperAdminSidebar from "./SuperAdminSidebar";
 import ChangePasswordModal from "@/components/rms/ChangePasswordModal";
@@ -29,7 +30,6 @@ import {
   LogOut,
   Menu,
   MessageSquare,
-  Search,
   User,
 } from "lucide-react";
 
@@ -202,15 +202,8 @@ export default function SuperAdminLayout({ children }) {
           </div>
 
           <div className="relative z-10 ml-auto flex min-w-0 shrink-0 flex-nowrap items-center justify-end gap-1 sm:gap-2 lg:gap-3">
-            <div className="hidden shrink-0 lg:block">
-              <div className="admin-search-wrap relative">
-                <Search className="admin-search-icon" strokeWidth={2} aria-hidden />
-                <input
-                  type="text"
-                  placeholder="Search..."
-                  className={`max-w-[9rem] xl:max-w-[14rem] ${adminSurface.searchCompact} focus-sa-primary`}
-                />
-              </div>
+            <div className="hidden min-w-0 shrink-0 md:block">
+              <SuperAdminGlobalSearch />
             </div>
 
             <AdminColorModeToggle portal="sa" className="shrink-0" />

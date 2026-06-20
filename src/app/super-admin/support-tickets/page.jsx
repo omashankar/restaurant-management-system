@@ -22,6 +22,8 @@ import { saIconBadgeCls, saInputCls, saSpinnerCls } from "@/config/superAdminThe
 import { useSuperAdminLocale } from "@/context/SuperAdminLocaleContext";
 import PaginationBar from "@/components/ui/PaginationBar";
 import PageDrawer from "@/components/ui/PageDrawer";
+import SearchField from "@/components/ui/SearchField";
+import { useHydrateSearchFromUrl } from "@/hooks/useHydrateSearchFromUrl";
 import { LifeBuoy, Loader2, RefreshCcw, X } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 
@@ -35,6 +37,7 @@ export default function SuperAdminSupportTicketsPage() {
   const [loadError, setLoadError] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [priorityFilter, setPriorityFilter] = useState("all");
+  const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [pagination, setPagination] = useState({ total: 0, pages: 1 });
   const [toast, setToast] = useState(null);
@@ -51,7 +54,9 @@ export default function SuperAdminSupportTicketsPage() {
 
   useEffect(() => {
     setPage(1);
-  }, [statusFilter, priorityFilter]);
+  }, [statusFilter, priorityFilter, search]);
+
+  useHydrateSearchFromUrl(setSearch);
 
   async function loadTickets() {
     setLoading(true);
@@ -63,6 +68,7 @@ export default function SuperAdminSupportTicketsPage() {
       });
       if (statusFilter !== "all") params.set("status", statusFilter);
       if (priorityFilter !== "all") params.set("priority", priorityFilter);
+      if (search.trim()) params.set("q", search.trim());
       const [listRes, statsRes] = await Promise.all([
         fetch(`/api/super-admin/support-tickets?${params.toString()}`, { cache: "no-store" }),
         fetch("/api/super-admin/support-tickets?stats=1", { cache: "no-store" }),
@@ -91,7 +97,7 @@ export default function SuperAdminSupportTicketsPage() {
   useEffect(() => {
     loadTickets();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [statusFilter, priorityFilter, page]);
+  }, [statusFilter, priorityFilter, search, page]);
 
   async function updateTicket(ticketId, payload) {
     const mergeTicket = (prev) =>
@@ -202,6 +208,15 @@ export default function SuperAdminSupportTicketsPage() {
       <div className="flex flex-col gap-3 admin-surface-card p-3 sm:flex-row sm:items-center sm:justify-between sm:p-4">
         <p className="text-xs font-semibold uppercase tracking-wide admin-surface-muted">Filters</p>
         <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:flex-wrap sm:items-center">
+          <SearchField
+            id="support-tickets-search"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search ticket, subject…"
+            className="w-full sm:min-w-[14rem] sm:max-w-xs"
+            clearable
+            onClear={() => setSearch("")}
+          />
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}

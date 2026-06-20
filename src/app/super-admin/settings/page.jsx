@@ -83,17 +83,17 @@ function Toggle({ checked, onChange, label, description }) {
 
 function SaveButton({ saving, onClick, hint }) {
   return (
-    <div className="flex flex-col gap-3 border-t admin-shell-border pt-4 sm:flex-row sm:items-center sm:justify-between">
+    <div className="mt-4 border-t admin-shell-border pt-3">
       {hint ? (
-        <p className="text-xs admin-surface-muted">{hint}</p>
-      ) : (
-        <span className="hidden sm:block" aria-hidden="true" />
-      )}
-      <button type="button" onClick={onClick} disabled={saving}
-        className={`inline-flex w-full cursor-pointer items-center justify-center gap-2 sm:w-auto ${saBtnPrimaryCls} disabled:opacity-50`}>
-        {saving ? <span className="size-3.5 animate-spin rounded-full border-2 border-zinc-950/30 border-t-zinc-950" /> : <Save className="size-4" />}
-        {saving ? "Saving…" : "Save Changes"}
-      </button>
+        <p className="mb-2.5 text-xs admin-surface-muted">{hint}</p>
+      ) : null}
+      <div className="flex justify-end">
+        <button type="button" onClick={onClick} disabled={saving}
+          className={`inline-flex w-full cursor-pointer items-center justify-center gap-2 sm:w-auto ${saBtnPrimaryCls} disabled:opacity-50`}>
+          {saving ? <span className="size-3.5 animate-spin rounded-full border-2 border-zinc-950/30 border-t-zinc-950" /> : <Save className="size-4" />}
+          {saving ? "Saving…" : "Save Changes"}
+        </button>
+      </div>
     </div>
   );
 }
@@ -1658,7 +1658,7 @@ export default function SuperAdminSettingsPage() {
         </AdminSideNav>
 
         {/* Panel */}
-        <div ref={panelRef} className="min-w-0 flex-1 overflow-x-hidden admin-surface-card p-4 sm:p-6">
+        <div ref={panelRef} className="min-w-0 w-full flex-1 self-start overflow-x-hidden admin-surface-card p-4 sm:p-6">
           {fetching ? (
             <SuperAdminPageSkeleton rows={6} rowClassName="h-12 rounded-xl" />
           ) : !settings ? (

@@ -18,6 +18,7 @@ import {
 import { useSuperAdminLocale } from "@/context/SuperAdminLocaleContext";
 import { formatSaMoney } from "@/lib/formatSaMoney";
 import { useToast } from "@/hooks/useToast";
+import { useHydrateSearchFromUrl } from "@/hooks/useHydrateSearchFromUrl";
 import {
   CheckCircle2,
   Clock, DollarSign, Download, FileText, RefreshCw, XCircle,
@@ -57,6 +58,8 @@ export default function PaymentsPage() {
   const [page, setPage]           = useState(1);
   const [downloadingId, setDownloadingId] = useState("");
   const { showToast, ToastUI }    = useToast();
+
+  useHydrateSearchFromUrl(setSearch);
 
   const fetchPayments = useCallback(async () => {
     setLoading(true);
