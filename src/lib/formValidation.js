@@ -23,7 +23,6 @@ import {
   tableSchema,
 } from "@/lib/validationSchemas";
 import { emailFormatError } from "@/lib/emailValidation";
-import { businessEmailFormatError } from "@/lib/businessEmailValidation";
 import {
   computeBillingEndDate,
   computeSubscriptionSchedule,
@@ -169,10 +168,20 @@ export function messageError(message, { min = 10 } = {}) {
 
 /** Default password rules (matches platformPassword when settings not loaded). */
 export const DEFAULT_SIGNUP_PASSWORD_SECURITY = {
-  minPasswordLength: 8,
-  requireNumbers: true,
-  requireSpecialChars: true,
+  minPasswordLength: 6,
+  requireNumbers: false,
+  requireSpecialChars: false,
 };
+
+/** User-facing hint aligned with DEFAULT_SIGNUP_PASSWORD_SECURITY / platform security. */
+export function getPasswordHint(security = DEFAULT_SIGNUP_PASSWORD_SECURITY) {
+  const min = Math.max(6, Number(security.minPasswordLength) || 6);
+  const parts = [`At least ${min} characters`];
+  if (security.requireNumbers) parts.push("a number");
+  if (security.requireSpecialChars) parts.push("a special character");
+  if (parts.length === 1) return `${parts[0]}.`;
+  return `${parts[0]}, with ${parts.slice(1).join(" and ")}.`;
+}
 
 export function platformPasswordError(password, security = DEFAULT_SIGNUP_PASSWORD_SECURITY) {
   const result = validatePlatformPassword(password, security);
@@ -188,7 +197,7 @@ export function getSignupFieldErrors(
     restaurantName: personNameError(restaurantName, "Restaurant name") ?? "",
     slug: slugError(slug) ?? "",
     name: personNameError(name, "Your name") ?? "",
-    email: businessEmailFormatError(email) ?? "",
+    email: emailError(email) ?? "",
     phone: optionalIndianPhoneError(phone) ?? "",
     password: platformPasswordError(password, passwordSecurity) ?? "",
   };
@@ -239,7 +248,7 @@ export function getRestaurantCreateFieldErrors(
       ownerNameTrimmed && !isValidPersonName(ownerNameTrimmed)
         ? "Owner name must be at least 2 characters and include letters."
         : "",
-    ownerEmail: businessEmailFormatError(ownerEmail) ?? "",
+    ownerEmail: emailError(ownerEmail) ?? "",
     ownerPassword: platformPasswordError(ownerPassword, passwordSecurity) ?? "",
     phone: optionalIndianPhoneError(phone) ?? "",
   };

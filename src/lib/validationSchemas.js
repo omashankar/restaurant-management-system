@@ -5,7 +5,6 @@ import {
   strictRequiredEmailSchema,
   STRICT_EMAIL_MESSAGE,
 } from "@/lib/emailValidation";
-import { businessRequiredEmailSchema } from "@/lib/businessEmailValidation";
 import { isValidIndianMobile, extractIndianMobileDigits } from "@/lib/phoneUtils";
 import { computeSubscriptionSchedule } from "@/lib/subscriptionSchedule";
 
@@ -68,7 +67,7 @@ export const signupSchema = z.object({
     .max(60, "Name too long.")
     .trim()
     .refine((v) => /[a-zA-Z\u0900-\u097F]/.test(v), "Name must include letters."),
-  email: businessRequiredEmailSchema.max(100, "Email too long."),
+  email: strictRequiredEmailSchema.max(100, "Email too long."),
   phone: optionalIndianPhoneSchema,
   password: z
     .string({ required_error: "Password is required." })
@@ -106,7 +105,7 @@ export const superAdminRestaurantCreateSchema = z.object({
     .optional()
     .or(z.literal(""))
     .refine((v) => !v || /[a-zA-Z\u0900-\u097F]/.test(v), "Owner name must include letters."),
-  ownerEmail: businessRequiredEmailSchema,
+  ownerEmail: strictRequiredEmailSchema,
   ownerPassword: z.string().min(6, "Password must be at least 6 characters.").max(72),
   phone: optionalIndianPhoneSchema,
   plan: z.enum(["free", "starter", "pro", "enterprise"], { message: "Invalid plan." }),

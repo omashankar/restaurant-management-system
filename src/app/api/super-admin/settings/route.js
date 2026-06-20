@@ -83,9 +83,9 @@ const DEFAULTS = {
     enabled:    false,
   },
   security: {
-    minPasswordLength:      8,
-    requireSpecialChars:    true,
-    requireNumbers:         true,
+    minPasswordLength:      6,
+    requireSpecialChars:    false,
+    requireNumbers:         false,
     loginAttemptLimit:      5,
     blockDurationMinutes:   30,
     enable2FA:              false,

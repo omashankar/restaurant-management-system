@@ -1009,7 +1009,7 @@ function SecuritySection({ data, onChange, onSave, saving, fieldErrors = {}, onC
         <Field label="Minimum Password Length" error={fieldErrors.minPasswordLength}>
           <input
             {...intInputProps({ min: 6, max: 32, step: 1 })}
-            value={data.minPasswordLength ?? 8}
+            value={data.minPasswordLength ?? 6}
             onChange={(e) => {
               onChange("minPasswordLength", e.target.value === "" ? "" : Number(e.target.value));
               onClearError?.("minPasswordLength");
@@ -1068,13 +1068,13 @@ function SecuritySection({ data, onChange, onSave, saving, fieldErrors = {}, onC
           checked={!!data.requireSpecialChars}
           onChange={(v) => onChange("requireSpecialChars", v)}
           label="Require Special Characters"
-          description="Password must contain at least one special character."
+          description="Optional — require a symbol like @ # $ when enabled."
         />
         <Toggle
           checked={!!data.requireNumbers}
           onChange={(v) => onChange("requireNumbers", v)}
           label="Require Numbers"
-          description="Password must contain at least one number."
+          description="Optional — require at least one digit when enabled."
         />
       </div>
 

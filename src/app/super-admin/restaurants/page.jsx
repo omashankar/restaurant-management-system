@@ -26,8 +26,8 @@ import PhoneInput from "@/components/ui/PhoneInput";
 import { useSuperAdminLocale } from "@/context/SuperAdminLocaleContext";
 import { useToast } from "@/hooks/useToast";
 import {
-  DEFAULT_SIGNUP_PASSWORD_SECURITY,
   EMPTY_RESTAURANT_EDIT_ERRORS,
+  getPasswordHint,
   getRestaurantCreateFieldErrors,
   getRestaurantEditFieldErrors,
 } from "@/lib/formValidation";
@@ -925,7 +925,7 @@ export default function RestaurantsPage() {
                 placeholder="Min 8 characters"
                 labelClassName="block text-xs font-medium text-zinc-400 mb-1"
                 inputClassName={`${inputCls} pr-11`}
-                hint={`At least ${DEFAULT_SIGNUP_PASSWORD_SECURITY.minPasswordLength} characters, with a number and special character.`}
+                hint={getPasswordHint()}
                 error={createFieldErrors.ownerPassword || undefined}
               />
             </div>

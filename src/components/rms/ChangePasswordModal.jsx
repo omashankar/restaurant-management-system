@@ -5,6 +5,7 @@ import { saInputCls } from "@/config/superAdminTheme";
 import Modal from "@/components/ui/Modal";
 import PasswordInput from "@/components/ui/PasswordInput";
 import { useProfile } from "@/hooks/useProfile";
+import { getPasswordHint } from "@/lib/formValidation";
 import { CheckCircle2, Loader2, XCircle } from "lucide-react";
 
 const ACCENT = {
@@ -84,7 +85,7 @@ export default function ChangePasswordModal({ open, onClose, variant = "emerald"
     >
       <div className="space-y-4">
         <p className={`text-xs ${accent.hint}`}>
-          At least 8 characters, with a number and a special character.
+          {getPasswordHint()}
         </p>
         <PasswordInput
           id="pw-current"
@@ -103,7 +104,7 @@ export default function ChangePasswordModal({ open, onClose, variant = "emerald"
           label="New Password"
           value={pwForm.next}
           onChange={(v) => setPwField("next", v)}
-          placeholder="Min. 8 characters"
+          placeholder="Min. 6 characters"
           autoComplete="new-password"
           error={pwErrors.next}
           inputClassName={`${inputCls} py-2.5 pl-10 pr-11 ${

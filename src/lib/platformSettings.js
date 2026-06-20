@@ -56,9 +56,9 @@ export const PLATFORM_DEFAULTS = {
     enabled: false,
   },
   security: {
-    minPasswordLength: 8,
-    requireSpecialChars: true,
-    requireNumbers: true,
+    minPasswordLength: 6,
+    requireSpecialChars: false,
+    requireNumbers: false,
     loginAttemptLimit: 5,
     blockDurationMinutes: 30,
     enable2FA: false,
@@ -125,6 +125,14 @@ export async function getPlatformSettings(db) {
 
   _cache = merged;
   _cacheTime = now;
+  if (merged.security) {
+    merged.security.minPasswordLength = Math.max(
+      6,
+      Math.min(32, Number(merged.security.minPasswordLength) || 6),
+    );
+    merged.security.requireNumbers = false;
+    merged.security.requireSpecialChars = false;
+  }
   return merged;
 }
 

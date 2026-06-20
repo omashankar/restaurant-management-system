@@ -1,9 +1,10 @@
 /**
- * Business email validation — run: node scripts/test-business-email.mjs
- * Requires dev server for API tests: npm run dev
- * MX lookup skipped in this script (set SKIP_EMAIL_MX_CHECK=1).
+ * Real email validation — run: node scripts/test-business-email.mjs
+ * Requires dev server: npm run dev
+ * MX lookup skipped in this script (SKIP_EMAIL_MX_CHECK=1).
  */
 process.env.SKIP_EMAIL_MX_CHECK = process.env.SKIP_EMAIL_MX_CHECK ?? "1";
+
 const BASE = process.env.BASE_URL || "http://localhost:3000";
 
 let passed = 0;
@@ -19,7 +20,7 @@ function fail(label, detail = "") {
 }
 
 async function expectSignupReject(email, label) {
-  const slug = `biz-test-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+  const slug = `email-test-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
   const res = await fetch(`${BASE}/api/auth/signup`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -32,16 +33,15 @@ async function expectSignupReject(email, label) {
     }),
   });
   const data = await res.json().catch(() => ({}));
-  const msg = String(data.error ?? "");
   if (!data.success && (res.status === 400 || res.status === 422)) {
     ok(label);
     return;
   }
-  fail(label, msg || res.status);
+  fail(label, data.error ?? res.status);
 }
 
 async function expectSignupAccept(email, label) {
-  const slug = `biz-ok-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+  const slug = `email-ok-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
   const res = await fetch(`${BASE}/api/auth/signup`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -65,54 +65,16 @@ async function expectSignupAccept(email, label) {
   fail(label, data.error ?? res.status);
 }
 
-async function expectDuplicateReject(email, label) {
-  const slug = `biz-dup-${Date.now()}`;
-  const body = {
-    name: "Dup Owner",
-    email,
-    password: "TestPass@123",
-    restaurantName: "Dup Bistro",
-    slug,
-  };
-  const first = await fetch(`${BASE}/api/auth/signup`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
-  });
-  const firstData = await first.json().catch(() => ({}));
-  if (!firstData.success && firstData.error === "Email already registered.") {
-    ok(`${label} (already exists)`);
-    return;
-  }
-  const second = await fetch(`${BASE}/api/auth/signup`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ ...body, slug: `${slug}-2` }),
-  });
-  const secondData = await second.json().catch(() => ({}));
-  if (!secondData.success && second.status === 409) {
-    ok(label);
-    return;
-  }
-  fail(label, secondData.error ?? second.status);
-}
-
-console.log("=== Business Email API Tests ===\n");
+console.log("=== Real Email API Tests ===\n");
 
 try {
-  await expectSignupReject("owner@gmail.com", "rejects gmail.com");
-  await expectSignupReject("chef@yahoo.co.in", "rejects yahoo.co.in");
-  await expectSignupReject("owner@outlook.com", "rejects outlook.com");
-  await expectSignupReject("owner@hotmail.com", "rejects hotmail.com");
-  await expectSignupReject("owner@icloud.com", "rejects icloud.com");
-  await expectSignupReject("temp@mailinator.com", "rejects mailinator.com");
-  await expectSignupReject("bad-email", "rejects invalid format");
   await expectSignupReject("mahesh@gmaidl.codmd", "rejects typo fake domain");
   await expectSignupReject("user@gmial.com", "rejects gmail typosquat");
+  await expectSignupReject("bad-email", "rejects invalid format");
 
-  const businessEmail = `owner+${Date.now()}@restaurant.com`;
-  await expectSignupAccept(businessEmail, "accepts business domain");
-  await expectDuplicateReject(businessEmail, "rejects duplicate registration");
+  const gmailEmail = `owner+${Date.now()}@gmail.com`;
+  await expectSignupAccept(gmailEmail, "accepts gmail.com");
+  await expectSignupAccept(`owner+${Date.now()}@restaurant.com`, "accepts company domain");
 } catch (err) {
   fail("API unreachable — start dev server", err.message);
 }

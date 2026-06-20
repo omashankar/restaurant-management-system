@@ -330,9 +330,9 @@ export async function POST(request) {
     }
 
     try {
-      await assertRealEmail(ownerEmail, { business: true });
+      await assertRealEmail(ownerEmail);
     } catch (err) {
-      const res = realEmailErrorResponse(err, { business: true });
+      const res = realEmailErrorResponse(err);
       if (res) return res;
       throw err;
     }
