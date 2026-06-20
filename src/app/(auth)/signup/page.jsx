@@ -13,7 +13,7 @@ import {
 import PasswordInput from "@/components/ui/PasswordInput";
 import PhoneInput from "@/components/ui/PhoneInput";
 import {
-  DEFAULT_SIGNUP_PASSWORD_SECURITY,
+  getPasswordHint,
   getSignupFieldErrors,
 } from "@/lib/formValidation";
 import BhojDeskLogo from "@/components/brand/BhojDeskLogo";
@@ -53,7 +53,7 @@ export default function SignupPage() {
   const [fieldErrors, setFieldErrors] = useState(EMPTY_FIELD_ERRORS);
   const [successMsg, setSuccessMsg] = useState("");
 
-  const passwordHint = `At least ${DEFAULT_SIGNUP_PASSWORD_SECURITY.minPasswordLength} characters, with a number and special character.`;
+  const passwordHint = getPasswordHint();
 
   const handleRestaurantNameChange = (val) => {
     setRestaurantName(val);
@@ -209,7 +209,7 @@ export default function SignupPage() {
 
           <div>
             <label htmlFor="email" className="text-xs font-medium uppercase tracking-wider text-zinc-500">
-              Business email <span className="text-red-400">*</span>
+              Email <span className="text-red-400">*</span>
             </label>
             <input
               id="email"
@@ -220,7 +220,7 @@ export default function SignupPage() {
                 setEmail(e.target.value);
                 clearFieldError("email");
               }}
-              placeholder="you@yourcompany.com"
+              placeholder="you@gmail.com or you@restaurant.com"
               className={authInputCls}
               aria-invalid={fieldErrors.email ? true : undefined}
             />

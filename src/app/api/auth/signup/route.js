@@ -55,9 +55,9 @@ export async function POST(request) {
   const cleanPhone = phone ? extractIndianMobileDigits(phone) : "";
 
   try {
-    await assertRealEmail(cleanEmail, { business: true });
+    await assertRealEmail(cleanEmail);
   } catch (err) {
-    const res = realEmailErrorResponse(err, { business: true });
+    const res = realEmailErrorResponse(err);
     if (res) return res;
     throw err;
   }

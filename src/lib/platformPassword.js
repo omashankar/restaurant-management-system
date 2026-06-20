@@ -1,12 +1,13 @@
 /**
  * Password rules from Super Admin → Security settings.
+ * Default policy is soft (length only). Numbers / special chars are opt-in.
  * @param {string} password
  * @param {object} [security]
  */
 export function validatePlatformPassword(password, security = {}) {
   const minLen = Math.max(
     6,
-    Number(security.minPasswordLength ?? 8) || 8,
+    Math.min(32, Number(security.minPasswordLength ?? 6) || 6),
   );
   const pwd = String(password ?? "");
 
@@ -16,10 +17,10 @@ export function validatePlatformPassword(password, security = {}) {
       error: `Password must be at least ${minLen} characters.`,
     };
   }
-  if (security.requireNumbers !== false && !/\d/.test(pwd)) {
+  if (security.requireNumbers === true && !/\d/.test(pwd)) {
     return { valid: false, error: "Password must include at least one number." };
   }
-  if (security.requireSpecialChars !== false && !/[^A-Za-z0-9]/.test(pwd)) {
+  if (security.requireSpecialChars === true && !/[^A-Za-z0-9]/.test(pwd)) {
     return {
       valid: false,
       error: "Password must include at least one special character.",
