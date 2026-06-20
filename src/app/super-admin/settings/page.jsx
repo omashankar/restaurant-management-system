@@ -628,20 +628,22 @@ function PaymentSection({ data, onChange, onSave, saving, fieldErrors = {}, onCl
             )}
           </div>
 
-          {/* Actions */}
-          <div className="flex flex-col-reverse gap-2 sm:flex-row sm:items-center sm:justify-between">
+          {/* Gateway test — save is at the bottom with Billing & Tax */}
+          <div className="flex justify-start">
             <button type="button" onClick={testConnection}
               disabled={testing || !gw.enabled || isOffline}
               className="inline-flex w-full items-center justify-center gap-2 rounded-xl border admin-shell-border px-4 py-2 text-sm font-medium admin-surface-body transition-colors hover:border-zinc-500 hover:admin-shell-text disabled:cursor-not-allowed disabled:opacity-40 sm:w-auto">
               {testing ? <Loader2 className={saSpinnerCls} /> : <Zap className="size-4" />}
               {testing ? "Testing…" : "Test Connection"}
             </button>
-            <SaveButton saving={saving} onClick={onSave} />
           </div>
 
           {/* GST / Billing settings */}
           <div className="border-t admin-shell-border pt-5">
-            <p className="mb-4 text-xs font-semibold uppercase tracking-wider text-zinc-500">Billing & Tax Settings</p>
+            <div className="mb-4 flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
+              <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500">Billing & Tax Settings</p>
+              <p className="text-xs admin-surface-faint">Saves currency, GST, trial, and payment gateways together.</p>
+            </div>
             <div className="grid gap-4 sm:grid-cols-2">
               <Field label="Default Currency">
                 <select value={data.currency ?? "INR"} onChange={(e) => onChange("currency", e.target.value)}
@@ -705,6 +707,9 @@ function PaymentSection({ data, onChange, onSave, saving, fieldErrors = {}, onCl
                   className={inputCls}
                 />
               </Field>
+            </div>
+            <div className="mt-5 flex flex-col-reverse gap-2 border-t admin-shell-border pt-4 sm:flex-row sm:items-center sm:justify-end">
+              <SaveButton saving={saving} onClick={onSave} />
             </div>
           </div>
         </div>
