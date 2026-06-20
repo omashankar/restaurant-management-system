@@ -205,7 +205,7 @@ export default function RefundManagementSection({ showToast }) {
                           <button type="button"
                             onClick={() => processRefund(r.id, "reject")}
                             disabled={Boolean(processing)}
-                            className="cursor-pointer rounded-lg bg-red-500/15 px-2.5 py-1 text-xs font-semibold text-red-400 transition-colors hover-bg-red-25 disabled:opacity-50"
+                            className="cursor-pointer rounded-lg bg-red-500/15 px-2.5 py-1 text-xs font-semibold text-red-400 transition-colors hover-bg-red-25 disabled:opacity-50">
                             {processing === r.id + "reject" ? "…" : "Reject"}
                           </button>
                         </div>

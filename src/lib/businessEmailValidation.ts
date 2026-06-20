@@ -75,7 +75,7 @@ export function businessEmailFormatError(
 
 /** Zod schema — required business email for owner / restaurant signup. */
 export const businessRequiredEmailSchema = z
-  .string({ required_error: "Email is required." })
+  .string({ message: "Email is required." })
   .trim()
   .toLowerCase()
   .min(1, "Email is required.")
