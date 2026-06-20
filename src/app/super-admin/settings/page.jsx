@@ -81,9 +81,14 @@ function Toggle({ checked, onChange, label, description }) {
   );
 }
 
-function SaveButton({ saving, onClick }) {
+function SaveButton({ saving, onClick, hint }) {
   return (
-    <div className="flex justify-stretch pt-2 sm:justify-end">
+    <div className="flex flex-col gap-3 border-t admin-shell-border pt-4 sm:flex-row sm:items-center sm:justify-between">
+      {hint ? (
+        <p className="text-xs admin-surface-muted">{hint}</p>
+      ) : (
+        <span className="hidden sm:block" aria-hidden="true" />
+      )}
       <button type="button" onClick={onClick} disabled={saving}
         className={`inline-flex w-full cursor-pointer items-center justify-center gap-2 sm:w-auto ${saBtnPrimaryCls} disabled:opacity-50`}>
         {saving ? <span className="size-3.5 animate-spin rounded-full border-2 border-zinc-950/30 border-t-zinc-950" /> : <Save className="size-4" />}
@@ -201,9 +206,7 @@ function AppSection({ data, onChange, onSave, saving, fieldErrors = {}, onClearE
             />
           </Field>
         </div>
-      </div>
-      <SaveButton saving={saving} onClick={onSave} />
-    </div>
+      </div>    </div>
   );
 }
 
@@ -320,8 +323,6 @@ function EmailSection({ data, onChange, onSave, saving, fieldErrors = {}, onClea
           {testing ? "Sending…" : "Send Test"}
         </button>
       </div>
-
-      <SaveButton saving={saving} onClick={onSave} />
     </div>
   );
 }
@@ -351,9 +352,7 @@ function LanguageSection({ data, onChange, onSave, saving }) {
             <option value="24h">24-hour</option>
           </select>
         </Field>
-      </div>
-      <SaveButton saving={saving} onClick={onSave} />
-    </div>
+      </div>    </div>
   );
 }
 
@@ -628,20 +627,22 @@ function PaymentSection({ data, onChange, onSave, saving, fieldErrors = {}, onCl
             )}
           </div>
 
-          {/* Actions */}
-          <div className="flex flex-col-reverse gap-2 sm:flex-row sm:items-center sm:justify-between">
+          {/* Gateway test only — save is at the bottom of the page */}
+          <div className="flex justify-start">
             <button type="button" onClick={testConnection}
               disabled={testing || !gw.enabled || isOffline}
               className="inline-flex w-full items-center justify-center gap-2 rounded-xl border admin-shell-border px-4 py-2 text-sm font-medium admin-surface-body transition-colors hover:border-zinc-500 hover:admin-shell-text disabled:cursor-not-allowed disabled:opacity-40 sm:w-auto">
               {testing ? <Loader2 className={saSpinnerCls} /> : <Zap className="size-4" />}
               {testing ? "Testing…" : "Test Connection"}
             </button>
-            <SaveButton saving={saving} onClick={onSave} />
           </div>
 
           {/* GST / Billing settings */}
           <div className="border-t admin-shell-border pt-5">
-            <p className="mb-4 text-xs font-semibold uppercase tracking-wider text-zinc-500">Billing & Tax Settings</p>
+            <div className="mb-4 flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
+              <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500">Billing & Tax Settings</p>
+              <p className="text-xs admin-surface-faint">Included when you save the Payment tab below.</p>
+            </div>
             <div className="grid gap-4 sm:grid-cols-2">
               <Field label="Default Currency">
                 <select value={data.currency ?? "INR"} onChange={(e) => onChange("currency", e.target.value)}
@@ -819,9 +820,7 @@ function ThemeSection({ data, onChange, onSave, saving, fieldErrors = {}, onClea
         }}
         label="Dark Mode"
         description="Use dark theme across the platform."
-      />
-      <SaveButton saving={saving} onClick={onSave} />
-    </div>
+      />    </div>
   );
 }
 
@@ -875,9 +874,7 @@ function NotificationsSection({ data, onChange, onSave, saving, fieldErrors = {}
             </div>
           </div>
         )}
-      </div>
-      <SaveButton saving={saving} onClick={onSave} />
-    </div>
+      </div>    </div>
   );
 }
 
@@ -919,9 +916,7 @@ function CurrenciesSection({ data, onChange, onSave, saving, fieldErrors = {} })
             );
           })}
         </div>
-      </div>
-      <SaveButton saving={saving} onClick={onSave} />
-    </div>
+      </div>    </div>
   );
 }
 
@@ -991,9 +986,7 @@ function SmsSection({ data, onChange, onSave, saving, fieldErrors = {}, onClearE
             />
           </Field>
         </div>
-      </div>
-      <SaveButton saving={saving} onClick={onSave} />
-    </div>
+      </div>    </div>
   );
 }
 
@@ -1087,8 +1080,6 @@ function SecuritySection({ data, onChange, onSave, saving, fieldErrors = {}, onC
           description="Require TOTP verification on every super admin login."
         />
       </div>
-
-      <SaveButton saving={saving} onClick={onSave} />
     </div>
   );
 }
@@ -1223,8 +1214,6 @@ function BackupSection({ data, onChange, onSave, saving, showToast, fieldErrors 
           </div>
         )}
       </div>
-
-      <SaveButton saving={saving} onClick={onSave} />
     </div>
   );
 }
@@ -1290,8 +1279,6 @@ function IntegrationsSection({ data, onChange, onSave, saving, fieldErrors = {},
           Razorpay and Stripe keys are now managed in the <strong className="admin-surface-body">Payment Settings</strong> tab above.
         </p>
       </div>
-
-      <SaveButton saving={saving} onClick={onSave} />
     </div>
   );
 }
@@ -1395,8 +1382,6 @@ function AdvancedSection({ data, onChange, onSave, saving, showToast }) {
           />
         ))}
       </div>
-
-      <SaveButton saving={saving} onClick={onSave} />
     </div>
   );
 }
@@ -1619,6 +1604,11 @@ export default function SuperAdminSettingsPage() {
   };
 
   const sectionData = settings?.[activeTab] ?? {};
+  const activeTabLabel = TABS.find((t) => t.id === activeTab)?.label ?? "Settings";
+  const saveHint =
+    activeTab === "payment"
+      ? "Saves payment gateways, billing, tax, and trial settings for this tab."
+      : `Saves all changes on the ${activeTabLabel} tab.`;
   const panelValidationProps = {
     fieldErrors: sectionErrors,
     onClearError: clearSectionError,
@@ -1701,6 +1691,7 @@ export default function SuperAdminSettingsPage() {
               {activeTab === "backup"        && <BackupSection        data={sectionData} onChange={handleChange} onSave={handleSave} saving={saving} showToast={showToast} {...panelValidationProps} />}
               {activeTab === "integrations"  && <IntegrationsSection  data={sectionData} onChange={handleChange} onSave={handleSave} saving={saving} {...panelValidationProps} />}
               {activeTab === "advanced"      && <AdvancedSection      data={sectionData} onChange={handleChange} onSave={handleSave} saving={saving} showToast={showToast} />}
+              <SaveButton saving={saving} onClick={handleSave} hint={saveHint} />
             </>
           )}
         </div>
