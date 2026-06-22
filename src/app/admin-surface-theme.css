@@ -521,6 +521,24 @@ html[data-admin-mode="light"]
   appearance: auto;
   color: var(--admin-text);
   background-color: var(--admin-control);
+  color-scheme: dark;
+}
+
+html[data-admin-mode="light"]
+  :is(.restaurant-admin-panel, .super-admin-panel, .admin-portal-scope)
+  .admin-inline-select {
+  color-scheme: light;
+}
+
+/* Native <select> option list — dark admin (Windows/Chrome otherwise shows light popup) */
+html[data-admin-mode="dark"]
+  :is(.restaurant-admin-panel, .super-admin-panel, .admin-portal-scope)
+  select option,
+:root:not([data-admin-mode])
+  :is(.restaurant-admin-panel, .super-admin-panel, .admin-portal-scope)
+  select option {
+  background-color: var(--admin-popover);
+  color: var(--admin-text);
 }
 
 :is(.restaurant-admin-panel, .super-admin-panel, .admin-portal-scope) .admin-surface-input {

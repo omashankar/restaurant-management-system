@@ -57,8 +57,30 @@ export const adminFilterSelectCls =
 export const adminTableSelectCls =
   "admin-inline-select h-8 cursor-pointer rounded-md border admin-shell-border bg-[var(--admin-control)] px-2 text-xs admin-shell-text outline-none";
 
+/** Solid control surface — semi-transparent badge bg breaks native option list on Windows. */
 const TABLE_SELECT_BASE =
-  "admin-inline-select h-8 w-[7.25rem] shrink-0 cursor-pointer rounded-lg px-2 text-center text-xs font-semibold capitalize outline-none ring-1 transition-colors";
+  "admin-inline-select admin-ticket-table-select h-8 w-[7.25rem] shrink-0 cursor-pointer rounded-lg border bg-[var(--admin-control)] px-2 text-center text-xs font-semibold capitalize outline-none transition-colors";
+
+const PRIORITY_SELECT_TONE = {
+  low: "border-zinc-500/45 text-zinc-400",
+  medium: "border-sky-500/45 text-sky-400",
+  high: "border-amber-500/45 text-amber-400",
+  urgent: "border-red-500/45 text-red-400",
+};
+
+const STATUS_SELECT_RA = {
+  open: "border-amber-500/45 text-amber-400",
+  in_progress: "border-sky-500/45 text-sky-400",
+  resolved: "border-ra-primary/50 text-ra-primary",
+  closed: "border-zinc-500/45 text-zinc-400",
+};
+
+const STATUS_SELECT_SA = {
+  open: "border-amber-500/45 text-amber-400",
+  in_progress: "border-sky-500/45 text-sky-400",
+  resolved: "border-sa-accent/50 text-sa-accent",
+  closed: "border-zinc-500/45 text-zinc-400",
+};
 
 export { adminPageDrawerOverlay as supportTicketDrawerOverlayCls } from "@/config/adminSurfaceClasses";
 
@@ -90,13 +112,13 @@ export const SUPPORT_STAT_ITEMS_RA = SUPPORT_STAT_ITEMS.map((item) =>
 
 export function ticketPrioritySelectCls(priority) {
   const key = String(priority ?? "medium").toLowerCase();
-  const tone = PRIORITY_BADGE[key] ?? PRIORITY_BADGE.medium;
+  const tone = PRIORITY_SELECT_TONE[key] ?? PRIORITY_SELECT_TONE.medium;
   return `${TABLE_SELECT_BASE} focus:ring-2 focus:ring-sky-500/25 ${tone}`;
 }
 
 export function ticketStatusSelectCls(status, portal = "super-admin") {
   const key = normalizeTicketStatus(status) || "open";
-  const map = portal === "super-admin" ? STATUS_BADGE_SA : STATUS_BADGE_RA;
+  const map = portal === "super-admin" ? STATUS_SELECT_SA : STATUS_SELECT_RA;
   const tone = map[key] ?? map.open;
   const focusRing =
     portal === "super-admin" ? "focus:ring-sa-accent/25" : "focus:ring-ra-primary/25";
