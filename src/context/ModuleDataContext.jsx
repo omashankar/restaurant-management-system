@@ -87,6 +87,16 @@ async function optionalFetch(url, fetchOpts, enabled) {
 
 async function optionalJson(res) {
   if (!res) return { success: false };
+  const contentType = res.headers.get("content-type") ?? "";
+  if (!contentType.includes("application/json")) {
+    console.warn(
+      "[ModuleDataContext] Expected JSON but got",
+      res.status,
+      contentType || "unknown",
+      res.url
+    );
+    return { success: false };
+  }
   return res.json();
 }
 
@@ -196,7 +206,7 @@ export function ModuleDataProvider({ children }) {
         optionalFetch("/api/menu", fetchOpts, flags.menu),
         optionalFetch("/api/categories", fetchOpts, flags.categories),
         optionalFetch("/api/tables", fetchOpts, flags.tables),
-        optionalFetch("/api/tables/areas", fetchOpts, flags.areas),
+        optionalFetch("/api/table-areas", fetchOpts, flags.areas),
         optionalFetch("/api/customers", fetchOpts, flags.customers),
         optionalFetch("/api/reservations", fetchOpts, flags.reservations),
         optionalFetch("/api/orders", fetchOpts, flags.orders),
@@ -326,7 +336,7 @@ export function ModuleDataProvider({ children }) {
         fetch(menuUrl),
         fetch(categoriesUrl),
         fetch("/api/tables"),
-        fetch("/api/tables/areas"),
+        fetch("/api/table-areas"),
       ]);
       const [menuData, catData, tablesData, areasData] = await Promise.all([
         menuRes.json(),

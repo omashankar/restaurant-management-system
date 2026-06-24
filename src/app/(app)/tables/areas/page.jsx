@@ -57,7 +57,7 @@ export default function TableAreasPage() {
     }
     try {
       const [areasRes, tablesRes] = await Promise.all([
-        fetch("/api/tables/areas"),
+        fetch("/api/table-areas"),
         fetch("/api/tables"),
       ]);
       const [areasData, tablesData] = await Promise.all([areasRes.json(), tablesRes.json()]);
@@ -179,7 +179,7 @@ export default function TableAreasPage() {
         imageUrl = uploadData.imageUrl;
       }
 
-      const url    = editingId ? `/api/tables/areas/${editingId}` : "/api/tables/areas";
+      const url    = editingId ? `/api/table-areas/${editingId}` : "/api/table-areas";
       const method = editingId ? "PATCH" : "POST";
       const payload = { ...form, imageUrl };
       const res    = await fetch(url, { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
@@ -205,7 +205,7 @@ export default function TableAreasPage() {
     if (!deleteTarget) return;
     setDeleting(true);
     try {
-      const res  = await fetch(`/api/tables/areas/${deleteTarget.id}`, { method: "DELETE" });
+      const res  = await fetch(`/api/table-areas/${deleteTarget.id}`, { method: "DELETE" });
       const data = await res.json();
       if (!data.success) { showToast(data.error ?? "Failed to delete.", "error"); return; }
       setAreas((prev) => prev.filter((a) => a.id !== deleteTarget.id));

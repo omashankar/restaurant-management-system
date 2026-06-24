@@ -13,6 +13,7 @@ import Providers from "./providers";
 import PlatformScripts from "@/components/PlatformScripts";
 import PlatformThemeStyles from "@/components/PlatformThemeStyles";
 import AdminThemeBootstrap from "@/components/AdminThemeBootstrap";
+import CustomerThemeBootstrap from "@/components/CustomerThemeBootstrap";
 import LandingPreloadBootstrap from "@/components/landing/LandingPreloadBootstrap";
 import { BHOJDESK_BRAND, BHOJDESK_LOGOS } from "@/config/bhojdeskBrand";
 import { getPublicPlatformConfig } from "@/lib/platformSettings";
@@ -112,6 +113,7 @@ export default function RootLayout({ children }) {
     >
       <head>
         <AdminThemeBootstrap />
+        <CustomerThemeBootstrap />
         <LandingPreloadBootstrap />
         <link rel="preload" href="/branding/bhojdesk/icon.png" as="image" />
       </head>

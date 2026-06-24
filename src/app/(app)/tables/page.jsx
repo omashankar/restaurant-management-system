@@ -55,7 +55,7 @@ export default function TablesModulePage() {
     try {
       const [tablesRes, areasRes] = await Promise.all([
         fetch("/api/tables", { cache: "no-store" }),
-        fetch("/api/tables/areas", { cache: "no-store" }),
+        fetch("/api/table-areas", { cache: "no-store" }),
       ]);
       const [tablesData, areasData] = await Promise.all([tablesRes.json(), areasRes.json()]);
       if (tablesData.success) setTables(tablesData.tables);

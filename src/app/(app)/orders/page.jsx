@@ -259,7 +259,7 @@ function CreateOrderModal({ open, onClose, onCreated, currency = "INR" }) {
     setPaymentStatus("paid");
     Promise.all([
       fetch("/api/tables"),
-      fetch("/api/tables/areas"),
+      fetch("/api/table-areas"),
       fetch("/api/menu?status=active"),
       fetch("/api/settings"),
     ])

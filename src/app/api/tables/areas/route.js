@@ -1,7 +1,7 @@
 import { withTenant } from "@/lib/tenantDb";
 import { ObjectId } from "mongodb";
 
-/* GET /api/tables/areas */
+/* GET /api/table-areas — also re-exported from /api/table-areas/route.js */
 export const GET = withTenant(
   ["admin", "manager", "waiter", "chef"],
   async ({ db, tenantFilter }) => {
@@ -17,7 +17,7 @@ export const GET = withTenant(
   }
 );
 
-/* POST /api/tables/areas */
+/* POST /api/table-areas */
 export const POST = withTenant(
   ["admin"],
   async ({ db, tenantFilter, payload }, request) => {

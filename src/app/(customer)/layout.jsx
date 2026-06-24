@@ -10,7 +10,6 @@ import CustomerToasts from "@/components/customer/CustomerToasts";
 import OrderTypeModal from "@/components/customer/OrderTypeModal";
 import PlatformFeatureGate from "@/components/customer/PlatformFeatureGate";
 import CustomerShellGate from "@/components/customer/CustomerShellGate";
-import CustomerThemeBootstrap from "@/components/CustomerThemeBootstrap";
 import { isCustomerAuthPath } from "@/lib/customerAuthRoutes";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { usePathname } from "next/navigation";
@@ -81,7 +80,6 @@ function CustomerShell({ children }) {
 export default function CustomerLayout({ children }) {
   return (
     <CustomerProvider>
-      <CustomerThemeBootstrap />
       <CustomerThemeProvider>
         <CustomerLocaleProvider>
           <CustomerShell>{children}</CustomerShell>
