@@ -1,6 +1,7 @@
 import { withTenant } from "@/lib/tenantDb";
 import { logInfo } from "@/lib/logger";
 import { buildPaginationMeta, paginationSkip, parseLimitParam, parsePageParam } from "@/lib/pagination";
+import { calculatePosTotals } from "@/lib/posTotals";
 import { sendNewOrderAlertEmail } from "@/lib/emailService";
 import { getRestaurantNotificationPrefs } from "@/lib/restaurantNotificationPrefs";
 import { orderCreateSchema, parseSchema } from "@/lib/validationSchemas";
@@ -18,6 +19,7 @@ async function fetchPosSettings(db, restaurantId) {
     taxPercent:           parseFloat(pos.taxPercentage ?? "0")    || 0,
     serviceChargePercent: parseFloat(pos.serviceCharge  ?? "0")   || 0,
     roundOffTotal:        Boolean(pos.roundOffTotal),
+    enableDiscount:       Boolean(pos.enableDiscount),
   };
 }
 
@@ -82,7 +84,6 @@ export const POST = withTenant(
     }
     const { items, orderType, tableNumber, customer, notes, paymentMethod, paymentStatus } = parsed;
 
-    const subtotal = items.reduce((s, i) => s + (i.price * i.qty), 0);
     const orderId  = `ORD-${Date.now()}`;
 
     // Use client-supplied breakdown if provided (POS sends it); otherwise read
@@ -94,13 +95,33 @@ export const POST = withTenant(
     if (taxPercent === null) taxPercent = posSettings.taxPercent;
     if (serviceChargePercent === null) serviceChargePercent = posSettings.serviceChargePercent;
 
-    const taxAmount      = parseFloat(((subtotal * taxPercent)           / 100).toFixed(2));
-    const scAmount       = parseFloat(((subtotal * serviceChargePercent) / 100).toFixed(2));
-    let total            = parseFloat((subtotal + taxAmount + scAmount).toFixed(2));
-
-    if (posSettings.roundOffTotal) {
-      total = Math.round(total);
+    let discountType = parsed.discountType ?? "none";
+    let discountPercent = parsed.discountPercent ?? 0;
+    let discountFixed = parsed.discountFixed ?? 0;
+    if (!posSettings.enableDiscount) {
+      discountType = "none";
+      discountPercent = 0;
+      discountFixed = 0;
     }
+
+    const totals = calculatePosTotals({
+      items,
+      taxPercent,
+      serviceChargePercent,
+      discountType,
+      discountPercent,
+      discountFixed,
+      roundOffTotal: posSettings.roundOffTotal,
+    });
+
+    const {
+      subtotal,
+      discountAmount,
+      taxableBase,
+      taxAmount,
+      serviceCharge: scAmount,
+      total,
+    } = totals;
 
     const method = paymentMethod ?? "cashCounter";
     const status =
@@ -116,6 +137,11 @@ export const POST = withTenant(
       customer: customer?.trim() || "Walk-in",
       notes: notes?.trim() ?? "",
       subtotal,
+      discountType: totals.discountType,
+      discountPercent: totals.discountPercent,
+      discountFixed: totals.discountFixed,
+      discountAmount,
+      taxableBase,
       taxPercent,
       taxAmount,
       serviceChargePercent,

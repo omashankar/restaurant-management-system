@@ -65,10 +65,11 @@ export function calcOrderTotals({
   const delivery =
     orderType === "delivery" ? Math.max(0, Number(deliveryCharge) || 0) : 0;
   const coupon = Math.max(0, Number(couponDiscount) || 0);
-  const taxableSubtotal = Math.max(0, sub - coupon);
-  const tax = taxableSubtotal * (rate / 100);
   const pts = Math.max(0, Number(pointsDiscount) || 0);
-  const total = Math.max(0, taxableSubtotal + tax + delivery - pts);
+  const taxableSubtotal = Math.max(0, sub - coupon);
+  const afterPoints = Math.max(0, taxableSubtotal - pts);
+  const tax = afterPoints * (rate / 100);
+  const total = Math.max(0, afterPoints + tax + delivery);
   return {
     subtotal: sub,
     tax,
@@ -78,5 +79,6 @@ export function calcOrderTotals({
     total,
     taxRate: rate,
     taxableSubtotal,
+    afterPoints,
   };
 }

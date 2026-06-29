@@ -84,6 +84,10 @@ export function buildInvoiceHtml(order, {
     Number(order.taxAmount) > 0
       ? `<tr><td>${taxLabel}</td><td style="text-align:right">${sym} ${Number(order.taxAmount).toFixed(2)}</td></tr>`
       : "";
+  const discountRow =
+    Number(order.discountAmount) > 0
+      ? `<tr><td>Discount${order.discountPercent > 0 ? ` (${order.discountPercent}%)` : ""}</td><td style="text-align:right">-${sym} ${Number(order.discountAmount).toFixed(2)}</td></tr>`
+      : "";
   const scRow =
     Number(order.serviceCharge) > 0
       ? `<tr><td>${scLabel}</td><td style="text-align:right">${sym} ${Number(order.serviceCharge).toFixed(2)}</td></tr>`
@@ -118,7 +122,7 @@ export function buildInvoiceHtml(order, {
       <div class="divider"></div>
       <table class="totals">
         <tr><td>Subtotal</td><td style="text-align:right">${sym} ${Number(order.subtotal ?? 0).toFixed(2)}</td></tr>
-        ${taxRow}${scRow}
+        ${discountRow}${taxRow}${scRow}
         <tr class="grand"><td>Total</td><td style="text-align:right">${sym} ${Number(order.total ?? 0).toFixed(2)}</td></tr>
       </table>
       <p class="footer">Thank you!</p>

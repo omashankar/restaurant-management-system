@@ -138,10 +138,12 @@ export default function CartPage() {
             <span>Subtotal</span>
             <span className="font-semibold text-customer-text">{formatCustomerMoney(subtotal)}</span>
           </div>
-          <div className="flex justify-between text-customer-muted">
-            <span>Tax ({taxRate}%)</span>
-            <span className="font-semibold text-customer-text">{formatCustomerMoney(tax)}</span>
-          </div>
+          {taxRate > 0 && (
+            <div className="flex justify-between text-customer-muted">
+              <span>Tax ({Number.isInteger(taxRate) ? taxRate : taxRate.toFixed(2)}%)</span>
+              <span className="font-semibold text-customer-text">{formatCustomerMoney(tax)}</span>
+            </div>
+          )}
           {delivery > 0 && (
             <div className="flex justify-between text-customer-muted">
               <span>Delivery</span>

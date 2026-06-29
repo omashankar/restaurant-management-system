@@ -1,19 +1,19 @@
 "use client";
 
-import { adminShell, adminSurface } from "@/config/adminSurfaceClasses";
+import { adminShell } from "@/config/adminSurfaceClasses";
 import { raTextareaCls } from "@/config/restaurantAdminTheme";
-import { adminControl } from "@/config/adminDesignSystem";
 import CartItem from "@/components/pos/CartItem";
-import CustomerSearch from "@/components/pos/CustomerSearch";
+import PosCustomerModal from "@/components/pos/PosCustomerModal";
+import PosDeliveryModal from "@/components/pos/PosDeliveryModal";
+import PosDiscountModal from "@/components/pos/PosDiscountModal";
 import PosOrderTypeBar from "@/components/pos/PosOrderTypeBar";
 import PosPaymentSection from "@/components/pos/PosPaymentSection";
-import PosTableSelectField, { PosSetupHint } from "@/components/pos/PosTableSelectField";
+import PosSetupRow from "@/components/pos/PosSetupRow";
+import { PosSetupHint } from "@/components/pos/PosTableSelectField";
 import TablePickerModal from "@/components/pos/TablePickerModal";
 import { useModuleData } from "@/context/ModuleDataContext";
 import { formatAdminMoney } from "@/lib/adminCurrency";
-import EmptyState from "@/components/ui/EmptyState";
-import { CreditCard, Trash2 } from "lucide-react";
-import PhoneInput from "@/components/ui/PhoneInput";
+import { CreditCard, LayoutGrid, MapPin, ShoppingBag, Tag, Trash2, UserRound } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 /**
@@ -29,6 +29,14 @@ export default function OrderSummary({
   taxPercent = 0,
   serviceCharge = 0,
   serviceChargePercent = 0,
+  discountAmount = 0,
+  discountPercent = 0,
+  discountMode = "percent",
+  discountValue = "",
+  enableDiscount = false,
+  onDiscountModeChange,
+  onDiscountValueChange,
+  onClearDiscount,
   total,
   currency = "INR",
   canPlaceOrder,
@@ -61,7 +69,33 @@ export default function OrderSummary({
 }) {
   const { floorTables, tableCategories } = useModuleData();
   const [pickerOpen, setPickerOpen] = useState(false);
+  const [discountOpen, setDiscountOpen] = useState(false);
+  const [customerOpen, setCustomerOpen] = useState(false);
+  const [deliveryOpen, setDeliveryOpen] = useState(false);
   const prevOrderType = useRef(orderType);
+
+  const cartQty = useMemo(() => cart.reduce((s, l) => s + l.qty, 0), [cart]);
+
+  const deliverySummary = useMemo(() => {
+    const parts = [delivery.name?.trim(), delivery.phone?.trim()].filter(Boolean);
+    return parts.length ? parts.join(" · ") : null;
+  }, [delivery]);
+
+  const deliverySecondary = useMemo(() => {
+    const address = delivery.address?.trim();
+    if (address) return address;
+    const hasName = Boolean(delivery.name?.trim());
+    const hasPhone = Boolean(delivery.phone?.trim());
+    if (hasName && hasPhone) return "Add delivery address";
+    if (hasName || hasPhone) return "Complete name, phone & address";
+    return "Name, phone & address required";
+  }, [delivery]);
+
+  const deliveryComplete = Boolean(
+    delivery.name?.trim() && delivery.phone?.trim() && delivery.address?.trim()
+  );
+
+  const showFooterSetupHints = section === "checkout";
 
   const openTablePicker = () => setPickerOpen(true);
 
@@ -113,7 +147,7 @@ export default function OrderSummary({
       ? "flex min-h-0 flex-col"
       : layout === "embedded"
         ? "flex min-h-0 flex-col"
-        : "flex max-h-full min-h-0 flex-col overflow-y-auto overscroll-contain admin-surface-card shadow-lg shadow-black/20 [scrollbar-width:thin] xl:max-h-[calc(100dvh-5.25rem)]";
+        : "flex min-h-0 max-h-[calc(100dvh-5.25rem)] flex-col overflow-hidden admin-surface-card shadow-lg shadow-black/20";
 
   const handlePlaceOrder = () => {
     onPlaceOrder?.();
@@ -124,135 +158,100 @@ export default function OrderSummary({
       <aside className={shellClass}>
         {showSetup ? (
           <div
-            className={`shrink-0 ${
-              layout === "sidebar"
-                ? `max-h-[min(28vh,240px)] overflow-y-auto overscroll-contain border-b ${adminShell.borderB}`
-                : ""
+            className={`shrink-0 space-y-2.5 p-3 ${
+              layout !== "embedded" ? `border-b ${adminShell.borderB}` : "pt-2"
             }`}
           >
-        {showSetup && !hideOrderTypes && (
-          <div className={`border-b ${adminShell.borderB} p-2 sm:p-3 xl:p-3`}>
-            <PosOrderTypeBar
-              orderType={orderType}
-              onOrderTypeChange={onOrderTypeChange}
-              onTableSelect={onTableSelect}
-              onClearFieldError={onClearFieldError}
-              className="border-0 bg-transparent p-0"
-            />
-          </div>
-        )}
-
-        {showSetup && orderType === "dine-in" && (
-          <div className={`border-b ${adminShell.borderB} p-3`}>
-            <PosTableSelectField
-              selectedTable={selectedTable}
-              areaName={selectedCat?.name}
-              fieldError={fieldErrors.table}
-              onOpenPicker={openTablePicker}
-              onClear={() => {
-                onTableSelect("");
-                onClearFieldError?.("table");
-              }}
-            />
-          </div>
-        )}
-
-        {showSetup && orderType === "delivery" && (
-          <div className={`space-y-2 border-b ${adminShell.borderB} p-3`}>
-            <p className="text-[10px] font-semibold uppercase tracking-wider admin-surface-muted">Delivery details</p>
-            <div>
-              <input
-                value={delivery.name}
-                onChange={(e) => {
-                  onDeliveryChange("name", e.target.value);
-                  onClearFieldError?.("deliveryName");
-                }}
-                placeholder="Name *"
-                aria-invalid={fieldErrors.deliveryName ? true : undefined}
-                className={`${adminControl.input} w-full px-3 py-2 text-xs focus-ra-primary`}
+            {showSetup && !hideOrderTypes && (
+              <PosOrderTypeBar
+                orderType={orderType}
+                onOrderTypeChange={onOrderTypeChange}
+                onTableSelect={onTableSelect}
+                onClearFieldError={onClearFieldError}
+                className="border-0 bg-transparent p-0"
               />
-              {fieldErrors.deliveryName && <p className="mt-1 text-[10px] text-red-400">{fieldErrors.deliveryName}</p>}
-            </div>
-            <PhoneInput
-              id="pos-delivery-phone"
-              value={delivery.phone}
-              size="sm"
-              onChange={(digits) => {
-                onDeliveryChange("phone", digits);
-                onClearFieldError?.("deliveryPhone");
-              }}
-              error={fieldErrors.deliveryPhone || undefined}
-            />
-            <div>
-              <input
-                value={delivery.address}
-                onChange={(e) => {
-                  onDeliveryChange("address", e.target.value);
-                  onClearFieldError?.("deliveryAddress");
-                }}
-                placeholder="Full delivery address *"
-                maxLength={300}
-                aria-invalid={fieldErrors.deliveryAddress ? true : undefined}
-                className={`${adminControl.input} w-full px-3 py-2 text-xs focus-ra-primary`}
-              />
-              {fieldErrors.deliveryAddress && (
-                <p className="mt-1 text-[10px] text-red-400">{fieldErrors.deliveryAddress}</p>
+            )}
+
+            {layout !== "embedded" ? (
+              <p className="px-0.5 text-[10px] font-semibold uppercase tracking-wider admin-surface-muted">
+                Order details
+              </p>
+            ) : null}
+
+            <div className="divide-y divide-[var(--admin-border-subtle)] rounded-xl border admin-shell-border bg-[var(--admin-surface-soft)] px-3">
+              {orderType === "dine-in" && (
+                <PosSetupRow
+                  label="Table"
+                  icon={LayoutGrid}
+                  primary={selectedTable ? `Table ${selectedTable.tableNumber}` : null}
+                  secondary={
+                    selectedTable
+                      ? [selectedCat?.name, selectedTable.capacity ? `${selectedTable.capacity} seats` : null]
+                          .filter(Boolean)
+                          .join(" · ")
+                      : "Choose area & table"
+                  }
+                  actionLabel={selectedTable ? "Change" : "Select"}
+                  onAction={openTablePicker}
+                  onClear={
+                    selectedTable
+                      ? () => {
+                          onTableSelect("");
+                          onClearFieldError?.("table");
+                        }
+                      : undefined
+                  }
+                  error={fieldErrors.table}
+                />
+              )}
+
+              {orderType === "delivery" && (
+                <PosSetupRow
+                  label="Delivery"
+                  icon={MapPin}
+                  primary={deliverySummary}
+                  secondary={deliverySecondary}
+                  actionLabel={deliveryComplete ? "Edit" : "Add details"}
+                  onAction={() => setDeliveryOpen(true)}
+                  error={
+                    fieldErrors.deliveryName ||
+                    fieldErrors.deliveryPhone ||
+                    fieldErrors.deliveryAddress ||
+                    undefined
+                  }
+                />
+              )}
+
+              {(orderType === "takeaway" || (orderType === "dine-in" && selectedTableId)) && (
+                <PosSetupRow
+                  label="Customer"
+                  icon={UserRound}
+                  primary={selectedCustomer?.name ?? null}
+                  secondary={
+                    selectedCustomer
+                      ? [selectedCustomer.phone, selectedCustomer.email].filter(Boolean).join(" · ")
+                      : "Required before placing order"
+                  }
+                  actionLabel={selectedCustomer ? "Change" : "Add"}
+                  onAction={() => setCustomerOpen(true)}
+                  error={fieldErrors.customer}
+                />
               )}
             </div>
-          </div>
-        )}
-
-        {showSetup && orderType !== "delivery" && (
-          <div className="admin-surface-divider-b p-3">
-            <div className="mb-1.5 flex items-center justify-between gap-2">
-              <p className="text-[10px] font-semibold uppercase tracking-wider admin-surface-muted">Customer</p>
-            </div>
-
-            {orderType === "dine-in" && !selectedTableId ? (
-              <PosSetupHint
-                message="Select a table before adding a customer."
-                actionLabel="Select table"
-                onAction={openTablePicker}
-              />
-            ) : (
-              <>
-                <CustomerSearch
-                  onCustomerSelect={(c) => {
-                    onCustomerSelect?.(c);
-                    onClearFieldError?.("customer");
-                  }}
-                />
-                {fieldErrors.customer && (
-                  <p className="mt-1.5 text-[10px] text-red-400">{fieldErrors.customer}</p>
-                )}
-              </>
-            )}
-          </div>
-        )}
           </div>
         ) : null}
 
         {showCheckout && (
-          <div
-            className={`flex flex-col ${
-              section === "checkout" || section === "all" || layout === "drawer" ? "min-h-0 flex-1" : ""
-            } ${layout === "sidebar" ? "" : "min-h-0 overflow-hidden"}`}
-          >
-            <div
-              className={
-                layout === "sidebar"
-                  ? "shrink-0"
-                  : "min-h-[10rem] flex-1 overflow-y-auto overscroll-contain"
-              }
-            >
-              <div className="shrink-0 px-4 pt-3 pb-2">
+          <div className="flex min-h-0 flex-1 flex-col">
+            <div className="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain [scrollbar-width:thin]">
+              <div className="shrink-0 border-b admin-shell-border px-3 py-2.5">
                 <div className="flex items-center justify-between gap-2">
                   <div>
                     <h2 className="text-sm font-semibold admin-shell-text">Order summary</h2>
                     <p className="text-[11px] admin-surface-muted">
                       {cart.length === 0
                         ? "No items yet"
-                        : `${cart.length} dish${cart.length === 1 ? "" : "es"} · ${cart.reduce((s, l) => s + l.qty, 0)} pcs`}
+                        : `${cart.length} dish${cart.length === 1 ? "" : "es"} · ${cartQty} pcs`}
                     </p>
                   </div>
                   {cart.length > 0 ? (
@@ -263,9 +262,15 @@ export default function OrderSummary({
                 </div>
               </div>
 
-              <div className="px-3 pb-3">
+              <div className="flex-1 px-3 py-3">
                 {cart.length === 0 ? (
-                  <EmptyState title="Cart is empty" description="Tap menu items to add them." />
+                  <div className="flex flex-col items-center justify-center rounded-xl border border-dashed admin-shell-border px-4 py-8 text-center">
+                    <ShoppingBag className="size-8 admin-surface-faint" strokeWidth={1.5} aria-hidden />
+                    <p className="mt-2.5 text-sm font-medium admin-surface-muted">Cart is empty</p>
+                    <p className="mt-1 max-w-[14rem] text-[11px] leading-relaxed admin-surface-faint">
+                      Add items from the menu
+                    </p>
+                  </div>
                 ) : (
                   <ul>
                     {cart.map((line, index) => (
@@ -287,72 +292,125 @@ export default function OrderSummary({
               </div>
             </div>
 
-            <div className="sticky bottom-0 z-10 shrink-0 space-y-3 border-t border-[var(--admin-border-subtle)] bg-[var(--admin-surface)] p-3 shadow-[0_-8px_24px_-12px_rgba(0,0,0,0.45)]">
-              {cart.length > 0 && (
-                <div>
-                  <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wider admin-surface-muted">
-                    Order note <span className="normal-case font-normal text-zinc-700">(optional)</span>
-                  </label>
-                  <textarea
-                    rows={2}
-                    value={note}
-                    onChange={(e) => onNoteChange?.(e.target.value)}
-                    placeholder="Allergies, special requests…"
-                    className={`${raTextareaCls} text-xs`}
+            <div className="shrink-0 space-y-2.5 border-t border-[var(--admin-border-subtle)] bg-[var(--admin-surface)] p-3">
+              {cart.length > 0 ? (
+                <>
+                  <div>
+                    <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wider admin-surface-muted">
+                      Order note{" "}
+                      <span className="normal-case font-normal admin-surface-faint">(optional)</span>
+                    </label>
+                    <textarea
+                      rows={2}
+                      value={note}
+                      onChange={(e) => onNoteChange?.(e.target.value)}
+                      placeholder="Allergies, special requests…"
+                      className={`${raTextareaCls} text-xs`}
+                    />
+                  </div>
+
+                  {enableDiscount && (
+                    <button
+                      type="button"
+                      onClick={() => setDiscountOpen(true)}
+                      className="cursor-pointer flex w-full items-center justify-between gap-2 rounded-xl border admin-shell-border bg-[var(--admin-surface-soft)] px-3 py-2 text-left transition-colors hover:border-emerald-500/30"
+                    >
+                      <span className="inline-flex min-w-0 items-center gap-2 text-[11px] admin-surface-muted">
+                        <Tag className="size-3.5 shrink-0 text-emerald-400" aria-hidden />
+                        {discountAmount > 0 ? (
+                          <span className="truncate font-semibold text-emerald-400">
+                            Discount −{formatAdminMoney(discountAmount, currency, { decimals: 2 })}
+                            {discountMode === "percent" && discountPercent > 0 ? ` (${discountPercent}%)` : ""}
+                          </span>
+                        ) : (
+                          "Add discount"
+                        )}
+                      </span>
+                      <span className="shrink-0 text-[11px] font-semibold text-ra-primary">
+                        {discountAmount > 0 ? "Edit" : "Add"}
+                      </span>
+                    </button>
+                  )}
+
+                  <div className="space-y-1 rounded-xl border admin-shell-border bg-[var(--admin-surface-soft)] px-3 py-2.5 text-xs">
+                    <div className="flex justify-between admin-surface-muted">
+                      <span>Subtotal</span>
+                      <span className="tabular-nums admin-shell-text">
+                        {formatAdminMoney(subtotal, currency, { decimals: 2 })}
+                      </span>
+                    </div>
+                    {discountAmount > 0 && (
+                      <div className="flex justify-between text-emerald-400/90">
+                        <span>
+                          Discount
+                          {discountMode === "percent" && discountPercent > 0 ? ` (${discountPercent}%)` : ""}
+                        </span>
+                        <span className="tabular-nums">
+                          −{formatAdminMoney(discountAmount, currency, { decimals: 2 })}
+                        </span>
+                      </div>
+                    )}
+                    {taxAmount > 0 && (
+                      <div className="flex justify-between admin-surface-muted">
+                        <span>Tax {taxPercent > 0 ? `(${taxPercent}%)` : ""}</span>
+                        <span className="tabular-nums admin-shell-text">
+                          {formatAdminMoney(taxAmount, currency, { decimals: 2 })}
+                        </span>
+                      </div>
+                    )}
+                    {serviceCharge > 0 && (
+                      <div className="flex justify-between admin-surface-muted">
+                        <span>Service {serviceChargePercent > 0 ? `(${serviceChargePercent}%)` : ""}</span>
+                        <span className="tabular-nums admin-shell-text">
+                          {formatAdminMoney(serviceCharge, currency, { decimals: 2 })}
+                        </span>
+                      </div>
+                    )}
+                    <div className="flex justify-between border-t border-[var(--admin-border-subtle)] pt-1.5 text-sm font-semibold admin-shell-text">
+                      <span>Total</span>
+                      <span className="tabular-nums">{formatAdminMoney(total, currency, { decimals: 2 })}</span>
+                    </div>
+                  </div>
+
+                  {showFooterSetupHints && orderType === "dine-in" && !selectedTableId && (
+                    <PosSetupHint
+                      message="Select a table to place this dine-in order."
+                      actionLabel="Select table"
+                      onAction={openTablePicker}
+                    />
+                  )}
+                  {showFooterSetupHints && orderType === "dine-in" && selectedTableId && !selectedCustomer && (
+                    <PosSetupHint
+                      message="Add a customer before placing the order."
+                      actionLabel="Add customer"
+                      onAction={() => setCustomerOpen(true)}
+                    />
+                  )}
+                  {showFooterSetupHints && orderType === "takeaway" && !selectedCustomer && (
+                    <PosSetupHint
+                      message="Add a customer before placing the order."
+                      actionLabel="Add customer"
+                      onAction={() => setCustomerOpen(true)}
+                    />
+                  )}
+                  {showFooterSetupHints && orderType === "delivery" && !deliveryComplete && (
+                    <PosSetupHint
+                      message="Complete delivery details before placing the order."
+                      actionLabel="Add details"
+                      onAction={() => setDeliveryOpen(true)}
+                    />
+                  )}
+
+                  <PosPaymentSection
+                    orderType={orderType}
+                    paymentMethod={paymentMethod}
+                    paymentStatus={paymentStatus}
+                    onPaymentMethodChange={onPaymentMethodChange}
+                    onPaymentStatusChange={onPaymentStatusChange}
                   />
-                </div>
-              )}
-
-              <div className="space-y-1 text-xs">
-                <div className="flex justify-between admin-surface-muted">
-                  <span>Subtotal</span>
-                  <span className="tabular-nums admin-shell-text">{formatAdminMoney(subtotal, currency, { decimals: 2 })}</span>
-                </div>
-                {taxAmount > 0 && (
-                  <div className="flex justify-between admin-surface-muted">
-                    <span>Tax {taxPercent > 0 ? `(${taxPercent}%)` : ""}</span>
-                    <span className="tabular-nums admin-shell-text">{formatAdminMoney(taxAmount, currency, { decimals: 2 })}</span>
-                  </div>
-                )}
-                {serviceCharge > 0 && (
-                  <div className="flex justify-between admin-surface-muted">
-                    <span>Service {serviceChargePercent > 0 ? `(${serviceChargePercent}%)` : ""}</span>
-                    <span className="tabular-nums admin-shell-text">{formatAdminMoney(serviceCharge, currency, { decimals: 2 })}</span>
-                  </div>
-                )}
-                <div className="flex justify-between admin-surface-divider-t pt-1.5 text-sm font-semibold admin-shell-text">
-                  <span>Total</span>
-                  <span className="tabular-nums">{formatAdminMoney(total, currency, { decimals: 2 })}</span>
-                </div>
-              </div>
-
-              {orderType === "dine-in" && !selectedTableId && cart.length > 0 && (
-                <PosSetupHint
-                  message="Select a table to place this dine-in order."
-                  actionLabel="Select table"
-                  onAction={openTablePicker}
-                />
-              )}
-              {orderType === "dine-in" && selectedTableId && !selectedCustomer && cart.length > 0 && (
-                <PosSetupHint message="Add a customer in order details above." />
-              )}
-              {orderType === "takeaway" && !selectedCustomer && cart.length > 0 && (
-                <PosSetupHint message="Add a customer in order details above." />
-              )}
-              {orderType === "delivery" &&
-                cart.length > 0 &&
-                !(delivery.name?.trim() && delivery.phone?.trim() && delivery.address?.trim()) && (
-                  <PosSetupHint message="Complete delivery details above." />
-                )}
-
-              {cart.length > 0 && (
-                <PosPaymentSection
-                  orderType={orderType}
-                  paymentMethod={paymentMethod}
-                  paymentStatus={paymentStatus}
-                  onPaymentMethodChange={onPaymentMethodChange}
-                  onPaymentStatusChange={onPaymentStatusChange}
-                />
+                </>
+              ) : (
+                <p className="text-center text-[11px] admin-surface-faint">Add menu items to see totals</p>
               )}
 
               <button
@@ -395,6 +453,38 @@ export default function OrderSummary({
           onClearFieldError?.("table");
         }}
         onClose={() => setPickerOpen(false)}
+      />
+
+      <PosDiscountModal
+        open={discountOpen}
+        onClose={() => setDiscountOpen(false)}
+        enabled={enableDiscount}
+        mode={discountMode}
+        value={discountValue}
+        discountAmount={discountAmount}
+        currency={currency}
+        onModeChange={onDiscountModeChange}
+        onValueChange={onDiscountValueChange}
+        onClear={() => {
+          onClearDiscount?.();
+        }}
+      />
+
+      <PosCustomerModal
+        open={customerOpen}
+        onClose={() => setCustomerOpen(false)}
+        selectedCustomer={selectedCustomer}
+        onCustomerSelect={onCustomerSelect}
+        onClearFieldError={onClearFieldError}
+      />
+
+      <PosDeliveryModal
+        open={deliveryOpen}
+        onClose={() => setDeliveryOpen(false)}
+        delivery={delivery}
+        onDeliveryChange={onDeliveryChange}
+        onClearFieldError={onClearFieldError}
+        fieldErrors={fieldErrors}
       />
     </>
   );

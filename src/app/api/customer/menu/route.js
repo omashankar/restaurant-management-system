@@ -1,4 +1,5 @@
 import clientPromise from "@/lib/mongodb";
+import { normalizeMenuSizes } from "@/lib/menuItemSizes";
 import { getRestaurantIdFromRequest } from "@/lib/restaurantResolver";
 
 export async function GET(request) {
@@ -38,11 +39,16 @@ export async function GET(request) {
 
     return Response.json({
       success: true,
-      items: items.map((item) => ({
-        ...item,
-        id: item._id.toString(),
-        _id: undefined,
-      })),
+      items: items.map((item) => {
+        const sizes = normalizeMenuSizes(item.sizes);
+        return {
+          ...item,
+          id: item._id.toString(),
+          _id: undefined,
+          sizeOptionType: item.sizeOptionType ?? (sizes.length ? "custom" : "none"),
+          sizes,
+        };
+      }),
     });
   } catch {
     return Response.json(

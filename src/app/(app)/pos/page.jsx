@@ -1,6 +1,7 @@
 "use client";
 
 import MenuCard from "@/components/menu/MenuCard";
+import MenuItemSizePickerModal from "@/components/menu/MenuItemSizePickerModal";
 import OrderSummary from "@/components/pos/OrderSummary";
 import PosCheckoutDrawer from "@/components/pos/PosCheckoutDrawer";
 import PosMenuFilters from "@/components/pos/PosMenuFilters";
@@ -19,6 +20,13 @@ import {
 } from "@/lib/formValidation";
 import { resolveCustomerByPhone } from "@/lib/posCustomer";
 import { getPosPaymentDefaults, resolvePosPaymentStatus } from "@/lib/posPayment";
+import {
+  buildSimpleCartLine,
+  buildSizedCartLine,
+  itemHasSizes,
+} from "@/lib/menuItemSizes";
+import { formatAdminMoney } from "@/lib/adminCurrency";
+import { calculatePosTotals, resolvePosDiscountInput } from "@/lib/posTotals";
 import { useCallback, useEffect, useMemo, useRef, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 
@@ -59,6 +67,7 @@ function PosPageContent() {
   const [cart, setCart] = useState([]);
   const [successOpen, setSuccessOpen] = useState(false);
   const [lastAddedId, setLastAddedId] = useState("");
+  const [sizePickerItem, setSizePickerItem] = useState(null);
   const [selectedCustomer, setSelectedCustomer] = useState(null);
   const [lastOrder, setLastOrder] = useState(null); // for print invoice
 
@@ -76,6 +85,9 @@ function PosPageContent() {
   const [taxPercent, setTaxPercent]                     = useState(0);
   const [serviceChargePercent, setServiceChargePercent] = useState(0);
   const [roundOffTotal, setRoundOffTotal]               = useState(false);
+  const [enableDiscount, setEnableDiscount]             = useState(false);
+  const [discountMode, setDiscountMode]                 = useState("percent");
+  const [discountValue, setDiscountValue]               = useState("");
   const [currency, setCurrency]                         = useState("INR");
   const [restaurantName, setRestaurantName]             = useState("Restaurant");
   const [printers, setPrinters]                         = useState([]);
@@ -91,6 +103,7 @@ function PosPageContent() {
           setTaxPercent(parseFloat(d.settings?.pos?.taxPercentage ?? "0")    || 0);
           setServiceChargePercent(parseFloat(d.settings?.pos?.serviceCharge ?? "0") || 0);
           setRoundOffTotal(Boolean(d.settings?.pos?.roundOffTotal));
+          setEnableDiscount(Boolean(d.settings?.pos?.enableDiscount));
           setCurrency(d.settings?.general?.currency ?? "INR");
           setRestaurantName(d.settings?.general?.restaurantName?.trim() || "Restaurant");
         }
@@ -112,14 +125,38 @@ function PosPageContent() {
     search, setSearch,
   } = useMenuFilter(activeMenuItems);
 
-  const subtotal      = useMemo(() => cart.reduce((s, l) => s + l.price * l.qty, 0), [cart]);
-  const taxAmount     = parseFloat(((subtotal * taxPercent)           / 100).toFixed(2));
-  const serviceCharge = parseFloat(((subtotal * serviceChargePercent) / 100).toFixed(2));
-  const total         = useMemo(() => {
-    let value = parseFloat((subtotal + taxAmount + serviceCharge).toFixed(2));
-    if (roundOffTotal) value = Math.round(value);
-    return value;
-  }, [subtotal, taxAmount, serviceCharge, roundOffTotal]);
+  const subtotal = useMemo(() => cart.reduce((s, l) => s + l.price * l.qty, 0), [cart]);
+
+  const discountInput = useMemo(
+    () => resolvePosDiscountInput(enableDiscount, discountMode, discountValue),
+    [enableDiscount, discountMode, discountValue]
+  );
+
+  const totals = useMemo(
+    () =>
+      calculatePosTotals({
+        subtotal,
+        taxPercent,
+        serviceChargePercent,
+        discountType: discountInput.discountType,
+        discountPercent: discountInput.discountPercent,
+        discountFixed: discountInput.discountFixed,
+        roundOffTotal,
+      }),
+    [subtotal, taxPercent, serviceChargePercent, discountInput, roundOffTotal]
+  );
+
+  const {
+    discountAmount,
+    taxAmount,
+    serviceCharge,
+    total,
+  } = totals;
+
+  const clearCart = useCallback(() => {
+    setCart([]);
+    setDiscountValue("");
+  }, []);
 
   const [fieldErrors, setFieldErrors] = useState(EMPTY_POS_ORDER_ERRORS);
   const [isPlacing, setIsPlacing] = useState(false);
@@ -156,15 +193,15 @@ function PosPageContent() {
     }
   }, [orderType, selectedTableId]);
 
-  const addItem = (item) => {
+  const addItem = (line) => {
     setCart((prev) => {
-      const idx = prev.findIndex((l) => l.id === item.id);
-      if (idx === -1) return [...prev, { ...item, qty: 1, note: "" }];
+      const idx = prev.findIndex((l) => l.id === line.id);
+      if (idx === -1) return [...prev, { ...line, qty: 1, note: "" }];
       const next = [...prev];
       next[idx] = { ...next[idx], qty: next[idx].qty + 1 };
       return next;
     });
-    setLastAddedId(item.id);
+    setLastAddedId(line.id);
     setTimeout(() => setLastAddedId(""), 300);
 
     const setup = getPosOrderFieldErrors({
@@ -186,6 +223,14 @@ function PosPageContent() {
         document.getElementById("pos-setup")?.scrollIntoView({ behavior: "smooth", block: "start" });
       }, 80);
     }
+  };
+
+  const handlePosMenuAdd = (item) => {
+    if (itemHasSizes(item)) {
+      setSizePickerItem(item);
+      return;
+    }
+    addItem(buildSimpleCartLine(item));
   };
 
   const incrementQty = (id) => setCart((p) => p.map((l) => l.id === id ? { ...l, qty: l.qty + 1 } : l));
@@ -290,7 +335,7 @@ function PosPageContent() {
             name: l.name,
             qty: l.qty,
             price: l.price,
-            menuItemId: l.id,
+            menuItemId: l.menuItemId ?? l.id,
             note: l.note?.trim() || undefined,
           })),
           orderType,
@@ -302,6 +347,9 @@ function PosPageContent() {
           taxPercent,
           serviceCharge,
           serviceChargePercent,
+          discountType: discountInput.discountType,
+          discountPercent: discountInput.discountPercent,
+          discountFixed: discountInput.discountFixed,
           paymentMethod,
           paymentStatus,
         }),
@@ -314,6 +362,15 @@ function PosPageContent() {
       }
 
       const orderId = data.order?.orderId ?? `ORD-POS-${Date.now()}`;
+      const saved = data.order ?? {};
+      const finalSubtotal = saved.subtotal ?? subtotal;
+      const finalDiscountAmount = saved.discountAmount ?? discountAmount;
+      const finalDiscountPercent = saved.discountPercent ?? totals.discountPercent;
+      const finalTaxAmount = saved.taxAmount ?? taxAmount;
+      const finalTaxPercent = saved.taxPercent ?? taxPercent;
+      const finalServiceCharge = saved.serviceCharge ?? serviceCharge;
+      const finalServiceChargePercent = saved.serviceChargePercent ?? serviceChargePercent;
+      const finalTotal = saved.total ?? total;
 
       // Sync into shared in-memory context so Orders/Kitchen pages update live
       const newOrder = {
@@ -327,8 +384,15 @@ function PosPageContent() {
         table:     tableNumber ?? "—",
         tableNumber: tableNumber ?? null,
         address:   orderType === "delivery" ? delivery.address : "",
-        total,
-        amount:    total,
+        total:     finalTotal,
+        amount:    finalTotal,
+        subtotal:  finalSubtotal,
+        discountAmount: finalDiscountAmount,
+        discountPercent: finalDiscountPercent,
+        taxAmount: finalTaxAmount,
+        taxPercent: finalTaxPercent,
+        serviceCharge: finalServiceCharge,
+        serviceChargePercent: finalServiceChargePercent,
         status:    "new",
         payment:   { method: paymentMethod, status: paymentStatus },
         items:     cart.map((l) => ({
@@ -367,7 +431,7 @@ function PosPageContent() {
         const itemsSummary = cart.map((l) => `${l.name} ×${l.qty}`).join(", ");
         const nextVisits = (activeCustomer.visits ?? 0) + 1;
         const nextHistory = [
-          { id: orderId, date: visitDate, total, items: itemsSummary },
+          { id: orderId, date: visitDate, total: finalTotal, items: itemsSummary },
           ...(activeCustomer.orderHistory ?? []),
         ].slice(0, 50);
         setCustomerRows((prev) =>
@@ -409,12 +473,14 @@ function PosPageContent() {
         customer: customerName,
         phone: selectedCustomer?.phone ?? delivery.phone ?? "",
         items: cart.map((l) => ({ name: l.name, qty: l.qty, price: l.price })),
-        subtotal,
-        taxAmount,
-        taxPercent,
-        serviceCharge,
-        serviceChargePercent,
-        total,
+        subtotal: finalSubtotal,
+        discountAmount: finalDiscountAmount,
+        discountPercent: finalDiscountPercent,
+        taxAmount: finalTaxAmount,
+        taxPercent: finalTaxPercent,
+        serviceCharge: finalServiceCharge,
+        serviceChargePercent: finalServiceChargePercent,
+        total: finalTotal,
         currency,
       });
 
@@ -428,18 +494,21 @@ function PosPageContent() {
           tableNumber,
           customer: customerName,
           items: cart.map((l) => ({ name: l.name, qty: l.qty, price: l.price })),
-          subtotal,
-          taxAmount,
-          taxPercent,
-          serviceCharge,
-          serviceChargePercent,
-          total,
+          subtotal: finalSubtotal,
+          discountAmount: finalDiscountAmount,
+          discountPercent: finalDiscountPercent,
+          taxAmount: finalTaxAmount,
+          taxPercent: finalTaxPercent,
+          serviceCharge: finalServiceCharge,
+          serviceChargePercent: finalServiceChargePercent,
+          total: finalTotal,
           currency,
         },
         kitchenRouting: map,
       });
 
       setCart([]);
+      setDiscountValue("");
       setNote("");
       setSelectedTableId("");
       setDelivery({ name: "", phone: "", address: "" });
@@ -454,7 +523,7 @@ function PosPageContent() {
       setIsPlacing(false);
     }
   }, [canPlaceOrder, isPlacing, cart, orderType, selectedTableId, selectedCustomer, delivery, total, subtotal,
-      taxAmount, taxPercent, serviceCharge, serviceChargePercent, currency, note, paymentMethod, paymentStatus,
+      discountAmount, discountInput, totals, taxAmount, taxPercent, serviceCharge, serviceChargePercent, currency, note, paymentMethod, paymentStatus,
       customerRows, floorTables, setOrderRows, setKitchenQueue, setCustomerRows, setFloorTables, printers, restaurantName, openSetup]);
 
   useEffect(() => {
@@ -467,12 +536,12 @@ function PosPageContent() {
         e.preventDefault();
         document.querySelector("[data-pos-menu-search]")?.focus();
       }
-      if (e.key === "Escape") setCart([]);
+      if (e.key === "Escape") clearCart();
       if (e.ctrlKey && e.key === "Enter") { e.preventDefault(); placeOrder(); }
     };
     window.addEventListener("keydown", h);
     return () => window.removeEventListener("keydown", h);
-  }, [placeOrder, handleOrderTypeChange]);
+  }, [placeOrder, handleOrderTypeChange, clearCart]);
 
   const setupSummary = useMemo(() => {
     if (orderType === "dine-in") {
@@ -498,11 +567,19 @@ function PosPageContent() {
     taxPercent,
     serviceCharge,
     serviceChargePercent,
+    discountAmount,
+    discountPercent: totals.discountPercent,
+    discountMode,
+    discountValue,
+    enableDiscount,
+    onDiscountModeChange: setDiscountMode,
+    onDiscountValueChange: setDiscountValue,
+    onClearDiscount: () => setDiscountValue(""),
     total,
     currency,
     canPlaceOrder: canPlaceOrder && !isPlacing,
     onPlaceOrder: placeOrder,
-    onClearCart: () => setCart([]),
+    onClearCart: clearCart,
     onInc: incrementQty,
     onDec: decrementQty,
     onRemove: removeLine,
@@ -536,7 +613,7 @@ function PosPageContent() {
           total={total}
           currency={currency}
           setupReady={setupReady}
-          onClearCart={() => setCart([])}
+          onClearCart={clearCart}
         />
 
         <PosFlowSteps setupReady={setupReady} cartItemCount={cartItemCount} />
@@ -587,8 +664,8 @@ function PosPageContent() {
                 variant="pos"
                 item={item}
                 currency={currency}
-                onAdd={addItem}
-                isPopping={lastAddedId === item.id}
+                onAdd={handlePosMenuAdd}
+                isPopping={lastAddedId === item.id || lastAddedId.startsWith(`${item.id}::`)}
               />
             ))}
             {filteredItems.length === 0 && (
@@ -637,6 +714,18 @@ function PosPageContent() {
         <OrderSummary {...orderSummaryProps} section="checkout" layout="drawer" />
       </PosCheckoutDrawer>
 
+      <MenuItemSizePickerModal
+        open={Boolean(sizePickerItem)}
+        item={sizePickerItem}
+        onClose={() => setSizePickerItem(null)}
+        onSelect={(size) => {
+          if (!sizePickerItem) return;
+          addItem(buildSizedCartLine(sizePickerItem, size));
+        }}
+        formatMoney={(amount) => formatAdminMoney(amount, currency, { decimals: 2 })}
+        tone="admin"
+      />
+
       {/* ── Success modal ── */}
       <Modal
         open={successOpen}
@@ -652,6 +741,8 @@ function PosPageContent() {
                 customer={lastOrder.customer}
                 items={lastOrder.items}
                 subtotal={lastOrder.subtotal}
+                discountAmount={lastOrder.discountAmount}
+                discountPercent={lastOrder.discountPercent}
                 taxAmount={lastOrder.taxAmount}
                 taxPercent={lastOrder.taxPercent}
                 serviceCharge={lastOrder.serviceCharge}

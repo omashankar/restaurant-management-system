@@ -1,4 +1,7 @@
 import { isOnlinePaymentConfigured } from "@/lib/paymentGateway";
+import { resolveCheckoutTaxPercent } from "@/lib/checkoutTax";
+
+export { resolveCheckoutTaxPercent } from "@/lib/checkoutTax";
 
 /**
  * Option C — Auto-detect payment methods from gateway config.
@@ -40,15 +43,6 @@ export function buildAutoPaymentMethods(onlineOk, storedMethods = {}) {
   };
 }
 
-/** Billing → Tax GST % wins over POS tax when set. */
-export function resolveCheckoutTaxPercent(settingsDoc, paymentSettingsDoc) {
-  const taxPercentage = Number(
-    paymentSettingsDoc?.tax?.gstPercentage ??
-      settingsDoc?.pos?.taxPercentage ??
-      8,
-  );
-  return Number.isFinite(taxPercentage) ? Math.max(0, taxPercentage) : 8;
-}
 
 export function resolveCheckoutServiceCharge(settingsDoc) {
   const serviceCharge = Number(settingsDoc?.pos?.serviceCharge ?? 0);

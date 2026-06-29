@@ -7,6 +7,7 @@ import { useRestaurantInfo } from "@/hooks/useRestaurantInfo";
 import { getActiveBanners, useRestaurantCms } from "@/hooks/useRestaurantCms";
 import CategoryBrowseSection from "@/components/customer/CategoryBrowseSection";
 import MenuItemCard from "@/components/customer/MenuItemCard";
+import MenuItemSizePickerModal from "@/components/menu/MenuItemSizePickerModal";
 import { CustomerSectionHeader } from "@/components/customer/CustomerSection";
 import SafeDishImage from "@/components/customer/SafeDishImage";
 import {
@@ -19,6 +20,12 @@ import {
   customerType,
 } from "@/lib/customerTheme";
 import { formatCustomerMoney } from "@/lib/customerCurrency";
+import {
+  buildSimpleCartLine,
+  buildSizedCartLine,
+  getMenuItemCartState,
+  itemHasSizes,
+} from "@/lib/menuItemSizes";
 import { DEFAULT_HERO_IMAGE, DEFAULT_PROMO_SLIDE_IMAGE, DEFAULTS } from "@/lib/restaurantCmsDefaults";
 import { mergeCmsSection, pickSectionHeaders } from "@/lib/customerCmsMerge";
 import { normalizeLogoSrc } from "@/lib/logoUrl";
@@ -225,6 +232,23 @@ export default function CustomerHomePage() {
   const { content: cms } = useRestaurantCms();
   const homeCms = mergeCmsSection(DEFAULTS.home, cms.home);
   const router = useRouter();
+  const [sizePickerItem, setSizePickerItem] = useState(null);
+
+  const handleHomeAdd = useCallback(
+    (item) => {
+      if (itemHasSizes(item)) {
+        setSizePickerItem(item);
+        return;
+      }
+      tryAddToCart(buildSimpleCartLine(item));
+    },
+    [tryAddToCart]
+  );
+
+  const getInCart = useCallback(
+    (itemId) => getMenuItemCartState(cart.lines, itemId),
+    [cart.lines]
+  );
 
   const orderTypes = homeCms.orderTypes?.length ? homeCms.orderTypes : [];
   const steps = homeCms.steps?.length ? homeCms.steps : [];
@@ -310,6 +334,7 @@ export default function CustomerHomePage() {
   }, [activeMenuItems, previewCategory]);
 
   return (
+    <>
     <div className="pb-16">
 
       {cms.announcement?.enabled && cms.announcement?.text?.trim() && (
@@ -671,8 +696,8 @@ export default function CustomerHomePage() {
                   <MenuItemCard
                     key={item.id}
                     item={item}
-                    inCart={cart.lines.find((l) => l.id === item.id)}
-                    onAdd={tryAddToCart}
+                    inCart={getInCart(item.id)}
+                    onAdd={handleHomeAdd}
                     detailHref={link(`/order/menu/${item.id}`)}
                     motionProps={{ variants: fadeUp }}
                   />
@@ -722,8 +747,8 @@ export default function CustomerHomePage() {
                   <MenuItemCard
                     key={item.id}
                     item={item}
-                    inCart={cart.lines.find((l) => l.id === item.id)}
-                    onAdd={tryAddToCart}
+                    inCart={getInCart(item.id)}
+                    onAdd={handleHomeAdd}
                     detailHref={link(`/order/menu/${item.id}`)}
                   />
                 ))}
@@ -874,5 +899,18 @@ export default function CustomerHomePage() {
       </section>
 
     </div>
+
+      <MenuItemSizePickerModal
+        open={Boolean(sizePickerItem)}
+        item={sizePickerItem}
+        onClose={() => setSizePickerItem(null)}
+        onSelect={(size) => {
+          if (!sizePickerItem) return;
+          tryAddToCart(buildSizedCartLine(sizePickerItem, size));
+        }}
+        formatMoney={formatCustomerMoney}
+        tone="customer"
+      />
+    </>
   );
 }

@@ -349,6 +349,9 @@ export const orderCreateSchema = z
     serviceCharge: z.number().nonnegative().optional(),
     taxPercent: z.number().nonnegative().optional(),
     serviceChargePercent: z.number().nonnegative().optional(),
+    discountType: z.enum(["none", "percent", "fixed"]).optional(),
+    discountPercent: z.number().min(0).max(100).optional(),
+    discountFixed: z.number().nonnegative().optional(),
     paymentMethod: z
       .enum(["cod", "cashCounter", "upi", "card", "netBanking", "wallet", "payLater", "bankTransfer"])
       .optional(),

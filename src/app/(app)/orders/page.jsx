@@ -169,12 +169,20 @@ function OrderCard({ order, currency, onStatusChange, onMarkPaid, canEdit }) {
               ))}
             </div>
           )}
-          {(order.subtotal != null || order.taxAmount > 0 || order.serviceCharge > 0) && (
+          {(order.subtotal != null || order.discountAmount > 0 || order.taxAmount > 0 || order.serviceCharge > 0) && (
             <div className="space-y-0.5 admin-surface-divider-t pt-2 text-[11px] admin-surface-faint">
               {order.subtotal != null && (
                 <div className="flex justify-between">
                   <span>Subtotal</span>
                   <span>{formatAdminMoney(order.subtotal, currency)}</span>
+                </div>
+              )}
+              {order.discountAmount > 0 && (
+                <div className="flex justify-between text-emerald-400/90">
+                  <span>
+                    Discount{order.discountPercent > 0 ? ` (${order.discountPercent}%)` : ""}
+                  </span>
+                  <span>−{formatAdminMoney(order.discountAmount, currency)}</span>
                 </div>
               )}
               {order.taxAmount > 0 && (

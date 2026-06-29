@@ -1,4 +1,5 @@
 import { deleteUploadedImage, deleteUploadedImageIfReplaced } from "@/lib/uploadImage";
+import { serializeMenuItemSizes } from "@/lib/menuItemSizes";
 import { withTenant } from "@/lib/tenantDb";
 import { ObjectId } from "mongodb";
 
@@ -37,7 +38,7 @@ export async function PATCH(request, { params }) {
 
       const existing = await db.collection("menuItems").findOne(
         { ...tenantFilter, _id },
-        { projection: { categoryId: 1, image: 1 } }
+        { projection: { categoryId: 1, image: 1, sizeOptionType: 1, sizes: 1 } }
       );
       if (!existing) {
         return Response.json({ success: false, error: "Item not found." }, { status: 404 });
@@ -62,6 +63,14 @@ export async function PATCH(request, { params }) {
         update.image = nextImage;
       }
       if ("badge" in body)    update.badge         = body.badge?.trim() || null;
+      if ("sizeOptionType" in body || "sizes" in body) {
+        const sizeFields = serializeMenuItemSizes(
+          body.sizeOptionType ?? existing.sizeOptionType,
+          "sizes" in body ? body.sizes : existing.sizes
+        );
+        update.sizeOptionType = sizeFields.sizeOptionType;
+        update.sizes = sizeFields.sizes;
+      }
       update.updatedAt = new Date();
 
       const result = await db.collection("menuItems").updateOne(

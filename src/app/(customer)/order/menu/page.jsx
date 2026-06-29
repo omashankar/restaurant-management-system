@@ -2,6 +2,7 @@
 
 import MenuFiltersBar from "@/components/customer/MenuFiltersBar";
 import MenuItemCard from "@/components/customer/MenuItemCard";
+import MenuItemSizePickerModal from "@/components/menu/MenuItemSizePickerModal";
 import { useCustomer } from "@/context/CustomerContext";
 import { useModuleData } from "@/context/ModuleDataContext";
 import { useRestaurantSlug } from "@/hooks/useRestaurantSlug";
@@ -9,6 +10,13 @@ import { useRestaurantCms } from "@/hooks/useRestaurantCms";
 import { mergeCmsSection } from "@/lib/customerCmsMerge";
 import { DEFAULTS } from "@/lib/restaurantCmsDefaults";
 import { formatCustomerMoney } from "@/lib/customerCurrency";
+import {
+  buildSimpleCartLine,
+  buildSizedCartLine,
+  getMenuItemCartState,
+  getMenuItemDisplayPrice,
+  itemHasSizes,
+} from "@/lib/menuItemSizes";
 import { orderTypeChipClass } from "@/lib/customerOrderTypeStyles";
 import { customerClasses, customerInteractive, customerPage, customerType } from "@/lib/customerTheme";
 import { motion, AnimatePresence } from "framer-motion";
@@ -45,6 +53,7 @@ function CustomerMenuPageContent() {
   const [fastOnly, setFastOnly]           = useState(false);
   const [sortBy, setSortBy]               = useState("default");
   const [isLoaded, setIsLoaded]           = useState(false);
+  const [sizePickerItem, setSizePickerItem] = useState(null);
 
   useEffect(() => {
     const tableParam = searchParams.get("table");
@@ -109,14 +118,29 @@ function CustomerMenuPageContent() {
       if (q && !`${item.name} ${item.categoryName}`.toLowerCase().includes(q)) return false;
       return true;
     });
-    if (sortBy === "price-asc") return [...list].sort((a, b) => Number(a.price) - Number(b.price));
-    if (sortBy === "price-desc") return [...list].sort((a, b) => Number(b.price) - Number(a.price));
+    if (sortBy === "price-asc") {
+      return [...list].sort((a, b) => getMenuItemDisplayPrice(a) - getMenuItemDisplayPrice(b));
+    }
+    if (sortBy === "price-desc") {
+      return [...list].sort((a, b) => getMenuItemDisplayPrice(b) - getMenuItemDisplayPrice(a));
+    }
     if (sortBy === "name") return [...list].sort((a, b) => String(a.name).localeCompare(String(b.name)));
     if (sortBy === "fast") return [...list].sort((a, b) => Number(a.prepTime ?? 99) - Number(b.prepTime ?? 99));
     return list;
   }, [activeItems, search, activeCategory, activeType, fastOnly, sortBy]);
 
-  const handleAdd = (item) => tryAddToCart(item);
+  const handleAdd = (item) => {
+    if (itemHasSizes(item)) {
+      setSizePickerItem(item);
+      return;
+    }
+    tryAddToCart(buildSimpleCartLine(item));
+  };
+
+  const isItemInCart = useCallback(
+    (itemId) => getMenuItemCartState(cart.lines, itemId),
+    [cart.lines]
+  );
 
   const clearAllFilters = useCallback(() => {
     setSearch("");
@@ -308,7 +332,7 @@ function CustomerMenuPageContent() {
               <MenuItemCard
                 key={item.id}
                 item={item}
-                inCart={cart.lines.find((l) => l.id === item.id)}
+                inCart={isItemInCart(item.id)}
                 addLabel={L.addToCartLabel?.trim() || "Add to Cart"}
                 inCartLabel={L.inCartLabel?.trim() || "In Cart"}
                 onAdd={handleAdd}
@@ -338,6 +362,18 @@ function CustomerMenuPageContent() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      <MenuItemSizePickerModal
+        open={Boolean(sizePickerItem)}
+        item={sizePickerItem}
+        onClose={() => setSizePickerItem(null)}
+        onSelect={(size) => {
+          if (!sizePickerItem) return;
+          tryAddToCart(buildSizedCartLine(sizePickerItem, size));
+        }}
+        formatMoney={formatCustomerMoney}
+        tone="customer"
+      />
     </div>
   );
 }

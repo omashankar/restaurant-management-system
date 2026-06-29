@@ -35,6 +35,9 @@ export function useCart(storageScope = "default") {
         ...prev,
         {
           id: item.id,
+          menuItemId: item.menuItemId ?? String(item.id),
+          menuItemSizeId: item.menuItemSizeId ?? null,
+          menuItemSizeLabel: item.menuItemSizeLabel ?? null,
           name: item.name,
           price: item.price,
           image: item.image ?? null,

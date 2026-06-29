@@ -3,6 +3,7 @@
 import { raIconBadgeCls, raInputCls, raSpinnerCls, raTextareaCls, raPageRefreshBtnCls, raPagePrimaryBtnCls } from "@/config/restaurantAdminTheme";
 import MenuCard from "@/components/menu/MenuCard";
 import MenuItemImageField from "@/components/menu/MenuItemImageField";
+import MenuItemSizesField from "@/components/menu/MenuItemSizesField";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import EmptyState from "@/components/ui/EmptyState";
 import Modal from "@/components/ui/Modal";
@@ -31,11 +32,42 @@ import {
   EMPTY_MENU_ITEM_ERRORS,
   getMenuItemFieldErrors,
 } from "@/lib/formValidation";
+import { normalizeMenuSizes, priceFieldHint, priceFieldLabel } from "@/lib/menuItemSizes";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 const ITEM_TYPES    = ["veg", "non-veg", "egg", "drink", "halal", "other"];
 const KITCHEN_TYPES = ["default_kitchen", "veg_kitchen", "non_veg_kitchen"];
-const emptyForm = { name: "", categoryId: "", price: "", description: "", status: "active", imageUrl: "", itemType: "veg", prepTime: "", kitchenType: "default_kitchen", badge: "" };
+
+function FormSection({ step, title, description, children }) {
+  return (
+    <section className="rounded-2xl border admin-shell-border bg-[var(--admin-surface-soft)] p-4">
+      <div className="mb-4 border-b admin-shell-border pb-3">
+        <p className="text-[10px] font-bold uppercase tracking-wider text-ra-primary">
+          Step {step}
+        </p>
+        <h3 className="mt-0.5 text-sm font-semibold admin-shell-text">{title}</h3>
+        {description ? (
+          <p className="mt-1 text-[11px] leading-relaxed admin-surface-muted">{description}</p>
+        ) : null}
+      </div>
+      <div className="grid gap-4 sm:grid-cols-2">{children}</div>
+    </section>
+  );
+}
+const emptyForm = {
+  name: "",
+  categoryId: "",
+  price: "",
+  description: "",
+  status: "active",
+  imageUrl: "",
+  itemType: "veg",
+  prepTime: "",
+  kitchenType: "default_kitchen",
+  badge: "",
+  sizeOptionType: "none",
+  sizes: [],
+};
 
 function GridSkeleton() {
   return (
@@ -175,6 +207,11 @@ export default function MenuItemsPage() {
     inactive: items.filter((m) => m.status === "inactive").length,
   }), [items]);
 
+  const selectedCategoryName = useMemo(
+    () => categories.find((c) => c.id === form.categoryId)?.name ?? "",
+    [categories, form.categoryId]
+  );
+
   /* ── Modal helpers ── */
   const openCreate = () => {
     setEditingId(null);
@@ -193,6 +230,11 @@ export default function MenuItemsPage() {
       prepTime: row.prepTime != null ? String(row.prepTime) : "",
       kitchenType: row.kitchenType ?? "default_kitchen",
       badge: row.badge ?? "",
+      sizeOptionType: row.sizeOptionType ?? (normalizeMenuSizes(row.sizes).length ? "custom" : "none"),
+      sizes: normalizeMenuSizes(row.sizes).map((s) => ({
+        ...s,
+        price: String(s.price),
+      })),
     });
     setFormError("");
     setFieldErrors(EMPTY_MENU_ITEM_ERRORS);
@@ -204,6 +246,10 @@ export default function MenuItemsPage() {
     setFieldErrors(validation.errors);
     if (!validation.valid) return;
     const price = parseFloat(form.price);
+    if (form.sizeOptionType !== "none" && !normalizeMenuSizes(form.sizes).length) {
+      setFormError("Add at least one size option with label and price, or choose Single price.");
+      return;
+    }
     setSaving(true); setFormError("");
 
     const cat = categories.find((c) => c.id === form.categoryId);
@@ -219,6 +265,8 @@ export default function MenuItemsPage() {
       kitchenType: form.kitchenType,
       image: form.imageUrl.trim() || null,
       badge: form.badge.trim() || null,
+      sizeOptionType: form.sizeOptionType,
+      sizes: form.sizes,
     };
 
     try {
@@ -536,9 +584,14 @@ export default function MenuItemsPage() {
         }>
         <div className="min-w-0 space-y-4">
           {formError && <p className="rounded-xl border border-red-500/20 bg-red-500/10 px-3 py-2 text-xs text-red-400">{formError}</p>}
-          <div className="grid gap-4 sm:grid-cols-2">
+
+          <FormSection
+            step={1}
+            title="Basic details"
+            description="Name and category — pick category first so we can suggest the right pricing style."
+          >
             <div className="sm:col-span-2">
-              <label className="text-xs font-medium admin-surface-muted">Item Name *</label>
+              <label className="text-xs font-medium admin-surface-muted">Item name *</label>
               <input
                 value={form.name}
                 onChange={(e) => {
@@ -553,7 +606,7 @@ export default function MenuItemsPage() {
               />
               {fieldErrors.name && <p className="mt-1 text-xs text-red-400">{fieldErrors.name}</p>}
             </div>
-            <div>
+            <div className="sm:col-span-2">
               <label className="text-xs font-medium admin-surface-muted">Category *</label>
               <select
                 value={form.categoryId}
@@ -566,15 +619,30 @@ export default function MenuItemsPage() {
                   fieldErrors.categoryId ? "border-red-500/50" : ""
                 }`}
               >
-                <option value="">— Select —</option>
+                <option value="">— Select category —</option>
                 {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
               </select>
               {fieldErrors.categoryId && (
                 <p className="mt-1 text-xs text-red-400">{fieldErrors.categoryId}</p>
               )}
             </div>
-            <div>
-              <label className="text-xs font-medium admin-surface-muted">Price *</label>
+            <div className="sm:col-span-2">
+              <label className="text-xs font-medium admin-surface-muted">Description (optional)</label>
+              <textarea rows={2} value={form.description} onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
+                placeholder="Short description for menu & customer app…"
+                className={`mt-1 ${raTextareaCls}`} />
+            </div>
+          </FormSection>
+
+          <FormSection
+            step={2}
+            title="Price & how it’s sold"
+            description="Set the main price, then choose whether customers pick a size or pay one fixed amount."
+          >
+            <div className="sm:col-span-2">
+              <label className="text-xs font-medium admin-surface-muted">
+                {priceFieldLabel(form.sizeOptionType)}
+              </label>
               <input
                 type="number"
                 inputMode="decimal"
@@ -587,14 +655,36 @@ export default function MenuItemsPage() {
                 }}
                 placeholder="0.00"
                 aria-invalid={fieldErrors.price ? true : undefined}
-                className={`mt-1 ${raInputCls} ${
+                className={`mt-1 max-w-xs ${raInputCls} ${
                   fieldErrors.price ? "border-red-500/50" : ""
                 }`}
               />
+              <p className="mt-1 text-[11px] admin-surface-faint">
+                {priceFieldHint(form.sizeOptionType)}
+              </p>
               {fieldErrors.price && <p className="mt-1 text-xs text-red-400">{fieldErrors.price}</p>}
             </div>
+            <div className="sm:col-span-2">
+              <MenuItemSizesField
+                sizeOptionType={form.sizeOptionType}
+                sizes={form.sizes}
+                basePrice={form.price}
+                categoryName={selectedCategoryName}
+                disabled={saving}
+                onChange={({ sizeOptionType, sizes }) =>
+                  setForm((f) => ({ ...f, sizeOptionType, sizes }))
+                }
+              />
+            </div>
+          </FormSection>
+
+          <FormSection
+            step={3}
+            title="Kitchen & availability"
+            description="Where it’s prepared and whether it appears on the menu."
+          >
             <div>
-              <label className="text-xs font-medium admin-surface-muted">Item Type</label>
+              <label className="text-xs font-medium admin-surface-muted">Item type</label>
               <select value={form.itemType}
                 onChange={(e) => setForm((f) => ({ ...f, itemType: e.target.value, kitchenType: DEFAULT_KITCHEN_FOR_TYPE[e.target.value] ?? "default_kitchen" }))}
                 className={`cursor-pointer mt-1 ${raInputCls}`}>
@@ -605,7 +695,7 @@ export default function MenuItemsPage() {
               </select>
             </div>
             <div>
-              <label className="text-xs font-medium admin-surface-muted">Prep Time (min)</label>
+              <label className="text-xs font-medium admin-surface-muted">Prep time (minutes)</label>
               <input type="number" inputMode="numeric" min="0" max="120" value={form.prepTime}
                 onChange={(e) => setForm((f) => ({ ...f, prepTime: e.target.value }))}
                 placeholder="e.g. 10"
@@ -622,21 +712,22 @@ export default function MenuItemsPage() {
               <label className="text-xs font-medium admin-surface-muted">Status</label>
               <select value={form.status} onChange={(e) => setForm((f) => ({ ...f, status: e.target.value }))}
                 className={`cursor-pointer mt-1 ${raInputCls}`}>
-                <option value="active">Active</option>
-                <option value="inactive">Inactive</option>
+                <option value="active">Active — visible on menu</option>
+                <option value="inactive">Inactive — hidden</option>
               </select>
             </div>
+          </FormSection>
+
+          <FormSection
+            step={4}
+            title="Optional extras"
+            description="Badge and photo for customer-facing screens."
+          >
             <div className="sm:col-span-2">
-              <label className="text-xs font-medium admin-surface-muted">Featured badge (optional)</label>
+              <label className="text-xs font-medium admin-surface-muted">Featured badge</label>
               <input value={form.badge} onChange={(e) => setForm((f) => ({ ...f, badge: e.target.value }))}
                 placeholder="e.g. Chef's Pick — shows on customer home"
                 className={`mt-1 ${raInputCls}`} />
-            </div>
-            <div className="sm:col-span-2">
-              <label className="text-xs font-medium admin-surface-muted">Description</label>
-              <textarea rows={2} value={form.description} onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
-                placeholder="Short description…"
-                className={`mt-1 ${raTextareaCls}`} />
             </div>
             <div className="sm:col-span-2">
               <MenuItemImageField
@@ -646,7 +737,7 @@ export default function MenuItemsPage() {
                 error={fieldErrors.imageUrl}
               />
             </div>
-          </div>
+          </FormSection>
         </div>
       </Modal>
 

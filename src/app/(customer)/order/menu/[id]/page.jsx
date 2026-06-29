@@ -5,6 +5,7 @@ import SafeDishImage from "@/components/customer/SafeDishImage";
 import { useCustomer } from "@/context/CustomerContext";
 import { useRestaurantSlug } from "@/hooks/useRestaurantSlug";
 import { formatCustomerMoney } from "@/lib/customerCurrency";
+import { buildDetailCartLine } from "@/lib/menuItemSizes";
 import { customerClasses, customerPage, customerType } from "@/lib/customerTheme";
 import { motion } from "framer-motion";
 import { ArrowLeft, Heart, Loader2, Minus, Plus } from "lucide-react";
@@ -92,18 +93,13 @@ export default function MenuItemDetailPage() {
 
   const addToCart = () => {
     if (!item || item.soldOut) return;
-    const nameParts = [item.name];
-    if (selectedSize?.label) nameParts.push(`(${selectedSize.label})`);
-    if (selectedAddOns.length) nameParts.push(`+ ${selectedAddOns.map((a) => a.name).join(", ")}`);
-    tryAddToCart({
-      id: `${item.id}-${selectedSize?.id ?? "base"}-${selectedAddOns.map((a) => a.id).join("-")}`,
-      name: nameParts.join(" "),
-      price: unitPrice,
-      image: item.image,
-      itemType: item.itemType,
-      prepTime: item.prepTime,
-      qty,
-    });
+    tryAddToCart(
+      buildDetailCartLine(item, {
+        selectedSize,
+        selectedAddOns,
+        qty,
+      })
+    );
   };
 
   if (loading) {

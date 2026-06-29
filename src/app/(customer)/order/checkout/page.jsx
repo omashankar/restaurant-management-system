@@ -716,7 +716,12 @@ export default function CheckoutPage() {
                 </button>
               </div>
               <div className="flex justify-between text-customer-muted"><span>Subtotal</span><span className="font-semibold text-customer-text">{formatCustomerMoney(subtotal)}</span></div>
-              <div className="flex justify-between text-customer-muted"><span>Tax ({taxRate.toFixed(2)}%)</span><span className="font-semibold text-customer-text">{formatCustomerMoney(tax)}</span></div>
+              {taxRate > 0 && (
+                <div className="flex justify-between text-customer-muted">
+                  <span>Tax ({taxRate.toFixed(2)}%)</span>
+                  <span className="font-semibold text-customer-text">{formatCustomerMoney(tax)}</span>
+                </div>
+              )}
               {orderType === "delivery" && <div className="flex justify-between text-customer-muted"><span>Delivery</span><span className="font-semibold text-customer-text">{formatCustomerMoney(deliveryCharge)}</span></div>}
               {appliedCoupon && <div className={`flex justify-between ${customerClasses.textSuccess}`}><span>Coupon ({appliedCoupon.code})</span><span>- {formatCustomerMoney(couponDiscount)}</span></div>}
               {pointsDiscount > 0 && <div className={`flex justify-between ${customerClasses.textSuccess}`}><span>Points redeemed</span><span>- {formatCustomerMoney(pointsDiscount)}</span></div>}

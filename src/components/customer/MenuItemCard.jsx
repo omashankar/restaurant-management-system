@@ -3,6 +3,7 @@
 import FoodTypeIndicator from "@/components/customer/FoodTypeIndicator";
 import SafeDishImage from "@/components/customer/SafeDishImage";
 import { formatCustomerMoney } from "@/lib/customerCurrency";
+import { formatMenuPriceRange, itemHasSizes } from "@/lib/menuItemSizes";
 import { customerClasses, customerMotion, customerOverlay } from "@/lib/customerTheme";
 import { motion } from "framer-motion";
 import Link from "next/link";
@@ -25,6 +26,9 @@ export default function MenuItemCard({
   const isFast = (item.prepTime ?? 99) < 10;
   const stock = item.stock != null ? Number(item.stock) : null;
   const soldOut = item.status !== "active" || stock === 0;
+  const cartQty =
+    inCart && typeof inCart === "object" ? Math.max(0, Number(inCart.qty) || 0) : inCart ? 1 : 0;
+  const showInCart = cartQty > 0;
 
   const media = (
       <div className={`ct-menu-card__media ct-media-zoom ${soldOut ? "opacity-60" : ""}`}>
@@ -53,7 +57,7 @@ export default function MenuItemCard({
           <span className={`absolute bottom-2.5 right-2.5 z-[1] rounded-full px-2.5 py-1 text-[10px] font-bold ${customerClasses.alertError}`}>Sold out</span>
         ) : (
           <span className={`absolute bottom-2.5 right-2.5 z-[1] px-2.5 py-1 text-sm ${customerOverlay.pricePill}`}>
-            {formatCustomerMoney(item.price)}
+            {formatMenuPriceRange(item, formatCustomerMoney)}
           </span>
         )}
       </div>
@@ -95,13 +99,13 @@ export default function MenuItemCard({
           disabled={soldOut}
           onClick={() => onAdd(item)}
           className={`ct-menu-card__btn inline-flex cursor-pointer items-center justify-center gap-2 rounded-full py-2.5 text-sm font-bold transition-all disabled:cursor-not-allowed disabled:opacity-50 ${
-            inCart
+            showInCart
               ? "border-2 border-customer-primary bg-[var(--customer-card)] text-customer-primary"
               : customerClasses.btnPrimary
           }`}
         >
           <Plus className="size-4 shrink-0" />
-          {soldOut ? "Unavailable" : inCart ? `${inCartLabel} (${inCart.qty})` : addLabel}
+          {soldOut ? "Unavailable" : showInCart ? `${inCartLabel} (${cartQty})` : addLabel}
         </button>
       </div>
     </motion.article>

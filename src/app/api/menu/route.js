@@ -1,4 +1,5 @@
 import { withTenant } from "@/lib/tenantDb";
+import { serializeMenuItemSizes } from "@/lib/menuItemSizes";
 import { ObjectId } from "mongodb";
 
 export const GET = withTenant(
@@ -33,11 +34,13 @@ export const POST = withTenant(
   async ({ db, tenantFilter, payload }, request) => {
     const body = await request.json();
     const { name, price, categoryId, categoryName, description, status,
-            itemType, prepTime, kitchenType, image, badge } = body;
+            itemType, prepTime, kitchenType, image, badge, sizeOptionType, sizes } = body;
 
     if (!name?.trim() || price == null || !categoryId) {
       return Response.json({ success: false, error: "name, price and categoryId are required." }, { status: 400 });
     }
+
+    const sizeFields = serializeMenuItemSizes(sizeOptionType, sizes);
 
     const doc = {
       ...tenantFilter,
@@ -52,6 +55,8 @@ export const POST = withTenant(
       kitchenType: kitchenType ?? "default_kitchen",
       image: image ?? null,
       badge: badge?.trim() || null,
+      sizeOptionType: sizeFields.sizeOptionType,
+      sizes: sizeFields.sizes,
       createdBy: new ObjectId(payload.id),
       createdAt: new Date(),
     };
