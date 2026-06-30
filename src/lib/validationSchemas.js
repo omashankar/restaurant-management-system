@@ -352,6 +352,7 @@ export const orderCreateSchema = z
     discountType: z.enum(["none", "percent", "fixed"]).optional(),
     discountPercent: z.number().min(0).max(100).optional(),
     discountFixed: z.number().nonnegative().optional(),
+    couponCode: z.string().trim().max(40).optional(),
     paymentMethod: z
       .enum(["cod", "cashCounter", "upi", "card", "netBanking", "wallet", "payLater", "bankTransfer"])
       .optional(),

@@ -17,6 +17,7 @@ import {
   ShoppingCart,
   Soup,
   Table2,
+  Tag,
   UserCog,
   Users,
   UtensilsCrossed,
@@ -116,6 +117,7 @@ export const NAV_ITEMS = [
       { href: "/menu/items",      label: "Menu Items",  Icon: ListOrdered },
       { href: "/menu/categories", label: "Categories",  Icon: FolderTree },
       { href: "/menu/recipes",    label: "Recipes",     Icon: BookOpen },
+      { href: "/coupons",         label: "Coupons",     Icon: Tag },
     ],
   },
   {

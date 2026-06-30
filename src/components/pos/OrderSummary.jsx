@@ -37,6 +37,11 @@ export default function OrderSummary({
   onDiscountModeChange,
   onDiscountValueChange,
   onClearDiscount,
+  appliedCoupon = null,
+  couponError = "",
+  couponLoading = false,
+  onApplyCoupon,
+  onClearCoupon,
   total,
   currency = "INR",
   canPlaceOrder,
@@ -317,12 +322,15 @@ export default function OrderSummary({
                     >
                       <span className="inline-flex min-w-0 items-center gap-2 text-[11px] admin-surface-muted">
                         <Tag className="size-3.5 shrink-0 text-emerald-400" aria-hidden />
-                        {discountAmount > 0 ? (
-                          <span className="truncate font-semibold text-emerald-400">
-                            Discount −{formatAdminMoney(discountAmount, currency, { decimals: 2 })}
-                            {discountMode === "percent" && discountPercent > 0 ? ` (${discountPercent}%)` : ""}
-                          </span>
-                        ) : (
+                    {discountAmount > 0 ? (
+                      <span className="truncate font-semibold text-emerald-400">
+                        {appliedCoupon
+                          ? `${appliedCoupon.code} −${formatAdminMoney(discountAmount, currency, { decimals: 2 })}`
+                          : `Discount −${formatAdminMoney(discountAmount, currency, { decimals: 2 })}${
+                              discountMode === "percent" && discountPercent > 0 ? ` (${discountPercent}%)` : ""
+                            }`}
+                      </span>
+                    ) : (
                           "Add discount"
                         )}
                       </span>
@@ -463,11 +471,17 @@ export default function OrderSummary({
         value={discountValue}
         discountAmount={discountAmount}
         currency={currency}
+        subtotal={subtotal}
+        appliedCoupon={appliedCoupon}
+        couponError={couponError}
+        couponLoading={couponLoading}
         onModeChange={onDiscountModeChange}
         onValueChange={onDiscountValueChange}
         onClear={() => {
           onClearDiscount?.();
         }}
+        onApplyCoupon={onApplyCoupon}
+        onClearCoupon={onClearCoupon}
       />
 
       <PosCustomerModal

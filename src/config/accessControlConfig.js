@@ -1,7 +1,7 @@
 export const ACCESS_CONTROL_FEATURES = [
   { key: "posSystem", label: "POS System", routes: ["/pos"] },
   { key: "orders", label: "Orders", routes: ["/orders"] },
-  { key: "menuManagement", label: "Menu Management", routes: ["/menu"] },
+  { key: "menuManagement", label: "Menu Management", routes: ["/menu", "/coupons"] },
   { key: "inventory", label: "Inventory", routes: ["/inventory"] },
   { key: "reservations", label: "Reservations", routes: ["/reservations"] },
   { key: "customers", label: "Customers", routes: ["/customers"] },

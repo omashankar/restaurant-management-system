@@ -1,9 +1,11 @@
 "use client";
 
+import CustomerCouponCheckout from "@/components/customer/CustomerCouponCheckout";
 import CustomerMobileInput from "@/components/customer/CustomerMobileInput";
 import StripePaymentModal from "@/components/payments/StripePaymentModal";
 import Modal from "@/components/ui/Modal";
 import { useCustomer } from "@/context/CustomerContext";
+import { splitCouponSavings } from "@/lib/couponUtils";
 import { useRestaurantInfo } from "@/hooks/useRestaurantInfo";
 import { useRestaurantSlug } from "@/hooks/useRestaurantSlug";
 import { BHOJDESK_BRAND } from "@/config/bhojdeskBrand";
@@ -25,7 +27,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Bike, ConciergeBell, Loader2, Phone, Store, ShoppingBag } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 const TYPE_LABEL = { "dine-in": "Dine-In", takeaway: "Takeaway", delivery: "Delivery" };
 const TYPE_ICON  = { "dine-in": Store, takeaway: ConciergeBell, delivery: Bike };
@@ -86,7 +88,6 @@ export default function CheckoutPage() {
   const [notes, setNotes] = useState("");
   const { meta: checkoutMeta } = useCheckoutMeta();
   const [paymentMethod, setPaymentMethod] = useState("cod");
-  const [couponCode, setCouponCode] = useState("");
   const [appliedCoupon, setAppliedCoupon] = useState(null);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [otpPhone, setOtpPhone] = useState("");
@@ -106,30 +107,37 @@ export default function CheckoutPage() {
   const [offlineCheckout, setOfflineCheckout] = useState(null);
 
   const { lines, subtotal, clearCart } = cart;
-  const couponDiscount = useMemo(() => {
-    if (!appliedCoupon) return 0;
-    if (appliedCoupon.type === "percent") {
-      const raw = (subtotal * Number(appliedCoupon.value ?? 0)) / 100;
-      const max = Number(appliedCoupon.maxDiscount ?? raw);
-      return Math.min(raw, max);
-    }
-    return Number(appliedCoupon.value ?? 0);
-  }, [appliedCoupon, subtotal]);
+  const rawDelivery =
+    orderType === "delivery" ? Math.max(0, Number(checkoutMeta.deliveryCharge) || 0) : 0;
+  const itemQty = lines.reduce((sum, line) => sum + Number(line.qty ?? 0), 0);
+  const couponSavings = useMemo(
+    () =>
+      appliedCoupon
+        ? splitCouponSavings(appliedCoupon, subtotal, { deliveryCharge: rawDelivery })
+        : { subtotalDiscount: 0, deliveryDiscount: 0, totalDiscount: 0 },
+    [appliedCoupon, subtotal, rawDelivery],
+  );
   const effectivePoints = Math.min(Math.max(0, pointsToRedeem), rewardPoints);
   const { tax, delivery: deliveryCharge, total, taxRate, pointsDiscount } = calcOrderTotals({
     subtotal,
     orderType,
     taxPercentage: checkoutMeta.taxPercentage,
     deliveryCharge: checkoutMeta.deliveryCharge,
-    couponDiscount,
+    couponDiscount: couponSavings.subtotalDiscount,
+    deliveryDiscount: couponSavings.deliveryDiscount,
     pointsDiscount: effectivePoints,
   });
+  const couponDiscount = couponSavings.totalDiscount;
   const minOrderAmount = Number(checkoutMeta.minOrderAmount ?? 0);
   const etaLabel = checkoutMeta.etaMinutes?.[orderType] ?? "20-30";
   const enabledPaymentMethods = useMemo(() => {
     const pm = checkoutMeta.paymentMethods ?? {};
     return Object.keys(PAYMENT_LABEL).filter((key) => Boolean(pm[key]));
   }, [checkoutMeta.paymentMethods]);
+  const applyCouponNotify = useCallback(
+    (message, type = "success") => showToast(message, type),
+    [showToast],
+  );
   const TypeIcon = orderType ? TYPE_ICON[orderType] : null;
 
   async function confirmPayment(orderId, provider, payload) {
@@ -397,24 +405,6 @@ export default function CheckoutPage() {
     } finally {
       setLoading(false);
     }
-  };
-
-  const applyCoupon = () => {
-    const code = couponCode.trim().toUpperCase();
-    if (!code) return;
-    const found = (checkoutMeta.coupons ?? []).find((c) => c.code === code);
-    if (!found) {
-      showToast("Invalid coupon code.", "error");
-      setAppliedCoupon(null);
-      return;
-    }
-    if (found.minSubtotal && subtotal < Number(found.minSubtotal)) {
-      showToast(`Coupon valid on minimum ${formatCustomerMoney(Number(found.minSubtotal))} subtotal.`, "error");
-      setAppliedCoupon(null);
-      return;
-    }
-    setAppliedCoupon(found);
-    showToast(`Coupon ${found.code} applied.`);
   };
 
   const requestOtp = async () => {
@@ -707,14 +697,18 @@ export default function CheckoutPage() {
             </ul>
             <div className="mt-5 space-y-2.5 border-t border-customer-border pt-5 text-sm">
               <p className="text-xs text-customer-muted">Est. time: <span className="font-bold text-customer-text">{etaLabel} mins</span></p>
-              <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-                <input value={couponCode} onChange={(e) => setCouponCode(e.target.value)} placeholder="Coupon code"
-                  className={`${customerClasses.field} min-w-0 flex-1 rounded-full py-2.5 text-xs`} />
-                <button type="button" onClick={applyCoupon}
-                  className="min-h-[44px] rounded-full border border-customer-border px-4 py-2.5 text-xs font-semibold text-customer-muted hover:border-customer-primary/30 hover:text-customer-primary sm:shrink-0">
-                  Apply
-                </button>
-              </div>
+              <CustomerCouponCheckout
+                coupons={checkoutMeta.coupons ?? []}
+                subtotal={subtotal}
+                orderType={orderType}
+                paymentMethod={paymentMethod}
+                deliveryCharge={rawDelivery}
+                itemQty={itemQty}
+                pointsToRedeem={pointsToRedeem}
+                appliedCoupon={appliedCoupon}
+                onAppliedChange={setAppliedCoupon}
+                onNotify={applyCouponNotify}
+              />
               <div className="flex justify-between text-customer-muted"><span>Subtotal</span><span className="font-semibold text-customer-text">{formatCustomerMoney(subtotal)}</span></div>
               {taxRate > 0 && (
                 <div className="flex justify-between text-customer-muted">
@@ -723,7 +717,12 @@ export default function CheckoutPage() {
                 </div>
               )}
               {orderType === "delivery" && <div className="flex justify-between text-customer-muted"><span>Delivery</span><span className="font-semibold text-customer-text">{formatCustomerMoney(deliveryCharge)}</span></div>}
-              {appliedCoupon && <div className={`flex justify-between ${customerClasses.textSuccess}`}><span>Coupon ({appliedCoupon.code})</span><span>- {formatCustomerMoney(couponDiscount)}</span></div>}
+              {appliedCoupon && couponDiscount > 0 && (
+                <div className={`flex justify-between ${customerClasses.textSuccess}`}>
+                  <span>Discount ({appliedCoupon.code})</span>
+                  <span>- {formatCustomerMoney(couponDiscount)}</span>
+                </div>
+              )}
               {pointsDiscount > 0 && <div className={`flex justify-between ${customerClasses.textSuccess}`}><span>Points redeemed</span><span>- {formatCustomerMoney(pointsDiscount)}</span></div>}
               {authUser && rewardPoints > 0 && (
                 <div className="rounded-xl border border-customer-border bg-customer-cream/50 p-3">

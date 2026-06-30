@@ -1,11 +1,13 @@
 "use client";
 
+import CustomerCouponOffers from "@/components/customer/CustomerCouponOffers";
 import MenuFiltersBar from "@/components/customer/MenuFiltersBar";
 import MenuItemCard from "@/components/customer/MenuItemCard";
 import MenuItemSizePickerModal from "@/components/menu/MenuItemSizePickerModal";
 import { useCustomer } from "@/context/CustomerContext";
 import { useModuleData } from "@/context/ModuleDataContext";
 import { useRestaurantSlug } from "@/hooks/useRestaurantSlug";
+import { useCheckoutMeta } from "@/hooks/useCheckoutMeta";
 import { useRestaurantCms } from "@/hooks/useRestaurantCms";
 import { mergeCmsSection } from "@/lib/customerCmsMerge";
 import { DEFAULTS } from "@/lib/restaurantCmsDefaults";
@@ -44,6 +46,7 @@ function CustomerMenuPageContent() {
   const { cart, setOrderTypeModalOpen, orderType, setOrderType, updateCustomer, tryAddToCart } = useCustomer();
   const { menuItems, categories, hydrated } = useModuleData();
   const { link } = useRestaurantSlug();
+  const { meta: checkoutMeta } = useCheckoutMeta();
   const { content: cms } = useRestaurantCms();
   const L = mergeCmsSection(DEFAULTS.menu, cms.menu);
   const searchParams = useSearchParams();
@@ -214,6 +217,14 @@ function CustomerMenuPageContent() {
               {L.subtitleSuffix?.trim() || "Fresh dishes crafted with love"}
             </p>
           )}
+
+          {(checkoutMeta.coupons ?? []).length > 0 ? (
+            <CustomerCouponOffers
+              coupons={checkoutMeta.coupons}
+              mode="banner"
+              className="mt-4 px-2"
+            />
+          ) : null}
 
           {/* Search bar */}
           <div className="mx-auto mt-6 max-w-xl">

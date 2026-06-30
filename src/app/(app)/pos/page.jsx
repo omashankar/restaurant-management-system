@@ -62,6 +62,8 @@ function PosPageContent() {
     return [...new Set(activeMenuItems.map((m) => m.itemType).filter(Boolean))];
   }, [activeMenuItems]);
   const [orderType, setOrderType] = useState("dine-in");
+  const [paymentMethod, setPaymentMethod] = useState(() => getPosPaymentDefaults("dine-in").paymentMethod);
+  const [paymentStatus, setPaymentStatus] = useState(() => getPosPaymentDefaults("dine-in").paymentStatus);
   const [selectedTableId, setSelectedTableId] = useState("");
   const [delivery, setDelivery] = useState({ name: "", phone: "", address: "" });
   const [cart, setCart] = useState([]);
@@ -88,6 +90,9 @@ function PosPageContent() {
   const [enableDiscount, setEnableDiscount]             = useState(false);
   const [discountMode, setDiscountMode]                 = useState("percent");
   const [discountValue, setDiscountValue]               = useState("");
+  const [appliedCoupon, setAppliedCoupon]             = useState(null);
+  const [couponError, setCouponError]                   = useState("");
+  const [couponLoading, setCouponLoading]               = useState(false);
   const [currency, setCurrency]                         = useState("INR");
   const [restaurantName, setRestaurantName]             = useState("Restaurant");
   const [printers, setPrinters]                         = useState([]);
@@ -127,10 +132,12 @@ function PosPageContent() {
 
   const subtotal = useMemo(() => cart.reduce((s, l) => s + l.price * l.qty, 0), [cart]);
 
-  const discountInput = useMemo(
-    () => resolvePosDiscountInput(enableDiscount, discountMode, discountValue),
-    [enableDiscount, discountMode, discountValue]
-  );
+  const discountInput = useMemo(() => {
+    if (appliedCoupon?.posDiscount) {
+      return appliedCoupon.posDiscount;
+    }
+    return resolvePosDiscountInput(enableDiscount, discountMode, discountValue);
+  }, [appliedCoupon, enableDiscount, discountMode, discountValue]);
 
   const totals = useMemo(
     () =>
@@ -156,14 +163,59 @@ function PosPageContent() {
   const clearCart = useCallback(() => {
     setCart([]);
     setDiscountValue("");
+    setAppliedCoupon(null);
+    setCouponError("");
   }, []);
+
+  const clearCoupon = useCallback(() => {
+    setAppliedCoupon(null);
+    setCouponError("");
+  }, []);
+
+  const applyPosCoupon = useCallback(
+    async (code) => {
+      if (!code || subtotal <= 0) return;
+      setCouponLoading(true);
+      setCouponError("");
+      try {
+        const res = await fetch("/api/coupons/validate", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            code,
+            subtotal,
+            channel: "pos",
+            orderType,
+            paymentMethod,
+            items: cart.map((l) => ({ id: l.menuItemId ?? l.id, qty: l.qty })),
+          }),
+        });
+        const data = await res.json();
+        if (!res.ok || !data?.success) {
+          setCouponError(data?.error ?? "Invalid coupon.");
+          setAppliedCoupon(null);
+          return;
+        }
+        setDiscountValue("");
+        setAppliedCoupon({
+          code: data.coupon.code,
+          label: data.coupon.label,
+          posDiscount: data.posDiscount,
+        });
+      } catch {
+        setCouponError("Could not validate coupon.");
+        setAppliedCoupon(null);
+      } finally {
+        setCouponLoading(false);
+      }
+    },
+    [subtotal, orderType, paymentMethod, cart],
+  );
 
   const [fieldErrors, setFieldErrors] = useState(EMPTY_POS_ORDER_ERRORS);
   const [isPlacing, setIsPlacing] = useState(false);
   const [placeError, setPlaceError] = useState("");
   const [note, setNote] = useState("");
-  const [paymentMethod, setPaymentMethod] = useState(() => getPosPaymentDefaults("dine-in").paymentMethod);
-  const [paymentStatus, setPaymentStatus] = useState(() => getPosPaymentDefaults("dine-in").paymentStatus);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
   const [setupOpen, setSetupOpen] = useState(true);
   const [tablePickerRequest, setTablePickerRequest] = useState(0);
@@ -350,6 +402,7 @@ function PosPageContent() {
           discountType: discountInput.discountType,
           discountPercent: discountInput.discountPercent,
           discountFixed: discountInput.discountFixed,
+          couponCode: appliedCoupon?.code ?? undefined,
           paymentMethod,
           paymentStatus,
         }),
@@ -523,7 +576,7 @@ function PosPageContent() {
       setIsPlacing(false);
     }
   }, [canPlaceOrder, isPlacing, cart, orderType, selectedTableId, selectedCustomer, delivery, total, subtotal,
-      discountAmount, discountInput, totals, taxAmount, taxPercent, serviceCharge, serviceChargePercent, currency, note, paymentMethod, paymentStatus,
+      discountAmount, discountInput, totals, taxAmount, taxPercent, serviceCharge, serviceChargePercent, currency, note, paymentMethod, paymentStatus, appliedCoupon,
       customerRows, floorTables, setOrderRows, setKitchenQueue, setCustomerRows, setFloorTables, printers, restaurantName, openSetup]);
 
   useEffect(() => {
@@ -574,7 +627,16 @@ function PosPageContent() {
     enableDiscount,
     onDiscountModeChange: setDiscountMode,
     onDiscountValueChange: setDiscountValue,
-    onClearDiscount: () => setDiscountValue(""),
+    onClearDiscount: () => {
+      setDiscountValue("");
+      setAppliedCoupon(null);
+      setCouponError("");
+    },
+    appliedCoupon,
+    couponError,
+    couponLoading,
+    onApplyCoupon: applyPosCoupon,
+    onClearCoupon: clearCoupon,
     total,
     currency,
     canPlaceOrder: canPlaceOrder && !isPlacing,

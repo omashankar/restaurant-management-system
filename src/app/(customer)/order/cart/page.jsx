@@ -1,5 +1,6 @@
 "use client";
 
+import CustomerCouponOffers from "@/components/customer/CustomerCouponOffers";
 import SafeDishImage from "@/components/customer/SafeDishImage";
 import { useCustomer } from "@/context/CustomerContext";
 import { useRestaurantSlug } from "@/hooks/useRestaurantSlug";
@@ -131,6 +132,12 @@ export default function CartPage() {
       )}
 
       {/* Summary */}
+      {(meta.coupons ?? []).length > 0 ? (
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mt-5">
+          <CustomerCouponOffers coupons={meta.coupons} subtotal={subtotal} mode="browse" />
+        </motion.div>
+      ) : null}
+
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
         className="mt-5 ct-surface-card p-5">
         <div className="space-y-2.5 text-sm">

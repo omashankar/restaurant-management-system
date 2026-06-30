@@ -1,6 +1,7 @@
 import { withTenant } from "@/lib/tenantDb";
 import { logInfo } from "@/lib/logger";
 import { buildPaginationMeta, paginationSkip, parseLimitParam, parsePageParam } from "@/lib/pagination";
+import { redeemCoupon, validateCouponForOrder } from "@/lib/couponDb";
 import { calculatePosTotals } from "@/lib/posTotals";
 import { sendNewOrderAlertEmail } from "@/lib/emailService";
 import { getRestaurantNotificationPrefs } from "@/lib/restaurantNotificationPrefs";
@@ -85,6 +86,7 @@ export const POST = withTenant(
     const { items, orderType, tableNumber, customer, notes, paymentMethod, paymentStatus } = parsed;
 
     const orderId  = `ORD-${Date.now()}`;
+    const orderSubtotal = items.reduce((sum, item) => sum + item.price * item.qty, 0);
 
     // Use client-supplied breakdown if provided (POS sends it); otherwise read
     // from restaurant settings so server always stores correct values.
@@ -98,10 +100,29 @@ export const POST = withTenant(
     let discountType = parsed.discountType ?? "none";
     let discountPercent = parsed.discountPercent ?? 0;
     let discountFixed = parsed.discountFixed ?? 0;
+    let couponCode = String(parsed.couponCode ?? "").trim().toUpperCase() || null;
+    let couponId = null;
+
     if (!posSettings.enableDiscount) {
       discountType = "none";
       discountPercent = 0;
       discountFixed = 0;
+      couponCode = null;
+    } else if (couponCode) {
+      const itemQty = items.reduce((sum, item) => sum + Number(item.qty ?? 0), 0);
+      const couponCheck = await validateCouponForOrder(db, restaurantId, couponCode, orderSubtotal, "pos", {
+        orderType,
+        paymentMethod: paymentMethod ?? "cashCounter",
+        itemQty,
+        hasOtherDiscount: discountType !== "none" && !couponCode,
+      });
+      if (!couponCheck.valid) {
+        return Response.json({ success: false, error: couponCheck.error }, { status: 400 });
+      }
+      discountType = couponCheck.posDiscount.discountType;
+      discountPercent = couponCheck.posDiscount.discountPercent;
+      discountFixed = couponCheck.posDiscount.discountFixed;
+      couponId = couponCheck.coupon?.id ?? null;
     }
 
     const totals = calculatePosTotals({
@@ -141,6 +162,9 @@ export const POST = withTenant(
       discountPercent: totals.discountPercent,
       discountFixed: totals.discountFixed,
       discountAmount,
+      couponCode,
+      couponId: couponId ? new ObjectId(couponId) : null,
+      couponDiscount: couponCode ? discountAmount : 0,
       taxableBase,
       taxPercent,
       taxAmount,
@@ -155,6 +179,21 @@ export const POST = withTenant(
     };
 
     const result = await db.collection("orders").insertOne(doc);
+    if (couponId) {
+      const redeemed = await redeemCoupon(db, restaurantId, couponId, {
+        orderId: doc.orderId,
+        orderMongoId: result.insertedId,
+        channel: "pos",
+        customerName: doc.customer,
+        discountAmount: discountAmount,
+        orderSubtotal: subtotal,
+        orderTotal: total,
+      });
+      if (!redeemed.ok) {
+        await db.collection("orders").deleteOne({ _id: result.insertedId });
+        return Response.json({ success: false, error: redeemed.error }, { status: 400 });
+      }
+    }
     if (orderType === "dine-in" && tableNumber) {
       await db.collection("tables").updateOne(
         { ...tenantFilter, tableNumber },

@@ -12,12 +12,13 @@ import {
   loadRestaurantCheckoutMeta,
 } from "@/lib/checkoutPaymentMeta";
 import { resolvePaymentCurrency } from "@/lib/platformCurrency";
-import { validateCustomerCoupon } from "@/lib/customerCoupons";
+import { splitCouponSavings } from "@/lib/couponUtils";
+import { redeemCoupon, validateCouponForOrder } from "@/lib/couponDb";
+import { ObjectId } from "mongodb";
 import { redeemCustomerPoints } from "@/lib/customerRewards";
 import { isValidIndianMobile, extractIndianMobileDigits, toIndianE164 } from "@/lib/phoneUtils";
 import { getRestaurantIdFromRequest } from "@/lib/restaurantResolver";
 import { assertPlatformFeatureForPath } from "@/lib/platformFeatureGuard";
-import { ObjectId } from "mongodb";
 
 export async function GET(request) {
   const blocked = await assertPlatformFeatureForPath("/api/customer/orders");
@@ -159,17 +160,6 @@ export async function POST(request) {
     }
 
     const subtotal = items.reduce((sum, item) => sum + item.price * item.qty, 0);
-    const couponCode = String(body?.couponCode ?? parsed.couponCode ?? "").trim();
-    let couponDiscount = 0;
-    let appliedCoupon = null;
-    if (couponCode) {
-      const couponCheck = validateCustomerCoupon(couponCode, subtotal);
-      if (!couponCheck.valid) {
-        return Response.json({ success: false, error: couponCheck.error }, { status: 400 });
-      }
-      couponDiscount = Number(couponCheck.discount.toFixed(2));
-      appliedCoupon = couponCheck.coupon?.code ?? couponCode.toUpperCase();
-    }
     const minOrderAmount = Number(settingsDoc?.pos?.minOrderAmount ?? 0);
     if (orderType === "delivery" && minOrderAmount > 0 && subtotal < minOrderAmount) {
       return Response.json(
@@ -178,10 +168,41 @@ export async function POST(request) {
       );
     }
 
-    const taxableSubtotal = Math.max(0, subtotal - couponDiscount);
+    const deliveryCharge = orderType === "delivery" ? Number(safeServiceCharge.toFixed(2)) : 0;
+    const itemQty = items.reduce((sum, item) => sum + Number(item.qty ?? 0), 0);
+    const requestedPoints = Math.max(0, Math.floor(Number(body?.pointsRedeemed ?? parsed.pointsRedeemed ?? 0)));
+
+    const couponCode = String(body?.couponCode ?? parsed.couponCode ?? "").trim();
+    let couponDiscount = 0;
+    let appliedCoupon = null;
+    let couponId = null;
+    let couponMeta = null;
+    if (couponCode) {
+      const couponCheck = await validateCouponForOrder(db, restaurantId, couponCode, subtotal, "online", {
+        orderType,
+        paymentMethod,
+        itemQty,
+        deliveryCharge,
+        hasPointsApplied: requestedPoints > 0,
+        customerId: customerAccountId ?? null,
+      });
+      if (!couponCheck.valid) {
+        return Response.json({ success: false, error: couponCheck.error }, { status: 400 });
+      }
+      couponMeta = couponCheck.coupon;
+      const savings = splitCouponSavings(couponMeta, subtotal, { deliveryCharge });
+      couponDiscount = Number(savings.totalDiscount.toFixed(2));
+      appliedCoupon = couponCheck.coupon?.code ?? couponCode.toUpperCase();
+      couponId = couponCheck.coupon?.id ?? null;
+    }
+
+    const savingsSplit = couponMeta
+      ? splitCouponSavings(couponMeta, subtotal, { deliveryCharge })
+      : { subtotalDiscount: 0, deliveryDiscount: 0, totalDiscount: 0 };
+
+    const taxableSubtotal = Math.max(0, subtotal - savingsSplit.subtotalDiscount);
     let pointsRedeemed = 0;
     let pointsDiscount = 0;
-    const requestedPoints = Math.max(0, Math.floor(Number(body?.pointsRedeemed ?? parsed.pointsRedeemed ?? 0)));
     if (requestedPoints > 0) {
       if (!customerAccountId) {
         return Response.json(
@@ -196,8 +217,8 @@ export async function POST(request) {
 
     const afterPoints = Math.max(0, taxableSubtotal - pointsDiscount);
     const tax = Number((afterPoints * (safeTaxPercent / 100)).toFixed(2));
-    const deliveryCharge = orderType === "delivery" ? Number(safeServiceCharge.toFixed(2)) : 0;
-    const total = Number((afterPoints + tax + deliveryCharge).toFixed(2));
+    const effectiveDelivery = Math.max(0, deliveryCharge - savingsSplit.deliveryDiscount);
+    const total = Number((afterPoints + tax + effectiveDelivery).toFixed(2));
     const scheduleFor = String(body?.scheduleFor ?? parsed.scheduleFor ?? "").trim() || null;
     const now = new Date();
     const currency = await resolvePaymentCurrency(
@@ -247,13 +268,14 @@ export async function POST(request) {
       itemCount: items.reduce((sum, item) => sum + item.qty, 0),
       subtotal,
       couponCode: appliedCoupon,
+      couponId: couponId ? new ObjectId(couponId) : null,
       couponDiscount,
       pointsRedeemed,
       pointsDiscount,
       scheduleFor,
       tax,
       taxPercentage: safeTaxPercent,
-      deliveryCharge,
+      deliveryCharge: effectiveDelivery,
       total,
       status: "new",
       payment: {
@@ -272,6 +294,22 @@ export async function POST(request) {
     };
 
     const result = await db.collection("orders").insertOne(doc);
+    if (couponId) {
+      const redeemed = await redeemCoupon(db, restaurantId, couponId, {
+        orderId: doc.orderId,
+        orderMongoId: result.insertedId,
+        channel: "online",
+        customerId: customerAccountId ?? null,
+        customerName,
+        discountAmount: couponDiscount,
+        orderSubtotal: subtotal,
+        orderTotal: total,
+      });
+      if (!redeemed.ok) {
+        await db.collection("orders").deleteOne({ _id: result.insertedId });
+        return Response.json({ success: false, error: redeemed.error }, { status: 400 });
+      }
+    }
     if (orderType === "dine-in" && tableNumber) {
       await db.collection("tables").updateOne(
         { restaurantId, tableNumber },

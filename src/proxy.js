@@ -9,14 +9,14 @@ import { TOKEN_COOKIE } from "@/lib/authCookies";
 const ROLE_PATHS = {
   super_admin: [
     "/super-admin",
-    "/admin", "/dashboard", "/pos", "/orders", "/menu",
+    "/admin", "/dashboard", "/pos", "/orders", "/menu", "/coupons",
     "/tables", "/reservations", "/customers", "/staff",
     "/inventory", "/analytics", "/settings", "/billing",
     "/support-tickets", "/kitchen", "/profile",
     "/onboarding", "/qr-menu", "/whatsapp", "/printer-settings",
   ],
   admin: [
-    "/admin", "/dashboard", "/pos", "/orders", "/menu",
+    "/admin", "/dashboard", "/pos", "/orders", "/menu", "/coupons",
     "/tables", "/reservations", "/customers", "/staff",
     "/inventory", "/analytics", "/settings", "/billing",
     "/support-tickets", "/kitchen", "/profile",
@@ -24,7 +24,7 @@ const ROLE_PATHS = {
     "/customer-site",
   ],
   manager: [
-    "/manager", "/dashboard", "/pos", "/orders", "/menu",
+    "/manager", "/dashboard", "/pos", "/orders", "/menu", "/coupons",
     "/tables", "/reservations", "/customers",
     "/inventory", "/analytics", "/support-tickets", "/profile",
   ],

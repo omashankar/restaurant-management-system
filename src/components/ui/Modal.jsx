@@ -5,7 +5,7 @@ import { X } from "lucide-react";
 import { useEffect } from "react";
 import { createPortal } from "react-dom";
 
-export default function Modal({ open, title, onClose, children, footer }) {
+export default function Modal({ open, title, onClose, children, footer, wide = false }) {
   const titleId = title ? "modal-title" : undefined;
   useEffect(() => {
     if (!open) return;
@@ -33,7 +33,7 @@ export default function Modal({ open, title, onClose, children, footer }) {
         aria-label="Close dialog"
       />
       <div
-        className={`relative z-10 flex max-h-[min(92dvh,720px)] w-full min-w-0 max-w-lg flex-col rounded-t-2xl shadow-2xl duration-200 sm:rounded-2xl ${adminSurface.cardSolid}`}
+        className={`relative z-10 flex max-h-[min(92dvh,800px)] w-full min-w-0 ${wide ? "max-w-2xl" : "max-w-lg"} flex-col rounded-t-2xl shadow-2xl duration-200 sm:rounded-2xl ${adminSurface.cardSolid}`}
         style={{ paddingBottom: "max(0rem, env(safe-area-inset-bottom))" }}
       >
         <div className="flex shrink-0 flex-col items-center pt-2 sm:hidden">
