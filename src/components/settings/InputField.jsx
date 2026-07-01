@@ -7,6 +7,7 @@ export default function InputField({
   label,
   value,
   onChange,
+  onBlur,
   type = "text",
   placeholder = "",
   options,
@@ -15,6 +16,7 @@ export default function InputField({
   max,
   step,
   error,
+  hint,
 }) {
   const borderCls = error ? "border-red-500/50" : "";
   const fieldCls = `${raInputCls} ${borderCls}`.trim();
@@ -66,12 +68,14 @@ export default function InputField({
           step={step}
           value={value}
           onChange={(e) => onChange(e.target.value)}
+          onBlur={onBlur}
           placeholder={placeholder}
           className={fieldCls}
           aria-invalid={error ? true : undefined}
         />
       )}
       {error ? <p className="mt-1 text-xs text-red-400">{error}</p> : null}
+      {!error && hint ? <p className="mt-1 text-xs admin-surface-muted">{hint}</p> : null}
     </div>
   );
 }

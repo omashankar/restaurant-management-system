@@ -1,5 +1,6 @@
 import { DATE_FORMAT_OPTIONS, TIME_FORMAT_OPTIONS } from "@/config/settingsConfig";
 import { emailError, optionalIndianPhoneError } from "@/lib/formValidation";
+import { normalizeSmtpHost } from "@/lib/smtpConfig";
 
 const TIME_FORMAT_VALUES = TIME_FORMAT_OPTIONS.map((opt) => opt.value);
 import { optionalLinkError } from "@/lib/landingValidation";
@@ -56,7 +57,7 @@ export function validatePlatformAppSettings(data) {
 
 export function validatePlatformEmailSettings(data) {
   const errors = {};
-  const host = trim(data?.smtpHost);
+  const host = normalizeSmtpHost(data?.smtpHost);
   const user = trim(data?.smtpUser);
   const hasSmtp = Boolean(host || user);
 

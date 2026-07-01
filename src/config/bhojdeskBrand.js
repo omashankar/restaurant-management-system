@@ -9,6 +9,9 @@ export const BHOJDESK_BRAND = {
   supportEmail: "support@bhojdesk.com",
 };
 
+/** Super Admin → Settings → Email → Send Test — default inbox */
+export const PLATFORM_SMTP_TEST_RECIPIENT = "omsuman14106@gmail.com";
+
 export const BHOJDESK_LOGOS = {
   /** B mark — favicon, collapsed sidebar, compact slots */
   icon: "/branding/bhojdesk/icon.png",

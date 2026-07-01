@@ -12,7 +12,7 @@ import {
   positiveIntError,
   priceError,
 } from "@/lib/formValidation";
-import { optionalLinkError } from "@/lib/landingValidation";
+import { isSmtpPasswordMask, normalizeSmtpHost } from "@/lib/smtpConfig";
 import { extractIndianMobileDigits, isValidIndianMobile } from "@/lib/phoneUtils";
 import {
   ACCESS_CONTROL_FEATURES,
@@ -106,7 +106,7 @@ export function validateRestaurantContact(data) {
 
 export function validateRestaurantEmail(data) {
   const errors = {};
-  const host = trim(data?.smtpHost);
+  const host = normalizeSmtpHost(data?.smtpHost);
   const user = trim(data?.smtpUser);
   const enabled = Boolean(data?.enabled);
   const configuring = enabled || host || user;
@@ -122,7 +122,7 @@ export function validateRestaurantEmail(data) {
     if (!fromEmail) errors.fromEmail = "From email is required when SMTP is enabled.";
     else errors.fromEmail = emailError(fromEmail) ?? "";
     const pwd = String(data?.smtpPassword ?? "");
-    if (enabled && !pwd && pwd !== "********") {
+    if (enabled && !isSmtpPasswordMask(pwd) && !pwd.trim()) {
       errors.smtpPassword = "SMTP password is required when enabling custom SMTP.";
     }
   }

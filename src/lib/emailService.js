@@ -1,6 +1,23 @@
 import { BHOJDESK_BRAND } from "@/config/bhojdeskBrand";
 import nodemailer from "nodemailer";
 import { ObjectId } from "mongodb";
+import {
+  normalizeSmtpHost,
+  normalizeSmtpSecure,
+} from "@/lib/smtpConfig";
+
+export {
+  SMTP_SECRET_MASK,
+  buildEffectiveSmtpConfig,
+  detectBrevoSmtpIssues,
+  formatSmtpError,
+  isSmtpPasswordMask,
+  maskSmtpSettingsForClient,
+  mergeSmtpPasswordForSave,
+  normalizeSmtpHost,
+  normalizeSmtpSecure,
+  sanitizeSmtpSettings,
+} from "@/lib/smtpConfig";
 
 const EMAIL_FROM_NAME = BHOJDESK_BRAND.name;
 const EMAIL_PRODUCT_NAME = BHOJDESK_BRAND.fullName;
@@ -10,14 +27,22 @@ export function createSmtpTransport(smtp) {
   if (!smtp?.smtpHost || !smtp?.smtpUser) {
     throw new Error("SMTP Host and Username are required.");
   }
+  const smtpHost = normalizeSmtpHost(smtp.smtpHost);
+  if (!smtpHost) {
+    throw new Error("SMTP Host is required.");
+  }
   const port = Number(smtp.smtpPort ?? 587);
   if (!Number.isFinite(port) || port < 1 || port > 65535) {
     throw new Error("Invalid SMTP port.");
   }
+  if (!String(smtp.smtpPassword ?? "").trim()) {
+    throw new Error("SMTP password is required.");
+  }
+  const secure = normalizeSmtpSecure(port, smtp.secure);
   return nodemailer.createTransport({
-    host: smtp.smtpHost,
+    host: smtpHost,
     port,
-    secure: Boolean(smtp.secure),
+    secure,
     auth: {
       user: smtp.smtpUser,
       pass: String(smtp.smtpPassword ?? ""),

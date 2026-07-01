@@ -1,16 +1,18 @@
 /**
  * POST /api/super-admin/settings/test-email
  * Send a test email using the provided SMTP config.
- * Uses nodemailer (already installed).
  */
 
-import { BHOJDESK_BRAND, platformEmailSubject } from "@/config/bhojdeskBrand";
-import { createSmtpTransport, buildFromAddress } from "@/lib/emailService";
+import { BHOJDESK_BRAND, platformEmailSubject, PLATFORM_SMTP_TEST_RECIPIENT } from "@/config/bhojdeskBrand";
+import {
+  buildEffectiveSmtpConfig,
+  buildFromAddress,
+  createSmtpTransport,
+  formatSmtpError,
+} from "@/lib/emailService";
 import { getTokenFromRequest } from "@/lib/authCookies";
 import { verifyToken } from "@/lib/jwt";
 import clientPromise from "@/lib/mongodb";
-
-const SECRET_MASK = "********";
 
 function superAdminOnly(request) {
   const token   = getTokenFromRequest(request);
@@ -30,36 +32,31 @@ export async function POST(request) {
   catch { return Response.json({ success: false, error: "Invalid JSON." }, { status: 400 }); }
 
   const { smtp } = body;
-  if (!smtp?.smtpHost || !smtp?.smtpUser) {
-    return Response.json(
-      { success: false, error: "SMTP Host and Username are required." },
-      { status: 400 }
-    );
+
+  const client = await clientPromise;
+  const db = client.db();
+  const stored = await db.collection("settings").findOne(
+    { _id: "platform" },
+    { projection: { email: 1 } },
+  );
+
+  const resolved = buildEffectiveSmtpConfig(smtp, stored?.email);
+  if (!resolved.ok) {
+    return Response.json({ success: false, error: resolved.error }, { status: resolved.status });
   }
-  const port = Number(smtp.smtpPort ?? 587);
-  if (!Number.isFinite(port) || port < 1 || port > 65535) {
-    return Response.json({ success: false, error: "Invalid SMTP port." }, { status: 400 });
-  }
+  const effective = resolved.effective;
 
   try {
-    const client = await clientPromise;
-    const db = client.db();
-    const stored = await db.collection("settings").findOne(
-      { _id: "platform" },
-      { projection: { email: 1 } },
-    );
-
-    let password = String(smtp.smtpPassword ?? "");
-    if (!password || password === SECRET_MASK) {
-      password = String(stored?.email?.smtpPassword ?? "");
-    }
-
-    const effective = { ...smtp, smtpPassword: password };
     const transporter = createSmtpTransport(effective);
+
+    const to =
+      typeof body.testRecipient === "string" && body.testRecipient.trim()
+        ? body.testRecipient.trim()
+        : PLATFORM_SMTP_TEST_RECIPIENT;
 
     await transporter.sendMail({
       from: buildFromAddress(effective),
-      to: smtp.smtpUser,
+      to,
       subject: platformEmailSubject("SMTP Test Email"),
       text:    `This is a test email from your ${BHOJDESK_BRAND.name} Super Admin panel. Your SMTP configuration is working correctly.`,
       html:    `
@@ -75,9 +72,12 @@ export async function POST(request) {
       `,
     });
 
-    return Response.json({ success: true, message: "Test email sent." });
+    return Response.json({ success: true, message: "Test email sent.", to });
   } catch (err) {
     console.error("Test email error:", err.message);
-    return Response.json({ success: false, error: "Failed to send test email. Check SMTP settings." }, { status: 500 });
+    return Response.json(
+      { success: false, error: formatSmtpError(err, effective.smtpHost) },
+      { status: 500 },
+    );
   }
 }

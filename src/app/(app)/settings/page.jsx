@@ -41,6 +41,7 @@ import {
   validateRestaurantTheme,
 } from "@/lib/restaurantSettingsValidation";
 import { sanitizeOpeningHoursSchedule } from "@/lib/reservationUtils";
+import { normalizeSmtpHost, normalizeSmtpSecure, SMTP_SECRET_MASK } from "@/lib/smtpConfig";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Palette } from "lucide-react";
 import { adminShell, adminSurface } from "@/config/adminSurfaceClasses";
@@ -491,20 +492,35 @@ export default function SettingsPage() {
   }
 
   async function sendTenantSmtpTest() {
-    if (!settings.email.smtpHost || !settings.email.smtpUser) {
+    const host = normalizeSmtpHost(settings.email.smtpHost);
+    if (!host || !settings.email.smtpUser?.trim()) {
       showToast("error", "Enter SMTP Host and Username first.");
       return;
     }
+    const pwd = String(settings.email.smtpPassword ?? "");
+    if (!pwd.trim() && pwd !== SMTP_SECRET_MASK) {
+      showToast("error", "Enter SMTP password and Save, or use saved credentials.");
+      return;
+    }
+    const port = Number(settings.email.smtpPort ?? 587);
     setTestingSmtp(true);
     try {
       const res = await fetch("/api/settings/test-email", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ smtp: settings.email, testRecipient: smtpTestRecipient.trim() || undefined }),
+        body: JSON.stringify({
+          smtp: {
+            ...settings.email,
+            smtpHost: host,
+            secure: normalizeSmtpSecure(port, settings.email.secure),
+          },
+          testRecipient: smtpTestRecipient.trim() || undefined,
+        }),
       });
       const data = await res.json();
-      if (data.success) showToast("success", "Test email sent.");
-      else showToast("error", data.error || "Could not send test email.");
+      if (data.success) {
+        showToast("success", `Test email sent to ${data.to ?? settings.email.smtpUser}.`);
+      } else showToast("error", data.error || "Could not send test email.");
     } catch { showToast("error", "Network error."); }
     finally { setTestingSmtp(false); }
   }
@@ -540,7 +556,11 @@ export default function SettingsPage() {
       });
       const data = await res.json();
       if (data.success) {
-        setSavedSnapshot(settings);
+        const nextSettings = data.email
+          ? { ...settings, email: { ...settings.email, ...data.email } }
+          : settings;
+        setSettings(nextSettings);
+        setSavedSnapshot(nextSettings);
         setFieldErrors({});
         invalidateRestaurantInfoCache();
         invalidateRestaurantBrandingCache();
@@ -841,19 +861,39 @@ export default function SettingsPage() {
               <div className="mt-4 grid gap-4 md:grid-cols-2">
                 <InputField
                   label="SMTP Host"
-                  placeholder="smtp.example.com"
+                  placeholder="smtp-relay.brevo.com"
                   value={settings.email.smtpHost}
                   error={fieldErrors.smtpHost}
                   onChange={(v) => {
                     setSettings((p) => ({ ...p, email: { ...p.email, smtpHost: v } }));
                     if (fieldErrors.smtpHost) setFieldErrors((e) => ({ ...e, smtpHost: "" }));
                   }}
+                  onBlur={(e) => {
+                    const normalized = normalizeSmtpHost(e.target.value);
+                    if (normalized && normalized !== e.target.value.trim()) {
+                      setSettings((p) => ({ ...p, email: { ...p.email, smtpHost: normalized } }));
+                    }
+                  }}
                 />
                 <InputField label="SMTP Port" type="number" value={String(settings.email.smtpPort ?? 587)}
-                  onChange={(v) => setSettings((p) => ({ ...p, email: { ...p.email, smtpPort: Number(v) || 587 } }))} />
-                <InputField label="SMTP Username" placeholder="user@company.com" value={settings.email.smtpUser}
+                  onChange={(v) => {
+                    const smtpPort = Number(v) || 587;
+                    setSettings((p) => ({
+                      ...p,
+                      email: {
+                        ...p.email,
+                        smtpPort,
+                        secure: normalizeSmtpSecure(smtpPort, p.email.secure),
+                      },
+                    }));
+                  }} />
+                <InputField label="SMTP Username" placeholder="9c7521001@smtp-brevo.com"
+                  hint="Brevo: copy Login from SMTP settings (ends with @smtp-brevo.com) — not the From Email"
+                  value={settings.email.smtpUser}
                   onChange={(v) => setSettings((p) => ({ ...p, email: { ...p.email, smtpUser: v } }))} />
-                <InputField label="SMTP Password" type="password" placeholder="••••••••" value={settings.email.smtpPassword}
+                <InputField label="SMTP Password" type="password" placeholder="xsmtpsib-… (Brevo SMTP key)"
+                  hint="Brevo → SMTP & API → SMTP keys — not API key (xkeysib) or login password"
+                  value={settings.email.smtpPassword}
                   onChange={(v) => setSettings((p) => ({ ...p, email: { ...p.email, smtpPassword: v } }))} />
                 <InputField label="From Name" placeholder={settings.general.restaurantName || "Restaurant"} value={settings.email.fromName}
                   onChange={(v) => setSettings((p) => ({ ...p, email: { ...p.email, fromName: v } }))} />
@@ -863,8 +903,14 @@ export default function SettingsPage() {
               <div className="mt-4">
                 <ToggleSwitch label="Use SSL/TLS (secure)"
                   hint="Typically on for port 465. Port 587 often uses STARTTLS with this off."
-                  checked={settings.email.secure}
-                  onChange={(v) => setSettings((p) => ({ ...p, email: { ...p.email, secure: v } }))} />
+                  checked={normalizeSmtpSecure(settings.email.smtpPort ?? 587, settings.email.secure)}
+                  onChange={(v) => setSettings((p) => ({
+                    ...p,
+                    email: {
+                      ...p.email,
+                      secure: normalizeSmtpSecure(p.email.smtpPort ?? 587, v),
+                    },
+                  }))} />
               </div>
               <div className="mt-5 space-y-3 rounded-xl admin-surface-card p-4">
                 <InputField label="Send test to (optional)" type="email"

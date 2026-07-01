@@ -6,7 +6,9 @@ import AdminSectionHeader from "@/components/ui/AdminSectionHeader";
 import { AdminSideNav, AdminSideNavItem, AdminSideNavList } from "@/components/ui/AdminSideNav";
 import { adminSurface } from "@/config/adminSurfaceClasses";
 import PushNotificationEnable from "@/components/PushNotificationEnable";
+import { PLATFORM_SMTP_TEST_RECIPIENT } from "@/config/bhojdeskBrand";
 import { useToast } from "@/hooks/useToast";
+import { normalizeSmtpHost, normalizeSmtpSecure, SMTP_SECRET_MASK } from "@/lib/smtpConfig";
 import {
   normalizePlatformLocaleSection,
 } from "@/config/platformLocaleConfig";
@@ -210,25 +212,42 @@ function AppSection({ data, onChange, onSave, saving, fieldErrors = {}, onClearE
   );
 }
 
-function EmailSection({ data, onChange, onSave, saving, fieldErrors = {}, onClearError }) {
+function EmailSection({ data, onChange, onPatch, onSave, saving, fieldErrors = {}, onClearError }) {
   const [testing, setTesting] = useState(false);
+  const [testRecipient, setTestRecipient] = useState("");
   const { showToast } = useToast();
 
   async function sendTestEmail() {
-    if (!data.smtpHost || !data.smtpUser) {
+    const host = normalizeSmtpHost(data.smtpHost);
+    if (!host || !data.smtpUser?.trim()) {
       showToast("Fill in SMTP Host and Username first.", "error");
+      return;
+    }
+    const pwd = String(data.smtpPassword ?? "");
+    if (!pwd.trim() && pwd !== SMTP_SECRET_MASK) {
+      showToast("Enter SMTP password and Save, or use saved credentials (••••••••).", "error");
       return;
     }
     setTesting(true);
     try {
+      const port = Number(data.smtpPort ?? 587);
+      const smtp = {
+        ...data,
+        smtpHost: host,
+        secure: normalizeSmtpSecure(port, data.secure),
+      };
       const res  = await fetch("/api/super-admin/settings/test-email", {
         method:  "POST",
         headers: { "Content-Type": "application/json" },
-        body:    JSON.stringify({ smtp: data }),
+        body:    JSON.stringify({
+          smtp,
+          testRecipient: testRecipient.trim() || undefined,
+        }),
       });
       const json = await res.json();
-      if (json.success) showToast("Test email sent successfully.");
-      else showToast(json.error ?? "Failed to send test email.", "error");
+      if (json.success) {
+        showToast(`Test email sent to ${json.to ?? PLATFORM_SMTP_TEST_RECIPIENT}.`);
+      } else showToast(json.error ?? "Failed to send test email.", "error");
     } catch {
       showToast("Network error.", "error");
     } finally {
@@ -247,7 +266,13 @@ function EmailSection({ data, onChange, onSave, saving, fieldErrors = {}, onClea
               onChange("smtpHost", e.target.value);
               onClearError?.("smtpHost");
             }}
-            placeholder="smtp.gmail.com"
+            onBlur={(e) => {
+              const normalized = normalizeSmtpHost(e.target.value);
+              if (normalized && normalized !== e.target.value.trim()) {
+                onChange("smtpHost", normalized);
+              }
+            }}
+            placeholder="smtp-relay.brevo.com"
             className={inputCls}
           />
         </Field>
@@ -256,7 +281,15 @@ function EmailSection({ data, onChange, onSave, saving, fieldErrors = {}, onClea
             {...intInputProps({ min: 1, max: 65535, step: 1 })}
             value={data.smtpPort ?? 587}
             onChange={(e) => {
-              onChange("smtpPort", e.target.value === "" ? "" : Number(e.target.value));
+              const smtpPort = e.target.value === "" ? "" : Number(e.target.value);
+              if (smtpPort === "") {
+                onChange("smtpPort", "");
+              } else {
+                onPatch?.({
+                  smtpPort,
+                  secure: normalizeSmtpSecure(smtpPort, data.secure),
+                });
+              }
               onClearError?.("smtpPort");
             }}
             className={inputCls}
@@ -269,13 +302,19 @@ function EmailSection({ data, onChange, onSave, saving, fieldErrors = {}, onClea
               onChange("smtpUser", e.target.value);
               onClearError?.("smtpUser");
             }}
-            placeholder="user@gmail.com"
+            placeholder="9c7521001@smtp-brevo.com"
             className={inputCls}
           />
+          <p className="mt-1 text-xs admin-surface-muted">
+            Brevo: use Login from dashboard (…@smtp-brevo.com), not From Email.
+          </p>
         </Field>
         <Field label="SMTP Password">
           <input type="password" value={data.smtpPassword ?? ""} onChange={(e) => onChange("smtpPassword", e.target.value)}
-            placeholder="••••••••" autoComplete="new-password" className={inputCls} />
+            placeholder="Brevo SMTP key" autoComplete="new-password" className={inputCls} />
+          <p className="mt-1 text-xs admin-surface-muted">
+            Brevo → SMTP &amp; API → SMTP keys. Not API key (xkeysib-) or login password.
+          </p>
         </Field>
         <Field label="From Name" error={fieldErrors.fromName}>
           <input
@@ -302,14 +341,30 @@ function EmailSection({ data, onChange, onSave, saving, fieldErrors = {}, onClea
           />
         </Field>
       </div>
-      <Toggle checked={!!data.secure} onChange={(v) => onChange("secure", v)}
+      <Toggle
+        checked={!!normalizeSmtpSecure(Number(data.smtpPort ?? 587), data.secure)}
+        onChange={(v) => onChange("secure", normalizeSmtpSecure(Number(data.smtpPort ?? 587), v))}
         label="Use SSL/TLS" description="Enable for port 465. Use STARTTLS for port 587." />
 
       {/* Test email */}
-      <div className="flex flex-col gap-3 admin-surface-card px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+      <div className="space-y-3 admin-surface-card px-4 py-3">
+        <div>
+          <label className="mb-1.5 block text-xs font-medium admin-surface-muted">Send test to (optional)</label>
+          <input
+            type="email"
+            value={testRecipient}
+            onChange={(e) => setTestRecipient(e.target.value)}
+            placeholder={`Default: ${PLATFORM_SMTP_TEST_RECIPIENT}`}
+            className={inputCls}
+          />
+        </div>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="min-w-0">
           <p className="text-sm font-medium admin-shell-text">Send Test Email</p>
-          <p className="mt-0.5 break-words text-xs admin-surface-muted">Verify your SMTP config by sending a test message.</p>
+          <p className="mt-0.5 break-words text-xs admin-surface-muted">
+            Uses SMTP settings above. Default inbox:{" "}
+            <span className="font-medium text-indigo-400">{PLATFORM_SMTP_TEST_RECIPIENT}</span>
+          </p>
         </div>
         <button
           type="button"
@@ -322,6 +377,7 @@ function EmailSection({ data, onChange, onSave, saving, fieldErrors = {}, onClea
             : <Key className="size-3.5" />}
           {testing ? "Sending…" : "Send Test"}
         </button>
+        </div>
       </div>
     </div>
   );
@@ -1526,6 +1582,13 @@ export default function SuperAdminSettingsPage() {
     });
   }, [activeTab]);
 
+  const handleEmailPatch = useCallback((patch) => {
+    setSettings((prev) => ({
+      ...prev,
+      email: { ...prev.email, ...patch },
+    }));
+  }, []);
+
   const clearSectionError = useCallback((key) => {
     setSectionErrors((prev) => (prev[key] ? { ...prev, [key]: "" } : prev));
   }, []);
@@ -1680,7 +1743,7 @@ export default function SuperAdminSettingsPage() {
           ) : (
             <>
               {activeTab === "app"           && <AppSection           data={sectionData} onChange={handleChange} onSave={handleSave} saving={saving} {...panelValidationProps} />}
-              {activeTab === "email"         && <EmailSection         data={sectionData} onChange={handleChange} onSave={handleSave} saving={saving} {...panelValidationProps} />}
+              {activeTab === "email"         && <EmailSection         data={sectionData} onChange={handleChange} onPatch={handleEmailPatch} onSave={handleSave} saving={saving} {...panelValidationProps} />}
               {activeTab === "language"      && <LanguageSection      data={sectionData} onChange={handleChange} onSave={handleSave} saving={saving} />}
               {activeTab === "payment"       && <PaymentSection       data={sectionData} onChange={handleChange} onSave={handleSave} saving={saving} {...panelValidationProps} />}
               {activeTab === "theme"         && <ThemeSection         data={sectionData} onChange={handleChange} onSave={handleSave} saving={saving} {...panelValidationProps} />}

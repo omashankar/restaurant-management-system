@@ -1,4 +1,5 @@
 import { BHOJDESK_BRAND, BHOJDESK_LOGOS } from "@/config/bhojdeskBrand";
+import { detectBrevoSmtpIssues, isSmtpPasswordMask, maskSmtpSettingsForClient, mergeSmtpPasswordForSave, normalizeSmtpHost, normalizeSmtpSecure, sanitizeSmtpSettings } from "@/lib/smtpConfig";
 import { writeAuditLog } from "@/lib/auditLog";
 import { normalizePlatformLocaleSection } from "@/config/platformLocaleConfig";
 import { invalidatePlatformSettingsCache, PLATFORM_DEFAULTS } from "@/lib/platformSettings";
@@ -209,6 +210,10 @@ function sanitizeSectionData(section, incoming = {}) {
   if (section === "email") {
     const port = Number(clean.smtpPort ?? base.smtpPort);
     clean.smtpPort = Number.isFinite(port) && port >= 1 && port <= 65535 ? port : base.smtpPort;
+    Object.assign(clean, sanitizeSmtpSettings(clean, base));
+    if (incoming.smtpPassword != null) {
+      clean.smtpPassword = String(incoming.smtpPassword);
+    }
   }
   if (section === "backup") {
     clean.retentionDays = Math.min(365, Math.max(1, Number(clean.retentionDays ?? base.retentionDays)));
@@ -257,7 +262,10 @@ export async function GET(request) {
 
     const settings = {};
     for (const section of Object.keys(DEFAULTS)) {
-      const merged = { ...DEFAULTS[section], ...(doc?.[section] ?? {}) };
+      let merged = { ...DEFAULTS[section], ...(doc?.[section] ?? {}) };
+      if (section === "email") {
+        merged = sanitizeSmtpSettings(merged, DEFAULTS[section]);
+      }
       settings[section] = maskSectionForClient(section, merged);
     }
     return Response.json({ success: true, settings });
@@ -311,7 +319,13 @@ export async function PATCH(request) {
     const mergedForSave = { ...clean };
     for (const key of SECRET_FIELDS[section] ?? []) {
       const incoming = data[key];
-      if (incoming == null || incoming === "" || incoming === SECRET_MASK) {
+      if (key === "smtpPassword" && section === "email") {
+        mergedForSave[key] = mergeSmtpPasswordForSave(
+          mergedForSave,
+          incoming,
+          existing?.[section]?.[key] ?? "",
+        ).smtpPassword;
+      } else if (isSmtpPasswordMask(incoming)) {
         mergedForSave[key] = existing?.[section]?.[key] ?? "";
       }
     }
@@ -320,6 +334,13 @@ export async function PATCH(request) {
         data.gateways,
         existing?.payment?.gateways ?? {},
       );
+    }
+
+    if (section === "email") {
+      const brevoIssue = detectBrevoSmtpIssues(mergedForSave);
+      if (brevoIssue) {
+        return Response.json({ success: false, error: brevoIssue }, { status: 400 });
+      }
     }
 
     const setFields = { [section]: mergedForSave, updatedAt: new Date() };

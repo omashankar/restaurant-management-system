@@ -1,7 +1,10 @@
-import { buildFromAddress, createSmtpTransport } from "@/lib/emailService";
+import {
+  buildEffectiveSmtpConfig,
+  buildFromAddress,
+  createSmtpTransport,
+  formatSmtpError,
+} from "@/lib/emailService";
 import { withTenant } from "@/lib/tenantDb";
-
-const SECRET_MASK = "********";
 
 /**
  * POST /api/settings/test-email
@@ -17,33 +20,22 @@ export const POST = withTenant(["admin"], async ({ db, restaurantId }, request) 
   }
 
   const smtpInput = body.smtp;
-  if (!smtpInput?.smtpHost || !smtpInput?.smtpUser) {
-    return Response.json(
-      { success: false, error: "SMTP Host and Username are required." },
-      { status: 400 }
-    );
-  }
-
   const stored = await db
     .collection("restaurant_settings")
     .findOne({ restaurantId }, { projection: { email: 1 } });
 
-  let password = String(smtpInput.smtpPassword ?? "");
-  if (!password || password === SECRET_MASK) {
-    password = String(stored?.email?.smtpPassword ?? "");
+  const resolved = buildEffectiveSmtpConfig(smtpInput, stored?.email);
+  if (!resolved.ok) {
+    return Response.json({ success: false, error: resolved.error }, { status: resolved.status });
   }
-
-  const effective = {
-    ...smtpInput,
-    smtpPassword: password,
-  };
+  const effective = resolved.effective;
 
   try {
     const transport = createSmtpTransport(effective);
     const to =
       typeof body.testRecipient === "string" && body.testRecipient.trim()
         ? body.testRecipient.trim()
-        : smtpInput.smtpUser;
+        : effective.smtpUser;
 
     await transport.sendMail({
       from: buildFromAddress(effective),
@@ -53,13 +45,13 @@ export const POST = withTenant(["admin"], async ({ db, restaurantId }, request) 
       html: `<p>This is a test message from your <strong>restaurant</strong> Email / SMTP settings.</p>`,
     });
 
-    return Response.json({ success: true, message: "Test email sent." });
+    return Response.json({ success: true, message: "Test email sent.", to });
   } catch (err) {
     console.error("Tenant SMTP test error:", err.message);
     return Response.json(
       {
         success: false,
-        error: err.message || "Failed to send test email. Check SMTP settings.",
+        error: formatSmtpError(err, effective.smtpHost),
       },
       { status: 500 }
     );

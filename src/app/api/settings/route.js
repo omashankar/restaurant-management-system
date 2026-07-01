@@ -4,13 +4,13 @@ import {
   normalizeDateFormat,
   normalizeTimeFormat,
 } from "@/config/settingsConfig";
+import { detectBrevoSmtpIssues, maskSmtpSettingsForClient, mergeSmtpPasswordForSave, sanitizeSmtpSettings } from "@/lib/smtpConfig";
 import { resolveRestaurantAdminTheme } from "@/lib/restaurantAdminThemeRuntime";
 import { sanitizeOpeningHoursSchedule } from "@/lib/reservationUtils";
 import { validateRestaurantSettingsPatch } from "@/lib/restaurantSettingsValidation";
 import { deleteUploadedImageIfReplaced } from "@/lib/uploadImage";
 import { withTenant } from "@/lib/tenantDb";
 
-const SECRET_MASK = "********";
 const PAYMENT_METHOD_KEYS = [
   "cod",
   "cashCounter",
@@ -23,27 +23,13 @@ const PAYMENT_METHOD_KEYS = [
 ];
 
 function sanitizeEmailSection(incoming = {}) {
-  const base = { ...EMPTY_SETTINGS.email };
-  const merged = { ...base, ...incoming };
-  const port = Number(merged.smtpPort);
-  merged.smtpPort =
-    Number.isFinite(port) && port >= 1 && port <= 65535 ? port : base.smtpPort;
-  merged.enabled = Boolean(merged.enabled);
-  merged.secure = Boolean(merged.secure);
-  for (const key of ["smtpHost", "smtpUser", "smtpPassword", "fromName", "fromEmail"]) {
-    merged[key] = merged[key] == null ? "" : String(merged[key]).trim();
-  }
-  return merged;
+  return sanitizeSmtpSettings(incoming, { ...EMPTY_SETTINGS.email });
 }
 
 /** Keep DB password when the client sends empty or the mask token. */
 function mergeEmailForSave(incoming, existingEmail) {
   const clean = sanitizeEmailSection({ ...EMPTY_SETTINGS.email, ...incoming });
-  const raw = incoming?.smtpPassword;
-  if (raw == null || raw === "" || raw === SECRET_MASK) {
-    clean.smtpPassword = existingEmail?.smtpPassword ?? "";
-  }
-  return clean;
+  return mergeSmtpPasswordForSave(clean, incoming?.smtpPassword, existingEmail?.smtpPassword ?? "");
 }
 
 function sanitizePaymentMethods(incoming = {}) {
@@ -129,7 +115,9 @@ export const GET = withTenant(
     if (payload.role !== "admin") {
       settings.email = { ...EMPTY_SETTINGS.email };
     } else if (settings.email?.smtpPassword) {
-      settings.email = { ...settings.email, smtpPassword: SECRET_MASK };
+      settings.email = maskSmtpSettingsForClient(sanitizeEmailSection(settings.email));
+    } else if (settings.email) {
+      settings.email = sanitizeEmailSection(settings.email);
     }
 
     // Restaurant slug (for multi-restaurant customer URL)
@@ -233,6 +221,13 @@ export const PATCH = withTenant(["admin"], async ({ db, restaurantId }, request)
     );
   }
 
+  if (updateFields.email) {
+    const brevoIssue = detectBrevoSmtpIssues(updateFields.email);
+    if (brevoIssue) {
+      return Response.json({ success: false, error: brevoIssue }, { status: 400 });
+    }
+  }
+
   updateFields.updatedAt = new Date();
 
   await db.collection("restaurant_settings").updateOne(
@@ -269,5 +264,10 @@ export const PATCH = withTenant(["admin"], async ({ db, restaurantId }, request)
     }
   }
 
-  return Response.json({ success: true });
+  return Response.json({
+    success: true,
+    ...(updateFields.email
+      ? { email: maskSmtpSettingsForClient(sanitizeEmailSection(updateFields.email)) }
+      : {}),
+  });
 });
