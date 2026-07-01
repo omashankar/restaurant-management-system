@@ -1,14 +1,15 @@
-import { customerThemeBootstrapScript } from "@/theme/customerBootstrap";
-import Script from "next/script";
+"use client";
 
-/**
- * Blocking restore of customer color mode from localStorage — reduces flash on reload.
- * Must render from the root Server Layout only (not inside client components).
- */
+import { customerThemeBootstrapScript } from "@/theme/customerBootstrap";
+import { useServerInsertedHTML } from "next/navigation";
+
+/** Blocking restore of customer color mode from localStorage — reduces flash on reload. */
 export default function CustomerThemeBootstrap() {
-  return (
-    <Script id="customer-theme-bootstrap" strategy="beforeInteractive">
-      {customerThemeBootstrapScript()}
-    </Script>
-  );
+  useServerInsertedHTML(() => (
+    <script
+      id="customer-theme-bootstrap"
+      dangerouslySetInnerHTML={{ __html: customerThemeBootstrapScript() }}
+    />
+  ));
+  return null;
 }

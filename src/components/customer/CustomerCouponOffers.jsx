@@ -21,7 +21,10 @@ export default function CustomerCouponOffers({
   mode = "browse",
   className = "",
 }) {
-  const uniqueCoupons = useMemo(() => dedupeCouponsByCode(coupons), [coupons]);
+  const uniqueCoupons = useMemo(
+    () => dedupeCouponsByCode(coupons).filter((c) => c.active !== false),
+    [coupons],
+  );
   if (!uniqueCoupons.length) return null;
 
   if (mode === "banner") {

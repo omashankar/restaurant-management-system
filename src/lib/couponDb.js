@@ -66,13 +66,37 @@ export async function findCouponByCode(db, restaurantId, code) {
 }
 
 async function countUsages(db, restaurantId, couponId, since = null, customerId = null) {
-  const filter = { restaurantId, couponId: new ObjectId(couponId) };
+  const filter = { restaurantId: normalizeRestaurantId(restaurantId), couponId: new ObjectId(couponId) };
   if (since) filter.redeemedAt = { $gte: since };
   if (customerId) filter.customerId = customerId;
   return db.collection(USAGE_COLLECTION).countDocuments(filter);
 }
 
+/** Redemption totals from usage history — source of truth for admin display. */
+export async function attachRedemptionCounts(db, restaurantId, coupons = []) {
+  const rid = normalizeRestaurantId(restaurantId);
+  const rows = await db
+    .collection(USAGE_COLLECTION)
+    .aggregate([
+      { $match: { restaurantId: rid } },
+      { $group: { _id: "$couponCode", count: { $sum: 1 } } },
+    ])
+    .toArray();
+  const map = new Map(rows.map((r) => [r._id, r.count]));
+  return coupons.map((c) => ({
+    ...c,
+    usedCount: map.get(c.code) ?? (Number(c.usedCount) || 0),
+  }));
+}
+
 async function validateUsageLimits(db, restaurantId, coupon, customerId) {
+  const couponId = coupon.id ?? coupon._id;
+  if (coupon.usageLimit != null && couponId) {
+    const total = await countUsages(db, restaurantId, couponId);
+    if (total >= Number(coupon.usageLimit)) {
+      return { valid: false, error: "This coupon has reached its usage limit." };
+    }
+  }
   if (coupon.onePerCustomer && customerId) {
     const prior = await countUsages(db, restaurantId, coupon.id ?? coupon._id, null, customerId);
     if (prior > 0) {
@@ -103,7 +127,15 @@ export async function validateCouponForOrder(
   context = {},
 ) {
   const coupon = await findCouponByCode(db, restaurantId, code);
-  const base = validateCouponDoc(coupon, subtotal, channel, context);
+  if (!coupon) {
+    return { valid: false, error: "Invalid coupon code.", discount: 0, coupon: null };
+  }
+
+  const couponId = coupon._id ?? coupon.id;
+  const usageTotal = couponId ? await countUsages(db, restaurantId, couponId) : Number(coupon.usedCount) || 0;
+  const couponForValidate = { ...coupon, usedCount: usageTotal };
+
+  const base = validateCouponDoc(couponForValidate, subtotal, channel, context);
   if (!base.valid) return base;
 
   const serialized = base.coupon;
@@ -143,13 +175,15 @@ export async function listActiveCouponsForChannel(db, restaurantId, channel = "o
     .sort({ code: 1 })
     .toArray();
 
-  return dedupeCouponsByCode(
-    rows
-      .filter((row) => row.active !== false)
-      .filter((row) => couponStatusLabel(serializeCouponAdmin(row)) === "active")
-      .filter((row) => row.usageLimit == null || Number(row.usedCount) < Number(row.usageLimit))
-      .map(serializeCouponPublic),
-  );
+  const adminRows = dedupeCouponsByCode(rows.map(serializeCouponAdmin));
+  const withCounts = await attachRedemptionCounts(db, restaurantId, adminRows);
+
+  return withCounts
+    .filter((row) => row.active !== false)
+    .filter((row) => couponStatusLabel(row) === "active")
+    .filter((row) => row.usageLimit == null || Number(row.usedCount) < Number(row.usageLimit))
+    .map((row) => serializeCouponPublic(row))
+    .filter(Boolean);
 }
 
 export async function seedCouponsIfEmpty(db, restaurantId, createdBy = null) {

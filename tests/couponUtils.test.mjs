@@ -72,6 +72,19 @@ test("resolveCustomerCouponFromList rejects unknown and pos-only codes", () => {
   assert.equal(ok.discount, 10);
 });
 
+test("resolveCustomerCouponFromList rejects inactive coupons", () => {
+  const list = [{ ...baseCoupon, code: "SAVE10", active: false }];
+  const result = resolveCustomerCouponFromList(list, "SAVE10", 100);
+  assert.equal(result.valid, false);
+  assert.match(result.error, /no longer active/i);
+});
+
+test("validateCouponDoc rejects inactive coupon", () => {
+  const result = validateCouponDoc({ ...baseCoupon, active: false }, 100, "online");
+  assert.equal(result.valid, false);
+  assert.match(result.error, /no longer active/i);
+});
+
 test("dedupeCouponsByCode keeps one entry per code", () => {
   const dupes = [
     { code: "FLAT5", label: "A", updatedAt: "2024-01-01" },

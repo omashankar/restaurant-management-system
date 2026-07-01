@@ -112,12 +112,12 @@ export default function RootLayout({ children }) {
       suppressHydrationWarning
     >
       <head>
-        <AdminThemeBootstrap />
-        <CustomerThemeBootstrap />
-        <LandingPreloadBootstrap />
         <link rel="preload" href="/branding/bhojdesk/icon.png" as="image" />
       </head>
       <body className="min-h-full" suppressHydrationWarning>
+        <AdminThemeBootstrap />
+        <CustomerThemeBootstrap />
+        <LandingPreloadBootstrap />
         <PlatformThemeStyles />
         <PlatformScripts />
         <Providers>{children}</Providers>

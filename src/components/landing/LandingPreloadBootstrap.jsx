@@ -1,5 +1,7 @@
+"use client";
+
 import { MARKETING_SHELL_PATHS } from "@/lib/marketingShell";
-import Script from "next/script";
+import { useServerInsertedHTML } from "next/navigation";
 
 const pathsJson = JSON.stringify(MARKETING_SHELL_PATHS);
 
@@ -23,9 +25,8 @@ const BOOTSTRAP = `
 
 /** Hides marketing shell until React preloader releases it (prevents content flash). */
 export default function LandingPreloadBootstrap() {
-  return (
-    <Script id="landing-preload-bootstrap" strategy="beforeInteractive">
-      {BOOTSTRAP}
-    </Script>
-  );
+  useServerInsertedHTML(() => (
+    <script id="landing-preload-bootstrap" dangerouslySetInnerHTML={{ __html: BOOTSTRAP }} />
+  ));
+  return null;
 }

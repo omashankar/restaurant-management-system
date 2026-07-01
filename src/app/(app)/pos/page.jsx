@@ -93,10 +93,28 @@ function PosPageContent() {
   const [appliedCoupon, setAppliedCoupon]             = useState(null);
   const [couponError, setCouponError]                   = useState("");
   const [couponLoading, setCouponLoading]               = useState(false);
+  const [posCoupons, setPosCoupons]                     = useState([]);
   const [currency, setCurrency]                         = useState("INR");
   const [restaurantName, setRestaurantName]             = useState("Restaurant");
   const [printers, setPrinters]                         = useState([]);
   const settingsFetchedRef = useRef(false);
+  const posCouponsReadyRef = useRef(false);
+
+  const refreshPosCoupons = useCallback(() => {
+    fetch("/api/coupons/active?channel=pos", { cache: "no-store" })
+      .then((r) => r.json())
+      .then((d) => {
+        if (!d?.success) return;
+        posCouponsReadyRef.current = true;
+        setPosCoupons(
+          (d.coupons ?? []).map((c) => ({
+            ...c,
+            id: c.code,
+          })),
+        );
+      })
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     if (settingsFetchedRef.current) return;
@@ -120,7 +138,25 @@ function PosPageContent() {
         if (d.success) setPrinters(Array.isArray(d.printers) ? d.printers : []);
       })
       .catch(() => {});
-  }, []);
+    refreshPosCoupons();
+  }, [refreshPosCoupons]);
+
+  useEffect(() => {
+    const onVisible = () => {
+      if (document.visibilityState === "visible") refreshPosCoupons();
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    return () => document.removeEventListener("visibilitychange", onVisible);
+  }, [refreshPosCoupons]);
+
+  useEffect(() => {
+    if (!posCouponsReadyRef.current || !appliedCoupon?.code) return;
+    const stillActive = posCoupons.some((c) => c.code === appliedCoupon.code);
+    if (!stillActive) {
+      setAppliedCoupon(null);
+      setCouponError("This coupon is no longer active.");
+    }
+  }, [posCoupons, appliedCoupon?.code]);
 
   const {
     filtered: filteredItems,
@@ -131,6 +167,11 @@ function PosPageContent() {
   } = useMenuFilter(activeMenuItems);
 
   const subtotal = useMemo(() => cart.reduce((s, l) => s + l.price * l.qty, 0), [cart]);
+
+  const cartCouponSig = useMemo(
+    () => cart.map((l) => `${l.menuItemId ?? l.id}:${l.qty}`).join(","),
+    [cart],
+  );
 
   const discountInput = useMemo(() => {
     if (appliedCoupon?.posDiscount) {
@@ -211,6 +252,56 @@ function PosPageContent() {
     },
     [subtotal, orderType, paymentMethod, cart],
   );
+
+  // Re-validate when cart / order type / payment changes (applyPosCoupon handles initial apply).
+  useEffect(() => {
+    const code = appliedCoupon?.code;
+    if (!code || subtotal <= 0) return;
+
+    let cancelled = false;
+    (async () => {
+      setCouponLoading(true);
+      setCouponError("");
+      try {
+        const res = await fetch("/api/coupons/validate", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            code,
+            subtotal,
+            channel: "pos",
+            orderType,
+            paymentMethod,
+            items: cart.map((l) => ({ id: l.menuItemId ?? l.id, qty: l.qty })),
+          }),
+        });
+        const data = await res.json();
+        if (cancelled) return;
+        if (!res.ok || !data?.success) {
+          setAppliedCoupon(null);
+          setCouponError(data?.error ?? "Coupon no longer valid for this order.");
+          return;
+        }
+        setAppliedCoupon({
+          code: data.coupon.code,
+          label: data.coupon.label,
+          posDiscount: data.posDiscount,
+        });
+      } catch {
+        if (!cancelled) {
+          setAppliedCoupon(null);
+          setCouponError("Could not validate coupon.");
+        }
+      } finally {
+        if (!cancelled) setCouponLoading(false);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- only re-run when order context changes, not on first apply
+  }, [subtotal, orderType, paymentMethod, cartCouponSig]);
 
   const [fieldErrors, setFieldErrors] = useState(EMPTY_POS_ORDER_ERRORS);
   const [isPlacing, setIsPlacing] = useState(false);
@@ -311,6 +402,8 @@ function PosPageContent() {
     setSelectedTableId("");
     setFieldErrors(EMPTY_POS_ORDER_ERRORS);
     setPlaceError("");
+    setAppliedCoupon(null);
+    setCouponError("");
     setSetupOpen(true);
     if (type === "delivery") setSelectedCustomer(null);
     const payment = getPosPaymentDefaults(type);
@@ -562,6 +655,8 @@ function PosPageContent() {
 
       setCart([]);
       setDiscountValue("");
+      setAppliedCoupon(null);
+      setCouponError("");
       setNote("");
       setSelectedTableId("");
       setDelivery({ name: "", phone: "", address: "" });
@@ -637,6 +732,7 @@ function PosPageContent() {
     couponLoading,
     onApplyCoupon: applyPosCoupon,
     onClearCoupon: clearCoupon,
+    posCoupons,
     total,
     currency,
     canPlaceOrder: canPlaceOrder && !isPlacing,

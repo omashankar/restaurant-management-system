@@ -24,7 +24,10 @@ export default function CustomerCouponCheckout({
   onAppliedChange,
   onNotify,
 }) {
-  const uniqueCoupons = useMemo(() => dedupeCouponsByCode(coupons), [coupons]);
+  const uniqueCoupons = useMemo(
+    () => dedupeCouponsByCode(coupons).filter((c) => c.active !== false),
+    [coupons],
+  );
   const [manualCode, setManualCode] = useState(appliedCoupon?.code ?? "");
   const onAppliedChangeRef = useRef(onAppliedChange);
   const onNotifyRef = useRef(onNotify);

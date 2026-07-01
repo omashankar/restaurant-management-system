@@ -94,7 +94,7 @@ export function couponStatusLabel(coupon, now = new Date()) {
 }
 
 export const COUPON_STATUS_STYLES = {
-  active: "bg-emerald-500/15 text-emerald-300",
+  active: "bg-ra-primary-15 text-ra-primary-muted ring-1 ring-ra-primary-25",
   inactive: "bg-zinc-500/15 admin-surface-muted",
   scheduled: "bg-sky-500/15 text-sky-300",
   expired: "bg-amber-500/15 text-amber-300",

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 const DEFAULT_META = {
   taxPercentage: 8,
@@ -28,27 +28,34 @@ export function useCheckoutMeta() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      try {
-        const res = await fetch("/api/customer/checkout-meta", { cache: "no-store" });
-        const data = await res.json();
-        if (!cancelled && data?.success && data.meta) {
-          setMeta({ ...DEFAULT_META, ...data.meta });
-        }
-      } catch {
-        if (!cancelled) setError("Could not load pricing settings.");
-      } finally {
-        if (!cancelled) setLoading(false);
+  const refetch = useCallback(async () => {
+    try {
+      const res = await fetch("/api/customer/checkout-meta", { cache: "no-store" });
+      const data = await res.json();
+      if (data?.success && data.meta) {
+        setMeta({ ...DEFAULT_META, ...data.meta });
+        setError("");
       }
-    })();
-    return () => {
-      cancelled = true;
-    };
+    } catch {
+      setError("Could not load pricing settings.");
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
-  return { meta, loading, error };
+  useEffect(() => {
+    refetch();
+  }, [refetch]);
+
+  useEffect(() => {
+    const onVisible = () => {
+      if (document.visibilityState === "visible") refetch();
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    return () => document.removeEventListener("visibilitychange", onVisible);
+  }, [refetch]);
+
+  return { meta, loading, error, refetch };
 }
 
 /** Cart/checkout totals aligned with server tax & delivery rules. */

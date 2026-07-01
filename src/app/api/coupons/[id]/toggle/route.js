@@ -15,15 +15,23 @@ export const PATCH = withTenant(
     const body = await request.json();
     const active = body?.active === true;
 
-    await db.collection("coupons").updateOne(filter, {
+    const result = await db.collection("coupons").updateOne(filter, {
       $set: { active, updatedAt: new Date() },
     });
+
+    if (result.matchedCount === 0) {
+      return Response.json({ success: false, error: "Coupon not found." }, { status: 404 });
+    }
 
     const updated = await db.collection("coupons").findOne(filter);
     if (!updated) {
       return Response.json({ success: false, error: "Coupon not found." }, { status: 404 });
     }
 
-    return Response.json({ success: true, coupon: serializeCouponAdmin(updated) });
+    return Response.json({
+      success: true,
+      active: updated.active !== false,
+      coupon: serializeCouponAdmin(updated),
+    });
   },
 );

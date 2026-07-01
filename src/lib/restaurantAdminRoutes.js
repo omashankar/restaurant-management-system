@@ -6,6 +6,7 @@ export const RESTAURANT_ADMIN_PREFIXES = [
   "/chef",
   "/orders",
   "/menu",
+  "/coupons",
   "/tables",
   "/pos",
   "/kitchen",

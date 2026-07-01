@@ -1,11 +1,15 @@
+"use client";
+
 import { restaurantThemeBootstrapScript } from "@/lib/restaurantThemeStorage";
-import Script from "next/script";
+import { useServerInsertedHTML } from "next/navigation";
 
 /** Blocking theme restore from localStorage — prevents default-color flash on reload. */
 export default function RestaurantThemeBootstrap() {
-  return (
-    <Script id="restaurant-theme-bootstrap" strategy="beforeInteractive">
-      {restaurantThemeBootstrapScript()}
-    </Script>
-  );
+  useServerInsertedHTML(() => (
+    <script
+      id="restaurant-theme-bootstrap"
+      dangerouslySetInnerHTML={{ __html: restaurantThemeBootstrapScript() }}
+    />
+  ));
+  return null;
 }

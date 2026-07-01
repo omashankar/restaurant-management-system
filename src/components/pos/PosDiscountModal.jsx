@@ -20,6 +20,7 @@ export default function PosDiscountModal({
   onClear,
   onApplyCoupon,
   onClearCoupon,
+  couponOptions = [],
 }) {
   return (
     <Modal
@@ -67,6 +68,7 @@ export default function PosDiscountModal({
         onClear={onClear}
         onApplyCoupon={onApplyCoupon}
         onClearCoupon={onClearCoupon}
+        couponOptions={couponOptions}
       />
     </Modal>
   );

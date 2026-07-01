@@ -119,6 +119,7 @@ export function serializeCouponPublic(doc) {
     minSubtotal: row.minSubtotal ?? undefined,
     orderTypes: row.orderTypes,
     autoApply: row.autoApply,
+    active: row.active !== false,
   };
 }
 
@@ -204,6 +205,14 @@ export function resolveCustomerCouponFromList(coupons, code, subtotal, context =
     return {
       valid: false,
       error: "This code isn't available for online orders.",
+      discount: 0,
+      coupon: null,
+    };
+  }
+  if (found.active === false) {
+    return {
+      valid: false,
+      error: "This coupon is no longer active.",
       discount: 0,
       coupon: null,
     };

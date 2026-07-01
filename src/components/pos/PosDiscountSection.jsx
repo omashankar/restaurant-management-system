@@ -24,6 +24,7 @@ export default function PosDiscountSection({
   onClear,
   onApplyCoupon,
   onClearCoupon,
+  couponOptions = [],
 }) {
   const [tab, setTab] = useState(appliedCoupon ? "coupon" : "manual");
   const [couponCode, setCouponCode] = useState(appliedCoupon?.code ?? "");
@@ -173,12 +174,44 @@ export default function PosDiscountSection({
             </div>
           ) : (
             <>
+              {couponOptions.length > 0 ? (
+                <div>
+                  <label className="mb-1 block text-[10px] font-medium admin-surface-muted">
+                    Select coupon
+                  </label>
+                  <select
+                    value=""
+                    disabled={couponLoading || subtotal <= 0}
+                    onChange={(e) => {
+                      const code = e.target.value;
+                      if (code) {
+                        setCouponCode(code);
+                        onApplyCoupon?.(code);
+                      }
+                    }}
+                    className={`${adminControl.input} w-full px-3 py-2 text-xs focus-ra-primary`}
+                  >
+                    <option value="">Choose a coupon…</option>
+                    {couponOptions.map((c) => (
+                      <option key={c.id ?? c.code} value={c.code}>
+                        {c.code} — {c.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              ) : null}
               <div className="flex gap-2">
                 <input
                   value={couponCode}
                   onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
-                  placeholder="Coupon code"
+                  placeholder="Enter coupon code"
                   className={`${adminControl.input} min-w-0 flex-1 px-3 py-2 text-xs uppercase focus-ra-primary`}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      handleApplyCoupon();
+                    }
+                  }}
                 />
                 <button
                   type="button"
@@ -194,7 +227,7 @@ export default function PosDiscountSection({
           )}
           <p className="flex items-center gap-1.5 text-[10px] admin-surface-faint">
             <Ticket className="size-3" aria-hidden />
-            Same codes as online checkout (Menu → Coupons).
+            Discount is applied to the subtotal before tax and service charge.
           </p>
         </div>
       )}

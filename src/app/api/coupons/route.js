@@ -3,7 +3,7 @@ import {
   parseCouponInput,
   serializeCouponAdmin,
 } from "@/lib/couponUtils";
-import { seedCouponsIfEmpty, ensureCouponIndexes } from "@/lib/couponDb";
+import { seedCouponsIfEmpty, ensureCouponIndexes, attachRedemptionCounts } from "@/lib/couponDb";
 import { withTenant } from "@/lib/tenantDb";
 import { ObjectId } from "mongodb";
 
@@ -17,9 +17,15 @@ export const GET = withTenant(["admin", "manager"], async ({ db, tenantFilter, r
     .sort({ code: 1 })
     .toArray();
 
+  const coupons = await attachRedemptionCounts(
+    db,
+    restaurantId,
+    dedupeCouponsByCode(rows.map(serializeCouponAdmin)),
+  );
+
   return Response.json({
     success: true,
-    coupons: dedupeCouponsByCode(rows.map(serializeCouponAdmin)),
+    coupons,
   });
 });
 

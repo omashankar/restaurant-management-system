@@ -42,6 +42,7 @@ export default function OrderSummary({
   couponLoading = false,
   onApplyCoupon,
   onClearCoupon,
+  posCoupons = [],
   total,
   currency = "INR",
   canPlaceOrder,
@@ -482,6 +483,7 @@ export default function OrderSummary({
         }}
         onApplyCoupon={onApplyCoupon}
         onClearCoupon={onClearCoupon}
+        couponOptions={posCoupons}
       />
 
       <PosCustomerModal
